@@ -22,7 +22,7 @@
     "react-dom": "^19.0.0",
     "react-feather": "^2.0.10",
     "react-i18next": "^15.1.4",
-    "react-rnd": "^10.4.13",
+    "react-rnd": "^10.4.14",
     "react-router-dom": "^7.0.2",
     "typescript": "^5.6.3"
   },
