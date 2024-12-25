@@ -387,6 +387,9 @@ class EditLocation extends React.Component<Props, State> {
     let res: any[] = [];
     this.state.availableAttributes.forEach(a => {
       let ok = true;
+      if (!a.locationApplicable) {
+        return;
+      }
       this.state.attributeValues.forEach(av => {
         if (av.attributeId === a.id) {
           ok = false;

@@ -1,6 +1,6 @@
 import React, { RefObject } from 'react';
-import { Form, Col, Row, Modal, Button, ListGroup, Badge } from 'react-bootstrap';
-import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference } from 'flexspace-commons';
+import { Form, Col, Row, Modal, Button, ListGroup, Badge, InputGroup } from 'react-bootstrap';
+import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute } from 'flexspace-commons';
 // @ts-ignore
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';
@@ -9,7 +9,7 @@ import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import Loading from '../components/Loading';
-import { EnterOutline as EnterIcon, ExitOutline as ExitIcon, LocationOutline as LocationIcon, ChevronUpOutline as CollapseIcon, ChevronDownOutline as CollapseIcon2, SettingsOutline as SettingsIcon, MapOutline as MapIcon, CalendarOutline as WeekIcon } from 'react-ionicons'
+import { InformationCircleOutline as InfoIcon, EnterOutline as EnterIcon, ExitOutline as ExitIcon, LocationOutline as LocationIcon, ChevronUpOutline as CollapseIcon, ChevronDownOutline as CollapseIcon2, SettingsOutline as SettingsIcon, MapOutline as MapIcon, CalendarOutline as WeekIcon } from 'react-ionicons'
 import ErrorText from '../types/ErrorText';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
@@ -30,6 +30,7 @@ interface State {
   showBookingNames: boolean
   selectedSpace: Space | null
   showConfirm: boolean
+  showLocationDetails: boolean
   showSuccess: boolean
   showError: boolean
   errorText: string
@@ -45,6 +46,7 @@ interface State {
   prefSelfBookedColor: string
   prefPartiallyBookedColor: string
   prefBuddyBookedColor: string
+  attributeValues: SpaceAttributeValue[]
 }
 
 interface Props extends WithTranslation {
@@ -64,6 +66,7 @@ class Search extends React.Component<Props, State> {
   enterChangeTimer: number | undefined;
   leaveChangeTimer: number | undefined;
   buddies: Buddy[];
+  availableAttributes: SpaceAttribute[];
 
   constructor(props: any) {
     super(props);
@@ -71,6 +74,7 @@ class Search extends React.Component<Props, State> {
     this.locations = [];
     this.mapData = null;
     this.buddies = [];
+    this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
     this.enterChangeTimer = undefined;
     this.leaveChangeTimer = undefined;
@@ -86,6 +90,7 @@ class Search extends React.Component<Props, State> {
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
+      showLocationDetails: false,
       showSuccess: false,
       showError: false,
       errorText: "",
@@ -101,13 +106,14 @@ class Search extends React.Component<Props, State> {
       prefSelfBookedColor: "#b825de",
       prefPartiallyBookedColor: "#ff9100",
       prefBuddyBookedColor: "#2415c5",
+      attributeValues: [],
     };
   }
 
   componentDidMount = () => {
     console.log(RuntimeConfig.INFOS);
     if (!Ajax.CREDENTIALS.accessToken) {
-      this.props.router.push({pathname: "/login", query: { redir: this.props.router.asPath }});
+      this.props.router.push({ pathname: "/login", query: { redir: this.props.router.asPath } });
       return;
     }
     this.loadItems();
@@ -118,6 +124,7 @@ class Search extends React.Component<Props, State> {
       this.loadLocations(),
       this.loadPreferences(),
       this.loadBuddies(),
+      this.loadAvailableAttributes(),
     ];
     Promise.all(promises).then(() => {
       this.initDates();
@@ -132,12 +139,17 @@ class Search extends React.Component<Props, State> {
         }
         let sidParam = this.props.router.query["sid"] as string || "";
         this.setState({ locationId: defaultLocationId }, () => {
-          this.loadMap(this.state.locationId).then(() => {
-            this.setState({ loading: false });
-            if (sidParam) {
-              let space = this.data.find( (item) => item.id == sidParam);
-              if (space) this.onSpaceSelect(space);
-            }
+          this.getLocation()?.getAttributes().then((attributes) => {
+            this.loadMap(this.state.locationId).then(() => {
+              this.setState({
+                attributeValues: attributes,
+                loading: false
+              });
+              if (sidParam) {
+                let space = this.data.find((item) => item.id == sidParam);
+                if (space) this.onSpaceSelect(space);
+              }
+            });
           });
         });
       } else {
@@ -235,6 +247,12 @@ class Search extends React.Component<Props, State> {
   loadLocations = async (): Promise<void> => {
     return Location.list().then(list => {
       this.locations = list;
+    });
+  }
+
+  loadAvailableAttributes = async (): Promise<void> => {
+    return SpaceAttribute.list().then(attributes => {
+      this.availableAttributes = attributes;
     });
   }
 
@@ -433,9 +451,15 @@ class Search extends React.Component<Props, State> {
     this.setState({
       locationId: id,
       loading: true,
-    });
-    this.loadMap(id).then(() => {
-      this.setState({ loading: false });
+    }, () => {
+      this.getLocation()?.getAttributes().then((attributes) => {
+        this.loadMap(id).then(() => {
+          this.setState({
+            attributeValues: attributes,
+            loading: false
+          });
+        });
+      });
     });
   }
 
@@ -638,13 +662,16 @@ class Search extends React.Component<Props, State> {
     });
   }
 
+  getLocation = (): Location | undefined => {
+    return this.locations.find(e => e.id === this.state.locationId);
+  }
+
   getLocationName = (): string => {
     let name: string = this.props.t("none");
-    this.locations.forEach(location => {
-      if (this.state.locationId === location.id) {
-        name = location.name;
-      }
-    });
+    let location = this.getLocation();
+    if (location) {
+      name = location.name;
+    }
     return name;
   }
 
@@ -663,6 +690,25 @@ class Search extends React.Component<Props, State> {
       if (!this.state.listView) {
         this.centerMapView();
       }
+    });
+  }
+
+  getLocationAttributeRows = () => {
+    let location = this.getLocation();
+    if (!location) {
+      return <></>;
+    }
+    return this.state.attributeValues.map((attributeValue) => {
+      let attribute = this.availableAttributes.find((attr) => attr.id === attributeValue.attributeId);
+      if (!attribute) {
+        return <></>;
+      }
+      return (
+        <Row key={attribute.id}>
+          <Col xs="4">{attribute.label}:</Col>
+          <Col xs="8">{attributeValue.value}</Col>
+        </Row>
+      );
     });
   }
 
@@ -746,9 +792,12 @@ class Search extends React.Component<Props, State> {
             <Form.Group className="d-flex">
               <div className='pt-1 me-2'><LocationIcon title={this.props.t("area")} color={'#555'} height="20px" width="20px" /></div>
               <div className='ms-2 w-100'>
-                <Form.Select required={true} value={this.state.locationId} onChange={(e) => this.changeLocation(e.target.value)}>
-                  {this.renderLocations()}
-                </Form.Select>
+                <InputGroup>
+                  <Form.Select required={true} value={this.state.locationId} onChange={(e) => this.changeLocation(e.target.value)}>
+                    {this.renderLocations()}
+                  </Form.Select>
+                  <Button variant='outline-secondary' disabled={this.state.attributeValues.length === 0} onClick={() => this.setState({ showLocationDetails: true })}><InfoIcon /></Button>
+                </InputGroup>
               </div>
             </Form.Group>
             <Form.Group className="d-flex margin-top-10">
@@ -785,6 +834,15 @@ class Search extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
     }
+    let locationInfoModal = (
+      <Modal show={this.state.showLocationDetails} onHide={() => this.setState({ showLocationDetails: false })}>
+        <Modal.Header closeButton>
+        </Modal.Header>
+        <Modal.Body>
+          {this.getLocationAttributeRows()}
+        </Modal.Body>
+      </Modal>
+    );
     let confirmModal = (
       <Modal show={this.state.showConfirm} onHide={() => this.setState({ showConfirm: false })}>
         <Modal.Header closeButton>
@@ -880,6 +938,7 @@ class Search extends React.Component<Props, State> {
     return (
       <>
         <NavBar />
+        {locationInfoModal}
         {confirmModal}
         {bookingNamesModal}
         {successModal}
