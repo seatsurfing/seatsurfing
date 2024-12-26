@@ -46,6 +46,6 @@
   "devDependencies": {
     "@types/node": "22.10.2",
     "eslint": "^9.17.0",
-    "eslint-config-next": "15.1.2"
+    "eslint-config-next": "15.1.3"
   }
 }
