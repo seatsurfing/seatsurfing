@@ -85,6 +85,32 @@ func (r *SpaceAttributeValueRepository) GetAllForEntity(entityID string, entityT
 	return result, nil
 }
 
+func (r *SpaceAttributeValueRepository) GetAll(OrganizationID string, entityType SpaceAttributeValueEntityType) ([]*SpaceAttributeValue, error) {
+	join := "LEFT JOIN locations ON space_attribute_values.entity_id = locations.id"
+	if entityType == SpaceAttributeValueEntityTypeSpace {
+		join = "LEFT JOIN spaces ON space_attribute_values.entity_id = spaces.id " + join
+	}
+	var result []*SpaceAttributeValue
+	rows, err := GetDatabase().DB().Query("SELECT attribute_id, entity_id, entity_type, value "+
+		"FROM space_attribute_values "+
+		join+" "+
+		"WHERE organization_id = $1 AND entity_type = $2",
+		OrganizationID, entityType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &SpaceAttributeValue{}
+		err = rows.Scan(&e.AttributeID, &e.EntityID, &e.EntityType, &e.Value)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *SpaceAttributeValueRepository) Delete(attributeID string, entityID string, entityType SpaceAttributeValueEntityType) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE attribute_id = $1 AND entity_id = $2 AND entity_type = $3",
 		attributeID, entityID, entityType)

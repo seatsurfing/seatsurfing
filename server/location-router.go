@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -50,6 +52,12 @@ type GetSpaceAttributeValueResponse struct {
 	Value       string `json:"value"`
 }
 
+type SearchAttribute struct {
+	AttributeID string `json:"attributeId"`
+	Comparator  string `json:"comparator"`
+	Value       string `json:"value"`
+}
+
 func (router *LocationRouter) setupRoutes(s *mux.Router) {
 	s.HandleFunc("/loadsampledata", router.loadSampleData).Methods("POST")
 	s.HandleFunc("/{id}/attribute", router.getAttributes).Methods("GET")
@@ -62,6 +70,7 @@ func (router *LocationRouter) setupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+	s.HandleFunc("/search", router.search).Methods("POST")
 }
 
 func (router *LocationRouter) getAttributes(w http.ResponseWriter, r *http.Request) {
@@ -171,6 +180,121 @@ func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	for _, e := range list {
 		m := router.copyToRestModel(e)
 		res = append(res, m)
+	}
+	SendJSON(w, res)
+}
+
+func (rouer *LocationRouter) matchesSearchAttributes(entityID string, m *[]SearchAttribute, attributeValues []*SpaceAttributeValue) bool {
+	for _, searchAttr := range *m {
+		found := false
+		for _, attrVal := range attributeValues {
+			if (attrVal.AttributeID == searchAttr.AttributeID) && (attrVal.EntityID == entityID) {
+				if searchAttr.Comparator == "eq" {
+					if attrVal.Value != searchAttr.Value {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "neq" {
+					if attrVal.Value == searchAttr.Value {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "contains" {
+					if !strings.Contains(attrVal.Value, searchAttr.Value) {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "ncontains" {
+					if strings.Contains(attrVal.Value, searchAttr.Value) {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "gt" {
+					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
+					if err != nil {
+						return false
+					}
+					attrValInt, err := strconv.Atoi(attrVal.Value)
+					if err != nil {
+						return false
+					}
+					if attrValInt <= searchAttrInt {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "lt" {
+					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
+					if err != nil {
+						return false
+					}
+					attrValInt, err := strconv.Atoi(attrVal.Value)
+					if err != nil {
+						return false
+					}
+					if attrValInt >= searchAttrInt {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "gte" {
+					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
+					if err != nil {
+						return false
+					}
+					attrValInt, err := strconv.Atoi(attrVal.Value)
+					if err != nil {
+						return false
+					}
+					if attrValInt < searchAttrInt {
+						return false
+					}
+					found = true
+				} else if searchAttr.Comparator == "lte" {
+					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
+					if err != nil {
+						return false
+					}
+					attrValInt, err := strconv.Atoi(attrVal.Value)
+					if err != nil {
+						return false
+					}
+					if attrValInt > searchAttrInt {
+						return false
+					}
+					found = true
+				}
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
+	var m []SearchAttribute
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	list, err := GetLocationRepository().GetAll(user.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	attributeValues, err := GetSpaceAttributeValueRepository().GetAll(user.OrganizationID, SpaceAttributeValueEntityTypeLocation)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+	}
+	res := []*GetLocationResponse{}
+	for _, e := range list {
+		if router.matchesSearchAttributes(e.ID, &m, attributeValues) {
+			m := router.copyToRestModel(e)
+			res = append(res, m)
+		}
 	}
 	SendJSON(w, res)
 }
