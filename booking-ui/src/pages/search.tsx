@@ -93,7 +93,7 @@ class Search extends React.Component<Props, State> {
       selectedSpace: null,
       showConfirm: false,
       showLocationDetails: false,
-      showSearchModal: true,
+      showSearchModal: false,
       showSuccess: false,
       showError: false,
       errorText: "",
@@ -708,10 +708,14 @@ class Search extends React.Component<Props, State> {
         return <></>;
       }
       return (
-        <Row key={attribute.id}>
-          <Col xs="4">{attribute.label}:</Col>
-          <Col xs="8">{attributeValue.value}</Col>
-        </Row>
+        <Form.Group as={Row}>
+          <Form.Label column sm="4">
+            {attribute.label}:
+          </Form.Label>
+          <Col sm="8">
+            <Form.Control plaintext={true} readOnly={true} defaultValue={attribute.type === 2 ? (attributeValue.value === '1' ? this.props.t("yes") : '') : attributeValue.value} />
+          </Col>
+        </Form.Group>
       );
     });
   }
@@ -984,8 +988,8 @@ class Search extends React.Component<Props, State> {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => this.resetSearch()}>Reset</Button>
-          <Button variant="primary" onClick={() => this.applySearch()}>Apply</Button>
+          <Button variant="secondary" onClick={() => this.resetSearch()}>{this.props.t("cancel")}</Button>
+          <Button variant="primary" onClick={() => this.applySearch()}>{this.props.t("ok")}</Button>
         </Modal.Footer>
       </Modal>
     );
