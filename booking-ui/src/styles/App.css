@@ -133,3 +133,7 @@ h2 {
     background-color: #fff;
     box-shadow: none;
 }
+
+.addon-button {
+    border-color: var(--bs-border-color);
+}

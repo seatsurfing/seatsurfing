@@ -111,5 +111,6 @@
     "nextBooking": "Nächste Buchung",
     "noBooking": "Keine Buchung",
     "userNotFound": "Benutzer nicht gefunden",
-    "validEmailRequired": "Bitte eine gültige E-Mail-Adresse eingeben"
+    "validEmailRequired": "Bitte eine gültige E-Mail-Adresse eingeben",
+    "noAreasFounds": "Keine Bereiche gefunden. Bitte versuchen Sie, Ihre Filter anzupassen."
 }

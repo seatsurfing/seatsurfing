@@ -59,6 +59,7 @@ type SearchAttribute struct {
 }
 
 func (router *LocationRouter) setupRoutes(s *mux.Router) {
+	s.HandleFunc("/search", router.search).Methods("POST")
 	s.HandleFunc("/loadsampledata", router.loadSampleData).Methods("POST")
 	s.HandleFunc("/{id}/attribute", router.getAttributes).Methods("GET")
 	s.HandleFunc("/{id}/attribute/{attributeId}", router.setAttribute).Methods("POST")
@@ -70,7 +71,6 @@ func (router *LocationRouter) setupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
-	s.HandleFunc("/search", router.search).Methods("POST")
 }
 
 func (router *LocationRouter) getAttributes(w http.ResponseWriter, r *http.Request) {
@@ -273,8 +273,13 @@ func (rouer *LocationRouter) matchesSearchAttributes(entityID string, m *[]Searc
 
 func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 	var m []SearchAttribute
-	if UnmarshalValidateBody(r, &m) != nil {
+	if err := UnmarshalBody(r, &m); err != nil {
+		log.Println(err)
 		SendBadRequest(w)
+		return
+	}
+	if len(m) == 0 {
+		router.getAll(w, r)
 		return
 	}
 	user := GetRequestUser(r)
