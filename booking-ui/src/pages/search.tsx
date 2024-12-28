@@ -708,7 +708,7 @@ class Search extends React.Component<Props, State> {
         return <></>;
       }
       return (
-        <Form.Group as={Row}>
+        <Form.Group as={Row} key={attribute.id}>
           <Form.Label column sm="4">
             {attribute.label}:
           </Form.Label>
