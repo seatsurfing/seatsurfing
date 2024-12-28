@@ -117,5 +117,8 @@
     "noBooking": "No booking",
     "userNotFound": "User not found",
     "validEmailRequired": "Valid email required",
-    "noAreasFounds": "No areas found. Please try to adjust your filters."
+    "noAreasFounds": "No areas found. Please try to adjust your filters.",
+    "apply": "Apply",
+    "reset": "Reset",
+    "filter": "Filter"
 }

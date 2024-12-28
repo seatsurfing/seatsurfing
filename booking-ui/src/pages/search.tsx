@@ -724,7 +724,7 @@ class Search extends React.Component<Props, State> {
     let items = [];
     items.push(<option value=''></option>);
     items.push(<option value='eq'>=</option>);
-    items.push(<option value='ne'>&lt;&gt;</option>);
+    items.push(<option value='neq'>&lt;&gt;</option>);
     if (attribute.type === 1) {
       items.push(<option value='gt'>&gt;</option>);
       items.push(<option value='lt'>&lt;</option>);
@@ -863,7 +863,7 @@ class Search extends React.Component<Props, State> {
       listOrMap = (
         <div className="container-signin">
           <Form className="form-signin">
-            {this.props.t("noAreasFounds")}
+            <div style={{paddingBottom: '100px'}} dangerouslySetInnerHTML={{__html: this.props.t("noAreasFounds").replace('.', '.<br />')}}></div>
           </Form>
         </div>
       );
@@ -980,17 +980,17 @@ class Search extends React.Component<Props, State> {
     let searchModal = (
       <Modal show={this.state.showSearchModal} onHide={() => this.setState({ showSearchModal: false })}>
         <Modal.Header closeButton={true}>
-          <Modal.Title>{this.props.t("searchSpace")}</Modal.Title>
+          <Modal.Title>{this.props.t("filter")}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <Form id='filter-locations-form'>
+        <Form id='filter-locations-form'>
+          <Modal.Body>
             {this.getSearchFormRows()}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => this.resetSearch()}>{this.props.t("cancel")}</Button>
-          <Button variant="primary" onClick={() => this.applySearch()}>{this.props.t("ok")}</Button>
-        </Modal.Footer>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => this.resetSearch()}>{this.props.t("reset")}</Button>
+            <Button type='submit' variant="primary" onClick={(e) => { e.preventDefault(); this.applySearch()}}>{this.props.t("apply")}</Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
     );
     let confirmModal = (

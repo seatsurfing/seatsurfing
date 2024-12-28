@@ -112,5 +112,8 @@
     "noBooking": "Keine Buchung",
     "userNotFound": "Benutzer nicht gefunden",
     "validEmailRequired": "Bitte eine gültige E-Mail-Adresse eingeben",
-    "noAreasFounds": "Keine Bereiche gefunden. Bitte versuchen Sie, Ihre Filter anzupassen."
+    "noAreasFounds": "Keine Bereiche gefunden. Bitte versuchen Sie, Ihre Filter anzupassen.",
+    "apply": "Anwenden",
+    "reset": "Zurücksetzen",
+    "filter": "Filter"
 }
