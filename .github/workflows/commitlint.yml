@@ -1,4 +1,4 @@
-name: Lint Commit Messages
+name: Lint PR Title
 on: [pull_request]
 
 permissions:
@@ -10,4 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: wagoid/commitlint-github-action@v6
+      - name: Install Dependencies
+        run: npm install @commitlint/config-conventional
+      - uses: JulienKode/pull-request-name-linter-action@v0.5.0
