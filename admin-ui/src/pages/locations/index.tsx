@@ -54,6 +54,7 @@ class Locations extends React.Component<Props, State> {
     return (
       <tr key={location.id} onClick={() => this.onItemSelect(location)}>
         <td>{location.name}</td>
+        <td>{location.enabled ? this.props.t('yes') : ''}</td>
         <td>{location.mapWidth}x{location.mapHeight}</td>
         <td>{window.location.origin}/ui/search?lid={location.id}</td>
       </tr>
@@ -105,6 +106,7 @@ class Locations extends React.Component<Props, State> {
           <thead>
             <tr>
               <th>{this.props.t("name")}</th>
+              <th>{this.props.t("enabled")}</th>
               <th>{this.props.t("map")}</th>
               <th>{this.props.t("bookingLink")}</th>
             </tr>

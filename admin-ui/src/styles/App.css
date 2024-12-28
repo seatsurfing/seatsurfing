@@ -46,6 +46,10 @@ form .row {
     margin-bottom: 15px;
 }
 
+form .row .form-check {
+    padding-top: 7px;
+}
+
 @-moz-keyframes spin {
     100% {
         -moz-transform: rotate(360deg);

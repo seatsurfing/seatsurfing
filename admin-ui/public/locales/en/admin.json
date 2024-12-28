@@ -166,5 +166,6 @@
     "text": "Text",
     "applicableTo": "Applicable to",
     "editAttribute": "Edit Attribute",
-    "confirmDeleteAttribute": "Delete attribute and its values?"
+    "confirmDeleteAttribute": "Delete attribute and its values?",
+    "enabled": "Enabled"
 }

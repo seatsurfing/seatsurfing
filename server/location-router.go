@@ -25,6 +25,7 @@ type CreateLocationRequest struct {
 	Description           string `json:"description"`
 	MaxConcurrentBookings uint   `json:"maxConcurrentBookings"`
 	Timezone              string `json:"timezone"`
+	Enabled               bool   `json:"enabled"`
 }
 
 type GetLocationResponse struct {
@@ -472,6 +473,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Description = m.Description
 	e.MaxConcurrentBookings = m.MaxConcurrentBookings
 	e.Timezone = m.Timezone
+	e.Enabled = m.Enabled
 	return e
 }
 
@@ -486,5 +488,6 @@ func (router *LocationRouter) copyToRestModel(e *Location) *GetLocationResponse 
 	m.Description = e.Description
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
+	m.Enabled = e.Enabled
 	return m
 }

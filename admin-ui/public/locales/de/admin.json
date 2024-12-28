@@ -159,5 +159,6 @@
     "text": "Text",
     "applicableTo": "Anwendbar auf",
     "editAttribute": "Attribut bearbeiten",
-    "confirmDeleteAttribute": "Attribut und alle seine Werte löschen?"
+    "confirmDeleteAttribute": "Attribut und alle seine Werte löschen?",
+    "enabled": "Aktiv"
 }

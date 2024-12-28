@@ -31,6 +31,7 @@ interface State {
   limitConcurrentBookings: boolean
   maxConcurrentBookings: number
   timezone: string
+  enabled: boolean
   fileLabel: string
   files: FileList | null
   spaces: SpaceState[]
@@ -66,6 +67,7 @@ class EditLocation extends React.Component<Props, State> {
       limitConcurrentBookings: false,
       maxConcurrentBookings: 0,
       timezone: "",
+      enabled: true,
       fileLabel: this.props.t("mapFileTypes"),
       files: null,
       spaces: [],
@@ -130,6 +132,7 @@ class EditLocation extends React.Component<Props, State> {
                   limitConcurrentBookings: (location.maxConcurrentBookings > 0),
                   maxConcurrentBookings: location.maxConcurrentBookings,
                   timezone: location.timezone,
+                  enabled: location.enabled,
                   attributeValues: attributeValues,
                   availableAttributes: attributes,
                   loading: false
@@ -213,6 +216,7 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.description = this.state.description;
     this.entity.maxConcurrentBookings = (this.state.limitConcurrentBookings ? this.state.maxConcurrentBookings : 0);
     this.entity.timezone = this.state.timezone;
+    this.entity.enabled = this.state.enabled;
     this.entity.save().then(() => {
       this.saveAttributes().then(() => {
         this.saveSpaces().then(() => {
@@ -475,7 +479,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form.Group as={Row} key={av.attributeId}>
             <Form.Label column sm="2">{a.label}</Form.Label>
             <Col sm="4">{input}</Col>
-            <Col sm="1" style={{"marginTop": "3px"}}>
+            <Col sm="1" style={{ "marginTop": "3px" }}>
               <Button variant="outline-secondary" size="sm" onClick={e => this.deleteAttribute((av.attributeId))}>{this.props.t("X")}</Button>
             </Col>
           </Form.Group>
@@ -629,6 +633,12 @@ class EditLocation extends React.Component<Props, State> {
                 <option value="">({this.props.t("default")})</option>
                 {this.timezones.map(tz => <option key={tz} value={tz}>{tz}</option>)}
               </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">{this.props.t("enabled")}</Form.Label>
+            <Col sm="4">
+              <Form.Check type="checkbox" id="check-enabled" label={this.props.t("yes")} checked={this.state.enabled} onChange={(e: any) => this.setState({ enabled: e.target.checked })} />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

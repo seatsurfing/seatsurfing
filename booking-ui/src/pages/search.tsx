@@ -133,14 +133,7 @@ class Search extends React.Component<Props, State> {
     Promise.all(promises).then(() => {
       this.initDates();
       if (this.state.locationId === "" && this.locations.length > 0) {
-        let defaultLocationId = this.locations[0].id;
-        if (this.state.prefLocationId) {
-          defaultLocationId = this.locations.find((e) => e.id === this.state.prefLocationId)?.id || defaultLocationId;
-        }
-        let lidParam = this.props.router.query["lid"] as string || "";
-        if (lidParam) {
-          defaultLocationId = this.locations.find((e) => e.id === lidParam)?.id || defaultLocationId;
-        }
+        let defaultLocationId = this.getPreferredLocationId(this.props.router.query["lid"] as string || '');
         let sidParam = this.props.router.query["sid"] as string || "";
         this.setState({ locationId: defaultLocationId }, () => {
           this.getLocation()?.getAttributes().then((attributes) => {
@@ -197,6 +190,23 @@ class Search extends React.Component<Props, State> {
       this.curBookingCount = list.length;
       this.updateCanSearch();
     });
+  }
+
+  getPreferredLocationId = (previousLocationId?: string) => {
+    if (previousLocationId !== undefined) {
+      if (this.locations.find((e) => (e.id === previousLocationId) && e.enabled) !== undefined) {
+        return previousLocationId
+      }
+    }
+    if (this.state.prefLocationId && this.locations.find((e) => (e.id === this.state.prefLocationId) && e.enabled) !== undefined) {
+      return this.state.prefLocationId;
+    }
+    for (let location of this.locations) {
+      if (location.enabled) {
+        return location.id;
+      }
+    }
+    return '';
   }
 
   initDates = () => {
@@ -357,7 +367,7 @@ class Search extends React.Component<Props, State> {
 
   renderLocations = () => {
     return this.locations.map(location => {
-      return <option value={location.id} key={location.id}>{location.name}</option>;
+      return <option value={location.id} key={location.id} disabled={!location.enabled}>{location.name}</option>;
     });
   }
 
@@ -810,21 +820,14 @@ class Search extends React.Component<Props, State> {
     });
     SearchAttribute.search(this.state.searchAttributes).then((locations) => {
       this.locations = locations;
-      if (locations.length === 0) {
+      if ((locations.length === 0) || (this.locations.find((e) => e.enabled) === undefined)) {
         this.setState({
           locationId: "",
           loading: false,
         });
         return;
       }
-      let newLocationId = this.state.locationId;
-      if (locations.find((location) => location.id === this.state.locationId) === undefined) {
-        if (this.state.prefLocationId && this.locations.find((e) => e.id === this.state.prefLocationId) !== undefined) {
-          newLocationId = this.state.prefLocationId;
-        } else {
-          newLocationId = locations.length > 0 ? locations[0].id : "";
-        }
-      }
+      let newLocationId = this.getPreferredLocationId(this.state.locationId);
       this.setState({
         locationId: newLocationId,
       }, () => {
