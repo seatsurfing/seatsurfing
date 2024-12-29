@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   workflow_call:
 
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
 env:
   REGISTRY: ghcr.io
 
