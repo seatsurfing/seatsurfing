@@ -12,6 +12,7 @@ export default class AuthProvider extends Entity {
     userInfoEmailField: string;
 	clientId: string;
 	clientSecret: string;
+    logoutUrl: string;
 
     constructor() {
         super();
@@ -25,6 +26,7 @@ export default class AuthProvider extends Entity {
         this.userInfoEmailField = "";
 	    this.clientId = "";
 	    this.clientSecret = "";
+        this.logoutUrl = "";
     }
 
     serialize(): Object {
@@ -39,6 +41,7 @@ export default class AuthProvider extends Entity {
             "userInfoEmailField": this.userInfoEmailField,
             "clientId": this.clientId,
             "clientSecret": this.clientSecret,
+            "logoutUrl": this.logoutUrl,
         });
     }
 
@@ -54,6 +57,7 @@ export default class AuthProvider extends Entity {
         this.userInfoEmailField = input.userInfoEmailField;
         this.clientId = input.clientId;
         this.clientSecret = input.clientSecret;
+        this.logoutUrl = input.logoutUrl;
     }
 
     getBackendUrl(): string {

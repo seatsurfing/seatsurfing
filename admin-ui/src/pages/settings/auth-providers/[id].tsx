@@ -24,6 +24,7 @@ interface State {
   userInfoEmailField: string;
   clientId: string;
   clientSecret: string;
+  logoutUrl: string;
 }
 
 interface Props extends WithTranslation {
@@ -49,7 +50,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoUrl: "",
       userInfoEmailField: "",
       clientId: "",
-      clientSecret: ""
+      clientSecret: "",
+      logoutUrl: "",
     };
   }
 
@@ -77,6 +79,7 @@ class EditAuthProvider extends React.Component<Props, State> {
           userInfoEmailField: authProvider.userInfoEmailField,
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
+          logoutUrl: authProvider.logoutUrl,
           loading: false
         });
       });
@@ -99,6 +102,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.userInfoEmailField = this.state.userInfoEmailField;
     this.entity.clientId = this.state.clientId;
     this.entity.clientSecret = this.state.clientSecret;
+    this.entity.logoutUrl = this.state.logoutUrl;
     this.entity.save().then(() => {
       this.props.router.push("/settings/auth-providers/" + this.entity.id);
       this.setState({
@@ -124,7 +128,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       authStyle: 1,
       scopes: "https://www.googleapis.com/auth/userinfo.email",
       userInfoUrl: "https://www.googleapis.com/oauth2/v3/userinfo",
-      userInfoEmailField: "email"
+      userInfoEmailField: "email",
+      logoutUrl: ""
     });
   }
 
@@ -137,7 +142,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       authStyle: 1,
       scopes: "openid,email",
       userInfoUrl: "https://graph.microsoft.com/oidc/userinfo",
-      userInfoEmailField: "email"
+      userInfoEmailField: "email",
+      logoutUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={logoutRedirectUri}"
     });
   }
 
@@ -150,7 +156,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       authStyle: 1,
       scopes: "openid,email",
       userInfoUrl: "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/userinfo",
-      userInfoEmailField: "email"
+      userInfoEmailField: "email",
+      logoutUrl: "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/logout?post_logout_redirect_uri={logoutRedirectUri}"
     });
   }
 
@@ -261,6 +268,12 @@ class EditAuthProvider extends React.Component<Props, State> {
             <Form.Label column sm="2">{this.props.t("userinfoEmailField")}</Form.Label>
             <Col sm="9">
               <Form.Control type="text" placeholder="email" value={this.state.userInfoEmailField} onChange={(e: any) => this.setState({ userInfoEmailField: e.target.value })} required={true} />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">Logout URL</Form.Label>
+            <Col sm="9">
+              <Form.Control type="url" placeholder="https://..." value={this.state.logoutUrl} onChange={(e: any) => this.setState({ logoutUrl: e.target.value })} />
             </Col>
           </Form.Group>
           {urlInfo}

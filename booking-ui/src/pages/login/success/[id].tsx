@@ -34,7 +34,8 @@ class LoginSuccess extends React.Component<Props, State> {
           Ajax.CREDENTIALS = {
             accessToken: res.json.accessToken,
             refreshToken: res.json.refreshToken,
-            accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET)
+            accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET),
+            logoutUrl: res.json.logoutUrl,
           };
           if (res.json.longLived) {
             Ajax.PERSISTER.persistRefreshTokenInLocalStorage(Ajax.CREDENTIALS);

@@ -83,7 +83,8 @@ export default class Ajax {
                 let c: AjaxCredentials = {
                   accessToken: json.accessToken,
                   refreshToken: json.refreshToken,
-                  accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET)
+                  accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET),
+                  logoutUrl: json.logoutUrl
                 };
                 Ajax.CREDENTIALS = c;
                 Ajax.PERSISTER.updateCredentialsSessionStorage(c).then(() => {

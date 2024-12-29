@@ -123,7 +123,8 @@ class Login extends React.Component<Props, State> {
       Ajax.CREDENTIALS = {
         accessToken: res.json.accessToken,
         refreshToken: res.json.refreshToken,
-        accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET)
+        accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET),
+        logoutUrl: res.json.logoutUrl,
       };
       Ajax.PERSISTER.updateCredentialsSessionStorage(Ajax.CREDENTIALS).then(() => {
         if (this.state.rememberMe) {

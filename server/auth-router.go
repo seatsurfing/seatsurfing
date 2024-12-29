@@ -20,6 +20,7 @@ type JWTResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 	LongLived    bool   `json:"longLived"`
+	LogoutURL    string `json:"logoutUrl"`
 }
 
 type Claims struct {
@@ -359,8 +360,18 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		LongLived:    payload.LongLived,
+		LogoutURL:    router.getLogoutUrl(provider),
 	}
 	SendJSON(w, res)
+}
+
+func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
+	if provider.LogoutURL == "" {
+		return ""
+	}
+	redirectUrl := GetConfig().FrontendURL + "ui/login"
+	logoutUrl := strings.ReplaceAll(provider.LogoutURL, "{logoutRedirectUri}", redirectUrl)
+	return logoutUrl
 }
 
 func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
