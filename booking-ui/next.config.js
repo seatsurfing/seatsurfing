@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
+// @ts-check
 const { i18n } = require('./next-i18next.config')
+
 const nextConfig = {
   i18n,
   distDir: 'build',
@@ -15,7 +16,6 @@ const nextConfig = {
       },
     ]
   },
-  bundlePagesRouterDependencies: true,
 }
 
 module.exports = nextConfig

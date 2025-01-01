@@ -9,7 +9,7 @@ import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import Loading from '../components/Loading';
-import { FilterOutline as FilterIcon, InformationOutline as InfoIcon, EnterOutline as EnterIcon, ExitOutline as ExitIcon, LocationOutline as LocationIcon, ChevronUpOutline as CollapseIcon, ChevronDownOutline as CollapseIcon2, SettingsOutline as SettingsIcon, MapOutline as MapIcon, CalendarOutline as WeekIcon } from 'react-ionicons'
+import { IoFilter as FilterIcon, IoInformation as InfoIcon, IoEnter as EnterIcon, IoExit as ExitIcon, IoLocation as LocationIcon, IoChevronUp as CollapseIcon, IoChevronDown as CollapseIcon2, IoSettings as SettingsIcon, IoMap as MapIcon, IoCalendar as WeekIcon } from 'react-icons/io5'
 import ErrorText from '../types/ErrorText';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
@@ -904,10 +904,10 @@ class Search extends React.Component<Props, State> {
     let configContainer = (
       <div className="container-search-config" ref={this.searchContainerRef}>
         <div className="collapse-bar" onClick={() => this.toggleSearchContainer()}>
-          <CollapseIcon color={'#000'} height="20px" width="20px" cssClasses="collapse-icon collapse-icon-bigscreen" />
-          <CollapseIcon2 color={'#000'} height="20px" width="20px" cssClasses="collapse-icon collapse-icon-smallscreen" />
-          <SettingsIcon color={'#555'} height="26px" width="26px" cssClasses="expand-icon expand-icon-bigscreen" />
-          <CollapseIcon color={'#555'} height="20px" width="20px" cssClasses="expand-icon expand-icon-smallscreen" />
+          <CollapseIcon color={'#000'} height="20px" width="20px" className="collapse-icon collapse-icon-bigscreen" />
+          <CollapseIcon2 color={'#000'} height="20px" width="20px" className="collapse-icon collapse-icon-smallscreen" />
+          <SettingsIcon color={'#555'} height="26px" width="26px" className="expand-icon expand-icon-bigscreen" />
+          <CollapseIcon color={'#555'} height="20px" width="20px" className="expand-icon expand-icon-smallscreen" />
         </div>
         <div className="content-minimized">
           <div className='d-flex'>

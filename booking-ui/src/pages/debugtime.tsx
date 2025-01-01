@@ -1,8 +1,6 @@
 import React from 'react';
-import { withTranslation, WithTranslation } from 'next-i18next';
 import { Ajax, Formatting } from 'flexspace-commons';
 import Loading from '../components/Loading';
-import dynamic from 'next/dynamic';
 
 interface State {
   loading: boolean
@@ -11,7 +9,7 @@ interface State {
   res: any
 }
 
-interface Props extends WithTranslation {
+interface Props {
 }
 
 class DebugTimeIssues extends React.Component<Props, State> {
@@ -79,4 +77,4 @@ class DebugTimeIssues extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(DebugTimeIssues as any);
+export default DebugTimeIssues;
