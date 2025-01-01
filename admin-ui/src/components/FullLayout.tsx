@@ -1,10 +1,11 @@
-import React, { ReactNode } from 'react';
+import React, { JSX, ReactNode } from 'react';
 import NavBar from './NavBar';
 import SideBar from './SideBar';
 
 interface Props {
   headline: string
   buttons?: ReactNode
+  children: string | JSX.Element | JSX.Element[]
 }
 
 interface State {
