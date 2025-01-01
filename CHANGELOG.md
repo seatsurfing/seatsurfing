@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.1](https://github.com/seatsurfing/seatsurfing/compare/v1.21.0...v1.21.1) (2025-01-01)
+
+
+### Bug Fixes
+
+* **deps:** bump react to v19 ([#456](https://github.com/seatsurfing/seatsurfing/issues/456)) ([c8bafd8](https://github.com/seatsurfing/seatsurfing/commit/c8bafd86d818b69e07bdab4fb32bfdaf4d12581b))
+* **deps:** bump react-i18next from 15.2.0 to 15.4.0 in /booking-ui ([#454](https://github.com/seatsurfing/seatsurfing/issues/454)) ([df83f37](https://github.com/seatsurfing/seatsurfing/commit/df83f3795f715f761c376492e11004000018780f))
+
 ## [1.21.0](https://github.com/seatsurfing/seatsurfing/compare/v1.20.3...v1.21.0) (2024-12-29)
 
 
