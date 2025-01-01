@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { JSX } from 'react';
 import { NextRouter, useRouter } from 'next/router';
 import { NextComponentType, NextPageContext } from 'next';
 import { BaseContext } from 'next/dist/shared/lib/utils';
