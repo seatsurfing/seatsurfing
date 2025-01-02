@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.21.2](https://github.com/seatsurfing/seatsurfing/compare/v1.21.1...v1.21.2) (2025-01-02)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.10.2 to 22.10.3 in /admin-ui ([#458](https://github.com/seatsurfing/seatsurfing/issues/458)) ([a157e02](https://github.com/seatsurfing/seatsurfing/commit/a157e0231e3c0a46ee9435a9beb43168cc44ad4d))
+* **deps:** bump @types/node from 22.10.2 to 22.10.3 in /booking-ui ([#459](https://github.com/seatsurfing/seatsurfing/issues/459)) ([4ddc230](https://github.com/seatsurfing/seatsurfing/commit/4ddc230a3604e5c9d371ded18af3bcffc6dd1528))
+* **deps:** bump @types/node from 22.10.2 to 22.10.3 in /e2e ([#460](https://github.com/seatsurfing/seatsurfing/issues/460)) ([4cd8d15](https://github.com/seatsurfing/seatsurfing/commit/4cd8d152877ae7f7613634da75d640281a0b5a47))
+* **deps:** bump braces from 3.0.2 to 3.0.3 in /booking-ui ([#462](https://github.com/seatsurfing/seatsurfing/issues/462)) ([91042b3](https://github.com/seatsurfing/seatsurfing/commit/91042b3103273e419e101636c02a263ec1889e00))
+* incorrect Italian Booking UI translations ([#457](https://github.com/seatsurfing/seatsurfing/issues/457)) ([44ac139](https://github.com/seatsurfing/seatsurfing/commit/44ac1397bb6eb8ffc496be27899dfc35bec6a8ba))
+
 ## [1.21.1](https://github.com/seatsurfing/seatsurfing/compare/v1.21.0...v1.21.1) (2025-01-01)
 
 
