@@ -25,8 +25,6 @@ jobs:
       run: echo "CI_VERSION=$(cat version.txt | awk NF)" >> $GITHUB_ENV
     - name: Set date env
       run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-    - name: Prepare Docker Hub Readme
-      run: cat docker-readme.md | sed "s/{{version}}/${CI_VERSION}/g" | sed "s/{{date}}/${TODAY}/g" > docker-readme-modified.md
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
     - name: Set up Docker Buildx
@@ -95,19 +93,3 @@ jobs:
           docker.io/seatsurfing/backend:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
-    - name: Docker Hub Description
-      uses: peter-evans/dockerhub-description@v4
-      with:
-        username: seatsurfing
-        password: ${{ secrets.CI_REGISTRY_PASSWORD }}
-        repository: seatsurfing/seatsurfing
-        readme-filepath: ./docker-readme-modified.md
-#    - name: Create Release
-#      uses: actions/create-release@v1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        tag_name: ${{ env.CI_VERSION }}
-#        release_name: ${{ env.CI_VERSION }}
-#        draft: false
-#        prerelease: false
