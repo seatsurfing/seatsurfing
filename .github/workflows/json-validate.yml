@@ -1,4 +1,4 @@
-name: json-yaml-validate 
+name: Validate JSON and YAML files
 on:
   push:
     branches:
