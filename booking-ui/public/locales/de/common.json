@@ -115,5 +115,8 @@
     "noAreasFounds": "Keine Bereiche gefunden. Bitte versuchen Sie, Ihre Filter anzupassen.",
     "apply": "Anwenden",
     "reset": "Zurücksetzen",
-    "filter": "Filter"
+    "filter": "Filter",
+    "yes": "ja",
+    "numSpaces": "# Plätze",
+    "numFreeSpaces": "# Freie Plätze"
 }

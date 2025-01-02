@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSpacesCount(t *testing.T) {
 	clearTestDB()
@@ -28,4 +30,26 @@ func TestSpacesCount(t *testing.T) {
 		t.Fatal(err)
 	}
 	checkTestInt(t, 2, res)
+}
+
+func TestSpacesCountMap(t *testing.T) {
+	clearTestDB()
+	org := createTestOrg("test.com")
+
+	l1 := &Location{OrganizationID: org.ID, Name: "L1"}
+	l2 := &Location{OrganizationID: org.ID, Name: "L2"}
+	GetLocationRepository().Create(l1)
+	GetLocationRepository().Create(l2)
+
+	GetSpaceRepository().Create(&Space{LocationID: l1.ID, Name: "S1.1"})
+	GetSpaceRepository().Create(&Space{LocationID: l1.ID, Name: "S1.2"})
+	GetSpaceRepository().Create(&Space{LocationID: l1.ID, Name: "S1.3"})
+	GetSpaceRepository().Create(&Space{LocationID: l2.ID, Name: "S2.1"})
+	GetSpaceRepository().Create(&Space{LocationID: l2.ID, Name: "S2.2"})
+
+	res, err := GetSpaceRepository().GetTotalCountMap(org.ID)
+	checkTestBool(t, true, err == nil)
+	checkTestInt(t, 2, len(res))
+	checkTestInt(t, 3, res[l1.ID])
+	checkTestInt(t, 2, res[l2.ID])
 }

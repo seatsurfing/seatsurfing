@@ -215,3 +215,50 @@ func (r *SpaceRepository) GetCount(organizationID string) (int, error) {
 		organizationID).Scan(&res)
 	return res, err
 }
+
+func (r *SpaceRepository) GetTotalCountMap(organizationID string) (map[string]int, error) {
+	res := make(map[string]int)
+	rows, err := GetDatabase().DB().Query("SELECT spaces.location_id, COUNT(spaces.id) "+
+		"FROM spaces "+
+		"INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE locations.organization_id = $1 "+
+		"GROUP BY spaces.location_id",
+		organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var locationId string
+		var count int
+		err = rows.Scan(&locationId, &count)
+		if err != nil {
+			return nil, err
+		}
+		res[locationId] = count
+	}
+	return res, nil
+}
+
+func (r *SpaceRepository) GetFreeCountMap(organizationID string, enter, leave time.Time) (map[string]int, error) {
+	res := make(map[string]int)
+	locations, _ := GetLocationRepository().GetAll(organizationID)
+	for _, location := range locations {
+		enterNew, err := attachTimezoneInformation(enter, location)
+		if err != nil {
+			return nil, err
+		}
+		leaveNew, err := attachTimezoneInformation(leave, location)
+		if err != nil {
+			return nil, err
+		}
+		spaces, _ := r.GetAllInTime(location.ID, enterNew, leaveNew)
+		res[location.ID] = 0
+		for _, space := range spaces {
+			if space.Available {
+				res[location.ID]++
+			}
+		}
+	}
+	return res, nil
+}
