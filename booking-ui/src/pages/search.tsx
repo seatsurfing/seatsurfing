@@ -786,7 +786,8 @@ class Search extends React.Component<Props, State> {
 
   getSearchFormRows = () => {
     let availableAttributes: SpaceAttribute[] = Object.assign([], this.availableAttributes);
-    availableAttributes.push(new SpaceAttribute('numSpaces', this.props.t('numSpaces'), 1, false, true));
+    availableAttributes.unshift(new SpaceAttribute('numFreeSpaces', this.props.t('numFreeSpaces'), 1, false, true));
+    availableAttributes.unshift(new SpaceAttribute('numSpaces', this.props.t('numSpaces'), 1, false, true));
     return availableAttributes.map(attribute => {
       if (!attribute.locationApplicable) {
         return <></>;
@@ -820,7 +821,11 @@ class Search extends React.Component<Props, State> {
       showSearchModal: false,
       loading: true,
     });
-    SearchAttribute.search(this.state.searchAttributes).then((locations) => {
+    let leave = new Date(this.state.leave);
+    if (!RuntimeConfig.INFOS.dailyBasisBooking) {
+      leave.setSeconds(leave.getSeconds() - 1);
+    }
+    SearchAttribute.search(this.state.enter, leave, this.state.searchAttributes).then((locations) => {
       this.locations = locations;
       if ((locations.length === 0) || (this.locations.find((e) => e.enabled) === undefined)) {
         this.setState({

@@ -47,7 +47,7 @@ func TestSpacesCountMap(t *testing.T) {
 	GetSpaceRepository().Create(&Space{LocationID: l2.ID, Name: "S2.1"})
 	GetSpaceRepository().Create(&Space{LocationID: l2.ID, Name: "S2.2"})
 
-	res, err := GetSpaceRepository().GetCountMap(org.ID)
+	res, err := GetSpaceRepository().GetTotalCountMap(org.ID)
 	checkTestBool(t, true, err == nil)
 	checkTestInt(t, 2, len(res))
 	checkTestInt(t, 3, res[l1.ID])

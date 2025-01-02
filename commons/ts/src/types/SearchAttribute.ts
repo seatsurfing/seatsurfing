@@ -1,4 +1,5 @@
 import Ajax from "../util/Ajax";
+import Formatting from "../util/Formatting";
 import Location from "./Location";
 
 export default class SearchAttribute {
@@ -20,8 +21,13 @@ export default class SearchAttribute {
         };
     }
 
-    static async search(attributes: SearchAttribute[]): Promise<Location[]> {
-        return Ajax.postData("/location/search", attributes.map(a => a.serialize())).then(result => {
+    static async search(enter: Date, leave: Date, attributes: SearchAttribute[]): Promise<Location[]> {
+        let payload = {
+            enter: Formatting.convertToFakeUTCDate(enter).toISOString(),
+            leave: Formatting.convertToFakeUTCDate(leave).toISOString(),
+            attributes: attributes.map(a => a.serialize())
+        };
+        return Ajax.postData("/location/search", payload).then(result => {
             let list: Location[] = [];
             (result.json as []).forEach(item => {
                 let e: Location = new Location();

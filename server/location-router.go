@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -51,6 +52,12 @@ type SetSpaceAttributeValueRequest struct {
 type GetSpaceAttributeValueResponse struct {
 	AttributeID string `json:"attributeId"`
 	Value       string `json:"value"`
+}
+
+type SearchLocationRequest struct {
+	Enter      time.Time         `json:"enter" validate:"required"`
+	Leave      time.Time         `json:"leave" validate:"required"`
+	Attributes []SearchAttribute `json:"attributes"`
 }
 
 type SearchAttribute struct {
@@ -287,7 +294,7 @@ func (router *LocationRouter) searchInputContains(m *[]SearchAttribute, attribut
 }
 
 func (router *LocationRouter) searchAttachNumSpaces(attributeValues []*SpaceAttributeValue, organizationID string) ([]*SpaceAttributeValue, error) {
-	totalSpaces, err := GetSpaceRepository().GetCountMap(organizationID)
+	totalSpaces, err := GetSpaceRepository().GetTotalCountMap(organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -302,14 +309,29 @@ func (router *LocationRouter) searchAttachNumSpaces(attributeValues []*SpaceAttr
 	return attributeValues, nil
 }
 
+func (router *LocationRouter) searchAttachNumFreeSpaces(attributeValues []*SpaceAttributeValue, organizationID string, enter, leave time.Time) ([]*SpaceAttributeValue, error) {
+	freeSpaces, err := GetSpaceRepository().GetFreeCountMap(organizationID, enter, leave)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range freeSpaces {
+		attributeValues = append(attributeValues, &SpaceAttributeValue{
+			AttributeID: SearchAttributeNumFreeSpaces,
+			EntityID:    k,
+			EntityType:  SpaceAttributeValueEntityTypeLocation,
+			Value:       strconv.Itoa(v),
+		})
+	}
+	return attributeValues, nil
+}
 func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
-	var m []SearchAttribute
-	if err := UnmarshalBody(r, &m); err != nil {
+	var m SearchLocationRequest
+	if err := UnmarshalValidateBody(r, &m); err != nil {
 		log.Println(err)
 		SendBadRequest(w)
 		return
 	}
-	if len(m) == 0 {
+	if len(m.Attributes) == 0 {
 		router.getAll(w, r)
 		return
 	}
@@ -326,8 +348,16 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	if router.searchInputContains(&m, SearchAttributeNumSpaces) {
+	if router.searchInputContains(&m.Attributes, SearchAttributeNumSpaces) {
 		attributeValues, err = router.searchAttachNumSpaces(attributeValues, user.OrganizationID)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+	}
+	if router.searchInputContains(&m.Attributes, SearchAttributeNumFreeSpaces) {
+		attributeValues, err = router.searchAttachNumFreeSpaces(attributeValues, user.OrganizationID, m.Enter, m.Leave)
 		if err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
@@ -336,7 +366,7 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 	}
 	res := []*GetLocationResponse{}
 	for _, e := range list {
-		if router.matchesSearchAttributes(e.ID, &m, attributeValues) {
+		if router.matchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
 			m := router.copyToRestModel(e)
 			res = append(res, m)
 		}

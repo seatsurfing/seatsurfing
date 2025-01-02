@@ -117,5 +117,6 @@
     "reset": "Zurücksetzen",
     "filter": "Filter",
     "yes": "ja",
-    "numSpaces": "Anzahl Plätze"
+    "numSpaces": "# Plätze",
+    "numFreeSpaces": "# Freie Plätze"
 }

@@ -122,5 +122,6 @@
     "reset": "Reset",
     "filter": "Filter",
     "yes": "yes",
-    "numSpaces": "Number of spaces"
+    "numSpaces": "# Spaces",
+    "numFreeSpaces": "# Free spaces"
 }
