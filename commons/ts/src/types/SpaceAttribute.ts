@@ -7,12 +7,12 @@ export default class SpaceAttribute extends Entity {
     spaceApplicable: boolean;
     locationApplicable: boolean;
 
-    constructor() {
-        super();
-        this.label = "";
-        this.type = 1;
-        this.spaceApplicable = false;
-        this.locationApplicable = false;
+    constructor(id: string = "", label: string = "", type: number = 1, spaceApplicable: boolean = false, locationApplicable: boolean = false) {
+        super(id);
+        this.label = label;
+        this.type = type;
+        this.spaceApplicable = spaceApplicable;
+        this.locationApplicable = locationApplicable;
     }
 
     serialize(): Object {

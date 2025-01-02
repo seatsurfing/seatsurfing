@@ -785,7 +785,9 @@ class Search extends React.Component<Props, State> {
   }
 
   getSearchFormRows = () => {
-    return this.availableAttributes.map(attribute => {
+    let availableAttributes: SpaceAttribute[] = Object.assign([], this.availableAttributes);
+    availableAttributes.push(new SpaceAttribute('numSpaces', this.props.t('numSpaces'), 1, false, true));
+    return availableAttributes.map(attribute => {
       if (!attribute.locationApplicable) {
         return <></>;
       }

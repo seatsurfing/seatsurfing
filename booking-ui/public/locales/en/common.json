@@ -120,5 +120,7 @@
     "noAreasFounds": "No areas found. Please try to adjust your filters.",
     "apply": "Apply",
     "reset": "Reset",
-    "filter": "Filter"
+    "filter": "Filter",
+    "yes": "yes",
+    "numSpaces": "Number of spaces"
 }
