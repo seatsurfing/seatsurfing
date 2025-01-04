@@ -3,10 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"image"
 	"io"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -69,6 +71,7 @@ type SearchAttribute struct {
 const (
 	SearchAttributeNumSpaces     string = "numSpaces"
 	SearchAttributeNumFreeSpaces string = "numFreeSpaces"
+	SearchAttributeBuddyOnSite   string = "buddyOnSite"
 )
 
 func (router *LocationRouter) setupRoutes(s *mux.Router) {
@@ -198,82 +201,87 @@ func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rouer *LocationRouter) matchesSearchAttributes(entityID string, m *[]SearchAttribute, attributeValues []*SpaceAttributeValue) bool {
+	var matchString = func(a, b, comparator string) bool {
+		if comparator == "eq" {
+			return a == b
+		} else if comparator == "neq" {
+			return a != b
+		} else if comparator == "contains" {
+			return strings.Contains(a, b)
+		} else if comparator == "ncontains" {
+			return !strings.Contains(a, b)
+		} else if comparator == "gt" {
+			searchAttrInt, err := strconv.Atoi(a)
+			if err != nil {
+				return false
+			}
+			attrValInt, err := strconv.Atoi(b)
+			if err != nil {
+				return false
+			}
+			return searchAttrInt > attrValInt
+		} else if comparator == "lt" {
+			searchAttrInt, err := strconv.Atoi(a)
+			if err != nil {
+				return false
+			}
+			attrValInt, err := strconv.Atoi(b)
+			if err != nil {
+				return false
+			}
+			return searchAttrInt < attrValInt
+		} else if comparator == "gte" {
+			searchAttrInt, err := strconv.Atoi(a)
+			if err != nil {
+				return false
+			}
+			attrValInt, err := strconv.Atoi(b)
+			if err != nil {
+				return false
+			}
+			return searchAttrInt >= attrValInt
+		} else if comparator == "lte" {
+			searchAttrInt, err := strconv.Atoi(a)
+			if err != nil {
+				return false
+			}
+			attrValInt, err := strconv.Atoi(b)
+			if err != nil {
+				return false
+			}
+			return searchAttrInt <= attrValInt
+		}
+		return false
+	}
+
+	var matchArray = func(a []string, b, comparator string) bool {
+		if comparator == "contains" {
+			if b == "*" {
+				return len(a) > 0
+			}
+			return slices.Contains(a, b)
+		} else if comparator == "ncontains" {
+			if b == "*" {
+				return len(a) == 0
+			}
+			return !slices.Contains(a, b)
+		}
+		return false
+	}
+
 	for _, searchAttr := range *m {
 		found := false
 		for _, attrVal := range attributeValues {
 			if (attrVal.AttributeID == searchAttr.AttributeID) && (attrVal.EntityID == entityID) {
-				if searchAttr.Comparator == "eq" {
-					if attrVal.Value != searchAttr.Value {
+				if strings.Index(attrVal.Value, "[") == 0 && strings.Index(attrVal.Value, "]") == len(attrVal.Value)-1 {
+					var arr []string
+					if err := json.Unmarshal([]byte(attrVal.Value), &arr); err != nil {
+						log.Println(err)
 						return false
 					}
-					found = true
-				} else if searchAttr.Comparator == "neq" {
-					if attrVal.Value == searchAttr.Value {
-						return false
-					}
-					found = true
-				} else if searchAttr.Comparator == "contains" {
-					if !strings.Contains(attrVal.Value, searchAttr.Value) {
-						return false
-					}
-					found = true
-				} else if searchAttr.Comparator == "ncontains" {
-					if strings.Contains(attrVal.Value, searchAttr.Value) {
-						return false
-					}
-					found = true
-				} else if searchAttr.Comparator == "gt" {
-					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
-					if err != nil {
-						return false
-					}
-					attrValInt, err := strconv.Atoi(attrVal.Value)
-					if err != nil {
-						return false
-					}
-					if attrValInt <= searchAttrInt {
-						return false
-					}
-					found = true
-				} else if searchAttr.Comparator == "lt" {
-					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
-					if err != nil {
-						return false
-					}
-					attrValInt, err := strconv.Atoi(attrVal.Value)
-					if err != nil {
-						return false
-					}
-					if attrValInt >= searchAttrInt {
-						return false
-					}
-					found = true
-				} else if searchAttr.Comparator == "gte" {
-					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
-					if err != nil {
-						return false
-					}
-					attrValInt, err := strconv.Atoi(attrVal.Value)
-					if err != nil {
-						return false
-					}
-					if attrValInt < searchAttrInt {
-						return false
-					}
-					found = true
-				} else if searchAttr.Comparator == "lte" {
-					searchAttrInt, err := strconv.Atoi(searchAttr.Value)
-					if err != nil {
-						return false
-					}
-					attrValInt, err := strconv.Atoi(attrVal.Value)
-					if err != nil {
-						return false
-					}
-					if attrValInt > searchAttrInt {
-						return false
-					}
-					found = true
+					found = matchArray(arr, searchAttr.Value, searchAttr.Comparator)
+				} else {
+					found = matchString(attrVal.Value, searchAttr.Value, searchAttr.Comparator)
 				}
 			}
 		}
@@ -324,6 +332,27 @@ func (router *LocationRouter) searchAttachNumFreeSpaces(attributeValues []*Space
 	}
 	return attributeValues, nil
 }
+
+func (router *LocationRouter) searchAttachBuddiesOnSite(attributeValues []*SpaceAttributeValue, organizationID string, enter, leave time.Time) ([]*SpaceAttributeValue, error) {
+	buddiesOnSite, err := GetSpaceRepository().GetBookingUserIDMap(organizationID, enter, leave)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range buddiesOnSite {
+		json, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		attributeValues = append(attributeValues, &SpaceAttributeValue{
+			AttributeID: SearchAttributeBuddyOnSite,
+			EntityID:    k,
+			EntityType:  SpaceAttributeValueEntityTypeLocation,
+			Value:       string(json),
+		})
+	}
+	return attributeValues, nil
+}
+
 func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 	var m SearchLocationRequest
 	if err := UnmarshalValidateBody(r, &m); err != nil {
@@ -358,6 +387,14 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 	}
 	if router.searchInputContains(&m.Attributes, SearchAttributeNumFreeSpaces) {
 		attributeValues, err = router.searchAttachNumFreeSpaces(attributeValues, user.OrganizationID, m.Enter, m.Leave)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+	}
+	if router.searchInputContains(&m.Attributes, SearchAttributeBuddyOnSite) {
+		attributeValues, err = router.searchAttachBuddiesOnSite(attributeValues, user.OrganizationID, m.Enter, m.Leave)
 		if err != nil {
 			log.Println(err)
 			SendInternalServerError(w)

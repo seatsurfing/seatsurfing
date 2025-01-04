@@ -3,16 +3,18 @@ import Ajax from "../util/Ajax";
 
 export default class SpaceAttribute extends Entity {
     label: string;
-    type: number;
+    type: number; // 1=number, 2=bool, 3=string, 4=select
     spaceApplicable: boolean;
     locationApplicable: boolean;
+    selectValues: Map<string, string>;
 
-    constructor(id: string = "", label: string = "", type: number = 1, spaceApplicable: boolean = false, locationApplicable: boolean = false) {
+    constructor(id: string = "", label: string = "", type: number = 1, spaceApplicable: boolean = false, locationApplicable: boolean = false, selectValues: Map<string, string> = new Map<string, string>()) {
         super(id);
         this.label = label;
         this.type = type;
         this.spaceApplicable = spaceApplicable;
         this.locationApplicable = locationApplicable;
+        this.selectValues = selectValues;
     }
 
     serialize(): Object {

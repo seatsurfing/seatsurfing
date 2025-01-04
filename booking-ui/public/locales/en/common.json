@@ -123,5 +123,6 @@
     "filter": "Filter",
     "yes": "yes",
     "numSpaces": "# Spaces",
-    "numFreeSpaces": "# Free spaces"
+    "numFreeSpaces": "# Free spaces",
+    "any": "any"
 }

@@ -236,6 +236,11 @@ func TestLocationsMatchesSearchAttributesSuccess(t *testing.T) {
 		{AttributeID: "4", Comparator: "ncontains", Value: "value4"},
 		{AttributeID: "5", Comparator: "lt", Value: "5"},
 		{AttributeID: "6", Comparator: "gt", Value: "5"},
+		{AttributeID: "7", Comparator: "contains", Value: "foo"},
+		{AttributeID: "7", Comparator: "contains", Value: "bar"},
+		{AttributeID: "7", Comparator: "contains", Value: "*"},
+		{AttributeID: "7", Comparator: "ncontains", Value: "test2"},
+		{AttributeID: "8", Comparator: "ncontains", Value: "*"},
 	}
 	attributeValues := []*SpaceAttributeValue{
 		{AttributeID: "1", EntityID: "1", EntityType: SpaceAttributeValueEntityTypeLocation, Value: "value1"},
@@ -244,6 +249,8 @@ func TestLocationsMatchesSearchAttributesSuccess(t *testing.T) {
 		{AttributeID: "4", EntityID: "1", EntityType: SpaceAttributeValueEntityTypeLocation, Value: "test-valuefour-test"},
 		{AttributeID: "5", EntityID: "1", EntityType: SpaceAttributeValueEntityTypeLocation, Value: "4"},
 		{AttributeID: "6", EntityID: "1", EntityType: SpaceAttributeValueEntityTypeLocation, Value: "7"},
+		{AttributeID: "7", EntityID: "1", EntityType: SpaceAttributeValueEntityTypeLocation, Value: `["foo", "bar", "test"]`},
+		{AttributeID: "8", EntityID: "1", EntityType: SpaceAttributeValueEntityTypeLocation, Value: `[]`},
 	}
 	checkTestBool(t, true, router.matchesSearchAttributes("1", &searchAttributes, attributeValues))
 }

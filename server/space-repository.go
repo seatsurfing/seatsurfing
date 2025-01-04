@@ -262,3 +262,26 @@ func (r *SpaceRepository) GetFreeCountMap(organizationID string, enter, leave ti
 	}
 	return res, nil
 }
+
+func (r *SpaceRepository) GetBookingUserIDMap(organizationID string, enter, leave time.Time) (map[string][]string, error) {
+	res := make(map[string][]string)
+	locations, _ := GetLocationRepository().GetAll(organizationID)
+	for _, location := range locations {
+		enterNew, err := attachTimezoneInformation(enter, location)
+		if err != nil {
+			return nil, err
+		}
+		leaveNew, err := attachTimezoneInformation(leave, location)
+		if err != nil {
+			return nil, err
+		}
+		spaces, _ := r.GetAllInTime(location.ID, enterNew, leaveNew)
+		res[location.ID] = make([]string, 0)
+		for _, space := range spaces {
+			for _, booking := range space.Bookings {
+				res[location.ID] = append(res[location.ID], booking.UserID)
+			}
+		}
+	}
+	return res, nil
+}

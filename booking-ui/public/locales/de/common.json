@@ -118,5 +118,6 @@
     "filter": "Filter",
     "yes": "ja",
     "numSpaces": "# Plätze",
-    "numFreeSpaces": "# Freie Plätze"
+    "numFreeSpaces": "# Freie Plätze",
+    "any": "beliebig"
 }

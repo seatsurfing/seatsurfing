@@ -17,6 +17,7 @@ import NavBar from '@/components/NavBar';
 import RuntimeConfig from '@/components/RuntimeConfig';
 import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
+import { JsxElement } from 'typescript';
 
 interface State {
   earliestEnterDate: Date;
@@ -733,14 +734,17 @@ class Search extends React.Component<Props, State> {
   getSearchFormComparator = (attribute: SpaceAttribute) => {
     let items = [];
     items.push(<option value=''></option>);
-    items.push(<option value='eq'>=</option>);
-    items.push(<option value='neq'>&lt;&gt;</option>);
+    if (attribute.type !== 4) {
+      items.push(<option value='eq'>=</option>);
+      items.push(<option value='neq'>≠</option>);
+    }
     if (attribute.type === 1) {
       items.push(<option value='gt'>&gt;</option>);
       items.push(<option value='lt'>&lt;</option>);
     }
-    if (attribute.type === 3) {
-      items.push(<option value='contains'>~</option>);
+    if ((attribute.type === 3) || (attribute.type === 4)) {
+      items.push(<option value='contains'>∋</option>);
+      items.push(<option value='ncontains'>∌</option>);
     }
     return items;
   }
@@ -752,6 +756,14 @@ class Search extends React.Component<Props, State> {
       return <Form.Check type="checkbox" style={{ paddingTop: '5px' }} label={this.props.t("yes")} checked={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value === '1' || false} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.checked ? '1' : '0')} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
     } else if (attribute.type === 3) {
       return <Form.Control type="text" value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
+    } else if (attribute.type === 4) {
+      let options: any[] = [];
+      attribute.selectValues.forEach((v, k) => {
+        options.push(<option value={k} key={k}>{v}</option>);
+      })
+      return <Form.Select value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined}>
+        {options}
+      </Form.Select>;
     }
   }
 
@@ -786,6 +798,12 @@ class Search extends React.Component<Props, State> {
 
   getSearchFormRows = () => {
     let availableAttributes: SpaceAttribute[] = Object.assign([], this.availableAttributes);
+    if (this.buddies.length > 0) {
+      let buddyOptions = new Map<string, string>();
+      buddyOptions.set('*', this.props.t('any'));
+      this.buddies.forEach(buddy => buddyOptions.set(buddy.id, buddy.buddy.email));
+      availableAttributes.unshift(new SpaceAttribute('buddyOnSite', this.props.t('myBuddies'), 4, false, true, buddyOptions));
+    }
     availableAttributes.unshift(new SpaceAttribute('numFreeSpaces', this.props.t('numFreeSpaces'), 1, false, true));
     availableAttributes.unshift(new SpaceAttribute('numSpaces', this.props.t('numSpaces'), 1, false, true));
     return availableAttributes.map(attribute => {
@@ -873,7 +891,7 @@ class Search extends React.Component<Props, State> {
       listOrMap = (
         <div className="container-signin">
           <Form className="form-signin">
-            <div style={{paddingBottom: '100px'}} dangerouslySetInnerHTML={{__html: this.props.t("noAreasFounds").replace('.', '.<br />')}}></div>
+            <div style={{ paddingBottom: '100px' }} dangerouslySetInnerHTML={{ __html: this.props.t("noAreasFounds").replace('.', '.<br />') }}></div>
           </Form>
         </div>
       );
@@ -998,7 +1016,7 @@ class Search extends React.Component<Props, State> {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => this.resetSearch()}>{this.props.t("reset")}</Button>
-            <Button type='submit' variant="primary" onClick={(e) => { e.preventDefault(); this.applySearch()}}>{this.props.t("apply")}</Button>
+            <Button type='submit' variant="primary" onClick={(e) => { e.preventDefault(); this.applySearch() }}>{this.props.t("apply")}</Button>
           </Modal.Footer>
         </Form>
       </Modal>
