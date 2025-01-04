@@ -333,16 +333,31 @@ func (router *LocationRouter) searchAttachNumFreeSpaces(attributeValues []*Space
 	return attributeValues, nil
 }
 
-func (router *LocationRouter) searchAttachBuddiesOnSite(attributeValues []*SpaceAttributeValue, organizationID string, enter, leave time.Time) ([]*SpaceAttributeValue, error) {
-	buddiesOnSite, err := GetSpaceRepository().GetBookingUserIDMap(organizationID, enter, leave)
+func (router *LocationRouter) searchAttachBuddiesOnSite(attributeValues []*SpaceAttributeValue, user *User, enter, leave time.Time) ([]*SpaceAttributeValue, error) {
+	buddies, err := GetBuddyRepository().GetAllByOwner(user.ID)
 	if err != nil {
 		return nil, err
+	}
+	log.Println(buddies)
+	usersOnSite, err := GetSpaceRepository().GetBookingUserIDMap(user.OrganizationID, enter, leave)
+	if err != nil {
+		return nil, err
+	}
+	buddiesOnSite := make(map[string][]string)
+	for locationID, userIDs := range usersOnSite {
+		buddiesOnSite[locationID] = []string{}
+		for _, buddy := range buddies {
+			if slices.Contains(userIDs, buddy.BuddyID) {
+				buddiesOnSite[locationID] = append(buddiesOnSite[locationID], buddy.ID)
+			}
+		}
 	}
 	for k, v := range buddiesOnSite {
 		json, err := json.Marshal(v)
 		if err != nil {
 			return nil, err
 		}
+		log.Println(string(json))
 		attributeValues = append(attributeValues, &SpaceAttributeValue{
 			AttributeID: SearchAttributeBuddyOnSite,
 			EntityID:    k,
@@ -394,7 +409,7 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if router.searchInputContains(&m.Attributes, SearchAttributeBuddyOnSite) {
-		attributeValues, err = router.searchAttachBuddiesOnSite(attributeValues, user.OrganizationID, m.Enter, m.Leave)
+		attributeValues, err = router.searchAttachBuddiesOnSite(attributeValues, user, m.Enter, m.Leave)
 		if err != nil {
 			log.Println(err)
 			SendInternalServerError(w)

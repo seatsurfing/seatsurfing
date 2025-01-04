@@ -267,7 +267,16 @@ class Search extends React.Component<Props, State> {
 
   loadAvailableAttributes = async (): Promise<void> => {
     return SpaceAttribute.list().then(attributes => {
-      this.availableAttributes = attributes;
+      let availableAttributes: SpaceAttribute[] = Object.assign([], attributes);
+      if (this.buddies.length > 0) {
+        let buddyOptions = new Map<string, string>();
+        buddyOptions.set('*', this.props.t('any'));
+        this.buddies.forEach(buddy => buddyOptions.set(buddy.id, buddy.buddy.email));
+        availableAttributes.unshift(new SpaceAttribute('buddyOnSite', this.props.t('myBuddies'), 4, false, true, buddyOptions));
+      }
+      availableAttributes.unshift(new SpaceAttribute('numFreeSpaces', this.props.t('numFreeSpaces'), 1, false, true));
+      availableAttributes.unshift(new SpaceAttribute('numSpaces', this.props.t('numSpaces'), 1, false, true));
+      this.availableAttributes = availableAttributes;
     });
   }
 
@@ -760,8 +769,8 @@ class Search extends React.Component<Props, State> {
       let options: any[] = [];
       attribute.selectValues.forEach((v, k) => {
         options.push(<option value={k} key={k}>{v}</option>);
-      })
-      return <Form.Select value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined}>
+      });
+      return <Form.Select value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.comparator === ''}>
         {options}
       </Form.Select>;
     }
@@ -781,6 +790,12 @@ class Search extends React.Component<Props, State> {
       searchAttributes.push(searchAttribute);
     }
     searchAttribute.comparator = comparator;
+    let attr = this.availableAttributes.find((attr) => attr.id === attributeId);
+    if (attr) {
+      if ((attr.type === 4) && (!searchAttribute.value)) {
+        searchAttribute.value = attr.selectValues.keys().next().value || '';
+      }
+    }
     this.setState({ searchAttributes: searchAttributes });
   }
 
@@ -797,16 +812,7 @@ class Search extends React.Component<Props, State> {
   }
 
   getSearchFormRows = () => {
-    let availableAttributes: SpaceAttribute[] = Object.assign([], this.availableAttributes);
-    if (this.buddies.length > 0) {
-      let buddyOptions = new Map<string, string>();
-      buddyOptions.set('*', this.props.t('any'));
-      this.buddies.forEach(buddy => buddyOptions.set(buddy.id, buddy.buddy.email));
-      availableAttributes.unshift(new SpaceAttribute('buddyOnSite', this.props.t('myBuddies'), 4, false, true, buddyOptions));
-    }
-    availableAttributes.unshift(new SpaceAttribute('numFreeSpaces', this.props.t('numFreeSpaces'), 1, false, true));
-    availableAttributes.unshift(new SpaceAttribute('numSpaces', this.props.t('numSpaces'), 1, false, true));
-    return availableAttributes.map(attribute => {
+    return this.availableAttributes.map(attribute => {
       if (!attribute.locationApplicable) {
         return <></>;
       }
