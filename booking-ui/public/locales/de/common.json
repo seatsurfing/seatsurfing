@@ -119,5 +119,15 @@
     "yes": "ja",
     "numSpaces": "# Plätze",
     "numFreeSpaces": "# Freie Plätze",
-    "any": "beliebig"
+    "any": "beliebig",
+    "caldavCalendar": "CalDAV Kalender",
+    "caldavUrl": "CalDAV URL",
+    "username": "Benutzername",
+    "calendar": "Kalender",
+    "connect": "Verbinden",
+    "disconnect": "Verbindung trennen",
+    "bookings": "Buchungen",
+    "security": "Sicherheit",
+    "integrations": "Integrationen",
+    "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen."
 }

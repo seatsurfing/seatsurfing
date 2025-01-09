@@ -124,5 +124,15 @@
     "yes": "yes",
     "numSpaces": "# Spaces",
     "numFreeSpaces": "# Free spaces",
-    "any": "any"
+    "any": "any",
+    "caldavCalendar": "CalDAV Calendar",
+    "caldavUrl": "CalDAV URL",
+    "username": "Username",
+    "calendar": "Calendar",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "bookings": "Bookings",
+    "security": "Security",
+    "integrations": "Integrations",
+    "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials."
 }

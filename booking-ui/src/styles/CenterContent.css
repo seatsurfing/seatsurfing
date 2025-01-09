@@ -15,7 +15,19 @@ html, body, div#root {
     padding-top: 75px;
 }
 
-.container-center .container-center-inner {
+.container-center-top {
+    display: -ms-flexbox;
+    display: flex;
+    justify-content: center;
+    background-color: #f5f5f5;
+    text-align: left;
+    position: relative;
+    padding-bottom: 50px;
+    padding-top: 75px;
+}
+
+.container-center .container-center-inner,
+.container-center-top .container-center-inner {
     width: 100%;
     max-width: 330px;
     padding: 15px;

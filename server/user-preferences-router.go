@@ -12,11 +12,51 @@ import (
 type UserPreferencesRouter struct {
 }
 
+type ListCaldavCalendarsRequest struct {
+	URL      string `json:"url" validate:"required,url"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type ListCaldavCalendarsResponse struct {
+	Path string `json:"path"`
+	Name string `json:"name"`
+}
+
 func (router *UserPreferencesRouter) setupRoutes(s *mux.Router) {
+	s.HandleFunc("/caldav/listCalendars", router.caldavListCalendars).Methods("POST")
 	s.HandleFunc("/{name}", router.getPreference).Methods("GET")
 	s.HandleFunc("/{name}", router.setPreference).Methods("PUT")
 	s.HandleFunc("/", router.getAll).Methods("GET")
 	s.HandleFunc("/", router.setAll).Methods("PUT")
+}
+
+func (router *UserPreferencesRouter) caldavListCalendars(w http.ResponseWriter, r *http.Request) {
+	if !canCrypt() {
+		log.Println("Error: CalDAV integration requires a valid crypt key (CRYPT_KEY).")
+		SendInternalServerError(w)
+		return
+	}
+	var m ListCaldavCalendarsRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	caldavClient := &CalDAVClient{}
+	if err := caldavClient.Connect(m.URL, m.Username, m.Password); err != nil {
+		SendNotFound(w)
+		return
+	}
+	calendars, err := caldavClient.ListCalendars()
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	res := make([]*ListCaldavCalendarsResponse, 0)
+	for _, calendar := range calendars {
+		res = append(res, &ListCaldavCalendarsResponse{Path: calendar.Path, Name: calendar.Name})
+	}
+	SendJSON(w, res)
 }
 
 func (router *UserPreferencesRouter) getPreference(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +87,7 @@ func (router *UserPreferencesRouter) setPreference(w http.ResponseWriter, r *htt
 		SendNotFound(w)
 		return
 	}
-	if !router.isValidPreferncesType(vars["name"], value.Value) {
+	if !router.isValidPreferenceType(vars["name"], value.Value) {
 		SendBadRequest(w)
 		return
 	}
@@ -93,7 +133,7 @@ func (router *UserPreferencesRouter) setAll(w http.ResponseWriter, r *http.Reque
 			SendNotFound(w)
 			return
 		}
-		if !router.isValidPreferncesType(e.Name, e.Value) {
+		if !router.isValidPreferenceType(e.Name, e.Value) {
 			SendBadRequest(w)
 			return
 		}
@@ -112,6 +152,9 @@ func (router *UserPreferencesRouter) setAll(w http.ResponseWriter, r *http.Reque
 }
 
 func (router *UserPreferencesRouter) doSetOne(userID, name, value string) error {
+	if router.getPreferenceType(name) == SettingTypeEncryptedString {
+		value = encryptString(value)
+	}
 	err := GetUserPreferencesRepository().Set(userID, name, value)
 	return err
 }
@@ -126,7 +169,11 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceSelfBookedColor.Name ||
 		name == PreferencePartiallyBookedColor.Name ||
 		name == PreferenceNotBookedColor.Name ||
-		name == PreferenceLocation.Name {
+		name == PreferenceLocation.Name ||
+		name == PreferenceCalDAVURL.Name ||
+		name == PreferenceCalDAVUser.Name ||
+		name == PreferenceCalDAVPass.Name ||
+		name == PreferenceCalDAVPath.Name {
 		return true
 	}
 	return false
@@ -163,15 +210,27 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	if name == PreferenceLocation.Name {
 		return PreferenceLocation.Type
 	}
+	if name == PreferenceCalDAVURL.Name {
+		return PreferenceCalDAVURL.Type
+	}
+	if name == PreferenceCalDAVUser.Name {
+		return PreferenceCalDAVUser.Type
+	}
+	if name == PreferenceCalDAVPass.Name {
+		return PreferenceCalDAVPass.Type
+	}
+	if name == PreferenceCalDAVPath.Name {
+		return PreferenceCalDAVPath.Type
+	}
 	return 0
 }
 
-func (router *UserPreferencesRouter) isValidPreferncesType(name string, value string) bool {
+func (router *UserPreferencesRouter) isValidPreferenceType(name string, value string) bool {
 	settingType := router.getPreferenceType(name)
 	if settingType == 0 {
 		return false
 	}
-	if settingType == SettingTypeString {
+	if settingType == SettingTypeString || settingType == SettingTypeEncryptedString {
 		return true
 	}
 	if settingType == SettingTypeBool && (value == "1" || value == "0") {
@@ -230,6 +289,10 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 func (router *UserPreferencesRouter) copyToRestModel(e *UserPreference) *GetSettingsResponse {
 	m := &GetSettingsResponse{}
 	m.Name = e.Name
-	m.Value = e.Value
+	if router.getPreferenceType(e.Name) == SettingTypeEncryptedString {
+		m.Value = decryptString(e.Value)
+	} else {
+		m.Value = e.Value
+	}
 	return m
 }

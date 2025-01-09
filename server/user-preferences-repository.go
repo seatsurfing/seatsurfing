@@ -30,6 +30,10 @@ var (
 	PreferenceSelfBookedColor      PreferenceName = PreferenceName{Name: "self_booked_color", Type: SettingTypeString}
 	PreferencePartiallyBookedColor PreferenceName = PreferenceName{Name: "partially_booked_color", Type: SettingTypeString}
 	PreferenceBuddyBookedColor     PreferenceName = PreferenceName{Name: "buddy_booked_color", Type: SettingTypeString}
+	PreferenceCalDAVURL            PreferenceName = PreferenceName{Name: "caldav_url", Type: SettingTypeString}
+	PreferenceCalDAVUser           PreferenceName = PreferenceName{Name: "caldav_user", Type: SettingTypeString}
+	PreferenceCalDAVPass           PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
+	PreferenceCalDAVPath           PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
 )
 
 var (

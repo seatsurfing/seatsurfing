@@ -42,6 +42,7 @@ type Config struct {
 	LoginProtectionMaxFails             int
 	LoginProtectionSlidingWindowSeconds int
 	LoginProtectionBanMinutes           int
+	CryptKey                            string
 }
 
 var _configInstance *Config
@@ -94,6 +95,10 @@ func (c *Config) ReadConfig() {
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)
 	c.LoginProtectionSlidingWindowSeconds = c.getEnvInt("LOGIN_PROTECTION_SLIDING_WINDOW_SECONDS", 600)
 	c.LoginProtectionBanMinutes = c.getEnvInt("LOGIN_PROTECTION_BAN_MINUTES", 5)
+	c.CryptKey = c.getEnv("CRYPT_KEY", "")
+	if c.CryptKey == "" || len(c.CryptKey) != 32 {
+		log.Println("Warning: No valid CRYPT_KEY set. Set it to a 32 bytes long string in order to use features such as CalDAV integration.")
+	}
 }
 
 func (c *Config) isValidLanguageCode(isoLanguageCode string) bool {
