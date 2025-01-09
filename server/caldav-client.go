@@ -72,17 +72,17 @@ func (c *CalDAVClient) ListCalendars() ([]*CalDAVCalendar, error) {
 	return res, nil
 }
 
-func (c *CalDAVClient) CreateEvent(calendar *CalDAVCalendar, e *CalDAVEvent) error {
+func (c *CalDAVClient) CreateEvent(calendarPath string, e *CalDAVEvent) error {
 	if e.ID == "" {
 		e.ID = uuid.New().String()
 	}
 	cal := c.getCaldavEvent(e)
 
-	_, err := c.client.PutCalendarObject(context.Background(), path.Join(calendar.Path, e.ID+".ics"), cal)
+	_, err := c.client.PutCalendarObject(context.Background(), path.Join(calendarPath, e.ID+".ics"), cal)
 	return err
 }
 
-func (c *CalDAVClient) DeleteEvent(calendar *CalDAVCalendar, e *CalDAVEvent) error {
+func (c *CalDAVClient) DeleteEvent(calendarPath string, e *CalDAVEvent) error {
 	cal := c.getCaldavEvent(e)
 
 	var buf bytes.Buffer
@@ -98,7 +98,7 @@ func (c *CalDAVClient) DeleteEvent(calendar *CalDAVCalendar, e *CalDAVEvent) err
 		Scheme: u.Scheme,
 		User:   u.User,
 		Host:   u.Host,
-		Path:   path.Join(calendar.Path, e.ID+".ics"),
+		Path:   path.Join(calendarPath, e.ID+".ics"),
 	}
 
 	req, err := http.NewRequest(http.MethodDelete, pathNew.String(), &buf)

@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"sort"
 	"time"
 
@@ -61,6 +62,13 @@ type DebugTimeIssuesResponse struct {
 	ReceivedTimeTransformed string    `json:"receivedTimeTransformed"`
 	Database                time.Time `json:"dbTime"`
 	Result                  time.Time `json:"result"`
+}
+
+type CaldavConfig struct {
+	URL      string
+	Username string
+	Password string
+	Path     string
 }
 
 func (router *BookingRouter) setupRoutes(s *mux.Router) {
@@ -221,6 +229,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	eNew.ID = e.ID
+	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
 	if m.UserEmail != "" && m.UserEmail != requestUser.Email {
 		if !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
@@ -257,6 +266,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	router.onBookingUpdated(eNew)
 	SendUpdated(w)
 }
 
@@ -288,6 +298,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	requestUser := GetRequestUser(r)
 	// Check for the date, If the BookingRequest is to close with SettingsMaxHoursBeforeDelete, the Delete can not be performed.
 	if router.isValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
+		router.onBookingDeleted(&e.Booking)
 		if err := GetBookingRepository().Delete(e); err != nil {
 			SendInternalServerError(w)
 			return
@@ -408,6 +419,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	router.onBookingCreated(e)
 	SendCreated(w, e.ID)
 }
 
@@ -673,6 +685,105 @@ func (router *BookingRouter) isValidMinHoursBooking(e *BookingRequest, organizat
 	leaveTime := e.Leave
 	difference_in_hours := int64(leaveTime.Sub(enterTime).Hours())
 	return difference_in_hours >= int64(min_hours)
+}
+
+func (router *BookingRouter) getCalDavConfig(userID string) (*CaldavConfig, error) {
+	prefs, err := GetUserPreferencesRepository().GetAll(userID)
+	if err != nil {
+		return nil, err
+	}
+	res := &CaldavConfig{}
+	for _, pref := range prefs {
+		if pref.Name == PreferenceCalDAVURL.Name {
+			if _, err := url.ParseRequestURI(pref.Value); err == nil {
+				res.URL = pref.Value
+			}
+		} else if pref.Name == PreferenceCalDAVUser.Name && len(pref.Value) > 0 {
+			res.Username = pref.Value
+		} else if pref.Name == PreferenceCalDAVPass.Name && len(pref.Value) > 0 {
+			decryptedPassword := decryptString(pref.Value)
+			if decryptedPassword != "" {
+				res.Password = decryptedPassword
+			}
+		} else if pref.Name == PreferenceCalDAVPath.Name && len(pref.Value) > 0 {
+			res.Path = pref.Value
+		}
+	}
+	if res.URL == "" || res.Username == "" || res.Password == "" || res.Path == "" {
+		return nil, errors.New("caldav not configured completely")
+	}
+	return res, nil
+}
+
+func (router *BookingRouter) initCaldavEvent(e *Booking) (*CalDAVClient, *CalDAVEvent, string, error) {
+	config, err := router.getCalDavConfig(e.UserID)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	caldavClient := &CalDAVClient{}
+	if err := caldavClient.Connect(config.URL, config.Username, config.Password); err != nil {
+		log.Println(err)
+		return nil, nil, "", err
+	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	caldavEvent := &CalDAVEvent{
+		Title:    "Reservation: " + space.Name + " @ " + location.Name,
+		Location: space.Name + " @ " + location.Name,
+		Start:    e.Enter,
+		End:      e.Leave,
+	}
+	return caldavClient, caldavEvent, config.Path, nil
+}
+
+func (router *BookingRouter) onBookingCreated(e *Booking) {
+	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
+	if err != nil {
+		return
+	}
+	if err := caldavClient.CreateEvent(path, caldavEvent); err != nil {
+		log.Println(err)
+		return
+	}
+	e.CalDavID = caldavEvent.ID
+	GetBookingRepository().Update(e)
+}
+
+func (router *BookingRouter) onBookingUpdated(e *Booking) {
+	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
+	if err != nil {
+		return
+	}
+	if e.CalDavID != "" {
+		caldavEvent.ID = e.CalDavID
+	}
+	if err := caldavClient.CreateEvent(path, caldavEvent); err != nil {
+		log.Println(err)
+		return
+	}
+	e.CalDavID = caldavEvent.ID
+	GetBookingRepository().Update(e)
+}
+
+func (router *BookingRouter) onBookingDeleted(e *Booking) {
+	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
+	if err != nil {
+		return
+	}
+	if e.CalDavID == "" {
+		return
+	}
+	caldavEvent.ID = e.CalDavID
+	if err := caldavClient.DeleteEvent(path, caldavEvent); err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func (router *BookingRouter) copyFromRestModel(m *CreateBookingRequest, location *Location) (*Booking, error) {
