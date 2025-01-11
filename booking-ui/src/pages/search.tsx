@@ -17,7 +17,7 @@ import NavBar from '@/components/NavBar';
 import RuntimeConfig from '@/components/RuntimeConfig';
 import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
-import { JsxElement } from 'typescript';
+import { Loader as IconLoad } from 'react-feather';
 
 interface State {
   earliestEnterDate: Date;
@@ -50,6 +50,7 @@ interface State {
   prefBuddyBookedColor: string
   attributeValues: SpaceAttributeValue[]
   searchAttributes: SearchAttribute[]
+  confirmingBooking: boolean
 }
 
 interface Props extends WithTranslation {
@@ -93,6 +94,7 @@ class Search extends React.Component<Props, State> {
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
+      confirmingBooking: false,
       showLocationDetails: false,
       showSearchModal: false,
       showSuccess: false,
@@ -631,8 +633,7 @@ class Search extends React.Component<Props, State> {
       return;
     }
     this.setState({
-      showConfirm: false,
-      loading: true
+      confirmingBooking: true
     });
     let booking: Booking = new Booking();
     booking.enter = new Date(this.state.enter);
@@ -643,7 +644,8 @@ class Search extends React.Component<Props, State> {
     booking.space = this.state.selectedSpace;
     booking.save().then(() => {
       this.setState({
-        loading: false,
+        confirmingBooking: false,
+        showConfirm: false,
         showSuccess: true
       });
     }).catch(e => {
@@ -652,7 +654,8 @@ class Search extends React.Component<Props, State> {
         code = e.appErrorCode;
       }
       this.setState({
-        loading: false,
+        confirmingBooking: false,
+        showConfirm: false,
         showError: true,
         errorText: ErrorText.getTextForAppCode(code, this.props.t)
       });
@@ -1039,11 +1042,12 @@ class Search extends React.Component<Props, State> {
           <p>{this.props.t("leave")}: {formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.leave)))}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })}>
+          <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })} disabled={this.state.confirmingBooking}>
             {this.props.t("cancel")}
           </Button>
-          <Button variant="primary" onClick={this.onConfirmBooking}>
+          <Button variant="primary" onClick={this.onConfirmBooking} disabled={this.state.confirmingBooking}>
             {this.props.t("confirmBooking")}
+            {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{marginLeft: '5px'}} /> : <></>}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -266,7 +266,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	router.onBookingUpdated(eNew)
+	go router.onBookingUpdated(eNew)
 	SendUpdated(w)
 }
 
@@ -298,7 +298,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	requestUser := GetRequestUser(r)
 	// Check for the date, If the BookingRequest is to close with SettingsMaxHoursBeforeDelete, the Delete can not be performed.
 	if router.isValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
-		router.onBookingDeleted(&e.Booking)
+		go router.onBookingDeleted(&e.Booking)
 		if err := GetBookingRepository().Delete(e); err != nil {
 			SendInternalServerError(w)
 			return
@@ -419,7 +419,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	router.onBookingCreated(e)
+	go router.onBookingCreated(e)
 	SendCreated(w, e.ID)
 }
 
@@ -734,8 +734,8 @@ func (router *BookingRouter) initCaldavEvent(e *Booking) (*CalDAVClient, *CalDAV
 		return nil, nil, "", err
 	}
 	caldavEvent := &CalDAVEvent{
-		Title:    "Reservation: " + space.Name + " @ " + location.Name,
-		Location: space.Name + " @ " + location.Name,
+		Title:    "Seat Reservation: " + space.Name + ", " + location.Name,
+		Location: space.Name + ", " + location.Name,
 		Start:    e.Enter,
 		End:      e.Leave,
 	}
