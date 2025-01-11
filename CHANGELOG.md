@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.22.0](https://github.com/seatsurfing/seatsurfing/compare/v1.21.1...v1.22.0) (2025-01-11)
+
+
+### Features
+
+* add additional filtering options ([#466](https://github.com/seatsurfing/seatsurfing/issues/466)) ([8c6b184](https://github.com/seatsurfing/seatsurfing/commit/8c6b184c3632ebb6caed9f747c2043d4f0bce0e3))
+* connect calendars via CalDAV ([#481](https://github.com/seatsurfing/seatsurfing/issues/481)) ([d720430](https://github.com/seatsurfing/seatsurfing/commit/d720430e4f3109b3320b7d755a864099313aa876))
+
+
+### Bug Fixes
+
+* buddy filter not working correctly ([#470](https://github.com/seatsurfing/seatsurfing/issues/470)) ([e65b2ee](https://github.com/seatsurfing/seatsurfing/commit/e65b2ee589fe472f7c893558af886b407e07f47f))
+* **deps:** bump @types/node from 22.10.2 to 22.10.3 in /admin-ui ([#458](https://github.com/seatsurfing/seatsurfing/issues/458)) ([a157e02](https://github.com/seatsurfing/seatsurfing/commit/a157e0231e3c0a46ee9435a9beb43168cc44ad4d))
+* **deps:** bump @types/node from 22.10.2 to 22.10.3 in /booking-ui ([#459](https://github.com/seatsurfing/seatsurfing/issues/459)) ([4ddc230](https://github.com/seatsurfing/seatsurfing/commit/4ddc230a3604e5c9d371ded18af3bcffc6dd1528))
+* **deps:** bump @types/node from 22.10.2 to 22.10.3 in /e2e ([#460](https://github.com/seatsurfing/seatsurfing/issues/460)) ([4cd8d15](https://github.com/seatsurfing/seatsurfing/commit/4cd8d152877ae7f7613634da75d640281a0b5a47))
+* **deps:** bump @types/node from 22.10.3 to 22.10.5 in /admin-ui ([#467](https://github.com/seatsurfing/seatsurfing/issues/467)) ([9063bee](https://github.com/seatsurfing/seatsurfing/commit/9063bee4e80dc1c06c6778aa6936ebb5647391ba))
+* **deps:** bump @types/node from 22.10.3 to 22.10.5 in /booking-ui ([#468](https://github.com/seatsurfing/seatsurfing/issues/468)) ([6a693af](https://github.com/seatsurfing/seatsurfing/commit/6a693af54e0838f307fcc11032f56da6d7616782))
+* **deps:** bump @types/node from 22.10.3 to 22.10.5 in /e2e ([#469](https://github.com/seatsurfing/seatsurfing/issues/469)) ([87039fc](https://github.com/seatsurfing/seatsurfing/commit/87039fcba05b3403d363c1c37717f43db6861133))
+* **deps:** bump braces from 3.0.2 to 3.0.3 in /booking-ui ([#462](https://github.com/seatsurfing/seatsurfing/issues/462)) ([91042b3](https://github.com/seatsurfing/seatsurfing/commit/91042b3103273e419e101636c02a263ec1889e00))
+* **deps:** bump eslint-config-next from 15.1.3 to 15.1.4 in /admin-ui ([#476](https://github.com/seatsurfing/seatsurfing/issues/476)) ([2608f25](https://github.com/seatsurfing/seatsurfing/commit/2608f258eaea1ef72142072ee25dfa8aadabc723))
+* **deps:** bump eslint-config-next from 15.1.3 to 15.1.4 in /booking-ui ([#478](https://github.com/seatsurfing/seatsurfing/issues/478)) ([3ebe883](https://github.com/seatsurfing/seatsurfing/commit/3ebe883820c4bb3e34481cd6d4b12cbc16165ccc))
+* **deps:** bump golang.org/x/crypto from 0.31.0 to 0.32.0 ([#471](https://github.com/seatsurfing/seatsurfing/issues/471)) ([a031c60](https://github.com/seatsurfing/seatsurfing/commit/a031c604179db7ed5984002cd03c782b42ba44d0))
+* **deps:** bump golang.org/x/oauth2 from 0.24.0 to 0.25.0 ([#472](https://github.com/seatsurfing/seatsurfing/issues/472)) ([8c9877e](https://github.com/seatsurfing/seatsurfing/commit/8c9877e0307e29a5e19d50b2de90cf56f7356efe))
+* **deps:** bump i18next from 24.2.0 to 24.2.1 in /commons/ts ([#473](https://github.com/seatsurfing/seatsurfing/issues/473)) ([a435bae](https://github.com/seatsurfing/seatsurfing/commit/a435baee13785f8e5f718b23f5fd01e927174ae2))
+* **deps:** bump next from 15.1.3 to 15.1.4 in /admin-ui ([#475](https://github.com/seatsurfing/seatsurfing/issues/475)) ([3314b7a](https://github.com/seatsurfing/seatsurfing/commit/3314b7ac4092942f2c9a398c66aff3f22425391e))
+* **deps:** bump next from 15.1.3 to 15.1.4 in /booking-ui ([#477](https://github.com/seatsurfing/seatsurfing/issues/477)) ([d29e09d](https://github.com/seatsurfing/seatsurfing/commit/d29e09d2b59eec921af7697438b09065f9e32811))
+* **deps:** bump typescript from 5.7.2 to 5.7.3 in /commons/ts ([#479](https://github.com/seatsurfing/seatsurfing/issues/479)) ([0a6ff63](https://github.com/seatsurfing/seatsurfing/commit/0a6ff6360371b6ebdb0260fbc9c182cb73885904))
+* incorrect Italian Booking UI translations ([#457](https://github.com/seatsurfing/seatsurfing/issues/457)) ([44ac139](https://github.com/seatsurfing/seatsurfing/commit/44ac1397bb6eb8ffc496be27899dfc35bec6a8ba))
+* **ui:** disable CalDAV buttons instead of hiding ([#482](https://github.com/seatsurfing/seatsurfing/issues/482)) ([d475b45](https://github.com/seatsurfing/seatsurfing/commit/d475b458664d8f08bdbe643be6f830143f5acc36))
+
 ## [1.21.1](https://github.com/seatsurfing/seatsurfing/compare/v1.21.0...v1.21.1) (2025-01-01)
 
 
