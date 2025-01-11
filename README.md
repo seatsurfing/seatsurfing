@@ -50,6 +50,7 @@ services:
       ADMIN_UI_BACKEND: 'admin-ui:3000'
       PUBLIC_URL: 'https://seatsurfing.your-domain.com'
       FRONTEND_URL: 'https://seatsurfing.your-domain.com'
+      CRYPT_KEY: 'some-random-32-bytes-long-string'
   booking-ui:
     image: ghcr.io/seatsurfing/booking-ui
     restart: always
