@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "async-mutex": "^0.5.0",
-    "i18next": "^24.2.0"
+    "i18next": "^24.2.1"
   },
   "devDependencies": {
     "typescript": "~5.7.2"
