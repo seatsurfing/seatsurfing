@@ -460,7 +460,7 @@ class Preferences extends React.Component<Props, State> {
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("calendar")}</Form.Label>
                 <Form.Select value={this.state.caldavCalendar} onChange={(e: any) => this.setState({ caldavCalendar: e.target.value })} disabled={!this.state.caldavCalendarsLoaded}>
-                  {this.state.caldavCalendars.map(cal => <option value={cal.path}>{cal.name}</option>)}
+                  {this.state.caldavCalendars.map(cal => <option key={cal.path} value={cal.path}>{cal.name}</option>)}
                 </Form.Select>
               </Form.Group>
               <ButtonGroup className="margin-top-15" >
