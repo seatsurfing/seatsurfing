@@ -464,8 +464,8 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Select>
               </Form.Group>
               <ButtonGroup className="margin-top-15" >
-                <Button type="button" variant='secondary' hidden={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === ''} onClick={() => this.connectCalDav()}>{this.props.t("connect")}</Button>
-                <Button type="button" variant='secondary' hidden={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === '' || this.state.caldavCalendar === ''} onClick={() => this.disconnectCalDav()}>{this.props.t("disconnect")}</Button>
+                <Button type="button" variant='secondary' disabled={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === ''} onClick={() => this.connectCalDav()}>{this.props.t("connect")}</Button>
+                <Button type="button" variant='secondary' disabled={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === '' || this.state.caldavCalendar === ''} onClick={() => this.disconnectCalDav()}>{this.props.t("disconnect")}</Button>
                 <Button type="submit" disabled={!(this.state.caldavCalendarsLoaded && this.state.caldavCalendar != '') || this.state.submitting}>{this.props.t("save")}</Button>
               </ButtonGroup>
             </Form>
