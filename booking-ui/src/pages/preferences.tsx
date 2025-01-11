@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ajax, Location, User, UserPreference } from 'flexspace-commons';
 import Loading from '../components/Loading';
-import { Alert, Button, Col, Form, Nav, Row } from 'react-bootstrap';
+import { Alert, Button, ButtonGroup, Col, Form, Nav, Row } from 'react-bootstrap';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import NavBar from '@/components/NavBar';
@@ -154,11 +154,6 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference("workday_end", this.state.workdayEnd.toString()),
       new UserPreference("workdays", workdays.join(",")),
       new UserPreference("location_id", this.state.locationId),
-      new UserPreference("booked_color", this.state.booked),
-      new UserPreference("not_booked_color", this.state.notBooked),
-      new UserPreference("self_booked_color", this.state.selfBooked),
-      new UserPreference("partially_booked_color", this.state.partiallyBooked),
-      new UserPreference("buddy_booked_color", this.state.buddyBooked)
     ];
     UserPreference.setAll(payload).then(() => {
       this.setState({
@@ -193,6 +188,50 @@ class Preferences extends React.Component<Props, State> {
         saved: true
       });
     });
+  }
+
+  onSubmitColors = (e: any) => {
+    e.preventDefault();
+    this.setState({
+      submitting: true,
+      saved: false,
+      error: false,
+      caldavError: false
+    });
+    let workdays: string[] = [];
+    this.state.workdays.forEach((val, day) => {
+      if (val) {
+        workdays.push(day.toString());
+      }
+    });
+    let payload = [
+      new UserPreference("booked_color", this.state.booked),
+      new UserPreference("not_booked_color", this.state.notBooked),
+      new UserPreference("self_booked_color", this.state.selfBooked),
+      new UserPreference("partially_booked_color", this.state.partiallyBooked),
+      new UserPreference("buddy_booked_color", this.state.buddyBooked)
+    ];
+    UserPreference.setAll(payload).then(() => {
+      this.setState({
+        submitting: false,
+        saved: true
+      });
+    }).catch(() => {
+      this.setState({
+        submitting: false,
+        error: true
+      });
+    });
+  }
+
+  resetColors = () => {
+    this.setState({
+      booked: "#ff453a",
+      notBooked: "#30d158",
+      selfBooked: "#b825de",
+      partiallyBooked: "#ff9100",
+      buddyBooked: "#2415c5",
+    })
   }
 
   onWorkdayCheck = (day: number, checked: boolean) => {
@@ -307,8 +346,8 @@ class Preferences extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-center-top">
-          <div className="">
-            <Nav variant="tabs" defaultActiveKey="tab-bookings" onSelect={(key) => { if (key) this.setState({ activeTab: key }) }}>
+          <div className="container-center-inner">
+            <Nav variant="underline" defaultActiveKey="tab-bookings" onSelect={(key) => { if (key) this.setState({ activeTab: key }) }}>
               <Nav.Item>
                 <Nav.Link eventKey="tab-bookings">{this.props.t('bookings')}</Nav.Link>
               </Nav.Item>
@@ -321,6 +360,7 @@ class Preferences extends React.Component<Props, State> {
             </Nav>
             {hint}
             <Form onSubmit={this.onSubmit} hidden={this.state.activeTab !== 'tab-bookings'}>
+              <h5 className='margin-top-15'>{this.props.t("preferences")}</h5>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("notice")}</Form.Label>
                 <Form.Select value={this.state.enterTime} onChange={(e: any) => this.setState({ enterTime: e.target.value })}>
@@ -352,7 +392,17 @@ class Preferences extends React.Component<Props, State> {
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("bookingcolors")}</Form.Label>
+                <Form.Label>{this.props.t("preferredLocation")}</Form.Label>
+                <Form.Select value={this.state.locationId} onChange={(e: any) => this.setState({ locationId: e.target.value })}>
+                  <option value="">({this.props.t("none")})</option>
+                  {this.locations.map(location => <option key={"location-" + location.id} value={location.id}>{location.name}</option>)}
+                </Form.Select>
+              </Form.Group>
+              <Button className="margin-top-15" type="submit" disabled={this.state.submitting}>{this.props.t("save")}</Button>
+            </Form>
+            <Form onSubmit={this.onSubmitColors} hidden={this.state.activeTab !== 'tab-bookings'}>
+              <h5 className='margin-top-50'>{this.props.t("bookingcolors")}</h5>
+              <Form.Group className="margin-top-15">
                 <Row>
                   <Col>
                     <p>Already booked</p>
@@ -380,16 +430,13 @@ class Preferences extends React.Component<Props, State> {
                   }
                 </Row>
               </Form.Group>
-              <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("preferredLocation")}</Form.Label>
-                <Form.Select value={this.state.locationId} onChange={(e: any) => this.setState({ locationId: e.target.value })}>
-                  <option value="">({this.props.t("none")})</option>
-                  {this.locations.map(location => <option key={"location-" + location.id} value={location.id}>{location.name}</option>)}
-                </Form.Select>
-              </Form.Group>
-              <Button className="margin-top-15" type="submit" disabled={this.state.submitting}>{this.props.t("save")}</Button>
+              <ButtonGroup className="margin-top-15" >
+                <Button type="button" variant='secondary' onClick={() => this.resetColors()}>{this.props.t("reset")}</Button>
+                <Button type="submit">{this.props.t("save")}</Button>
+              </ButtonGroup>
             </Form>
             <Form onSubmit={this.onSubmitSecurity} hidden={this.state.activeTab !== 'tab-security'}>
+              <h5 className='margin-top-15'>{this.props.t("password")}</h5>
               <Form.Group className="margin-top-15">
                 <Form.Check type="checkbox" inline={true} id="check-changePassword" label={this.props.t("passwordChange")} checked={this.state.changePassword} onChange={(e: any) => this.setState({ changePassword: e.target.checked })} />
                 <Form.Control type="password" value={this.state.password} onChange={(e: any) => this.setState({ password: e.target.value })} required={this.state.changePassword} disabled={!this.state.changePassword} minLength={8} />
@@ -397,7 +444,7 @@ class Preferences extends React.Component<Props, State> {
               <Button className="margin-top-15" type="submit" disabled={this.state.submitting}>{this.props.t("save")}</Button>
             </Form>
             <Form onSubmit={this.saveCaldavSettings} hidden={this.state.activeTab !== 'tab-integrations'}>
-              <h3>{this.props.t("caldavCalendar")}</h3>
+              <h5 className='margin-top-15'>{this.props.t("caldavCalendar")}</h5>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("caldavUrl")}</Form.Label>
                 <Form.Control type='url' value={this.state.caldavUrl} onChange={(e: any) => this.setState({ caldavUrl: e.target.value, caldavCalendarsLoaded: false })} />
@@ -416,9 +463,11 @@ class Preferences extends React.Component<Props, State> {
                   {this.state.caldavCalendars.map(cal => <option value={cal.path}>{cal.name}</option>)}
                 </Form.Select>
               </Form.Group>
-              <Button className="margin-top-15" type="button" hidden={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === ''} onClick={() => this.connectCalDav()}>{this.props.t("connect")}</Button>
-              <Button className="margin-top-15" type="button" hidden={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === '' || this.state.caldavCalendar === ''} onClick={() => this.disconnectCalDav()}>{this.props.t("disconnect")}</Button>
-              <Button className="margin-top-15" type="submit" disabled={!(this.state.caldavCalendarsLoaded && this.state.caldavCalendar != '') || this.state.submitting}>{this.props.t("save")}</Button>
+              <ButtonGroup className="margin-top-15" >
+                <Button type="button" variant='secondary' hidden={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === ''} onClick={() => this.connectCalDav()}>{this.props.t("connect")}</Button>
+                <Button type="button" variant='secondary' hidden={this.state.submitting || this.state.caldavUrl === '' || this.state.caldavUser === '' || this.state.caldavPass === '' || this.state.caldavCalendar === ''} onClick={() => this.disconnectCalDav()}>{this.props.t("disconnect")}</Button>
+                <Button type="submit" disabled={!(this.state.caldavCalendarsLoaded && this.state.caldavCalendar != '') || this.state.submitting}>{this.props.t("save")}</Button>
+              </ButtonGroup>
             </Form>
           </div>
         </div>
