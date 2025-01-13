@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/react-dom": "^19.0.2",
+    "@types/react-dom": "^19.0.3",
     "bootstrap": "^5.3.3",
     "flexspace-commons": "file:../commons/ts",
     "i18next": "^24.2.0",
