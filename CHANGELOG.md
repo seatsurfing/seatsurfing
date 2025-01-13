@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.22.1](https://github.com/seatsurfing/seatsurfing/compare/v1.22.0...v1.22.1) (2025-01-13)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/react-dom from 19.0.2 to 19.0.3 in /admin-ui ([#484](https://github.com/seatsurfing/seatsurfing/issues/484)) ([c366e36](https://github.com/seatsurfing/seatsurfing/commit/c366e3699f507b0c999c0a45f7452b5895c948f8))
+* **deps:** bump @types/react-dom from 19.0.2 to 19.0.3 in /booking-ui ([#487](https://github.com/seatsurfing/seatsurfing/issues/487)) ([4a45ca5](https://github.com/seatsurfing/seatsurfing/commit/4a45ca54bc9399d378ae29d2839562f0fedab52c))
+* **deps:** bump eslint from 9.17.0 to 9.18.0 in /admin-ui ([#485](https://github.com/seatsurfing/seatsurfing/issues/485)) ([48aba0d](https://github.com/seatsurfing/seatsurfing/commit/48aba0d83a9aafb18b2531a8a13b83cb0e73690d))
+* **deps:** bump eslint from 9.17.0 to 9.18.0 in /booking-ui ([#486](https://github.com/seatsurfing/seatsurfing/issues/486)) ([da79b94](https://github.com/seatsurfing/seatsurfing/commit/da79b94c87d6cb8d33ce688759cde52519e9c672))
+
 ## [1.22.0](https://github.com/seatsurfing/seatsurfing/compare/v1.21.1...v1.22.0) (2025-01-11)
 
 
