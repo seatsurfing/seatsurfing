@@ -96,8 +96,6 @@
     "showMap": "Voir la carte",
     "gotoBooking": "Afficher la réservation",
     "administration": "Administration",
-    "datePickerFormat": "dd/MM/y HH:mm",
-    "datePickerFormatDailyBasisBooking": "dd/MM/y",
     "today": "Aujourd'hui",
     "tomorrow": "Demain",
     "inXdays": "Dans {{x}} de jours",

@@ -101,8 +101,6 @@
     "showMap": "Show Map",
     "gotoBooking": "Show Booking",
     "administration": "Administration",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "today": "Today",
     "tomorrow": "Tomorrow",
     "inXdays": "In {{x}} days",

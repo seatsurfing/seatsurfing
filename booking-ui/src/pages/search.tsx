@@ -886,13 +886,13 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     }
-    let enterDatePicker = <DateTimePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={this.props.t("datePickerFormat")} />;
+    let enterDatePicker = <DateTimePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatString()} />;
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterDatePicker = <DatePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={this.props.t("datePickerFormatDailyBasisBooking")} />;
+      enterDatePicker = <DatePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} />;
     }
-    let leaveDatePicker = <DateTimePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={this.props.t("datePickerFormat")} />;
+    let leaveDatePicker = <DateTimePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatString()} />;
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      leaveDatePicker = <DatePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={this.props.t("datePickerFormatDailyBasisBooking")} />;
+      leaveDatePicker = <DatePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} />;
     }
 
     let listOrMap = <></>;

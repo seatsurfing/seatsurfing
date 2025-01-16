@@ -145,7 +145,5 @@
     "errorDaysAdvance": "Je mag niet meer dan {{num}} dagen van tevoren boeken.",
     "errorMaxBookingDuration": "De maximale boekingsduur is {{num}} uur.",
     "errorTooManyConcurrent": "Capaciteitslimiet bereikt in geselecteerd gebied.",
-    "errorUnknown": "Onbekende fout, probeer het later nog eens.",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd"
+    "errorUnknown": "Onbekende fout, probeer het later nog eens."
 }

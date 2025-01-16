@@ -96,8 +96,6 @@
     "showMap": "Afișează harta",
     "gotoBooking": "Afișează rezervarea",
     "administration": "Administrație",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "today": "Astăzi",
     "tomorrow": "Mâine",
     "inXdays": "În {{x}} zile",

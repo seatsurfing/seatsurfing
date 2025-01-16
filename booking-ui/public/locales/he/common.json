@@ -96,8 +96,6 @@
     "showMap": "הצגת מפה",
     "gotoBooking": "הצגת הזמנה",
     "administration": "ניהול",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "today": "היום",
     "tomorrow": "מחר",
     "inXdays": "בעוד {{x}} ימים",

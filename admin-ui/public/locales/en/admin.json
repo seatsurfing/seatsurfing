@@ -157,8 +157,6 @@
     "errorMinBookingDuration": "The minimum booking duration is {{num}} hours.",
     "errorTooManyConcurrent": "Capacity limit reached in selected area.",
     "errorUnknown": "Unknown error, please try again later.",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "maxHoursPartiallyBooked": "Max. hours partially booked",
     "attributes": "Attributes",
     "number": "Number",

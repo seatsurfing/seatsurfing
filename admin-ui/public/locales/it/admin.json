@@ -154,7 +154,5 @@
     "errorMinBookingDuration": "La durata minima della prenotazione è di {{num}} ore.",
     "errorTooManyConcurrent": "Limite di capacità raggiunto nell'area selezionata.",
     "errorUnknown": "Errore sconosciuto, riprovare più tardi.",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "maxHoursPartiallyBooked": "Ore massime prenotazione parziale"
 }

@@ -616,7 +616,7 @@ class EditBooking extends React.Component<Props, State> {
             onChange={(value: Date | null) => { if (value != null) this.setEnterDate(value) }}
             clearIcon={null}
             required={true}
-            format={this.props.t("datePickerFormat")}
+            format={Formatting.getDateTimePickerFormatString()}
             disabled={!this.state.canEdit}
         />;
         if (this.dailyBasisBooking) {
@@ -625,7 +625,7 @@ class EditBooking extends React.Component<Props, State> {
             onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setEnterDate(value) }}
             clearIcon={null}
             required={true}
-            format={this.props.t("datePickerFormatDailyBasisBooking")}
+            format={Formatting.getDateTimePickerFormatDailyString()}
             disabled={!this.state.canEdit}
         />;
         }
@@ -634,7 +634,7 @@ class EditBooking extends React.Component<Props, State> {
             onChange={(value: Date | null) => { if (value != null) this.setLeaveDate(value) }}
             clearIcon={null}
             required={true}
-            format={this.props.t("datePickerFormat")}
+            format={Formatting.getDateTimePickerFormatString()}
             disabled={!this.state.canEdit}
         />;
         if (this.dailyBasisBooking) {
@@ -642,7 +642,7 @@ class EditBooking extends React.Component<Props, State> {
             onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }}
             clearIcon={null}
             required={true}
-            format={this.props.t("datePickerFormatDailyBasisBooking")}
+            format={Formatting.getDateTimePickerFormatDailyString()}
             disabled={!this.state.canEdit}
         />;
         }

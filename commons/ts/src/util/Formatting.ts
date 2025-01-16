@@ -3,7 +3,7 @@ import { TFunction } from "i18next";
 export default class Formatting {
     static Language: string = "en";
     static t: TFunction;
-    
+
     static tbool(s: string) {
         return Formatting.t(s) === "1";
     }
@@ -18,7 +18,7 @@ export default class Formatting {
             hour: 'numeric',
             minute: 'numeric',
             hour12: this.tbool("hour12")
-          });
+        });
         return formatter;
     }
 
@@ -29,7 +29,7 @@ export default class Formatting {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
-          });
+        });
         return formatter;
     }
 
@@ -42,7 +42,7 @@ export default class Formatting {
             hour: 'numeric',
             minute: 'numeric',
             hour12: false
-          });
+        });
         return formatter;
     }
 
@@ -52,12 +52,24 @@ export default class Formatting {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
-          });
+        });
         return formatter;
     }
 
+    static getDateTimePickerFormatString(): string {
+        let date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
+        let formattedDate = Formatting.getFormatterShort().format(date);
+        return formattedDate.replace('2006', 'y').replace('12', 'MM').replace('23', 'dd').replace('11', 'HH').replace('41', 'mm');
+    }
+
+    static getDateTimePickerFormatDailyString(): string {
+        let date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
+        let formattedDate = Formatting.getFormatterDate().format(date);
+        return formattedDate.replace('2006', 'y').replace('12', 'MM').replace('23', 'dd');
+    }
+
     static getDayValue(date: Date): number {
-        let s = date.getFullYear().toString().padStart(4, "0") + (date.getMonth()+1).toString().padStart(2, "0") + date.getDate().toString().padStart(2, "0");
+        let s = date.getFullYear().toString().padStart(4, "0") + (date.getMonth() + 1).toString().padStart(2, "0") + date.getDate().toString().padStart(2, "0");
         return parseInt(s);
     }
 
@@ -70,7 +82,7 @@ export default class Formatting {
     }
 
     static getISO8601(date: Date): string {
-        let s = date.getFullYear().toString().padStart(4, "0") + "-" + (date.getMonth()+1).toString().padStart(2, "0") + "-" + date.getDate().toString().padStart(2, "0");
+        let s = date.getFullYear().toString().padStart(4, "0") + "-" + (date.getMonth() + 1).toString().padStart(2, "0") + "-" + date.getDate().toString().padStart(2, "0");
         return s;
     }
 
@@ -81,11 +93,11 @@ export default class Formatting {
         if (start <= today && today <= end) {
             return Formatting.t("today");
         }
-        if (start == today+1) {
+        if (start == today + 1) {
             return Formatting.t("tomorrow");
         }
-        if (start > today && start <= today+7) {
-            return Formatting.t("inXdays", {"x": (start-today)});
+        if (start > today && start <= today + 7) {
+            return Formatting.t("inXdays", { "x": (start - today) });
         }
         return Formatting.getFormatterDate().format(enter);
     }
@@ -95,8 +107,8 @@ export default class Formatting {
     }
 
     static stripTimezoneDetails(s: string): string {
-        if ((s.length > 6) && ((s[s.length-6] === "+") || (s[s.length-6] === "-"))) {
-            return s.substring(0, s.length-6) + ".000Z";
+        if ((s.length > 6) && ((s[s.length - 6] === "+") || (s[s.length - 6] === "-"))) {
+            return s.substring(0, s.length - 6) + ".000Z";
         }
         return s;
     }

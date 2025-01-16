@@ -150,8 +150,6 @@
     "errorTooManyConcurrent": "Kapazitätsgrenze des gewählten Bereichs ist erreicht.",
     "errorUnknown": "Unbekannter Fehler, bitte versuche es später erneut.",
     "administration": "Administration",
-    "datePickerFormat": "dd.MM.y HH:mm",
-    "datePickerFormatDailyBasisBooking": "dd.MM.y",
     "maxHoursPartiallyBooked": "Max. Stunden teilw. gebucht",
     "attributes": "Attribute",
     "number": "Zahl",

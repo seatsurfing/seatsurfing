@@ -99,8 +99,6 @@
     "showMap": "Mostra Mappa",
     "gotoBooking": "Mostra prenotazione",
     "administration": "Amministrazione",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "today": "Oggi",
     "tomorrow": "Domani",
     "inXdays": "Fra {{x}} giorni",

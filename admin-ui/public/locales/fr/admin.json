@@ -146,7 +146,5 @@
     "errorDaysAdvance": "Votre réservation ne doit pas être faite plus de {{num}} jours à l'avance.",
     "errorMaxBookingDuration": "La durée maximale de réservation est de {{num}} heures.",
     "errorTooManyConcurrent": "Limite de capacité atteinte dans la zone sélectionnée.",
-    "errorUnknown": "Erreur inconnue, veuillez réessayer plus tard.",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "dd/MM/y"
+    "errorUnknown": "Erreur inconnue, veuillez réessayer plus tard."
 }

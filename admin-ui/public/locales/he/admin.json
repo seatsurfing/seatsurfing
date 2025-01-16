@@ -146,7 +146,5 @@
     "errorDaysAdvance": "ההזמנה שלך לא יכולה להיות יותר מ־{{num}} ימים מראש.",
     "errorMaxBookingDuration": "משך ההזמנה המרבי הוא {{num}} שעות.",
     "errorTooManyConcurrent": "הגעת למגבלת הקיבולת באזור הנבחר.",
-    "errorUnknown": "שגיאה לא ידועה, נא לנסות שוב מאוחר יותר.",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd"
+    "errorUnknown": "שגיאה לא ידועה, נא לנסות שוב מאוחר יותר."
 }

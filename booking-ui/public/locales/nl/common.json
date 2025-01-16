@@ -95,8 +95,6 @@
     "showMap": "Toon kaart",
     "gotoBooking": "Toon boekingen",
     "administration": "Administratie",
-    "datePickerFormat": "y-MM-dd HH:mm",
-    "datePickerFormatDailyBasisBooking": "y-MM-dd",
     "today": "Vandaag",
     "tomorrow": "Morgen",
     "inXdays": "Over {{x}} dagen",

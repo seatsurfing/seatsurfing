@@ -96,8 +96,6 @@
   "showMap": "Térkép nézet",
   "gotoBooking": "Foglalás megjelenítése",
   "administration": "Adminisztráció",
-  "datePickerFormat": "y-MM-dd HH:mm",
-  "datePickerFormatDailyBasisBooking": "y-MM-dd",
   "today": "Ma",
   "tomorrow": "Holnap",
   "inXdays": "{{x}} napon belül",
