@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.22.1](https://github.com/seatsurfing/seatsurfing/compare/v1.22.0...v1.22.1) (2025-01-16)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.10.5 to 22.10.7 in /admin-ui ([#496](https://github.com/seatsurfing/seatsurfing/issues/496)) ([dafcbf5](https://github.com/seatsurfing/seatsurfing/commit/dafcbf5bbaacfbbb61762b678f310c02ce82c3b9))
+* **deps:** bump @types/node from 22.10.5 to 22.10.7 in /booking-ui ([#497](https://github.com/seatsurfing/seatsurfing/issues/497)) ([8a24f81](https://github.com/seatsurfing/seatsurfing/commit/8a24f81b4046f55411d46e0ab235925718427f8b))
+* **deps:** bump @types/node from 22.10.5 to 22.10.7 in /e2e ([#498](https://github.com/seatsurfing/seatsurfing/issues/498)) ([72eb5f4](https://github.com/seatsurfing/seatsurfing/commit/72eb5f4cf776ece854ba44885f72cf5e9eea94da))
+* **deps:** bump @types/react-dom from 19.0.2 to 19.0.3 in /admin-ui ([#484](https://github.com/seatsurfing/seatsurfing/issues/484)) ([c366e36](https://github.com/seatsurfing/seatsurfing/commit/c366e3699f507b0c999c0a45f7452b5895c948f8))
+* **deps:** bump @types/react-dom from 19.0.2 to 19.0.3 in /booking-ui ([#487](https://github.com/seatsurfing/seatsurfing/issues/487)) ([4a45ca5](https://github.com/seatsurfing/seatsurfing/commit/4a45ca54bc9399d378ae29d2839562f0fedab52c))
+* **deps:** bump eslint from 9.17.0 to 9.18.0 in /admin-ui ([#485](https://github.com/seatsurfing/seatsurfing/issues/485)) ([48aba0d](https://github.com/seatsurfing/seatsurfing/commit/48aba0d83a9aafb18b2531a8a13b83cb0e73690d))
+* **deps:** bump eslint from 9.17.0 to 9.18.0 in /booking-ui ([#486](https://github.com/seatsurfing/seatsurfing/issues/486)) ([da79b94](https://github.com/seatsurfing/seatsurfing/commit/da79b94c87d6cb8d33ce688759cde52519e9c672))
+* **deps:** bump react-router-dom from 7.1.1 to 7.1.2 in /admin-ui ([#495](https://github.com/seatsurfing/seatsurfing/issues/495)) ([03417d8](https://github.com/seatsurfing/seatsurfing/commit/03417d8319fbd3dc62a8b5e87c821b84fc5ffb58))
+* inconsistent date format ([#499](https://github.com/seatsurfing/seatsurfing/issues/499)) ([7104841](https://github.com/seatsurfing/seatsurfing/commit/71048411825a18a782b5f55c685f7f7e567ae841))
+
 ## [1.22.0](https://github.com/seatsurfing/seatsurfing/compare/v1.21.1...v1.22.0) (2025-01-11)
 
 
