@@ -8,29 +8,35 @@
 Seatsurfing is a software which enables your organisation's employees to book seats, desks and rooms.
 
 This repository contains the Backend, which consists of:
-* The Server (REST API Backend) written in Go
-* User Self-Service Booking Web Interface ("Booking UI"), built as a Progressive Web Application (PWA) which can be installed on mobile devices
-* Admin Web Interface ("Admin UI")
-* Common TypeScript files for the two TypeScript/React web frontends
+
+- The Server (REST API Backend) written in Go
+- User Self-Service Booking Web Interface ("Booking UI"), built as a Progressive Web Application (PWA) which can be installed on mobile devices
+- Admin Web Interface ("Admin UI")
+- Common TypeScript files for the two TypeScript/React web frontends
 
 **[Visit project's website for more information.](https://seatsurfing.app)**
 
 ## Screenshots
 
 ### Web Admin UI
+
 ![Seatsurfing Web Admin UI](https://raw.githubusercontent.com/seatsurfing/seatsurfing/main/.github/admin-ui.png)
 
 ### Web Booking UI
+
 ![Seatsurfing Web Booking UI](https://raw.githubusercontent.com/seatsurfing/seatsurfing/main/.github/booking-ui.png)
 
 ## Quick reference
-* **Maintained by:** [Seatsurfing.app](https://seatsurfing.app/)
-* **Where to get help:** [Documentation](https://seatsurfing.app/docs/)
-* **Docker architectures:** [amd64, arm64](https://github.com/seatsurfing?tab=packages&repo_name=seatsurfing)
-* **License:** [GPL 3.0](https://github.com/seatsurfing/seatsurfing/blob/main/LICENSE)
+
+- **Maintained by:** [Seatsurfing.app](https://seatsurfing.app/)
+- **Where to get help:** [Documentation](https://seatsurfing.app/docs/)
+- **Docker architectures:** [amd64, arm64](https://github.com/seatsurfing?tab=packages&repo_name=seatsurfing)
+- **License:** [GPL 3.0](https://github.com/seatsurfing/seatsurfing/blob/main/LICENSE)
 
 ## How to use the Docker image
+
 ### Start using Docker Compose
+
 ```
 version: '3.7'
 
@@ -86,17 +92,20 @@ networks:
 ```
 
 This starts...
-* a PostgreSQL database with data stored on Docker volume "db"
-* a Seatsurfing Backend instance with port 8080 exposed
-* a Seatsurfing Booking UI instance which is accessible through the Backend instance at: :8080/ui/
-* a Seatsurfing Admin UI instance which is accessible through the Backend instance at: :8080/admin/
+
+- a PostgreSQL database with data stored on Docker volume "db"
+- a Seatsurfing Backend instance with port 8080 exposed
+- a Seatsurfing Booking UI instance which is accessible through the Backend instance at: :8080/ui/
+- a Seatsurfing Admin UI instance which is accessible through the Backend instance at: :8080/admin/
 
 To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.app/docs/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
 
 ### Running on Kubernetes
+
 Please refer to our [Kubernetes documentation](https://seatsurfing.app/docs/kubernetes/).
 
 ## Environment variables
+
 Please check out the [documentation](https://seatsurfing.app/docs/config) for information on available environment variables and further guidance.
 
-**Hint**: When running in an IPV6-only Docker/Podman environment with multiple network interfaces bound to the Frontend containers, setting the ```LISTEN_ADDR``` environment variable can be necessary as NextJS binds to only one network interface by default. Set it to ```::``` to bind to any address.
+**Hint**: When running in an IPV6-only Docker/Podman environment with multiple network interfaces bound to the Frontend containers, setting the `LISTEN_ADDR` environment variable can be necessary as NextJS binds to only one network interface by default. Set it to `::` to bind to any address.
