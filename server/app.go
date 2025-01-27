@@ -67,7 +67,7 @@ func (a *App) InitializeRouter() {
 		a.setupBookingUIProxy(a.Router)
 		a.setupAdminUIProxy(a.Router)
 	}
-	a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
+	//a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
 	a.Router.Path("/").Methods("GET").HandlerFunc(a.RedirectRootPath)
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)

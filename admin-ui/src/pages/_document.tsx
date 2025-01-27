@@ -12,7 +12,9 @@ class Doc extends Document<Props> {
       i18nextConfig.i18n.defaultLocale
     return (
       <Html lang={currentLocale}>
-        <Head />
+        <Head>
+          <meta name="robots" content="noindex" />
+        </Head>
         <body>
           <Main />
           <NextScript />
