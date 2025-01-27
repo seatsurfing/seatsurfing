@@ -67,10 +67,16 @@ func (a *App) InitializeRouter() {
 		a.setupBookingUIProxy(a.Router)
 		a.setupAdminUIProxy(a.Router)
 	}
+	a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
 	a.Router.Path("/").Methods("GET").HandlerFunc(a.RedirectRootPath)
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
+}
+
+func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("User-agent: *\nDisallow: /\n"))
 }
 
 func (a *App) RedirectRootPath(w http.ResponseWriter, r *http.Request) {

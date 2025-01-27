@@ -313,4 +313,5 @@ var unauthorizedRoutes = [...]string{
 	"/fastspring/webhook",
 	"/confluence",
 	"/booking/debugtimeissues/",
+	"/robots.txt",
 }
