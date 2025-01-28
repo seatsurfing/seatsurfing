@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.22.2](https://github.com/seatsurfing/seatsurfing/compare/v1.22.1...v1.22.2) (2025-01-28)
+
+
+### Bug Fixes
+
+* add robots.txt ([#520](https://github.com/seatsurfing/seatsurfing/issues/520)) ([9198e15](https://github.com/seatsurfing/seatsurfing/commit/9198e15497e28b7495327dd86884e22f3a50491f))
+* **deps:** bump @types/node from 22.10.7 to 22.10.10 in /admin-ui ([#515](https://github.com/seatsurfing/seatsurfing/issues/515)) ([7138269](https://github.com/seatsurfing/seatsurfing/commit/713826921e4534555cf8d0de5d51f014aae15066))
+* **deps:** bump @types/node from 22.10.7 to 22.10.10 in /booking-ui ([#516](https://github.com/seatsurfing/seatsurfing/issues/516)) ([a1c3a90](https://github.com/seatsurfing/seatsurfing/commit/a1c3a905b1afeab2b97434be411c022efeb05ce4))
+* **deps:** bump @types/node from 22.10.7 to 22.10.10 in /e2e ([#518](https://github.com/seatsurfing/seatsurfing/issues/518)) ([aa23157](https://github.com/seatsurfing/seatsurfing/commit/aa2315754645c071b145b174a401859d18503f7e))
+* **deps:** bump eslint-config-next from 15.1.4 to 15.1.6 in /admin-ui ([#510](https://github.com/seatsurfing/seatsurfing/issues/510)) ([9cd33a9](https://github.com/seatsurfing/seatsurfing/commit/9cd33a90572e0d7f85078ab28f0327e1ad686ac2))
+* **deps:** bump eslint-config-next from 15.1.4 to 15.1.6 in /booking-ui ([#512](https://github.com/seatsurfing/seatsurfing/issues/512)) ([5300806](https://github.com/seatsurfing/seatsurfing/commit/5300806d39c2284b2c3abf3765f0703ea479de60))
+* **deps:** bump i18next-http-backend from 3.0.1 to 3.0.2 in /admin-ui ([#514](https://github.com/seatsurfing/seatsurfing/issues/514)) ([7983bee](https://github.com/seatsurfing/seatsurfing/commit/7983beee8a8cecd729d19d706a881f79ab758789))
+* **deps:** bump i18next-http-backend from 3.0.1 to 3.0.2 in /booking-ui ([#517](https://github.com/seatsurfing/seatsurfing/issues/517)) ([462f2c1](https://github.com/seatsurfing/seatsurfing/commit/462f2c1a5ae9f89e7515cc005b9707cb3f69a906))
+* **deps:** bump next from 15.1.4 to 15.1.6 in /admin-ui ([#509](https://github.com/seatsurfing/seatsurfing/issues/509)) ([af9e15b](https://github.com/seatsurfing/seatsurfing/commit/af9e15bf54378f4e82ecaafc72fe7467989cbc0a))
+* **deps:** bump next from 15.1.4 to 15.1.6 in /booking-ui ([#511](https://github.com/seatsurfing/seatsurfing/issues/511)) ([66a56e6](https://github.com/seatsurfing/seatsurfing/commit/66a56e661f928c00c76a3d8e76b3e34d7d67bd96))
+* **deps:** bump react-bootstrap from 2.10.7 to 2.10.8 in /admin-ui ([#506](https://github.com/seatsurfing/seatsurfing/issues/506)) ([142cf5d](https://github.com/seatsurfing/seatsurfing/commit/142cf5d9aa76c3355ba11549f1ee62d01e2a8d2c))
+* **deps:** bump react-bootstrap from 2.10.7 to 2.10.8 in /booking-ui ([#507](https://github.com/seatsurfing/seatsurfing/issues/507)) ([e9290d1](https://github.com/seatsurfing/seatsurfing/commit/e9290d1069edb9d4406f33f910788dd6f43a3379))
+* **deps:** bump react-router-dom from 7.1.2 to 7.1.3 in /admin-ui ([#505](https://github.com/seatsurfing/seatsurfing/issues/505)) ([54eb029](https://github.com/seatsurfing/seatsurfing/commit/54eb0295b0b113a8d3913ad24c589da25fcd6b61))
+* replace robots.txt with noindex meta tag ([#522](https://github.com/seatsurfing/seatsurfing/issues/522)) ([f9e5a1e](https://github.com/seatsurfing/seatsurfing/commit/f9e5a1e90bf86ac4f0326236bdf9cef4b4896108))
+
 ## [1.22.1](https://github.com/seatsurfing/seatsurfing/compare/v1.22.0...v1.22.1) (2025-01-16)
 
 
