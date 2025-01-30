@@ -16,7 +16,7 @@
     "next-i18next": "^15.4.1",
     "react": "^19.0.0",
     "react-autosuggest": "^10.1.0",
-    "react-bootstrap": "^2.10.8",
+    "react-bootstrap": "^2.10.9",
     "react-date-picker": "^11.0.0",
     "react-datetime-picker": "^6.0.1",
     "react-dom": "^19.0.0",
