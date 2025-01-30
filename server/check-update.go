@@ -37,7 +37,7 @@ func GetUpdateChecker() *UpdateChecker {
 }
 
 func (uc *UpdateChecker) pollLatestRelease() (*CheckVersionResponse, error) {
-	const url = "https://uc.seatsurfing.app/"
+	const url = "https://uc.seatsurfing.io/"
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	payload := CheckVersionRequest{
 		InstallID:      installID,

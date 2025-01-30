@@ -22,8 +22,8 @@ RUN sed -i "s/const hostname = /const hostname = process.env.LISTEN_ADDR || /g" 
 
 FROM gcr.io/distroless/nodejs22-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
-      org.opencontainers.image.url="https://seatsurfing.app" \
-      org.opencontainers.image.documentation="https://seatsurfing.app/docs/"
+      org.opencontainers.image.url="https://seatsurfing.io" \
+      org.opencontainers.image.documentation="https://seatsurfing.io/docs/"
 ENV NODE_ENV=production
 ENV PORT=3000
 WORKDIR /app

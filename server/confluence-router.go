@@ -111,7 +111,7 @@ func (router *ConfluenceRouter) getOrgNotFoundBody() []byte {
 	sb.WriteString("\n\n")
 	sb.WriteString("Make sure the Instance ID is set under 'Seatsurfing Configuration' in your Confluence installation.")
 	sb.WriteString("\n\n")
-	sb.WriteString("For more information, please read the documentation at: https://docs.seatsurfing.app/")
+	sb.WriteString("For more information, please read the documentation at: https://docs.seatsurfing.io/")
 	sb.WriteString("\n")
 	return []byte(sb.String())
 }

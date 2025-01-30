@@ -14,7 +14,7 @@ This repository contains the Backend, which consists of:
 - Admin Web Interface ("Admin UI")
 - Common TypeScript files for the two TypeScript/React web frontends
 
-**[Visit project's website for more information.](https://seatsurfing.app)**
+**[Visit project's website for more information.](https://seatsurfing.io)**
 
 ## Screenshots
 
@@ -28,8 +28,8 @@ This repository contains the Backend, which consists of:
 
 ## Quick reference
 
-- **Maintained by:** [Seatsurfing.app](https://seatsurfing.app/)
-- **Where to get help:** [Documentation](https://seatsurfing.app/docs/)
+- **Maintained by:** [seatsurfing.io](https://seatsurfing.io/)
+- **Where to get help:** [Documentation](https://seatsurfing.io/docs/)
 - **Docker architectures:** [amd64, arm64](https://github.com/seatsurfing?tab=packages&repo_name=seatsurfing)
 - **License:** [GPL 3.0](https://github.com/seatsurfing/seatsurfing/blob/main/LICENSE)
 
@@ -98,14 +98,14 @@ This starts...
 - a Seatsurfing Booking UI instance which is accessible through the Backend instance at: :8080/ui/
 - a Seatsurfing Admin UI instance which is accessible through the Backend instance at: :8080/admin/
 
-To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.app/docs/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
+To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.io/docs/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
 
 ### Running on Kubernetes
 
-Please refer to our [Kubernetes documentation](https://seatsurfing.app/docs/kubernetes/).
+Please refer to our [Kubernetes documentation](https://seatsurfing.io/docs/kubernetes/).
 
 ## Environment variables
 
-Please check out the [documentation](https://seatsurfing.app/docs/config) for information on available environment variables and further guidance.
+Please check out the [documentation](https://seatsurfing.io/docs/config) for information on available environment variables and further guidance.
 
 **Hint**: When running in an IPV6-only Docker/Podman environment with multiple network interfaces bound to the Frontend containers, setting the `LISTEN_ADDR` environment variable can be necessary as NextJS binds to only one network interface by default. Set it to `::` to bind to any address.

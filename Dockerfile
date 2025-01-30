@@ -10,8 +10,8 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o main .
 
 FROM gcr.io/distroless/static-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
-      org.opencontainers.image.url="https://seatsurfing.app" \
-      org.opencontainers.image.documentation="https://seatsurfing.app/docs/"
+      org.opencontainers.image.url="https://seatsurfing.io" \
+      org.opencontainers.image.documentation="https://seatsurfing.io/docs/"
 COPY --from=server-builder /go/src/app/server/main /app/
 COPY server/res/ /app/res
 ADD version.txt /app/

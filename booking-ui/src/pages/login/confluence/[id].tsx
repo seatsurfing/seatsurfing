@@ -16,21 +16,21 @@ class ConfluenceHint extends React.Component<Props, State> {
   onCreateAccountClick = (e: any) => {
     e.preventDefault();
     if (typeof window !== 'undefined') {
-      window.open("https://seatsurfing.app/sign-up/");
+      window.open("https://seatsurfing.io/sign-up/");
     }
   }
 
   onAdminClick = (e: any) => {
     e.preventDefault();
     if (typeof window !== 'undefined') {
-      window.open("https://app.seatsurfing.app/admin/");
+      window.open("https://app.seatsurfing.io/admin/");
     }
   }
 
   onHelpClick = (e: any) => {
     e.preventDefault();
     if (typeof window !== 'undefined') {
-      window.open("https://seatsurfing.app/contact/");
+      window.open("https://seatsurfing.io/contact/");
     }
   }
 

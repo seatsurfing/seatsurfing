@@ -23,7 +23,7 @@ Zur Platzbuchung gehen Sie bitte auf:
 {{frontendUrl}}ui/
 
 Viele Grüße
-Ihr Team von seatsurfing.app
+Ihr Team von seatsurfing.io
 
 -- 
-www.seatsurfing.app
+www.seatsurfing.io
