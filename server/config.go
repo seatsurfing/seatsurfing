@@ -36,6 +36,7 @@ type Config struct {
 	InitOrgLanguage                     string
 	OrgSignupEnabled                    bool
 	OrgSignupDomain                     string
+	OrgSignupPreviousDomains            []string
 	OrgSignupAdmin                      string
 	OrgSignupMaxUsers                   int
 	OrgSignupDelete                     bool
@@ -89,6 +90,7 @@ func (c *Config) ReadConfig() {
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")
 	c.OrgSignupEnabled = (c.getEnv("ORG_SIGNUP_ENABLED", "0") == "1")
 	c.OrgSignupDomain = c.getEnv("ORG_SIGNUP_DOMAIN", ".on.seatsurfing.local")
+	c.OrgSignupPreviousDomains = strings.Split(c.getEnv("ORG_SIGNUP_PREVIOUS_DOMAINS", ""), ",")
 	c.OrgSignupAdmin = c.getEnv("ORG_SIGNUP_ADMIN", "admin")
 	c.OrgSignupMaxUsers = c.getEnvInt("ORG_SIGNUP_MAX_USERS", 10)
 	c.OrgSignupDelete = (c.getEnv("ORG_SIGNUP_DELETE", "0") == "1")

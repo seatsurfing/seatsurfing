@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -532,8 +533,13 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {
 	email := user.Email
 	c := GetConfig()
-	if strings.Contains(email, c.OrgSignupAdmin+"@") && strings.Contains(email, GetConfig().OrgSignupDomain) {
-		email = org.ContactEmail
+	if strings.Contains(email, c.OrgSignupAdmin+"@") {
+		signupDomains := slices.Concat(GetConfig().OrgSignupPreviousDomains, []string{GetConfig().OrgSignupDomain})
+		for _, domain := range signupDomains {
+			if strings.Contains(email, domain) {
+				email = org.ContactEmail
+			}
+		}
 	}
 	vars := map[string]string{
 		"recipientName":  user.Email,

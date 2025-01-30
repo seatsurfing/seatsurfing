@@ -310,7 +310,6 @@ var unauthorizedRoutes = [...]string{
 	"/signup/",
 	"/admin/",
 	"/ui/",
-	"/fastspring/webhook",
 	"/confluence",
 	"/booking/debugtimeissues/",
 	"/robots.txt",
