@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.3](https://github.com/seatsurfing/seatsurfing/compare/v1.22.2...v1.22.3) (2025-01-30)
+
+
+### Bug Fixes
+
+* allow previous signup domains ([#533](https://github.com/seatsurfing/seatsurfing/issues/533)) ([3f9cae1](https://github.com/seatsurfing/seatsurfing/commit/3f9cae1e3c865ba2cc312b2e6457c9d9283fbe98))
+* moved from seatsurfing.app to seatsurfing.io ([#531](https://github.com/seatsurfing/seatsurfing/issues/531)) ([ec6124e](https://github.com/seatsurfing/seatsurfing/commit/ec6124ea679affe515425bdbdba5bb11eacb72b6))
+
 ## [1.22.2](https://github.com/seatsurfing/seatsurfing/compare/v1.22.1...v1.22.2) (2025-01-28)
 
 
