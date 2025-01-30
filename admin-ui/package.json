@@ -5,7 +5,7 @@
   "dependencies": {
     "@types/react-dom": "^19.0.3",
     "bootstrap": "^5.3.3",
-    "excellentexport": "^3.9.7",
+    "excellentexport": "^3.9.9",
     "flexspace-commons": "file:../commons/ts",
     "i18next": "^24.2.0",
     "i18next-browser-languagedetector": "^8.0.2",
