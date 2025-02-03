@@ -175,10 +175,10 @@ class Login extends React.Component<Props, State> {
     );
 
     let copyrightFooter = (
-      <p className="copyright-footer">
+      <div className="copyright-footer">
         &copy; Seatsurfing &#183; Version {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
         {languageSelectDropdown}
-      </p>
+      </div>
     );
 
     if (this.state.requirePassword) {
