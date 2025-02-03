@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.22.4](https://github.com/seatsurfing/seatsurfing/compare/v1.22.3...v1.22.4) (2025-02-03)
+
+
+### Bug Fixes
+
+* added content security policy (csp) ([#543](https://github.com/seatsurfing/seatsurfing/issues/543)) ([530e158](https://github.com/seatsurfing/seatsurfing/commit/530e158ed4f601fcdcaabccc16a12d875394db62))
+* **deps:** bump @playwright/test from 1.49.1 to 1.50.1 in /e2e ([#538](https://github.com/seatsurfing/seatsurfing/issues/538)) ([f47e01b](https://github.com/seatsurfing/seatsurfing/commit/f47e01b2111b4466d64303e7359b04f30c2a2576))
+* **deps:** bump @types/node from 22.10.10 to 22.13.0 in /admin-ui ([#539](https://github.com/seatsurfing/seatsurfing/issues/539)) ([bd31ee5](https://github.com/seatsurfing/seatsurfing/commit/bd31ee5a43633877f84a2097d725909b56540df3))
+* **deps:** bump @types/node from 22.10.10 to 22.13.0 in /booking-ui ([#541](https://github.com/seatsurfing/seatsurfing/issues/541)) ([6afae7c](https://github.com/seatsurfing/seatsurfing/commit/6afae7cc9e1c7475c18e71950cd41d3eddb03337))
+* **deps:** bump @types/node from 22.10.10 to 22.13.0 in /e2e ([#542](https://github.com/seatsurfing/seatsurfing/issues/542)) ([8fc5179](https://github.com/seatsurfing/seatsurfing/commit/8fc51791e2c691dff45aad9a638f2fd75a34be71))
+* **deps:** bump eslint from 9.18.0 to 9.19.0 in /admin-ui ([#524](https://github.com/seatsurfing/seatsurfing/issues/524)) ([f92f09a](https://github.com/seatsurfing/seatsurfing/commit/f92f09af8b8b15a6299e7333a28ae58e05ded830))
+* **deps:** bump eslint from 9.18.0 to 9.19.0 in /booking-ui ([#527](https://github.com/seatsurfing/seatsurfing/issues/527)) ([9f2f0c3](https://github.com/seatsurfing/seatsurfing/commit/9f2f0c325553149dabcb2539fbe7a3702715ba66))
+* **deps:** bump excellentexport from 3.9.7 to 3.9.9 in /admin-ui ([#535](https://github.com/seatsurfing/seatsurfing/issues/535)) ([b09d7ae](https://github.com/seatsurfing/seatsurfing/commit/b09d7ae053c14cba0f58c6afd02d0e390096e4e5))
+* **deps:** bump i18next from 24.2.1 to 24.2.2 in /commons/ts ([#528](https://github.com/seatsurfing/seatsurfing/issues/528)) ([c5228b8](https://github.com/seatsurfing/seatsurfing/commit/c5228b805238b276968dfe65ffddb01c86bfd4bc))
+* **deps:** bump react-bootstrap from 2.10.8 to 2.10.9 in /admin-ui ([#534](https://github.com/seatsurfing/seatsurfing/issues/534)) ([3c6d4e9](https://github.com/seatsurfing/seatsurfing/commit/3c6d4e92157264ed7ffb5c2a6e48ea8c65d4d514))
+* **deps:** bump react-bootstrap from 2.10.8 to 2.10.9 in /booking-ui ([#537](https://github.com/seatsurfing/seatsurfing/issues/537)) ([39ba2dd](https://github.com/seatsurfing/seatsurfing/commit/39ba2ddf3299b3d3c787d00f979664feb5e965b2))
+* **deps:** bump react-router-dom from 7.1.3 to 7.1.5 in /admin-ui ([#540](https://github.com/seatsurfing/seatsurfing/issues/540)) ([0584ada](https://github.com/seatsurfing/seatsurfing/commit/0584adaba32f40e0292da1b8161894133340fd3d))
+* stricter csp in production mode ([#545](https://github.com/seatsurfing/seatsurfing/issues/545)) ([b93c0fe](https://github.com/seatsurfing/seatsurfing/commit/b93c0fe415255dd43aafe7ec6740e6f917eaca38))
+
 ## [1.22.3](https://github.com/seatsurfing/seatsurfing/compare/v1.22.2...v1.22.3) (2025-01-30)
 
 
