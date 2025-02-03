@@ -9,7 +9,10 @@ type Props = DocumentProps & {
 class Doc extends Document<Props> {
   render() {
     const nonce = randomBytes(128).toString('base64')
-    const csp = `object-src 'none'; base-uri 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https: 'nonce-${nonce}' 'strict-dynamic'`
+    let csp = `default-src 'self'; object-src 'none'; base-uri 'none'; script-src 'self' https: 'nonce-${nonce}' 'strict-dynamic'`
+    if (process.env.NODE_ENV.toLowerCase() === "development") {
+      csp = `object-src 'none'; base-uri 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https: 'nonce-${nonce}' 'strict-dynamic'`
+    }
     const currentLocale =
       this.props.__NEXT_DATA__.locale ??
       i18nextConfig.i18n.defaultLocale
