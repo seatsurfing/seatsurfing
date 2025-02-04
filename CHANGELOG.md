@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.5](https://github.com/seatsurfing/seatsurfing/compare/v1.22.4...v1.22.5) (2025-02-04)
+
+
+### Bug Fixes
+
+* floor plan issues due to strict csp ([#546](https://github.com/seatsurfing/seatsurfing/issues/546)) ([a8ffa2e](https://github.com/seatsurfing/seatsurfing/commit/a8ffa2e5d7f0db62198f6f83f847bed5a5880d26))
+
 ## [1.22.4](https://github.com/seatsurfing/seatsurfing/compare/v1.22.3...v1.22.4) (2025-02-03)
 
 
