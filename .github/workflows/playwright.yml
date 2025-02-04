@@ -23,8 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install Node
-      run: apt-get update && apt-get install -y npm nodejs
-
+      run: curl -fsSL https://deb.nodesource.com/setup_22.x -o - | bash && apt-get install -y nodejs
 
     - name: Build TypeScript commons
       working-directory: ./commons/ts
