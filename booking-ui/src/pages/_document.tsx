@@ -9,10 +9,21 @@ type Props = DocumentProps & {
 class Doc extends Document<Props> {
   render() {
     const nonce = randomBytes(128).toString('base64')
-    let csp = `default-src 'self'; object-src 'none'; base-uri 'none'; script-src 'self' https: 'nonce-${nonce}' 'strict-dynamic'`
+    let csp = new Map<string, string[]>();
+    csp.set('default-src', ["'self'"]);
+    csp.set('img-src', ["'self'", "data:", "'unsafe-eval'"]);
+    csp.set('style-src', ["'self'", "data:", "'unsafe-inline'"]);
+    csp.set('object-src', ["data:", "'unsafe-eval'"]);
+    csp.set('base-uri', ["'none'"]);
+    csp.set('script-src', ["'self'", "'nonce-"+nonce+"'", "'strict-dynamic'"]);
     if (process.env.NODE_ENV.toLowerCase() === "development") {
-      csp = `object-src 'none'; base-uri 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https: 'nonce-${nonce}' 'strict-dynamic'`
+      csp.set('connect-src', ["'self'", "http://localhost:8080"]);
+      csp.set('script-src', Object.assign([], csp.get('script-src')?.concat(["'unsafe-eval'", "'unsafe-inline'"])));
     }
+    let cspString = ``;
+    csp.keys().forEach((key) => {
+      cspString += `${key} ${csp.get(key)?.join(' ')}; `;
+    });
     const currentLocale =
       this.props.__NEXT_DATA__.locale ??
       i18nextConfig.i18n.defaultLocale
@@ -20,7 +31,7 @@ class Doc extends Document<Props> {
       <Html lang={currentLocale}>
         <Head nonce={nonce}>
           <meta name="robots" content="noindex" />
-          <meta httpEquiv="Content-Security-Policy" content={csp} />
+          <meta httpEquiv="Content-Security-Policy" content={cspString} />
         </Head>
         <body>
           <Main />

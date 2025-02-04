@@ -193,6 +193,10 @@ form#filter-locations-form .row {
     margin-bottom: 15px;
 }
 
+.input-group .btn {
+    z-index: auto;
+}
+
 @media only screen and (min-width: 440px) {
     .container-search-config {
         width: calc(100% - 20px);
