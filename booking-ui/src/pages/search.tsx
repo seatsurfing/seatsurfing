@@ -118,7 +118,6 @@ class Search extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    console.log(RuntimeConfig.INFOS);
     if (!Ajax.CREDENTIALS.accessToken) {
       this.props.router.push({ pathname: "/login", query: { redir: this.props.router.asPath } });
       return;
@@ -139,6 +138,10 @@ class Search extends React.Component<Props, State> {
         let defaultLocationId = this.getPreferredLocationId(this.props.router.query["lid"] as string || '');
         let sidParam = this.props.router.query["sid"] as string || "";
         this.setState({ locationId: defaultLocationId }, () => {
+          if (!defaultLocationId) {
+            this.setState({ loading: false });
+            return;
+          }
           this.getLocation()?.getAttributes().then((attributes) => {
             this.loadMap(this.state.locationId).then(() => {
               this.setState({
@@ -874,6 +877,30 @@ class Search extends React.Component<Props, State> {
     });
   }
 
+  cancelBooking = (item: Booking | null) => {
+    this.setState({
+      confirmingBooking: true
+    });
+    item?.delete().then(() => {
+      this.setState({
+        selectedSpace: null,
+        confirmingBooking: false,
+        showBookingNames: false
+      }, this.refreshPage);
+    }, (reason: any) => {
+      if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
+        window.alert(ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t));
+      } else {
+        window.alert(this.props.t("errorDeleteBooking"));
+      }
+      this.setState({
+        selectedSpace: null,
+        confirmingBooking: false,
+        showBookingNames: false
+      }, this.refreshPage);
+    });
+  }
+
   render() {
     let hint = <></>;
     if ((!this.state.canSearch) && (this.state.canSearchHint)) {
@@ -1047,7 +1074,7 @@ class Search extends React.Component<Props, State> {
           </Button>
           <Button variant="primary" onClick={this.onConfirmBooking} disabled={this.state.confirmingBooking}>
             {this.props.t("confirmBooking")}
-            {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{marginLeft: '5px'}} /> : <></>}
+            {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1060,11 +1087,9 @@ class Search extends React.Component<Props, State> {
     let gotoBooking;
     if (myBooking) {
       gotoBooking = (
-        <Button variant="secondary" onClick={() => {
-          this.setState({ showBookingNames: false })
-          this.props.router.push("/bookings#" + myBooking.id)
-        }}>
-          {this.props.t("gotoBooking")}
+        <Button variant="danger" onClick={() => this.cancelBooking(myBooking)} disabled={this.state.confirmingBooking}>
+          {this.props.t("cancelBooking")}
+          {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
         </Button>
       )
     }
@@ -1079,8 +1104,8 @@ class Search extends React.Component<Props, State> {
           })}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => this.setState({ showBookingNames: false })}>
-            {this.props.t("ok")}
+          <Button variant={myBooking ? 'secondary' : 'primary'} onClick={() => this.setState({ showBookingNames: false })}>
+            {this.props.t("back")}
           </Button>
           {gotoBooking}
         </Modal.Footer>
@@ -1116,8 +1141,8 @@ class Search extends React.Component<Props, State> {
           <p>{this.state.errorText}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => this.props.router.push("/bookings")}>
-            {this.props.t("myBookings").toString()}
+          <Button variant="primary" onClick={() => this.setState({showError: false, errorText: ""})}>
+            {this.props.t("ok").toString()}
           </Button>
         </Modal.Footer>
       </Modal>

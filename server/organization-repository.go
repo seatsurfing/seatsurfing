@@ -323,6 +323,7 @@ func (r *OrganizationRepository) createSampleData(org *Organization) error {
 		OrganizationID: org.ID,
 		Name:           "Sample Floor",
 		Description:    "Sample Map provided by Marco Garbelini under the Creative Commons Attribution 2.0 Generic (CC BY 2.0) License: https://www.flickr.com/photos/garbelini/300134781",
+		Enabled:        true,
 	}
 	if err := GetLocationRepository().Create(location); err != nil {
 		return err
