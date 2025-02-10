@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.23.0](https://github.com/seatsurfing/seatsurfing/compare/v1.22.5...v1.23.0) (2025-02-10)
+
+
+### Features
+
+* allow cancel booking from map ([#558](https://github.com/seatsurfing/seatsurfing/issues/558)) ([350fd17](https://github.com/seatsurfing/seatsurfing/commit/350fd17ea7bb153ed704bb1a4698e85626f349cf))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.13.0 to 22.13.1 in /admin-ui ([#549](https://github.com/seatsurfing/seatsurfing/issues/549)) ([fb3b14c](https://github.com/seatsurfing/seatsurfing/commit/fb3b14c31ef73af07046e26a3b8a1c058da1d336))
+* **deps:** bump @types/node from 22.13.0 to 22.13.1 in /booking-ui ([#550](https://github.com/seatsurfing/seatsurfing/issues/550)) ([4cd5c98](https://github.com/seatsurfing/seatsurfing/commit/4cd5c983065fd0a9fb68d53b7b05a69f938ff1ee))
+* **deps:** bump @types/node from 22.13.0 to 22.13.1 in /e2e ([#551](https://github.com/seatsurfing/seatsurfing/issues/551)) ([000798e](https://github.com/seatsurfing/seatsurfing/commit/000798e51e6ace8401f1410614cdab91137fbda9))
+* **deps:** bump eslint from 9.19.0 to 9.20.0 in /admin-ui ([#559](https://github.com/seatsurfing/seatsurfing/issues/559)) ([6a99783](https://github.com/seatsurfing/seatsurfing/commit/6a997834ef1c11af6ff250646a8ac4878cf4738f))
+* **deps:** bump eslint from 9.19.0 to 9.20.0 in /booking-ui ([#560](https://github.com/seatsurfing/seatsurfing/issues/560)) ([e452ccd](https://github.com/seatsurfing/seatsurfing/commit/e452ccd53b5a1f7c15d003ced96f2ebd07925a33))
+* **deps:** bump golang.org/x/crypto from 0.32.0 to 0.33.0 ([#561](https://github.com/seatsurfing/seatsurfing/issues/561)) ([58a4964](https://github.com/seatsurfing/seatsurfing/commit/58a49646ca5daecf5d9f192d9fa1d6a782276486))
+* **deps:** bump golang.org/x/oauth2 from 0.25.0 to 0.26.0 ([#548](https://github.com/seatsurfing/seatsurfing/issues/548)) ([d00188c](https://github.com/seatsurfing/seatsurfing/commit/d00188c6b8e62911576ff3121d6122b563e911e5))
+* **deps:** bump next-i18next from 15.4.1 to 15.4.2 in /admin-ui ([#555](https://github.com/seatsurfing/seatsurfing/issues/555)) ([fed1eaf](https://github.com/seatsurfing/seatsurfing/commit/fed1eaf6142995cae83fd2315d3455dde790b59a))
+* **deps:** bump next-i18next from 15.4.1 to 15.4.2 in /booking-ui ([#556](https://github.com/seatsurfing/seatsurfing/issues/556)) ([8d66537](https://github.com/seatsurfing/seatsurfing/commit/8d66537553eb51f8bd0ba4416b9cebdd4c811a81))
+* enable sample location in new org by default ([#562](https://github.com/seatsurfing/seatsurfing/issues/562)) ([7e8b18d](https://github.com/seatsurfing/seatsurfing/commit/7e8b18d8cfcaf343ace3683464ff4f935a611b41))
+* handle all locations disabled ([#563](https://github.com/seatsurfing/seatsurfing/issues/563)) ([9c2851a](https://github.com/seatsurfing/seatsurfing/commit/9c2851ae95897480d04d359131ff3eee5572e4ba))
+* incorrect disabled button style ([#564](https://github.com/seatsurfing/seatsurfing/issues/564)) ([300f775](https://github.com/seatsurfing/seatsurfing/commit/300f7750725d9c827c8107e1bf59e2c22d1b5d4c))
+
 ## [1.22.5](https://github.com/seatsurfing/seatsurfing/compare/v1.22.4...v1.22.5) (2025-02-04)
 
 
