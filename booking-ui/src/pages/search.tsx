@@ -118,7 +118,6 @@ class Search extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    console.log(RuntimeConfig.INFOS);
     if (!Ajax.CREDENTIALS.accessToken) {
       this.props.router.push({ pathname: "/login", query: { redir: this.props.router.asPath } });
       return;
@@ -139,6 +138,10 @@ class Search extends React.Component<Props, State> {
         let defaultLocationId = this.getPreferredLocationId(this.props.router.query["lid"] as string || '');
         let sidParam = this.props.router.query["sid"] as string || "";
         this.setState({ locationId: defaultLocationId }, () => {
+          if (!defaultLocationId) {
+            this.setState({ loading: false });
+            return;
+          }
           this.getLocation()?.getAttributes().then((attributes) => {
             this.loadMap(this.state.locationId).then(() => {
               this.setState({
