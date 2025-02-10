@@ -126,6 +126,11 @@
     padding-bottom: 0px;
 }
 
+.container-search-config .input-group .btn.disabled,
+.container-search-config .input-group .btn:disabled {
+    border-color: var(--bs-border-color);
+}
+
 .container-search-config .collapse-bar .expand-icon,
 .container-search-config .collapse-bar .expand-icon-bigscreen,
 .container-search-config .collapse-bar .expand-icon-smallscreen,
