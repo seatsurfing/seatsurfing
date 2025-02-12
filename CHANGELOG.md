@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.23.1](https://github.com/seatsurfing/seatsurfing/compare/v1.23.0...v1.23.1) (2025-02-12)
+
+
+### Bug Fixes
+
+* **deps:** bump eslint from 9.20.0 to 9.20.1 in /admin-ui ([#565](https://github.com/seatsurfing/seatsurfing/issues/565)) ([36086e5](https://github.com/seatsurfing/seatsurfing/commit/36086e5cdd52e494dec9995e27eb2c0492f3804b))
+* **deps:** bump eslint from 9.20.0 to 9.20.1 in /booking-ui ([#569](https://github.com/seatsurfing/seatsurfing/issues/569)) ([3f10af8](https://github.com/seatsurfing/seatsurfing/commit/3f10af8782ccdbb9e2110c7345f7c916cb6bb712))
+* **deps:** bump eslint-config-next from 15.1.6 to 15.1.7 in /admin-ui ([#566](https://github.com/seatsurfing/seatsurfing/issues/566)) ([05b7999](https://github.com/seatsurfing/seatsurfing/commit/05b7999b3e661ffadf92dc17703fcd144d973457))
+* **deps:** bump eslint-config-next from 15.1.6 to 15.1.7 in /booking-ui ([#568](https://github.com/seatsurfing/seatsurfing/issues/568)) ([52a2941](https://github.com/seatsurfing/seatsurfing/commit/52a2941d8a273a84d5bbd973bab6cd13d8e3b4ad))
+* **deps:** bump next from 15.1.6 to 15.1.7 in /admin-ui ([#567](https://github.com/seatsurfing/seatsurfing/issues/567)) ([05e56ee](https://github.com/seatsurfing/seatsurfing/commit/05e56eecb720f852e7eb1b05929acde5a8021833))
+* **deps:** bump next from 15.1.6 to 15.1.7 in /booking-ui ([#570](https://github.com/seatsurfing/seatsurfing/issues/570)) ([eb8104d](https://github.com/seatsurfing/seatsurfing/commit/eb8104d756125427bf9f9218030dad03c5d76a06))
+* include cloud upgrade option ([#571](https://github.com/seatsurfing/seatsurfing/issues/571)) ([ac92ac0](https://github.com/seatsurfing/seatsurfing/commit/ac92ac0523b1cddeb54ffa3a029d4a5056025247))
+
 ## [1.23.0](https://github.com/seatsurfing/seatsurfing/compare/v1.22.5...v1.23.0) (2025-02-10)
 
 
