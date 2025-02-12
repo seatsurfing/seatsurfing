@@ -29,7 +29,7 @@
   "scripts": {
     "start": "PORT=3000 next start",
     "build": "next build",
-    "dev": "PORT=3000 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
+    "dev": "PORT=3000 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev NEXT_PUBLIC_CLOUD=1 next dev",
     "lint": "next lint",
     "install-commons": "npm remove --save flexspace-commons && npm install --save ../commons/ts"
   },

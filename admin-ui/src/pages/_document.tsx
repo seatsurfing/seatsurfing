@@ -17,6 +17,7 @@ class Doc extends Document<Props> {
     csp.set('base-uri', ["'none'"]);
     csp.set('script-src', ["'self'", "'nonce-"+nonce+"'", "'strict-dynamic'"]);
     if (process.env.NODE_ENV.toLowerCase() === "development") {
+      csp.set('frame-src', ["'self'", "https://app.seatsurfing.io"]);
       csp.set('connect-src', ["'self'", "http://localhost:8080"]);
       csp.set('script-src', Object.assign([], csp.get('script-src')?.concat(["'unsafe-eval'", "'unsafe-inline'"])));
     }

@@ -165,5 +165,6 @@
     "applicableTo": "Applicable to",
     "editAttribute": "Edit Attribute",
     "confirmDeleteAttribute": "Delete attribute and its values?",
-    "enabled": "Enabled"
+    "enabled": "Enabled",
+    "upgradeCloud": "Upgrade"
 }

@@ -158,5 +158,6 @@
     "applicableTo": "Anwendbar auf",
     "editAttribute": "Attribut bearbeiten",
     "confirmDeleteAttribute": "Attribut und alle seine Werte löschen?",
-    "enabled": "Aktiv"
+    "enabled": "Aktiv",
+    "upgradeCloud": "Upgrade"
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home as IconHome, Users as IconUsers, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink } from 'react-feather';
+import { Home as IconHome, Users as IconUsers, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Gift as UpgradeIcon } from 'react-feather';
 import { Ajax, AjaxCredentials, User } from 'flexspace-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { Nav } from 'react-bootstrap';
@@ -80,6 +80,9 @@ class SideBar extends React.Component<Props, State> {
                     </li>
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/settings" href="/settings"><IconSettings className="feather" /> {this.props.t("settings")}</Nav.Link>
+                    </li>
+                    <li className="nav-item" hidden={process.env.NEXT_PUBLIC_CLOUD !== "1"}>
+                        <Nav.Link as={Link} eventKey="/upgrade-cloud" href="/upgrade-cloud"><UpgradeIcon className="feather" /> {this.props.t("upgradeCloud")}</Nav.Link>
                     </li>
                 </>
             );
