@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.2](https://github.com/seatsurfing/seatsurfing/compare/v1.23.1...v1.23.2) (2025-02-13)
+
+
+### Bug Fixes
+
+* cloud runtime detection ([#573](https://github.com/seatsurfing/seatsurfing/issues/573)) ([223fb2c](https://github.com/seatsurfing/seatsurfing/commit/223fb2cfdf5ace3a211ac5baf3e9151bdb7de32b))
+
 ## [1.23.1](https://github.com/seatsurfing/seatsurfing/compare/v1.23.0...v1.23.1) (2025-02-12)
 
 
