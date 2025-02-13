@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm AS server-builder
+FROM golang:1.24-bookworm AS server-builder
 RUN export GOBIN=$HOME/work/bin
 WORKDIR /go/src/app
 ADD server/ server/
