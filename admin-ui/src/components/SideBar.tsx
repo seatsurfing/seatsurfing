@@ -81,7 +81,7 @@ class SideBar extends React.Component<Props, State> {
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/settings" href="/settings"><IconSettings className="feather" /> {this.props.t("settings")}</Nav.Link>
                     </li>
-                    <li className="nav-item" hidden={process.env.NEXT_PUBLIC_CLOUD !== "1"}>
+                    <li className="nav-item" hidden={window.location.host.split(':').shift() !== 'app.seatsurfing.io'}>
                         <Nav.Link as={Link} eventKey="/upgrade-cloud" href="/upgrade-cloud"><UpgradeIcon className="feather" /> {this.props.t("upgradeCloud")}</Nav.Link>
                     </li>
                 </>
