@@ -65,9 +65,11 @@ class ReportAnalysis extends React.Component<Props, State> {
 
   getRows = () => {
     return this.data.users.map((user: any, i: number) => {
+      let j = 0;
       let cols = this.data.presences[i].map((num: number) => {
         let val = num > 0 ? <IconCheck className="feather" /> : "-";
-        return <td key={'row-' + num} className="center">{val}</td>;
+        j++;
+        return <td key={'row-' + user.userId + '-' + j} className="center">{val}</td>;
       });
       return (
         <tr key={user.userId}>
