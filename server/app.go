@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -27,8 +27,11 @@ func GetApp() *App {
 }
 
 type App struct {
-	Router        *mux.Router
-	CleanupTicker *time.Ticker
+	Router              *mux.Router
+	BackplaneRouter     *mux.Router
+	PublicHttpServer    *http.Server
+	BackplaneHttpServer *http.Server
+	CleanupTicker       *time.Ticker
 }
 
 func (a *App) InitializeDatabases() {
@@ -72,6 +75,17 @@ func (a *App) InitializeRouter() {
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
+}
+
+func (a *App) InitializeBackplaneRouter() {
+	a.BackplaneRouter = mux.NewRouter()
+	routers := make(map[string]Route)
+	routers["/organization/"] = &BackplaneOrganizationRouter{}
+	for route, router := range routers {
+		subRouter := a.BackplaneRouter.PathPrefix(route).Subrouter()
+		router.setupRoutes(subRouter)
+	}
+	a.BackplaneRouter.Use(ValidateBackplaneAuthMiddleware)
 }
 
 func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {
@@ -147,12 +161,12 @@ func (a *App) adminUIProxyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend string) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	r.Body = ioutil.NopCloser(bytes.NewReader(body))
+	r.Body = io.NopCloser(bytes.NewReader(body))
 	url := fmt.Sprintf("%s://%s%s", "http", backend, r.RequestURI)
 	proxyReq, err := http.NewRequest(r.Method, url, bytes.NewReader(body))
 	if err != nil {
@@ -170,7 +184,7 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 		return
 	}
 	defer resp.Body.Close()
-	bodyRes, err := ioutil.ReadAll(resp.Body)
+	bodyRes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -198,27 +212,51 @@ func (a *App) setupAdminUIProxy(router *mux.Router) {
 	router.PathPrefix(basePath + "/").HandlerFunc(a.adminUIProxyHandler)
 }
 
-func (a *App) Run(publicListenAddr string) {
-	log.Println("Initializing REST services...")
-	httpServer := &http.Server{
-		Addr:         publicListenAddr,
+func (a *App) startPublicHttpServer() {
+	log.Println("Initializing Public REST services...")
+	a.PublicHttpServer = &http.Server{
+		Addr:         GetConfig().PublicListenAddr,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 		Handler:      a.Router,
 	}
 	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
+		if err := a.PublicHttpServer.ListenAndServe(); err != nil {
 			log.Fatal(err)
 			os.Exit(-1)
 		}
 	}()
-	log.Println("HTTP Server listening on", publicListenAddr)
+	log.Println("Public HTTP Server listening on", GetConfig().PublicListenAddr)
+}
+
+func (a *App) startBackplaneHttpServer() {
+	log.Println("Initializing Backplane REST services...")
+	a.BackplaneHttpServer = &http.Server{
+		Addr:         GetConfig().BackplaneListenAddr,
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      a.BackplaneRouter,
+	}
+	go func() {
+		if err := a.BackplaneHttpServer.ListenAndServe(); err != nil {
+			log.Fatal(err)
+			os.Exit(-1)
+		}
+	}()
+	log.Println("Backplane HTTP Server listening on", GetConfig().BackplaneListenAddr)
+}
+
+func (a *App) Run() {
+	a.startBackplaneHttpServer()
+	a.startPublicHttpServer()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
 	log.Println("Shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
-	httpServer.Shutdown(ctx)
+	a.PublicHttpServer.Shutdown(ctx)
+	a.BackplaneHttpServer.Shutdown(ctx)
 }

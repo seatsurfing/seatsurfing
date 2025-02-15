@@ -16,6 +16,9 @@ import (
 
 type Config struct {
 	PublicListenAddr                    string
+	BackplaneListenAddr                 string
+	BackplaneUsername                   string
+	BackplanePassword                   string
 	PublicURL                           string
 	FrontendURL                         string
 	PostgresURL                         string
@@ -67,6 +70,9 @@ func (c *Config) ReadConfig() {
 	log.Println("Reading config...")
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
+	c.BackplaneListenAddr = c.getEnv("BACKPLANE_LISTEN_ADDR", "0.0.0.0:8081")
+	c.BackplaneUsername = c.getEnv("BACKPLANE_USERNAME", "admin")
+	c.BackplanePassword = c.getEnv("BACKPLANE_PASSWORD", "")
 	c.PublicURL = strings.TrimSuffix(c.getEnv("PUBLIC_URL", "http://localhost:8080"), "/") + "/"
 	if c.Development {
 		c.FrontendURL = c.getEnv("FRONTEND_URL", "http://localhost:3000")

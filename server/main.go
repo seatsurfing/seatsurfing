@@ -38,7 +38,7 @@ func main() {
 	if GetConfig().PrintConfig {
 		GetConfig().Print()
 	}
-	a.Run(GetConfig().PublicListenAddr)
+	a.Run()
 	db.Close()
 	os.Exit(0)
 }
