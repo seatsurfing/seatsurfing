@@ -1,7 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
+	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -14,7 +19,8 @@ type Config struct {
 	PublicURL                           string
 	FrontendURL                         string
 	PostgresURL                         string
-	JwtSigningKey                       string
+	JwtPrivateKey                       *rsa.PrivateKey
+	JwtPublicKey                        *rsa.PublicKey
 	DisableUiProxy                      bool
 	AdminUiBackend                      string
 	BookingUiBackend                    string
@@ -72,7 +78,17 @@ func (c *Config) ReadConfig() {
 	c.AdminUiBackend = c.getEnv("ADMIN_UI_BACKEND", "localhost:3000")
 	c.BookingUiBackend = c.getEnv("BOOKING_UI_BACKEND", "localhost:3001")
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")
-	c.JwtSigningKey = c.getEnv("JWT_SIGNING_KEY", "cX32hEwZDCLZ6bCR")
+	privateKey, _ := c.loadPrivateKey(c.getEnv("JWT_PRIVATE_KEY", ""))
+	publicKey, _ := c.loadPublicKey(c.getEnv("JWT_PUBLIC_KEY", ""))
+	if publicKey == nil || privateKey == nil {
+		log.Println("Warning: No valid JWT_PRIVATE_KEY or JWT_PUBLIC_KEY set. Generating a temporary random private/public key pair...")
+		privkey, _ := rsa.GenerateKey(rand.Reader, 2048)
+		c.JwtPrivateKey = privkey
+		c.JwtPublicKey = &privkey.PublicKey
+	} else {
+		c.JwtPrivateKey = privateKey
+		c.JwtPublicKey = publicKey
+	}
 	c.SMTPHost = c.getEnv("SMTP_HOST", "127.0.0.1")
 	c.SMTPPort = c.getEnvInt("SMTP_PORT", 25)
 	c.SMTPStartTLS = (c.getEnv("SMTP_START_TLS", "0") == "1")
@@ -100,6 +116,39 @@ func (c *Config) ReadConfig() {
 	c.CryptKey = c.getEnv("CRYPT_KEY", "")
 	if c.CryptKey == "" || len(c.CryptKey) != 32 {
 		log.Println("Warning: No valid CRYPT_KEY set. Set it to a 32 bytes long string in order to use features such as CalDAV integration.")
+	}
+}
+
+func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {
+	pemBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode([]byte(pemBytes))
+	if block == nil {
+		return nil, errors.New("failed to parse PEM block containing the key")
+	}
+	return x509.ParsePKCS1PrivateKey(block.Bytes)
+}
+
+func (c *Config) loadPublicKey(path string) (*rsa.PublicKey, error) {
+	pemBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode([]byte(pemBytes))
+	if block == nil {
+		return nil, errors.New("failed to parse PEM block containing the key")
+	}
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	switch pub := pub.(type) {
+	case *rsa.PublicKey:
+		return pub, nil
+	default:
+		return nil, errors.New("key type is not RSA")
 	}
 }
 

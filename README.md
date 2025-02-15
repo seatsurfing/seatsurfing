@@ -51,7 +51,6 @@ services:
       - 8080:8080
     environment:
       POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
-      JWT_SIGNING_KEY: 'some_random_string'
       BOOKING_UI_BACKEND: 'booking-ui:3001'
       ADMIN_UI_BACKEND: 'admin-ui:3000'
       PUBLIC_URL: 'https://seatsurfing.your-domain.com'

@@ -579,8 +579,8 @@ func (router *AuthRouter) createAccessToken(claims *Claims) string {
 	claims.RegisteredClaims = jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
 	}
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	jwtString, err := accessToken.SignedString([]byte(GetConfig().JwtSigningKey))
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	jwtString, err := accessToken.SignedString(GetConfig().JwtPrivateKey)
 	if err != nil {
 		return ""
 	}

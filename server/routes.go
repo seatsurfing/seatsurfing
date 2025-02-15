@@ -159,10 +159,10 @@ func ExtractClaimsFromRequest(r *http.Request) (*Claims, string, error) {
 	authHeader = strings.TrimPrefix(authHeader, "Bearer ")
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(authHeader, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(GetConfig().JwtSigningKey), nil
+		return GetConfig().JwtPublicKey, nil
 	})
 	if err != nil {
 		return nil, "", errors.New("JWT header verification failed: parsing JWT failed with: " + err.Error())
