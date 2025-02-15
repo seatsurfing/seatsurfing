@@ -1,4 +1,4 @@
-module server
+module github.com/seatsurfing/seatsurfing
 
 go 1.23.0
 
