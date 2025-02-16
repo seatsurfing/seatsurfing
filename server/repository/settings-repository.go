@@ -46,7 +46,6 @@ var (
 	SettingMaxBookingDurationHours        SettingName = SettingName{Name: "max_booking_duration_hours", Type: SettingTypeInt}
 	SettingMaxHoursPartiallyBooked        SettingName = SettingName{Name: "max_hours_partially_booked", Type: SettingTypeInt}
 	SettingMaxHoursPartiallyBookedEnabled SettingName = SettingName{Name: "max_hours_partially_booked_enabled", Type: SettingTypeBool}
-	SettingActiveSubscription             SettingName = SettingName{Name: "subscription_active", Type: SettingTypeBool}
 	SettingDailyBasisBooking              SettingName = SettingName{Name: "daily_basis_booking", Type: SettingTypeBool}
 	SettingNoAdminRestrictions            SettingName = SettingName{Name: "no_admin_restrictions", Type: SettingTypeBool}
 	SettingCustomLogoUrl                  SettingName = SettingName{Name: "custom_logo_url", Type: SettingTypeString}
@@ -189,7 +188,6 @@ func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error
 func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES "+
-		"($1, '"+SettingActiveSubscription.Name+"', '0'), "+
 		"($1, '"+SettingSubscriptionMaxUsers.Name+"', '"+strconv.Itoa(GetConfig().OrgSignupMaxUsers)+"'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+

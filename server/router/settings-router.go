@@ -212,7 +212,6 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingMaxHoursBeforeDelete.Name ||
 		name == SettingEnableMaxHourBeforeDelete.Name ||
 		name == SettingMinBookingDurationHours.Name ||
-		name == SettingActiveSubscription.Name ||
 		name == SettingMaxHoursPartiallyBooked.Name ||
 		name == SettingMaxHoursPartiallyBookedEnabled.Name ||
 		name == SettingSubscriptionMaxUsers.Name ||

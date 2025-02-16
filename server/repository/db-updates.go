@@ -26,7 +26,6 @@ func RunDBSchemaUpdates() {
 		GetUserPreferencesRepository(),
 		GetSettingsRepository(),
 		GetSignupRepository(),
-		GetSubscriptionRepository(),
 		GetRefreshTokenRepository(),
 		GetDebugTimeIssuesRepository(),
 		GetSpaceAttributeRepository(),

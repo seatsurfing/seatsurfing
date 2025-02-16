@@ -35,10 +35,6 @@ type GetDomainResponse struct {
 	VerifyToken string `json:"verifyToken"`
 }
 
-type GetManageSubscriptionURLResponse struct {
-	URL string `json:"url"`
-}
-
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
 	s.HandleFunc("/{id}/domain/", router.getDomains).Methods("GET")

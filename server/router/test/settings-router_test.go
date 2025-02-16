@@ -72,7 +72,6 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingAllowAnyUser.Name,
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
-		SettingActiveSubscription.Name,
 		SettingSubscriptionMaxUsers.Name,
 	}
 
@@ -129,7 +128,6 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingAllowAnyUser.Name,
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
-		SettingActiveSubscription.Name,
 		SettingSubscriptionMaxUsers.Name,
 		SettingDefaultTimezone.Name,
 		SettingCustomLogoUrl.Name,
