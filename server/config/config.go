@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"log"
@@ -36,7 +35,6 @@ type Config struct {
 	SMTPAuthUser                        string
 	SMTPAuthPass                        string
 	MockSendmail                        bool
-	PrintConfig                         bool
 	Development                         bool
 	InitOrgName                         string
 	InitOrgDomain                       string
@@ -105,7 +103,6 @@ func (c *Config) ReadConfig() {
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
 	c.SMTPSenderAddress = c.getEnv("SMTP_SENDER_ADDRESS", "no-reply@seatsurfing.local")
 	c.MockSendmail = (c.getEnv("MOCK_SENDMAIL", "0") == "1")
-	c.PrintConfig = (c.getEnv("PRINT_CONFIG", "0") == "1")
 	c.InitOrgName = c.getEnv("INIT_ORG_NAME", "Sample Company")
 	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "seatsurfing.local")
 	c.InitOrgUser = c.getEnv("INIT_ORG_USER", "admin")
@@ -170,11 +167,6 @@ func (c *Config) IsValidLanguageCode(isoLanguageCode string) bool {
 		}
 	}
 	return false
-}
-
-func (c *Config) Print() {
-	s, _ := json.MarshalIndent(c, "", "\t")
-	log.Println("Using config:\n" + string(s))
 }
 
 func (c *Config) getEnv(key, defaultValue string) string {
