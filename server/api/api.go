@@ -1,8 +1,7 @@
-package plugin
-
-import . "github.com/seatsurfing/seatsurfing/server/router"
+package api
 
 type SeatsurfingPlugin interface {
 	GetPublicRoutes() map[string]Route
 	GetBackplaneRoutes() map[string]Route
+	GetRepositories() []Repository
 }

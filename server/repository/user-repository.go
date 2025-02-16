@@ -9,6 +9,9 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type UserRepository struct {

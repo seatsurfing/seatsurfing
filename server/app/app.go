@@ -14,7 +14,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -66,6 +68,11 @@ func (a *App) InitializeRouter() {
 	if config.OrgSignupEnabled {
 		routers["/signup/"] = &SignupRouter{}
 	}
+	for _, plg := range plugin.GetPlugins() {
+		for route, router := range (*plg).GetPublicRoutes() {
+			routers[route] = router
+		}
+	}
 	for route, router := range routers {
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
@@ -84,6 +91,11 @@ func (a *App) InitializeRouter() {
 func (a *App) InitializeBackplaneRouter() {
 	a.BackplaneRouter = mux.NewRouter()
 	routers := make(map[string]Route)
+	for _, plg := range plugin.GetPlugins() {
+		for route, router := range (*plg).GetBackplaneRoutes() {
+			routers[route] = router
+		}
+	}
 	for route, router := range routers {
 		subRouter := a.BackplaneRouter.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)

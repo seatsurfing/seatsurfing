@@ -13,7 +13,6 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/gorilla/mux"
 	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -40,10 +39,6 @@ var (
 	ResponseCodeBookingInvalidMinBookingDuration = 1007
 	ResponseCodeBookingMaxHoursBeforeDelete      = 1008
 )
-
-type Route interface {
-	SetupRoutes(s *mux.Router)
-}
 
 func SendTemporaryRedirect(w http.ResponseWriter, url string) {
 	w.Header().Set("Location", url)

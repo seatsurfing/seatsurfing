@@ -2,11 +2,8 @@ package repository
 
 import (
 	"database/sql"
-	"database/sql/driver"
-	"errors"
 	"log"
 	"sync"
-	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 
@@ -53,27 +50,4 @@ func (db *Database) DB() *sql.DB {
 func (db *Database) Close() {
 	log.Println("Closing database connection...")
 	db.Connection.Close()
-}
-
-type NullString string
-type NullTime *time.Time
-
-func (s *NullString) Scan(value interface{}) error {
-	if value == nil {
-		*s = ""
-		return nil
-	}
-	strVal, ok := value.(string)
-	if !ok {
-		return errors.New("column is not a string")
-	}
-	*s = NullString(strVal)
-	return nil
-}
-
-func (s NullString) Value() (driver.Value, error) {
-	if len(s) == 0 { // if nil or empty string
-		return nil, nil
-	}
-	return string(s), nil
 }

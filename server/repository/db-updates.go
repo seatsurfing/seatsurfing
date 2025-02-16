@@ -5,6 +5,9 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 )
 
 func RunDBSchemaUpdates() {
@@ -30,6 +33,11 @@ func RunDBSchemaUpdates() {
 		GetDebugTimeIssuesRepository(),
 		GetSpaceAttributeRepository(),
 		GetSpaceAttributeValueRepository(),
+	}
+	for _, plg := range plugin.GetPlugins() {
+		for _, repository := range (*plg).GetRepositories() {
+			repositories = append(repositories, repository)
+		}
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)
