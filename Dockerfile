@@ -10,7 +10,7 @@ FROM gcr.io/distroless/static-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
       org.opencontainers.image.url="https://seatsurfing.io" \
       org.opencontainers.image.documentation="https://seatsurfing.io/docs/"
-COPY --from=server-builder /go/src/app/server/main /app/
+COPY --from=server-builder /go/src/app/main /app/
 COPY server/res/ /app/res
 ADD version.txt /app/
 WORKDIR /app
