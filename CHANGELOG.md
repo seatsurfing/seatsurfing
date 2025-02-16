@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.24.0](https://github.com/seatsurfing/seatsurfing/compare/v1.23.2...v1.24.0) (2025-02-16)
+
+
+### Features
+
+* create/verify jwt with asymmetric RSA algorithm ([#583](https://github.com/seatsurfing/seatsurfing/issues/583)) ([6521e94](https://github.com/seatsurfing/seatsurfing/commit/6521e94f1efec87464fd78d20044c11f90da4317))
+* plugin support ([#591](https://github.com/seatsurfing/seatsurfing/issues/591)) ([e384975](https://github.com/seatsurfing/seatsurfing/commit/e3849756a281fa532db9fc0c3264f760c45f1371))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.13.1 to 22.13.4 in /admin-ui ([#579](https://github.com/seatsurfing/seatsurfing/issues/579)) ([e1150ce](https://github.com/seatsurfing/seatsurfing/commit/e1150ce4ab13cd481e11c3ac65df60cfe3d4f52c))
+* **deps:** bump @types/node from 22.13.1 to 22.13.4 in /booking-ui ([#581](https://github.com/seatsurfing/seatsurfing/issues/581)) ([8c527cb](https://github.com/seatsurfing/seatsurfing/commit/8c527cbc4e808579922175f85ff485141a2b8764))
+* **deps:** bump @types/node from 22.13.1 to 22.13.4 in /e2e ([#582](https://github.com/seatsurfing/seatsurfing/issues/582)) ([bb3c0c8](https://github.com/seatsurfing/seatsurfing/commit/bb3c0c83e066920eadc6c6d187045fa69262fa1f))
+* **deps:** bump golang from 1.23-bookworm to 1.24-bookworm ([#577](https://github.com/seatsurfing/seatsurfing/issues/577)) ([f84b1f1](https://github.com/seatsurfing/seatsurfing/commit/f84b1f1362bc32ac79cd7c68f930eb8e4a7bd568))
+* **deps:** bump i18next-browser-languagedetector from 8.0.2 to 8.0.3 in /admin-ui ([#580](https://github.com/seatsurfing/seatsurfing/issues/580)) ([8575c86](https://github.com/seatsurfing/seatsurfing/commit/8575c86b8b6473e2825f08639724781bcbd36d01))
+* duplicate keys on analytics page ([#586](https://github.com/seatsurfing/seatsurfing/issues/586)) ([fc05165](https://github.com/seatsurfing/seatsurfing/commit/fc051651e497ada90a40a044c22483e84438ef9e))
+* improve iframe height handling ([#585](https://github.com/seatsurfing/seatsurfing/issues/585)) ([8ee0141](https://github.com/seatsurfing/seatsurfing/commit/8ee01417a819ab1ef292d12840fea01cb3ba7a94))
+* server docker build ([#589](https://github.com/seatsurfing/seatsurfing/issues/589)) ([e86d3ea](https://github.com/seatsurfing/seatsurfing/commit/e86d3ea55182ba963cec134f703ef4ddf19fb514))
+
 ## [1.23.2](https://github.com/seatsurfing/seatsurfing/compare/v1.23.1...v1.23.2) (2025-02-13)
 
 
