@@ -1,11 +1,9 @@
 FROM golang:1.24-bookworm AS server-builder
 RUN export GOBIN=$HOME/work/bin
 WORKDIR /go/src/app
-ADD server/ server/
-ADD go.mod .
-ADD go.sum .
-WORKDIR /go/src/app/server
-RUN go get -d -v ./...
+ADD server/ .
+WORKDIR /go/src/app
+RUN go get -d -v .
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o main .
 
 FROM gcr.io/distroless/static-debian12
