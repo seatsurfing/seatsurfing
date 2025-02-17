@@ -16,7 +16,6 @@ func main() {
 	a := GetApp()
 	a.InitializeDatabases()
 	a.InitializeDefaultOrg()
-	a.InitializeBackplaneRouter()
 	a.InitializeRouter()
 	a.InitializeTimers()
 	a.Run()

@@ -33,11 +33,9 @@ func GetApp() *App {
 }
 
 type App struct {
-	Router              *mux.Router
-	BackplaneRouter     *mux.Router
-	PublicHttpServer    *http.Server
-	BackplaneHttpServer *http.Server
-	CleanupTicker       *time.Ticker
+	Router           *mux.Router
+	PublicHttpServer *http.Server
+	CleanupTicker    *time.Ticker
 }
 
 func (a *App) InitializeDatabases() {
@@ -86,21 +84,6 @@ func (a *App) InitializeRouter() {
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
-}
-
-func (a *App) InitializeBackplaneRouter() {
-	a.BackplaneRouter = mux.NewRouter()
-	routers := make(map[string]Route)
-	for _, plg := range plugin.GetPlugins() {
-		for route, router := range (*plg).GetBackplaneRoutes() {
-			routers[route] = router
-		}
-	}
-	for route, router := range routers {
-		subRouter := a.BackplaneRouter.PathPrefix(route).Subrouter()
-		router.SetupRoutes(subRouter)
-	}
-	a.BackplaneRouter.Use(ValidateBackplaneAuthMiddleware)
 }
 
 func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {
@@ -246,26 +229,7 @@ func (a *App) startPublicHttpServer() {
 	log.Println("Public HTTP Server listening on", GetConfig().PublicListenAddr)
 }
 
-func (a *App) startBackplaneHttpServer() {
-	log.Println("Initializing Backplane REST services...")
-	a.BackplaneHttpServer = &http.Server{
-		Addr:         GetConfig().BackplaneListenAddr,
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      a.BackplaneRouter,
-	}
-	go func() {
-		if err := a.BackplaneHttpServer.ListenAndServe(); err != nil {
-			log.Fatal(err)
-			os.Exit(-1)
-		}
-	}()
-	log.Println("Backplane HTTP Server listening on", GetConfig().BackplaneListenAddr)
-}
-
 func (a *App) Run() {
-	a.startBackplaneHttpServer()
 	a.startPublicHttpServer()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -274,5 +238,4 @@ func (a *App) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	a.PublicHttpServer.Shutdown(ctx)
-	a.BackplaneHttpServer.Shutdown(ctx)
 }
