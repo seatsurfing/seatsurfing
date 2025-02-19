@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.2](https://github.com/seatsurfing/seatsurfing/compare/v1.24.1...v1.24.2) (2025-02-19)
+
+
+### Bug Fixes
+
+* allow plugin in docker container ([#601](https://github.com/seatsurfing/seatsurfing/issues/601)) ([4e69419](https://github.com/seatsurfing/seatsurfing/commit/4e69419b6800f3b7788b7110302a33760161d53b))
+
 ## [1.24.1](https://github.com/seatsurfing/seatsurfing/compare/v1.24.0...v1.24.1) (2025-02-19)
 
 
