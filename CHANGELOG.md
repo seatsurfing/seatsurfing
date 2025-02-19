@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.24.1](https://github.com/seatsurfing/seatsurfing/compare/v1.24.0...v1.24.1) (2025-02-19)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/react-dom from 19.0.3 to 19.0.4 in /admin-ui ([#592](https://github.com/seatsurfing/seatsurfing/issues/592)) ([b5582fb](https://github.com/seatsurfing/seatsurfing/commit/b5582fbb256ece8f12c744ea37002508705da3f9))
+* **deps:** bump @types/react-dom from 19.0.3 to 19.0.4 in /booking-ui ([#593](https://github.com/seatsurfing/seatsurfing/issues/593)) ([2e585ab](https://github.com/seatsurfing/seatsurfing/commit/2e585abc29379ac3315f2d11e47fe2a8dc3d0970))
+* **deps:** bump react-i18next from 15.4.0 to 15.4.1 in /admin-ui ([#596](https://github.com/seatsurfing/seatsurfing/issues/596)) ([519c8a1](https://github.com/seatsurfing/seatsurfing/commit/519c8a1468c59d10303e8ff14db4a3f2b1276292))
+* **deps:** bump react-i18next from 15.4.0 to 15.4.1 in /booking-ui ([#597](https://github.com/seatsurfing/seatsurfing/issues/597)) ([11129b2](https://github.com/seatsurfing/seatsurfing/commit/11129b277e41fb23cf08691c0b516d8e52fe6f4f))
+* frontend plugin support ([#598](https://github.com/seatsurfing/seatsurfing/issues/598)) ([80fc5c3](https://github.com/seatsurfing/seatsurfing/commit/80fc5c344f06c04c97e153eee50437af00ede5f6))
+* remove backplane ([#594](https://github.com/seatsurfing/seatsurfing/issues/594)) ([77703da](https://github.com/seatsurfing/seatsurfing/commit/77703da5e13c1cfa01b477ee1432c28af76e8d98))
+
 ## [1.24.0](https://github.com/seatsurfing/seatsurfing/compare/v1.23.2...v1.24.0) (2025-02-16)
 
 
