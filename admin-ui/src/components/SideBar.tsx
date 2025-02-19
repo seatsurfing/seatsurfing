@@ -1,16 +1,18 @@
 import React from 'react';
-import { Home as IconHome, Users as IconUsers, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Gift as UpgradeIcon } from 'react-feather';
+import { Home as IconHome, Users as IconUsers, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon } from 'react-feather';
 import { Ajax, AjaxCredentials, User } from 'flexspace-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { Nav } from 'react-bootstrap';
 import { NextRouter } from 'next/router';
 import withReadyRouter from './withReadyRouter';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 interface State {
     superAdmin: boolean
     spaceAdmin: boolean
     orgAdmin: boolean
+    pluginMenuItems: any[]
 }
 
 interface Props extends WithTranslation {
@@ -24,6 +26,7 @@ class SideBar extends React.Component<Props, State> {
             superAdmin: false,
             spaceAdmin: false,
             orgAdmin: false,
+            pluginMenuItems: [],
         };
     }
 
@@ -41,10 +44,19 @@ class SideBar extends React.Component<Props, State> {
                 spaceAdmin: user.spaceAdmin,
                 orgAdmin: user.admin,
             });
+            Ajax.get('/plugin/admin-menu-items/').then(res => {
+                this.setState({
+                    pluginMenuItems: res.json
+                });
+            });
         });
     }
 
     getActiveKey = () => {
+        let path = this.props.router.pathname;
+        if (path.startsWith('/plugin/')) {
+            return window.location.pathname.replace('/admin', '');
+        }
         const startPaths = [
             '/organizations',
             '/users',
@@ -52,7 +64,6 @@ class SideBar extends React.Component<Props, State> {
             '/locations',
             '/bookings'
         ];
-        let path = this.props.router.pathname;
         let result = path;
         startPaths.forEach(startPath => {
             if (path.startsWith(startPath)) {
@@ -81,9 +92,19 @@ class SideBar extends React.Component<Props, State> {
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/settings" href="/settings"><IconSettings className="feather" /> {this.props.t("settings")}</Nav.Link>
                     </li>
-                    <li className="nav-item" hidden={window.location.host.split(':').shift() !== 'app.seatsurfing.io'}>
-                        <Nav.Link as={Link} eventKey="/upgrade-cloud" href="/upgrade-cloud"><UpgradeIcon className="feather" /> {this.props.t("upgradeCloud")}</Nav.Link>
-                    </li>
+                    {
+                        this.state.pluginMenuItems.map((item) => {
+                            if (item.visibility !== 'admin') {
+                                return;
+                            }
+                            const PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                            return (
+                                <li className="nav-item" key={'plugin-'+item.id}>
+                                    <Nav.Link as={Link} eventKey={'/plugin/'+item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
+                                </li>
+                            );
+                        })
+                    }
                 </>
             );
         }
@@ -103,6 +124,19 @@ class SideBar extends React.Component<Props, State> {
                         <li className="nav-item">
                             <Nav.Link as={Link} eventKey="/report/analysis" href="/report/analysis"><IconAnalysis className="feather" /> {this.props.t("analysis")}</Nav.Link>
                         </li>
+                        {
+                        this.state.pluginMenuItems.map((item) => {
+                            if (item.visibility !== 'spaceadmin') {
+                                return;
+                            }
+                            const PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                            return (
+                                <li className="nav-item" key={'plugin-'+item.id}>
+                                    <Nav.Link as={Link} eventKey={'/plugin/'+item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
+                                </li>
+                            );
+                        })
+                    }
                         {orgAdminItems}
                         {orgItem}
                         <li className="nav-item">

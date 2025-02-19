@@ -55,7 +55,6 @@ class Dashboard extends React.Component<Props, State> {
     let self = this;
     return new Promise<void>(function (resolve, reject) {
       Ajax.get("/uc/").then(res => {
-        console.log(JSON.stringify(res))
         self.setState({
           latestVersion: res.json
         }, () => resolve());

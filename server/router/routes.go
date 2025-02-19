@@ -183,7 +183,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return true
 		}
 		// Check for whitelisted public API paths
-		for _, whitelistedURL := range unauthorizedRoutes {
+		for _, whitelistedURL := range getUnauthorizedRoutes() {
 			if isWhitelistMatch(url, whitelistedURL) {
 				return true
 			}
@@ -287,16 +287,4 @@ func GetValidator() *validator.Validate {
 		return err == nil
 	})
 	return v
-}
-
-var unauthorizedRoutes = [...]string{
-	"/auth/",
-	"/organization/domain/",
-	"/auth-provider/org/",
-	"/signup/",
-	"/admin/",
-	"/ui/",
-	"/confluence",
-	"/booking/debugtimeissues/",
-	"/robots.txt",
 }
