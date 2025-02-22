@@ -1,6 +1,6 @@
 import React from 'react';
 import { Nav, Button, Form } from 'react-bootstrap';
-import { Ajax, AjaxCredentials } from 'flexspace-commons';
+import { Ajax, AjaxCredentials } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Home as IconHome, Users as IconUsers, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon } from 'react-feather';
-import { Ajax, AjaxCredentials, User } from 'flexspace-commons';
+import { Ajax, AjaxCredentials, User } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { Nav } from 'react-bootstrap';
 import { NextRouter } from 'next/router';

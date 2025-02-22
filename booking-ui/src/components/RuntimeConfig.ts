@@ -1,4 +1,4 @@
-import { Ajax, AjaxCredentials, User, Settings as OrgSettings } from 'flexspace-commons'
+import { Ajax, AjaxCredentials, User, Settings as OrgSettings } from 'seatsurfing-commons'
 
 interface RuntimeUserInfos {
     username: string;

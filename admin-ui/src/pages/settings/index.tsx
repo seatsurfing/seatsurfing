@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Organization, AuthProvider, Settings as OrgSettings, Domain, Ajax, AjaxCredentials } from 'flexspace-commons';
+import { User, Organization, AuthProvider, Settings as OrgSettings, Domain, Ajax, AjaxCredentials } from 'seatsurfing-commons';
 import { Form, Col, Row, Table, Button, Alert, InputGroup, Popover, OverlayTrigger } from 'react-bootstrap';
 import { Plus as IconPlus, Save as IconSave } from 'react-feather';
 import { NextRouter } from 'next/router';

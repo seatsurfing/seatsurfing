@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Col, Row, Button, Alert } from 'react-bootstrap';
 import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete } from 'react-feather';
-import { Ajax, Location, Space, Booking, Formatting, User, AuthProvider, Settings as OrgSettings, UserPreference } from 'flexspace-commons';
+import { Ajax, Location, Space, Booking, Formatting, User, AuthProvider, Settings as OrgSettings, UserPreference } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import FullLayout from '../../components/FullLayout';

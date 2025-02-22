@@ -3,7 +3,7 @@ import FullLayout from '../../components/FullLayout';
 import { Form, Col, Row, Button, Alert, InputGroup, Table, Dropdown } from 'react-bootstrap';
 import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete, MapPin as IconMap, Copy as IconCopy, Loader as IconLoad, Download as IconDownload, Tag as IconTag } from 'react-feather';
 import Loading from '../../components/Loading';
-import { Ajax, Location, Space, SpaceAttribute, SpaceAttributeValue } from 'flexspace-commons';
+import { Ajax, Location, Space, SpaceAttribute, SpaceAttributeValue } from 'seatsurfing-commons';
 import { Rnd } from 'react-rnd';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';

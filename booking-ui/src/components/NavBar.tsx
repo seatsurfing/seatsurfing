@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navbar, Nav, Modal, Button, Form, Badge, Container, NavLink } from 'react-bootstrap';
-import { Ajax, User, MergeRequest, AjaxCredentials } from 'flexspace-commons';
+import { Ajax, User, MergeRequest, AjaxCredentials } from 'seatsurfing-commons';
 import RuntimeConfig from './RuntimeConfig';
 import { Users as IconMerge, Bell as IconAlert, Settings as IconSettings, Calendar as IconCalendar, PlusSquare as IconPlus } from 'react-feather';
 import { WithTranslation, withTranslation } from 'next-i18next';

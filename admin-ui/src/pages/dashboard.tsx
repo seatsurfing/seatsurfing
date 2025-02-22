@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax, Stats, User } from 'flexspace-commons';
+import { Ajax, Stats, User } from 'seatsurfing-commons';
 import { Card, Row, Col, ProgressBar, Alert } from 'react-bootstrap';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';

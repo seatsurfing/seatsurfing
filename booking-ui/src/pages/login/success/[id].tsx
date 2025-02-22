@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
-import { Ajax } from 'flexspace-commons';
+import { Ajax } from 'seatsurfing-commons';
 import RuntimeConfig from '@/components/RuntimeConfig';
 import Loading from '@/components/Loading';
 import { NextRouter } from 'next/router';

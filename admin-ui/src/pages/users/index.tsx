@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table } from 'react-bootstrap';
 import { Plus as IconPlus, Download as IconDownload } from 'react-feather';
-import { User, AuthProvider, Ajax } from 'flexspace-commons';
+import { User, AuthProvider, Ajax } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import Loading from '@/components/Loading';

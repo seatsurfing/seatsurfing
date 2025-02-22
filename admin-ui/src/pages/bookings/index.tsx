@@ -1,5 +1,5 @@
 import React from 'react';
-import {Ajax, AjaxError, Booking, Formatting, Settings as OrgSettings} from 'flexspace-commons';
+import {Ajax, AjaxError, Booking, Formatting, Settings as OrgSettings} from 'seatsurfing-commons';
 import { Table, Form, Col, Row, Button } from 'react-bootstrap';
 import { Plus as IconPlus, Search as IconSearch, Download as IconDownload, X as IconX } from 'react-feather';
 import { WithTranslation, withTranslation } from 'next-i18next';

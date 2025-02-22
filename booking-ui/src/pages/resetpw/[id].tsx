@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax } from 'flexspace-commons';
+import { Ajax } from 'seatsurfing-commons';
 import { Button, Form } from 'react-bootstrap';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';

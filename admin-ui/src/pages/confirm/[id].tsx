@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader as IconLoad } from 'react-feather';
-import { Ajax } from 'flexspace-commons';
+import { Ajax } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';

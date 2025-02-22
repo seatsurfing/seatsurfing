@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax, Search } from 'flexspace-commons';
+import { Ajax, Search } from 'seatsurfing-commons';
 import { Card, ListGroup, Col, Row } from 'react-bootstrap';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Ajax, AjaxError, Booking, Formatting} from 'flexspace-commons';
+import {Ajax, AjaxError, Booking, Formatting} from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 import { Button, Form, ListGroup, Modal } from 'react-bootstrap';
 import { LogIn as IconEnter, LogOut as IconLeave, MapPin as IconLocation } from 'react-feather';

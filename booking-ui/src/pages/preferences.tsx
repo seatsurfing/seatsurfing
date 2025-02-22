@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax, Location, User, UserPreference } from 'flexspace-commons';
+import { Ajax, Location, User, UserPreference } from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 import { Alert, Button, ButtonGroup, Col, Form, Nav, Row } from 'react-bootstrap';
 import { WithTranslation, withTranslation } from 'next-i18next';

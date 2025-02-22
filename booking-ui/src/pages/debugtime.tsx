@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax, Formatting } from 'flexspace-commons';
+import { Ajax, Formatting } from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 
 interface State {

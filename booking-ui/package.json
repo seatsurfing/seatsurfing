@@ -5,7 +5,6 @@
   "dependencies": {
     "@types/react-dom": "^19.0.4",
     "bootstrap": "^5.3.3",
-    "flexspace-commons": "file:../commons/ts",
     "i18next": "^24.2.0",
     "i18next-chained-backend": "^4.6.2",
     "i18next-http-backend": "^3.0.2",
@@ -21,6 +20,7 @@
     "react-i18next": "^15.4.1",
     "react-icons": "^5.4.0",
     "react-tooltip": "^5.28.0",
+    "seatsurfing-commons": "file:../commons/ts",
     "typescript": "^5.7.2"
   },
   "scripts": {
@@ -28,7 +28,7 @@
     "build": "next build",
     "dev": "PORT=3001 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
     "lint": "next lint",
-    "install-commons": "npm remove --save flexspace-commons && npm install --save ../commons/ts"
+    "install-commons": "npm remove --save seatsurfing-commons && npm install --save ../commons/ts"
   },
   "browserslist": {
     "production": [

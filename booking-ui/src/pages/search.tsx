@@ -1,6 +1,6 @@
 import React, { RefObject } from 'react';
 import { Form, Col, Row, Modal, Button, ListGroup, Badge, InputGroup } from 'react-bootstrap';
-import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'flexspace-commons';
+import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
 // @ts-ignore
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';

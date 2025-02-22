@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table } from 'react-bootstrap';
 import { Plus as IconPlus, Download as IconDownload, Tag as IconTag } from 'react-feather';
-import { Ajax, Location } from 'flexspace-commons';
+import { Ajax, Location } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import { NextRouter } from 'next/router';

@@ -21,7 +21,7 @@ import (
 type contextKey string
 
 func (c contextKey) String() string {
-	return "flexspace context key " + string(c)
+	return "seatsurfing context key " + string(c)
 }
 
 var (

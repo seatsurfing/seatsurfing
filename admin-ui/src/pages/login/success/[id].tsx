@@ -1,7 +1,7 @@
 import React from 'react';
 import Loading from '../../../components/Loading';
 import { Form } from 'react-bootstrap';
-import { Ajax, JwtDecoder, User } from 'flexspace-commons';
+import { Ajax, JwtDecoder, User } from 'seatsurfing-commons';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import withReadyRouter from '@/components/withReadyRouter';

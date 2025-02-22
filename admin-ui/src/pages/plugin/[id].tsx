@@ -4,7 +4,7 @@ import FullLayout from '@/components/FullLayout';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import { NextRouter } from 'next/router';
-import { Ajax } from 'flexspace-commons';
+import { Ajax } from 'seatsurfing-commons';
 
 interface State {
   iFrameLoaded: boolean

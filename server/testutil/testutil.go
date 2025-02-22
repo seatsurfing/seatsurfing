@@ -240,7 +240,7 @@ func AuthAttemptRepositoryIsUserDisabled(t *testing.T, userID string) bool {
 
 func TestRunner(m *testing.M) {
 	if os.Getenv("POSTGRES_URL") == "" {
-		os.Setenv("POSTGRES_URL", "postgres://postgres:root@localhost/flexspace_test?sslmode=disable")
+		os.Setenv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing_test?sslmode=disable")
 	}
 	os.Setenv("MOCK_SENDMAIL", "1")
 	os.Setenv("ORG_SIGNUP_ENABLED", "1")

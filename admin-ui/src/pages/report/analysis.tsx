@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax, Formatting, Location } from 'flexspace-commons';
+import { Ajax, Formatting, Location } from 'seatsurfing-commons';
 import { Table, Form, Col, Row, Button } from 'react-bootstrap';
 import { Search as IconSearch, Download as IconDownload, Check as IconCheck } from 'react-feather';
 import { WithTranslation, withTranslation } from 'next-i18next';

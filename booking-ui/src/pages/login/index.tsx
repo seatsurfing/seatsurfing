@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Button, InputGroup, Dropdown, DropdownButton } from 'react-bootstrap';
-import { Organization, AuthProvider, Ajax } from 'flexspace-commons';
+import { Organization, AuthProvider, Ajax } from 'seatsurfing-commons';
 import { withTranslation, WithTranslation } from 'next-i18next';
 import RuntimeConfig from '../../components/RuntimeConfig';
 import Loading from '../../components/Loading';
