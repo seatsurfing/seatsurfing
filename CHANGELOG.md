@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.24.3](https://github.com/seatsurfing/seatsurfing/compare/v1.24.2...v1.24.3) (2025-02-27)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.13.4 to 22.13.5 in /admin-ui ([#609](https://github.com/seatsurfing/seatsurfing/issues/609)) ([e9a7715](https://github.com/seatsurfing/seatsurfing/commit/e9a7715f39d05b389c6e98538f18bdc1d6971a76))
+* **deps:** bump @types/node from 22.13.4 to 22.13.5 in /booking-ui ([#612](https://github.com/seatsurfing/seatsurfing/issues/612)) ([828fbb3](https://github.com/seatsurfing/seatsurfing/commit/828fbb3874412872dc59ab6b676904f38bab2e9b))
+* **deps:** bump @types/node from 22.13.4 to 22.13.5 in /e2e ([#613](https://github.com/seatsurfing/seatsurfing/issues/613)) ([5578409](https://github.com/seatsurfing/seatsurfing/commit/55784095ec474d595825f2ca2875f7cf713cce75))
+* **deps:** bump eslint from 9.20.1 to 9.21.0 in /admin-ui ([#608](https://github.com/seatsurfing/seatsurfing/issues/608)) ([733aa24](https://github.com/seatsurfing/seatsurfing/commit/733aa24f43b28befcb09a9647ff47e2c98bdc5a8))
+* **deps:** bump eslint from 9.20.1 to 9.21.0 in /booking-ui ([#611](https://github.com/seatsurfing/seatsurfing/issues/611)) ([32eaa3e](https://github.com/seatsurfing/seatsurfing/commit/32eaa3e4b769aa72aff493c38d9c4aeed2ecbef0))
+* **deps:** bump i18next-browser-languagedetector from 8.0.3 to 8.0.4 in /admin-ui ([#604](https://github.com/seatsurfing/seatsurfing/issues/604)) ([60e0c2b](https://github.com/seatsurfing/seatsurfing/commit/60e0c2bbb22fe3bf5bba825f7e1538862ab841c3))
+* **deps:** bump react-icons from 5.4.0 to 5.5.0 in /booking-ui ([#600](https://github.com/seatsurfing/seatsurfing/issues/600)) ([5aa8828](https://github.com/seatsurfing/seatsurfing/commit/5aa88284642ea7ea73863b04607750713b21371a))
+* **deps:** bump react-rnd from 10.4.14 to 10.5.2 in /admin-ui ([#616](https://github.com/seatsurfing/seatsurfing/issues/616)) ([659e8e2](https://github.com/seatsurfing/seatsurfing/commit/659e8e23c3902ab759b545a9cb309d05ca26b1ac))
+* **deps:** bump react-router-dom from 7.1.5 to 7.2.0 in /admin-ui ([#599](https://github.com/seatsurfing/seatsurfing/issues/599)) ([c97f7f0](https://github.com/seatsurfing/seatsurfing/commit/c97f7f0a32ffcb7f2fe9ac25ea5e79e01cf7cd8a))
+* list user bookings according to location's timezone ([#619](https://github.com/seatsurfing/seatsurfing/issues/619)) ([76196b2](https://github.com/seatsurfing/seatsurfing/commit/76196b29e045d891c1d1162f8010ddefaf3af51d))
+
 ## [1.24.2](https://github.com/seatsurfing/seatsurfing/compare/v1.24.1...v1.24.2) (2025-02-19)
 
 
