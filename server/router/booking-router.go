@@ -185,16 +185,32 @@ func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *BookingRouter) getAll(w http.ResponseWriter, r *http.Request) {
-	list, err := GetBookingRepository().GetAllByUser(GetRequestUserID(r), time.Now().UTC())
+	startTime := time.Now().UTC().Add(time.Hour * -12)
+	list, err := GetBookingRepository().GetAllByUser(GetRequestUserID(r), startTime)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
+	user := GetRequestUser(r)
+	defaultTz, err := GetSettingsRepository().Get(user.OrganizationID, SettingDefaultTimezone.Name)
+	if err != nil {
+		defaultTz = "UTC"
+	}
+	nowAtOrg, _ := GetUTCNowInTimezone(defaultTz)
 	res := []*GetBookingResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e)
-		res = append(res, m)
+		var nowAtLocation time.Time
+		if e.Space.Location.Timezone == "" {
+			nowAtLocation = nowAtOrg
+		} else {
+			nowAtLocation, _ = GetUTCNowInTimezone(e.Space.Location.Timezone)
+		}
+		includeEntity := e.Leave.After(nowAtLocation)
+		if includeEntity {
+			m := router.copyToRestModel(e)
+			res = append(res, m)
+		}
 	}
 	SendJSON(w, res)
 }

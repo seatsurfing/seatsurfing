@@ -24,6 +24,21 @@ func AttachTimezoneInformationTz(timestamp time.Time, tz string) (time.Time, err
 	return targetTimestamp, nil
 }
 
+func GetUTCNowInTimezone(tz string) (time.Time, error) {
+	targetTz, err := time.LoadLocation(tz)
+	if err != nil {
+		return time.Time{}, err
+
+	}
+	utcNow := time.Now().UTC()
+	targetNow := time.Now().In(targetTz)
+	_, offset := targetNow.Zone()
+
+	result := utcNow.Add(time.Second * time.Duration(offset))
+
+	return result, nil
+}
+
 var TimeZones = []string{
 	"Africa/Abidjan",
 	"Africa/Accra",
