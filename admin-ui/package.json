@@ -47,7 +47,7 @@
   },
   "homepage": "/admin/",
   "devDependencies": {
-    "@types/node": "22.13.4",
+    "@types/node": "22.13.5",
     "@types/react-autosuggest": "^10.1.11",
     "eslint": "^9.21.0",
     "eslint-config-next": "^15.1.7"
