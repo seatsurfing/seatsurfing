@@ -63,4 +63,4 @@
    ./run.sh
    ```
 
-You should now be able to access the Admin UI at http://localhost:8080/admin/ and the Booking UI at http://localhost:8080/ui/.
+You should now be able to access the Admin UI at http://localhost:8080/admin/ and the Booking UI at http://localhost:8080/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`).
