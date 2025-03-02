@@ -463,7 +463,7 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 			SendInternalServerError(w)
 			return "", errors.New("InternalServerError")
 		}
-		if !GetOrganizationRepository().IsValidEmailForOrg(userEmail, org) {
+		if !GetOrganizationRepository().IsValidCustomDomainForOrg(userEmail, org) {
 			SendBadRequest(w)
 			return "", errors.New("BadRequest")
 		}

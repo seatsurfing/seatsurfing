@@ -10,6 +10,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type UserRouter struct {
@@ -307,15 +308,12 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	eNew.OrganizationID = e.OrganizationID
 	eNew.HashedPassword = e.HashedPassword
-	org, err := GetOrganizationRepository().GetOne(e.OrganizationID)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if !GetOrganizationRepository().IsValidEmailForOrg(user.Email, org) {
-		SendBadRequest(w)
-		return
+	existingUser, err := GetUserRepository().GetByEmail(eNew.Email)
+	if err == nil && existingUser != nil {
+		if existingUser.ID != e.ID {
+			SendAleadyExists(w)
+			return
+		}
 	}
 	if err := GetUserRepository().Update(eNew); err != nil {
 		log.Println(err)
@@ -377,9 +375,18 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendPaymentRequired(w)
 		return
 	}
-	if !GetOrganizationRepository().IsValidEmailForOrg(e.Email, org) {
-		SendBadRequest(w)
+	existingUser, err := GetUserRepository().GetByEmail(e.Email)
+	if err == nil && existingUser != nil {
+		SendAleadyExists(w)
 		return
+	}
+	// Check if user's domain is allowed
+	orgDomain, _ := GetOrganizationRepository().GetOneByDomain(GetDomainFromEmail(e.Email))
+	if orgDomain != nil {
+		if orgDomain.ID != e.OrganizationID {
+			SendAleadyExists(w)
+			return
+		}
 	}
 	if err := GetUserRepository().Create(e); err != nil {
 		log.Println(err)

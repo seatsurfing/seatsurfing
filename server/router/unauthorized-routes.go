@@ -23,9 +23,7 @@ var unauthorizedRoutesOnce sync.Once
 func getUnauthorizedRoutes() []string {
 	unauthorizedRoutesOnce.Do(func() {
 		for _, plg := range plugin.GetPlugins() {
-			for _, route := range (*plg).GetUnauthorizedRoutes() {
-				unauthorizedRoutes = append(unauthorizedRoutes, route)
-			}
+			unauthorizedRoutes = append(unauthorizedRoutes, (*plg).GetUnauthorizedRoutes()...)
 		}
 	})
 	return unauthorizedRoutes

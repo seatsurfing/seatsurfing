@@ -1,6 +1,9 @@
 package util
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 const JsDateTimeFormat string = "2006-01-02T15:04:05"
 const JsDateTimeFormatWithTimezone string = "2006-01-02T15:04:05-07:00"
@@ -23,4 +26,13 @@ func MaxOf(vars ...int) int {
 	}
 
 	return max
+}
+
+func GetDomainFromEmail(email string) string {
+	mailParts := strings.Split(email, "@")
+	if len(mailParts) != 2 {
+		return ""
+	}
+	domain := strings.ToLower(mailParts[1])
+	return domain
 }
