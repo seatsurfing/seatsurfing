@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type OrganizationRepository struct {
@@ -297,12 +299,11 @@ func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) 
 	return result, nil
 }
 
-func (r *OrganizationRepository) IsValidEmailForOrg(email string, org *Organization) bool {
-	mailParts := strings.Split(email, "@")
-	if len(mailParts) != 2 {
+func (r *OrganizationRepository) IsValidCustomDomainForOrg(email string, org *Organization) bool {
+	domain := GetDomainFromEmail(email)
+	if domain == "" {
 		return false
 	}
-	domain := strings.ToLower(mailParts[1])
 	domains, err := GetOrganizationRepository().GetDomains(org)
 	if err != nil {
 		return false
@@ -315,7 +316,6 @@ func (r *OrganizationRepository) IsValidEmailForOrg(email string, org *Organizat
 		}
 	}
 	return false
-
 }
 
 func (r *OrganizationRepository) CreateSampleData(org *Organization) error {

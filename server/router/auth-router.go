@@ -236,19 +236,28 @@ func (router *AuthRouter) preflight(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	res := router.getPreflightResponse(&m)
-	if res == nil {
-		SendNotFound(w)
-		return
-	}
-	user, err := GetUserRepository().GetByEmail(m.Email)
-	if err != nil {
-		log.Println(err)
+
+	// Check if user exists.
+	// If so, return preflight response with requirePassword set to true if user has a password set.
+	user, _ := GetUserRepository().GetByEmail(m.Email)
+	if user != nil {
+		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
+		res := router.getPreflightResponseForOrg(org)
+		res.RequirePassword = (user.HashedPassword != "")
 		SendJSON(w, res)
 		return
 	}
-	res.RequirePassword = (user.HashedPassword != "")
-	SendJSON(w, res)
+
+	// If the user doesn't exist, check if the email domain is associated with an organization.
+	org := router.getOrgForEmail(m.Email)
+	if org != nil {
+		res := router.getPreflightResponseForOrg(org)
+		SendJSON(w, res)
+		return
+	}
+
+	// If neither user nor org for domain exists, return 404.
+	SendNotFound(w)
 }
 
 func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) {
@@ -487,7 +496,7 @@ func (router *AuthRouter) isValidEmailForOrg(provider *AuthProvider, email strin
 	if err != nil {
 		return false
 	}
-	return GetOrganizationRepository().IsValidEmailForOrg(email, org)
+	return GetOrganizationRepository().IsValidCustomDomainForOrg(email, org)
 }
 
 func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*Claims, *AuthStateLoginPayload, error) {
@@ -645,14 +654,6 @@ func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPre
 		res.AuthProviders = append(res.AuthProviders, m)
 	}
 	return res
-}
-
-func (router *AuthRouter) getPreflightResponse(req *AuthPreflightRequest) *AuthPreflightResponse {
-	org := router.getOrgForEmail(req.Email)
-	if org == nil {
-		return nil
-	}
-	return router.getPreflightResponseForOrg(org)
 }
 
 func marshalAuthStateLoginPayload(payload *AuthStateLoginPayload) string {

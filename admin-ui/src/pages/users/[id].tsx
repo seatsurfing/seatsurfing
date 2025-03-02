@@ -1,7 +1,7 @@
 import React from 'react';
-import { Form, Col, Row, Button, Alert, InputGroup } from 'react-bootstrap';
+import { Form, Col, Row, Button, Alert } from 'react-bootstrap';
 import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete } from 'react-feather';
-import { User, Settings as OrgSettings, Domain, Ajax } from 'seatsurfing-commons';
+import { User, Settings as OrgSettings, Ajax } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import FullLayout from '@/components/FullLayout';
@@ -20,7 +20,6 @@ interface State {
   password: string
   changePassword: boolean
   role: number
-  domain: string
 }
 
 interface Props extends WithTranslation {
@@ -31,7 +30,6 @@ class EditUser extends React.Component<Props, State> {
   entity: User = new User();
   usersMax: number = 0;
   usersCur: number = -1;
-  domains: Domain[] = [];
   adminUserRole: number = 0;
 
   constructor(props: any) {
@@ -47,7 +45,6 @@ class EditUser extends React.Component<Props, State> {
       password: "",
       changePassword: false,
       role: User.UserRoleUser,
-      domain: ""
     };
   }
 
@@ -64,9 +61,7 @@ class EditUser extends React.Component<Props, State> {
       OrgSettings.getOne("subscription_max_users"),
       User.getCount(),
       User.getSelf().then(me => {
-        return Domain.list(me.organizationId).then(domains => {
-          return [me, domains];
-        });
+        return [me];
       })
     ];
     const { id } = this.props.router.query;
@@ -77,25 +72,13 @@ class EditUser extends React.Component<Props, State> {
       this.usersMax = window.parseInt(values[0]);
       this.usersCur = values[1];
       this.adminUserRole = values[2][0].role;
-      this.domains = values[2][1];
-      let selectedDomain = "";
-      this.domains.forEach(domain => {
-        if (!selectedDomain && domain.active) {
-          selectedDomain = domain.domain;
-        }
-      });
-      this.setState({
-        domain: selectedDomain
-      });
       if (values.length >= 4) {
         let user = values[3];
-        let userDomain = user.email.substring(user.email.indexOf("@") + 1).toLowerCase();
         this.entity = user;
         this.setState({
-          email: user.email.substring(0, user.email.indexOf("@")),
+          email: user.email,
           requirePassword: user.requirePassword,
-          role: user.role,
-          domain: userDomain
+          role: user.role
         });
       }
       this.setState({
@@ -110,7 +93,7 @@ class EditUser extends React.Component<Props, State> {
       error: false,
       saved: false
     });
-    this.entity.email = this.state.email + "@" + this.state.domain;
+    this.entity.email = this.state.email;
     this.entity.role = this.state.role;
     this.entity.save().then(() => {
       this.props.router.push("/users/" + this.entity.id);
@@ -169,10 +152,6 @@ class EditUser extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>
     }
 
-    let domainOptions = this.domains.map(domain => {
-      return <option key={domain.domain} value={domain.domain} disabled={!domain.active}>@{domain.domain.toLowerCase()}</option>;
-    });
-
     let buttonDelete = <Button className="btn-sm" variant="outline-secondary" onClick={this.deleteItem} disabled={false}><IconDelete className="feather" /> {this.props.t("delete")}</Button>;
     let buttonSave = <Button className="btn-sm" variant="outline-secondary" type="submit" form="form"><IconSave className="feather" /> {this.props.t("save")}</Button>;
     if (this.entity.id) {
@@ -221,12 +200,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2">{this.props.t("emailAddress")}</Form.Label>
             <Col sm="4">
-              <InputGroup>
-                <Form.Control type="text" placeholder="max.mustermann" value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value })} required={true} />
-                <Form.Select className="custom-select" value={this.state.domain} onChange={(e: any) => this.setState({ domain: e.target.value })}>
-                  {domainOptions}
-                </Form.Select>
-              </InputGroup>
+              <Form.Control type="email" placeholder="some@domain.com" value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value })} required={true} />
             </Col>
           </Form.Group>
           {changePassword}
