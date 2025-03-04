@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button, InputGroup, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Form, Button, InputGroup, Dropdown, DropdownButton, Alert } from 'react-bootstrap';
 import { Organization, AuthProvider, Ajax } from 'seatsurfing-commons';
 import { withTranslation, WithTranslation } from 'next-i18next';
 import RuntimeConfig from '../../components/RuntimeConfig';
@@ -11,6 +11,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 interface State {
   email: string
   password: string
+  orgDomain: string
   rememberMe: boolean
   invalid: boolean
   redirect: string | null
@@ -22,6 +23,7 @@ interface State {
   singleOrgMode: boolean
   noPasswords: boolean
   loading: boolean
+  legacyMode: boolean
 }
 
 interface Props extends WithTranslation {
@@ -37,6 +39,7 @@ class Login extends React.Component<Props, State> {
     this.state = {
       email: "",
       password: "",
+      orgDomain: "",
       rememberMe: false,
       invalid: false,
       redirect: null,
@@ -47,12 +50,40 @@ class Login extends React.Component<Props, State> {
       inAuthProviderLogin: false,
       singleOrgMode: false,
       noPasswords: false,
-      loading: true
+      loading: true,
+      legacyMode: false
     };
   }
 
   componentDidMount = () => {
-    this.checkSingleOrg();
+    this.loadOrgDetails();
+  }
+
+  loadOrgDetails = () => {
+    const domain = window.location.host.split(':').shift();
+    Ajax.get("/auth/org/" + domain).then((res) => {
+      this.org = new Organization();
+      this.org.deserialize(res.json.organization);
+      if ((res.json.authProviders) && (res.json.authProviders.length > 0)) {
+        this.setState({
+          providers: res.json.authProviders,
+          noPasswords: !res.json.requirePassword,
+          singleOrgMode: true,
+          loading: false
+        }, () => {
+          if ((this.state.noPasswords) && (this.state.providers) && (this.state.providers.length === 1)) {
+            this.useProvider(this.state.providers[0].id);
+          } else {
+            this.setState({ loading: false });
+          }
+        });
+      } else {
+        this.setState({ loading: false });
+      }
+    }).catch(() => {
+      // No org for domain found
+      this.checkSingleOrg();
+    });
   }
 
   checkSingleOrg = () => {
@@ -76,11 +107,15 @@ class Login extends React.Component<Props, State> {
         this.setState({ loading: false });
       }
     }).catch(() => {
-      this.setState({ loading: false });
+      const domain = window.location.host.split(':').shift();
+      this.setState({
+        loading: false,
+        legacyMode: (domain === "app.seatsurfing.io")
+      });
     });
   }
 
-  onSubmit = (e: any) => {
+  onLegacySubmit = (e: any) => {
     e.preventDefault();
     let email = this.state.email.split("@");
     if (email.length !== 2) {
@@ -99,6 +134,7 @@ class Login extends React.Component<Props, State> {
       this.setState({
         providers: res.json.authProviders,
         requirePassword: res.json.requirePassword,
+        orgDomain: res.json.domain,
         inPreflight: false
       });
     }).catch(() => {
@@ -117,6 +153,7 @@ class Login extends React.Component<Props, State> {
     let payload = {
       email: this.state.email,
       password: this.state.password,
+      organizationId: this.org?.id,
       longLived: this.state.rememberMe
     };
     Ajax.postData("/auth/login", payload).then((res) => {
@@ -211,11 +248,23 @@ class Login extends React.Component<Props, State> {
       </div>
     );
 
+    let legacyAlert = <></>;
+    if (this.state.legacyMode) {
+      legacyAlert = (
+        <Alert variant='warning'>
+          You are using the legacy login page.<br />
+          Please consider using the new login page at:<br />
+          <a href={"https://" + this.state.orgDomain}>{this.state.orgDomain}</a>
+        </Alert>
+      );
+    }
+
     if (this.state.requirePassword) {
       return (
         <div className="container-signin">
           <Form className="form-signin" onSubmit={this.onPasswordSubmit}>
             <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            {legacyAlert}
             <p>{this.props.t("signinAsAt", { user: this.state.email, org: this.org?.name })}</p>
             <InputGroup>
               <Form.Control type="password" readOnly={this.state.inPasswordSubmit} placeholder={this.props.t("password")} value={this.state.password} onChange={(e: any) => this.setState({ password: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} minLength={8} autoFocus={true} />
@@ -233,7 +282,7 @@ class Login extends React.Component<Props, State> {
       let buttons = this.state.providers.map(provider => this.renderAuthProviderButton(provider));
       let providerSelection = <p>{this.props.t("signinAsAt", { user: this.state.email, org: this.org?.name })}</p>;
       if (this.state.singleOrgMode) {
-        providerSelection = <p>{this.props.t("signinAt", { org: this.org?.name })}</p>;
+        providerSelection = <p></p>;
       }
       if (buttons.length === 0) {
         providerSelection = <p>{this.props.t("errorNoAuthProviders")}</p>
@@ -242,6 +291,8 @@ class Login extends React.Component<Props, State> {
         <div className="container-signin">
           <Form className="form-signin">
             <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <h3 hidden={this.state.legacyMode}>{this.org?.name}</h3>
+            {legacyAlert}
             {providerSelection}
             {buttons}
             <p className="margin-top-50"><Button variant="link" onClick={() => this.setState({ providers: null })}>{this.props.t("back")}</Button></p>
@@ -251,18 +302,42 @@ class Login extends React.Component<Props, State> {
       );
     }
 
+    if (this.state.legacyMode) {
+      return (
+        <div className="container-signin">
+          <Form className="form-signin" onSubmit={this.onLegacySubmit}>
+            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <h3>{this.props.t("findYourPlace")}</h3>
+            <InputGroup>
+              <Form.Control type="email" readOnly={this.state.inPreflight} placeholder={this.props.t("emailPlaceholder")} value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} autoFocus={true} />
+              <Button variant="primary" type="submit">{this.state.inPreflight ? <Loading showText={false} paddingTop={false} /> : <div className="feather-btn">&#10148;</div>}</Button>
+            </InputGroup>
+            <Form.Control.Feedback type="invalid">{this.props.t("errorInvalidEmail")}</Form.Control.Feedback>
+            <Form.Check type="checkbox" id="check-rememberme" label={this.props.t("rememberMe")} checked={this.state.rememberMe} onChange={(e: any) => this.setState({ rememberMe: e.target.checked })} />
+            <p className="margin-top-50" hidden={!this.org}><Link href="/resetpw">{this.props.t("forgotPassword")}</Link></p>
+          </Form>
+          {copyrightFooter}
+        </div>
+      );
+    }
+
     return (
       <div className="container-signin">
-        <Form className="form-signin" onSubmit={this.onSubmit}>
+        <Form className="form-signin" onSubmit={this.onPasswordSubmit}>
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
-          <h3>{this.props.t("findYourPlace")}</h3>
-          <InputGroup>
-            <Form.Control type="email" readOnly={this.state.inPreflight} placeholder={this.props.t("emailPlaceholder")} value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} autoFocus={true} />
-            <Button variant="primary" type="submit">{this.state.inPreflight ? <Loading showText={false} paddingTop={false} /> : <div className="feather-btn">&#10148;</div>}</Button>
-          </InputGroup>
+          <h3>{this.org?.name}</h3>
+          <Form.Group style={{ 'marginBottom': '5px' }}>
+            <Form.Control type="email" readOnly={this.state.inPasswordSubmit} placeholder={this.props.t("emailPlaceholder")} value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} autoFocus={true} />
+          </Form.Group>
+          <Form.Group>
+            <InputGroup>
+              <Form.Control type="password" readOnly={this.state.inPasswordSubmit} placeholder={this.props.t("password")} value={this.state.password} onChange={(e: any) => this.setState({ password: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} minLength={8} />
+              <Button variant="primary" type="submit">{this.state.inPasswordSubmit ? <Loading showText={false} paddingTop={false} /> : <div className="feather-btn">&#10148;</div>}</Button>
+            </InputGroup>
+          </Form.Group>
           <Form.Control.Feedback type="invalid">{this.props.t("errorInvalidEmail")}</Form.Control.Feedback>
           <Form.Check type="checkbox" id="check-rememberme" label={this.props.t("rememberMe")} checked={this.state.rememberMe} onChange={(e: any) => this.setState({ rememberMe: e.target.checked })} />
-          <p className="margin-top-50"><Link href="/resetpw">{this.props.t("forgotPassword")}</Link></p>
+          <p className="margin-top-50" hidden={!this.org}><Link href="/resetpw">{this.props.t("forgotPassword")}</Link></p>
         </Form>
         {copyrightFooter}
       </div>

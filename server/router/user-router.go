@@ -103,7 +103,7 @@ func (router *UserRouter) mergeInit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	source := GetRequestUser(r)
-	target, err := GetUserRepository().GetByEmail(m.Email)
+	target, err := GetUserRepository().GetByEmail(source.OrganizationID, m.Email)
 	if err != nil || target == nil {
 		SendNotFound(w)
 		return
@@ -221,7 +221,7 @@ func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) 
 	}
 
 	vars := mux.Vars(r)
-	e, err := GetUserRepository().GetByEmail(vars["email"])
+	e, err := GetUserRepository().GetByEmail(user.OrganizationID, vars["email"])
 
 	if err != nil || e.ID == user.ID {
 		log.Println(err)
@@ -308,7 +308,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	eNew.OrganizationID = e.OrganizationID
 	eNew.HashedPassword = e.HashedPassword
-	existingUser, err := GetUserRepository().GetByEmail(eNew.Email)
+	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {
 		if existingUser.ID != e.ID {
 			SendAleadyExists(w)
@@ -375,7 +375,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendPaymentRequired(w)
 		return
 	}
-	existingUser, err := GetUserRepository().GetByEmail(e.Email)
+	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, e.Email)
 	if err == nil && existingUser != nil {
 		SendAleadyExists(w)
 		return

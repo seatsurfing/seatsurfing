@@ -46,10 +46,14 @@ func TestSignup(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "Hallo Foo Bar,"))
 	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "To: foo@bar.com"))
-	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "admin@testorg.on.seatsurfing.local"))
+	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "https://testorg.on.seatsurfing.local"))
+
+	org, err := GetOrganizationRepository().GetOneByDomain("testorg.on.seatsurfing.local")
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, org != nil)
 
 	// Check if login works
-	payload = `{"email": "admin@testorg.on.seatsurfing.local", "password": "12345678"}`
+	payload = `{"email": "foo@bar.com", "password": "12345678", "organizationId": "` + org.ID + `"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)

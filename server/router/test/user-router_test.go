@@ -285,7 +285,7 @@ func TestUserDuplicateDifferentOrg(t *testing.T) {
 	payload = "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req = NewHTTPRequest("POST", "/user/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
 
 func TestUserUpdateCreatesDuplicate(t *testing.T) {

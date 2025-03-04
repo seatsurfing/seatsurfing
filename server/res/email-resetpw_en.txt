@@ -9,7 +9,7 @@ we've received a request to reset your password.
 
 If this request was yours, you can change your password here:
 
-{{frontendUrl}}ui/resetpw/{{confirmID}}
+{{orgDomain}}ui/resetpw/{{confirmID}}
 
 If you did not initiate a password reset for your Seatsurfing account,
 you can safely ignore this email. We won't change your password if you

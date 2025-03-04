@@ -8,11 +8,29 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"slices"
+
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+
+var disallowedDomains = []string{
+	"www",
+	"web",
+	"docs",
+	"status",
+	"admin",
+	"ui",
+	"app",
+	"portal",
+	"booking",
+	"uc",
+	"test",
+	"dev",
+	"staging",
+}
 
 type SignupRouter struct {
 }
@@ -47,7 +65,7 @@ func (router *SignupRouter) signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	domain := strings.ToLower(m.Domain) + GetConfig().OrgSignupDomain
-	if !router.isDomainAvailable(domain) {
+	if !router.isDomainAvailable(domain) || !router.isSubdomainAllowed(m.Domain) {
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
@@ -90,7 +108,8 @@ func (router *SignupRouter) confirm(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	if !router.isDomainAvailable(e.Domain) {
+	subdomain := strings.Split(e.Domain, ".")[0]
+	if !router.isDomainAvailable(e.Domain) || !router.isSubdomainAllowed(subdomain) {
 		GetSignupRepository().Delete(e)
 		w.WriteHeader(http.StatusConflict)
 		return
@@ -114,7 +133,7 @@ func (router *SignupRouter) confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := &User{
-		Email:          GetConfig().OrgSignupAdmin + "@" + e.Domain,
+		Email:          org.ContactEmail,
 		HashedPassword: NullString(e.Password),
 		OrganizationID: org.ID,
 		Role:           UserRoleOrgAdmin,
@@ -145,7 +164,7 @@ func (router *SignupRouter) sendConfirmMail(signup *Signup, language string) err
 	vars := map[string]string{
 		"recipientName":  signup.Firstname + " " + signup.Lastname,
 		"recipientEmail": signup.Email,
-		"username":       GetConfig().OrgSignupAdmin + "@" + signup.Domain,
+		"orgDomain":      "https://" + signup.Domain + "/",
 	}
 	return SendEmail(signup.Email, GetConfig().SMTPSenderAddress, GetEmailTemplatePathConfirm(), language, vars)
 }
@@ -170,6 +189,10 @@ func (router *SignupRouter) isEmailAvailable(email string) bool {
 		return false
 	}
 	return true
+}
+
+func (router *SignupRouter) isSubdomainAllowed(domain string) bool {
+	return !slices.Contains(disallowedDomains, domain)
 }
 
 func (router *SignupRouter) isDomainAvailable(domain string) bool {

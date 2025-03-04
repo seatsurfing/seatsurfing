@@ -448,7 +448,7 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 		SendForbidden(w)
 		return "", errors.New("Forbidden")
 	}
-	bookForUser, err := GetUserRepository().GetByEmail(userEmail)
+	bookForUser, err := GetUserRepository().GetByEmail(requestUser.OrganizationID, userEmail)
 	if bookForUser == nil || err != nil {
 		org, err := GetOrganizationRepository().GetOne(requestUser.OrganizationID)
 		if err != nil || org == nil {
@@ -478,7 +478,7 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 			SendInternalServerError(w)
 			return "", errors.New("InternalServerError")
 		}
-		bookForUser, err = GetUserRepository().GetByEmail(userEmail)
+		bookForUser, err = GetUserRepository().GetByEmail(org.ID, userEmail)
 		if err != nil {
 			SendInternalServerError(w)
 			return "", errors.New("InternalServerError")

@@ -11,16 +11,11 @@ Ihren Mitarbeitern die Möglichkeit, flexibel Ihre Arbeitsplätze zu wählen.
 
 Als Administrator können Sie sich ab sofort hier einloggen:
 
-{{frontendUrl}}admin/
-
-Verwenden Sie hierfür das von Ihnen gewählte Kennwort und den folgenden
-Benutzernamen:
-
-{{username}}
+{{orgDomain}}admin/
 
 Zur Platzbuchung gehen Sie bitte auf:
 
-{{frontendUrl}}ui/
+{{orgDomain}}ui/
 
 Viele Grüße
 Ihr Team von seatsurfing.io

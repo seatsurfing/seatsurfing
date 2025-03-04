@@ -141,7 +141,7 @@ func TestBookingsCreateNonExistingUser(t *testing.T) {
 	id := res.Header().Get("X-Object-Id")
 
 	// Check user
-	newUser, _ := GetUserRepository().GetByEmail("new-user@test.com")
+	newUser, _ := GetUserRepository().GetByEmail(org.ID, "new-user@test.com")
 	CheckTestBool(t, true, newUser != nil)
 
 	// Check booking

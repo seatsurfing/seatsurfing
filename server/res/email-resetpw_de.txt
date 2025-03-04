@@ -9,7 +9,7 @@ wir haben eine Anfrage zum Zurücksetzen Ihres Kennworts erhalten.
 
 Wenn diese Anfrage von Ihnen stammt, können Sie Ihr Kennwort hier ändern:
 
-{{frontendUrl}}ui/resetpw/{{confirmID}}
+{{orgDomain}}ui/resetpw/{{confirmID}}
 
 Wenn Sie keine Anfrage zur Änderung Ihres Kennworts initiiert haben,
 können Sie diese Mail gefahrlos ignorieren. Wir werden Ihr Kennwort

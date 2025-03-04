@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax } from 'seatsurfing-commons';
+import { Ajax, Organization } from 'seatsurfing-commons';
 import { Button, Form } from 'react-bootstrap';
 import { withTranslation, WithTranslation } from 'next-i18next';
 import Link from 'next/link';
@@ -15,8 +15,11 @@ interface Props extends WithTranslation {
 }
 
 class InitPasswordReset extends React.Component<Props, State> {
+  org: Organization | null;
+
   constructor(props: any) {
     super(props);
+    this.org = null;
     this.state = {
       loading: false,
       complete: false,
@@ -25,11 +28,29 @@ class InitPasswordReset extends React.Component<Props, State> {
     };
   }
 
+  componentDidMount = () => {
+    this.loadOrgDetails();
+  }
+
+  loadOrgDetails = () => {
+    const domain = window.location.host.split(':').shift();
+    Ajax.get("/auth/org/" + domain).then((res) => {
+      this.org = new Organization();
+      this.org.deserialize(res.json.organization);
+    }).catch(() => {
+      Ajax.get("/auth/singleorg").then((res) => {
+        this.org = new Organization();
+        this.org.deserialize(res.json.organization);
+      });
+    });
+  }
+
   onPasswordSubmit = (e: any) => {
     e.preventDefault();
     this.setState({ loading: true, complete: false, success: false });
     let payload = {
-      "email": this.state.email
+      "email": this.state.email,
+      "organizationId": (this.org ? this.org.id : ''),
     };
     Ajax.postData("/auth/initpwreset", payload).then((res) => {
       if (res.status >= 200 && res.status <= 299) {

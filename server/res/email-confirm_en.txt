@@ -11,15 +11,11 @@ possibility to book their desks when they need it.
 
 As an administrator, you can log in here:
 
-{{frontendUrl}}admin/
-
-Please use your chosen password and the following username:
-
-{{username}}
+{{orgDomain}}admin/
 
 To book your seats, please go to:
 
-{{frontendUrl}}ui/
+{{orgDomain}}ui/
 
 Kind regards,
 Team Seatsurfing

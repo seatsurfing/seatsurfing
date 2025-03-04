@@ -112,6 +112,14 @@ func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 19 {
+		if _, err := GetDatabase().DB().Exec("DROP INDEX IF EXISTS users_email"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email, organization_id)"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *UserRepository) Create(e *User) error {
@@ -141,17 +149,39 @@ func (r *UserRepository) GetOne(id string) (*User, error) {
 	return e, nil
 }
 
-func (r *UserRepository) GetByEmail(email string) (*User, error) {
+func (r *UserRepository) GetByEmail(organizationID string, email string) (*User, error) {
 	e := &User{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
 		"FROM users "+
-		"WHERE LOWER(email) = $1",
-		strings.ToLower(email)).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		"WHERE LOWER(email) = $1 AND organization_id = $2",
+		strings.ToLower(email), organizationID).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
 	if err != nil {
 		return nil, err
 	}
 	return e, nil
 }
+
+func (r *UserRepository) GetUsersWithEmail(email string) ([]*User, error) {
+	var result []*User
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+		"FROM users "+
+		"WHERE LOWER(email) = $1",
+		strings.ToLower(email))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &User{}
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *UserRepository) GetByAtlassianID(atlassianID string) (*User, error) {
 	e := &User{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+

@@ -27,7 +27,7 @@ func TestAuthPasswordLogin(t *testing.T) {
 	GetUserRepository().Update(user)
 
 	// Log in
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -54,28 +54,28 @@ func TestAuthPasswordLoginBan(t *testing.T) {
 	GetUserRepository().Update(user)
 
 	// Attempt 1
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345670\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345670\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Attempt 2
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345679\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345679\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Attempt 3
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345671\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345671\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Would be successful, but fails cause banned
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -91,7 +91,7 @@ func TestAuthRefresh(t *testing.T) {
 	GetUserRepository().Update(user)
 
 	// Log in
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -148,7 +148,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	GetUserRepository().Update(user)
 
 	// Init password reset
-	payload := "{ \"email\": \"" + user.Email + "\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/initpwreset", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -169,13 +169,13 @@ func TestAuthPasswordReset(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
 	// Test login with old password
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 
 	// Test login with new password
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"abcd1234\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"abcd1234\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -203,5 +203,36 @@ func TestAuthSingleOrgWithMultipleOrgs(t *testing.T) {
 
 	req := NewHTTPRequestWithAccessToken("GET", "/auth/singleorg", "", nil)
 	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestAuthOrgDetails(t *testing.T) {
+	ClearTestDB()
+	org1 := CreateTestOrg("test1.com")
+	CreateTestUserInOrg(org1)
+
+	org2 := CreateTestOrg("test2.com")
+	user2 := CreateTestUserInOrg(org2)
+	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user2)
+
+	req := NewHTTPRequestWithAccessToken("GET", "/auth/org/test1.com", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *AuthPreflightResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "Test Org", resBody.Organization.Name)
+	CheckTestBool(t, false, resBody.RequirePassword)
+
+	req = NewHTTPRequestWithAccessToken("GET", "/auth/org/test2.com", "", nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *AuthPreflightResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestString(t, "Test Org", resBody2.Organization.Name)
+	CheckTestBool(t, true, resBody2.RequirePassword)
+
+	req = NewHTTPRequestWithAccessToken("GET", "/auth/org/test3.com", "", nil)
+	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }

@@ -43,7 +43,8 @@ type AuthPreflightRequest struct {
 }
 
 type InitPasswordResetRequest struct {
-	Email string `json:"email" validate:"required,email"`
+	OrganizationID string `json:"organizationId" validate:"required"`
+	Email          string `json:"email" validate:"required,email"`
 }
 
 type CompletePasswordResetRequest struct {
@@ -55,12 +56,14 @@ type AuthPreflightResponse struct {
 	AuthProviders   []*GetAuthProviderPublicResponse `json:"authProviders"`
 	RequirePassword bool                             `json:"requirePassword"`
 	BackendVersion  string                           `json:"backendVersion"`
+	Domain          string                           `json:"domain"`
 }
 
 type AuthPasswordRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8"`
-	LongLived bool   `json:"longLived"`
+	Email          string `json:"email" validate:"required,email"`
+	Password       string `json:"password" validate:"required,min=8"`
+	OrganizationID string `json:"organizationId" validate:"required"`
+	LongLived      bool   `json:"longLived"`
 }
 
 type RefreshRequest struct {
@@ -88,6 +91,32 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
 	s.HandleFunc("/refresh", router.refreshAccessToken).Methods("POST")
 	s.HandleFunc("/singleorg", router.singleOrg).Methods("GET")
+	s.HandleFunc("/org/{domain}", router.getOrgDetails).Methods("GET")
+}
+
+func (router *AuthRouter) getOrgDetails(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	if vars["domain"] == "" {
+		SendBadRequest(w)
+		return
+	}
+	org, err := GetOrganizationRepository().GetOneByDomain(vars["domain"])
+	if err != nil || org == nil {
+		SendNotFound(w)
+		return
+	}
+	res := router.getPreflightResponseForOrg(org)
+	if res == nil {
+		SendInternalServerError(w)
+		return
+	}
+	requirePassword, err := GetUserRepository().HasAnyUserInOrgPasswordSet(org.ID)
+	if err != nil {
+		SendInternalServerError(w)
+		return
+	}
+	res.RequirePassword = requirePassword
+	SendJSON(w, res)
 }
 
 func (router *AuthRouter) singleOrg(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +195,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		SendBadRequest(w)
 		return
 	}
-	user, err := GetUserRepository().GetByEmail(m.Email)
+	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if user == nil || err != nil {
 		SendNotFound(w)
 		return
@@ -239,7 +268,15 @@ func (router *AuthRouter) preflight(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user exists.
 	// If so, return preflight response with requirePassword set to true if user has a password set.
-	user, _ := GetUserRepository().GetByEmail(m.Email)
+	users, err := GetUserRepository().GetUsersWithEmail(m.Email)
+	if err != nil {
+		SendInternalServerError(w)
+		return
+	}
+	var user *User = nil
+	if len(users) > 0 {
+		user = users[0]
+	}
 	if user != nil {
 		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
 		res := router.getPreflightResponseForOrg(org)
@@ -266,7 +303,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendBadRequest(w)
 		return
 	}
-	user, err := GetUserRepository().GetByEmail(m.Email)
+	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if err != nil {
 		SendNotFound(w)
 		return
@@ -339,7 +376,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
-	user, err := GetUserRepository().GetByEmail(payload.UserID)
+	user, err := GetUserRepository().GetByEmail(provider.OrganizationID, payload.UserID)
 	// TODO Change email to auth server ID???
 	if err != nil {
 		org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
@@ -446,7 +483,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
 	if !allowAnyUser {
-		_, err := GetUserRepository().GetByEmail(claims.Email)
+		_, err := GetUserRepository().GetByEmail(provider.OrganizationID, claims.Email)
 		if err != nil {
 			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType))
 			return
@@ -555,10 +592,15 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 			}
 		}
 	}
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		return err
+	}
 	vars := map[string]string{
 		"recipientName":  user.Email,
 		"recipientEmail": email,
 		"confirmID":      ID,
+		"orgDomain":      "https://" + domain.DomainName + "/",
 	}
 	return SendEmail(email, c.SMTPSenderAddress, GetEmailTemplatePathResetpassword(), org.Language, vars)
 }
@@ -646,6 +688,10 @@ func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPre
 		RequirePassword: false,
 		AuthProviders:   []*GetAuthProviderPublicResponse{},
 		BackendVersion:  GetProductVersion(),
+	}
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if domain != nil && err == nil {
+		res.Domain = domain.DomainName
 	}
 	for _, e := range list {
 		m := &GetAuthProviderPublicResponse{}

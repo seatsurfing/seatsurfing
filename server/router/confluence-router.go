@@ -67,7 +67,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	_, err = GetUserRepository().GetByAtlassianID(userID)
 	if err != nil {
 		// user not found using atlassianID, try by mail
-		u, err := GetUserRepository().GetByEmail(userID)
+		u, err := GetUserRepository().GetByEmail(org.ID, userID)
 		if err == nil {
 			// got it, update it now
 			GetUserRepository().UpdateAtlassianClientIDForUser(u.OrganizationID, u.ID, userID)

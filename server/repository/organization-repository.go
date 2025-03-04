@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -275,6 +277,26 @@ func (r *OrganizationRepository) ActivateDomain(e *Organization, domain string) 
 		"WHERE domain = LOWER($1) AND organization_id = $2",
 		strings.ToLower(domain), e.ID)
 	return err
+}
+
+func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, error) {
+	domains, err := r.GetDomains(e)
+	if err != nil {
+		return nil, err
+	}
+	for _, domain := range domains {
+		if domain.Active {
+			if strings.Contains(domain.DomainName, GetConfig().OrgSignupDomain) {
+				return domain, nil
+			}
+		}
+	}
+	for _, domain := range domains {
+		if domain.Active {
+			return domain, nil
+		}
+	}
+	return nil, errors.New("no primary domain found")
 }
 
 func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) {
