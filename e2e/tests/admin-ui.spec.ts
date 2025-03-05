@@ -7,11 +7,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto(adminUiURL + '/admin/login');
   await expect(page).toHaveURL(/login$/);
 
-  // Enter username
+  // Enter credentials
   await page.getByPlaceholder('Email address').fill('admin@seatsurfing.local');
-  await page.getByRole('button', { name: '➤' }).click();
-
-  // Enter password
   await page.getByPlaceholder('Password').fill('12345678');
   await page.getByRole('button', { name: '➤' }).click();
 

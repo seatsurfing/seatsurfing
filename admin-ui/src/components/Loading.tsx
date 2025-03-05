@@ -6,15 +6,20 @@ interface State {
 }
 
 interface Props extends WithTranslation {
+    showText: boolean
+    paddingTop: boolean
+    visible: boolean
 }
 
 class Loading extends React.Component<Props, State> {
     render() {
         let text = "Loading...";
+        let paddingTop = (this.props.paddingTop ?? true) ? 'padding-top' : '';
+        let display = (this.props.visible === undefined || this.props.visible === true) ? 'display-block' : 'display-none';
         return (
-            <div className="padding-top center"><IconLoad className="feather loader" /> {text}</div>
+            <div className={`${paddingTop} ${display} center loading-overlay`}><IconLoad className="feather loader" />{text}</div>
         );
     }
 }
 
-export default withTranslation(['admin'])(Loading as any);
+export default withTranslation()(Loading as any);

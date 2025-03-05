@@ -11,7 +11,6 @@ import withReadyRouter from '@/components/withReadyRouter';
 interface State {
   email: string
   password: string
-  orgDomain: string
   rememberMe: boolean
   invalid: boolean
   redirect: string | null
@@ -23,6 +22,7 @@ interface State {
   singleOrgMode: boolean
   noPasswords: boolean
   loading: boolean
+  orgDomain: string
   legacyMode: boolean
 }
 
@@ -39,7 +39,6 @@ class Login extends React.Component<Props, State> {
     this.state = {
       email: "",
       password: "",
-      orgDomain: "",
       rememberMe: false,
       invalid: false,
       redirect: null,
@@ -51,6 +50,7 @@ class Login extends React.Component<Props, State> {
       singleOrgMode: false,
       noPasswords: false,
       loading: true,
+      orgDomain: "",
       legacyMode: false
     };
   }
@@ -59,10 +59,8 @@ class Login extends React.Component<Props, State> {
     this.loadOrgDetails();
   }
 
-  loadOrgDetails = () => {
-    const domain = window.location.host.split(':').shift();
-    Ajax.get("/auth/org/" + domain).then((res) => {
-      this.org = new Organization();
+  applyOrg = (res: any) => {
+    this.org = new Organization();
       this.org.deserialize(res.json.organization);
       if ((res.json.authProviders) && (res.json.authProviders.length > 0)) {
         this.setState({
@@ -80,6 +78,12 @@ class Login extends React.Component<Props, State> {
       } else {
         this.setState({ loading: false });
       }
+  }
+
+  loadOrgDetails = () => {
+    const domain = window.location.host.split(':').shift();
+    Ajax.get("/auth/org/" + domain).then((res) => {
+      this.applyOrg(res);
     }).catch(() => {
       // No org for domain found
       this.checkSingleOrg();
@@ -88,24 +92,7 @@ class Login extends React.Component<Props, State> {
 
   checkSingleOrg = () => {
     Ajax.get("/auth/singleorg").then((res) => {
-      this.org = new Organization();
-      this.org.deserialize(res.json.organization);
-      if ((res.json.authProviders) && (res.json.authProviders.length > 0)) {
-        this.setState({
-          providers: res.json.authProviders,
-          noPasswords: !res.json.requirePassword,
-          singleOrgMode: true,
-          loading: false
-        }, () => {
-          if ((this.state.noPasswords) && (this.state.providers) && (this.state.providers.length === 1)) {
-            this.useProvider(this.state.providers[0].id);
-          } else {
-            this.setState({ loading: false });
-          }
-        });
-      } else {
-        this.setState({ loading: false });
-      }
+      this.applyOrg(res);
     }).catch(() => {
       const domain = window.location.host.split(':').shift();
       this.setState({
@@ -169,7 +156,6 @@ class Login extends React.Component<Props, State> {
         }
         RuntimeConfig.setLoginDetails().then(() => {
           let redirect = this.props.router.query["redir"] as string || "/search";
-
           this.setState({ redirect });
         });
       });

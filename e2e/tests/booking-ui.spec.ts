@@ -7,11 +7,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto(bookingUiUrl + '/ui/login');
   await expect(page).toHaveURL(/login$/);
 
-  // Enter username
+  // Enter credentials
   await page.getByPlaceholder('you@company.com').fill('admin@seatsurfing.local');
-  await page.getByRole('button', { name: '➤' }).click();
-
-  // Enter password
   await page.getByPlaceholder('Password').fill('12345678');
   await page.getByRole('button', { name: '➤' }).click();
 
@@ -24,8 +21,10 @@ test('crud booking', async ({ page }) => {
   await page.getByText('Desk 1', { exact: true }).click();
   await page.getByRole('button', { name: 'Confirm booking' }).click();
   await page.getByRole('button', { name: 'My bookings' }).click();
-  await page.getByRole('button', { name: 'Sample Floor' }).click();
+  await expect(page).toHaveURL(/bookings$/);
+  await page.getByText(/Sample Floor/).click();
   await page.getByRole('button', { name: 'Cancel booking' }).click();
   await page.getByText('No bookings.');
   await page.getByRole('link', { name: 'Book a space' }).click();
+  await expect(page).toHaveURL(/search$/);
 });
