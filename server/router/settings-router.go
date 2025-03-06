@@ -337,7 +337,7 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 
 func (router *SettingsRouter) getSysSettingOrgSignupDelete() *GetSettingsResponse {
 	boolVal := "0"
-	if GetConfig().OrgSignupDelete {
+	if GetConfig().AllowOrgDelete {
 		boolVal = "1"
 	}
 	return &GetSettingsResponse{

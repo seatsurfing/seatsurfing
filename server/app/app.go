@@ -45,7 +45,6 @@ func (a *App) InitializeDatabases() {
 }
 
 func (a *App) InitializeRouter() {
-	config := GetConfig()
 	a.Router = mux.NewRouter()
 	routers := make(map[string]Route)
 	routers["/location/{locationId}/space/"] = &SpaceRouter{}
@@ -64,9 +63,6 @@ func (a *App) InitializeRouter() {
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/plugin/"] = &PluginRouter{}
-	if config.OrgSignupEnabled {
-		routers["/signup/"] = &SignupRouter{}
-	}
 	for _, plg := range plugin.GetPlugins() {
 		for route, router := range (*plg).GetPublicRoutes() {
 			routers[route] = router
@@ -132,9 +128,6 @@ func (a *App) InitializeTimers() {
 			if err := GetAuthStateRepository().DeleteExpired(); err != nil {
 				log.Println(err)
 			}
-			if err := GetSignupRepository().DeleteExpired(); err != nil {
-				log.Println(err)
-			}
 			if err := GetRefreshTokenRepository().DeleteExpired(); err != nil {
 				log.Println(err)
 			}
@@ -147,6 +140,9 @@ func (a *App) InitializeTimers() {
 			}
 			if num > 0 {
 				log.Printf("Deleted %d anonymous Confluence users", num)
+			}
+			for _, plg := range plugin.GetPlugins() {
+				(*plg).OnTimer()
 			}
 		}
 	}()

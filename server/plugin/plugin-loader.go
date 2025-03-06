@@ -30,6 +30,10 @@ func GetPlugins() []*api.SeatsurfingPlugin {
 	return pluginList
 }
 
+func AddPlugin(plg *api.SeatsurfingPlugin) {
+	pluginList = append(pluginList, plg)
+}
+
 func loadPlugin(f os.DirEntry) {
 	plg, err := plugin.Open(filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name()))
 	if err != nil {
@@ -47,5 +51,6 @@ func loadPlugin(f os.DirEntry) {
 		return
 	}
 	log.Println("Loaded plugin", f.Name())
-	pluginList = append(pluginList, &castV)
+	AddPlugin(&castV)
+	//pluginList = append(pluginList, &castV)
 }

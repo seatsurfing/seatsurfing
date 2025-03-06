@@ -5,6 +5,7 @@ type SeatsurfingPlugin interface {
 	GetUnauthorizedRoutes() []string
 	GetRepositories() []Repository
 	GetAdminUIMenuItems() []AdminUIMenuItem
+	OnTimer()
 }
 
 type AdminUIMenuItem struct {

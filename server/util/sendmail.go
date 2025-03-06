@@ -15,14 +15,6 @@ const EmailTemplateDefaultLanguage = "en"
 
 var SendMailMockContent = ""
 
-func GetEmailTemplatePathSignup() string {
-	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-signup.txt")
-}
-
-func GetEmailTemplatePathConfirm() string {
-	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-confirm.txt")
-}
-
 func GetEmailTemplatePathResetpassword() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.txt")
 }
@@ -32,17 +24,21 @@ func SendEmail(recipient, sender, templateFile, language string, vars map[string
 	if err != nil {
 		return err
 	}
-	body, err := compileEmailTemplate(actualTemplateFile, vars)
+	body, err := compileEmailTemplateFromFile(actualTemplateFile, vars)
 	if err != nil {
 		return err
 	}
+	return SendEmailWithBody(recipient, sender, body)
+}
+
+func SendEmailWithBody(recipient, sender, body string) error {
 	if GetConfig().MockSendmail {
 		SendMailMockContent = body
 		return nil
 	}
 	to := []string{recipient}
 	msg := []byte(body)
-	err = smtpDialAndSend(sender, to, msg)
+	err := smtpDialAndSend(sender, to, msg)
 	return err
 }
 
@@ -65,20 +61,24 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 	return "", os.ErrNotExist
 }
 
-func compileEmailTemplate(templateFile string, vars map[string]string) (string, error) {
-	data, err := os.ReadFile(templateFile)
-	if err != nil {
-		return "", err
-	}
-	s := string(data)
+func CompileEmailTemplate(template string, vars map[string]string) string {
 	c := GetConfig()
 	vars["frontendUrl"] = c.FrontendURL
 	vars["publicUrl"] = c.PublicURL
 	vars["senderAddress"] = c.SMTPSenderAddress
 	for key, val := range vars {
-		s = strings.ReplaceAll(s, "{{"+key+"}}", val)
+		template = strings.ReplaceAll(template, "{{"+key+"}}", val)
 	}
-	return s, nil
+	return template
+}
+
+func compileEmailTemplateFromFile(templateFile string, vars map[string]string) (string, error) {
+	data, err := os.ReadFile(templateFile)
+	if err != nil {
+		return "", err
+	}
+	s := string(data)
+	return CompileEmailTemplate(s, vars), nil
 }
 
 func smtpDialAndSend(from string, to []string, msg []byte) error {

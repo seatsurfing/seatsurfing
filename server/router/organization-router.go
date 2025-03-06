@@ -266,7 +266,7 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if !GetUserRepository().IsSuperAdmin(user) && CanAdminOrg(user, user.OrganizationID) {
-		if !GetConfig().OrgSignupDelete {
+		if !GetConfig().AllowOrgDelete {
 			SendForbidden(w)
 		}
 	}

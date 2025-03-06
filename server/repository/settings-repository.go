@@ -3,8 +3,6 @@ package repository
 import (
 	"strconv"
 	"sync"
-
-	. "github.com/seatsurfing/seatsurfing/server/config"
 )
 
 type SettingsRepository struct {
@@ -188,7 +186,7 @@ func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error
 func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES "+
-		"($1, '"+SettingSubscriptionMaxUsers.Name+"', '"+strconv.Itoa(GetConfig().OrgSignupMaxUsers)+"'), "+
+		"($1, '"+SettingSubscriptionMaxUsers.Name+"', '10'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
 		"($1, '"+SettingNoAdminRestrictions.Name+"', '0'), "+

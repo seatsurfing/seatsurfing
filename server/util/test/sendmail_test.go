@@ -9,13 +9,13 @@ import (
 )
 
 func TestGetEmailTemplatePathExists(t *testing.T) {
-	res, err := GetEmailTemplatePath(GetEmailTemplatePathSignup(), "de")
+	res, err := GetEmailTemplatePath(GetEmailTemplatePathResetpassword(), "de")
 	CheckStringNotEmpty(t, res)
 	CheckTestBool(t, true, err == nil)
 }
 
 func TestGetEmailTemplatePathFallback(t *testing.T) {
-	res, err := GetEmailTemplatePath(GetEmailTemplatePathSignup(), "notexists")
+	res, err := GetEmailTemplatePath(GetEmailTemplatePathResetpassword(), "notexists")
 	CheckStringNotEmpty(t, res)
 	CheckTestBool(t, true, err == nil)
 }

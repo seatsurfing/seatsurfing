@@ -38,12 +38,7 @@ type Config struct {
 	InitOrgUser                         string
 	InitOrgPass                         string
 	InitOrgLanguage                     string
-	OrgSignupEnabled                    bool
-	OrgSignupDomain                     string
-	OrgSignupPreviousDomains            []string
-	OrgSignupAdmin                      string
-	OrgSignupMaxUsers                   int
-	OrgSignupDelete                     bool
+	AllowOrgDelete                      bool
 	LoginProtectionMaxFails             int
 	LoginProtectionSlidingWindowSeconds int
 	LoginProtectionBanMinutes           int
@@ -103,12 +98,7 @@ func (c *Config) ReadConfig() {
 	c.InitOrgUser = c.getEnv("INIT_ORG_USER", "admin")
 	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "12345678")
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")
-	c.OrgSignupEnabled = (c.getEnv("ORG_SIGNUP_ENABLED", "0") == "1")
-	c.OrgSignupDomain = c.getEnv("ORG_SIGNUP_DOMAIN", ".on.seatsurfing.local")
-	c.OrgSignupPreviousDomains = strings.Split(c.getEnv("ORG_SIGNUP_PREVIOUS_DOMAINS", ""), ",")
-	c.OrgSignupAdmin = c.getEnv("ORG_SIGNUP_ADMIN", "admin")
-	c.OrgSignupMaxUsers = c.getEnvInt("ORG_SIGNUP_MAX_USERS", 10)
-	c.OrgSignupDelete = (c.getEnv("ORG_SIGNUP_DELETE", "0") == "1")
+	c.AllowOrgDelete = (c.getEnv("ALLOW_ORG_DELETE", "0") == "1")
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)
 	c.LoginProtectionSlidingWindowSeconds = c.getEnvInt("LOGIN_PROTECTION_SLIDING_WINDOW_SECONDS", 600)
 	c.LoginProtectionBanMinutes = c.getEnvInt("LOGIN_PROTECTION_BAN_MINUTES", 5)

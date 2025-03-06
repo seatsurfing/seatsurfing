@@ -286,13 +286,6 @@ func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, err
 	}
 	for _, domain := range domains {
 		if domain.Active {
-			if strings.Contains(domain.DomainName, GetConfig().OrgSignupDomain) {
-				return domain, nil
-			}
-		}
-	}
-	for _, domain := range domains {
-		if domain.Active {
 			return domain, nil
 		}
 	}
@@ -350,7 +343,7 @@ func (r *OrganizationRepository) CreateSampleData(org *Organization) error {
 	if err := GetLocationRepository().Create(location); err != nil {
 		return err
 	}
-	mapFile, _ := filepath.Abs("./res/floorplan.jpg")
+	mapFile, _ := filepath.Abs(filepath.Join(GetConfig().FilesystemBasePath, "./res/floorplan.jpg"))
 	mapData, err := os.ReadFile(mapFile)
 	if err != nil {
 		return err
