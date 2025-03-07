@@ -913,13 +913,13 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     }
-    let enterDatePicker = <DateTimePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatString()} />;
+    let enterDatePicker = (<div aria-label="Reservation start date"><DateTimePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatString()} yearAriaLabel="Year" monthAriaLabel="Month" dayAriaLabel="Day" hourAriaLabel="Start hour" minuteAriaLabel="Start minute" secondAriaLabel="Start second" nativeInputAriaLabel="Start date" calendarAriaLabel="Toggle start calendar" /></div>);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterDatePicker = <DatePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} />;
+      enterDatePicker = (<div aria-label="Reservation start date"><DatePicker disabled={!this.state.locationId} value={this.state.enter} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setEnterDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} yearAriaLabel="Year" monthAriaLabel="Month" dayAriaLabel="Day" nativeInputAriaLabel="Start date" calendarAriaLabel="Toggle start calendar" /></div>);
     }
-    let leaveDatePicker = <DateTimePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatString()} />;
+    let leaveDatePicker = (<div aria-label="Reservation end date"><DateTimePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatString()} yearAriaLabel="Year" monthAriaLabel="Month" dayAriaLabel="Day" hourAriaLabel="End hour" minuteAriaLabel="End minute" secondAriaLabel="End second" nativeInputAriaLabel="End date" calendarAriaLabel="Toggle end calendar" /></div>);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      leaveDatePicker = <DatePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} />;
+      leaveDatePicker = (<div aria-label="Reservation end date"><DatePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} yearAriaLabel="Year" monthAriaLabel="Month" dayAriaLabel="Day" nativeInputAriaLabel="End date" calendarAriaLabel="Toggle end calendar" /></div>);
     }
 
     let listOrMap = <></>;
@@ -990,11 +990,11 @@ class Search extends React.Component<Props, State> {
               <div className='pt-1 me-2'><LocationIcon title={this.props.t("area")} color={'#555'} height="20px" width="20px" /></div>
               <div className='ms-2 w-100'>
                 <InputGroup>
-                  <Form.Select required={true} value={this.state.locationId} onChange={(e) => this.changeLocation(e.target.value)} disabled={this.locations.length === 0}>
+                  <Form.Select required={true} value={this.state.locationId} onChange={(e) => this.changeLocation(e.target.value)} disabled={this.locations.length === 0} aria-label="Select location" >
                     {this.renderLocations()}
                   </Form.Select>
-                  <Button variant='outline-secondary' className='addon-button' disabled={(!this.state.locationId) || (this.state.attributeValues.length === 0)} onClick={() => this.setState({ showLocationDetails: true })}><InfoIcon /></Button>
-                  <Button variant={this.state.searchAttributes.length === 0 ? 'outline-secondary' : 'primary'} className='addon-button' onClick={() => this.setState({ showSearchModal: true })}><FilterIcon color={this.state.searchAttributes.length === 0 ? undefined : 'white'} /></Button>
+                  <Button variant='outline-secondary' className='addon-button' disabled={(!this.state.locationId) || (this.state.attributeValues.length === 0)} onClick={() => this.setState({ showLocationDetails: true })} aria-label="Show location details"><InfoIcon /></Button>
+                  <Button variant={this.state.searchAttributes.length === 0 ? 'outline-secondary' : 'primary'} className='addon-button' onClick={() => this.setState({ showSearchModal: true })} aria-label="Show location filters" ><FilterIcon color={this.state.searchAttributes.length === 0 ? undefined : 'white'} /></Button>
                 </InputGroup>
               </div>
             </Form.Group>
@@ -1014,13 +1014,13 @@ class Search extends React.Component<Props, State> {
             <Form.Group className="d-flex margin-top-10">
               <div className='me-2'><WeekIcon title={this.props.t("week")} color={'#555'} height="20px" width="20px" /></div>
               <div className='ms-2 w-100'>
-                <Form.Range disabled={!this.state.locationId || this.state.daySliderDisabled} list="weekDays" min={0} max={RuntimeConfig.INFOS.maxDaysInAdvance} step="1" value={this.state.daySlider} onChange={(event) => this.changeEnterDay(window.parseInt(event.target.value))} />
+                <Form.Range disabled={!this.state.locationId || this.state.daySliderDisabled} list="weekDays" min={0} max={RuntimeConfig.INFOS.maxDaysInAdvance} step="1" value={this.state.daySlider} onChange={(event) => this.changeEnterDay(window.parseInt(event.target.value))} aria-label="Day slider" />
               </div>
             </Form.Group>
             <Form.Group className="d-flex margin-top-10">
               <div className='me-2'><MapIcon title={this.props.t("map")} color={'#555'} height="20px" width="20px" /></div>
               <div className='ms-2 w-100'>
-                <Form.Check disabled={!this.state.locationId} type="switch" checked={!this.state.listView} onChange={() => this.toggleListView()} label={this.state.listView ? this.props.t("showList") : this.props.t("showMap")} />
+                <Form.Check disabled={!this.state.locationId} type="switch" checked={!this.state.listView} onChange={() => this.toggleListView()} label={this.state.listView ? this.props.t("showList") : this.props.t("showMap")} aria-label={this.state.listView ? this.props.t("showList") : this.props.t("showMap")} id="switch-control" />
               </div>
             </Form.Group>
           </Form>
