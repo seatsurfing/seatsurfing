@@ -246,17 +246,6 @@ func TestOrganizationsDomainsCRUD(t *testing.T) {
 	CheckTestBool(t, true, resBody[1].Active)
 }
 
-func TestOrganizationsDomainsPreventAdminDomainDelete(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
-
-	req := NewHTTPRequest("DELETE", "/organization/"+org.ID+"/domain/test.com", loginResponse.UserID, nil)
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
-}
-
 func TestOrganizationsVerifyDNS(t *testing.T) {
 	ClearTestDB()
 	user := CreateTestUserSuperAdmin()
@@ -484,5 +473,77 @@ func TestOrganizationsDelete(t *testing.T) {
 	// Verify
 	users, _ := GetUserRepository().GetAll(org.ID, 100, 0)
 	CheckTestInt(t, 0, len(users))
+}
 
+func TestOrganizationsPrimaryDomain(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test1.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Add domain 2
+	req := NewHTTPRequest("POST", "/organization/"+org.ID+"/domain/test2.com", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Add domain 3
+	req = NewHTTPRequest("POST", "/organization/"+org.ID+"/domain/test3.com", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Get domain list
+	req = NewHTTPRequest("GET", "/organization/"+org.ID+"/domain/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetDomainResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 3 {
+		t.Fatalf("Expected array with 3 elements, got %d", len(resBody))
+	}
+	CheckTestString(t, "test1.com", resBody[0].DomainName)
+	CheckTestString(t, "test2.com", resBody[1].DomainName)
+	CheckTestString(t, "test3.com", resBody[2].DomainName)
+	CheckTestBool(t, true, resBody[0].Primary)
+	CheckTestBool(t, false, resBody[1].Primary)
+	CheckTestBool(t, false, resBody[2].Primary)
+
+	// Set domain 2 as primary
+	req = NewHTTPRequest("POST", "/organization/"+org.ID+"/domain/test2.com/primary", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Get domain list
+	req = NewHTTPRequest("GET", "/organization/"+org.ID+"/domain/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 3 {
+		t.Fatalf("Expected array with 3 elements, got %d", len(resBody))
+	}
+	CheckTestString(t, "test1.com", resBody[0].DomainName)
+	CheckTestString(t, "test2.com", resBody[1].DomainName)
+	CheckTestString(t, "test3.com", resBody[2].DomainName)
+	CheckTestBool(t, false, resBody[0].Primary)
+	CheckTestBool(t, true, resBody[1].Primary)
+	CheckTestBool(t, false, resBody[2].Primary)
+
+	// Delete domain 2
+	req = NewHTTPRequest("DELETE", "/organization/"+org.ID+"/domain/test2.com", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Get domain list
+	req = NewHTTPRequest("GET", "/organization/"+org.ID+"/domain/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 2 {
+		t.Fatalf("Expected array with 2 elements, got %d", len(resBody))
+	}
+	CheckTestString(t, "test1.com", resBody[0].DomainName)
+	CheckTestString(t, "test3.com", resBody[1].DomainName)
+	CheckTestBool(t, true, resBody[0].Primary)
+	CheckTestBool(t, false, resBody[1].Primary)
 }

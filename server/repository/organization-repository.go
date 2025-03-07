@@ -32,6 +32,7 @@ type Domain struct {
 	OrganizationID string
 	Active         bool
 	VerifyToken    string
+	Primary        bool
 }
 
 var organizationRepository *OrganizationRepository
@@ -110,6 +111,17 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 	if curVersion < 15 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
 			"DROP COLUMN country"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 20 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations_domains " +
+			"ADD COLUMN primary_domain boolean NOT NULL DEFAULT FALSE"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains " +
+			"SET primary_domain = TRUE " +
+			"WHERE domain IN (SELECT domain FROM (SELECT DISTINCT ON (organization_id) organization_id, domain FROM organizations_domains ORDER BY organization_id))"); err != nil {
 			panic(err)
 		}
 	}
@@ -245,10 +257,10 @@ func (r *OrganizationRepository) Delete(e *Organization) error {
 
 func (r *OrganizationRepository) GetDomain(org *Organization, domain string) (*Domain, error) {
 	e := &Domain{}
-	err := GetDatabase().DB().QueryRow("SELECT domain, organization_id, active, verify_token "+
+	err := GetDatabase().DB().QueryRow("SELECT domain, organization_id, active, verify_token, primary_domain "+
 		"FROM organizations_domains "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
-		strings.ToLower(domain), org.ID).Scan(&e.DomainName, &e.OrganizationID, &e.Active, &e.VerifyToken)
+		strings.ToLower(domain), org.ID).Scan(&e.DomainName, &e.OrganizationID, &e.Active, &e.VerifyToken, &e.Primary)
 	if err != nil {
 		return nil, err
 	}
@@ -279,10 +291,30 @@ func (r *OrganizationRepository) ActivateDomain(e *Organization, domain string) 
 	return err
 }
 
+func (r *OrganizationRepository) SetPrimaryDomain(e *Organization, domain string) error {
+	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
+		"SET primary_domain = FALSE "+
+		"WHERE organization_id = $1",
+		e.ID)
+	if err != nil {
+		return err
+	}
+	_, err = GetDatabase().DB().Exec("UPDATE organizations_domains "+
+		"SET primary_domain = TRUE "+
+		"WHERE domain = LOWER($1) AND organization_id = $2",
+		strings.ToLower(domain), e.ID)
+	return err
+}
+
 func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, error) {
 	domains, err := r.GetDomains(e)
 	if err != nil {
 		return nil, err
+	}
+	for _, domain := range domains {
+		if domain.Active && domain.Primary {
+			return domain, nil
+		}
 	}
 	for _, domain := range domains {
 		if domain.Active {
@@ -294,7 +326,7 @@ func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, err
 
 func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) {
 	var result []*Domain
-	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token "+
+	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain "+
 		"FROM organizations_domains "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY domain",
@@ -305,7 +337,7 @@ func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) 
 	defer rows.Close()
 	for rows.Next() {
 		domain := &Domain{}
-		err = rows.Scan(&domain.DomainName, &domain.OrganizationID, &domain.Active, &domain.VerifyToken)
+		err = rows.Scan(&domain.DomainName, &domain.OrganizationID, &domain.Active, &domain.VerifyToken, &domain.Primary)
 		if err != nil {
 			return nil, err
 		}

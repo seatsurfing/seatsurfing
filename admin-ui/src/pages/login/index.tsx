@@ -290,7 +290,7 @@ class Login extends React.Component<Props, State> {
     return (
       <div className="container-signin">
         <Form className="form-signin" onSubmit={this.onPasswordSubmit}>
-          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <img src="/admin/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
           <Form.Group style={{ 'marginBottom': '5px' }}>
             <Form.Control type="email" readOnly={this.state.inPasswordSubmit} placeholder={this.props.t("emailAddress")} value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} autoFocus={true} />

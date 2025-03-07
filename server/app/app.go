@@ -106,6 +106,7 @@ func (a *App) InitializeDefaultOrg() {
 		GetOrganizationRepository().Create(org)
 		GetSettingsRepository().Set(org.ID, SettingSubscriptionMaxUsers.Name, "10000")
 		GetOrganizationRepository().AddDomain(org, config.InitOrgDomain, true)
+		GetOrganizationRepository().SetPrimaryDomain(org, config.InitOrgDomain)
 		user := &User{
 			OrganizationID: org.ID,
 			Email:          config.InitOrgUser + "@" + config.InitOrgDomain,

@@ -100,6 +100,9 @@ func CreateTestOrg(orgDomain string) *Organization {
 	if err := GetOrganizationRepository().AddDomain(org, orgDomain, true); err != nil {
 		panic(err)
 	}
+	if err := GetOrganizationRepository().SetPrimaryDomain(org, orgDomain); err != nil {
+		panic(err)
+	}
 	return org
 }
 

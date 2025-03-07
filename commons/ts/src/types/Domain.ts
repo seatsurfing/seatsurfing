@@ -5,22 +5,29 @@ export default class Domain {
     domain: string;
     active: boolean;
     verifyToken: string;
+    primary: boolean;
 
     constructor() {
         this.organizationId = "";
         this.domain = "";
         this.active = false;
         this.verifyToken = "";
+        this.primary = false;
     }
 
     deserialize(input: any): void {
         this.domain = input.domain;
         this.active = input.active;
         this.verifyToken = input.verifyToken;
+        this.primary = input.primary;
     }
 
     async delete(): Promise<void> {
         return Ajax.delete("/organization/" + this.organizationId + "/domain/" + this.domain).then(() => undefined);
+    }
+
+    async setPrimary(): Promise<void> {
+        return Ajax.postData("/organization/" + this.organizationId + "/domain/" + this.domain + "/primary").then(() => undefined);
     }
 
     async verify(): Promise<void> {

@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -33,12 +32,14 @@ type GetDomainResponse struct {
 	DomainName  string `json:"domain"`
 	Active      bool   `json:"active"`
 	VerifyToken string `json:"verifyToken"`
+	Primary     bool   `json:"primary"`
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
 	s.HandleFunc("/{id}/domain/", router.getDomains).Methods("GET")
 	s.HandleFunc("/{id}/domain/{domain}/verify", router.verifyDomain).Methods("POST")
+	s.HandleFunc("/{id}/domain/{domain}/primary", router.setPrimaryDomain).Methods("POST")
 	s.HandleFunc("/{id}/domain/{domain}", router.removeDomain).Methods("DELETE")
 	s.HandleFunc("/{id}/domain/{domain}", router.addDomain).Methods("POST")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
@@ -123,6 +124,7 @@ func (router *OrganizationRouter) getDomains(w http.ResponseWriter, r *http.Requ
 			DomainName:  domain.DomainName,
 			Active:      domain.Active,
 			VerifyToken: domain.VerifyToken,
+			Primary:     domain.Primary,
 		}
 		res = append(res, item)
 	}
@@ -205,6 +207,28 @@ func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Re
 	SendUpdated(w)
 }
 
+func (router *OrganizationRouter) setPrimaryDomain(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetOrganizationRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+		SendForbidden(w)
+		return
+	}
+	if _, err = GetOrganizationRepository().GetDomain(e, vars["domain"]); err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	GetOrganizationRepository().SetPrimaryDomain(e, vars["domain"])
+	SendUpdated(w)
+}
+
 func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
@@ -218,21 +242,22 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 		SendForbidden(w)
 		return
 	}
-	mailParts := strings.Split(user.Email, "@")
-	if len(mailParts) != 2 {
-		SendInternalServerError(w)
-		return
-	}
-	domain := strings.ToLower(mailParts[1])
-	if strings.ToLower(vars["domain"]) == domain {
-		SendBadRequest(w)
-		return
-	}
+	// prevent removing signup domain
+	// TODO
 	err = GetOrganizationRepository().RemoveDomain(e, vars["domain"])
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
+	}
+	// check if org still has a primary domain
+	domains, _ := GetOrganizationRepository().GetDomains(e)
+	hasPrimary := false
+	for _, domain := range domains {
+		hasPrimary = hasPrimary || domain.Primary
+	}
+	if !hasPrimary && len(domains) > 0 {
+		GetOrganizationRepository().SetPrimaryDomain(e, domains[0].DomainName)
 	}
 	SendUpdated(w)
 }

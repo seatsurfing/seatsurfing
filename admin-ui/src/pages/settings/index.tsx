@@ -1,6 +1,6 @@
 import React from 'react';
 import { User, Organization, AuthProvider, Settings as OrgSettings, Domain, Ajax, AjaxCredentials } from 'seatsurfing-commons';
-import { Form, Col, Row, Table, Button, Alert, InputGroup, Popover, OverlayTrigger } from 'react-bootstrap';
+import { Form, Col, Row, Table, Button, Alert, InputGroup, Popover, OverlayTrigger, Badge } from 'react-bootstrap';
 import { Plus as IconPlus, Save as IconSave } from 'react-feather';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
@@ -38,7 +38,6 @@ interface State {
   error: boolean
   newDomain: string
   domains: Domain[]
-  userDomain: string
 }
 
 interface Props extends WithTranslation {
@@ -83,8 +82,7 @@ class Settings extends React.Component<Props, State> {
       saved: false,
       error: false,
       newDomain: "",
-      domains: [],
-      userDomain: ""
+      domains: []
     };
   }
 
@@ -106,13 +104,11 @@ class Settings extends React.Component<Props, State> {
 
   loadItems = async (): Promise<void> => {
     return User.getSelf().then(user => {
-      let userDomain = user.email.substring(user.email.indexOf("@")+1).toLowerCase();
       return Organization.get(user.organizationId).then(org => {
         this.org = org;
         return Domain.list(org.id).then(domains => {
           this.setState({
             domains: domains,
-            userDomain: userDomain
           });
         });
       });
@@ -266,6 +262,16 @@ class Settings extends React.Component<Props, State> {
     });
   }
 
+  setPrimaryDomain = (domainName: string) => {
+    this.state.domains.forEach(domain => {
+      if (domain.domain === domainName) {
+        domain.setPrimary().then(() => {
+          Domain.list(this.org ? this.org.id : "").then(domains => this.setState({ domains: domains }));
+        });
+      }
+    });
+  }
+
   removeDomain = (domainName: string) => {
     if (!window.confirm(this.props.t("confirmDeleteDomain", {domain: domainName}))) {
       return;
@@ -361,12 +367,15 @@ class Settings extends React.Component<Props, State> {
         );
       }
       let key = "domain-" + domain.domain;
-      let canDelete = domain.domain.toLowerCase() !== this.state.userDomain;
       return (
         <Form.Group key={key} className="domain-row">
           {domain.domain}
             &nbsp;
-          <Button variant="danger" size="sm" onClick={() => this.removeDomain(domain.domain)} disabled={!canDelete}>{this.props.t("remove")}</Button>
+          <Badge hidden={!domain.primary}>Primary</Badge>
+            &nbsp;
+          <Button variant="secondary" size="sm" hidden={domain.primary} onClick={() => this.setPrimaryDomain(domain.domain)}>Primary</Button>
+            &nbsp;
+          <Button variant="danger" size="sm" onClick={() => this.removeDomain(domain.domain)}>{this.props.t("remove")}</Button>
             &nbsp;
           {verify}
         </Form.Group>
