@@ -375,7 +375,7 @@ class Settings extends React.Component<Props, State> {
             &nbsp;
           <Button variant="secondary" size="sm" hidden={domain.primary} onClick={() => this.setPrimaryDomain(domain.domain)}>Primary</Button>
             &nbsp;
-          <Button variant="danger" size="sm" onClick={() => this.removeDomain(domain.domain)}>{this.props.t("remove")}</Button>
+          <Button variant="danger" size="sm" hidden={domain.domain.endsWith('.seatsurfing.app')} onClick={() => this.removeDomain(domain.domain)}>{this.props.t("remove")}</Button>
             &nbsp;
           {verify}
         </Form.Group>

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -243,7 +244,10 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 		return
 	}
 	// prevent removing signup domain
-	// TODO
+	if strings.HasSuffix(vars["domain"], ".seatsurfing.app") {
+		SendForbidden(w)
+		return
+	}
 	err = GetOrganizationRepository().RemoveDomain(e, vars["domain"])
 	if err != nil {
 		log.Println(err)
