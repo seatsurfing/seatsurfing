@@ -223,7 +223,7 @@ class Login extends React.Component<Props, State> {
 
     let languageSelectDropdown = (
       <DropdownButton title={this.props.i18n.language} className='lng-selector' size='sm' variant='outline-secondary' drop='up'>
-        {this.props.router.locales?.sort().map(l => <Dropdown.Item key={'lng-btn-' + l} onClick={() => this.changeLanguage(l)} active={l === this.props.i18n.language}>{l}</Dropdown.Item>)}
+        {(this.props.router.locales as string[]).sort().map(l => <Dropdown.Item key={'lng-btn-' + l} onClick={() => this.changeLanguage(l)} active={l === this.props.i18n.language}>{l}</Dropdown.Item>)}
       </DropdownButton>
     );
 
