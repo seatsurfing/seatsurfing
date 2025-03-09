@@ -111,7 +111,7 @@ func (a *App) InitializeDefaultOrg() {
 			OrganizationID: org.ID,
 			Email:          config.InitOrgUser + "@" + config.InitOrgDomain,
 			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
-			Role:           UserRoleSuperAdmin,
+			Role:           UserRoleOrgAdmin,
 		}
 		GetUserRepository().Create(user)
 		GetOrganizationRepository().CreateSampleData(org)
