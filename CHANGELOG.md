@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.25.0](https://github.com/seatsurfing/seatsurfing/compare/v1.24.3...v1.25.0) (2025-03-09)
+
+
+### Features
+
+* add ability to set primary domain ([#640](https://github.com/seatsurfing/seatsurfing/issues/640)) ([3209a0e](https://github.com/seatsurfing/seatsurfing/commit/3209a0ef6ad218007c9026331b8988b0ef020fd5))
+* add ARIA labels to Booking UI form for improved accessibility ([#639](https://github.com/seatsurfing/seatsurfing/issues/639)) ([a503a04](https://github.com/seatsurfing/seatsurfing/commit/a503a04b988912b3656e91ea15e807b09af860e0))
+* prevent deleting .seatsurfing.app domains ([#641](https://github.com/seatsurfing/seatsurfing/issues/641)) ([b89c802](https://github.com/seatsurfing/seatsurfing/commit/b89c802cfbc0036c4427bb04d8f6bebad74dc905))
+* remove obsolete signup router ([#637](https://github.com/seatsurfing/seatsurfing/issues/637)) ([cd47606](https://github.com/seatsurfing/seatsurfing/commit/cd4760630c34602040ff6899de728b5fb68c4cdd))
+* use real email address as username ([#627](https://github.com/seatsurfing/seatsurfing/issues/627)) ([4e824d7](https://github.com/seatsurfing/seatsurfing/commit/4e824d71edb06fc083d8bf79ca080c04ef8e1e8e))
+
+
+### Bug Fixes
+
+* create first org user with org admin role ([#644](https://github.com/seatsurfing/seatsurfing/issues/644)) ([46cdc81](https://github.com/seatsurfing/seatsurfing/commit/46cdc81cdc76249f8a31d8eec74dea746626f6e2))
+* **deps:** bump @playwright/test from 1.50.1 to 1.51.0 in /e2e ([#636](https://github.com/seatsurfing/seatsurfing/issues/636)) ([9aa36c8](https://github.com/seatsurfing/seatsurfing/commit/9aa36c8f479d51660cc66f65243ea8898dd94a80))
+* **deps:** bump @types/node from 22.13.5 to 22.13.10 in /e2e ([#643](https://github.com/seatsurfing/seatsurfing/issues/643)) ([112d909](https://github.com/seatsurfing/seatsurfing/commit/112d909dba1f2dd6ef00a2f3f30fcb8bcea7e324))
+* **deps:** bump next to 15.2.1 ([#642](https://github.com/seatsurfing/seatsurfing/issues/642)) ([b52819c](https://github.com/seatsurfing/seatsurfing/commit/b52819cf127f439101fc0d13c13bc4dbafb49399))
+* **deps:** bump react-router-dom from 7.2.0 to 7.3.0 in /admin-ui ([#638](https://github.com/seatsurfing/seatsurfing/issues/638)) ([40af9a2](https://github.com/seatsurfing/seatsurfing/commit/40af9a2169fe3dd82ee658fc6de3dead92cb8dd7))
+* **deps:** bump typescript from 5.7.3 to 5.8.2 in /commons/ts ([#626](https://github.com/seatsurfing/seatsurfing/issues/626)) ([cfbcbc0](https://github.com/seatsurfing/seatsurfing/commit/cfbcbc01d7803b8d3d4789b150dd2266d70c1593))
+
 ## [1.24.3](https://github.com/seatsurfing/seatsurfing/compare/v1.24.2...v1.24.3) (2025-02-27)
 
 
