@@ -91,7 +91,7 @@ class Login extends React.Component<Props, State> {
       const domain = window.location.host.split(':').shift();
       this.setState({
         loading: false,
-        legacyMode: (domain === "app.seatsurfing.io")
+        legacyMode: (domain === "app.seatsurfing.io") || (domain === "localhost")
       });
     });
   }

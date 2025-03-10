@@ -32,7 +32,7 @@
     "confirmDeleteOrg": "Really delete this organization permanently?",
     "confirmDeleteOrg2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible.",
     "errorTryAgain": "Something went wrong. Please try again later.",
-    "yourDomainPlaceholder": "your-domain.com",
+    "yourDomainPlaceholder": "seatsurfing.your-domain.com",
     "verifyDomain": "Verify domain",
     "verifyDomainHowto": "To verify domain {{domain}}, please add the following TXT record to your DNS server:",
     "verifyNow": "Verify now",

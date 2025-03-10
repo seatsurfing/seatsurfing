@@ -32,7 +32,7 @@
     "confirmDeleteOrg": "Vuoi davvero rimuovere questa organizzazione definitivamente ?",
     "confirmDeleteOrg2": "Sei davvero sicuro ? Se elimini questa organizzazione, tutte le prenotazioni, aree, spazi ed utenti verranno eliminati irrimediabilmente. Non sarà possibile recuperarli in alcun modo.",
     "errorTryAgain": "Something went wrong. Please try again later.",
-    "yourDomainPlaceholder": "your-domain.com",
+    "yourDomainPlaceholder": "seatsurfing.your-domain.com",
     "verifyDomain": "Verify domain",
     "verifyDomainHowto": "To verify domain {{domain}}, please add the following TXT record to your DNS server:",
     "verifyNow": "Verify now",

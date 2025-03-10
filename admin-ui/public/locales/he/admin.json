@@ -32,7 +32,7 @@
     "confirmDeleteOrg": "למחוק את הארגון הזה לצמיתות?",
     "confirmDeleteOrg2": "באמת לעשות את זה? מחיקת הארגון הזה תמחק גם את כל ההזמנות, האזורים, המקומות והמשתמשים באופן בלתי הפיך.",
     "errorTryAgain": "משהו השתבש. נא לנסות שוב.",
-    "yourDomainPlaceholder": "your-domain.com",
+    "yourDomainPlaceholder": "seatsurfing.your-domain.com",
     "verifyDomain": "אימות שם התחום שלך",
     "verifyDomainHowto": "כדי לאמת את שם התחום {{domain}}, נא להוסיף את רשומת ה־TXT הבאה לשרת ה־DNS שלך:",
     "verifyNow": "לאמת כעת",

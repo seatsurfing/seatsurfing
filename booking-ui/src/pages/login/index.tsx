@@ -97,7 +97,7 @@ class Login extends React.Component<Props, State> {
       const domain = window.location.host.split(':').shift();
       this.setState({
         loading: false,
-        legacyMode: (domain === "app.seatsurfing.io")
+        legacyMode: (domain === "app.seatsurfing.io") || (domain === "localhost")
       });
     });
   }
@@ -239,7 +239,7 @@ class Login extends React.Component<Props, State> {
       legacyAlert = (
         <Alert variant='warning'>
           You are using the legacy login page.<br />
-          Please consider using the new login page at:<br />
+          Please use the new login page at:<br />
           <a href={"https://" + this.state.orgDomain}>{this.state.orgDomain}</a>
         </Alert>
       );

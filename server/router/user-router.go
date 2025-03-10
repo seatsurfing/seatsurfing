@@ -10,7 +10,6 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
-	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type UserRouter struct {
@@ -379,14 +378,6 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	if err == nil && existingUser != nil {
 		SendAleadyExists(w)
 		return
-	}
-	// Check if user's domain is allowed
-	orgDomain, _ := GetOrganizationRepository().GetOneByDomain(GetDomainFromEmail(e.Email))
-	if orgDomain != nil {
-		if orgDomain.ID != e.OrganizationID {
-			SendAleadyExists(w)
-			return
-		}
 	}
 	if err := GetUserRepository().Create(e); err != nil {
 		log.Println(err)

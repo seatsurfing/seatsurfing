@@ -89,17 +89,14 @@ class EditOrganization extends React.Component<Props, State> {
     this.entity.language = this.state.language;
     let createUser = (!this.entity.id);
     this.entity.save().then(() => {
-      console.log("org saved, id = " + this.entity.id);
       if (createUser) {
         Domain.add(this.entity.id, this.state.domain).then(() => {
-          console.log("domain added");
           let user = new User();
           user.organizationId = this.entity.id;
-          user.email = "admin@" + this.state.domain;
+          user.email = this.state.email;
           user.password = this.state.password;
           user.requirePassword = true;
-          user.admin = true;
-          user.superAdmin = false;
+          user.role = 20;
           user.save().then(() => {
             this.props.router.push("/organizations/" + this.entity.id);
             this.setState({ saved: true });
@@ -162,16 +159,16 @@ class EditOrganization extends React.Component<Props, State> {
       adminSection = (
         <>
           <Form.Group as={Row}>
-            <Form.Label column sm="6" className="lead text-uppercase">{this.props.t("admin")}</Form.Label>
+            <Form.Label column sm="6" className="lead text-uppercase">{this.props.t("domain")}</Form.Label>
           </Form.Group>
           <Form.Group as={Row}>
             <Form.Label column sm="2">{this.props.t("domain")}</Form.Label>
             <Col sm="4">
-              <InputGroup>
-                <Form.Control plaintext={true} readOnly={true} defaultValue="admin@" />
-                <Form.Control type="text" placeholder={this.props.t("yourDomainPlaceholder")} value={this.state.domain} onChange={(e: any) => this.setState({ domain: e.target.value })} required={true} />
-              </InputGroup>
+              <Form.Control type="text" placeholder={this.props.t("yourDomainPlaceholder")} value={this.state.domain} onChange={(e: any) => this.setState({ domain: e.target.value })} required={true} />
             </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="6" className="lead text-uppercase">{this.props.t("admin")}</Form.Label>
           </Form.Group>
           <Form.Group as={Row}>
             <Form.Label column sm="2">{this.props.t("password")}</Form.Label>

@@ -32,7 +32,7 @@
     "confirmDeleteOrg": "Deze organisatie echt definitief verwijderen?",
     "confirmDeleteOrg2": "Weet je het echt zeker? Als u deze organisatie verwijdert, worden alle boekingen, gebieden, ruimtes en gebruikers onherroepelijk verwijderd. Er zal geen herstel mogelijk zijn.",
     "errorTryAgain": "Er is iets fout gegaan. Probeer het later opnieuw.",
-    "yourDomainPlaceholder": "your-domain.com",
+    "yourDomainPlaceholder": "seatsurfing.your-domain.com",
     "verifyDomain": "Domein verifiëren",
     "verifyDomainHowto": "Om domein {{domain}} te verifiëren, voegt u de volgende TXT-record toe aan uw DNS-server:",
     "verifyNow": "Nu verifiëren",

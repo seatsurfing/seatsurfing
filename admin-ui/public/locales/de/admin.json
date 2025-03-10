@@ -32,7 +32,7 @@
     "confirmDeleteOrg": "Diese Organisation unwiederbringlich löschen?",
     "confirmDeleteOrg2": "Sind Sie ganz sicher? Wenn Sie diese Organisation löschen, werden alle Buchungen, Bereiche, Plätze und Benutzer unwiederbringlich gelöscht. Eine Wiederherstellung ist nicht möglich.",
     "errorTryAgain": "Etwas ist schief gegangen. Bitte probieren Sie es später erneut.",
-    "yourDomainPlaceholder": "ihre-domain.de",
+    "yourDomainPlaceholder": "seatsurfing.ihre-domain.de",
     "verifyDomain": "Domain bestätigen",
     "verifyDomainHowto": "Um die Domain {{domain}} zu bestätigen, fügen Sie im DNS-Server der Domain bitte folgenden TXT-Record hinzu:",
     "verifyNow": "Jetzt bestätigen",

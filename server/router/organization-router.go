@@ -164,6 +164,7 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		SendAleadyExists(w)
 		return
 	}
+	router.ensureOrgHasPrimaryDomain(e, vars["domain"])
 	SendCreated(w, vars["domain"])
 }
 
@@ -254,15 +255,7 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 		SendInternalServerError(w)
 		return
 	}
-	// check if org still has a primary domain
-	domains, _ := GetOrganizationRepository().GetDomains(e)
-	hasPrimary := false
-	for _, domain := range domains {
-		hasPrimary = hasPrimary || domain.Primary
-	}
-	if !hasPrimary && len(domains) > 0 {
-		GetOrganizationRepository().SetPrimaryDomain(e, domains[0].DomainName)
-	}
+	router.ensureOrgHasPrimaryDomain(e, "")
 	SendUpdated(w)
 }
 
@@ -346,6 +339,27 @@ func (router *OrganizationRouter) isValidTXTRecord(domain, uuid string) bool {
 		}
 	}
 	return false
+}
+
+func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, favoritePrimaryDomain string) {
+	domains, _ := GetOrganizationRepository().GetDomains(e)
+	hasPrimary := false
+	for _, domain := range domains {
+		if domain.Primary {
+			hasPrimary = true
+			break
+		}
+	}
+	if !hasPrimary {
+		if favoritePrimaryDomain != "" {
+			GetOrganizationRepository().SetPrimaryDomain(e, favoritePrimaryDomain)
+		} else {
+			domain, err := GetOrganizationRepository().GetPrimaryDomain(e)
+			if err == nil && domain != nil {
+				GetOrganizationRepository().SetPrimaryDomain(e, domain.DomainName)
+			}
+		}
+	}
 }
 
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {
