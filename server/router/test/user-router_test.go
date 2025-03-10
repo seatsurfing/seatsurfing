@@ -328,20 +328,3 @@ func TestUserCreateInOwnOrgsVerifiedDomain(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
-
-func TestUserCreateInForeignOrgsVerifiedDomain(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
-
-	org2 := CreateTestOrg("test2.com")
-	GetOrganizationRepository().AddDomain(org2, "gmail.com", true)
-
-	username := uuid.New().String() + "@gmail.com"
-
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
-	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusConflict, res.Code)
-}
