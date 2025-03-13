@@ -196,20 +196,21 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if user == nil || err != nil {
-		SendNotFound(w)
+		log.Printf("Password reset failed: user %s not found in org %s\n", m.Email, m.OrganizationID)
+		SendUpdated(w)
 		return
 	}
 	if user.HashedPassword == "" {
-		SendNotFound(w)
+		SendUpdated(w)
 		return
 	}
 	if user.Disabled {
-		SendNotFound(w)
+		SendUpdated(w)
 		return
 	}
 	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
 	if org == nil || err != nil {
-		SendNotFound(w)
+		SendUpdated(w)
 		return
 	}
 	authState := &AuthState{

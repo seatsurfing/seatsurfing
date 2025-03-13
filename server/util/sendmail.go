@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/tls"
+	"log"
 	"net/smtp"
 	"os"
 	"path/filepath"
@@ -86,6 +87,7 @@ func smtpDialAndSend(from string, to []string, msg []byte) error {
 	addr := config.SMTPHost + ":" + strconv.Itoa(config.SMTPPort)
 	c, err := smtp.Dial(addr)
 	if err != nil {
+		log.Println("Error dialing SMTP server:", err)
 		return err
 	}
 	defer c.Close()
@@ -96,6 +98,7 @@ func smtpDialAndSend(from string, to []string, msg []byte) error {
 				InsecureSkipVerify: config.SMTPInsecureSkipVerify,
 			}
 			if err = c.StartTLS(tlsConfig); err != nil {
+				log.Println("Error starting TLS with SMTP server:", err)
 				return err
 			}
 		}
@@ -103,23 +106,28 @@ func smtpDialAndSend(from string, to []string, msg []byte) error {
 	if config.SMTPAuth {
 		auth := smtp.PlainAuth("", config.SMTPAuthUser, config.SMTPAuthPass, config.SMTPHost)
 		if err = c.Auth(auth); err != nil {
+			log.Println("Error authenticating with SMTP server:", err)
 			return err
 		}
 	}
 	if err = c.Mail(from); err != nil {
+		log.Println("Error sending 'Mail From' to SMTP server:", err)
 		return err
 	}
 	for _, addr := range to {
 		if err = c.Rcpt(addr); err != nil {
+			log.Println("Error sending 'Rcpt To' to SMTP server:", err)
 			return err
 		}
 	}
 	w, err := c.Data()
 	if err != nil {
+		log.Println("Error sending 'Data' to SMTP server:", err)
 		return err
 	}
 	_, err = w.Write(msg)
 	if err != nil {
+		log.Println("Error writing message to SMTP server:", err)
 		return err
 	}
 	err = w.Close()

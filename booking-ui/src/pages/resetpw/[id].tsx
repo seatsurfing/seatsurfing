@@ -70,7 +70,7 @@ class CompletePasswordReset extends React.Component<Props, State> {
             <Form.Control type="password" placeholder={this.props.t("newPassword")} value={this.state.newPassword} onChange={(e: any) => this.setState({ newPassword: e.target.value, complete: false })} required={true} autoFocus={true} minLength={8} disabled={this.state.loading} isInvalid={this.state.complete && !this.state.success} />
             <Form.Control.Feedback type="invalid">{this.props.t("errorInvalidPassword")}</Form.Control.Feedback>
           </Form.Group>
-          <Button variant="primary" type="submit" disabled={this.state.loading}>{this.props.t("changePassword")}</Button>
+          <Button className="margin-top-10" variant="primary" type="submit" disabled={this.state.loading}>{this.props.t("changePassword")}</Button>
         </Form>
       </div>
     );

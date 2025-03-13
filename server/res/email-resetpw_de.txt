@@ -1,7 +1,7 @@
 From: Seatsurfing <{{senderAddress}}>
 To: {{recipientEmail}}
 Content-Type: text/plain; charset=UTF-8
-Subject: =?utf-8?B?WnVyw7xja3NldHplbiBJaHJlcyBTZWF0c3VyZmluZy1LZW5ud29ydHMK
+Subject: Zuruecksetzen Ihres Seatsurfing-Kennworts
 
 Hallo {{recipientName}},
 
