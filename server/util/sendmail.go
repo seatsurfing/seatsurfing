@@ -64,8 +64,6 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 
 func CompileEmailTemplate(template string, vars map[string]string) string {
 	c := GetConfig()
-	vars["frontendUrl"] = c.FrontendURL
-	vars["publicUrl"] = c.PublicURL
 	vars["senderAddress"] = c.SMTPSenderAddress
 	for key, val := range vars {
 		template = strings.ReplaceAll(template, "{{"+key+"}}", val)

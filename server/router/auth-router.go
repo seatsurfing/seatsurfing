@@ -421,7 +421,9 @@ func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
 	if provider.LogoutURL == "" {
 		return ""
 	}
-	redirectUrl := GetConfig().FrontendURL + "ui/login"
+	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
+	redirectUrl := "https://" + primaryDomain.DomainName + "/ui/login"
 	logoutUrl := strings.ReplaceAll(provider.LogoutURL, "{logoutRedirectUri}", redirectUrl)
 	return logoutUrl
 }
@@ -435,7 +437,7 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 	}
 	provider, err := GetAuthProviderRepository().GetOne(vars["id"])
 	if err != nil {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
 		return
 	}
 	longLived := false
@@ -457,7 +459,7 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		Payload:        marshalAuthStateLoginPayload(payload),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
 		return
 	}
 	url := config.AuthCodeURL(authState.ID)
@@ -468,24 +470,24 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	provider, err := GetAuthProviderRepository().GetOne(vars["id"])
 	if err != nil {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui"))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider))
 		return
 	}
 	claims, payload, err := router.getUserInfo(provider, r.FormValue("state"), r.FormValue("code"))
 	if err != nil {
 		log.Println(err)
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
 		return
 	}
 	if !router.isValidEmailForOrg(provider, claims.Email) {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
 		return
 	}
 	allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
 	if !allowAnyUser {
 		_, err := GetUserRepository().GetByEmail(provider.OrganizationID, claims.Email)
 		if err != nil {
-			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType))
+			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
 			return
 		}
 	}
@@ -502,29 +504,33 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		log.Println(err)
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
 		return
 	}
-	redirectUrl := router.getRedirectSuccessUrl(payload.LoginType, authState)
+	redirectUrl := router.getRedirectSuccessUrl(payload.LoginType, authState, provider)
 	if payload.Redirect != "" {
 		redirectUrl = redirectUrl + "?redir=" + url.QueryEscape(payload.Redirect)
 	}
 	SendTemporaryRedirect(w, redirectUrl)
 }
 
-func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *AuthState) string {
+func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *AuthState, provider *AuthProvider) string {
+	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if loginType == "ui" {
-		return GetConfig().FrontendURL + "ui/login/success/" + authState.ID
+		return "https://" + primaryDomain.DomainName + "/ui/login/success/" + authState.ID
 	} else {
-		return GetConfig().FrontendURL + "admin/login/success/" + authState.ID
+		return "https://" + primaryDomain.DomainName + "/admin/login/success/" + authState.ID
 	}
 }
 
-func (router *AuthRouter) getRedirectFailedUrl(loginType string) string {
+func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthProvider) string {
+	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if loginType == "ui" {
-		return GetConfig().FrontendURL + "ui/login/failed"
+		return "https://" + primaryDomain.DomainName + "/ui/login/failed"
 	} else {
-		return GetConfig().FrontendURL + "admin/login/failed"
+		return "https://" + primaryDomain.DomainName + "/admin/login/failed"
 	}
 }
 
@@ -598,8 +604,10 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 }
 
 func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
+	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	config := &oauth2.Config{
-		RedirectURL:  GetConfig().PublicURL + "auth/" + provider.ID + "/callback",
+		RedirectURL:  "https://" + primaryDomain.DomainName + "/auth/" + provider.ID + "/callback",
 		ClientID:     provider.ClientID,
 		ClientSecret: provider.ClientSecret,
 		Scopes:       strings.Split(provider.Scopes, ","),

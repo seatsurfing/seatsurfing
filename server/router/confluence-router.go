@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 
@@ -48,20 +47,21 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 		}
 		return []byte(sharedSecret), nil
 	})
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		log.Println("JWT header verification failed: parsing JWT failed with: " + err.Error())
-		SendTemporaryRedirect(w, GetConfig().FrontendURL+"ui/login/failed")
+		SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/failed")
 		return
 	}
 	if !token.Valid {
 		log.Println("JWT header verification failed: invalid JWT")
-		SendTemporaryRedirect(w, GetConfig().FrontendURL+"ui/login/failed")
+		SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/failed")
 		return
 	}
 	allowAnonymous, _ := GetSettingsRepository().GetBool(org.ID, SettingConfluenceAnonymous.Name)
 	userID := router.getUserEmailServer(org, claims, allowAnonymous)
 	if userID == "" {
-		SendTemporaryRedirect(w, GetConfig().FrontendURL+"ui/login/confluence/anonymous")
+		SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/confluence/anonymous")
 		return
 	}
 	_, err = GetUserRepository().GetByAtlassianID(userID)
@@ -77,7 +77,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	}
 	if err != nil {
 		if !GetUserRepository().CanCreateUser(org) {
-			SendTemporaryRedirect(w, GetConfig().FrontendURL+"ui/login/failed")
+			SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/failed")
 			return
 		}
 		user := &User{
@@ -103,15 +103,14 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
-	SendTemporaryRedirect(w, GetConfig().FrontendURL+"ui/login/success/"+authState.ID)
+	SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/success/"+authState.ID)
 }
 
 func (router *ConfluenceRouter) getOrgNotFoundBody() []byte {
 	var sb strings.Builder
-	sb.WriteString("Instance ID could not be found at this instance: ")
-	sb.WriteString(GetConfig().PublicURL)
+	sb.WriteString("Instance ID could not be found at this instance. ")
 	sb.WriteString("\n\n")
-	sb.WriteString("To get your Intance ID, log in to the Admin interface (i.e. " + GetConfig().FrontendURL + "admin/), go to Settings and copy the Instance ID.")
+	sb.WriteString("To get your Intance ID, log in to the Admin interface, go to Settings and copy the Instance ID.")
 	sb.WriteString("\n\n")
 	sb.WriteString("Make sure the Instance ID is set under 'Seatsurfing Configuration' in your Confluence installation.")
 	sb.WriteString("\n\n")

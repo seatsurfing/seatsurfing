@@ -14,12 +14,7 @@ import (
 )
 
 type Config struct {
-	PublicListenAddr string
-
-	// TODO REMOVE
-	PublicURL   string
-	FrontendURL string
-
+	PublicListenAddr                    string
 	PostgresURL                         string
 	JwtPrivateKey                       *rsa.PrivateKey
 	JwtPublicKey                        *rsa.PublicKey
@@ -65,16 +60,6 @@ func (c *Config) ReadConfig() {
 	log.Println("Reading config...")
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
-
-	// TODO REMOVE
-	c.PublicURL = strings.TrimSuffix(c.getEnv("PUBLIC_URL", "http://localhost:8080"), "/") + "/"
-	if c.Development {
-		c.FrontendURL = c.getEnv("FRONTEND_URL", "http://localhost:3000")
-	} else {
-		c.FrontendURL = c.getEnv("FRONTEND_URL", "http://localhost:8080")
-	}
-	c.FrontendURL = strings.TrimSuffix(c.FrontendURL, "/") + "/"
-
 	c.DisableUiProxy = (c.getEnv("DISABLE_UI_PROXY", "0") == "1")
 	c.AdminUiBackend = c.getEnv("ADMIN_UI_BACKEND", "localhost:3000")
 	c.BookingUiBackend = c.getEnv("BOOKING_UI_BACKEND", "localhost:3001")
