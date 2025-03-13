@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.25.0](https://github.com/seatsurfing/seatsurfing/compare/v1.24.3...v1.25.0) (2025-03-13)
+
+
+### Features
+
+* add ability to set primary domain ([#640](https://github.com/seatsurfing/seatsurfing/issues/640)) ([3209a0e](https://github.com/seatsurfing/seatsurfing/commit/3209a0ef6ad218007c9026331b8988b0ef020fd5))
+* add ARIA labels to Booking UI form for improved accessibility ([#639](https://github.com/seatsurfing/seatsurfing/issues/639)) ([a503a04](https://github.com/seatsurfing/seatsurfing/commit/a503a04b988912b3656e91ea15e807b09af860e0))
+* improve password reset process ([#656](https://github.com/seatsurfing/seatsurfing/issues/656)) ([126d02c](https://github.com/seatsurfing/seatsurfing/commit/126d02c73fa348b3ce3e3ca2eca928d12d5d79a9))
+* prevent deleting .seatsurfing.app domains ([#641](https://github.com/seatsurfing/seatsurfing/issues/641)) ([b89c802](https://github.com/seatsurfing/seatsurfing/commit/b89c802cfbc0036c4427bb04d8f6bebad74dc905))
+* remove obsolete signup router ([#637](https://github.com/seatsurfing/seatsurfing/issues/637)) ([cd47606](https://github.com/seatsurfing/seatsurfing/commit/cd4760630c34602040ff6899de728b5fb68c4cdd))
+* use real email address as username ([#627](https://github.com/seatsurfing/seatsurfing/issues/627)) ([4e824d7](https://github.com/seatsurfing/seatsurfing/commit/4e824d71edb06fc083d8bf79ca080c04ef8e1e8e))
+
+
+### Bug Fixes
+
+* create first org user with org admin role ([#644](https://github.com/seatsurfing/seatsurfing/issues/644)) ([46cdc81](https://github.com/seatsurfing/seatsurfing/commit/46cdc81cdc76249f8a31d8eec74dea746626f6e2))
+* **deps:** bump @babel/runtime from 7.26.0 to 7.26.10 in /admin-ui ([#654](https://github.com/seatsurfing/seatsurfing/issues/654)) ([4145a98](https://github.com/seatsurfing/seatsurfing/commit/4145a98d0c7f5b701a958fa89122d335ae9f6a0d))
+* **deps:** bump @playwright/test from 1.50.1 to 1.51.0 in /e2e ([#636](https://github.com/seatsurfing/seatsurfing/issues/636)) ([9aa36c8](https://github.com/seatsurfing/seatsurfing/commit/9aa36c8f479d51660cc66f65243ea8898dd94a80))
+* **deps:** bump @types/node from 22.13.5 to 22.13.10 in /e2e ([#643](https://github.com/seatsurfing/seatsurfing/issues/643)) ([112d909](https://github.com/seatsurfing/seatsurfing/commit/112d909dba1f2dd6ef00a2f3f30fcb8bcea7e324))
+* **deps:** bump eslint-config-next from 15.2.1 to 15.2.2 in /admin-ui ([#650](https://github.com/seatsurfing/seatsurfing/issues/650)) ([506e68b](https://github.com/seatsurfing/seatsurfing/commit/506e68b881cf7597f7e40453f47ea0887c135733))
+* **deps:** bump eslint-config-next from 15.2.1 to 15.2.2 in /booking-ui ([#652](https://github.com/seatsurfing/seatsurfing/issues/652)) ([9910830](https://github.com/seatsurfing/seatsurfing/commit/99108307206ff843ce4fea400efc14845de4daeb))
+* **deps:** bump next from 15.2.1 to 15.2.2 in /admin-ui ([#649](https://github.com/seatsurfing/seatsurfing/issues/649)) ([f4dd028](https://github.com/seatsurfing/seatsurfing/commit/f4dd02829380454a68185e8d8ccd82a3a997772a))
+* **deps:** bump next from 15.2.1 to 15.2.2 in /booking-ui ([#651](https://github.com/seatsurfing/seatsurfing/issues/651)) ([c12ad75](https://github.com/seatsurfing/seatsurfing/commit/c12ad753ede650fd8d882fe0876629f295fb4d19))
+* **deps:** bump next to 15.2.1 ([#642](https://github.com/seatsurfing/seatsurfing/issues/642)) ([b52819c](https://github.com/seatsurfing/seatsurfing/commit/b52819cf127f439101fc0d13c13bc4dbafb49399))
+* **deps:** bump react-router-dom from 7.2.0 to 7.3.0 in /admin-ui ([#638](https://github.com/seatsurfing/seatsurfing/issues/638)) ([40af9a2](https://github.com/seatsurfing/seatsurfing/commit/40af9a2169fe3dd82ee658fc6de3dead92cb8dd7))
+* **deps:** bump typescript from 5.7.3 to 5.8.2 in /commons/ts ([#626](https://github.com/seatsurfing/seatsurfing/issues/626)) ([cfbcbc0](https://github.com/seatsurfing/seatsurfing/commit/cfbcbc01d7803b8d3d4789b150dd2266d70c1593))
+* domain handling ([#646](https://github.com/seatsurfing/seatsurfing/issues/646)) ([d744fe2](https://github.com/seatsurfing/seatsurfing/commit/d744fe251885eec23b42ff893e7758d976afbd9c))
+* improve legacy login ([#657](https://github.com/seatsurfing/seatsurfing/issues/657)) ([a52ad78](https://github.com/seatsurfing/seatsurfing/commit/a52ad789653af853b1e0791d1f0f5270f34eb395))
+* improve primary domain setting ([#659](https://github.com/seatsurfing/seatsurfing/issues/659)) ([97797ad](https://github.com/seatsurfing/seatsurfing/commit/97797adf100d17681b7419123e3dcd0a0405a9dd))
+* remove obsolete files ([#655](https://github.com/seatsurfing/seatsurfing/issues/655)) ([bb0a8b0](https://github.com/seatsurfing/seatsurfing/commit/bb0a8b04f616db1942eaec28ed94a4c1197506df))
+* use organization primary domain instead of global frontend url ([#661](https://github.com/seatsurfing/seatsurfing/issues/661)) ([7ae59b5](https://github.com/seatsurfing/seatsurfing/commit/7ae59b57771c8722b2f4749eb1d38c85eeb001f7))
+
 ## [1.24.3](https://github.com/seatsurfing/seatsurfing/compare/v1.24.2...v1.24.3) (2025-02-27)
 
 
