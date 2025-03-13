@@ -288,3 +288,20 @@ func GetValidator() *validator.Validate {
 	})
 	return v
 }
+
+// GetFrontendURL returns the frontend URL (without sub-paths!) with a trailing slash.
+func GetFrontendURL(r *http.Request) string {
+	protocol := r.Header.Get("X-Forwarded-Proto")
+	if protocol == "" {
+		if config.GetConfig().Development {
+			protocol = "http"
+		} else {
+			protocol = "https"
+		}
+	}
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	return protocol + "://" + host + "/"
+}
