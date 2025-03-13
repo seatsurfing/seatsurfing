@@ -120,8 +120,12 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains " +
+			"SET domain = REPLACE(REPLACE(REPLACE(domain, '.on.seatsurfing.de', '.seatsurfing.app'), '.on.seatsurfing.app', '.seatsurfing.app'), '.on.seatsurfing.io', '.seatsurfing.app')"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains " +
 			"SET primary_domain = TRUE " +
-			"WHERE domain IN (SELECT domain FROM (SELECT DISTINCT ON (organization_id) organization_id, domain FROM organizations_domains ORDER BY organization_id))"); err != nil {
+			"WHERE domain IN (SELECT domain FROM (SELECT DISTINCT ON (organization_id) organization_id, domain FROM organizations_domains ORDER BY organization_id, domain LIKE '%.seatsurfing.app' DESC))"); err != nil {
 			panic(err)
 		}
 	}
