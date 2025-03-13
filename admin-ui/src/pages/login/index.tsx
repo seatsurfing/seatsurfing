@@ -50,6 +50,14 @@ class Login extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
+    if (this.state.email === '') {
+      let emailParam = this.props.router.query['email'];
+      if (emailParam !== '') {
+        this.setState({
+          email: emailParam as string
+        });
+      }
+    }
     this.loadOrgDetails();
   }
 
@@ -91,7 +99,7 @@ class Login extends React.Component<Props, State> {
       const domain = window.location.host.split(':').shift();
       this.setState({
         loading: false,
-        legacyMode: (domain === "app.seatsurfing.io") || (domain === "localhost")
+        legacyMode: (domain === "app.seatsurfing.io") || ((domain === "localhost") && (process.env.NODE_ENV.toLowerCase() === "development"))
       });
     });
   }
@@ -221,26 +229,19 @@ class Login extends React.Component<Props, State> {
     if (this.state.legacyMode) {
       legacyAlert = (
         <Alert variant='warning'>
-          You are using the legacy login page.<br />
-          Please consider using the new login page at:<br />
-          <a href={"https://" + this.state.orgDomain}>{this.state.orgDomain}</a>
+          <p>Great news! Your organization now has it's own unique Seatsurfing domain 🚀</p>
+          <p>Please use the new login page and update your bookmarks:</p>
+          <p><a style={{ 'fontWeight': 'bold' }} href={"https://" + this.state.orgDomain + "/admin/login?email=" + encodeURIComponent(this.state.email)}>{this.state.orgDomain}</a></p>
         </Alert>
       );
     }
 
-    if (this.state.requirePassword) {
+    if (this.state.legacyMode && (this.state.requirePassword || this.state.providers != null)) {
       return (
         <div className="container-signin">
-          <Form className="form-signin" onSubmit={this.onPasswordSubmit}>
+          <Form className="form-signin">
             <img src="/admin/seatsurfing.svg" alt="Seatsurfing" className="logo" />
             {legacyAlert}
-            <p>{this.props.t("signinAsAt", { user: this.state.email, org: this.org?.name })}</p>
-            <InputGroup>
-              <Form.Control type="password" readOnly={this.state.inPasswordSubmit} placeholder={this.props.t("password")} value={this.state.password} onChange={(e: any) => this.setState({ password: e.target.value, invalid: false })} required={true} isInvalid={this.state.invalid} minLength={8} autoFocus={true} />
-              <Button variant="primary" type="submit">{this.state.inPasswordSubmit ? <Loading showText={false} paddingTop={false} /> : <div className="feather-btn">&#10148;</div>}</Button>
-            </InputGroup>
-            <Form.Control.Feedback type="invalid">{this.props.t("errorInvalidPassword")}</Form.Control.Feedback>
-            <Button variant="secondary" className="btn-auth-provider btn-back" onClick={this.cancelPasswordLogin}>{this.props.t("back")}</Button>
           </Form>
           {copyrightFooter}
         </div>
