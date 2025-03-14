@@ -9,6 +9,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 interface State {
   loading: boolean
   success: boolean
+  domain: string
 }
 
 interface Props extends WithTranslation {
@@ -20,7 +21,8 @@ class ConfirmSignup extends React.Component<Props, State> {
     super(props);
     this.state = {
       loading: true,
-      success: false
+      success: false,
+      domain: ''
     };
   }
 
@@ -33,7 +35,7 @@ class ConfirmSignup extends React.Component<Props, State> {
     if (id) {
       Ajax.postData("/signup/confirm/" + id, null).then((res) => {
         if (res.status >= 200 && res.status <= 299) {
-          this.setState({ loading: false, success: true });
+          this.setState({ loading: false, success: true, domain: res.json.domain });
         } else {
           this.setState({ loading: false, success: false });
         }
@@ -55,7 +57,7 @@ class ConfirmSignup extends React.Component<Props, State> {
         result = (
           <div>
             <p>{this.props.t("orgSignupSuccess")}</p>
-            <Link href="/login" className="btn btn-primary">{this.props.t("orgSignupGoToLogin")}</Link>
+            <Link href={"https://"+this.state.domain+"/admin/login"} className="btn btn-primary">{this.props.t("orgSignupGoToLogin")}</Link>
           </div>
         );
       } else {
