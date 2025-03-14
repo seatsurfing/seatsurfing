@@ -246,7 +246,7 @@ class Login extends React.Component<Props, State> {
     if (this.state.legacyMode) {
       legacyAlert = (
         <Alert variant='warning'>
-          <p>Great news! Your organization now has it&apos;s own unique Seatsurfing domain 🚀</p>
+          <p>Great news! Your organization now has its own unique Seatsurfing domain 🚀</p>
           <p>Please use the new login page and update your bookmarks:</p>
           <p><a style={{ 'fontWeight': 'bold' }} href={"https://" + this.state.orgDomain + "/ui/login?email=" + encodeURIComponent(this.state.email)}>{this.state.orgDomain}</a></p>
         </Alert>
