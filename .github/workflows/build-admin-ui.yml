@@ -3,7 +3,11 @@ name: Build Admin UI (dev)
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - admin-ui/**
+      - commons/ts/**
 
 env:
   REGISTRY: ghcr.io
