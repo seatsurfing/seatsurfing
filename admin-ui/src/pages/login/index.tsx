@@ -97,9 +97,14 @@ class Login extends React.Component<Props, State> {
       this.applyOrg(res);
     }).catch(() => {
       const domain = window.location.host.split(':').shift();
+      const legacyMode = (domain === "app.seatsurfing.io") || ((domain === "localhost") && (process.env.NODE_ENV.toLowerCase() === "development"));
+      if (!legacyMode && domain?.endsWith(".seatsurfing.app")) {
+        this.props.router.push("/404");
+        return;
+      }
       this.setState({
         loading: false,
-        legacyMode: (domain === "app.seatsurfing.io") || ((domain === "localhost") && (process.env.NODE_ENV.toLowerCase() === "development"))
+        legacyMode: legacyMode
       });
     });
   }
