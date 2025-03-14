@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.25.1](https://github.com/seatsurfing/seatsurfing/compare/v1.25.0...v1.25.1) (2025-03-14)
+
+
+### Bug Fixes
+
+* frame-src ([#664](https://github.com/seatsurfing/seatsurfing/issues/664)) ([f5d2ac3](https://github.com/seatsurfing/seatsurfing/commit/f5d2ac3fb62f97146a1834668796878dbf682542))
+* redirect to actual domain ([#662](https://github.com/seatsurfing/seatsurfing/issues/662)) ([7e5059e](https://github.com/seatsurfing/seatsurfing/commit/7e5059e5c53beb1f8607890ce65914c4d3c42866))
+* show 404 if org not found ([#666](https://github.com/seatsurfing/seatsurfing/issues/666)) ([3fa34a4](https://github.com/seatsurfing/seatsurfing/commit/3fa34a41e1b1ea65430b4ef7d79c6123187394aa))
+* typo ([#665](https://github.com/seatsurfing/seatsurfing/issues/665)) ([bc4f8ad](https://github.com/seatsurfing/seatsurfing/commit/bc4f8ad102d16ab86d11ad759e86c6705c06939b))
+
 ## [1.25.0](https://github.com/seatsurfing/seatsurfing/compare/v1.24.3...v1.25.0) (2025-03-13)
 
 
