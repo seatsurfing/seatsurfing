@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.2](https://github.com/seatsurfing/seatsurfing/compare/v1.25.1...v1.25.2) (2025-03-15)
+
+
+### Bug Fixes
+
+* add GetOrgIDsByValue() method to Settings ([#670](https://github.com/seatsurfing/seatsurfing/issues/670)) ([559d550](https://github.com/seatsurfing/seatsurfing/commit/559d5508f1a7eddca121f576004e90906cab01d3))
+
 ## [1.25.1](https://github.com/seatsurfing/seatsurfing/compare/v1.25.0...v1.25.1) (2025-03-14)
 
 
