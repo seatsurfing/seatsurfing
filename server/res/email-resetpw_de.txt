@@ -1,8 +1,3 @@
-From: Seatsurfing <{{senderAddress}}>
-To: {{recipientEmail}}
-Content-Type: text/plain; charset=UTF-8
-Subject: Zuruecksetzen Ihres Seatsurfing-Kennworts
-
 Hallo {{recipientName}},
 
 wir haben eine Anfrage zum Zurücksetzen Ihres Kennworts erhalten.

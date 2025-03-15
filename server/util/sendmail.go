@@ -16,11 +16,25 @@ const EmailTemplateDefaultLanguage = "en"
 
 var SendMailMockContent = ""
 
+type MailAddress struct {
+	Address     string
+	DisplayName string
+}
+
 func GetEmailTemplatePathResetpassword() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.txt")
 }
 
-func SendEmail(recipient, sender, templateFile, language string, vars map[string]string) error {
+func GetEmailSubjectResetPassword(language string) string {
+	switch language {
+	case "de":
+		return "Zuruecksetzen Ihres Seatsurfing-Kennworts"
+	default:
+		return "Reset your Seatsurfing password"
+	}
+}
+
+func SendEmail(recipient *MailAddress, subject, templateFile, language string, vars map[string]string) error {
 	actualTemplateFile, err := GetEmailTemplatePath(templateFile, language)
 	if err != nil {
 		return err
@@ -29,18 +43,31 @@ func SendEmail(recipient, sender, templateFile, language string, vars map[string
 	if err != nil {
 		return err
 	}
-	return SendEmailWithBody(recipient, sender, body)
+	return SendEmailWithBody(recipient, subject, body)
 }
 
-func SendEmailWithBody(recipient, sender, body string) error {
+func SendEmailWithBody(recipient *MailAddress, subject, body string) error {
 	if GetConfig().MockSendmail {
 		SendMailMockContent = body
 		return nil
 	}
-	to := []string{recipient}
-	msg := []byte(body)
-	err := smtpDialAndSend(sender, to, msg)
-	return err
+	sender := &MailAddress{
+		Address:     GetConfig().MailSenderAddress,
+		DisplayName: "Seatsurfing",
+	}
+	if GetConfig().MailService == "acs" {
+		return acsDialAndSend(recipient, sender, subject, body)
+	} else {
+		to := []string{recipient.Address}
+		body = "From: " + sender.DisplayName + " <" + sender.Address + ">\n" +
+			"To: " + recipient.Address + "\n" +
+			"Content-Type: text/plain; charset=UTF-8\n" +
+			"Subject: " + subject + "\n" +
+			"\n" +
+			body
+		msg := []byte(body)
+		return smtpDialAndSend(sender.Address, to, msg)
+	}
 }
 
 func GetEmailTemplatePath(templateFile, language string) (string, error) {
@@ -64,7 +91,7 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 
 func CompileEmailTemplate(template string, vars map[string]string) string {
 	c := GetConfig()
-	vars["senderAddress"] = c.SMTPSenderAddress
+	vars["senderAddress"] = c.MailSenderAddress
 	for key, val := range vars {
 		template = strings.ReplaceAll(template, "{{"+key+"}}", val)
 	}
@@ -78,6 +105,25 @@ func compileEmailTemplateFromFile(templateFile string, vars map[string]string) (
 	}
 	s := string(data)
 	return CompileEmailTemplate(s, vars), nil
+}
+
+func acsDialAndSend(recipient, sender *MailAddress, subject, body string) error {
+	mail := &ACSSendMailRequest{
+		SenderAddress: sender.Address,
+		Recipients: ACSRecipients{
+			To: []ACSAddress{
+				{
+					Address:     recipient.Address,
+					DisplayName: recipient.DisplayName,
+				},
+			},
+		},
+		Content: ACSSendMailContent{
+			Subject:   subject,
+			Plaintext: body,
+		},
+	}
+	return ACSSendEmail(GetConfig().ACSHost, GetConfig().ACSAccessKey, mail)
 }
 
 func smtpDialAndSend(from string, to []string, msg []byte) error {

@@ -588,19 +588,17 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 }
 
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {
-	email := user.Email
-	c := GetConfig()
 	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		return err
 	}
 	vars := map[string]string{
 		"recipientName":  user.Email,
-		"recipientEmail": email,
+		"recipientEmail": user.Email,
 		"confirmID":      ID,
 		"orgDomain":      "https://" + domain.DomainName + "/",
 	}
-	return SendEmail(email, c.SMTPSenderAddress, GetEmailTemplatePathResetpassword(), org.Language, vars)
+	return SendEmail(&MailAddress{Address: user.Email}, GetEmailSubjectResetPassword(org.Language), GetEmailTemplatePathResetpassword(), org.Language, vars)
 }
 
 func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {

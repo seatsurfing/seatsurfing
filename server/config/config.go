@@ -21,14 +21,17 @@ type Config struct {
 	DisableUiProxy                      bool
 	AdminUiBackend                      string
 	BookingUiBackend                    string
+	MailService                         string
+	MailSenderAddress                   string
 	SMTPHost                            string
 	SMTPPort                            int
-	SMTPSenderAddress                   string
 	SMTPStartTLS                        bool
 	SMTPInsecureSkipVerify              bool
 	SMTPAuth                            bool
 	SMTPAuthUser                        string
 	SMTPAuthPass                        string
+	ACSHost                             string
+	ACSAccessKey                        string
 	MockSendmail                        bool
 	Development                         bool
 	InitOrgName                         string
@@ -82,7 +85,17 @@ func (c *Config) ReadConfig() {
 	c.SMTPAuth = (c.getEnv("SMTP_AUTH", "0") == "1")
 	c.SMTPAuthUser = c.getEnv("SMTP_AUTH_USER", "")
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
-	c.SMTPSenderAddress = c.getEnv("SMTP_SENDER_ADDRESS", "no-reply@seatsurfing.local")
+	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@seatsurfing.local")
+	if c.MailSenderAddress == "" {
+		// Deprecated
+		c.MailSenderAddress = c.getEnv("SMTP_SENDER_ADDRESS", "no-reply@seatsurfing.local")
+	}
+	c.MailService = c.getEnv("MAIL_SERVICE", "smtp")
+	if c.MailService != "smtp" && c.MailService != "acs" {
+		log.Println("Warning: Invalid MAIL_SERVICE set. Only 'smtp' and 'acs' are allowed. Defaulting to 'smtp'.")
+	}
+	c.ACSHost = c.getEnv("ACS_HOST", "")
+	c.ACSAccessKey = c.getEnv("ACS_ACCESS_KEY", "")
 	c.MockSendmail = (c.getEnv("MOCK_SENDMAIL", "0") == "1")
 	c.InitOrgName = c.getEnv("INIT_ORG_NAME", "Sample Company")
 	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "seatsurfing.local")
