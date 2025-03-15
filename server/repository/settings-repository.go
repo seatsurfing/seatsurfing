@@ -183,6 +183,26 @@ func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error
 	return result, nil
 }
 
+func (r *SettingsRepository) GetOrgIDsByValue(name string, value string) ([]string, error) {
+	var result []string
+	rows, err := GetDatabase().DB().Query("SELECT organization_id FROM settings "+
+		"WHERE name = $1 AND value = $2 "+
+		"ORDER BY organization_id", name, value)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var orgID string
+		err = rows.Scan(&orgID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, orgID)
+	}
+	return result, nil
+}
+
 func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES "+
