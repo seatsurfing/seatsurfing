@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.26.0](https://github.com/seatsurfing/seatsurfing/compare/v1.25.1...v1.26.0) (2025-03-15)
+
+
+### Features
+
+* add Azure Communication Services (ACS) as alternative to SMTP for sending mails ([#672](https://github.com/seatsurfing/seatsurfing/issues/672)) ([4d49d9f](https://github.com/seatsurfing/seatsurfing/commit/4d49d9fa6e48771a9a7409abbb39f2da301f5bda))
+
+
+### Bug Fixes
+
+* add GetOrgIDsByValue() method to Settings ([#670](https://github.com/seatsurfing/seatsurfing/issues/670)) ([559d550](https://github.com/seatsurfing/seatsurfing/commit/559d5508f1a7eddca121f576004e90906cab01d3))
+* **deps:** bump @babel/runtime from 7.23.6 to 7.26.10 in /commons/ts ([#669](https://github.com/seatsurfing/seatsurfing/issues/669)) ([c9a355f](https://github.com/seatsurfing/seatsurfing/commit/c9a355f020917b3dd8efa6c51064fe501ce01ed4))
+* **deps:** bump @babel/runtime from 7.26.0 to 7.26.10 in /booking-ui ([#668](https://github.com/seatsurfing/seatsurfing/issues/668)) ([f9237a0](https://github.com/seatsurfing/seatsurfing/commit/f9237a090b7069e6fc63732a69f6fc387e4c728c))
+* **deps:** bump i18next from 24.2.2 to 24.2.3 in /commons/ts ([#660](https://github.com/seatsurfing/seatsurfing/issues/660)) ([b612f22](https://github.com/seatsurfing/seatsurfing/commit/b612f225e1bc8d7fae671ca8f62a5f87839996fa))
+
 ## [1.25.1](https://github.com/seatsurfing/seatsurfing/compare/v1.25.0...v1.25.1) (2025-03-14)
 
 
