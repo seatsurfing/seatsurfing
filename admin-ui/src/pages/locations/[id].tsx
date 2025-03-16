@@ -1,7 +1,7 @@
 import React from 'react';
 import FullLayout from '../../components/FullLayout';
-import { Form, Col, Row, Button, Alert, InputGroup, Table, Dropdown } from 'react-bootstrap';
-import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete, MapPin as IconMap, Copy as IconCopy, Loader as IconLoad, Download as IconDownload, Tag as IconTag } from 'react-feather';
+import { Form, Col, Row, Button, Alert, InputGroup, Table, Dropdown, Modal } from 'react-bootstrap';
+import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete, MapPin as IconMap, Copy as IconCopy, Edit as IconEdit, Loader as IconLoad, Download as IconDownload, Tag as IconTag } from 'react-feather';
 import Loading from '../../components/Loading';
 import { Ajax, Location, Space, SpaceAttribute, SpaceAttributeValue } from 'seatsurfing-commons';
 import { Rnd } from 'react-rnd';
@@ -42,6 +42,7 @@ interface State {
   availableAttributes: SpaceAttribute[]
   changedAttributeIds: string[]
   deletedAttributeIds: string[]
+  showEditSpaceDetailsModal: boolean
 }
 
 interface Props extends WithTranslation {
@@ -77,7 +78,8 @@ class EditLocation extends React.Component<Props, State> {
       attributeValues: [],
       availableAttributes: [],
       changedAttributeIds: [],
-      deletedAttributeIds: []
+      deletedAttributeIds: [],
+      showEditSpaceDetailsModal: false
     };
   }
 
@@ -305,6 +307,25 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ selectedSpace: i });
   }
 
+  checkDoubleClickSpace = (i: number) => {
+    // TODO
+  }
+
+  getSelectedSpace = (): SpaceState | null => {
+    if (this.state.selectedSpace == null) {
+      return null;
+    }
+    return this.state.spaces[this.state.selectedSpace];
+  }
+
+  editSpaceDetails = () => {
+    if (this.state.selectedSpace != null) {
+      this.setState({
+        showEditSpaceDetailsModal: true
+      });
+    }
+  }
+
   copySpace = () => {
     if (this.state.selectedSpace != null) {
       let spaces = this.state.spaces;
@@ -363,6 +384,7 @@ class EditLocation extends React.Component<Props, State> {
       key={i}
       size={size}
       position={position}
+      onMouseDown={() => { this.onSpaceSelect(i); this.checkDoubleClickSpace(i) } }
       onDragStop={(e, d) => { this.setSpacePosition(i, d.x, d.y); this.onSpaceSelect(i); }}
       onResizeStop={(e, d, ref) => { this.setSpaceDimensions(i, ref.style.width, ref.style.height) }}
       className={className}>
@@ -406,6 +428,32 @@ class EditLocation extends React.Component<Props, State> {
       res.push(option);
     });
     return res;
+  }
+
+  getEditSpaceDetailsModal = () => {
+    return (
+      <Modal show={this.state.showEditSpaceDetailsModal} onHide={() => this.setState({ showEditSpaceDetailsModal: false })}>
+        <Modal.Header closeButton={true}>
+          <Modal.Title>Edit Space</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={(e) => { e.preventDefault() }}>
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">{this.props.t("name")}</Form.Label>
+              <Col sm="4">
+                <Form.Control type="text" value={this.getSelectedSpace()?.name} onChange={(e: any) => this.setSpaceName(this.state.selectedSpace!, e.target.value) } required={true} />
+              </Col>
+            </Form.Group>
+            
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={() => this.setState({ showEditSpaceDetailsModal: false })}>
+            {this.props.t("OK")}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
   }
 
   setAttribute = (id: string, value?: string) => {
@@ -536,9 +584,11 @@ class EditLocation extends React.Component<Props, State> {
       let spaces = this.state.spaces.map((item, i) => {
         return this.renderRect(i);
       });
+      let buttonEditSpaceDetails = <></>;
       let buttonCopySpace = <></>;
       let buttonDeleteSpace = <></>;
       if (this.state.selectedSpace != null) {
+        buttonEditSpaceDetails = <Button className="btn-sm" variant="outline-secondary" onClick={this.editSpaceDetails}><IconEdit className="feather" /> {this.props.t("edit")}</Button>;
         buttonCopySpace = <Button className="btn-sm" variant="outline-secondary" onClick={this.copySpace}><IconCopy className="feather" /> {this.props.t("duplicate")}</Button>;
         buttonDeleteSpace = <Button className="btn-sm" variant="outline-secondary" onClick={this.deleteSpace}><IconDelete className="feather" /> {this.props.t("deleteSpace")}</Button>;
       }
@@ -548,7 +598,7 @@ class EditLocation extends React.Component<Props, State> {
             <h4>{this.props.t("floorplan")}</h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
-                {buttonCopySpace} {buttonDeleteSpace}
+                {buttonEditSpaceDetails} {buttonCopySpace} {buttonDeleteSpace}
                 <Button className="btn-sm" variant="outline-secondary" onClick={() => this.addRect()}><IconMap className="feather" /> {this.props.t("addSpace")}</Button>
               </div>
             </div>
@@ -660,6 +710,7 @@ class EditLocation extends React.Component<Props, State> {
         {floorPlan}
         {attributeTable}
         {spaceTable}
+        {this.getEditSpaceDetailsModal()}
       </FullLayout>
     );
   }
