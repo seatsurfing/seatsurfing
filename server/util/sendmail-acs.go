@@ -34,18 +34,6 @@ type ACSSendMailRequest struct {
 	ReplyTo       []ACSAddress       `json:"replyTo"`
 }
 
-type ACSSendMailError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Target  string `json:"target"`
-}
-
-type ACSSendMailResponse struct {
-	ID     string            `json:"id"`
-	Status string            `json:"status"`
-	Error  *ACSSendMailError `json:"error"`
-}
-
 func ACSSendEmail(host string, accessKey string, r *ACSSendMailRequest) error {
 	url, err := url.Parse("https://" + host + "/emails:send?api-version=2023-03-31")
 	if err != nil {
