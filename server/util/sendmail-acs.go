@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,6 +32,18 @@ type ACSSendMailRequest struct {
 	Recipients    ACSRecipients      `json:"recipients"`
 	Content       ACSSendMailContent `json:"content"`
 	ReplyTo       []ACSAddress       `json:"replyTo"`
+}
+
+type ACSSendMailError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Target  string `json:"target"`
+}
+
+type ACSSendMailResponse struct {
+	ID     string            `json:"id"`
+	Status string            `json:"status"`
+	Error  *ACSSendMailError `json:"error"`
 }
 
 func ACSSendEmail(host string, accessKey string, r *ACSSendMailRequest) error {
@@ -67,9 +78,8 @@ func ACSSendEmail(host string, accessKey string, r *ACSSendMailRequest) error {
 	}
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
-	fmt.Println("response Body:", string(body))
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return errors.New("invalid status " + res.Status)
+		return fmt.Errorf("could not send mail via ACS, status code = %d, error: %s", res.StatusCode, string(body))
 	}
 	return nil
 }
