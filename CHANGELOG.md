@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.26.1](https://github.com/seatsurfing/seatsurfing/compare/v1.26.0...v1.26.1) (2025-03-16)
+
+
+### Bug Fixes
+
+* improve ACS error handling ([#673](https://github.com/seatsurfing/seatsurfing/issues/673)) ([7de5e54](https://github.com/seatsurfing/seatsurfing/commit/7de5e540bbf3d1926ec2d7cb7a73d3af5e9a2829))
+* perform database schema updates more resilient ([#676](https://github.com/seatsurfing/seatsurfing/issues/676)) ([c066560](https://github.com/seatsurfing/seatsurfing/commit/c066560b97a09158e3533b95b52858f2109c1d19))
+
 ## [1.26.0](https://github.com/seatsurfing/seatsurfing/compare/v1.25.1...v1.26.0) (2025-03-15)
 
 
