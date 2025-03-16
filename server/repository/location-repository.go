@@ -56,25 +56,25 @@ func GetLocationRepository() *LocationRepository {
 func (r *LocationRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 9 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
-			"ADD COLUMN description VARCHAR DEFAULT ''"); err != nil {
+			"ADD COLUMN IF NOT EXISTS description VARCHAR DEFAULT ''"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 10 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
-			"ADD COLUMN max_concurrent_bookings INTEGER DEFAULT 0"); err != nil {
+			"ADD COLUMN IF NOT EXISTS max_concurrent_bookings INTEGER DEFAULT 0"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 11 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
-			"ADD COLUMN tz VARCHAR DEFAULT ''"); err != nil {
+			"ADD COLUMN IF NOT EXISTS tz VARCHAR DEFAULT ''"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 16 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
-			"ADD COLUMN enabled boolean NOT NULL DEFAULT TRUE"); err != nil {
+			"ADD COLUMN IF NOT EXISTS enabled boolean NOT NULL DEFAULT TRUE"); err != nil {
 			panic(err)
 		}
 	}

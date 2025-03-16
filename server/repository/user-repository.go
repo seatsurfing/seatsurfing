@@ -65,8 +65,8 @@ func GetUserRepository() *UserRepository {
 func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 1 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
-			"ADD COLUMN password VARCHAR, " +
-			"ADD COLUMN auth_provider_id uuid"); err != nil {
+			"ADD COLUMN IF NOT EXISTS password VARCHAR, " +
+			"ADD COLUMN IF NOT EXISTS auth_provider_id uuid"); err != nil {
 			panic(err)
 		}
 	}
@@ -78,7 +78,7 @@ func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 	if curVersion < 7 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
-			"ADD COLUMN atlassian_id VARCHAR"); err != nil {
+			"ADD COLUMN IF NOT EXISTS atlassian_id VARCHAR"); err != nil {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS users_atlassian_id ON users(atlassian_id)"); err != nil {
@@ -87,7 +87,7 @@ func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 	if curVersion < 13 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
-			"ADD COLUMN role INT"); err != nil {
+			"ADD COLUMN IF NOT EXISTS role INT"); err != nil {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("UPDATE users SET role = " + strconv.Itoa(int(UserRoleUser))); err != nil {
@@ -100,15 +100,15 @@ func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
-			"DROP COLUMN org_admin, " +
-			"DROP COLUMN super_admin"); err != nil {
+			"DROP COLUMN IF EXISTS org_admin, " +
+			"DROP COLUMN IF EXISTS super_admin"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 14 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
-			"ADD COLUMN disabled boolean NOT NULL DEFAULT FALSE, " +
-			"ADD COLUMN ban_expiry TIMESTAMP NULL DEFAULT NULL"); err != nil {
+			"ADD COLUMN IF NOT EXISTS disabled boolean NOT NULL DEFAULT FALSE, " +
+			"ADD COLUMN IF NOT EXISTS ban_expiry TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
 	}

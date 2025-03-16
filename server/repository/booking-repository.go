@@ -62,7 +62,7 @@ func GetBookingRepository() *BookingRepository {
 func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 18 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
-			"ADD COLUMN caldav_id VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			"ADD COLUMN IF NOT EXISTS caldav_id VARCHAR NOT NULL DEFAULT ''"); err != nil {
 			panic(err)
 		}
 	}

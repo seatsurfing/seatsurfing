@@ -66,22 +66,22 @@ func GetOrganizationRepository() *OrganizationRepository {
 func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 3 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
-			"ADD COLUMN contact_firstname VARCHAR, " +
-			"ADD COLUMN contact_lastname VARCHAR, " +
-			"ADD COLUMN contact_email VARCHAR"); err != nil {
+			"ADD COLUMN IF NOT EXISTS contact_firstname VARCHAR, " +
+			"ADD COLUMN IF NOT EXISTS contact_lastname VARCHAR, " +
+			"ADD COLUMN IF NOT EXISTS contact_email VARCHAR"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 4 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations_domains " +
-			"ADD COLUMN active boolean NOT NULL DEFAULT FALSE, " +
-			"ADD COLUMN verify_token uuid"); err != nil {
+			"ADD COLUMN IF NOT EXISTS active boolean NOT NULL DEFAULT FALSE, " +
+			"ADD COLUMN IF NOT EXISTS verify_token uuid"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 5 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations_domains " +
-			"DROP CONSTRAINT organizations_domains_pkey"); err != nil {
+			"DROP CONSTRAINT IF EXISTS organizations_domains_pkey"); err != nil {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_organizations_domains_domain ON organizations_domains(domain)"); err != nil {
@@ -90,8 +90,8 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 	}
 	if curVersion < 6 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
-			"ADD COLUMN country VARCHAR, " +
-			"ADD COLUMN language VARCHAR"); err != nil {
+			"ADD COLUMN IF NOT EXISTS country VARCHAR, " +
+			"ADD COLUMN IF NOT EXISTS language VARCHAR"); err != nil {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("UPDATE organizations SET country = 'DE', language = 'de'"); err != nil {
@@ -100,7 +100,7 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 	}
 	if curVersion < 8 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
-			"ADD COLUMN signup_date TIMESTAMP NOT NULL DEFAULT '2021-03-28 16:00:00'"); err != nil {
+			"ADD COLUMN IF NOT EXISTS signup_date TIMESTAMP NOT NULL DEFAULT '2021-03-28 16:00:00'"); err != nil {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
@@ -110,13 +110,13 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 	}
 	if curVersion < 15 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
-			"DROP COLUMN country"); err != nil {
+			"DROP COLUMN IF EXISTS country"); err != nil {
 			panic(err)
 		}
 	}
 	if curVersion < 20 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations_domains " +
-			"ADD COLUMN primary_domain boolean NOT NULL DEFAULT FALSE"); err != nil {
+			"ADD COLUMN IF NOT EXISTS primary_domain boolean NOT NULL DEFAULT FALSE"); err != nil {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains " +

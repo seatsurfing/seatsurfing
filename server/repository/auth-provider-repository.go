@@ -63,7 +63,7 @@ func GetAuthProviderRepository() *AuthProviderRepository {
 func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 17 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
-			"ADD COLUMN logout_url VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			"ADD COLUMN IF NOT EXISTS logout_url VARCHAR NOT NULL DEFAULT ''"); err != nil {
 			panic(err)
 		}
 	}
