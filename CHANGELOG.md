@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.2](https://github.com/seatsurfing/seatsurfing/compare/v1.26.1...v1.26.2) (2025-03-17)
+
+
+### Bug Fixes
+
+* improve compatibility with Postgres &lt; v16 ([#679](https://github.com/seatsurfing/seatsurfing/issues/679)) ([65a3186](https://github.com/seatsurfing/seatsurfing/commit/65a3186035346d5cf9ae8ab562442329769bebbe))
+
 ## [1.26.1](https://github.com/seatsurfing/seatsurfing/compare/v1.26.0...v1.26.1) (2025-03-16)
 
 
