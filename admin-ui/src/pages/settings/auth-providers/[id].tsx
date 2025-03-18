@@ -161,6 +161,20 @@ class EditAuthProvider extends React.Component<Props, State> {
     });
   }
 
+  templateOkta = () => {
+    this.setState({
+      name: "Okta",
+      providerType: 1,
+      authUrl: "https://tenantname.okta.com/oauth2/default/v1/authorize",
+      tokenUrl: "https://tenantname.okta.com/oauth2/default/v1/token",
+      authStyle: 1,
+      scopes: "openid,email",
+      userInfoUrl: "https://tenantname.okta.com/oauth2/default/v1/userinfo",
+      userInfoEmailField: "email",
+      logoutUrl: "https://tenantname.okta.com/oauth2/default/v1/logout?post_logout_redirect_uri={logoutRedirectUri}"
+    });
+  }
+
   render() {
     if (this.state.goBack) {
       this.props.router.push(`/settings`);
@@ -277,13 +291,14 @@ class EditAuthProvider extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           {urlInfo}
-          <Form.Group as={Row}>
+          <Form.Group as={Row} hidden={this.entity.id !== ''}>
             <Form.Label column sm="2">{this.props.t("templates")}</Form.Label>
             <Col sm="9">
               <ButtonGroup>
                 <Button variant="outline-secondary" onClick={this.templateGoogle}>Google</Button>
                 <Button variant="outline-secondary" onClick={this.templateMicrosoft}>Microsoft</Button>
                 <Button variant="outline-secondary" onClick={this.templateKeycloak}>Keycloak</Button>
+                <Button variant="outline-secondary" onClick={this.templateOkta}>Okta</Button>
               </ButtonGroup>
             </Col>
           </Form.Group>
