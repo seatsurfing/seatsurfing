@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.26.3](https://github.com/seatsurfing/seatsurfing/compare/v1.26.2...v1.26.3) (2025-03-18)
+
+
+### Bug Fixes
+
+* add auth provider template for Okta ([#689](https://github.com/seatsurfing/seatsurfing/issues/689)) ([ea7410c](https://github.com/seatsurfing/seatsurfing/commit/ea7410cd67cc3e058c5d38ac1bbf0edd940e1fe6))
+* **deps:** bump @playwright/test from 1.51.0 to 1.51.1 in /e2e ([#681](https://github.com/seatsurfing/seatsurfing/issues/681)) ([4e48cef](https://github.com/seatsurfing/seatsurfing/commit/4e48cef97e2b42b7d5af92cf91a1c19e2620817d))
+* **deps:** bump eslint-config-next from 15.2.2 to 15.2.3 in /admin-ui ([#684](https://github.com/seatsurfing/seatsurfing/issues/684)) ([ac9f286](https://github.com/seatsurfing/seatsurfing/commit/ac9f286ee9b79649694baa059370e300a32b8792))
+* **deps:** bump eslint-config-next from 15.2.2 to 15.2.3 in /booking-ui ([#685](https://github.com/seatsurfing/seatsurfing/issues/685)) ([bc7af15](https://github.com/seatsurfing/seatsurfing/commit/bc7af15c840b8ad46389ed53dfddd30dc403ac5d))
+* **deps:** bump next from 15.2.2 to 15.2.3 in /admin-ui ([#683](https://github.com/seatsurfing/seatsurfing/issues/683)) ([015cb8f](https://github.com/seatsurfing/seatsurfing/commit/015cb8faa7847ea32b68858c440449888548179c))
+* **deps:** bump next from 15.2.2 to 15.2.3 in /booking-ui ([#686](https://github.com/seatsurfing/seatsurfing/issues/686)) ([6ce69c4](https://github.com/seatsurfing/seatsurfing/commit/6ce69c48773dd50ed02863b6385f484a4b9d9480))
+* prevent crash when reading email address from auth provider response fails ([#688](https://github.com/seatsurfing/seatsurfing/issues/688)) ([d452961](https://github.com/seatsurfing/seatsurfing/commit/d4529618a2457712d978afbd29473fcfb3855072))
+
 ## [1.26.2](https://github.com/seatsurfing/seatsurfing/compare/v1.26.1...v1.26.2) (2025-03-17)
 
 
