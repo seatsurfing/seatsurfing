@@ -476,7 +476,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	claims, payload, err := router.getUserInfo(provider, r.FormValue("state"), r.FormValue("code"))
 	if err != nil {
 		log.Println(err)
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider))
 		return
 	}
 	if !router.isValidEmailForOrg(provider, claims.Email) {
