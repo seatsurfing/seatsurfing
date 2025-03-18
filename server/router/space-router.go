@@ -13,13 +13,19 @@ import (
 type SpaceRouter struct {
 }
 
+type SpaceAttributeValueRequest struct {
+	AttributeID string `json:"attributeId"`
+	Value       string `json:"value"`
+}
+
 type CreateSpaceRequest struct {
-	Name     string `json:"name" validate:"required"`
-	X        uint   `json:"x"`
-	Y        uint   `json:"y"`
-	Width    uint   `json:"width"`
-	Height   uint   `json:"height"`
-	Rotation uint   `json:"rotation"`
+	Name       string                       `json:"name" validate:"required"`
+	X          uint                         `json:"x"`
+	Y          uint                         `json:"y"`
+	Width      uint                         `json:"width"`
+	Height     uint                         `json:"height"`
+	Rotation   uint                         `json:"rotation"`
+	Attributes []SpaceAttributeValueRequest `json:"attributes"`
 }
 
 type UpdateSpaceRequest struct {

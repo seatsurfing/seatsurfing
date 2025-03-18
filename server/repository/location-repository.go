@@ -168,6 +168,9 @@ func (r *LocationRepository) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces WHERE location_id = $1", e.ID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE entity_id = $1 AND entity_type = $2", e.ID, SpaceAttributeValueEntityTypeLocation); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM locations WHERE id = $1", e.ID)
 	return err
 }
