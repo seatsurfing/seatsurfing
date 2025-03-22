@@ -19,6 +19,8 @@ interface SpaceState {
   height: string
   rotation: number
   changed: boolean
+  attributes: Map<string, string>
+  enabledAttributes: string[]
 }
 
 interface State {
@@ -43,6 +45,7 @@ interface State {
   changedAttributeIds: string[]
   deletedAttributeIds: string[]
   showEditSpaceDetailsModal: boolean
+  selectedSpaceMouseDownTimestamp: number
 }
 
 interface Props extends WithTranslation {
@@ -79,7 +82,8 @@ class EditLocation extends React.Component<Props, State> {
       availableAttributes: [],
       changedAttributeIds: [],
       deletedAttributeIds: [],
-      showEditSpaceDetailsModal: false
+      showEditSpaceDetailsModal: false,
+      selectedSpaceMouseDownTimestamp: 0
     };
   }
 
@@ -183,6 +187,16 @@ class EditLocation extends React.Component<Props, State> {
         space.width = parseInt(item.width.replace(/^\D+/g, ''));
         space.height = parseInt(item.height.replace(/^\D+/g, ''));
         space.rotation = item.rotation;
+        space.attributes = [];
+        item.enabledAttributes.forEach(attributeId => {
+          let value = item.attributes.get(attributeId);
+          if (value) {
+            let a = new SpaceAttributeValue();
+            a.attributeId = attributeId;
+            a.value = value;
+            space.attributes.push(a);
+          }
+        });
         if (space.id) {
           updates.push(space);
         } else {
@@ -254,7 +268,7 @@ class EditLocation extends React.Component<Props, State> {
   }
 
   newSpaceState = (e?: Space): SpaceState => {
-    return {
+    let res: SpaceState = {
       id: (e ? e.id : ""),
       name: (e ? e.name : this.props.t("unnamed")),
       x: (e ? e.x : 10),
@@ -262,8 +276,17 @@ class EditLocation extends React.Component<Props, State> {
       width: (e ? e.width + "px" : "100px"),
       height: (e ? e.height + "px" : "100px"),
       rotation: 0,
-      changed: true
+      changed: true,
+      attributes: new Map<string, string>(),
+      enabledAttributes: []
     };
+    if (e) {
+      e.attributes.forEach(a => {
+        res.attributes.set(a.attributeId, a.value);
+        res.enabledAttributes.push(a.attributeId);
+      });
+    }
+    return res;
   }
 
   addRect = (e?: Space): number => {
@@ -304,11 +327,27 @@ class EditLocation extends React.Component<Props, State> {
   }
 
   onSpaceSelect = (i: number) => {
-    this.setState({ selectedSpace: i });
+    if (this.state.selectedSpace === i) {
+      return;
+    }
+    this.setState({
+      selectedSpace: i,
+      selectedSpaceMouseDownTimestamp: 0
+    });
   }
 
   checkDoubleClickSpace = (i: number) => {
-    // TODO
+    let now: number = new Date().getTime();
+    let diff: number = now - this.state.selectedSpaceMouseDownTimestamp;
+    if (diff <= 300) {
+      this.setState({
+        showEditSpaceDetailsModal: true
+      });
+      return;
+    }
+    this.setState({
+      selectedSpaceMouseDownTimestamp: now
+    });
   }
 
   getSelectedSpace = (): SpaceState | null => {
@@ -384,7 +423,7 @@ class EditLocation extends React.Component<Props, State> {
       key={i}
       size={size}
       position={position}
-      onMouseDown={() => { this.onSpaceSelect(i); this.checkDoubleClickSpace(i) } }
+      onMouseDown={() => { this.onSpaceSelect(i); this.checkDoubleClickSpace(i) }}
       onDragStop={(e, d) => { this.setSpacePosition(i, d.x, d.y); this.onSpaceSelect(i); }}
       onResizeStop={(e, d, ref) => { this.setSpaceDimensions(i, ref.style.width, ref.style.height) }}
       className={className}>
@@ -430,6 +469,80 @@ class EditLocation extends React.Component<Props, State> {
     return res;
   }
 
+  setSpaceAttributeValue = (attributeId: string, value: string) => {
+    if (this.state.selectedSpace == null) {
+      return;
+    }
+    let spaces = this.state.spaces;
+    let space = { ...spaces[this.state.selectedSpace] };
+    space.attributes.set(attributeId, value);
+    if (space.enabledAttributes.indexOf(attributeId) === -1) {
+      space.enabledAttributes.push(attributeId);
+    }
+    space.changed = true;
+    spaces[this.state.selectedSpace] = space;
+    this.setState({ spaces: spaces, changed: true });
+  }
+
+  isSpaceAttributeEnabled = (attributeId: string): boolean => {
+    if (this.state.selectedSpace == null) {
+      return false;
+    }
+    return this.state.spaces[this.state.selectedSpace].enabledAttributes.indexOf(attributeId) > -1;
+  }
+
+  setSpaceAttributeEnabled = (attributeId: string, enabled: boolean) => {
+    if (this.state.selectedSpace == null) {
+      return;
+    }
+    let spaces = this.state.spaces;
+    let space = { ...spaces[this.state.selectedSpace] };
+    const index = space.enabledAttributes.indexOf(attributeId);
+    if (enabled && (index === -1)) {
+      space.enabledAttributes.push(attributeId);
+    }
+    if (!enabled && (index > -1)) {
+      space.enabledAttributes.splice(index, 1);
+    }
+    space.changed = true;
+    spaces[this.state.selectedSpace] = space;
+    this.setState({ spaces: spaces, changed: true });
+  }
+
+  getSpaceAttributeValue = (attributeId: string): string => {
+    if (this.state.selectedSpace == null) {
+      return "";
+    }
+    return this.state.spaces[this.state.selectedSpace].attributes.get(attributeId) || "";
+  }
+
+  getSpaceAttributeRows = () => {
+    let res: any = [];
+    this.state.availableAttributes.forEach(a => {
+      if (!a.spaceApplicable) {
+        return;
+      }
+      let input = <></>;
+      if (a.type === 1) {
+        input = <Form.Control type="number" disabled={!this.isSpaceAttributeEnabled(a.id)} min={0} value={this.getSpaceAttributeValue(a.id)} onChange={(e: any) => this.setSpaceAttributeValue(a.id, e.target.value)} />;
+      } else if (a.type === 2) {
+        input = <Form.Check type="checkbox" disabled={!this.isSpaceAttributeEnabled(a.id)} label={this.props.t("yes")} checked={this.getSpaceAttributeValue(a.id) === "1"} onChange={(e: any) => this.setSpaceAttributeValue(a.id, e.target.checked ? "1" : "0")} />;
+      } else {
+        input = <Form.Control type="text" disabled={!this.isSpaceAttributeEnabled(a.id)} value={this.getSpaceAttributeValue(a.id)} onChange={(e: any) => this.setSpaceAttributeValue(a.id, e.target.value)} />;
+      }
+      let row = (
+        <Form.Group as={Row} key={a.id}>
+          <Col sm="4">
+            <Form.Check type="checkbox" label={a.label} checked={this.isSpaceAttributeEnabled(a.id)} onChange={(e: any) => this.setSpaceAttributeEnabled(a.id, e.target.checked)} />
+          </Col>
+          <Col sm="6">{input}</Col>
+        </Form.Group>
+      );
+      res.push(row);
+    });
+    return res;
+  }
+
   getEditSpaceDetailsModal = () => {
     return (
       <Modal show={this.state.showEditSpaceDetailsModal} onHide={() => this.setState({ showEditSpaceDetailsModal: false })}>
@@ -439,12 +552,12 @@ class EditLocation extends React.Component<Props, State> {
         <Modal.Body>
           <Form onSubmit={(e) => { e.preventDefault() }}>
             <Form.Group as={Row}>
-              <Form.Label column sm="2">{this.props.t("name")}</Form.Label>
-              <Col sm="4">
-                <Form.Control type="text" value={this.getSelectedSpace()?.name} onChange={(e: any) => this.setSpaceName(this.state.selectedSpace!, e.target.value) } required={true} />
+              <Form.Label column sm="4">{this.props.t("name")}</Form.Label>
+              <Col sm="6">
+                <Form.Control type="text" value={this.getSelectedSpace()?.name} onChange={(e: any) => this.setSpaceName(this.state.selectedSpace!, e.target.value)} required={true} />
               </Col>
             </Form.Group>
-            
+            {this.getSpaceAttributeRows()}
           </Form>
         </Modal.Body>
         <Modal.Footer>

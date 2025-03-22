@@ -104,7 +104,13 @@ func (router *SpaceRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e)
+	attributes, err := GetSpaceAttributeValueRepository().GetAllForEntity(e.ID, SpaceAttributeValueEntityTypeSpace)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, attributes)
 	SendJSON(w, res)
 }
 
@@ -201,6 +207,12 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	availableAttributes, err := GetSpaceAttributeRepository().GetAll(location.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 
 	res := BulkUpdateResponse{
 		Creates: []BulkUpdateItemResponse{},
@@ -233,6 +245,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
 			} else {
+				router.applySpaceAttributes(availableAttributes, e, &mSpace)
 				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: e.ID, Success: true})
 			}
 		}
@@ -248,6 +261,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: "", Success: false})
 			} else {
+				router.applySpaceAttributes(availableAttributes, e, &mSpace.CreateSpaceRequest)
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: e.ID, Success: true})
 			}
 		}
@@ -273,9 +287,19 @@ func (router *SpaceRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	spaceIds := []string{}
+	for _, e := range list {
+		spaceIds = append(spaceIds, e.ID)
+	}
+	attributes, err := GetSpaceAttributeValueRepository().GetAllForEntityList(spaceIds, SpaceAttributeValueEntityTypeSpace)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetSpaceResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e)
+		m := router.copyToRestModel(e, attributes)
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -306,6 +330,13 @@ func (router *SpaceRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	availableAttributes, err := GetSpaceAttributeRepository().GetAll(location.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	router.applySpaceAttributes(availableAttributes, e, &m)
 	SendUpdated(w)
 }
 
@@ -357,7 +388,53 @@ func (router *SpaceRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	availableAttributes, err := GetSpaceAttributeRepository().GetAll(location.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	router.applySpaceAttributes(availableAttributes, e, &m)
 	SendCreated(w, e.ID)
+}
+
+func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttribute, space *Space, m *CreateSpaceRequest) error {
+	existingSpaceAttributes, err := GetSpaceAttributeValueRepository().GetAllForEntity(space.ID, SpaceAttributeValueEntityTypeSpace)
+	if err != nil {
+		return err
+	}
+	// Check deletes
+	for _, attribute := range existingSpaceAttributes {
+		found := false
+		for _, mAttribute := range m.Attributes {
+			if attribute.AttributeID == mAttribute.AttributeID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			if err := GetSpaceAttributeValueRepository().Delete(attribute.AttributeID, space.ID, SpaceAttributeValueEntityTypeSpace); err != nil {
+				return err
+			}
+		}
+	}
+	// Check creates / updates
+	for _, mAttribute := range m.Attributes {
+		// Check if attribute is valid
+		found := false
+		for _, availableAttribute := range availableAttributes {
+			if availableAttribute.ID == mAttribute.AttributeID {
+				found = true
+				break
+			}
+		}
+		if found {
+			if err := GetSpaceAttributeValueRepository().Set(mAttribute.AttributeID, space.ID, SpaceAttributeValueEntityTypeSpace, mAttribute.Value); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
@@ -371,7 +448,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	return e
 }
 
-func (router *SpaceRouter) copyToRestModel(e *Space) *GetSpaceResponse {
+func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttributeValue) *GetSpaceResponse {
 	m := &GetSpaceResponse{}
 	m.ID = e.ID
 	m.LocationID = e.LocationID
@@ -381,5 +458,15 @@ func (router *SpaceRouter) copyToRestModel(e *Space) *GetSpaceResponse {
 	m.Width = e.Width
 	m.Height = e.Height
 	m.Rotation = e.Rotation
+	if attributes != nil {
+		m.Attributes = []SpaceAttributeValueRequest{}
+		for _, attribute := range attributes {
+			if attribute.EntityType == SpaceAttributeValueEntityTypeSpace {
+				if attribute.EntityID == e.ID {
+					m.Attributes = append(m.Attributes, SpaceAttributeValueRequest{AttributeID: attribute.AttributeID, Value: attribute.Value})
+				}
+			}
+		}
+	}
 	return m
 }

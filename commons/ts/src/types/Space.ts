@@ -3,6 +3,7 @@ import Ajax from "../util/Ajax";
 import Location from "./Location";
 import Formatting from "../util/Formatting";
 import BulkUpdateResponse from "./BulkUpdateResponse";
+import SpaceAttributeValue from "./SpaceAttributeValue";
 
 export default class Space extends Entity {
     name: string;
@@ -11,6 +12,7 @@ export default class Space extends Entity {
     width: number;
     height: number;
     rotation: number;
+    attributes: SpaceAttributeValue[];
     available: boolean;
     locationId: string;
     location: Location;
@@ -24,6 +26,7 @@ export default class Space extends Entity {
         this.width = 0;
         this.height = 0;
         this.rotation = 0;
+        this.attributes = [];
         this.available = false;
         this.locationId = "";
         this.location = new Location();
@@ -38,6 +41,7 @@ export default class Space extends Entity {
             "width": this.width,
             "height": this.height,
             "rotation": this.rotation,
+            "attributes": this.attributes.map(a => a.serialize()),
         });
     }
 
@@ -58,6 +62,13 @@ export default class Space extends Entity {
         }
         if (input.bookings && Array.isArray(input.bookings)) {
             this.rawBookings = input.bookings;
+        }
+        if (input.attributes) {
+            this.attributes = input.attributes.map((a: any) => {
+                let e = new SpaceAttributeValue();
+                e.deserialize(a);
+                return e;
+            });
         }
     }
 

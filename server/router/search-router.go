@@ -86,7 +86,7 @@ func (router *SearchRouter) addSpaceResults(user *User, keyword string, res *Get
 	}
 	spaceRouter := &SpaceRouter{}
 	for _, e := range list {
-		m := spaceRouter.copyToRestModel(e)
+		m := spaceRouter.copyToRestModel(e, nil)
 		res.Spaces = append(res.Spaces, m)
 	}
 	return nil

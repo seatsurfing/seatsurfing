@@ -2,6 +2,8 @@ package repository
 
 import (
 	"sync"
+
+	"github.com/lib/pq"
 )
 
 type SpaceAttributeValueRepository struct {
@@ -65,11 +67,15 @@ func (r *SpaceAttributeValueRepository) Get(attributeID string, entityID string,
 }
 
 func (r *SpaceAttributeValueRepository) GetAllForEntity(entityID string, entityType SpaceAttributeValueEntityType) ([]*SpaceAttributeValue, error) {
+	return r.GetAllForEntityList([]string{entityID}, entityType)
+}
+
+func (r *SpaceAttributeValueRepository) GetAllForEntityList(entityIDs []string, entityType SpaceAttributeValueEntityType) ([]*SpaceAttributeValue, error) {
 	var result []*SpaceAttributeValue
 	rows, err := GetDatabase().DB().Query("SELECT attribute_id, entity_id, entity_type, value "+
 		"FROM space_attribute_values "+
-		"WHERE entity_id = $1 AND entity_type = $2",
-		entityID, entityType)
+		"WHERE entity_id = ANY($1::uuid[]) AND entity_type = $2",
+		pq.StringArray(entityIDs), entityType)
 	if err != nil {
 		return nil, err
 	}
