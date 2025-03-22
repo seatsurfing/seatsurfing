@@ -51,10 +51,10 @@ type BulkUpdateResponse struct {
 }
 
 type GetSpaceResponse struct {
-	ID         string              `json:"id"`
-	Available  bool                `json:"available"`
-	LocationID string              `json:"locationId"`
-	Location   GetLocationResponse `json:"location"`
+	ID         string               `json:"id"`
+	Available  bool                 `json:"available"`
+	LocationID string               `json:"locationId"`
+	Location   *GetLocationResponse `json:"location,omitempty"`
 	CreateSpaceRequest
 }
 

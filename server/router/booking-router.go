@@ -835,7 +835,11 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.Space.ID = e.Space.ID
 	m.Space.LocationID = e.Space.LocationID
 	m.Space.Name = e.Space.Name
-	m.Space.Location.ID = e.Space.Location.ID
-	m.Space.Location.Name = e.Space.Location.Name
+	m.Space.Location = &GetLocationResponse{
+		ID: e.Space.Location.ID,
+		CreateLocationRequest: CreateLocationRequest{
+			Name: e.Space.Location.Name,
+		},
+	}
 	return m
 }
