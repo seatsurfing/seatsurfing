@@ -6,6 +6,7 @@ type SeatsurfingPlugin interface {
 	GetRepositories() []Repository
 	GetAdminUIMenuItems() []AdminUIMenuItem
 	OnTimer()
+	OnInit()
 }
 
 type AdminUIMenuItem struct {

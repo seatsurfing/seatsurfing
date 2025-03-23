@@ -44,6 +44,12 @@ func (a *App) InitializeDatabases() {
 	InitDefaultUserPreferences()
 }
 
+func (a *App) InitializePlugins() {
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnInit()
+	}
+}
+
 func (a *App) InitializeRouter() {
 	a.Router = mux.NewRouter()
 	routers := make(map[string]Route)
