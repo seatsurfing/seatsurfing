@@ -166,5 +166,7 @@
     "editAttribute": "Edit Attribute",
     "confirmDeleteAttribute": "Delete attribute and its values?",
     "enabled": "Enabled",
-    "upgradeCloud": "Upgrade"
+    "upgradeCloud": "Upgrade",
+    "edit": "Edit",
+    "ok": "OK"
 }

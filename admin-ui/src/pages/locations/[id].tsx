@@ -562,7 +562,7 @@ class EditLocation extends React.Component<Props, State> {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary" onClick={() => this.setState({ showEditSpaceDetailsModal: false })}>
-            {this.props.t("OK")}
+            {this.props.t("ok")}
           </Button>
         </Modal.Footer>
       </Modal>

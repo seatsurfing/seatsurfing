@@ -159,5 +159,7 @@
     "editAttribute": "Attribut bearbeiten",
     "confirmDeleteAttribute": "Attribut und alle seine Werte löschen?",
     "enabled": "Aktiv",
-    "upgradeCloud": "Upgrade"
+    "upgradeCloud": "Upgrade",
+    "edit": "Bearbeiten",
+    "ok": "OK"
 }
