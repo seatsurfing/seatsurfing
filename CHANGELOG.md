@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/seatsurfing/seatsurfing/compare/v1.27.1...v1.27.2) (2025-03-24)
+
+
+### Bug Fixes
+
+* optimize language handling in Admin and Booking UI ([#714](https://github.com/seatsurfing/seatsurfing/issues/714)) ([37e64d4](https://github.com/seatsurfing/seatsurfing/commit/37e64d461811dd8fd3c368a66efd21752846a523))
+
 ## [1.27.1](https://github.com/seatsurfing/seatsurfing/compare/v1.27.0...v1.27.1) (2025-03-24)
 
 
