@@ -420,7 +420,6 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, ""); !valid {
-		log.Println(err)
 		SendBadRequestCode(w, code)
 		return
 	}
@@ -565,7 +564,7 @@ func (router *BookingRouter) IsValidBookingDuration(m *BookingRequest, orgID str
 	hoursOnDate := router.getHoursOnDate(&m.Leave)
 	durationNotRounded := int(math.Round(m.Leave.Sub(m.Enter).Minutes()) / 60)
 	if dailyBasisBooking {
-		return durationNotRounded%hoursOnDate == 0
+		return (durationNotRounded%hoursOnDate == 0) && (durationNotRounded <= maxDurationHours)
 	}
 
 	// For non-daily-basis bookings, check exact duration
