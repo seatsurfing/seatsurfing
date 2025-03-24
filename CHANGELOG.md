@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.27.0](https://github.com/seatsurfing/seatsurfing/compare/v1.26.3...v1.27.0) (2025-03-24)
+
+
+### Features
+
+* add ability to assign attributes to spaces in Admin UI ([#696](https://github.com/seatsurfing/seatsurfing/issues/696)) ([8fda071](https://github.com/seatsurfing/seatsurfing/commit/8fda071e4064d1ec55d6df22e25ab5819e88884c))
+* show and search for space attributes in Booking UI ([#702](https://github.com/seatsurfing/seatsurfing/issues/702)) ([7419470](https://github.com/seatsurfing/seatsurfing/commit/7419470d61ee8bebbc05a41609099b1ee3bd00ce))
+
+
+### Bug Fixes
+
+* add missing translations ([#699](https://github.com/seatsurfing/seatsurfing/issues/699)) ([067e3ed](https://github.com/seatsurfing/seatsurfing/commit/067e3eda7a9a9c74d4be893718316bdbfbcbcbb9))
+* add plugin init support ([#700](https://github.com/seatsurfing/seatsurfing/issues/700)) ([a26654f](https://github.com/seatsurfing/seatsurfing/commit/a26654f8ff215e354cd3944bc863a51c5ed4661e))
+* **deps:** bump @types/node from 22.13.10 to 22.13.11 in /admin-ui ([#692](https://github.com/seatsurfing/seatsurfing/issues/692)) ([1f247db](https://github.com/seatsurfing/seatsurfing/commit/1f247db4ba425ff4873ea2c6cb5edeb9cce2b205))
+* **deps:** bump @types/node from 22.13.10 to 22.13.11 in /booking-ui ([#693](https://github.com/seatsurfing/seatsurfing/issues/693)) ([6c112ed](https://github.com/seatsurfing/seatsurfing/commit/6c112ed48512206bd903d18ee6c26588d91b4468))
+* **deps:** bump @types/node from 22.13.10 to 22.13.11 in /e2e ([#694](https://github.com/seatsurfing/seatsurfing/issues/694)) ([c34f392](https://github.com/seatsurfing/seatsurfing/commit/c34f39261475f6f58740f9ef6bb46d56c4515700))
+* **deps:** bump react-router-dom from 7.3.0 to 7.4.0 in /admin-ui ([#691](https://github.com/seatsurfing/seatsurfing/issues/691)) ([3577f2c](https://github.com/seatsurfing/seatsurfing/commit/3577f2c16a1325514bc127d13e78cbeca8e677b3))
+* omit location in space response ([#698](https://github.com/seatsurfing/seatsurfing/issues/698)) ([a343a62](https://github.com/seatsurfing/seatsurfing/commit/a343a6268041051f245ba5a7f27f4c72af917e1f))
+
 ## [1.26.3](https://github.com/seatsurfing/seatsurfing/compare/v1.26.2...v1.26.3) (2025-03-18)
 
 
