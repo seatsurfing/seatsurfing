@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/seatsurfing/seatsurfing/compare/v1.27.0...v1.27.1) (2025-03-24)
+
+
+### Bug Fixes
+
+* max booking duration not respected in daily basis booking mode ([#705](https://github.com/seatsurfing/seatsurfing/issues/705)) ([8db649e](https://github.com/seatsurfing/seatsurfing/commit/8db649e855cfdd1a12ea250092c2c894e2c37cd2))
+
 ## [1.27.0](https://github.com/seatsurfing/seatsurfing/compare/v1.26.3...v1.27.0) (2025-03-24)
 
 
