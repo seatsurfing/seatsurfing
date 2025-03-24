@@ -4,6 +4,7 @@ import Location from "./Location";
 import Formatting from "../util/Formatting";
 import BulkUpdateResponse from "./BulkUpdateResponse";
 import SpaceAttributeValue from "./SpaceAttributeValue";
+import SearchAttribute from "./SearchAttribute";
 
 export default class Space extends Entity {
     name: string;
@@ -104,10 +105,11 @@ export default class Space extends Entity {
         });
     }
 
-    static async listAvailability(locationId: string, enter: Date, leave: Date): Promise<Space[]> {
+    static async listAvailability(locationId: string, enter: Date, leave: Date, attributes?: SearchAttribute[]): Promise<Space[]> {
         let payload = {
             enter: Formatting.convertToFakeUTCDate(enter).toISOString(),
-            leave: Formatting.convertToFakeUTCDate(leave).toISOString()
+            leave: Formatting.convertToFakeUTCDate(leave).toISOString(),
+            attributes: (attributes ? attributes.map(a => a.serialize()) : [])
         };
         return Ajax.postData("/location/"+locationId+"/space/availability", payload).then(result => {
             let list: Space[] = [];

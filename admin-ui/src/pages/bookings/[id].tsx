@@ -144,7 +144,6 @@ class EditBooking extends React.Component<Props, State> {
 
     loadData = () => {
         const {id} = this.props.router.query;
-        console.log("load data, id = " + id);
         if (id && (typeof id === "string")){
             if (id !== 'add') {
                 return Booking.get(id).then(booking => {
@@ -234,13 +233,10 @@ class EditBooking extends React.Component<Props, State> {
     }
 
     loadSpaces = async (selectedLocationId: string, enter: Date, leave: Date): Promise<void> => {
-        // this.setState({ loading: true });
-        console.log("Loading spaces "+enter.toString()+" --> "+leave.toString())
         return Space.listAvailability(selectedLocationId, enter, leave).then(list => {
             this.setState({
                 spaces: list,
                 isDisabledSpace: false
-                // loading: false
             });
         });
     }
@@ -262,7 +258,6 @@ class EditBooking extends React.Component<Props, State> {
                 if (s.name === "max_days_in_advance") {this.maxDaysInAdvance = window.parseInt(s.value)};
                 if (s.name === "max_booking_duration_hours") {this.maxBookingDurationHours = window.parseInt(s.value)};
                 if (s.name === "min_booking_duration_hours") {this.minBookingDurationHours = window.parseInt(s.value)};
-                // this.setState({ loading: false });
             });
         });
     }
@@ -356,7 +351,6 @@ class EditBooking extends React.Component<Props, State> {
             this.entity.space.id = this.state.selectedSpaceId;
             this.entity.user.email = user;
             this.entity.save().then(() => {
-                console.log("booking saved, id = " + this.entity.id);
                 this.isNewBooking=false;
                 this.props.router.push("/bookings/" + this.entity.id);
                 this.setState({
@@ -402,17 +396,12 @@ class EditBooking extends React.Component<Props, State> {
     }
 
     updateCanSearch = async () => {
-        console.log("updateCanSearch");
         let res = true;
         let hint = "";
         if (this.curBookingCount >= this.maxBookingsPerUser) {
             res = false;
             hint = this.props.t("errorBookingLimit", { "num": this.maxBookingsPerUser });
         }
-        // if (!this.state.selectedLocationId && !this.entity.location.id) {
-        //     res = false;
-        //     hint = this.props.t("errorPickArea");
-        // }
         let todayMorning = this.createDateAsUTC(new Date());
         todayMorning.setHours(0,0,0);
         let enterTime = new Date(this.state.enter);

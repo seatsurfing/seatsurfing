@@ -347,7 +347,7 @@ class Preferences extends React.Component<Props, State> {
         <NavBar />
         <div className="container-center-top">
           <div className="container-center-inner">
-            <Nav variant="underline" defaultActiveKey="tab-bookings" onSelect={(key) => { if (key) this.setState({ activeTab: key }) }}>
+            <Nav variant="underline" activeKey={this.state.activeTab} onSelect={(key) => { if (key) this.setState({ activeTab: key }) }}>
               <Nav.Item>
                 <Nav.Link eventKey="tab-bookings">{this.props.t('bookings')}</Nav.Link>
               </Nav.Item>

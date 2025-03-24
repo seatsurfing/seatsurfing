@@ -72,8 +72,9 @@ type GetSpaceAvailabilityResponse struct {
 }
 
 type GetSpaceAvailabilityRequest struct {
-	Enter time.Time `json:"enter" validate:"required"`
-	Leave time.Time `json:"leave" validate:"required"`
+	Enter      time.Time         `json:"enter" validate:"required"`
+	Leave      time.Time         `json:"leave" validate:"required"`
+	Attributes []SearchAttribute `json:"attributes"`
 }
 
 func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
@@ -153,39 +154,52 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 		SendInternalServerError(w)
 		return
 	}
+	spaceIds := []string{}
+	for _, e := range list {
+		spaceIds = append(spaceIds, e.Space.ID)
+	}
+	attributeValues, err := GetSpaceAttributeValueRepository().GetAllForEntityList(spaceIds, SpaceAttributeValueEntityTypeSpace)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
-		m := &GetSpaceAvailabilityResponse{}
-		m.ID = e.ID
-		m.LocationID = e.LocationID
-		m.Name = e.Name
-		m.X = e.X
-		m.Y = e.Y
-		m.Width = e.Width
-		m.Height = e.Height
-		m.Rotation = e.Rotation
-		m.Available = e.Available
-		m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
-		for _, booking := range e.Bookings {
-			var showName bool = showNames
-			enter, _ := GetLocationRepository().AttachTimezoneInformation(booking.Enter, location)
-			leave, _ := GetLocationRepository().AttachTimezoneInformation(booking.Leave, location)
-			outUserId := ""
-			outUserEmail := ""
-			if showName || user.Email == booking.UserEmail {
-				outUserId = booking.UserID
-				outUserEmail = booking.UserEmail
+		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
+			m := &GetSpaceAvailabilityResponse{}
+			m.ID = e.ID
+			m.LocationID = e.LocationID
+			m.Name = e.Name
+			m.X = e.X
+			m.Y = e.Y
+			m.Width = e.Width
+			m.Height = e.Height
+			m.Rotation = e.Rotation
+			m.Available = e.Available
+			router.appendAttributesToRestModel(&m.GetSpaceResponse, attributeValues)
+			m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
+			for _, booking := range e.Bookings {
+				var showName bool = showNames
+				enter, _ := GetLocationRepository().AttachTimezoneInformation(booking.Enter, location)
+				leave, _ := GetLocationRepository().AttachTimezoneInformation(booking.Leave, location)
+				outUserId := ""
+				outUserEmail := ""
+				if showName || user.Email == booking.UserEmail {
+					outUserId = booking.UserID
+					outUserEmail = booking.UserEmail
+				}
+				entry := &GetSpaceAvailabilityBookingsResponse{
+					BookingID: booking.BookingID,
+					UserID:    outUserId,
+					UserEmail: outUserEmail,
+					Enter:     enter,
+					Leave:     leave,
+				}
+				m.Bookings = append(m.Bookings, entry)
 			}
-			entry := &GetSpaceAvailabilityBookingsResponse{
-				BookingID: booking.BookingID,
-				UserID:    outUserId,
-				UserEmail: outUserEmail,
-				Enter:     enter,
-				Leave:     leave,
-			}
-			m.Bookings = append(m.Bookings, entry)
+			res = append(res, m)
 		}
-		res = append(res, m)
 	}
 	SendJSON(w, res)
 }
@@ -437,6 +451,15 @@ func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttr
 	return nil
 }
 
+func (router *SpaceRouter) searchInputContains(m *[]SearchAttribute, attributeID string) bool {
+	for _, e := range *m {
+		if e.AttributeID == attributeID {
+			return true
+		}
+	}
+	return false
+}
+
 func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e := &Space{}
 	e.Name = m.Name
@@ -469,4 +492,17 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 		}
 	}
 	return m
+}
+
+func (router *SpaceRouter) appendAttributesToRestModel(m *GetSpaceResponse, attributes []*SpaceAttributeValue) {
+	if attributes != nil {
+		m.Attributes = []SpaceAttributeValueRequest{}
+		for _, attribute := range attributes {
+			if attribute.EntityType == SpaceAttributeValueEntityTypeSpace {
+				if attribute.EntityID == m.ID {
+					m.Attributes = append(m.Attributes, SpaceAttributeValueRequest{AttributeID: attribute.AttributeID, Value: attribute.Value})
+				}
+			}
+		}
+	}
 }

@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import { Form, Col, Row, Modal, Button, ListGroup, Badge, InputGroup } from 'react-bootstrap';
+import { Form, Col, Row, Modal, Button, ListGroup, Badge, InputGroup, Nav } from 'react-bootstrap';
 import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
 // @ts-ignore
 import DateTimePicker from 'react-datetime-picker';
@@ -49,8 +49,10 @@ interface State {
   prefPartiallyBookedColor: string
   prefBuddyBookedColor: string
   attributeValues: SpaceAttributeValue[]
-  searchAttributes: SearchAttribute[]
+  searchAttributesLocation: SearchAttribute[]
+  searchAttributesSpace: SearchAttribute[]
   confirmingBooking: boolean
+  activeTabFilterModal: string
 }
 
 interface Props extends WithTranslation {
@@ -113,7 +115,9 @@ class Search extends React.Component<Props, State> {
       prefPartiallyBookedColor: "#ff9100",
       prefBuddyBookedColor: "#2415c5",
       attributeValues: [],
-      searchAttributes: [],
+      searchAttributesLocation: [],
+      searchAttributesSpace: [],
+      activeTabFilterModal: "tab-filter-area",
     };
   }
 
@@ -324,7 +328,7 @@ class Search extends React.Component<Props, State> {
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
       leave.setSeconds(leave.getSeconds() - 1);
     }
-    return Space.listAvailability(locationId, this.state.enter, leave).then(list => {
+    return Space.listAvailability(locationId, this.state.enter, leave, this.state.searchAttributesSpace).then(list => {
       this.data = list;
     });
   }
@@ -400,7 +404,6 @@ class Search extends React.Component<Props, State> {
   }
 
   setEnterDate = (value: Date | [Date | null, Date | null]) => {
-    console.log("New enter date: " + value);
     let dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
@@ -576,7 +579,6 @@ class Search extends React.Component<Props, State> {
     const className = "space space-box"
       + ((item.width < item.height) ? " space-box-vertical" : "");
     return (
-
       <div key={item.id} style={boxStyle} className={className} data-tooltip-id="my-tooltip" data-tooltip-content={item.rawBookings[0] ? item.rawBookings[0].userEmail : "Free"}
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}>
@@ -764,29 +766,34 @@ class Search extends React.Component<Props, State> {
     return items;
   }
 
-  getSearchFormInput = (attribute: SpaceAttribute) => {
+  getSearchFormInput = (type: 'space' | 'location', attribute: SpaceAttribute) => {
+    const searchAttributes = (type === 'location' ? this.state.searchAttributesLocation : this.state.searchAttributesSpace);
     if (attribute.type === 1) {
-      return <Form.Control type="number" min={0} value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
+      return <Form.Control type="number" min={0} value={searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(type, attribute.id, e.target.value)} disabled={searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
     } else if (attribute.type === 2) {
-      return <Form.Check type="checkbox" style={{ paddingTop: '5px' }} label={this.props.t("yes")} checked={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value === '1' || false} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.checked ? '1' : '0')} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
+      return <Form.Check type="checkbox" style={{ paddingTop: '5px' }} label={this.props.t("yes")} checked={searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value === '1' || false} onChange={(e: any) => this.setSearchAttributeValue(type, attribute.id, e.target.checked ? '1' : '0')} disabled={searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
     } else if (attribute.type === 3) {
-      return <Form.Control type="text" value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
+      return <Form.Control type="text" value={searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(type, attribute.id, e.target.value)} disabled={searchAttributes.find((attr) => attr.attributeId === attribute.id) === undefined} />;
     } else if (attribute.type === 4) {
       let options: any[] = [];
       attribute.selectValues.forEach((v, k) => {
         options.push(<option value={k} key={k}>{v}</option>);
       });
-      return <Form.Select value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(attribute.id, e.target.value)} disabled={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.comparator === ''}>
+      return <Form.Select value={searchAttributes.find((attr) => attr.attributeId === attribute.id)?.value || ''} onChange={(e: any) => this.setSearchAttributeValue(type, attribute.id, e.target.value)} disabled={searchAttributes.find((attr) => attr.attributeId === attribute.id)?.comparator === ''}>
         {options}
       </Form.Select>;
     }
   }
 
-  setSearchAttributeComparator = (attributeId: string, comparator: string) => {
-    let searchAttributes = this.state.searchAttributes;
+  setSearchAttributeComparator = (type: 'space' | 'location', attributeId: string, comparator: string) => {
+    let searchAttributes = (type === 'location' ? this.state.searchAttributesLocation : this.state.searchAttributesSpace);
     if (comparator === '') {
       searchAttributes = searchAttributes.filter((attr) => attr.attributeId !== attributeId);
-      this.setState({ searchAttributes: searchAttributes });
+      if (type === 'space') {
+        this.setState({ searchAttributesSpace: searchAttributes });
+      } else {
+        this.setState({ searchAttributesLocation: searchAttributes });
+      }
       return;
     }
     let searchAttribute = searchAttributes.find((attr) => attr.attributeId === attributeId);
@@ -802,11 +809,20 @@ class Search extends React.Component<Props, State> {
         searchAttribute.value = attr.selectValues.keys().next().value || '';
       }
     }
-    this.setState({ searchAttributes: searchAttributes });
+    if (type === 'space') {
+      this.setState({ searchAttributesSpace: searchAttributes });
+    } else {
+      this.setState({ searchAttributesLocation: searchAttributes });
+    }
   }
 
-  setSearchAttributeValue = (attributeId: string, value: string) => {
-    let searchAttributes = this.state.searchAttributes;
+  setSearchAttributeValue = (type: 'space' | 'location', attributeId: string, value: string) => {
+    let searchAttributes: SearchAttribute[];
+    if (type === 'space') {
+      searchAttributes = this.state.searchAttributesSpace;
+    } else {
+      searchAttributes = this.state.searchAttributesLocation;
+    }
     let searchAttribute = searchAttributes.find((attr) => attr.attributeId === attributeId);
     if (!searchAttribute) {
       searchAttribute = new SearchAttribute();
@@ -814,33 +830,63 @@ class Search extends React.Component<Props, State> {
       searchAttributes.push(searchAttribute);
     }
     searchAttribute.value = value;
-    this.setState({ searchAttributes: searchAttributes });
+    if (type === 'space') {
+      this.setState({ searchAttributesSpace: searchAttributes });
+    } else {
+      this.setState({ searchAttributesLocation: searchAttributes });
+    }
   }
 
-  getSearchFormRows = () => {
+  getSearchFormRows = (type: 'space' | 'location') => {
+    let searchAttributes: SearchAttribute[];
+    if (type === 'space') {
+      searchAttributes = this.state.searchAttributesSpace;
+    } else {
+      searchAttributes = this.state.searchAttributesLocation;
+    }
     return this.availableAttributes.map(attribute => {
-      if (!attribute.locationApplicable) {
+      if (type === 'location' && !attribute.locationApplicable) {
+        return <></>;
+      }
+      if (type === 'space' && !attribute.spaceApplicable) {
         return <></>;
       }
       return (
-        <Form.Group as={Row} key={attribute.id}>
+        <Form.Group as={Row} key={type + "-attribute-" + attribute.id}>
           <Form.Label column sm="4">{attribute.label}</Form.Label>
           <Col sm="3">
-            <Form.Select value={this.state.searchAttributes.find((attr) => attr.attributeId === attribute.id)?.comparator || ''} onChange={(e: any) => this.setSearchAttributeComparator(attribute.id, e.target.value)}>
+            <Form.Select value={searchAttributes.find((attr) => attr.attributeId === attribute.id)?.comparator || ''} onChange={(e: any) => this.setSearchAttributeComparator(type, attribute.id, e.target.value)}>
               {this.getSearchFormComparator(attribute)}
             </Form.Select>
           </Col>
           <Col sm="5">
-            {this.getSearchFormInput(attribute)}
+            {this.getSearchFormInput(type, attribute)}
           </Col>
         </Form.Group>
       );
     });
   }
 
+  getSearchFormRowsArea = () => {
+    return (
+      <div hidden={this.state.activeTabFilterModal !== 'tab-filter-area'}>
+        {this.getSearchFormRows('location')}
+      </div>
+    );
+  }
+
+  getSearchFormRowsSpace = () => {
+    return (
+      <div hidden={this.state.activeTabFilterModal !== 'tab-filter-space'}>
+        {this.getSearchFormRows('space')}
+      </div>
+    );
+  }
+
   resetSearch = () => {
     this.setState({
-      searchAttributes: []
+      searchAttributesLocation: [],
+      searchAttributesSpace: [],
     }, () => {
       this.applySearch();
     });
@@ -855,7 +901,7 @@ class Search extends React.Component<Props, State> {
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
       leave.setSeconds(leave.getSeconds() - 1);
     }
-    SearchAttribute.search(this.state.enter, leave, this.state.searchAttributes).then((locations) => {
+    SearchAttribute.search(this.state.enter, leave, this.state.searchAttributesLocation).then((locations) => {
       this.locations = locations;
       if ((locations.length === 0) || (this.locations.find((e) => e.enabled) === undefined)) {
         this.setState({
@@ -994,7 +1040,7 @@ class Search extends React.Component<Props, State> {
                     {this.renderLocations()}
                   </Form.Select>
                   <Button variant='outline-secondary' className='addon-button' disabled={(!this.state.locationId) || (this.state.attributeValues.length === 0)} onClick={() => this.setState({ showLocationDetails: true })} aria-label="Show location details"><InfoIcon /></Button>
-                  <Button variant={this.state.searchAttributes.length === 0 ? 'outline-secondary' : 'primary'} className='addon-button' onClick={() => this.setState({ showSearchModal: true })} aria-label="Show location filters" ><FilterIcon color={this.state.searchAttributes.length === 0 ? undefined : 'white'} /></Button>
+                  <Button variant={(this.state.searchAttributesLocation.length === 0 && this.state.searchAttributesSpace.length === 0) ? 'outline-secondary' : 'primary'} className='addon-button' onClick={() => this.setState({ showSearchModal: true })} aria-label="Show location filters" ><FilterIcon color={(this.state.searchAttributesLocation.length === 0 && this.state.searchAttributesSpace.length === 0) ? undefined : 'white'} /></Button>
                 </InputGroup>
               </div>
             </Form.Group>
@@ -1048,7 +1094,16 @@ class Search extends React.Component<Props, State> {
         </Modal.Header>
         <Form id='filter-locations-form'>
           <Modal.Body>
-            {this.getSearchFormRows()}
+            <Nav variant="underline" activeKey={this.state.activeTabFilterModal} onSelect={(key) => { if (key) this.setState({ activeTabFilterModal: key }) }} style={{ 'marginBottom': '25px' }} >
+              <Nav.Item>
+                <Nav.Link eventKey="tab-filter-area">{this.props.t('area')}</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="tab-filter-space">{this.props.t('space')}</Nav.Link>
+              </Nav.Item>
+            </Nav>
+            {this.getSearchFormRowsArea()}
+            {this.getSearchFormRowsSpace()}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => this.resetSearch()}>{this.props.t("reset")}</Button>
@@ -1057,16 +1112,39 @@ class Search extends React.Component<Props, State> {
         </Form>
       </Modal>
     );
+    let confirmModalRows = [];
+    confirmModalRows.push({ 'label': this.props.t("space"), 'value': this.state.selectedSpace?.name });
+    confirmModalRows.push({ 'label': this.props.t("area"), 'value': this.getLocationName() });
+    confirmModalRows.push({ 'label': this.props.t("enter"), 'value': formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.enter))) });
+    confirmModalRows.push({ 'label': this.props.t("leave"), 'value': formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.leave))) });
+    this.state.selectedSpace?.attributes.forEach((attribute) => {
+      const attributeName = this.availableAttributes.find((attr) => attr.id === attribute.attributeId)?.label;
+      const attributeType = this.availableAttributes.find((attr) => attr.id === attribute.attributeId)?.type;
+      if (attributeType === 2) {
+        confirmModalRows.push({ 'label': attributeName, 'value': attribute.value === '1' ? this.props.t("yes") : <>&mdash;</> });
+      } else {
+        confirmModalRows.push({ 'label': attributeName, 'value': attribute.value });
+      }
+    });
     let confirmModal = (
       <Modal show={this.state.showConfirm} onHide={() => this.setState({ showConfirm: false })}>
         <Modal.Header closeButton={true}>
           <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>{this.props.t("space")}: {this.state.selectedSpace?.name}</p>
-          <p>{this.props.t("area")}: {this.getLocationName()}</p>
-          <p>{this.props.t("enter")}: {formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.enter)))}</p>
-          <p>{this.props.t("leave")}: {formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.leave)))}</p>
+          {confirmModalRows.map((row, index) => {
+            return (
+              <Row key={"confirm-modal-row" + this.state.selectedSpace?.id + "-" + index} style={{ marginBottom: '5px' }}>
+                <Col sm="4">
+                  {row.label}:
+                </Col>
+                <Col sm="8">
+                  {row.value}
+                </Col>
+              </Row>
+            );
+          }
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })} disabled={this.state.confirmingBooking}>
@@ -1141,7 +1219,7 @@ class Search extends React.Component<Props, State> {
           <p>{this.state.errorText}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => this.setState({showError: false, errorText: ""})}>
+          <Button variant="primary" onClick={() => this.setState({ showError: false, errorText: "" })}>
             {this.props.t("ok").toString()}
           </Button>
         </Modal.Footer>
