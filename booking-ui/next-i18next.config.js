@@ -8,7 +8,6 @@ module.exports = {
   debug: isDev,
   browserLanguageDetection: true,
   nonExplicitSupportedLngs: true,
-  localeDetection: false,
   backend: {
     backendOptions: [{
       expirationTime: isDev ? 0 : 60 * 60 * 1000, // 1 hour
@@ -18,9 +17,10 @@ module.exports = {
     backends: isBrowser ? [LocalStorageBackend, HttpBackend] : [],
   },
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en', 'de', 'fr', 'it', 'hu', 'ro'],
+    defaultLocale: 'default',
+    locales: ['default', 'en', 'de', 'fr', 'it', 'hu', 'ro'],
+    localeDetection: false,
   },
-  serializeConfig: false,
+  trailingSlash: true,
   use: isBrowser ? [ChainedBackend] : [],
 }

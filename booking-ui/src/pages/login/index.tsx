@@ -213,6 +213,9 @@ class Login extends React.Component<Props, State> {
   }
 
   changeLanguage = (lng: string) => {
+    const expiry = new Date();
+    expiry.setTime(expiry.getTime() + (365 * 24 * 60 * 60 * 1000));
+    window.document.cookie = "NEXT_LOCALE=" + lng + "; expires="+expiry.toUTCString()+"; path=/";
     this.props.i18n.changeLanguage(lng);
   }
 
@@ -236,7 +239,7 @@ class Login extends React.Component<Props, State> {
 
     let languageSelectDropdown = (
       <DropdownButton title={this.props.i18n.language} className='lng-selector' size='sm' variant='outline-secondary' drop='up'>
-        {(this.props.router.locales as string[]).sort().map(l => <Dropdown.Item key={'lng-btn-' + l} onClick={() => this.changeLanguage(l)} active={l === this.props.i18n.language}>{l}</Dropdown.Item>)}
+        {(this.props.router.locales as string[]).sort().filter(l => l !== 'default').map(l => <Dropdown.Item key={'lng-btn-' + l} onClick={() => this.changeLanguage(l)} active={l === this.props.i18n.language}>{l}</Dropdown.Item>)}
       </DropdownButton>
     );
 

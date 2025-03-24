@@ -15,6 +15,7 @@ import (
 
 	"github.com/gorilla/mux"
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -180,7 +181,21 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 	for h, val := range r.Header {
 		proxyReq.Header[h] = val
 	}
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	protocol := r.Header.Get("X-Forwarded-Proto")
+	if protocol == "" {
+		if config.GetConfig().Development {
+			protocol = "http"
+		} else {
+			protocol = "https"
+		}
+	}
 	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
+	proxyReq.Header.Set("X-Forwarded-Host", host)
+	proxyReq.Header.Set("X-Forwarded-Proto", protocol)
 	resp, err := http.DefaultClient.Do(proxyReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
