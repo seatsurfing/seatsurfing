@@ -19,8 +19,8 @@ module.exports = {
   i18n: {
     defaultLocale: 'default',
     locales: ['default', 'en', 'de', 'fr', 'it', 'he', 'nl'],
-    localeDetection: false,
   },
+  localeDetection: false,
   trailingSlash: true,
   use: isBrowser ? [ChainedBackend] : [],
 }
