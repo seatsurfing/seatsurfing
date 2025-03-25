@@ -11,7 +11,7 @@
     "i18next-chained-backend": "^4.6.2",
     "i18next-http-backend": "^3.0.2",
     "i18next-localstorage-backend": "^4.2.0",
-    "next": "^15.2.3",
+    "next": "^15.2.4",
     "next-i18next": "^15.4.2",
     "react": "^19.0.0",
     "react-autosuggest": "^10.1.0",
