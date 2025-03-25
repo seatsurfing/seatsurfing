@@ -570,7 +570,7 @@ func (router *BookingRouter) IsValidBookingDuration(m *BookingRequest, orgID str
 			correction += (hoursOnDate - 24)
 		}
 		durationNotRounded := int(math.Round(m.Leave.Sub(m.Enter).Minutes()) / 60)
-		return (durationNotRounded%(24+correction) == 0) && (durationNotRounded <= (maxDurationHours + correction))
+		return ((durationNotRounded-correction)%24 == 0) && (durationNotRounded <= (maxDurationHours + correction))
 	}
 
 	// For non-daily-basis bookings, check exact duration
