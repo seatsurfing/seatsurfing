@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
- 
+
 const PUBLIC_FILE = /\.(.*)$/;
- 
+
 export async function middleware(req: NextRequest) {
   if (
     req.nextUrl.pathname.startsWith('/_next') ||
@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   ) {
     return;
   }
- 
+
   if (req.nextUrl.locale === 'default') {
     const locale = req.cookies.get('NEXT_LOCALE')?.value || 'en';
     const scheme = req.headers.get('X-Forwarded-Proto') || req.nextUrl.protocol;
