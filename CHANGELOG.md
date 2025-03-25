@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.27.4](https://github.com/seatsurfing/seatsurfing/compare/v1.27.3...v1.27.4) (2025-03-25)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.13.11 to 22.13.13 in /booking-ui ([#710](https://github.com/seatsurfing/seatsurfing/issues/710)) ([cf0df3c](https://github.com/seatsurfing/seatsurfing/commit/cf0df3c9b58198ad5392d195880e57db76455ace))
+* multi-day bookings can fail ([#723](https://github.com/seatsurfing/seatsurfing/issues/723)) ([88eff18](https://github.com/seatsurfing/seatsurfing/commit/88eff18fa5f655eff4286f09e29b379d13ec2f24))
+
 ## [1.27.3](https://github.com/seatsurfing/seatsurfing/compare/v1.27.2...v1.27.3) (2025-03-25)
 
 
