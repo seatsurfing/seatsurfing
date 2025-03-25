@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.27.3](https://github.com/seatsurfing/seatsurfing/compare/v1.27.2...v1.27.3) (2025-03-25)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.13.11 to 22.13.13 in /e2e ([#712](https://github.com/seatsurfing/seatsurfing/issues/712)) ([5d6e10a](https://github.com/seatsurfing/seatsurfing/commit/5d6e10a4f7976831a4f30e666a72f7c58aff32b8))
+* **deps:** bump eslint from 9.22.0 to 9.23.0 in /admin-ui ([#711](https://github.com/seatsurfing/seatsurfing/issues/711)) ([2a857d1](https://github.com/seatsurfing/seatsurfing/commit/2a857d12184fe66547d0950e760af0cf374307e3))
+* **deps:** bump eslint from 9.22.0 to 9.23.0 in /booking-ui ([#713](https://github.com/seatsurfing/seatsurfing/issues/713)) ([dee7a19](https://github.com/seatsurfing/seatsurfing/commit/dee7a1994e44019edea4a84fc781810f5d021ce6))
+* **deps:** bump eslint-config-next from 15.2.3 to 15.2.4 in /admin-ui ([#718](https://github.com/seatsurfing/seatsurfing/issues/718)) ([befecbb](https://github.com/seatsurfing/seatsurfing/commit/befecbb39449b19f822dc0f9cd5624cba862b134))
+* **deps:** bump eslint-config-next from 15.2.3 to 15.2.4 in /booking-ui ([#720](https://github.com/seatsurfing/seatsurfing/issues/720)) ([7fb3b29](https://github.com/seatsurfing/seatsurfing/commit/7fb3b29b4600fa11eda993dc2ec88346d77e9160))
+* **deps:** bump next from 15.2.3 to 15.2.4 in /admin-ui ([#717](https://github.com/seatsurfing/seatsurfing/issues/717)) ([9ff7c46](https://github.com/seatsurfing/seatsurfing/commit/9ff7c469dbf8b0e3a7876d1e42528349b429bba2))
+* **deps:** bump next from 15.2.3 to 15.2.4 in /booking-ui ([#719](https://github.com/seatsurfing/seatsurfing/issues/719)) ([e219e88](https://github.com/seatsurfing/seatsurfing/commit/e219e880ab3e21e003ceacbc3b3e9e83b824268e))
+* translation differences between Admin and Booking UI ([#721](https://github.com/seatsurfing/seatsurfing/issues/721)) ([51a689d](https://github.com/seatsurfing/seatsurfing/commit/51a689d444be530b80e3b36c3fac6948954269ab))
+
 ## [1.27.2](https://github.com/seatsurfing/seatsurfing/compare/v1.27.1...v1.27.2) (2025-03-24)
 
 
