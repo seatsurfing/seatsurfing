@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.5](https://github.com/seatsurfing/seatsurfing/compare/v1.27.4...v1.27.5) (2025-03-27)
+
+
+### Bug Fixes
+
+* display version on preferences page in Admin UI ([#726](https://github.com/seatsurfing/seatsurfing/issues/726)) ([df48d44](https://github.com/seatsurfing/seatsurfing/commit/df48d445b31086f9592f851290f785757ff1f6e2))
+
 ## [1.27.4](https://github.com/seatsurfing/seatsurfing/compare/v1.27.3...v1.27.4) (2025-03-25)
 
 
