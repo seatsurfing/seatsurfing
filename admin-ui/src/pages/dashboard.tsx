@@ -142,7 +142,8 @@ class Dashboard extends React.Component<Props, State> {
     }
 
     let updateHint = <></>;
-    if (this.state.latestVersion && this.state.latestVersion.updateAvailable) {
+    const domain = window.location.host.split(':').shift();
+    if (this.state.latestVersion && this.state.latestVersion.updateAvailable && !(domain?.endsWith('.seatsurfing.app') || domain?.endsWith('.seatsurfing.io'))) {
       updateHint = <Alert variant="warning"><a href="https://github.com/seatsurfing/seatsurfing/releases" target="_blank" rel="noreferrer">{this.props.t("updateAvailable", {version: this.state.latestVersion.version})}</a></Alert>;
     }
 

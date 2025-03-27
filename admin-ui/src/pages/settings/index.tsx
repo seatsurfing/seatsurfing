@@ -38,6 +38,7 @@ interface State {
   error: boolean
   newDomain: string
   domains: Domain[]
+  latestVersion: any
 }
 
 interface Props extends WithTranslation {
@@ -82,7 +83,8 @@ class Settings extends React.Component<Props, State> {
       saved: false,
       error: false,
       newDomain: "",
-      domains: []
+      domains: [],
+      latestVersion: null
     };
   }
 
@@ -96,6 +98,7 @@ class Settings extends React.Component<Props, State> {
       this.loadItems(),
       this.loadAuthProviders(),
       this.loadTimezones(),
+      this.checkUpdates(),
     ];
     Promise.all(promises).then(() => {
       this.setState({ loading: false });
@@ -111,6 +114,23 @@ class Settings extends React.Component<Props, State> {
             domains: domains,
           });
         });
+      });
+    });
+  }
+
+  checkUpdates = async (): Promise<void> => {
+    let self = this;
+    return new Promise<void>(function (resolve, reject) {
+      Ajax.get("/uc/").then(res => {
+        self.setState({
+          latestVersion: res.json
+        }, () => resolve() );
+      }).catch(() => {
+        console.warn("Could not check for updates.")
+        let res = { version: "", updateAvailable: false };
+        self.setState({
+          latestVersion: res
+        }, () => resolve());
       });
     });
   }
@@ -147,8 +167,8 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "max_hours_partially_booked") state.maxHoursPartiallyBooked = window.parseInt(s.value);
         if (s.name === "_sys_org_signup_delete") state.allowOrgDelete = (s.value === "1");
       });
-      if (state.dailyBasisBooking && (state.maxBookingDurationHours%24 !== 0)) {
-        state.maxBookingDurationHours += (24-state.maxBookingDurationHours%24);
+      if (state.dailyBasisBooking && (state.maxBookingDurationHours % 24 !== 0)) {
+        state.maxBookingDurationHours += (24 - state.maxBookingDurationHours % 24);
       }
       this.setState({
         ...this.state,
@@ -176,7 +196,7 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings("confluence_server_shared_secret", this.state.confluenceServerSharedSecret),
       new OrgSettings("custom_logo_url", this.state.customLogoUrl),
       new OrgSettings("daily_basis_booking", this.state.dailyBasisBooking ? "1" : "0"),
-      new OrgSettings("no_admin_restrictions", this.state.noAdminRestrictions  ? "1" : "0"),
+      new OrgSettings("no_admin_restrictions", this.state.noAdminRestrictions ? "1" : "0"),
       new OrgSettings("show_names", this.state.showNames ? "1" : "0"),
       new OrgSettings("allow_booking_nonexist_users", this.state.allowBookingNonExistUsers ? "1" : "0"),
       new OrgSettings("disable_buddies", this.state.disableBuddies ? "1" : "0"),
@@ -230,7 +250,7 @@ class Settings extends React.Component<Props, State> {
         domain.verify().then(() => {
           Domain.list(domain.organizationId).then(domains => this.setState({ domains: domains }));
         }).catch(e => {
-          alert(this.props.t("errorValidateDomain", {domain: domainName}));
+          alert(this.props.t("errorValidateDomain", { domain: domainName }));
         })
       }
     });
@@ -273,7 +293,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   removeDomain = (domainName: string) => {
-    if (!window.confirm(this.props.t("confirmDeleteDomain", {domain: domainName}))) {
+    if (!window.confirm(this.props.t("confirmDeleteDomain", { domain: domainName }))) {
       return;
     }
     this.state.domains.forEach(domain => {
@@ -321,8 +341,8 @@ class Settings extends React.Component<Props, State> {
 
   onDailyBasisBookingChange = (enabled: boolean) => {
     let maxBookingDurationHours: number = Number(this.state.maxBookingDurationHours);
-    if (enabled && (maxBookingDurationHours%24 !== 0)) {
-      maxBookingDurationHours += (24-maxBookingDurationHours%24);
+    if (enabled && (maxBookingDurationHours % 24 !== 0)) {
+      maxBookingDurationHours += (24 - maxBookingDurationHours % 24);
     }
     this.setState({
       maxBookingDurationHours: maxBookingDurationHours,
@@ -351,7 +371,7 @@ class Settings extends React.Component<Props, State> {
         <Popover id={popoverId}>
           <Popover.Header as="h3">{this.props.t("verifyDomain")}</Popover.Header>
           <Popover.Body>
-            <div>{this.props.t("verifyDomainHowto", {domain: domain.domain})}</div>
+            <div>{this.props.t("verifyDomainHowto", { domain: domain.domain })}</div>
             <div>&nbsp;</div>
             <div><strong>seatsurfing-verification={domain.verifyToken}</strong></div>
             <div>&nbsp;</div>
@@ -370,13 +390,13 @@ class Settings extends React.Component<Props, State> {
       return (
         <Form.Group key={key} className="domain-row">
           {domain.domain}
-            &nbsp;
+          &nbsp;
           <Badge hidden={!domain.primary}>Primary</Badge>
-            &nbsp;
+          &nbsp;
           <Button variant="secondary" size="sm" hidden={domain.primary} onClick={() => this.setPrimaryDomain(domain.domain)}>Primary</Button>
-            &nbsp;
+          &nbsp;
           <Button variant="danger" size="sm" hidden={domain.domain.endsWith('.seatsurfing.app')} onClick={() => this.removeDomain(domain.domain)}>{this.props.t("remove")}</Button>
-            &nbsp;
+          &nbsp;
           {verify}
         </Form.Group>
       );
@@ -422,6 +442,21 @@ class Settings extends React.Component<Props, State> {
     }
 
     let buttonSave = <Button className="btn-sm" variant="outline-secondary" type="submit" form="form"><IconSave className="feather" /> {this.props.t("save")}</Button>;
+    let updateHint = <span className='form-control-plaintext'>{process.env.NEXT_PUBLIC_PRODUCT_VERSION}</span>
+    const domain = window.location.host.split(':').shift();
+    if (this.state.latestVersion && !(domain?.endsWith('.seatsurfing.app') || domain?.endsWith('.seatsurfing.io')))  {
+      if (this.state.latestVersion.updateAvailable) {
+        updateHint = (
+          <span className='form-control-plaintext'>
+            {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
+            &nbsp;
+            (<a href="https://github.com/seatsurfing/seatsurfing/releases" target="_blank">upgrade to {this.state.latestVersion.version}</a>)
+          </span>
+        );
+      } else {
+        updateHint = <span className='form-control-plaintext'>{process.env.NEXT_PUBLIC_PRODUCT_VERSION} (up to date)</span>
+      }
+    }
 
     return (
       <FullLayout headline={this.props.t("settings")} buttons={buttonSave}>
@@ -437,6 +472,12 @@ class Settings extends React.Component<Props, State> {
             <Form.Label column sm="2">{this.props.t("orgId")}</Form.Label>
             <Col sm="4">
               <Form.Control plaintext={true} readOnly={true} defaultValue={this.org?.id} />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">Version</Form.Label>
+            <Col sm="4">
+              {updateHint}
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
