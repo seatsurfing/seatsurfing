@@ -108,7 +108,7 @@ class NavBar extends React.Component<Props, State> {
 
     openWebUI = () => {
         if (typeof window !== 'undefined') {
-            window.open(process.env.PUBLIC_URL);
+            window.open(window.location.href);
         }
     }
 

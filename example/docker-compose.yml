@@ -18,8 +18,6 @@ services:
       POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
       BOOKING_UI_BACKEND: 'booking-ui:3001'
       ADMIN_UI_BACKEND: 'admin-ui:3000'
-      PUBLIC_URL: 'https://seatsurfing.your-domain.com'
-      FRONTEND_URL: 'https://seatsurfing.your-domain.com'
       CRYPT_KEY: 'some-random-32-bytes-long-string'
   booking-ui:
     image: seatsurfing/booking-ui
@@ -29,8 +27,6 @@ services:
     restart: always
     networks:
       http:
-    environment:
-      FRONTEND_URL: 'https://seatsurfing.your-domain.com'
   admin-ui:
     image: seatsurfing/admin-ui:dev
     #build:
@@ -39,8 +35,6 @@ services:
     restart: always
     networks:
       http:
-    environment:
-      FRONTEND_URL: 'https://seatsurfing.your-domain.com'
   db:
     image: postgres:15-alpine
     restart: always
