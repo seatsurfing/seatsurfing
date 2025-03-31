@@ -293,7 +293,7 @@ func GetValidator() *validator.Validate {
 func GetFrontendURL(r *http.Request) string {
 	protocol := r.Header.Get("X-Forwarded-Proto")
 	if protocol == "" {
-		if config.GetConfig().Development {
+		if r.TLS == nil {
 			protocol = "http"
 		} else {
 			protocol = "https"

@@ -15,7 +15,6 @@ import (
 
 	"github.com/gorilla/mux"
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -187,7 +186,7 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 	}
 	protocol := r.Header.Get("X-Forwarded-Proto")
 	if protocol == "" {
-		if config.GetConfig().Development {
+		if r.TLS == nil {
 			protocol = "http"
 		} else {
 			protocol = "https"
