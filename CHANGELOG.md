@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.28.0](https://github.com/seatsurfing/seatsurfing/compare/v1.27.4...v1.28.0) (2025-03-31)
+
+
+### Features
+
+* add Estonian translation for Booking UI ([#732](https://github.com/seatsurfing/seatsurfing/issues/732)) ([b5f106a](https://github.com/seatsurfing/seatsurfing/commit/b5f106a64098742721f44c9fe8bb77c4e748f176))
+
+
+### Bug Fixes
+
+* **deps:** bump react-dom from 19.0.0 to 19.1.0 in /admin-ui ([#738](https://github.com/seatsurfing/seatsurfing/issues/738)) ([430658e](https://github.com/seatsurfing/seatsurfing/commit/430658e34bb9805fce3abaa620a931764cd9e9fd))
+* **deps:** bump react-dom from 19.0.0 to 19.1.0 in /booking-ui ([#739](https://github.com/seatsurfing/seatsurfing/issues/739)) ([44e1571](https://github.com/seatsurfing/seatsurfing/commit/44e1571e35da43f24b3ec3ffe4d79af83606b239))
+* **deps:** bump react-router-dom from 7.4.0 to 7.4.1 in /admin-ui ([#737](https://github.com/seatsurfing/seatsurfing/issues/737)) ([f03b939](https://github.com/seatsurfing/seatsurfing/commit/f03b9394dd53b1e734c52c6cfc45c20425f06688))
+* display version on preferences page in Admin UI ([#726](https://github.com/seatsurfing/seatsurfing/issues/726)) ([df48d44](https://github.com/seatsurfing/seatsurfing/commit/df48d445b31086f9592f851290f785757ff1f6e2))
+* error "dial tcp &lt;IP&gt;:443: connect: connection refused" when connected via HTTP ([#741](https://github.com/seatsurfing/seatsurfing/issues/741)) ([f1da980](https://github.com/seatsurfing/seatsurfing/commit/f1da9809ddd259dc51e8f8cbe8dbebc86474c768))
+* make language changes persistent ([#735](https://github.com/seatsurfing/seatsurfing/issues/735)) ([f33355d](https://github.com/seatsurfing/seatsurfing/commit/f33355d39a5b5d0ad4e77e4dbbae2286ac6af718))
+* remove FRONTEND_URL and PUBLIC_URL ([#733](https://github.com/seatsurfing/seatsurfing/issues/733)) ([108d555](https://github.com/seatsurfing/seatsurfing/commit/108d555aab290e19306b37c54973167b43b467db))
+* remove obsolete params from development run script ([#742](https://github.com/seatsurfing/seatsurfing/issues/742)) ([1c8a9f0](https://github.com/seatsurfing/seatsurfing/commit/1c8a9f092a7d20ee68d81a4aaedb8d3bca1a04d7))
+
 ## [1.27.4](https://github.com/seatsurfing/seatsurfing/compare/v1.27.3...v1.27.4) (2025-03-25)
 
 
