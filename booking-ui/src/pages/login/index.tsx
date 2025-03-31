@@ -216,7 +216,8 @@ class Login extends React.Component<Props, State> {
     const expiry = new Date();
     expiry.setTime(expiry.getTime() + (365 * 24 * 60 * 60 * 1000));
     window.document.cookie = "NEXT_LOCALE=" + lng + "; expires="+expiry.toUTCString()+"; path=/";
-    this.props.i18n.changeLanguage(lng);
+    const { pathname, asPath, query } = this.props.router;
+    this.props.router.push({ pathname, query }, asPath, { locale: lng })
   }
 
   render() {
