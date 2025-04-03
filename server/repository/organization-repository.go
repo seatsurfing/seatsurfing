@@ -33,6 +33,8 @@ type Domain struct {
 	Active         bool
 	VerifyToken    string
 	Primary        bool
+	Accessible     bool
+	AccessCheck    *time.Time
 }
 
 var organizationRepository *OrganizationRepository
@@ -126,6 +128,13 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains " +
 			"SET primary_domain = TRUE " +
 			"WHERE domain IN (SELECT domain FROM (SELECT DISTINCT ON (organization_id) organization_id, domain FROM organizations_domains ORDER BY organization_id, domain LIKE '%.seatsurfing.app' DESC) AS sq1)"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 21 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations_domains " +
+			"ADD COLUMN IF NOT EXISTS accessible boolean NOT NULL DEFAULT FALSE, " +
+			"ADD COLUMN IF NOT EXISTS access_check TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
 	}
@@ -261,10 +270,10 @@ func (r *OrganizationRepository) Delete(e *Organization) error {
 
 func (r *OrganizationRepository) GetDomain(org *Organization, domain string) (*Domain, error) {
 	e := &Domain{}
-	err := GetDatabase().DB().QueryRow("SELECT domain, organization_id, active, verify_token, primary_domain "+
+	err := GetDatabase().DB().QueryRow("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check "+
 		"FROM organizations_domains "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
-		strings.ToLower(domain), org.ID).Scan(&e.DomainName, &e.OrganizationID, &e.Active, &e.VerifyToken, &e.Primary)
+		strings.ToLower(domain), org.ID).Scan(&e.DomainName, &e.OrganizationID, &e.Active, &e.VerifyToken, &e.Primary, &e.Accessible, &e.AccessCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +339,7 @@ func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, err
 
 func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) {
 	var result []*Domain
-	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain "+
+	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check "+
 		"FROM organizations_domains "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY domain",
@@ -341,7 +350,7 @@ func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) 
 	defer rows.Close()
 	for rows.Next() {
 		domain := &Domain{}
-		err = rows.Scan(&domain.DomainName, &domain.OrganizationID, &domain.Active, &domain.VerifyToken, &domain.Primary)
+		err = rows.Scan(&domain.DomainName, &domain.OrganizationID, &domain.Active, &domain.VerifyToken, &domain.Primary, &domain.Accessible, &domain.AccessCheck)
 		if err != nil {
 			return nil, err
 		}

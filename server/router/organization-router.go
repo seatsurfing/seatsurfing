@@ -2,7 +2,6 @@ package router
 
 import (
 	"log"
-	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type OrganizationRouter struct {
@@ -37,6 +37,7 @@ type GetDomainResponse struct {
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
 	s.HandleFunc("/{id}/domain/", router.getDomains).Methods("GET")
 	s.HandleFunc("/{id}/domain/{domain}/verify", router.verifyDomain).Methods("POST")
@@ -48,6 +49,27 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+}
+
+func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domain := vars["domain"]
+	if domain == "" {
+		SendBadRequest(w)
+		return
+	}
+	// Check if domain exists in activated state in ANY org already
+	org, err := GetOrganizationRepository().GetOneByDomain(domain)
+	if err != nil || org == nil {
+		SendNotFound(w)
+		return
+	}
+	res := &DomainAccessibilityPayload{
+		Domain: domain,
+		OrgID:  org.ID,
+		Status: "ok",
+	}
+	SendJSON(w, res)
 }
 
 func (router *OrganizationRouter) getOrgForDomain(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +218,7 @@ func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Re
 		SendAleadyExists(w)
 		return
 	}
-	if !router.isValidTXTRecord(domain.DomainName, domain.VerifyToken) {
+	if !IsValidTXTRecord(domain.DomainName, domain.VerifyToken) {
 		SendBadRequest(w)
 		return
 	}
@@ -324,21 +346,6 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	SendCreated(w, e.ID)
-}
-
-func (router *OrganizationRouter) isValidTXTRecord(domain, uuid string) bool {
-	records, err := net.LookupTXT(domain)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	checkString := "seatsurfing-verification=" + uuid
-	for _, record := range records {
-		if record == checkString {
-			return true
-		}
-	}
-	return false
 }
 
 func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, favoritePrimaryDomain string) {
