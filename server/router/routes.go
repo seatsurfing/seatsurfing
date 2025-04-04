@@ -178,7 +178,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 	}
 
 	var IsWhitelisted = func(r *http.Request) bool {
-		url := r.URL.RequestURI()
+		url := r.URL.Path
 		if url == "/" {
 			return true
 		}
