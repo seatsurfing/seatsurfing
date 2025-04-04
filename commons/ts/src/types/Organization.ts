@@ -48,12 +48,6 @@ export default class Organization extends Entity {
         return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
     }
 
-    async getSubscriptionManagementURL(): Promise<string> {
-        return Ajax.get(this.getBackendUrl() + this.id + "/subscription/manage").then(res => {
-            return res.json.url;
-        });
-    }
-
     static async get(id: string): Promise<Organization> {
         return Ajax.get("/organization/" + id).then(result => {
             let e: Organization = new Organization();

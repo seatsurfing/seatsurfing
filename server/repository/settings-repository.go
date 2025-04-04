@@ -50,8 +50,9 @@ var (
 	SettingShowNames                      SettingName = SettingName{Name: "show_names", Type: SettingTypeBool}
 	SettingAllowBookingsNonExistingUsers  SettingName = SettingName{Name: "allow_booking_nonexist_users", Type: SettingTypeBool}
 	SettingDisableBuddies                 SettingName = SettingName{Name: "disable_buddies", Type: SettingTypeBool}
-	SettingSubscriptionMaxUsers           SettingName = SettingName{Name: "subscription_max_users", Type: SettingTypeInt}
 	SettingDefaultTimezone                SettingName = SettingName{Name: "default_timezone", Type: SettingTypeString}
+	SettingFeatureNoUserLimit             SettingName = SettingName{Name: "feature_no_user_limit", Type: SettingTypeBool}
+	SettingFeatureCustomDomains           SettingName = SettingName{Name: "feature_custom_domains", Type: SettingTypeBool}
 )
 
 var settingsRepository *SettingsRepository
@@ -73,6 +74,26 @@ func GetSettingsRepository() *SettingsRepository {
 }
 
 func (r *SettingsRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+	// upgrade old settings
+	rows, err := GetDatabase().DB().Query("SELECT organization_id FROM settings " +
+		"WHERE name = 'subscription_max_users' AND NULLIF(value, '')::int > " + strconv.Itoa(DefaultUserLimit))
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		if err := r.Set(id, SettingFeatureNoUserLimit.Name, "1"); err != nil {
+			panic(err)
+		}
+		if err := r.Set(id, SettingFeatureCustomDomains.Name, "1"); err != nil {
+			panic(err)
+		}
+		if err := r.Delete(id, "subscription_max_users"); err != nil {
+			panic(err)
+		}
+	}
 	// nothing yet
 }
 
@@ -81,6 +102,12 @@ func (r *SettingsRepository) Set(organizationID string, name string, value strin
 		"VALUES ($1, $2, $3) "+
 		"ON CONFLICT (organization_id, name) DO UPDATE SET value = $3",
 		organizationID, name, value)
+	return err
+}
+
+func (r *SettingsRepository) Delete(organizationID string, name string) error {
+	_, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE organization_id = $1 AND name = $2",
+		organizationID, name)
 	return err
 }
 
@@ -206,7 +233,8 @@ func (r *SettingsRepository) GetOrgIDsByValue(name string, value string) ([]stri
 func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES "+
-		"($1, '"+SettingSubscriptionMaxUsers.Name+"', '10'), "+
+		"($1, '"+SettingFeatureNoUserLimit.Name+"', '0'), "+
+		"($1, '"+SettingFeatureCustomDomains.Name+"', '0'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
 		"($1, '"+SettingNoAdminRestrictions.Name+"', '0'), "+

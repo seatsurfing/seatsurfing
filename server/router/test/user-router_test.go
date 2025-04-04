@@ -130,13 +130,17 @@ func TestUserSubscriptionExceeded(t *testing.T) {
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
-	GetSettingsRepository().Set(org.ID, SettingSubscriptionMaxUsers.Name, "1")
-
-	username := uuid.New().String() + "@test.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\"}"
-	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusPaymentRequired, res.Code)
+	for i := 1; i <= DefaultUserLimit; i++ {
+		username := uuid.New().String() + "@test.com"
+		payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\"}"
+		req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		if i < DefaultUserLimit {
+			CheckTestResponseCode(t, http.StatusCreated, res.Code)
+		} else {
+			CheckTestResponseCode(t, http.StatusPaymentRequired, res.Code)
+		}
+	}
 }
 
 func TestUserGetCount(t *testing.T) {

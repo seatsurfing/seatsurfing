@@ -19,6 +19,8 @@ type UserRepository struct {
 
 type UserRole int
 
+const DefaultUserLimit int = 10
+
 const (
 	UserRoleUser       UserRole = 0
 	UserRoleSpaceAdmin UserRole = 10
@@ -370,9 +372,12 @@ func (r *UserRepository) EnableUsersWithExpiredBan() error {
 }
 
 func (r *UserRepository) CanCreateUser(org *Organization) bool {
-	maxUsers, _ := GetSettingsRepository().GetInt(org.ID, SettingSubscriptionMaxUsers.Name)
+	noUserLimit, _ := GetSettingsRepository().GetBool(org.ID, SettingFeatureNoUserLimit.Name)
+	if noUserLimit {
+		return true
+	}
 	curUsers, _ := GetUserRepository().GetCount(org.ID)
-	return curUsers < maxUsers
+	return curUsers < DefaultUserLimit
 }
 
 func (r *UserRepository) IsSpaceAdmin(user *User) bool {

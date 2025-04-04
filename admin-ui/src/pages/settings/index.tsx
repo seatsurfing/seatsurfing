@@ -27,8 +27,6 @@ interface State {
   noAdminRestrictions: boolean
   showNames: boolean
   allowBookingNonExistUsers: boolean
-  subscriptionActive: boolean
-  subscriptionMaxUsers: number
   allowOrgDelete: boolean
   selectedAuthProvider: string
   disableBuddies: boolean
@@ -39,6 +37,8 @@ interface State {
   newDomain: string
   domains: Domain[]
   latestVersion: any
+  featureNoUserLimit: boolean
+  featureCustomDomains: boolean
 }
 
 interface Props extends WithTranslation {
@@ -73,8 +73,6 @@ class Settings extends React.Component<Props, State> {
       noAdminRestrictions: false,
       showNames: false,
       allowBookingNonExistUsers: false,
-      subscriptionActive: false,
-      subscriptionMaxUsers: 0,
       allowOrgDelete: false,
       selectedAuthProvider: "",
       disableBuddies: false,
@@ -84,7 +82,9 @@ class Settings extends React.Component<Props, State> {
       error: false,
       newDomain: "",
       domains: [],
-      latestVersion: null
+      latestVersion: null,
+      featureNoUserLimit: false,
+      featureCustomDomains: false
     };
   }
 
@@ -160,11 +160,11 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "no_admin_restrictions") state.noAdminRestrictions = (s.value === "1");
         if (s.name === "show_names") state.showNames = (s.value === "1");
         if (s.name === "allow_booking_nonexist_users") state.allowBookingNonExistUsers = (s.value === "1");
-        if (s.name === "subscription_active") state.subscriptionActive = (s.value === "1");
-        if (s.name === "subscription_max_users") state.subscriptionMaxUsers = window.parseInt(s.value);
         if (s.name === "disable_buddies") state.disableBuddies = (s.value === "1");
         if (s.name === "max_hours_partially_booked_enabled") state.maxHoursPartiallyBookedEnabled = (s.value === "1");
         if (s.name === "max_hours_partially_booked") state.maxHoursPartiallyBooked = window.parseInt(s.value);
+        if (s.name === "feature_no_user_limit") state.featureNoUserLimit = (s.value === "1");
+        if (s.name === "feature_custom_domains") state.featureCustomDomains = (s.value === "1");
         if (s.name === "_sys_org_signup_delete") state.allowOrgDelete = (s.value === "1");
       });
       if (state.dailyBasisBooking && (state.maxBookingDurationHours % 24 !== 0)) {
@@ -323,20 +323,6 @@ class Settings extends React.Component<Props, State> {
         });
       }
     }
-  }
-
-  manageSubscription = () => {
-    let windowRef = window.open();
-    this.org?.getSubscriptionManagementURL().then(url => {
-      if (windowRef) {
-        windowRef.location.href = url;
-      }
-    }).catch(() => {
-      if (windowRef) {
-        windowRef?.close();
-      }
-      alert(this.props.t("errorTryAgain"));
-    });
   }
 
   onDailyBasisBookingChange = (enabled: boolean) => {
@@ -593,7 +579,7 @@ class Settings extends React.Component<Props, State> {
             <Form.Label column sm="2">{this.props.t("domains")}</Form.Label>
             <Col sm="4">
               {domains}
-              <InputGroup size="sm">
+              <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
                 <Form.Control type="text" value={this.state.newDomain} onChange={(e: any) => this.setState({ newDomain: e.target.value })} placeholder={this.props.t("yourDomainPlaceholder")} onKeyDown={this.handleNewDomainKeyDown} />
                 <Button variant="outline-secondary" onClick={this.addDomain} disabled={!this.isValidDomain()}>{this.props.t("addDomain")}</Button>
               </InputGroup>

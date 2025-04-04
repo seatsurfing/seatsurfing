@@ -134,6 +134,7 @@ func TestOrganizationsGetByDomain(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
 
 	// Add domain 1
 	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/test1.com", loginResponse.UserID, nil)
@@ -194,6 +195,7 @@ func TestOrganizationsDomainsCRUD(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
 
 	// Add domain 1
 	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/test1.com", loginResponse.UserID, nil)
@@ -263,6 +265,7 @@ func TestOrganizationsVerifyDNS(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
 
 	org, _ := GetOrganizationRepository().GetOne(id)
 	adminUser := CreateTestUserOrgAdmin(org)
@@ -314,6 +317,7 @@ func TestOrganizationsAddDomainConflict(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id1 := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
 
 	// Create organization 2
 	payload = `{
@@ -327,6 +331,7 @@ func TestOrganizationsAddDomainConflict(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id2 := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id2, SettingFeatureCustomDomains.Name, "1")
 
 	// Add domain to org 1 and activate it
 	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/test1.com", loginResponse.UserID, nil)
@@ -358,6 +363,7 @@ func TestOrganizationsAddDomainNoConflictBecauseInactive(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id1 := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
 
 	// Create organization 2
 	payload = `{
@@ -371,6 +377,7 @@ func TestOrganizationsAddDomainNoConflictBecauseInactive(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id2 := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id2, SettingFeatureCustomDomains.Name, "1")
 
 	org1, _ := GetOrganizationRepository().GetOne(id1)
 	adminUser1 := CreateTestUserOrgAdmin(org1)
@@ -408,6 +415,7 @@ func TestOrganizationsAddDomainActivateConflicting(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id1 := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
 
 	// Create organization 2
 	payload = `{
@@ -421,6 +429,7 @@ func TestOrganizationsAddDomainActivateConflicting(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id2 := res.Header().Get("X-Object-Id")
+	GetSettingsRepository().Set(id2, SettingFeatureCustomDomains.Name, "1")
 
 	org1, _ := GetOrganizationRepository().GetOne(id1)
 	adminUser1 := CreateTestUserOrgAdmin(org1)
@@ -478,6 +487,7 @@ func TestOrganizationsDelete(t *testing.T) {
 func TestOrganizationsPrimaryDomain(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test1.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 

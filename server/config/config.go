@@ -35,7 +35,6 @@ type Config struct {
 	MockSendmail                        bool
 	Development                         bool
 	InitOrgName                         string
-	InitOrgDomain                       string
 	InitOrgUser                         string
 	InitOrgPass                         string
 	InitOrgLanguage                     string
@@ -98,7 +97,6 @@ func (c *Config) ReadConfig() {
 	c.ACSAccessKey = c.getEnv("ACS_ACCESS_KEY", "")
 	c.MockSendmail = (c.getEnv("MOCK_SENDMAIL", "0") == "1")
 	c.InitOrgName = c.getEnv("INIT_ORG_NAME", "Sample Company")
-	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "seatsurfing.local")
 	c.InitOrgUser = c.getEnv("INIT_ORG_USER", "admin")
 	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "12345678")
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")

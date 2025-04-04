@@ -72,7 +72,8 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingAllowAnyUser.Name,
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
-		SettingSubscriptionMaxUsers.Name,
+		SettingFeatureNoUserLimit.Name,
+		SettingFeatureCustomDomains.Name,
 	}
 
 	for _, name := range allowedSettings {
@@ -128,7 +129,8 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingAllowAnyUser.Name,
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
-		SettingSubscriptionMaxUsers.Name,
+		SettingFeatureNoUserLimit.Name,
+		SettingFeatureCustomDomains.Name,
 		SettingDefaultTimezone.Name,
 		SettingCustomLogoUrl.Name,
 		SysSettingOrgSignupDelete,

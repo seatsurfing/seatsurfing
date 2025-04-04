@@ -110,12 +110,11 @@ func (a *App) InitializeDefaultOrg() {
 			SignupDate: time.Now().UTC(),
 		}
 		GetOrganizationRepository().Create(org)
-		GetSettingsRepository().Set(org.ID, SettingSubscriptionMaxUsers.Name, "10000")
-		GetOrganizationRepository().AddDomain(org, config.InitOrgDomain, true)
-		GetOrganizationRepository().SetPrimaryDomain(org, config.InitOrgDomain)
+		GetSettingsRepository().Set(org.ID, SettingFeatureNoUserLimit.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
 		user := &User{
 			OrganizationID: org.ID,
-			Email:          config.InitOrgUser + "@" + config.InitOrgDomain,
+			Email:          config.InitOrgUser + "@seatsurfing.local",
 			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
 			Role:           UserRoleOrgAdmin,
 		}

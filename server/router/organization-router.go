@@ -145,6 +145,11 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		SendForbidden(w)
 		return
 	}
+	featureCustomDomains, _ := GetSettingsRepository().GetBool(e.ID, SettingFeatureCustomDomains.Name)
+	if !featureCustomDomains {
+		SendPaymentRequired(w)
+		return
+	}
 	// Check if domain exists in this org already
 	domain, _ := GetOrganizationRepository().GetDomain(e, vars["domain"])
 	if domain != nil {

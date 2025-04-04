@@ -214,7 +214,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingMinBookingDurationHours.Name ||
 		name == SettingMaxHoursPartiallyBooked.Name ||
 		name == SettingMaxHoursPartiallyBookedEnabled.Name ||
-		name == SettingSubscriptionMaxUsers.Name ||
+		name == SettingFeatureNoUserLimit.Name ||
+		name == SettingFeatureCustomDomains.Name ||
 		name == SettingConfluenceServerSharedSecret.Name ||
 		name == SettingConfluenceAnonymous.Name ||
 		name == SysSettingOrgSignupDelete {

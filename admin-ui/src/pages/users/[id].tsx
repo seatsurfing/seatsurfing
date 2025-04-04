@@ -58,7 +58,7 @@ class EditUser extends React.Component<Props, State> {
 
   loadData = () => {
     let promises: Promise<any>[] = [
-      OrgSettings.getOne("subscription_max_users"),
+      OrgSettings.getOne("feature_no_user_limit"),
       User.getCount(),
       User.getSelf().then(me => {
         return [me];
@@ -69,7 +69,7 @@ class EditUser extends React.Component<Props, State> {
       promises.push(User.get(id));
     }
     Promise.all(promises).then(values => {
-      this.usersMax = window.parseInt(values[0]);
+      this.usersMax = ((values[0] === '1') ? 1000000 : 10);
       this.usersCur = values[1];
       this.adminUserRole = values[2][0].role;
       if (values.length >= 4) {
@@ -140,7 +140,6 @@ class EditUser extends React.Component<Props, State> {
       return (
         <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
           <p>{this.props.t("errorSubscriptionLimit")}</p>
-          <Link href="/settings" className="btn btn-primary">{this.props.t("subscriptionManage")}</Link>
         </FullLayout>
       );
     }
