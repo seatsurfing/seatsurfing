@@ -75,7 +75,7 @@ jobs:
       with:
         working-directory: ./server
         run: DEV=1 PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable go run `ls *.go | grep -v _test.go`
-        wait-on: http-get://localhost:8080/organization/domain/seatsurfing.local
+        wait-on: http-get://localhost:8080/auth/singleorg
 
     - name: Install dependencies
       working-directory: ./e2e
