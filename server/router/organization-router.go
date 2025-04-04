@@ -30,10 +30,12 @@ type GetOrganizationResponse struct {
 }
 
 type GetDomainResponse struct {
-	DomainName  string `json:"domain"`
-	Active      bool   `json:"active"`
-	VerifyToken string `json:"verifyToken"`
-	Primary     bool   `json:"primary"`
+	DomainName  string     `json:"domain"`
+	Active      bool       `json:"active"`
+	VerifyToken string     `json:"verifyToken"`
+	Primary     bool       `json:"primary"`
+	Accessible  bool       `json:"accessible"`
+	AccessCheck *time.Time `json:"accessCheck"`
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
@@ -148,6 +150,8 @@ func (router *OrganizationRouter) getDomains(w http.ResponseWriter, r *http.Requ
 			Active:      domain.Active,
 			VerifyToken: domain.VerifyToken,
 			Primary:     domain.Primary,
+			Accessible:  domain.Accessible,
+			AccessCheck: domain.AccessCheck,
 		}
 		res = append(res, item)
 	}

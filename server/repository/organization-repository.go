@@ -304,6 +304,14 @@ func (r *OrganizationRepository) ActivateDomain(e *Organization, domain string) 
 	return err
 }
 
+func (r *OrganizationRepository) SetDomainAccessibility(e *Organization, domain string, accessible bool, accessCheck *time.Time) error {
+	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
+		"SET accessible = $3, access_check = $4 "+
+		"WHERE domain = LOWER($1) AND organization_id = $2",
+		strings.ToLower(domain), e.ID, accessible, accessCheck)
+	return err
+}
+
 func (r *OrganizationRepository) SetPrimaryDomain(e *Organization, domain string) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET primary_domain = FALSE "+
