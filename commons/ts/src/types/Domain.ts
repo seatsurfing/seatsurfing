@@ -6,6 +6,8 @@ export default class Domain {
     active: boolean;
     verifyToken: string;
     primary: boolean;
+    accessible: boolean;
+    accessCheck: Date | null;
 
     constructor() {
         this.organizationId = "";
@@ -13,6 +15,8 @@ export default class Domain {
         this.active = false;
         this.verifyToken = "";
         this.primary = false;
+        this.accessible = false;
+        this.accessCheck = null;
     }
 
     deserialize(input: any): void {
@@ -20,6 +24,10 @@ export default class Domain {
         this.active = input.active;
         this.verifyToken = input.verifyToken;
         this.primary = input.primary;
+        this.accessible = input.accessible;
+        if (input.accessCheck) {
+            this.accessCheck = new Date(input.accessCheck);
+        }
     }
 
     async delete(): Promise<void> {

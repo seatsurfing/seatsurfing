@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Organization, AuthProvider, Settings as OrgSettings, Domain, Ajax, AjaxCredentials } from 'seatsurfing-commons';
 import { Form, Col, Row, Table, Button, Alert, InputGroup, Popover, OverlayTrigger, Badge } from 'react-bootstrap';
-import { Plus as IconPlus, Save as IconSave } from 'react-feather';
+import { Plus as IconPlus, Save as IconSave, AlertTriangle as IconAlert, Check as IconCheck } from 'react-feather';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
@@ -386,10 +386,16 @@ class Settings extends React.Component<Props, State> {
           </OverlayTrigger>
         );
       }
+      let accessibleCheckmark = <IconAlert className="feather" color='orange' />;
+      if (domain.accessible) {
+        accessibleCheckmark = <IconCheck className="feather" color='green' />;
+      }
       let key = "domain-" + domain.domain;
       return (
         <Form.Group key={key} className="domain-row">
           {domain.domain}
+          &nbsp;
+          {accessibleCheckmark}
           &nbsp;
           <Badge hidden={!domain.primary}>Primary</Badge>
           &nbsp;
