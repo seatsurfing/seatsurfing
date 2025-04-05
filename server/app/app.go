@@ -169,6 +169,10 @@ func (a *App) CheckDomainAccessibilityTimer() {
 			continue
 		}
 		success, err := IsDomainAccessible(domain.DomainName, domain.OrganizationID)
+		if err != nil {
+			log.Println("Error while performing domain accessibility check for domain:", domain.DomainName, err)
+			continue
+		}
 		if !success {
 			log.Println("Domain is not accessible:", domain.DomainName)
 			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, false, time.Now().UTC())
