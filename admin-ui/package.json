@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/react-dom": "^19.0.4",
+    "@types/react-dom": "^19.1.1",
     "bootstrap": "^5.3.5",
     "excellentexport": "^3.9.9",
     "i18next": "^24.2.2",
