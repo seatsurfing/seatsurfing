@@ -164,9 +164,6 @@ func (a *App) CheckDomainAccessibilityTimer() {
 		return
 	}
 	for _, domain := range domains {
-		if strings.HasSuffix(domain.DomainName, ".seatsurfing.app") || strings.HasSuffix(domain.DomainName, ".seatsurfing.io") {
-			continue
-		}
 		success, err := IsDomainAccessible(domain.DomainName, domain.OrganizationID)
 		if err != nil {
 			log.Println("Error while performing domain accessibility check for domain:", domain.DomainName, err)
