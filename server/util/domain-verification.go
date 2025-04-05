@@ -77,7 +77,9 @@ func isDomainAccessible(scheme, domain string, port int, orgID string) error {
 		return fmt.Errorf("could not verify domain accessibility, status code = %d, error: %s", res.StatusCode, string(body))
 	}
 	var payload DomainAccessibilityPayload
-	json.Unmarshal(body, &payload)
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
 	if strings.ToUpper(payload.Status) != "OK" {
 		return fmt.Errorf("domain verification failed, status = %s", payload.Status)
 	}
