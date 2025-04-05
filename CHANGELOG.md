@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.29.0](https://github.com/seatsurfing/seatsurfing/compare/v1.28.0...v1.29.0) (2025-04-05)
+
+
+### Features
+
+* domain accessibility validation ([#760](https://github.com/seatsurfing/seatsurfing/issues/760)) ([6b3de16](https://github.com/seatsurfing/seatsurfing/commit/6b3de168c5eaefd30dc7a66453c74ee2b8ee2af3))
+* introduce feature flags for 'no user limit' and 'custom domains' ([#758](https://github.com/seatsurfing/seatsurfing/issues/758)) ([9b920e2](https://github.com/seatsurfing/seatsurfing/commit/9b920e2846b2bae41d0b1277dbc0c2f07ac8a3eb))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.13.13 to 22.14.0 in /booking-ui ([#750](https://github.com/seatsurfing/seatsurfing/issues/750)) ([e0d8a6c](https://github.com/seatsurfing/seatsurfing/commit/e0d8a6c8851b6ed16f3d95dd51c2203fc32d2448))
+* **deps:** bump @types/node from 22.13.13 to 22.14.0 in /e2e ([#751](https://github.com/seatsurfing/seatsurfing/issues/751)) ([41d4275](https://github.com/seatsurfing/seatsurfing/commit/41d4275312d1f97b3f46fba51c6eaf3865c6f31b))
+* **deps:** bump @types/react-dom from 19.0.4 to 19.1.1 in /admin-ui ([#748](https://github.com/seatsurfing/seatsurfing/issues/748)) ([75c14cd](https://github.com/seatsurfing/seatsurfing/commit/75c14cdf3d6da4046b02878765cedc413fa7a7a6))
+* **deps:** bump @types/react-dom from 19.0.4 to 19.1.1 in /booking-ui ([#749](https://github.com/seatsurfing/seatsurfing/issues/749)) ([19f1345](https://github.com/seatsurfing/seatsurfing/commit/19f13456af5ceea712352251f202a5c8402bd170))
+* **deps:** bump bootstrap from 5.3.3 to 5.3.5 in /admin-ui ([#756](https://github.com/seatsurfing/seatsurfing/issues/756)) ([ef0b727](https://github.com/seatsurfing/seatsurfing/commit/ef0b72725e87b021e14db5f591d440b580770bc9))
+* **deps:** bump bootstrap from 5.3.3 to 5.3.5 in /booking-ui ([#757](https://github.com/seatsurfing/seatsurfing/issues/757)) ([ed14a7b](https://github.com/seatsurfing/seatsurfing/commit/ed14a7b2d791242543a797234df6b3e0a534deeb))
+* **deps:** bump react-router-dom from 7.4.1 to 7.5.0 in /admin-ui ([#755](https://github.com/seatsurfing/seatsurfing/issues/755)) ([48b04b7](https://github.com/seatsurfing/seatsurfing/commit/48b04b7a51cd14f357fbd16ad7a8d37791a750ce))
+* remove domain accessibility validation excludes ([#762](https://github.com/seatsurfing/seatsurfing/issues/762)) ([2398814](https://github.com/seatsurfing/seatsurfing/commit/2398814dfe4a6f89c84b9d2bf9dd02a4eb234d82))
+* use path instead of full uri in whitelist check ([#761](https://github.com/seatsurfing/seatsurfing/issues/761)) ([adb7ca9](https://github.com/seatsurfing/seatsurfing/commit/adb7ca92890430a9d5e246b6282bf4012c468b34))
+
 ## [1.28.0](https://github.com/seatsurfing/seatsurfing/compare/v1.27.4...v1.28.0) (2025-03-31)
 
 
