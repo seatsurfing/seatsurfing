@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,8 +9,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/seatsurfing/seatsurfing/server/config"
 )
 
 type DomainAccessibilityPayload struct {
@@ -37,7 +41,11 @@ func IsDomainAccessible(domain, orgID string) (bool, error) {
 	if err := isDomainAccessible("https", domain, 443, orgID); err == nil {
 		return true, nil
 	}
-	if err := isDomainAccessible("http", domain, 80, orgID); err != nil {
+	httpPort := 80
+	if GetConfig().Development {
+		httpPort, _ = strconv.Atoi(GetConfig().PublicListenAddr[strings.Index(GetConfig().PublicListenAddr, ":")+1:])
+	}
+	if err := isDomainAccessible("http", domain, httpPort, orgID); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -52,8 +60,12 @@ func isDomainAccessible(scheme, domain string, port int, orgID string) error {
 	if err != nil {
 		return err
 	}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	client := &http.Client{
-		Timeout: time.Second * 10,
+		Timeout:   time.Second * 10,
+		Transport: tr,
 	}
 	res, err := client.Do(req)
 	if err != nil {

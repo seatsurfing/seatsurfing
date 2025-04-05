@@ -131,7 +131,6 @@ func (a *App) InitializeTimers() {
 	go func() {
 		for {
 			<-a.CleanupTicker.C
-			log.Println("Cleaning up expired database entries...")
 			if err := GetAuthStateRepository().DeleteExpired(); err != nil {
 				log.Println(err)
 			}
@@ -151,8 +150,36 @@ func (a *App) InitializeTimers() {
 			for _, plg := range plugin.GetPlugins() {
 				(*plg).OnTimer()
 			}
+			// Check domain accessibility once per hour
+			if time.Now().Minute() == 0 {
+				go a.CheckDomainAccessibilityTimer()
+			}
 		}
 	}()
+}
+
+func (a *App) CheckDomainAccessibilityTimer() {
+	domains, err := GetOrganizationRepository().GetAllDomains()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for _, domain := range domains {
+		if strings.HasSuffix(domain.DomainName, ".seatsurfing.app") || strings.HasSuffix(domain.DomainName, ".seatsurfing.io") {
+			continue
+		}
+		success, err := IsDomainAccessible(domain.DomainName, domain.OrganizationID)
+		if !success {
+			log.Println("Domain is not accessible:", domain.DomainName)
+			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, false, time.Now().UTC())
+			continue
+		}
+		if err != nil {
+			log.Println("Error while performing domain accessibility check for domain:", domain.DomainName, err)
+			continue
+		}
+		GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, time.Now().UTC())
+	}
 }
 
 func (a *App) bookingUIProxyHandler(w http.ResponseWriter, r *http.Request) {

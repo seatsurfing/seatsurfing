@@ -304,11 +304,11 @@ func (r *OrganizationRepository) ActivateDomain(e *Organization, domain string) 
 	return err
 }
 
-func (r *OrganizationRepository) SetDomainAccessibility(e *Organization, domain string, accessible bool, accessCheck *time.Time) error {
+func (r *OrganizationRepository) SetDomainAccessibility(orgID string, domain string, accessible bool, accessCheck time.Time) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET accessible = $3, access_check = $4 "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
-		strings.ToLower(domain), e.ID, accessible, accessCheck)
+		strings.ToLower(domain), orgID, accessible, accessCheck)
 	return err
 }
 
@@ -352,6 +352,25 @@ func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) 
 		"WHERE organization_id = $1 "+
 		"ORDER BY domain",
 		e.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		domain := &Domain{}
+		err = rows.Scan(&domain.DomainName, &domain.OrganizationID, &domain.Active, &domain.VerifyToken, &domain.Primary, &domain.Accessible, &domain.AccessCheck)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, domain)
+	}
+	return result, nil
+}
+func (r *OrganizationRepository) GetAllDomains() ([]*Domain, error) {
+	var result []*Domain
+	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check " +
+		"FROM organizations_domains " +
+		"ORDER BY domain")
 	if err != nil {
 		return nil, err
 	}
