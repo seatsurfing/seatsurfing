@@ -178,10 +178,6 @@ func (a *App) CheckDomainAccessibilityTimer() {
 			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, false, time.Now().UTC())
 			continue
 		}
-		if err != nil {
-			log.Println("Error while performing domain accessibility check for domain:", domain.DomainName, err)
-			continue
-		}
 		GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, time.Now().UTC())
 	}
 }
