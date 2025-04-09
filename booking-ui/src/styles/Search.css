@@ -184,6 +184,7 @@
     width: 100%;
     font-size: .875em;
     color: #dc3545;
+    margin-left: -2em;
 }
 
 .space-list.maximized {
