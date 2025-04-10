@@ -272,7 +272,7 @@ func TestOrganizationsVerifyDNS(t *testing.T) {
 	adminLoginResponse := LoginTestUser(adminUser.ID)
 
 	// Add domain
-	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/testcase.seatsurfing.app", adminLoginResponse.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
@@ -280,10 +280,10 @@ func TestOrganizationsVerifyDNS(t *testing.T) {
 	GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET verify_token = '65e51a4b-339f-4b24-b376-f9d866057b38' "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
-		"testcase.seatsurfing.app", id)
+		"seatsurfing-testcase.virtualzone.de", id)
 
 	// Verify domain
-	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/testcase.seatsurfing.app/verify", adminLoginResponse.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/seatsurfing-testcase.virtualzone.de/verify", adminLoginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
@@ -296,7 +296,7 @@ func TestOrganizationsVerifyDNS(t *testing.T) {
 	if len(resBody) != 1 {
 		t.Fatalf("Expected array with 1 elements, got %d", len(resBody))
 	}
-	CheckTestString(t, "testcase.seatsurfing.app", resBody[0].DomainName)
+	CheckTestString(t, "seatsurfing-testcase.virtualzone.de", resBody[0].DomainName)
 	CheckTestBool(t, true, resBody[0].Active)
 }
 
@@ -440,12 +440,12 @@ func TestOrganizationsAddDomainActivateConflicting(t *testing.T) {
 	adminLoginResponse2 := LoginTestUser(adminUser2.ID)
 
 	// Add domain to org 1
-	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/testcase.seatsurfing.app", adminLoginResponse1.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse1.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Add same domain to org 2
-	req = NewHTTPRequest("POST", "/organization/"+id2+"/domain/testcase.seatsurfing.app", adminLoginResponse2.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id2+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse2.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
@@ -453,18 +453,18 @@ func TestOrganizationsAddDomainActivateConflicting(t *testing.T) {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET verify_token = '65e51a4b-339f-4b24-b376-f9d866057b38' "+
 		"WHERE domain = LOWER($1) AND organization_id IN ($2, $3)",
-		"testcase.seatsurfing.app", id1, id2)
+		"seatsurfing-testcase.virtualzone.de", id1, id2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Activate domain in org 1
-	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/testcase.seatsurfing.app/verify", adminLoginResponse1.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/seatsurfing-testcase.virtualzone.de/verify", adminLoginResponse1.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
 	// Try to activate same domain in org 2
-	req = NewHTTPRequest("POST", "/organization/"+id2+"/domain/testcase.seatsurfing.app/verify", adminLoginResponse2.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id2+"/domain/seatsurfing-testcase.virtualzone.de/verify", adminLoginResponse2.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
 }
