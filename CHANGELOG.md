@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.29.0](https://github.com/seatsurfing/seatsurfing/compare/v1.28.0...v1.29.0) (2025-04-10)
+
+
+### Features
+
+* domain accessibility validation ([#760](https://github.com/seatsurfing/seatsurfing/issues/760)) ([6b3de16](https://github.com/seatsurfing/seatsurfing/commit/6b3de168c5eaefd30dc7a66453c74ee2b8ee2af3))
+* introduce feature flags for 'no user limit' and 'custom domains' ([#758](https://github.com/seatsurfing/seatsurfing/issues/758)) ([9b920e2](https://github.com/seatsurfing/seatsurfing/commit/9b920e2846b2bae41d0b1277dbc0c2f07ac8a3eb))
+
+
+### Bug Fixes
+
+* align error message in search widget (Booking UI) ([#769](https://github.com/seatsurfing/seatsurfing/issues/769)) ([92dcfbc](https://github.com/seatsurfing/seatsurfing/commit/92dcfbc8a7bd4de66d65e4eecc9b8df5684359d9))
+* **deps:** bump @types/node from 22.13.13 to 22.14.0 in /admin-ui ([#747](https://github.com/seatsurfing/seatsurfing/issues/747)) ([ca318ce](https://github.com/seatsurfing/seatsurfing/commit/ca318ce57b11dbf35c12d38d63ca659d09e1b9b5))
+* **deps:** bump @types/node from 22.13.13 to 22.14.0 in /booking-ui ([#750](https://github.com/seatsurfing/seatsurfing/issues/750)) ([e0d8a6c](https://github.com/seatsurfing/seatsurfing/commit/e0d8a6c8851b6ed16f3d95dd51c2203fc32d2448))
+* **deps:** bump @types/node from 22.13.13 to 22.14.0 in /e2e ([#751](https://github.com/seatsurfing/seatsurfing/issues/751)) ([41d4275](https://github.com/seatsurfing/seatsurfing/commit/41d4275312d1f97b3f46fba51c6eaf3865c6f31b))
+* **deps:** bump @types/react-dom from 19.0.4 to 19.1.1 in /admin-ui ([#748](https://github.com/seatsurfing/seatsurfing/issues/748)) ([75c14cd](https://github.com/seatsurfing/seatsurfing/commit/75c14cdf3d6da4046b02878765cedc413fa7a7a6))
+* **deps:** bump @types/react-dom from 19.0.4 to 19.1.1 in /booking-ui ([#749](https://github.com/seatsurfing/seatsurfing/issues/749)) ([19f1345](https://github.com/seatsurfing/seatsurfing/commit/19f13456af5ceea712352251f202a5c8402bd170))
+* **deps:** bump @types/react-dom from 19.1.1 to 19.1.2 in /admin-ui ([#771](https://github.com/seatsurfing/seatsurfing/issues/771)) ([6b90a19](https://github.com/seatsurfing/seatsurfing/commit/6b90a19b76214459a9990034a8d41a1f4aa5f11c))
+* **deps:** bump @types/react-dom from 19.1.1 to 19.1.2 in /booking-ui ([#776](https://github.com/seatsurfing/seatsurfing/issues/776)) ([5312e0a](https://github.com/seatsurfing/seatsurfing/commit/5312e0a44b39702bfd03133f6e3960555180bae5))
+* **deps:** bump bootstrap from 5.3.3 to 5.3.5 in /admin-ui ([#756](https://github.com/seatsurfing/seatsurfing/issues/756)) ([ef0b727](https://github.com/seatsurfing/seatsurfing/commit/ef0b72725e87b021e14db5f591d440b580770bc9))
+* **deps:** bump bootstrap from 5.3.3 to 5.3.5 in /booking-ui ([#757](https://github.com/seatsurfing/seatsurfing/issues/757)) ([ed14a7b](https://github.com/seatsurfing/seatsurfing/commit/ed14a7b2d791242543a797234df6b3e0a534deeb))
+* **deps:** bump eslint from 9.23.0 to 9.24.0 in /admin-ui ([#766](https://github.com/seatsurfing/seatsurfing/issues/766)) ([5614f75](https://github.com/seatsurfing/seatsurfing/commit/5614f75748bffdb1d9b216390b7cbc8226470fb8))
+* **deps:** bump eslint from 9.23.0 to 9.24.0 in /booking-ui ([#764](https://github.com/seatsurfing/seatsurfing/issues/764)) ([792d69e](https://github.com/seatsurfing/seatsurfing/commit/792d69eace706a99942fcd48d05699afa926c921))
+* **deps:** bump eslint-config-next from 15.2.4 to 15.3.0 in /admin-ui ([#772](https://github.com/seatsurfing/seatsurfing/issues/772)) ([a718aab](https://github.com/seatsurfing/seatsurfing/commit/a718aab0b948adaf69e2ed1f32ce6a218115c22b))
+* **deps:** bump eslint-config-next from 15.2.4 to 15.3.0 in /booking-ui ([#775](https://github.com/seatsurfing/seatsurfing/issues/775)) ([6f7f60b](https://github.com/seatsurfing/seatsurfing/commit/6f7f60b270e4186b9557d4f2b0627c324ba75d16))
+* **deps:** bump next from 15.2.4 to 15.3.0 in /admin-ui ([#773](https://github.com/seatsurfing/seatsurfing/issues/773)) ([dfa5dfe](https://github.com/seatsurfing/seatsurfing/commit/dfa5dfe7d661f76d89f849a24e20dbb28cfe578c))
+* **deps:** bump next from 15.2.4 to 15.3.0 in /booking-ui ([#774](https://github.com/seatsurfing/seatsurfing/issues/774)) ([57b5655](https://github.com/seatsurfing/seatsurfing/commit/57b5655e0a5a5226312a31473abe9f7225ce59f8))
+* **deps:** bump react-router-dom from 7.4.1 to 7.5.0 in /admin-ui ([#755](https://github.com/seatsurfing/seatsurfing/issues/755)) ([48b04b7](https://github.com/seatsurfing/seatsurfing/commit/48b04b7a51cd14f357fbd16ad7a8d37791a750ce))
+* **deps:** bump react-tooltip from 5.28.0 to 5.28.1 in /booking-ui ([#767](https://github.com/seatsurfing/seatsurfing/issues/767)) ([d40fae8](https://github.com/seatsurfing/seatsurfing/commit/d40fae88b69b496201869c46d1baf7435c4eb26e))
+* **deps:** bump typescript from 5.8.2 to 5.8.3 in /commons/ts ([#765](https://github.com/seatsurfing/seatsurfing/issues/765)) ([c822e2c](https://github.com/seatsurfing/seatsurfing/commit/c822e2cd04046b96eb87731f3669727ba22da1ea))
+* improve adding and checking custom domains ([#777](https://github.com/seatsurfing/seatsurfing/issues/777)) ([9cacc6c](https://github.com/seatsurfing/seatsurfing/commit/9cacc6c14cd569da86bb5deadbb27bccd8578027))
+* prevent clipping of search widget (Booking UI) ([#768](https://github.com/seatsurfing/seatsurfing/issues/768)) ([b30ce06](https://github.com/seatsurfing/seatsurfing/commit/b30ce06bc73775703b1ceb6f81c567f3bf38043d))
+* remove domain accessibility validation excludes ([#762](https://github.com/seatsurfing/seatsurfing/issues/762)) ([2398814](https://github.com/seatsurfing/seatsurfing/commit/2398814dfe4a6f89c84b9d2bf9dd02a4eb234d82))
+* use path instead of full uri in whitelist check ([#761](https://github.com/seatsurfing/seatsurfing/issues/761)) ([adb7ca9](https://github.com/seatsurfing/seatsurfing/commit/adb7ca92890430a9d5e246b6282bf4012c468b34))
+
 ## [1.28.0](https://github.com/seatsurfing/seatsurfing/compare/v1.27.4...v1.28.0) (2025-03-31)
 
 
