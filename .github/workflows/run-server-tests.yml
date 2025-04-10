@@ -3,11 +3,9 @@ name: Run Server Tests
 on: [pull_request, workflow_dispatch]
 
 jobs:
-
   container-job:
     runs-on: ubuntu-latest
     container: golang:1.23-alpine
-
     services:
       postgres:
         image: postgres:16-alpine
