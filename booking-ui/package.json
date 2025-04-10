@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/react-dom": "^19.1.1",
+    "@types/react-dom": "^19.1.2",
     "bootstrap": "^5.3.5",
     "i18next": "^24.2.2",
     "i18next-chained-backend": "^4.6.2",
