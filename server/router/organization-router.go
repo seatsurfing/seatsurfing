@@ -176,27 +176,33 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		SendPaymentRequired(w)
 		return
 	}
+	domainName := strings.TrimSpace(strings.ToLower(vars["domain"]))
+	// Check if domain is special
+	if strings.HasSuffix(domainName, ".seatsurfing.app") || strings.HasSuffix(domainName, ".seatsurfing.io") {
+		SendBadRequest(w)
+		return
+	}
 	// Check if domain exists in this org already
-	domain, _ := GetOrganizationRepository().GetDomain(e, vars["domain"])
+	domain, _ := GetOrganizationRepository().GetDomain(e, domainName)
 	if domain != nil {
 		SendAleadyExists(w)
 		return
 	}
 	// Check if domain exists in activated state in ANY org already
-	someOrg, _ := GetOrganizationRepository().GetOneByDomain(vars["domain"])
+	someOrg, _ := GetOrganizationRepository().GetOneByDomain(domainName)
 	if someOrg != nil {
 		SendAleadyExists(w)
 		return
 	}
 	// Add domain
-	err = GetOrganizationRepository().AddDomain(e, vars["domain"], GetUserRepository().IsSuperAdmin(user))
+	err = GetOrganizationRepository().AddDomain(e, domainName, GetUserRepository().IsSuperAdmin(user))
 	if err != nil {
 		log.Println(err)
 		SendAleadyExists(w)
 		return
 	}
-	router.ensureOrgHasPrimaryDomain(e, vars["domain"])
-	SendCreated(w, vars["domain"])
+	router.ensureOrgHasPrimaryDomain(e, domainName)
+	SendCreated(w, domainName)
 }
 
 func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Request) {

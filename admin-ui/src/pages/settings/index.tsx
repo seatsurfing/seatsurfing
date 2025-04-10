@@ -260,6 +260,9 @@ class Settings extends React.Component<Props, State> {
     if (this.state.newDomain.indexOf(".") < 3) {
       return false;
     }
+    if (this.state.newDomain.toLowerCase().endsWith(".seatsurfing.app") || this.state.newDomain.toLowerCase().endsWith(".seatsurfing.io")) {
+      return false;
+    }
     let lastIndex = this.state.newDomain.length - 3;
     if (lastIndex < 3) {
       lastIndex = 3;
