@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/seatsurfing/seatsurfing/compare/v1.29.0...v1.29.1) (2025-04-13)
+
+
+### Bug Fixes
+
+* improve plugin display in Admin UI ([#778](https://github.com/seatsurfing/seatsurfing/issues/778)) ([3c34a23](https://github.com/seatsurfing/seatsurfing/commit/3c34a2374367433ac4e0d8c723879d8d547857b6))
+
 ## [1.29.0](https://github.com/seatsurfing/seatsurfing/compare/v1.28.0...v1.29.0) (2025-04-10)
 
 
