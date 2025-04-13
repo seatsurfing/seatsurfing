@@ -37,6 +37,7 @@ h2 {
 
 main {
     padding-bottom: 50px;
+    min-height: calc(100vh - 48px);
 }
 
 .padding-top {

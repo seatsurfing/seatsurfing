@@ -20,6 +20,8 @@ interface Props extends WithTranslation {
 }
 
 class SideBar extends React.Component<Props, State> {
+    dynamicIcons: Map<string, any> = new Map();
+
     constructor(props: any) {
         super(props);
         this.state = {
@@ -97,7 +99,11 @@ class SideBar extends React.Component<Props, State> {
                             if (item.visibility !== 'admin') {
                                 return;
                             }
-                            const PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                            let PluginIcon = this.dynamicIcons.get(item.icon);
+                            if (!PluginIcon) {
+                                PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                                this.dynamicIcons.set(item.icon, PluginIcon);
+                            }
                             return (
                                 <li className="nav-item" key={'plugin-'+item.id}>
                                     <Nav.Link as={Link} eventKey={'/plugin/'+item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
@@ -129,7 +135,11 @@ class SideBar extends React.Component<Props, State> {
                             if (item.visibility !== 'spaceadmin') {
                                 return;
                             }
-                            const PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                            let PluginIcon = this.dynamicIcons.get(item.icon);
+                            if (!PluginIcon) {
+                                PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                                this.dynamicIcons.set(item.icon, PluginIcon);
+                            }
                             return (
                                 <li className="nav-item" key={'plugin-'+item.id}>
                                     <Nav.Link as={Link} eventKey={'/plugin/'+item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>

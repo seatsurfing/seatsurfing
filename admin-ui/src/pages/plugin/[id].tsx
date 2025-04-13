@@ -71,8 +71,7 @@ class PluginPage extends React.Component<Props, State> {
     }
     return (
       <FullLayout headline={this.state.pluginMenuItem ? this.state.pluginMenuItem.title : ''}>
-        {this.state.iFrameLoaded ? <></> : <Loading />}
-        <iframe src={url} style={{ width: '100%', height: '0', borderWidth: 0 }} id="plugin-iframe">
+        <iframe src={url} style={{ width: '100%', height: '100vh', borderWidth: 0 }} id="plugin-iframe">
         </iframe>
       </FullLayout>
     );
