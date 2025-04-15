@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.2](https://github.com/seatsurfing/seatsurfing/compare/v1.29.1...v1.29.2) (2025-04-15)
+
+
+### Bug Fixes
+
+* too much logging in domain accessibility verification ([#783](https://github.com/seatsurfing/seatsurfing/issues/783)) ([19d551d](https://github.com/seatsurfing/seatsurfing/commit/19d551d8f3bd4419ebb143927213133143ccf5f0))
+
 ## [1.29.1](https://github.com/seatsurfing/seatsurfing/compare/v1.29.0...v1.29.1) (2025-04-13)
 
 
