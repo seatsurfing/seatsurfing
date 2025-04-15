@@ -74,7 +74,7 @@ func isDomainAccessible(scheme, domain string, port int, orgID string) error {
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return fmt.Errorf("could not verify domain accessibility, status code = %d, error: %s", res.StatusCode, string(body))
+		return fmt.Errorf("could not verify domain accessibility, status code = %d", res.StatusCode)
 	}
 	var payload DomainAccessibilityPayload
 	if err := json.Unmarshal(body, &payload); err != nil {
