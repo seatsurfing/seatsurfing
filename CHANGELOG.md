@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.3](https://github.com/seatsurfing/seatsurfing/compare/v1.29.2...v1.29.3) (2025-04-21)
+
+
+### Bug Fixes
+
+* add welcome screen support to admin ui ([#796](https://github.com/seatsurfing/seatsurfing/issues/796)) ([acf5c6b](https://github.com/seatsurfing/seatsurfing/commit/acf5c6bb5f5a64fd339b2ebdf51aaf7d4c9df01d))
+
 ## [1.29.2](https://github.com/seatsurfing/seatsurfing/compare/v1.29.1...v1.29.2) (2025-04-15)
 
 
