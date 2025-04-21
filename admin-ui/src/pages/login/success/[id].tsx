@@ -5,6 +5,7 @@ import { Ajax, JwtDecoder, User } from 'seatsurfing-commons';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import withReadyRouter from '@/components/withReadyRouter';
+import RuntimeConfig from '@/components/RuntimeConfig';
 
 interface State {
   redirect: string | null
@@ -48,8 +49,10 @@ class LoginSuccess extends React.Component<Props, State> {
             Ajax.PERSISTER.persistRefreshTokenInLocalStorage(Ajax.CREDENTIALS);
           }
           Ajax.PERSISTER.updateCredentialsSessionStorage(Ajax.CREDENTIALS).then(() => {
-            this.setState({
-              redirect: "/dashboard"
+            RuntimeConfig.loadUserAndSettings().then(() => {
+              this.setState({
+                redirect: "/dashboard"
+              });
             });
           });
         } else {

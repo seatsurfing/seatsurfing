@@ -68,7 +68,6 @@ func (a *App) InitializeRouter() {
 	routers["/space-attribute/"] = &SpaceAttributeRouter{}
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
-	routers["/plugin/"] = &PluginRouter{}
 	for _, plg := range plugin.GetPlugins() {
 		for route, router := range (*plg).GetPublicRoutes() {
 			routers[route] = router

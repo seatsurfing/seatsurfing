@@ -7,12 +7,9 @@ import { NextRouter } from 'next/router';
 import withReadyRouter from './withReadyRouter';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import RuntimeConfig from './RuntimeConfig';
 
 interface State {
-    superAdmin: boolean
-    spaceAdmin: boolean
-    orgAdmin: boolean
-    pluginMenuItems: any[]
 }
 
 interface Props extends WithTranslation {
@@ -25,33 +22,17 @@ class SideBar extends React.Component<Props, State> {
     constructor(props: any) {
         super(props);
         this.state = {
-            superAdmin: false,
-            spaceAdmin: false,
-            orgAdmin: false,
-            pluginMenuItems: [],
         };
     }
 
     componentDidMount = () => {
-        User.getSelf().then(user => {
-            if (user.role === 0) {
-                Ajax.CREDENTIALS = new AjaxCredentials();
-                Ajax.PERSISTER.deleteCredentialsFromSessionStorage().then(() => {
-                    this.props.router.push("/login");
-                });
-                return;
-            }
-            this.setState({
-                superAdmin: user.superAdmin,
-                spaceAdmin: user.spaceAdmin,
-                orgAdmin: user.admin,
+        if (!RuntimeConfig.INFOS.spaceAdmin) {
+            Ajax.CREDENTIALS = new AjaxCredentials();
+            Ajax.PERSISTER.deleteCredentialsFromSessionStorage().then(() => {
+                this.props.router.push("/login");
             });
-            Ajax.get('/plugin/admin-menu-items/').then(res => {
-                this.setState({
-                    pluginMenuItems: res.json
-                });
-            });
-        });
+            return;
+        }
     }
 
     getActiveKey = () => {
@@ -77,7 +58,7 @@ class SideBar extends React.Component<Props, State> {
 
     render() {
         let orgItem = <></>;
-        if (this.state.superAdmin) {
+        if (RuntimeConfig.INFOS.superAdmin) {
             orgItem = (
                 <li className="nav-item">
                     <Nav.Link as={Link} eventKey="/organizations" href="/organizations"><IconBox className="feather" /> {this.props.t("organizations")}</Nav.Link>
@@ -85,7 +66,7 @@ class SideBar extends React.Component<Props, State> {
             );
         }
         let orgAdminItems = <></>;
-        if (this.state.orgAdmin) {
+        if (RuntimeConfig.INFOS.orgAdmin) {
             orgAdminItems = (
                 <>
                     <li className="nav-item">
@@ -95,18 +76,18 @@ class SideBar extends React.Component<Props, State> {
                         <Nav.Link as={Link} eventKey="/settings" href="/settings"><IconSettings className="feather" /> {this.props.t("settings")}</Nav.Link>
                     </li>
                     {
-                        this.state.pluginMenuItems.map((item) => {
+                        RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
                             if (item.visibility !== 'admin') {
                                 return;
                             }
                             let PluginIcon = this.dynamicIcons.get(item.icon);
                             if (!PluginIcon) {
-                                PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
+                                PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), { ssr: true }) as Icon;
                                 this.dynamicIcons.set(item.icon, PluginIcon);
                             }
                             return (
-                                <li className="nav-item" key={'plugin-'+item.id}>
-                                    <Nav.Link as={Link} eventKey={'/plugin/'+item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
+                                <li className="nav-item" key={'plugin-' + item.id}>
+                                    <Nav.Link as={Link} eventKey={'/plugin/' + item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
                                 </li>
                             );
                         })
@@ -131,26 +112,26 @@ class SideBar extends React.Component<Props, State> {
                             <Nav.Link as={Link} eventKey="/report/analysis" href="/report/analysis"><IconAnalysis className="feather" /> {this.props.t("analysis")}</Nav.Link>
                         </li>
                         {
-                        this.state.pluginMenuItems.map((item) => {
-                            if (item.visibility !== 'spaceadmin') {
-                                return;
-                            }
-                            let PluginIcon = this.dynamicIcons.get(item.icon);
-                            if (!PluginIcon) {
-                                PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), {ssr: true}) as Icon;
-                                this.dynamicIcons.set(item.icon, PluginIcon);
-                            }
-                            return (
-                                <li className="nav-item" key={'plugin-'+item.id}>
-                                    <Nav.Link as={Link} eventKey={'/plugin/'+item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
-                                </li>
-                            );
-                        })
-                    }
+                            RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
+                                if (item.visibility !== 'spaceadmin') {
+                                    return;
+                                }
+                                let PluginIcon = this.dynamicIcons.get(item.icon);
+                                if (!PluginIcon) {
+                                    PluginIcon = dynamic(() => import('react-feather/dist/icons/' + item.icon.toLowerCase()), { ssr: true }) as Icon;
+                                    this.dynamicIcons.set(item.icon, PluginIcon);
+                                }
+                                return (
+                                    <li className="nav-item" key={'plugin-' + item.id}>
+                                        <Nav.Link as={Link} eventKey={'/plugin/' + item.id} href={"/plugin/" + item.id}><PluginIcon className="feather" /> {item.title}</Nav.Link>
+                                    </li>
+                                );
+                            })
+                        }
                         {orgAdminItems}
                         {orgItem}
                         <li className="nav-item">
-                            <Nav.Link onClick={(e) => {e.preventDefault(); window.location.href="/ui/";}}><IconExternalLink className="feather" /> {this.props.t("bookingui")}</Nav.Link>
+                            <Nav.Link onClick={(e) => { e.preventDefault(); window.location.href = "/ui/"; }}><IconExternalLink className="feather" /> {this.props.t("bookingui")}</Nav.Link>
                         </li>
                     </ul>
                 </div>

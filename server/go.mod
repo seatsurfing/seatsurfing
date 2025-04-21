@@ -3,15 +3,15 @@ module github.com/seatsurfing/seatsurfing/server
 go 1.23.6
 
 require (
-	github.com/emersion/go-ical v0.0.0-20250313142940-aefc67679264
+	github.com/emersion/go-ical v0.0.0-20250329121855-f41e73efc392
 	github.com/emersion/go-webdav v0.6.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
-	golang.org/x/crypto v0.36.0
-	golang.org/x/oauth2 v0.28.0
+	golang.org/x/crypto v0.37.0
+	golang.org/x/oauth2 v0.29.0
 )
 
 require (

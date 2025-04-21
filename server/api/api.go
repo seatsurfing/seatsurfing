@@ -7,6 +7,7 @@ type SeatsurfingPlugin interface {
 	GetAdminUIMenuItems() []AdminUIMenuItem
 	OnTimer()
 	OnInit()
+	GetAdminWelcomeScreen() *AdminWelcomeScreen
 }
 
 type AdminUIMenuItem struct {
@@ -15,4 +16,9 @@ type AdminUIMenuItem struct {
 	Source     string
 	Visibility string // "admin", "spaceadmin"
 	Icon       string
+}
+
+type AdminWelcomeScreen struct {
+	Source            string
+	SkipOnSettingTrue string
 }

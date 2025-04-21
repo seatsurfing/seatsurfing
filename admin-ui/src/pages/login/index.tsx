@@ -5,6 +5,7 @@ import Loading from '../../components/Loading';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import withReadyRouter from '@/components/withReadyRouter';
+import RuntimeConfig from '@/components/RuntimeConfig';
 
 interface State {
   email: string
@@ -165,8 +166,10 @@ class Login extends React.Component<Props, State> {
         logoutUrl: res.json.logoutUrl,
       };
       Ajax.PERSISTER.updateCredentialsSessionStorage(Ajax.CREDENTIALS).then(() => {
-        this.setState({
-          redirect: "/dashboard"
+        RuntimeConfig.loadUserAndSettings().then(() => {
+          this.setState({
+            redirect: "/dashboard"
+          });
         });
       });
     }).catch((e) => {

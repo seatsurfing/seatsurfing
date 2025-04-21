@@ -1,6 +1,7 @@
 import React, { JSX, ReactNode } from 'react';
 import NavBar from './NavBar';
 import SideBar from './SideBar';
+import RuntimeConfig from './RuntimeConfig';
 
 interface Props {
   headline: string
@@ -13,6 +14,15 @@ interface State {
 
 export default class FullLayout extends React.Component<Props, State> {
   render() {
+    if (RuntimeConfig.INFOS.pluginWelcomeScreens && RuntimeConfig.INFOS.pluginWelcomeScreens.length > 0) {
+      return (
+        <div style={{ height: '100vh', width: '100vw', overflow: 'hidden' }}>
+          <iframe src={RuntimeConfig.INFOS.pluginWelcomeScreens[0].src} style={{ width: '100%', height: '100vh', borderWidth: 0 }} id="welcome-screen-iframe">
+          </iframe>
+        </div>
+      );
+    }
+
     return (
       <div>
         <NavBar />

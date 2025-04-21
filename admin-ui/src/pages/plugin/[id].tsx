@@ -5,6 +5,7 @@ import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import { NextRouter } from 'next/router';
 import { Ajax } from 'seatsurfing-commons';
+import RuntimeConfig from '@/components/RuntimeConfig';
 
 interface State {
   iFrameLoaded: boolean
@@ -30,17 +31,15 @@ class PluginPage extends React.Component<Props, State> {
 
   loadData = () => {
     const { id } = this.props.router.query;
-    Ajax.get('/plugin/admin-menu-items/').then(res => {
-      for (let item of res.json) {
-        if (item.id === id) {
-          this.setState({
-            pluginMenuItem: item
-          });
-          this.checkiFrameHeight();
-          return;
-        }
+    for (let item of RuntimeConfig.INFOS.pluginMenuItems) {
+      if (item.id === id) {
+        this.setState({
+          pluginMenuItem: item
+        });
+        this.checkiFrameHeight();
+        return;
       }
-    });
+    }
   }
 
   checkiFrameHeight(): void {

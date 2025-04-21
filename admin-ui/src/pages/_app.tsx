@@ -16,6 +16,7 @@ import { Ajax, Formatting } from 'seatsurfing-commons'
 import React from 'react'
 import Loading from '@/components/Loading'
 import Head from 'next/head'
+import RuntimeConfig from '@/components/RuntimeConfig'
 
 
 interface State {
@@ -37,17 +38,10 @@ class App extends React.Component<Props, State> {
       }
     }
     setTimeout(() => {
-      this.initAjax();
-    }, 10);
-  }
-
-  initAjax = async () => {
-    Ajax.PERSISTER.readCredentialsFromSessionStorage().then(c => {
-      Ajax.CREDENTIALS = c;
-      this.setState({
-        isLoading: false
+      RuntimeConfig.verifyToken(() => {
+        this.setState({isLoading: false});
       });
-    });
+    }, 10);
   }
 
   render() {

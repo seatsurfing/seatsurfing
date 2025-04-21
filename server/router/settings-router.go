@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -25,10 +27,24 @@ type GetSettingsResponse struct {
 	Value string `json:"value"`
 }
 
+type SettingsRouterAdminMenuItem struct {
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	Source     string `json:"src"`
+	Visibility string `json:"visibility"`
+	Icon       string `json:"icon"`
+}
+
+type SettingsRouterWelcomeScreen struct {
+	Source string `json:"src"`
+}
+
 var (
-	ErrAlreadyExists          = errors.New("resource already exists")
-	SysSettingOrgSignupDelete = "_sys_org_signup_delete"
-	SysSettingVersion         = "_sys_version"
+	ErrAlreadyExists              = errors.New("resource already exists")
+	SysSettingOrgSignupDelete     = "_sys_org_signup_delete"
+	SysSettingVersion             = "_sys_version"
+	SysSettingAdminMenuItems      = "_sys_admin_menu_items"
+	SysSettingAdminWelcomeScreens = "_sys_admin_welcome_screens"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -127,6 +143,10 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	}
 	if orgAdmin {
 		res = append(res, router.getSysSettingOrgSignupDelete())
+		res = append(res, router.getAdminWelcomeScreens(list))
+	}
+	if CanSpaceAdminOrg(user, user.OrganizationID) {
+		res = append(res, router.getAdminMenuItems())
 	}
 	res = append(res, router.getSysSettingVersion())
 	SendJSON(w, res)
@@ -334,6 +354,62 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 		return false
 	}
 	return true
+}
+
+func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *GetSettingsResponse {
+	res := []SettingsRouterWelcomeScreen{}
+	for _, plg := range plugin.GetPlugins() {
+		ws := (*plg).GetAdminWelcomeScreen()
+		if ws != nil {
+			skip := false
+			for _, setting := range settings {
+				if setting.Name == ws.SkipOnSettingTrue && setting.Value == "1" {
+					skip = true
+					break
+				}
+			}
+			if !skip {
+				resItem := SettingsRouterWelcomeScreen{
+					Source: ws.Source,
+				}
+				res = append(res, resItem)
+			}
+		}
+	}
+	jsonBytes, err := json.Marshal(res)
+	if err != nil {
+		log.Println("Error marshalling welcome screens:", err)
+		return nil
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingAdminWelcomeScreens,
+		Value: string(jsonBytes),
+	}
+}
+
+func (router *SettingsRouter) getAdminMenuItems() *GetSettingsResponse {
+	res := []SettingsRouterAdminMenuItem{}
+	for _, plg := range plugin.GetPlugins() {
+		for _, item := range (*plg).GetAdminUIMenuItems() {
+			resItem := SettingsRouterAdminMenuItem{
+				ID:         item.ID,
+				Title:      item.Title,
+				Source:     item.Source,
+				Visibility: item.Visibility,
+				Icon:       item.Icon,
+			}
+			res = append(res, resItem)
+		}
+	}
+	jsonBytes, err := json.Marshal(res)
+	if err != nil {
+		log.Println("Error marshalling admin menu items:", err)
+		return nil
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingAdminMenuItems,
+		Value: string(jsonBytes),
+	}
 }
 
 func (router *SettingsRouter) getSysSettingOrgSignupDelete() *GetSettingsResponse {
