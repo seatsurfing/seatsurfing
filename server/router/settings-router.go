@@ -75,6 +75,15 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		SendJSON(w, router.getSysSettingVersion())
 		return
 	}
+	if vars["name"] == SysSettingAdminMenuItems {
+		SendJSON(w, router.getAdminMenuItems())
+		return
+	}
+	if vars["name"] == SysSettingAdminWelcomeScreens {
+		list, _ := GetSettingsRepository().GetAll(user.OrganizationID)
+		SendJSON(w, router.getAdminWelcomeScreens(list))
+		return
+	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
 	if err != nil {
 		log.Println(err)
@@ -238,7 +247,9 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingConfluenceServerSharedSecret.Name ||
 		name == SettingConfluenceAnonymous.Name ||
-		name == SysSettingOrgSignupDelete {
+		name == SysSettingOrgSignupDelete ||
+		name == SysSettingAdminMenuItems ||
+		name == SysSettingAdminWelcomeScreens {
 		return true
 	}
 	return false
