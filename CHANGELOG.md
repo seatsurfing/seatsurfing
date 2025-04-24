@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.30.0](https://github.com/seatsurfing/seatsurfing/compare/v1.29.3...v1.30.0) (2025-04-24)
+
+
+### Features
+
+* add ability to download iCalendar (.ics) events ([#807](https://github.com/seatsurfing/seatsurfing/issues/807)) ([bf630ef](https://github.com/seatsurfing/seatsurfing/commit/bf630efac91dfad9b8c55213872a354ab571d963))
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.51.1 to 1.52.0 in /e2e ([#793](https://github.com/seatsurfing/seatsurfing/issues/793)) ([11298a3](https://github.com/seatsurfing/seatsurfing/commit/11298a38e27e047620e277686b0e58fae3e1c0dc))
+* **deps:** bump @types/node from 22.14.0 to 22.14.1 in /admin-ui ([#780](https://github.com/seatsurfing/seatsurfing/issues/780)) ([26e2e45](https://github.com/seatsurfing/seatsurfing/commit/26e2e453f1e53caa491260780693e6266acb2dc9))
+* **deps:** bump @types/node from 22.14.0 to 22.14.1 in /booking-ui ([#781](https://github.com/seatsurfing/seatsurfing/issues/781)) ([6b1beaa](https://github.com/seatsurfing/seatsurfing/commit/6b1beaabadefee903a543afd2df6563859015286))
+* **deps:** bump @types/node from 22.14.0 to 22.14.1 in /e2e ([#782](https://github.com/seatsurfing/seatsurfing/issues/782)) ([46f2302](https://github.com/seatsurfing/seatsurfing/commit/46f23025773826ab4af4ad00db0d8e72eb3c8a78))
+* **deps:** bump eslint from 9.24.0 to 9.25.1 in /admin-ui ([#800](https://github.com/seatsurfing/seatsurfing/issues/800)) ([7bcc12a](https://github.com/seatsurfing/seatsurfing/commit/7bcc12a66aabcb0b6ddc5549c10669822ea9cf99))
+* **deps:** bump eslint from 9.24.0 to 9.25.1 in /booking-ui ([#802](https://github.com/seatsurfing/seatsurfing/issues/802)) ([c144f37](https://github.com/seatsurfing/seatsurfing/commit/c144f3722207e42c463ba64151edbab9c777bd4d))
+* **deps:** bump eslint-config-next from 15.3.0 to 15.3.1 in /admin-ui ([#790](https://github.com/seatsurfing/seatsurfing/issues/790)) ([61ac4a7](https://github.com/seatsurfing/seatsurfing/commit/61ac4a779c4b9882813778a1d1a7ae775fd85dc2))
+* **deps:** bump eslint-config-next from 15.3.0 to 15.3.1 in /booking-ui ([#792](https://github.com/seatsurfing/seatsurfing/issues/792)) ([f96af83](https://github.com/seatsurfing/seatsurfing/commit/f96af83a028308ef2574222ba56f4dd39b768462))
+* **deps:** bump i18next from 24.2.3 to 25.0.1 in /commons/ts ([#794](https://github.com/seatsurfing/seatsurfing/issues/794)) ([80f7065](https://github.com/seatsurfing/seatsurfing/commit/80f706513d2f84ceb2845eed8af864d68de558f5))
+* **deps:** bump i18next-browser-languagedetector from 8.0.4 to 8.0.5 in /admin-ui ([#801](https://github.com/seatsurfing/seatsurfing/issues/801)) ([c0ee28d](https://github.com/seatsurfing/seatsurfing/commit/c0ee28db2e3094678e373e126551bb41293ac5a7))
+* **deps:** bump next from 15.3.0 to 15.3.1 in /admin-ui ([#788](https://github.com/seatsurfing/seatsurfing/issues/788)) ([f751ceb](https://github.com/seatsurfing/seatsurfing/commit/f751ceb76a17103545be7afbce8c404670576b35))
+* **deps:** bump next from 15.3.0 to 15.3.1 in /booking-ui ([#791](https://github.com/seatsurfing/seatsurfing/issues/791)) ([7c50de0](https://github.com/seatsurfing/seatsurfing/commit/7c50de017469cd2640b3dcb7d4086afbdfe61329))
+* **deps:** bump react-i18next from 15.4.1 to 15.5.1 in /admin-ui ([#803](https://github.com/seatsurfing/seatsurfing/issues/803)) ([8431c03](https://github.com/seatsurfing/seatsurfing/commit/8431c039f1597a26764b7d3f0f246c6b9f1f0429))
+* **deps:** bump react-i18next from 15.4.1 to 15.5.1 in /booking-ui ([#804](https://github.com/seatsurfing/seatsurfing/issues/804)) ([10afd52](https://github.com/seatsurfing/seatsurfing/commit/10afd52d174094bd09eb1a1367a62122169d0947))
+* **deps:** bump react-router-dom from 7.5.0 to 7.5.1 in /admin-ui ([#789](https://github.com/seatsurfing/seatsurfing/issues/789)) ([300dfb6](https://github.com/seatsurfing/seatsurfing/commit/300dfb607903b37c283dfbd43cbed798242d7dab))
+* **deps:** bump react-router-dom from 7.5.1 to 7.5.2 in /admin-ui ([#805](https://github.com/seatsurfing/seatsurfing/issues/805)) ([1d58926](https://github.com/seatsurfing/seatsurfing/commit/1d58926913d43958e207eacd9d413e31c2469553))
+
 ## [1.29.3](https://github.com/seatsurfing/seatsurfing/compare/v1.29.2...v1.29.3) (2025-04-21)
 
 
