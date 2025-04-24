@@ -76,14 +76,14 @@ func (c *CalDAVClient) CreateEvent(calendarPath string, e *CalDAVEvent) error {
 	if e.ID == "" {
 		e.ID = uuid.New().String()
 	}
-	cal := c.getCaldavEvent(e)
+	cal := c.GetCaldavEvent(e)
 
 	_, err := c.client.PutCalendarObject(context.Background(), path.Join(calendarPath, e.ID+".ics"), cal)
 	return err
 }
 
 func (c *CalDAVClient) DeleteEvent(calendarPath string, e *CalDAVEvent) error {
-	cal := c.getCaldavEvent(e)
+	cal := c.GetCaldavEvent(e)
 
 	var buf bytes.Buffer
 	if err := ical.NewEncoder(&buf).Encode(cal); err != nil {
@@ -116,7 +116,7 @@ func (c *CalDAVClient) DeleteEvent(calendarPath string, e *CalDAVEvent) error {
 	return nil
 }
 
-func (c *CalDAVClient) getCaldavEvent(e *CalDAVEvent) *ical.Calendar {
+func (c *CalDAVClient) GetCaldavEvent(e *CalDAVEvent) *ical.Calendar {
 	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropProductID, "-//seatsurfing.io//seatsurfing//EN")
 	cal.Props.SetText(ical.PropVersion, "2.0")

@@ -17,8 +17,8 @@ import NavBar from '@/components/NavBar';
 import RuntimeConfig from '@/components/RuntimeConfig';
 import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
-import { Loader as IconLoad } from 'react-feather';
-
+import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
+import { getIcal } from '@/components/Ical';
 interface State {
   earliestEnterDate: Date;
   enter: Date
@@ -53,6 +53,7 @@ interface State {
   searchAttributesSpace: SearchAttribute[]
   confirmingBooking: boolean
   activeTabFilterModal: string
+  createdBookingId: string
 }
 
 interface Props extends WithTranslation {
@@ -118,6 +119,7 @@ class Search extends React.Component<Props, State> {
       searchAttributesLocation: [],
       searchAttributesSpace: [],
       activeTabFilterModal: "tab-filter-area",
+      createdBookingId: "",
     };
   }
 
@@ -649,6 +651,7 @@ class Search extends React.Component<Props, State> {
     booking.space = this.state.selectedSpace;
     booking.save().then(() => {
       this.setState({
+        createdBookingId: booking.id,
         confirmingBooking: false,
         showConfirm: false,
         showSuccess: true
@@ -1165,10 +1168,15 @@ class Search extends React.Component<Props, State> {
     let gotoBooking;
     if (myBooking) {
       gotoBooking = (
-        <Button variant="danger" onClick={() => this.cancelBooking(myBooking)} disabled={this.state.confirmingBooking}>
-          {this.props.t("cancelBooking")}
-          {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
-        </Button>
+        <>
+          <Button variant="secondary" onClick={() => getIcal(myBooking.id)}>
+            <IconCalendar className="feather" style={{ marginRight: '5px' }} /> Event
+          </Button>
+          <Button variant="danger" onClick={() => this.cancelBooking(myBooking)} disabled={this.state.confirmingBooking}>
+            {this.props.t("cancelBooking")}
+            {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
+          </Button>
+        </>
       )
     }
     let bookingNamesModal = (
@@ -1200,6 +1208,9 @@ class Search extends React.Component<Props, State> {
         <Modal.Footer>
           <Button variant="primary" onClick={() => this.props.router.push("/bookings")}>
             {this.props.t("myBookings").toString()}
+          </Button>
+          <Button variant="secondary" onClick={() => getIcal(this.state.createdBookingId)}>
+            <IconCalendar className="feather" style={{ marginRight: '5px' }} /> Event
           </Button>
           <Button variant="secondary" onClick={() => {
             this.setState({ showSuccess: false });
