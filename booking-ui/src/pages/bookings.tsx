@@ -1,5 +1,5 @@
 import React from 'react';
-import {Ajax, AjaxError, Booking, Formatting} from 'seatsurfing-commons';
+import { Ajax, AjaxError, Booking, Formatting } from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 import { Button, Form, ListGroup, Modal } from 'react-bootstrap';
 import { LogIn as IconEnter, LogOut as IconLeave, MapPin as IconLocation } from 'react-feather';
@@ -9,7 +9,8 @@ import NavBar from '@/components/NavBar';
 import withReadyRouter from '@/components/withReadyRouter';
 import RuntimeConfig from '@/components/RuntimeConfig';
 import ErrorText from '@/types/ErrorText';
-import { Loader as IconLoad } from 'react-feather';
+import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
+import { getIcal } from '@/components/Ical';
 
 interface State {
   loading: boolean
@@ -65,10 +66,10 @@ class Bookings extends React.Component<Props, State> {
       }, this.loadData);
     }, (reason: any) => {
       if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
-          window.alert(ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t));
-        } else {
-          window.alert(this.props.t("errorDeleteBooking"));
-        }
+        window.alert(ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t));
+      } else {
+        window.alert(this.props.t("errorDeleteBooking"));
+      }
       this.setState({
         selectedItem: null,
         deletingItem: false,
@@ -135,9 +136,12 @@ class Bookings extends React.Component<Props, State> {
             <Button variant="secondary" onClick={() => this.setState({ selectedItem: null })} disabled={this.state.deletingItem}>
               {this.props.t("back")}
             </Button>
+            <Button variant="secondary" onClick={() => getIcal(this.state.selectedItem ? this.state.selectedItem.id : "")}>
+              <IconCalendar className="feather" style={{ marginRight: '5px' }} /> Event
+            </Button>
             <Button variant="danger" onClick={() => this.cancelBooking(this.state.selectedItem)} disabled={this.state.deletingItem}>
               {this.props.t("cancelBooking")}
-              {this.state.deletingItem ? <IconLoad className="feather loader" style={{marginLeft: '5px'}} /> : <></>}
+              {this.state.deletingItem ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
             </Button>
           </Modal.Footer>
         </Modal>

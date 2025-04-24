@@ -1,6 +1,7 @@
 package router
 
 import (
+	"bytes"
 	"errors"
 	"log"
 	"math"
@@ -9,6 +10,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/emersion/go-ical"
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -80,6 +82,7 @@ func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("POST")
 	s.HandleFunc("/filter/", router.getFiltered).Methods("POST")
 	s.HandleFunc("/precheck/", router.preBookingCreateCheck).Methods("POST")
+	s.HandleFunc("/{id}/ical", router.getIcal).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -161,6 +164,42 @@ func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request)
 		res = append(res, m)
 	}
 	SendJSON(w, res)
+}
+
+func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetBookingRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	requestUser := GetRequestUser(r)
+	if !CanAccessOrg(requestUser, requestUser.OrganizationID) && e.UserID != GetRequestUserID(r) {
+		SendForbidden(w)
+		return
+	}
+	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	calDavEvent, err := router.getCalDavEventFromBooking(&e.Booking)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	caldavClient := &CalDAVClient{}
+	icalEvent := caldavClient.GetCaldavEvent(calDavEvent)
+	var buf bytes.Buffer
+	if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	w.Header().Set("Content-Type", "text/calendar")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"seatsurfing.ics\"")
+	w.Write(buf.Bytes())
 }
 
 func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
@@ -750,13 +789,21 @@ func (router *BookingRouter) initCaldavEvent(e *Booking) (*CalDAVClient, *CalDAV
 		log.Println(err)
 		return nil, nil, "", err
 	}
-	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	caldavEvent, err := router.getCalDavEventFromBooking(e)
 	if err != nil {
 		return nil, nil, "", err
 	}
+	return caldavClient, caldavEvent, config.Path, nil
+}
+
+func (router *BookingRouter) getCalDavEventFromBooking(e *Booking) (*CalDAVEvent, error) {
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	location, err := GetLocationRepository().GetOne(space.LocationID)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	caldavEvent := &CalDAVEvent{
 		Title:    "Seat Reservation: " + space.Name + ", " + location.Name,
@@ -764,7 +811,7 @@ func (router *BookingRouter) initCaldavEvent(e *Booking) (*CalDAVClient, *CalDAV
 		Start:    e.Enter,
 		End:      e.Leave,
 	}
-	return caldavClient, caldavEvent, config.Path, nil
+	return caldavEvent, nil
 }
 
 func (router *BookingRouter) onBookingCreated(e *Booking) {
