@@ -9,9 +9,3 @@ If this request was yours, you can change your password here:
 If you did not initiate a password reset for your Seatsurfing account,
 you can safely ignore this email. We won't change your password if you
 don't click the link above.
-
-Kind regards,
-Team Seatsurfing
-
--- 
-www.seatsurfing.io
