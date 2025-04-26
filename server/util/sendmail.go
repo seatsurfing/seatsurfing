@@ -25,6 +25,10 @@ func GetEmailTemplatePathResetpassword() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.txt")
 }
 
+func GetEmailTemplatePathFooter() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-footer.txt")
+}
+
 func GetEmailSubjectResetPassword(language string) string {
 	switch language {
 	case "de":
@@ -43,10 +47,19 @@ func SendEmail(recipient *MailAddress, subject, templateFile, language string, v
 	if err != nil {
 		return err
 	}
-	return SendEmailWithBody(recipient, subject, body)
+	return SendEmailWithBody(recipient, subject, body, language)
 }
 
-func SendEmailWithBody(recipient *MailAddress, subject, body string) error {
+func SendEmailWithBody(recipient *MailAddress, subject, body, language string) error {
+	footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
+	if err != nil {
+		return err
+	}
+	footer, err := os.ReadFile(footerFile)
+	if err != nil {
+		return err
+	}
+	body += "\n\n" + string(footer)
 	if GetConfig().MockSendmail {
 		SendMailMockContent = body
 		return nil
