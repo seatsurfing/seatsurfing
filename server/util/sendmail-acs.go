@@ -15,7 +15,8 @@ import (
 
 type ACSSendMailContent struct {
 	Subject   string `json:"subject"`
-	Plaintext string `json:"plainText"`
+	Plaintext string `json:"plainText,omitempty"`
+	HTML      string `json:"html,omitempty"`
 }
 
 type ACSRecipients struct {
