@@ -2,6 +2,9 @@ package util
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"html"
 	"log"
 	"net/smtp"
 	"os"
@@ -16,50 +19,97 @@ const EmailTemplateDefaultLanguage = "en"
 
 var SendMailMockContent = ""
 
+type MailButton struct {
+	Paragraph string `json:"paragraph"`
+	URL       string `json:"url"`
+	Label     string `json:"label"`
+}
+
+type MailTemplate struct {
+	Subject         string       `json:"subject"`
+	Headline        string       `json:"headline"`
+	Paragraphs      []string     `json:"paragraphs"`
+	Buttons         []MailButton `json:"buttons"`
+	FinalParagraphs []string     `json:"finalParagraphs"`
+}
+
 type MailAddress struct {
 	Address     string
 	DisplayName string
 }
 
 func GetEmailTemplatePathResetpassword() string {
-	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.txt")
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.json")
 }
 
 func GetEmailTemplatePathFooter() string {
-	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-footer.txt")
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-footer.json")
 }
 
-func GetEmailSubjectResetPassword(language string) string {
-	switch language {
-	case "de":
-		return "Zuruecksetzen Ihres Seatsurfing-Kennworts"
-	default:
-		return "Reset your Seatsurfing password"
+func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
+	path := filepath.Join(GetConfig().FilesystemBasePath, "./res/email.html")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, "", fmt.Errorf("error reading email template file: %v", err)
 	}
+	s := string(data)
+	var jsonContent MailTemplate
+	if err := json.Unmarshal(jsonTemplate, &jsonContent); err != nil {
+		return nil, "", fmt.Errorf("error unmarshalling json template: %v", err)
+	}
+	s = strings.ReplaceAll(s, "{{headline}}", html.EscapeString(jsonContent.Headline))
+	body := ""
+	for _, paragraph := range jsonContent.Paragraphs {
+		body += "<p>" + html.EscapeString(paragraph) + "</p>"
+	}
+	for _, button := range jsonContent.Buttons {
+		body += "<p>" + html.EscapeString(button.Paragraph) + "</p>"
+		body += "<p><a href=\"" + button.URL + "\" class=\"btn btn-primary\">" + html.EscapeString(button.Label) + "</a></p>"
+	}
+	for _, paragraph := range jsonContent.FinalParagraphs {
+		body += "<p>" + html.EscapeString(paragraph) + "</p>"
+	}
+	s = strings.ReplaceAll(s, "{{body}}", body)
+	return &jsonContent, s, nil
 }
 
-func SendEmail(recipient *MailAddress, subject, templateFile, language string, vars map[string]string) error {
+func SendEmail(recipient *MailAddress, templateFile, language string, vars map[string]string) error {
 	actualTemplateFile, err := GetEmailTemplatePath(templateFile, language)
 	if err != nil {
 		return err
 	}
-	body, err := compileEmailTemplateFromFile(actualTemplateFile, vars)
+	actualTemplateData, err := os.ReadFile(actualTemplateFile)
+	if err != nil {
+		return fmt.Errorf("error reading json template file: %v", err)
+	}
+	mailTemplate, body, err := GetHTMLMailTemplate(actualTemplateData)
 	if err != nil {
 		return err
 	}
-	return SendEmailWithBody(recipient, subject, body, language)
+	for key, val := range vars {
+		body = strings.ReplaceAll(body, "{{"+key+"}}", val)
+	}
+	return SendEmailWithBody(recipient, mailTemplate.Subject, body, language)
 }
 
 func SendEmailWithBody(recipient *MailAddress, subject, body, language string) error {
 	footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting footer template path: %v", err)
 	}
-	footer, err := os.ReadFile(footerFile)
+	footerData, err := os.ReadFile(footerFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading footer template file: %v", err)
 	}
-	body += "\n\n" + string(footer)
+	var jsonFooter []string
+	if err := json.Unmarshal(footerData, &jsonFooter); err != nil {
+		return fmt.Errorf("error unmarshalling footer json: %v", err)
+	}
+	footer := ""
+	for _, paragraph := range jsonFooter {
+		footer += "<p>" + html.EscapeString(paragraph) + "</p>"
+	}
+	body = strings.ReplaceAll(body, "{{footer}}", footer)
 	if GetConfig().MockSendmail {
 		SendMailMockContent = body
 		return nil
@@ -74,7 +124,7 @@ func SendEmailWithBody(recipient *MailAddress, subject, body, language string) e
 		to := []string{recipient.Address}
 		body = "From: " + sender.DisplayName + " <" + sender.Address + ">\n" +
 			"To: " + recipient.Address + "\n" +
-			"Content-Type: text/plain; charset=UTF-8\n" +
+			"Content-Type: text/html; charset=UTF-8\n" +
 			"Subject: " + subject + "\n" +
 			"\n" +
 			body
@@ -87,7 +137,7 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 	if !GetConfig().IsValidLanguageCode(language) {
 		language = EmailTemplateDefaultLanguage
 	}
-	res := strings.ReplaceAll(templateFile, ".txt", "_"+language+".txt")
+	res := strings.ReplaceAll(templateFile, ".json", "_"+language+".json")
 	if _, err := os.Stat(res); err == nil {
 		return res, nil
 	}
@@ -95,29 +145,11 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 		return "", os.ErrNotExist
 	}
 
-	res = strings.ReplaceAll(templateFile, ".txt", "_"+EmailTemplateDefaultLanguage+".txt")
+	res = strings.ReplaceAll(templateFile, ".json", "_"+EmailTemplateDefaultLanguage+".json")
 	if _, err := os.Stat(res); err == nil {
 		return res, nil
 	}
 	return "", os.ErrNotExist
-}
-
-func CompileEmailTemplate(template string, vars map[string]string) string {
-	c := GetConfig()
-	vars["senderAddress"] = c.MailSenderAddress
-	for key, val := range vars {
-		template = strings.ReplaceAll(template, "{{"+key+"}}", val)
-	}
-	return template
-}
-
-func compileEmailTemplateFromFile(templateFile string, vars map[string]string) (string, error) {
-	data, err := os.ReadFile(templateFile)
-	if err != nil {
-		return "", err
-	}
-	s := string(data)
-	return CompileEmailTemplate(s, vars), nil
 }
 
 func acsDialAndSend(recipient, sender *MailAddress, subject, body string) error {

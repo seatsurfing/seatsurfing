@@ -220,7 +220,9 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		Payload:        user.ID,
 	}
 	GetAuthStateRepository().Create(authState)
-	router.SendPasswordResetEmail(user, authState.ID, org)
+	if err := router.SendPasswordResetEmail(user, authState.ID, org); err != nil {
+		log.Printf("Password reset email failed: %s\n", err)
+	}
 	SendUpdated(w)
 }
 
@@ -598,7 +600,7 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"confirmID":      ID,
 		"orgDomain":      "https://" + domain.DomainName + "/",
 	}
-	return SendEmail(&MailAddress{Address: user.Email}, GetEmailSubjectResetPassword(org.Language), GetEmailTemplatePathResetpassword(), org.Language, vars)
+	return SendEmail(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars)
 }
 
 func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
