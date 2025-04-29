@@ -5,6 +5,17 @@
 [![](https://img.shields.io/github/actions/workflow/status/seatsurfing/seatsurfing/release.yml?branch=main)](https://github.com/seatsurfing/seatsurfing/actions)
 [![](https://img.shields.io/github/license/seatsurfing/seatsurfing)](https://github.com/seatsurfing/seatsurfing/blob/main/LICENSE)
 
+## 🚀 Seatsurfing SaaS available!
+
+We offer Seatsurfing as a fully-hosted Software-as-a-Service (SaaS) at [seatsurfing.io](https://seatsurfing.io/)!
+
+- **No installation required** - Get started immediately
+- **Get it free** - Free for up to 10 users
+- **Automatic updates** - Always enjoy the latest features
+- **Managed infrastructure** - Servers in Germany (EU)
+
+## 📖 Introduction
+
 Seatsurfing is a software which enables your organisation's employees to book seats, desks and rooms.
 
 This repository contains the Backend, which consists of:
@@ -16,7 +27,7 @@ This repository contains the Backend, which consists of:
 
 **[Visit project's website for more information.](https://seatsurfing.io)**
 
-## Screenshots
+## 📷 Screenshots
 
 ### Web Admin UI
 
@@ -26,14 +37,14 @@ This repository contains the Backend, which consists of:
 
 ![Seatsurfing Web Booking UI](https://raw.githubusercontent.com/seatsurfing/seatsurfing/main/.github/booking-ui.png)
 
-## Quick reference
+## 🗸 Quick reference
 
 - **Maintained by:** [seatsurfing.io](https://seatsurfing.io/)
 - **Where to get help:** [Documentation](https://seatsurfing.io/docs/)
 - **Docker architectures:** [amd64, arm64](https://github.com/seatsurfing?tab=packages&repo_name=seatsurfing)
 - **License:** [GPL 3.0](https://github.com/seatsurfing/seatsurfing/blob/main/LICENSE)
 
-## How to use the Docker image
+## 🐋 How to use the Docker image
 
 ### Start using Docker Compose
 
@@ -97,7 +108,7 @@ To login, use the default admin login (user `admin@seatsurfing.local` and passwo
 
 Please refer to our [Kubernetes documentation](https://seatsurfing.io/docs/kubernetes/).
 
-## Environment variables
+## ⚙️ Environment variables
 
 Please check out the [documentation](https://seatsurfing.io/docs/config) for information on available environment variables and further guidance.
 
