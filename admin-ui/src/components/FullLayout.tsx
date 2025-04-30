@@ -13,8 +13,29 @@ interface State {
 }
 
 export default class FullLayout extends React.Component<Props, State> {
+  onMessage(event: MessageEvent) {
+    if (event !== null && event.data !== null && event.source !== null) {
+      const iframe = event.source as Window;
+      if (iframe.location.pathname === '/subscription/static/welcome.html') {
+        const data = event.data;
+        if (data && data.type === 'skipWelcomeScreen') {
+          window.sessionStorage.setItem('skipWelcomeScreen', 'true');
+          window.location.reload();
+        }
+      }
+    }
+  }
+
+  componentDidMount() {
+    window.addEventListener('message', this.onMessage, false);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('message', this.onMessage, false);
+  }
+
   render() {
-    if (RuntimeConfig.INFOS.pluginWelcomeScreens && RuntimeConfig.INFOS.pluginWelcomeScreens.length > 0) {
+    if (RuntimeConfig.INFOS.pluginWelcomeScreens && RuntimeConfig.INFOS.pluginWelcomeScreens.length > 0 && window.sessionStorage.getItem('skipWelcomeScreen') !== 'true') {
       return (
         <div style={{ height: '100vh', width: '100vw', overflow: 'hidden' }}>
           <iframe src={RuntimeConfig.INFOS.pluginWelcomeScreens[0].src} style={{ width: '100%', height: '100vh', borderWidth: 0 }} id="welcome-screen-iframe">
