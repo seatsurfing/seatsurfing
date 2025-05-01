@@ -15,10 +15,10 @@ interface State {
 export default class FullLayout extends React.Component<Props, State> {
   onMessage(event: MessageEvent) {
     if (event !== null && event.data !== null && event.source !== null) {
-      const iframe = event.source as Window;
-      if (iframe.location.pathname === '/subscription/static/welcome.html') {
-        const data = event.data;
-        if (data && data.type === 'skipWelcomeScreen') {
+      const data = event.data;
+      if (data && data.type === 'skipWelcomeScreen') {
+        const iframe = event.source as Window;
+        if (iframe.location.pathname === '/subscription/static/welcome.html') {
           window.sessionStorage.setItem('skipWelcomeScreen', 'true');
           window.location.reload();
         }
