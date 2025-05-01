@@ -33,6 +33,7 @@ interface State {
   caldavCalendars: any[]
   caldavCalendarsLoaded: boolean
   caldavError: boolean
+  mailNotifications: boolean
 }
 
 interface Props extends WithTranslation {
@@ -70,6 +71,7 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendars: [],
       caldavCalendarsLoaded: false,
       caldavError: false,
+      mailNotifications: false,
     };
   }
 
@@ -115,6 +117,7 @@ class Preferences extends React.Component<Props, State> {
           if (s.name === "caldav_user") state.caldavUser = s.value;
           if (s.name === "caldav_pass") state.caldavPass = s.value;
           if (s.name === "caldav_path") state.caldavCalendar = s.value;
+          if (s.name === "mail_notifications") state.mailNotifications = (s.value === '1');
         });
         self.setState({
           ...self.state,
@@ -153,6 +156,7 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference("workday_start", this.state.workdayStart.toString()),
       new UserPreference("workday_end", this.state.workdayEnd.toString()),
       new UserPreference("workdays", workdays.join(",")),
+      new UserPreference("mail_notifications", this.state.mailNotifications ? "1" : "0"),
       new UserPreference("location_id", this.state.locationId),
     ];
     UserPreference.setAll(payload).then(() => {
@@ -389,6 +393,12 @@ class Preferences extends React.Component<Props, State> {
                   {[0, 1, 2, 3, 4, 5, 6].map(day => (
                     <Form.Check type="checkbox" key={"workday-" + day} id={"workday-" + day} label={this.props.t("workday-" + day)} checked={this.state.workdays[day]} onChange={(e: any) => this.onWorkdayCheck(day, e.target.checked)} />
                   ))}
+                </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label>{this.props.t("mailNotifications")}</Form.Label>
+                <div className="text-left">
+                  <Form.Check type="checkbox" id="mailNotifications" label={this.props.t("mailNotifications")} checked={this.state.mailNotifications} onChange={(e: any) => this.setState({ mailNotifications: e.target.checked })} />
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">

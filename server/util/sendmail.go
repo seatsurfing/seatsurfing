@@ -1,11 +1,14 @@
 package util
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html"
 	"log"
+	"mime/multipart"
 	"net/smtp"
 	"os"
 	"path/filepath"
@@ -38,8 +41,19 @@ type MailAddress struct {
 	DisplayName string
 }
 
+type MailAttachment struct {
+	Filename  string
+	Data      []byte
+	MimeType  string
+	ContentID string
+}
+
 func GetEmailTemplatePathResetpassword() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.json")
+}
+
+func GetEmailTemplatePathBookingCreated() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-created.json")
 }
 
 func GetEmailTemplatePathFooter() string {
@@ -74,6 +88,10 @@ func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
 }
 
 func SendEmail(recipient *MailAddress, templateFile, language string, vars map[string]string) error {
+	return SendEmailWithAttachments(recipient, templateFile, language, vars, nil)
+}
+
+func SendEmailWithAttachments(recipient *MailAddress, templateFile, language string, vars map[string]string, attachments []*MailAttachment) error {
 	actualTemplateFile, err := GetEmailTemplatePath(templateFile, language)
 	if err != nil {
 		return err
@@ -89,10 +107,24 @@ func SendEmail(recipient *MailAddress, templateFile, language string, vars map[s
 	for key, val := range vars {
 		body = strings.ReplaceAll(body, "{{"+key+"}}", val)
 	}
-	return SendEmailWithBody(recipient, mailTemplate.Subject, body, language)
+	return SendEmailWithBodyAndAttachment(recipient, mailTemplate.Subject, body, language, attachments)
 }
 
 func SendEmailWithBody(recipient *MailAddress, subject, body, language string) error {
+	return SendEmailWithBodyAndAttachment(recipient, subject, body, language, nil)
+}
+
+func SendEmailWithBodyAndAttachment(recipient *MailAddress, subject, body, language string, attachments []*MailAttachment) error {
+	logoData, err := os.ReadFile(filepath.Join(GetConfig().FilesystemBasePath, "./res/seatsurfing.png"))
+	if err != nil {
+		return fmt.Errorf("error reading logo file: %v", err)
+	}
+	attachments = append(attachments, &MailAttachment{
+		Filename:  "seatsurfing.png",
+		Data:      logoData,
+		MimeType:  "image/png",
+		ContentID: "seatsurfing-logo",
+	})
 	footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
 	if err != nil {
 		return fmt.Errorf("error getting footer template path: %v", err)
@@ -121,15 +153,37 @@ func SendEmailWithBody(recipient *MailAddress, subject, body, language string) e
 	if GetConfig().MailService == "acs" {
 		return acsDialAndSend(recipient, sender, subject, body)
 	} else {
+		buf := bytes.NewBuffer(nil)
+		buf.WriteString(fmt.Sprintf("From: %s\n", sender.DisplayName+" <"+sender.Address+">"))
+		buf.WriteString(fmt.Sprintf("To: %s\n", recipient.Address))
+		buf.WriteString(fmt.Sprintf("Subject: %s\n", subject))
+		buf.WriteString("MIME-Version: 1.0\n")
+
+		writer := multipart.NewWriter(buf)
+		boundary := writer.Boundary()
+		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"\n", boundary))
+
+		// Write body
+		buf.WriteString(fmt.Sprintf("\n--%s\n", boundary))
+		buf.WriteString("Content-Type: text/html; charset=utf-8\n")
+		buf.WriteString("Content-Transfer-Encoding: base64\n")
+		buf.WriteString(fmt.Sprintf("\n%s\n", base64.StdEncoding.EncodeToString([]byte(body))))
+
+		// Write attachments
+		for _, attachment := range attachments {
+			buf.WriteString(fmt.Sprintf("--%s\n", boundary))
+			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\n", attachment.Filename))
+			buf.WriteString(fmt.Sprintf("Content-Type: %s\n", attachment.MimeType))
+			if attachment.ContentID != "" {
+				buf.WriteString(fmt.Sprintf("Content-ID: <%s>\n", attachment.ContentID))
+			}
+			buf.WriteString("Content-Transfer-Encoding: base64\n")
+			buf.WriteString(fmt.Sprintf("\n%s\n", base64.StdEncoding.EncodeToString(attachment.Data)))
+		}
+		buf.WriteString(fmt.Sprintf("--%s--\n", boundary))
+
 		to := []string{recipient.Address}
-		body = "From: " + sender.DisplayName + " <" + sender.Address + ">\n" +
-			"To: " + recipient.Address + "\n" +
-			"Content-Type: text/html; charset=UTF-8\n" +
-			"Subject: " + subject + "\n" +
-			"\n" +
-			body
-		msg := []byte(body)
-		return smtpDialAndSend(sender.Address, to, msg)
+		return smtpDialAndSend(sender.Address, to, buf.Bytes())
 	}
 }
 

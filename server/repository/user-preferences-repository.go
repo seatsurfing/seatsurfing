@@ -34,6 +34,7 @@ var (
 	PreferenceCalDAVUser           PreferenceName = PreferenceName{Name: "caldav_user", Type: SettingTypeString}
 	PreferenceCalDAVPass           PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
 	PreferenceCalDAVPath           PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
+	PreferenceMailNotifications    PreferenceName = PreferenceName{Name: "mail_notifications", Type: SettingTypeBool}
 )
 
 var (

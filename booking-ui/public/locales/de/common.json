@@ -127,5 +127,6 @@
     "bookings": "Buchungen",
     "security": "Sicherheit",
     "integrations": "Integrationen",
-    "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen."
+    "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen.",
+    "mailNotifications": "E-Mail-Benachrichtigungen"
 }
