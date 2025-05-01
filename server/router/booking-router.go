@@ -815,6 +815,11 @@ func (router *BookingRouter) getCalDavEventFromBooking(e *Booking) (*CalDAVEvent
 }
 
 func (router *BookingRouter) onBookingCreated(e *Booking) {
+	router.createCalDavEvent(e)
+	router.sendMailNotification(e)
+}
+
+func (router *BookingRouter) createCalDavEvent(e *Booking) {
 	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
 	if err != nil {
 		return
@@ -825,6 +830,59 @@ func (router *BookingRouter) onBookingCreated(e *Booking) {
 	}
 	e.CalDavID = caldavEvent.ID
 	GetBookingRepository().Update(e)
+}
+
+func (router *BookingRouter) sendMailNotification(e *Booking) {
+	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
+	if err != nil || !active {
+		return
+	}
+	user, err := GetUserRepository().GetOne(e.UserID)
+	if err != nil || user == nil {
+		log.Println(err)
+		return
+	}
+	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if err != nil || org == nil {
+		log.Println(err)
+		return
+	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	calDavEvent, err := router.getCalDavEventFromBooking(e)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	caldavClient := &CalDAVClient{}
+	icalEvent := caldavClient.GetCaldavEvent(calDavEvent)
+	var buf bytes.Buffer
+	if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
+		log.Println(err)
+		return
+	}
+	attachments := []*MailAttachment{
+		{
+			Filename: "seatsurfing.ics",
+			MimeType: "text/calendar",
+			Data:     buf.Bytes(),
+		},
+	}
+	vars := map[string]string{
+		"recipientName": user.Email,
+		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
+		"areaName":      location.Name,
+		"spaceName":     space.Name,
+	}
+	SendEmailWithAttachments(&MailAddress{Address: user.Email}, GetEmailTemplatePathBookingCreated(), org.Language, vars, attachments)
 }
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {

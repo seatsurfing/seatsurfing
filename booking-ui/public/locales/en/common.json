@@ -132,5 +132,6 @@
     "bookings": "Bookings",
     "security": "Security",
     "integrations": "Integrations",
-    "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials."
+    "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
+    "mailNotifications": "Mail notifications"
 }
