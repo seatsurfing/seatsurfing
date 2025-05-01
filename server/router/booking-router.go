@@ -832,6 +832,22 @@ func (router *BookingRouter) createCalDavEvent(e *Booking) {
 	GetBookingRepository().Update(e)
 }
 
+func (router *BookingRouter) updateCalDavEvent(e *Booking) {
+	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
+	if err != nil {
+		return
+	}
+	if e.CalDavID != "" {
+		caldavEvent.ID = e.CalDavID
+	}
+	if err := caldavClient.CreateEvent(path, caldavEvent); err != nil {
+		log.Println(err)
+		return
+	}
+	e.CalDavID = caldavEvent.ID
+	GetBookingRepository().Update(e)
+}
+
 func (router *BookingRouter) sendMailNotification(e *Booking) {
 	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
 	if err != nil || !active {
@@ -889,19 +905,8 @@ func (router *BookingRouter) sendMailNotification(e *Booking) {
 }
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
-	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
-	if err != nil {
-		return
-	}
-	if e.CalDavID != "" {
-		caldavEvent.ID = e.CalDavID
-	}
-	if err := caldavClient.CreateEvent(path, caldavEvent); err != nil {
-		log.Println(err)
-		return
-	}
-	e.CalDavID = caldavEvent.ID
-	GetBookingRepository().Update(e)
+	router.updateCalDavEvent(e)
+	router.sendMailNotification(e)
 }
 
 func (router *BookingRouter) onBookingDeleted(e *Booking) {
