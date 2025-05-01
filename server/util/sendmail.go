@@ -151,7 +151,7 @@ func SendEmailWithBodyAndAttachment(recipient *MailAddress, subject, body, langu
 		DisplayName: "Seatsurfing",
 	}
 	if GetConfig().MailService == "acs" {
-		return acsDialAndSend(recipient, sender, subject, body)
+		return acsDialAndSend(recipient, sender, subject, "", body, attachments)
 	} else {
 		buf := bytes.NewBuffer(nil)
 		buf.WriteString(fmt.Sprintf("From: %s\n", sender.DisplayName+" <"+sender.Address+">"))
@@ -206,7 +206,16 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 	return "", os.ErrNotExist
 }
 
-func acsDialAndSend(recipient, sender *MailAddress, subject, body string) error {
+func acsDialAndSend(recipient, sender *MailAddress, subject, bodyPlainText, bodyHTML string, attachments []*MailAttachment) error {
+	attachmentsList := []ACSAttachment{}
+	for _, attachment := range attachments {
+		attachmentsList = append(attachmentsList, ACSAttachment{
+			Name:            attachment.Filename,
+			ContentType:     attachment.MimeType,
+			ContentInBase64: base64.StdEncoding.EncodeToString(attachment.Data),
+			ContentID:       attachment.ContentID,
+		})
+	}
 	mail := &ACSSendMailRequest{
 		SenderAddress: sender.Address,
 		Recipients: ACSRecipients{
@@ -219,8 +228,10 @@ func acsDialAndSend(recipient, sender *MailAddress, subject, body string) error 
 		},
 		Content: ACSSendMailContent{
 			Subject:   subject,
-			Plaintext: body,
+			Plaintext: bodyPlainText,
+			HTML:      bodyHTML,
 		},
+		Attachments: attachmentsList,
 	}
 	return ACSSendEmail(GetConfig().ACSHost, GetConfig().ACSAccessKey, mail)
 }

@@ -882,7 +882,10 @@ func (router *BookingRouter) sendMailNotification(e *Booking) {
 		"areaName":      location.Name,
 		"spaceName":     space.Name,
 	}
-	SendEmailWithAttachments(&MailAddress{Address: user.Email}, GetEmailTemplatePathBookingCreated(), org.Language, vars, attachments)
+	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, GetEmailTemplatePathBookingCreated(), org.Language, vars, attachments); err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {

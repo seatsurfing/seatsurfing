@@ -28,11 +28,19 @@ type ACSAddress struct {
 	DisplayName string `json:"displayName"`
 }
 
+type ACSAttachment struct {
+	Name            string `json:"name"`
+	ContentType     string `json:"contentType"`
+	ContentInBase64 string `json:"contentInBase64"`
+	ContentID       string `json:"contentId,omitempty"`
+}
+
 type ACSSendMailRequest struct {
 	SenderAddress string             `json:"senderAddress"`
 	Recipients    ACSRecipients      `json:"recipients"`
 	Content       ACSSendMailContent `json:"content"`
 	ReplyTo       []ACSAddress       `json:"replyTo"`
+	Attachments   []ACSAttachment    `json:"attachments,omitempty"`
 }
 
 func ACSSendEmail(host string, accessKey string, r *ACSSendMailRequest) error {
