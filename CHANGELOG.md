@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.1](https://github.com/seatsurfing/seatsurfing/compare/v1.31.0...v1.31.1) (2025-05-02)
+
+
+### Bug Fixes
+
+* improve html email formatting ([#827](https://github.com/seatsurfing/seatsurfing/issues/827)) ([07d3322](https://github.com/seatsurfing/seatsurfing/commit/07d332225d567435fa279ab72849fd8154c922d4))
+
 ## [1.31.0](https://github.com/seatsurfing/seatsurfing/compare/v1.30.0...v1.31.0) (2025-05-01)
 
 
