@@ -26,3 +26,10 @@ func TestGetEmailTemplatePathNotExists(t *testing.T) {
 	CheckTestString(t, "", res)
 	CheckTestBool(t, true, err != nil)
 }
+
+func TestGetLocalPartFromEmailAddress(t *testing.T) {
+	CheckTestString(t, "test", GetLocalPartFromEmailAddress("test@domain.com"))
+	CheckTestString(t, "test", GetLocalPartFromEmailAddress("test@domain"))
+	CheckTestString(t, "test", GetLocalPartFromEmailAddress("test"))
+	CheckTestString(t, "\"a@b\"", GetLocalPartFromEmailAddress("\"a@b\"@example.com"))
+}

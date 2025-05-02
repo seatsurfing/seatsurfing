@@ -206,6 +206,14 @@ func GetEmailTemplatePath(templateFile, language string) (string, error) {
 	return "", os.ErrNotExist
 }
 
+func GetLocalPartFromEmailAddress(email string) string {
+	idx := strings.LastIndex(email, "@")
+	if idx == -1 {
+		return email
+	}
+	return email[:idx]
+}
+
 func acsDialAndSend(recipient, sender *MailAddress, subject, bodyPlainText, bodyHTML string, attachments []*MailAttachment) error {
 	attachmentsList := []ACSAttachment{}
 	for _, attachment := range attachments {

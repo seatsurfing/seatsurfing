@@ -893,7 +893,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking) {
 		},
 	}
 	vars := map[string]string{
-		"recipientName": user.Email,
+		"recipientName": GetLocalPartFromEmailAddress(user.Email),
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
 		"spaceName":     space.Name,

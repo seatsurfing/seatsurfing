@@ -30,12 +30,12 @@
                 height: 2rem;
             }
 
-            main {
+            #main {
                 padding: 25px;
                 max-width: 600px;
             }
 
-            main p {
+            #main p {
                 margin-bottom: 15px;
                 display: block;
                 font-size: 16px;
@@ -59,20 +59,20 @@
                 color: #fff;
             }
             
-            footer {
+            #footer {
                 padding: 25px;
                 max-width: 600px;
                 font-size: 12px;
                 color: #999;
             }
 
-            footer p {
+            #footer p {
                 display: block;
                 margin-bottom: 2px;
                 margin-top: 0px;
             }
 
-            footer hr {
+            #footer hr {
                 border: 0;
                 border-top: 1px solid #eee;
                 margin-bottom: 10px;
@@ -83,13 +83,13 @@
         <div class="header">
             <img alt="Seatsurfing" src="cid:seatsurfing-logo" />
         </div>
-        <main>
+        <div id="main">
             <h2>{{headline}}</h2>
             {{body}}
-        </main>
-        <footer>
+        </div>
+        <div id="footer">
             <hr />
             {{footer}}
-        </footer>
+        </div>
     </body>
 </html>
