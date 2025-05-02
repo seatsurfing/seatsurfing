@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.31.0](https://github.com/seatsurfing/seatsurfing/compare/v1.30.0...v1.31.0) (2025-05-01)
+
+
+### Features
+
+* add email footer support ([#811](https://github.com/seatsurfing/seatsurfing/issues/811)) ([0e029d0](https://github.com/seatsurfing/seatsurfing/commit/0e029d0b2f2154c99600a64d59dbb3f6b9389ca8))
+* add mail notifications ([#824](https://github.com/seatsurfing/seatsurfing/issues/824)) ([b69494f](https://github.com/seatsurfing/seatsurfing/commit/b69494ffade72c6ce80f840e99156d416b6b4370))
+* add support for html emails ([#813](https://github.com/seatsurfing/seatsurfing/issues/813)) ([a5db476](https://github.com/seatsurfing/seatsurfing/commit/a5db476962198a7e8768dbb3e1d7798b6d54fb74))
+
+
+### Bug Fixes
+
+* allow admin welcome screen skipping ([#823](https://github.com/seatsurfing/seatsurfing/issues/823)) ([62148f9](https://github.com/seatsurfing/seatsurfing/commit/62148f9159d1943f9d8055133256f08a622d1f9c))
+* **deps:** bump @types/node from 22.14.1 to 22.15.3 in /admin-ui ([#816](https://github.com/seatsurfing/seatsurfing/issues/816)) ([b884d8d](https://github.com/seatsurfing/seatsurfing/commit/b884d8d3a99e3755b232065cf24f37b237f987f5))
+* **deps:** bump @types/node from 22.14.1 to 22.15.3 in /booking-ui ([#814](https://github.com/seatsurfing/seatsurfing/issues/814)) ([2335ec2](https://github.com/seatsurfing/seatsurfing/commit/2335ec28eda0ecbdd93ac2ef58e89107ae47bfd1))
+* **deps:** bump @types/node from 22.14.1 to 22.15.3 in /e2e ([#817](https://github.com/seatsurfing/seatsurfing/issues/817)) ([dac6200](https://github.com/seatsurfing/seatsurfing/commit/dac62008646d5dbba4ad9f41c44402a5bce91859))
+* **deps:** bump @types/react-dom from 19.1.2 to 19.1.3 in /admin-ui ([#821](https://github.com/seatsurfing/seatsurfing/issues/821)) ([c47595f](https://github.com/seatsurfing/seatsurfing/commit/c47595f7dca85e6142f273afda30df9ca83bd68d))
+* **deps:** bump @types/react-dom from 19.1.2 to 19.1.3 in /booking-ui ([#822](https://github.com/seatsurfing/seatsurfing/issues/822)) ([de06610](https://github.com/seatsurfing/seatsurfing/commit/de06610f2ca8b777b6f0c0dac321a8fc0ab4ba67))
+* **deps:** bump i18next from 25.0.1 to 25.0.2 in /commons/ts ([#815](https://github.com/seatsurfing/seatsurfing/issues/815)) ([2378a1a](https://github.com/seatsurfing/seatsurfing/commit/2378a1a68abe53685795042efc7aef2102697fcd))
+* **deps:** bump i18next-browser-languagedetector from 8.0.5 to 8.1.0 in /admin-ui ([#820](https://github.com/seatsurfing/seatsurfing/issues/820)) ([62a1f56](https://github.com/seatsurfing/seatsurfing/commit/62a1f56f7b6d5ba34cd6e0eb2ba70beaa6a2f840))
+* **deps:** bump react-router-dom from 7.5.2 to 7.5.3 in /admin-ui ([#819](https://github.com/seatsurfing/seatsurfing/issues/819)) ([9d0029b](https://github.com/seatsurfing/seatsurfing/commit/9d0029b2bb9e1a12ca46a0842c3217eeece98ddf))
+* send booking mail notification on update ([#826](https://github.com/seatsurfing/seatsurfing/issues/826)) ([83ba352](https://github.com/seatsurfing/seatsurfing/commit/83ba352d3eada216ffb014e64764838c46153562))
+* support attachments when sending mails via ACS ([#825](https://github.com/seatsurfing/seatsurfing/issues/825)) ([cd3b954](https://github.com/seatsurfing/seatsurfing/commit/cd3b9544a68f66a6c13b105b9482093db7644be1))
+
 ## [1.30.0](https://github.com/seatsurfing/seatsurfing/compare/v1.29.3...v1.30.0) (2025-04-24)
 
 
