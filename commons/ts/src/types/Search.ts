@@ -3,6 +3,13 @@ import Location from "./Location";
 import Space from "./Space";
 import Ajax from "../util/Ajax";
 
+export class SearchOptions {
+    includeUsers: boolean = false;
+    includeLocations: boolean = false;
+    includeSpaces: boolean = false;
+    includeGroups: boolean = false;
+}
+
 export default class Search {
     users: User[]
     locations: Location[]
@@ -38,8 +45,14 @@ export default class Search {
         }
     }
 
-    static async search(keyword: string): Promise<Search> {
-        return Ajax.get("/search/" + keyword).then(result => {
+    static async search(keyword: string, options: SearchOptions): Promise<Search> {
+        let params = new URLSearchParams();
+        params.append("query", keyword);
+        params.append("includeUsers", options.includeUsers ? "1" : "0");
+        params.append("includeLocations", options.includeLocations ? "1" : "0");
+        params.append("includeSpaces", options.includeSpaces ? "1" : "0");
+        params.append("includeGroups", options.includeGroups ? "1" : "0");
+        return Ajax.get("/search/?" + params.toString()).then(result => {
             let e: Search = new Search();
             e.deserialize(result.json);
             return e;

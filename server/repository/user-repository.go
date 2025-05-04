@@ -277,6 +277,40 @@ func (r *UserRepository) GetAll(organizationID string, maxResults int, offset in
 	return result, nil
 }
 
+func (r *UserRepository) GetAllByIDs(userIDs []string) ([]*User, error) {
+	var result []*User
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+		"FROM users "+
+		"WHERE id = ANY($1) "+
+		"ORDER BY email",
+		pq.Array(userIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &User{}
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *UserRepository) UsersExistAndBelongToOrg(organizationID string, userIDs []string) (bool, error) {
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+
+		"FROM users "+
+		"WHERE id = ANY($1) AND organization_id = $2",
+		pq.Array(userIDs), organizationID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count == len(userIDs), nil
+}
+
 func (r *UserRepository) GetAllIDs() ([]string, error) {
 	var result []string
 	rows, err := GetDatabase().DB().Query("SELECT id " +
@@ -314,6 +348,18 @@ func (r *UserRepository) Update(e *User) error {
 func (r *UserRepository) Delete(e *User) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
 		"bookings.user_id = $1", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE "+
+		"user_id = $1", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM users_preferences WHERE "+
+		"user_id = $1", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM buddies WHERE "+
+		"owner_id = $1 OR buddy_id = $1", e.ID); err != nil {
 		return err
 	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM users WHERE id = $1", e.ID)

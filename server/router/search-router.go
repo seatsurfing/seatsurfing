@@ -19,7 +19,7 @@ type GetSearchResultsResponse struct {
 }
 
 func (router *SearchRouter) SetupRoutes(s *mux.Router) {
-	s.HandleFunc("/{keyword}", router.getResults).Methods("GET")
+	s.HandleFunc("/", router.getResults).Methods("GET")
 }
 
 func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
@@ -28,27 +28,32 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	vars := mux.Vars(r)
-	keyword := vars["keyword"]
+	keyword := r.URL.Query().Get("query")
 	res := &GetSearchResultsResponse{
 		Users: []*GetUserResponse{},
 	}
-	if CanAdminOrg(user, user.OrganizationID) {
-		if err := router.addUserResults(user, keyword, res); err != nil {
+	if r.URL.Query().Get("includeUsers") == "1" {
+		if CanAdminOrg(user, user.OrganizationID) {
+			if err := router.addUserResults(user, keyword, res); err != nil {
+				log.Println(err)
+				SendInternalServerError(w)
+				return
+			}
+		}
+	}
+	if r.URL.Query().Get("includeLocations") == "1" {
+		if err := router.addLocationResults(user, keyword, res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
 		}
 	}
-	if err := router.addLocationResults(user, keyword, res); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if err := router.addSpaceResults(user, keyword, res); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+	if r.URL.Query().Get("includeSpaces") == "1" {
+		if err := router.addSpaceResults(user, keyword, res); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
 	}
 	SendJSON(w, res)
 }

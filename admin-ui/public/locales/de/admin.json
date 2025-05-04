@@ -157,5 +157,10 @@
     "enabled": "Aktiv",
     "upgradeCloud": "Upgrade",
     "edit": "Bearbeiten",
-    "ok": "OK"
+    "ok": "OK",
+    "groups": "Gruppen",
+    "confirmDeleteGroup": "Gruppe löschen?",
+    "editGroup": "Gruppe bearbeiten",
+    "members": "Mitglieder",
+    "searchForUser": "Suche nach Benutzer..."
 }

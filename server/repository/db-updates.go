@@ -22,6 +22,7 @@ func RunDBSchemaUpdates() {
 		GetAuthStateRepository(),
 		GetAuthAttemptRepository(),
 		GetBookingRepository(),
+		GetGroupRepository(),
 		GetLocationRepository(),
 		GetOrganizationRepository(),
 		GetSpaceRepository(),
@@ -34,9 +35,7 @@ func RunDBSchemaUpdates() {
 		GetSpaceAttributeValueRepository(),
 	}
 	for _, plg := range plugin.GetPlugins() {
-		for _, repository := range (*plg).GetRepositories() {
-			repositories = append(repositories, repository)
-		}
+		repositories = append(repositories, (*plg).GetRepositories()...)
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)

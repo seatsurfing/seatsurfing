@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ajax, Search } from 'seatsurfing-commons';
+import { Ajax, Search, SearchOptions } from 'seatsurfing-commons';
 import { Card, ListGroup, Col, Row } from 'react-bootstrap';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
@@ -45,7 +45,12 @@ class SearchResult extends React.Component<Props, State> {
   loadItems = () => {
     const { keyword } = this.props.router.query;
     if (typeof keyword === 'string') {
-      Search.search(keyword ? keyword : "").then(res => {
+      let options = new SearchOptions();
+      options.includeUsers = true;
+      options.includeLocations = true;
+      options.includeSpaces = true;
+      options.includeGroups = true;
+      Search.search(keyword ? keyword : "", options).then(res => {
         this.data = res;
         this.setState({ loading: false });
       });

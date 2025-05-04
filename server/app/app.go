@@ -60,6 +60,7 @@ func (a *App) InitializeRouter() {
 	routers["/organization/"] = &OrganizationRouter{}
 	routers["/auth-provider/"] = &AuthProviderRouter{}
 	routers["/auth/"] = &AuthRouter{}
+	routers["/group/"] = &GroupRouter{}
 	routers["/user/"] = &UserRouter{}
 	routers["/preference/"] = &UserPreferencesRouter{}
 	routers["/stats/"] = &StatsRouter{}
