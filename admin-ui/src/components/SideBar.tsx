@@ -73,7 +73,7 @@ class SideBar extends React.Component<Props, State> {
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/users" href="/users"><IconUsers className="feather" /> {this.props.t("users")}</Nav.Link>
                     </li>
-                    <li className="nav-item">
+                    <li className="nav-item" hidden={!RuntimeConfig.INFOS.featureGroups}>
                         <Nav.Link as={Link} eventKey="/groups" href="/groups"><IconGroups className="feather" /> {this.props.t("groups")}</Nav.Link>
                     </li>
                     <li className="nav-item">

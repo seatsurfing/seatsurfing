@@ -124,6 +124,11 @@ func (router *GroupRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	featureGroups, _ := GetSettingsRepository().GetBool(user.ID, SettingFeatureGroups.Name)
+	if !featureGroups {
+		SendPaymentRequired(w)
+		return
+	}
 	var m CreateGroupRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)

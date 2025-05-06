@@ -72,6 +72,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
 		SettingFeatureNoUserLimit.Name,
+		SettingFeatureGroups.Name,
 		SettingFeatureCustomDomains.Name,
 	}
 
@@ -129,6 +130,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
 		SettingFeatureNoUserLimit.Name,
+		SettingFeatureGroups.Name,
 		SettingFeatureCustomDomains.Name,
 		SettingDefaultTimezone.Name,
 		SettingCustomLogoUrl.Name,

@@ -53,6 +53,7 @@ var (
 	SettingDefaultTimezone                SettingName = SettingName{Name: "default_timezone", Type: SettingTypeString}
 	SettingFeatureNoUserLimit             SettingName = SettingName{Name: "feature_no_user_limit", Type: SettingTypeBool}
 	SettingFeatureCustomDomains           SettingName = SettingName{Name: "feature_custom_domains", Type: SettingTypeBool}
+	SettingFeatureGroups                  SettingName = SettingName{Name: "feature_groups", Type: SettingTypeBool}
 )
 
 var settingsRepository *SettingsRepository
@@ -235,6 +236,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"VALUES "+
 		"($1, '"+SettingFeatureNoUserLimit.Name+"', '0'), "+
 		"($1, '"+SettingFeatureCustomDomains.Name+"', '0'), "+
+		"($1, '"+SettingFeatureGroups.Name+"', '0'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
 		"($1, '"+SettingNoAdminRestrictions.Name+"', '0'), "+

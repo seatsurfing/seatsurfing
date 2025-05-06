@@ -6,6 +6,7 @@ interface RuntimeUserInfos {
     orgAdmin: boolean;
     pluginMenuItems: any[];
     pluginWelcomeScreens: any[];
+    featureGroups: boolean;
 }
 
 export default class RuntimeConfig {
@@ -15,6 +16,7 @@ export default class RuntimeConfig {
         orgAdmin: false,
         pluginMenuItems: [],
         pluginWelcomeScreens: [],
+        featureGroups: false,
     };
 
     static verifyToken = async (resolve: Function) => {
@@ -47,6 +49,7 @@ export default class RuntimeConfig {
                 settings.forEach(s => {
                     if (s.name === "_sys_admin_menu_items") RuntimeConfig.INFOS.pluginMenuItems = (s.value ? JSON.parse(s.value) : []);
                     if (s.name === "_sys_admin_welcome_screens") RuntimeConfig.INFOS.pluginWelcomeScreens = (s.value ? JSON.parse(s.value) : []);
+                    if (s.name === "feature_groups") RuntimeConfig.INFOS.featureGroups = (s.value ? JSON.parse(s.value) : []);
                 });
                 resolve();
             });
