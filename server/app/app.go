@@ -60,6 +60,7 @@ func (a *App) InitializeRouter() {
 	routers["/organization/"] = &OrganizationRouter{}
 	routers["/auth-provider/"] = &AuthProviderRouter{}
 	routers["/auth/"] = &AuthRouter{}
+	routers["/group/"] = &GroupRouter{}
 	routers["/user/"] = &UserRouter{}
 	routers["/preference/"] = &UserPreferencesRouter{}
 	routers["/stats/"] = &StatsRouter{}
@@ -109,8 +110,6 @@ func (a *App) InitializeDefaultOrg() {
 			SignupDate: time.Now().UTC(),
 		}
 		GetOrganizationRepository().Create(org)
-		GetSettingsRepository().Set(org.ID, SettingFeatureNoUserLimit.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
 		user := &User{
 			OrganizationID: org.ID,
 			Email:          config.InitOrgUser + "@seatsurfing.local",
@@ -119,6 +118,22 @@ func (a *App) InitializeDefaultOrg() {
 		}
 		GetUserRepository().Create(user)
 		GetOrganizationRepository().CreateSampleData(org)
+	}
+}
+
+func (a *App) InitializeSingleOrgSettings() {
+	numOrgs, err := GetOrganizationRepository().GetNumOrgs()
+	if err == nil && numOrgs == 1 {
+		log.Println("Updating settings for primary organization...")
+		orgs, err := GetOrganizationRepository().GetAll()
+		if err != nil {
+			log.Println("Error while getting first organization:", err)
+			return
+		}
+		org := orgs[0]
+		GetSettingsRepository().Set(org.ID, SettingFeatureNoUserLimit.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 	}
 }
 

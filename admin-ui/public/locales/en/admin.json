@@ -164,5 +164,10 @@
     "enabled": "Enabled",
     "upgradeCloud": "Upgrade",
     "edit": "Edit",
-    "ok": "OK"
+    "ok": "OK",
+    "groups": "Groups",
+    "confirmDeleteGroup": "Delete group?",
+    "editGroup": "Edit group",
+    "members": "Members",
+    "searchForUser": "Search for user..."
 }

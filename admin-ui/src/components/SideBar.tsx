@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home as IconHome, Users as IconUsers, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon } from 'react-feather';
+import { Home as IconHome, User as IconUsers, Users as IconGroups, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon } from 'react-feather';
 import { Ajax, AjaxCredentials, User } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { Nav } from 'react-bootstrap';
@@ -43,6 +43,7 @@ class SideBar extends React.Component<Props, State> {
         const startPaths = [
             '/organizations',
             '/users',
+            '/groups',
             '/settings',
             '/locations',
             '/bookings'
@@ -71,6 +72,9 @@ class SideBar extends React.Component<Props, State> {
                 <>
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/users" href="/users"><IconUsers className="feather" /> {this.props.t("users")}</Nav.Link>
+                    </li>
+                    <li className="nav-item" hidden={!RuntimeConfig.INFOS.featureGroups}>
+                        <Nav.Link as={Link} eventKey="/groups" href="/groups"><IconGroups className="feather" /> {this.props.t("groups")}</Nav.Link>
                     </li>
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/settings" href="/settings"><IconSettings className="feather" /> {this.props.t("settings")}</Nav.Link>

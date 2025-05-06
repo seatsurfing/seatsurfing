@@ -26,6 +26,27 @@ type LoginResponse struct {
 	UserID       string `json:"userId"`
 }
 
+var DatabaseTables = [...]string{
+	"auth_attempts",
+	"auth_providers",
+	"auth_states",
+	"bookings",
+	"buddies",
+	"debug_time_issues",
+	"groups",
+	"locations",
+	"organizations",
+	"organizations_domains",
+	"refresh_tokens",
+	"settings",
+	"spaces_attributes",
+	"spaces_attributes_values",
+	"spaces",
+	"users",
+	"users_groups",
+	"users_preferences",
+}
+
 func GetTestJWT(userID string) string {
 	claims := &Claims{
 		Email:  userID,
@@ -168,15 +189,13 @@ func CreateLoginTestUserParams() *LoginResponse {
 }
 
 func DropTestDB() {
-	tables := []string{"auth_providers", "auth_states", "bookings", "spaces", "locations", "organizations_domains", "organizations", "users", "signups", "settings", "space_attributes"}
-	for _, s := range tables {
+	for _, s := range DatabaseTables {
 		GetDatabase().DB().Exec("DROP TABLE IF EXISTS " + s)
 	}
 }
 
 func ClearTestDB() {
-	tables := []string{"auth_providers", "auth_states", "auth_attempts", "bookings", "spaces", "locations", "organizations_domains", "organizations", "users", "users_preferences", "signups", "settings", "space_attributes"}
-	for _, s := range tables {
+	for _, s := range DatabaseTables {
 		GetDatabase().DB().Exec("TRUNCATE " + s)
 	}
 }

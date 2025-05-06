@@ -16,7 +16,7 @@ func TestSearchForbidden(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 	loginResponse := LoginTestUser(user.ID)
 
-	req := NewHTTPRequest("GET", "/search/test", loginResponse.UserID, nil)
+	req := NewHTTPRequest("GET", "/search/?query=test", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
@@ -43,7 +43,7 @@ func TestSearchUsers(t *testing.T) {
 	}
 	GetUserRepository().Create(u3)
 
-	req := NewHTTPRequest("GET", "/search/max", loginResponse.UserID, nil)
+	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetSearchResultsResponse
@@ -76,7 +76,7 @@ func TestSearchLocations(t *testing.T) {
 	}
 	GetLocationRepository().Create(l3)
 
-	req := NewHTTPRequest("GET", "/search/frank", loginResponse.UserID, nil)
+	req := NewHTTPRequest("GET", "/search/?query=frank&includeLocations=1", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetSearchResultsResponse
@@ -115,7 +115,7 @@ func TestSearchSpaces(t *testing.T) {
 	}
 	GetSpaceRepository().Create(s3)
 
-	req := NewHTTPRequest("GET", "/search/123", loginResponse.UserID, nil)
+	req := NewHTTPRequest("GET", "/search/?query=123&includeSpaces=1", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetSearchResultsResponse

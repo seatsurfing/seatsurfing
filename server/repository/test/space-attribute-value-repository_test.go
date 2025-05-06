@@ -1,7 +1,6 @@
 package test
 
 import (
-	"log"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -61,7 +60,6 @@ func TestSpaceAttributeValueRepositoryCRUD(t *testing.T) {
 	CheckTestBool(t, true, err == nil)
 
 	list1, err := GetSpaceAttributeValueRepository().GetAllForEntity(l1.ID, SpaceAttributeValueEntityTypeLocation)
-	log.Println(err)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(list1))
 	CheckTestString(t, "val1.2", list1[0].Value)
