@@ -22,6 +22,7 @@ func RunDBSchemaUpdates() {
 		GetAuthStateRepository(),
 		GetAuthAttemptRepository(),
 		GetBookingRepository(),
+		GetBuddyRepository(),
 		GetGroupRepository(),
 		GetLocationRepository(),
 		GetOrganizationRepository(),

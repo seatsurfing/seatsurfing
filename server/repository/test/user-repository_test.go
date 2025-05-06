@@ -23,9 +23,7 @@ func TestUsersCRUD(t *testing.T) {
 
 	// Read
 	user2, err := GetUserRepository().GetOne(user.ID)
-	if err != nil {
-		t.Fatalf("Expected non-nil user")
-	}
+	CheckTestBool(t, true, err == nil)
 	CheckTestString(t, user.ID, user2.ID)
 	CheckTestString(t, "73980078-f4d7-40ff-9211-a7bcbf8d1981", user.OrganizationID)
 
@@ -38,18 +36,16 @@ func TestUsersCRUD(t *testing.T) {
 
 	// Read
 	user3, err := GetUserRepository().GetOne(user.ID)
-	if err != nil {
-		t.Fatalf("Expected non-nil user")
-	}
+	CheckTestBool(t, true, err == nil)
 	CheckTestString(t, user.ID, user3.ID)
 	CheckTestString(t, "61bf23af-0310-4d2b-b401-21c31d60c2c4", user3.OrganizationID)
 
 	// Delete
-	GetUserRepository().Delete(user)
+	err = GetUserRepository().Delete(user)
+	CheckTestBool(t, true, err == nil)
+
 	_, err = GetUserRepository().GetOne(user.ID)
-	if err == nil {
-		t.Fatalf("Expected nil user")
-	}
+	CheckTestBool(t, true, err != nil)
 }
 
 func TestUsersCount(t *testing.T) {
@@ -59,9 +55,7 @@ func TestUsersCount(t *testing.T) {
 	CreateTestUserInOrg(org)
 
 	res, err := GetUserRepository().GetCount(org.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 2, res)
 }
 
@@ -99,9 +93,7 @@ func TestDeleteObsoleteConfluenceAnonymousUsers(t *testing.T) {
 	GetAuthAttemptRepository().Create(la)
 
 	num, err := GetUserRepository().DeleteObsoleteConfluenceAnonymousUsers()
-	if err != nil {
-		t.Fatal(err)
-	}
+	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 3, num)
 
 	users, _ := GetUserRepository().GetAll(org.ID, 10000, 0)
