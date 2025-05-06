@@ -124,7 +124,7 @@ func (router *GroupRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	featureGroups, _ := GetSettingsRepository().GetBool(user.ID, SettingFeatureGroups.Name)
+	featureGroups, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingFeatureGroups.Name)
 	if !featureGroups {
 		SendPaymentRequired(w)
 		return

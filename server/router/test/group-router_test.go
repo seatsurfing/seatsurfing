@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
@@ -46,7 +47,9 @@ func TestGroupsForbidden(t *testing.T) {
 
 func TestGroupsCRUD(t *testing.T) {
 	ClearTestDB()
+
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -93,6 +96,7 @@ func TestGroupsCRUD(t *testing.T) {
 func TestGroupsList(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -127,6 +131,7 @@ func TestGroupsList(t *testing.T) {
 func TestGroupsMembersCRUD(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -172,7 +177,9 @@ func TestGroupsMembersCRUD(t *testing.T) {
 func TestGroupsMembersAddForeignOrg(t *testing.T) {
 	ClearTestDB()
 	org1 := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org1.ID, SettingFeatureGroups.Name, "1")
 	org2 := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org2.ID, SettingFeatureGroups.Name, "1")
 	user := CreateTestUserOrgAdmin(org1)
 	loginResponse := LoginTestUser(user.ID)
 
