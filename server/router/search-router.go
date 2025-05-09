@@ -16,6 +16,7 @@ type GetSearchResultsResponse struct {
 	Users     []*GetUserResponse     `json:"users"`
 	Locations []*GetLocationResponse `json:"locations"`
 	Spaces    []*GetSpaceResponse    `json:"spaces"`
+	Groups    []*GetGroupResponse    `json:"groups"`
 }
 
 func (router *SearchRouter) SetupRoutes(s *mux.Router) {
@@ -35,6 +36,15 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("includeUsers") == "1" {
 		if CanAdminOrg(user, user.OrganizationID) {
 			if err := router.addUserResults(user, keyword, res); err != nil {
+				log.Println(err)
+				SendInternalServerError(w)
+				return
+			}
+		}
+	}
+	if r.URL.Query().Get("includeGroups") == "1" {
+		if CanSpaceAdminOrg(user, user.OrganizationID) {
+			if err := router.addGroupResults(user, keyword, res); err != nil {
 				log.Println(err)
 				SendInternalServerError(w)
 				return
@@ -71,6 +81,19 @@ func (router *SearchRouter) addUserResults(user *User, keyword string, res *GetS
 	return nil
 }
 
+func (router *SearchRouter) addGroupResults(user *User, keyword string, res *GetSearchResultsResponse) error {
+	list, err := GetGroupRepository().GetByKeyword(user.OrganizationID, keyword)
+	if err != nil {
+		return err
+	}
+	groupRouter := &GroupRouter{}
+	for _, e := range list {
+		m := groupRouter.copyToRestModel(e)
+		res.Groups = append(res.Groups, m)
+	}
+	return nil
+}
+
 func (router *SearchRouter) addLocationResults(user *User, keyword string, res *GetSearchResultsResponse) error {
 	list, err := GetLocationRepository().GetByKeyword(user.OrganizationID, keyword)
 	if err != nil {
@@ -91,7 +114,7 @@ func (router *SearchRouter) addSpaceResults(user *User, keyword string, res *Get
 	}
 	spaceRouter := &SpaceRouter{}
 	for _, e := range list {
-		m := spaceRouter.copyToRestModel(e, nil)
+		m := spaceRouter.copyToRestModel(e, nil, nil, nil)
 		res.Spaces = append(res.Spaces, m)
 	}
 	return nil

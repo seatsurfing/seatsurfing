@@ -162,5 +162,10 @@
     "confirmDeleteGroup": "Gruppe löschen?",
     "editGroup": "Gruppe bearbeiten",
     "members": "Mitglieder",
-    "searchForUser": "Suche nach Benutzer..."
+    "searchForUser": "Suche nach Benutzer...",
+    "searchForGroup": "Suche nach Gruppe...",
+    "approvers": "Genehmiger",
+    "setApproversHint": "Leer, wenn keine Genehmigung erforderlich ist.",
+    "allowBookers": "Erlaubte Bucher",
+    "setAllowBookersHint": "Leer, wenn Buchung nicht eingeschränkt ist."
 }

@@ -42,6 +42,8 @@ var DatabaseTables = [...]string{
 	"spaces_attributes",
 	"spaces_attributes_values",
 	"spaces",
+	"spaces_approvers",
+	"spaces_allowed_bookers",
 	"users",
 	"users_groups",
 	"users_preferences",

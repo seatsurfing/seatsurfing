@@ -137,6 +137,144 @@ func TestSpacesCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestSpacesApproversCRUD(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Create group 1
+	payload := `{"name": "G 1"}`
+	req := NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	group1ID := res.Header().Get("X-Object-Id")
+
+	// Create group 2
+	payload = `{"name": "G 2"}`
+	req = NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	group2ID := res.Header().Get("X-Object-Id")
+
+	// Create location
+	payload = `{"name": "Location 1"}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locationID := res.Header().Get("X-Object-Id")
+
+	// Create space
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	spaceID := res.Header().Get("X-Object-Id")
+
+	// Add approvers
+	approverIDs := []string{group1ID, group2ID}
+	approverIDsJson, _ := json.Marshal(approverIDs)
+	req = NewHTTPRequest("PUT", "/location/"+locationID+"/space/"+spaceID+"/approver", loginResponse.UserID, bytes.NewBuffer(approverIDsJson))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// List approvers
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/"+spaceID+"/approver", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetGroupResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, len(resBody))
+	CheckTestString(t, group1ID, resBody[0].ID)
+	CheckTestString(t, group2ID, resBody[1].ID)
+
+	// Remove one approver
+	approverIDs = []string{group1ID}
+	approverIDsJson, _ = json.Marshal(approverIDs)
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID+"/approver/remove", loginResponse.UserID, bytes.NewBuffer(approverIDsJson))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// List approvers
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/"+spaceID+"/approver", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 []*GetGroupResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestInt(t, 1, len(resBody2))
+	CheckTestString(t, group2ID, resBody2[0].ID)
+}
+
+func TestSpacesAllowedBookersCRUD(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Create group 1
+	payload := `{"name": "G 1"}`
+	req := NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	group1ID := res.Header().Get("X-Object-Id")
+
+	// Create group 2
+	payload = `{"name": "G 2"}`
+	req = NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	group2ID := res.Header().Get("X-Object-Id")
+
+	// Create location
+	payload = `{"name": "Location 1"}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locationID := res.Header().Get("X-Object-Id")
+
+	// Create space
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	spaceID := res.Header().Get("X-Object-Id")
+
+	// Add allowed bookers
+	approverIDs := []string{group1ID, group2ID}
+	approverIDsJson, _ := json.Marshal(approverIDs)
+	req = NewHTTPRequest("PUT", "/location/"+locationID+"/space/"+spaceID+"/allowedbooker", loginResponse.UserID, bytes.NewBuffer(approverIDsJson))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// List allowed bookers
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/"+spaceID+"/allowedbooker", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetGroupResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, len(resBody))
+	CheckTestString(t, group1ID, resBody[0].ID)
+	CheckTestString(t, group2ID, resBody[1].ID)
+
+	// Remove one allowed booker
+	approverIDs = []string{group1ID}
+	approverIDsJson, _ = json.Marshal(approverIDs)
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID+"/allowedbooker/remove", loginResponse.UserID, bytes.NewBuffer(approverIDsJson))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// List allowed bookers
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/"+spaceID+"/allowedbooker", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 []*GetGroupResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestInt(t, 1, len(resBody2))
+	CheckTestString(t, group2ID, resBody2[0].ID)
+}
+
 func TestSpacesBulkUpdate(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
