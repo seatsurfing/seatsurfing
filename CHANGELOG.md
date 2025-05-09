@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.32.0](https://github.com/seatsurfing/seatsurfing/compare/v1.31.1...v1.32.0) (2025-05-09)
+
+
+### Features
+
+* add ability to specify approver and allowed booker groups per space ([#850](https://github.com/seatsurfing/seatsurfing/issues/850)) ([f840abc](https://github.com/seatsurfing/seatsurfing/commit/f840abc7ff9c0a09b47086527b9689a778619516))
+* add user groups support ([#829](https://github.com/seatsurfing/seatsurfing/issues/829)) ([5b05a83](https://github.com/seatsurfing/seatsurfing/commit/5b05a83f7f7efbcf3d9b7905cbbe54183ea2798c))
+
+
+### Bug Fixes
+
+* **deps:** bump bootstrap from 5.3.5 to 5.3.6 in /admin-ui ([#832](https://github.com/seatsurfing/seatsurfing/issues/832)) ([891d4b3](https://github.com/seatsurfing/seatsurfing/commit/891d4b32c434c7448ab8aeaba33c2d9d9ef00378))
+* **deps:** bump bootstrap from 5.3.5 to 5.3.6 in /booking-ui ([#835](https://github.com/seatsurfing/seatsurfing/issues/835)) ([5bbd5b8](https://github.com/seatsurfing/seatsurfing/commit/5bbd5b88a4bc749b2f5bf25fd0a2b657c0054d24))
+* **deps:** bump eslint from 9.25.1 to 9.26.0 in /admin-ui ([#831](https://github.com/seatsurfing/seatsurfing/issues/831)) ([13fa44e](https://github.com/seatsurfing/seatsurfing/commit/13fa44eb56fa79a7c5f8b23b267b03de93f710c9))
+* **deps:** bump eslint from 9.25.1 to 9.26.0 in /booking-ui ([#830](https://github.com/seatsurfing/seatsurfing/issues/830)) ([5c50b40](https://github.com/seatsurfing/seatsurfing/commit/5c50b400b0c55a1d1df707b2beebfb3d6c858646))
+* **deps:** bump eslint-config-next from 15.3.1 to 15.3.2 in /admin-ui ([#840](https://github.com/seatsurfing/seatsurfing/issues/840)) ([f61d72f](https://github.com/seatsurfing/seatsurfing/commit/f61d72fd7858e73b8a24a089e29348a7f7979da3))
+* **deps:** bump eslint-config-next from 15.3.1 to 15.3.2 in /booking-ui ([#844](https://github.com/seatsurfing/seatsurfing/issues/844)) ([f05f6d0](https://github.com/seatsurfing/seatsurfing/commit/f05f6d021df94b98bb51f8580696a1e9c88f8e1c))
+* **deps:** bump i18next from 25.0.2 to 25.1.1 in /commons/ts ([#836](https://github.com/seatsurfing/seatsurfing/issues/836)) ([a5419be](https://github.com/seatsurfing/seatsurfing/commit/a5419be40dd565177bcd009b4dbf8e1b2b2fa745))
+* **deps:** bump next from 15.3.1 to 15.3.2 in /admin-ui ([#839](https://github.com/seatsurfing/seatsurfing/issues/839)) ([39b35b3](https://github.com/seatsurfing/seatsurfing/commit/39b35b3d0724d214c133cb1d8ad4cac37322ba40))
+* **deps:** bump next from 15.3.1 to 15.3.2 in /booking-ui ([#842](https://github.com/seatsurfing/seatsurfing/issues/842)) ([e98d90b](https://github.com/seatsurfing/seatsurfing/commit/e98d90b18512b092f78e4492a8b83a0fb08e4614))
+* **deps:** bump react-router-dom from 7.5.3 to 7.6.0 in /admin-ui ([#847](https://github.com/seatsurfing/seatsurfing/issues/847)) ([f273a31](https://github.com/seatsurfing/seatsurfing/commit/f273a312e9539c74edb6cb2028fef582c5d0d8e9))
+
 ## [1.31.1](https://github.com/seatsurfing/seatsurfing/compare/v1.31.0...v1.31.1) (2025-05-02)
 
 
