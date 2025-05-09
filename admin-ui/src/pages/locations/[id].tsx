@@ -610,7 +610,7 @@ class EditLocation extends React.Component<Props, State> {
           <Col sm="4">
             <Form.Check type="checkbox" label={a.label} checked={this.isSpaceAttributeEnabled(a.id)} onChange={(e: any) => this.setSpaceAttributeEnabled(a.id, e.target.checked)} />
           </Col>
-          <Col sm="6">{input}</Col>
+          <Col sm="8">{input}</Col>
         </Form.Group>
       );
       res.push(row);
@@ -628,13 +628,13 @@ class EditLocation extends React.Component<Props, State> {
           <Form onSubmit={(e) => { e.preventDefault() }}>
             <Form.Group as={Row}>
               <Form.Label column sm="4">{this.props.t("name")}</Form.Label>
-              <Col sm="6">
+              <Col sm="8">
                 <Form.Control type="text" value={this.getSelectedSpace()?.name} onChange={(e: any) => this.setSpaceName(this.state.selectedSpace!, e.target.value)} required={true} />
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4">{this.props.t("approvers")}</Form.Label>
-              <Col sm="6">
+              <Col sm="8">
                 <AsyncTypeahead
                   filterBy={this.filterSearch}
                   id="search-approvers"
@@ -655,11 +655,12 @@ class EditLocation extends React.Component<Props, State> {
                     </div>
                   )}
                 />
+                <Form.Text className="text-muted">{this.props.t("setApproversHint")}</Form.Text>
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4">{this.props.t("allowBookers")}</Form.Label>
-              <Col sm="6">
+              <Col sm="8">
                 <AsyncTypeahead
                   filterBy={this.filterSearch}
                   id="search-allowbookers"
@@ -680,6 +681,7 @@ class EditLocation extends React.Component<Props, State> {
                     </div>
                   )}
                 />
+                <Form.Text className="text-muted">{this.props.t("setAllowBookersHint")}</Form.Text>
               </Col>
             </Form.Group>
             {this.getSpaceAttributeRows()}
