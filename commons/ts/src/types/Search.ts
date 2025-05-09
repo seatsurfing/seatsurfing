@@ -2,6 +2,7 @@ import User from "./User";
 import Location from "./Location";
 import Space from "./Space";
 import Ajax from "../util/Ajax";
+import Group from "./Group";
 
 export class SearchOptions {
     includeUsers: boolean = false;
@@ -14,11 +15,13 @@ export default class Search {
     users: User[]
     locations: Location[]
     spaces: Space[]
+    groups: Group[]
 
     constructor() {
         this.users = [];
         this.locations = [];
         this.spaces = [];
+        this.groups = [];
     }
 
     deserialize(input: any): void {
@@ -26,6 +29,13 @@ export default class Search {
             this.users = input.users.map((user: any) => {
                 let e = new User();
                 e.deserialize(user);
+                return e;
+            });
+        }
+        if (input.groups) {
+            this.groups = input.groups.map((group: any) => {
+                let e = new Group();
+                e.deserialize(group);
                 return e;
             });
         }

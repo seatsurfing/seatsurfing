@@ -42,7 +42,7 @@ func (router *GroupRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !CanSpaceAdminOrg(user, e.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
@@ -52,7 +52,7 @@ func (router *GroupRouter) getOne(w http.ResponseWriter, r *http.Request) {
 
 func (router *GroupRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !CanSpaceAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
 		return
 	}

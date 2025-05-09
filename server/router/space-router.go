@@ -19,13 +19,15 @@ type SpaceAttributeValueRequest struct {
 }
 
 type CreateSpaceRequest struct {
-	Name       string                       `json:"name" validate:"required"`
-	X          uint                         `json:"x"`
-	Y          uint                         `json:"y"`
-	Width      uint                         `json:"width"`
-	Height     uint                         `json:"height"`
-	Rotation   uint                         `json:"rotation"`
-	Attributes []SpaceAttributeValueRequest `json:"attributes"`
+	Name                  string                       `json:"name" validate:"required"`
+	X                     uint                         `json:"x"`
+	Y                     uint                         `json:"y"`
+	Width                 uint                         `json:"width"`
+	Height                uint                         `json:"height"`
+	Rotation              uint                         `json:"rotation"`
+	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
+	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
+	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
 }
 
 type UpdateSpaceRequest struct {
@@ -80,6 +82,12 @@ type GetSpaceAvailabilityRequest struct {
 func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/availability", router.getAvailability).Methods("POST")
 	s.HandleFunc("/bulk", router.bulkUpdate).Methods("POST")
+	s.HandleFunc("/{id}/approver/remove", router.removeApprovers).Methods("POST")
+	s.HandleFunc("/{id}/approver", router.getApprovers).Methods("GET")
+	s.HandleFunc("/{id}/approver", router.addApprovers).Methods("PUT")
+	s.HandleFunc("/{id}/allowedbooker/remove", router.removeAllowedBookers).Methods("POST")
+	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
+	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -111,7 +119,19 @@ func (router *SpaceRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, attributes)
+	approvers, err := GetSpaceRepository().GetAllApproversForSpaceList([]string{e.ID})
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	allowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{e.ID})
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, attributes, approvers, allowedBookers)
 	SendJSON(w, res)
 }
 
@@ -259,7 +279,15 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
 			} else {
-				router.applySpaceAttributes(availableAttributes, e, &mSpace)
+				if err := router.applySpaceAttributes(availableAttributes, e, &mSpace); err != nil {
+					log.Println("Could not apply space attributes:", err)
+				}
+				if err := router.applyApprovers(e, &mSpace); err != nil {
+					log.Println("Could not apply approvers:", err)
+				}
+				if err := router.applyAllowBookers(e, &mSpace); err != nil {
+					log.Println("Could not apply allow bookers:", err)
+				}
 				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: e.ID, Success: true})
 			}
 		}
@@ -275,7 +303,15 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: "", Success: false})
 			} else {
-				router.applySpaceAttributes(availableAttributes, e, &mSpace.CreateSpaceRequest)
+				if err := router.applySpaceAttributes(availableAttributes, e, &mSpace.CreateSpaceRequest); err != nil {
+					log.Println("Could not apply space attributes:", err)
+				}
+				if err := router.applyApprovers(e, &mSpace.CreateSpaceRequest); err != nil {
+					log.Println("Could not apply approvers:", err)
+				}
+				if err := router.applyAllowBookers(e, &mSpace.CreateSpaceRequest); err != nil {
+					log.Println("Could not apply allow bookers:", err)
+				}
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: e.ID, Success: true})
 			}
 		}
@@ -311,9 +347,21 @@ func (router *SpaceRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	approvers, err := GetSpaceRepository().GetAllApproversForSpaceList(spaceIds)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	allowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetSpaceResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e, attributes)
+		m := router.copyToRestModel(e, attributes, approvers, allowedBookers)
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -451,13 +499,304 @@ func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttr
 	return nil
 }
 
-func (router *SpaceRouter) searchInputContains(m *[]SearchAttribute, attributeID string) bool {
-	for _, e := range *m {
-		if e.AttributeID == attributeID {
-			return true
+func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest) error {
+	existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(space)
+	if err != nil {
+		return err
+	}
+	// Check deletes
+	removes := []string{}
+	for _, approver := range existingApprovers {
+		found := false
+		for _, mApprover := range m.ApproverGroupIDs {
+			if approver == mApprover {
+				found = true
+				break
+			}
+		}
+		if !found {
+			removes = append(removes, approver)
 		}
 	}
-	return false
+	// Check creates
+	adds := []string{}
+	for _, mApprover := range m.ApproverGroupIDs {
+		found := false
+		for _, approver := range existingApprovers {
+			if approver == mApprover {
+				found = true
+				break
+			}
+		}
+		if !found {
+			adds = append(adds, mApprover)
+		}
+	}
+	if err := GetSpaceRepository().AddApprovers(space, adds); err != nil {
+		return err
+	}
+	if err := GetSpaceRepository().RemoveApprovers(space, removes); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (router *SpaceRouter) applyAllowBookers(space *Space, m *CreateSpaceRequest) error {
+	existingAllowBookers, err := GetSpaceRepository().GetAllowedBookersGroupIDs(space)
+	if err != nil {
+		return err
+	}
+	// Check deletes
+	removes := []string{}
+	for _, allowBooker := range existingAllowBookers {
+		found := false
+		for _, mAllowBooker := range m.AllowedBookerGroupIDs {
+			if allowBooker == mAllowBooker {
+				found = true
+				break
+			}
+		}
+		if !found {
+			removes = append(removes, allowBooker)
+		}
+	}
+	// Check creates
+	adds := []string{}
+	for _, mAllowBooker := range m.AllowedBookerGroupIDs {
+		found := false
+		for _, allowBooker := range existingAllowBookers {
+			if allowBooker == mAllowBooker {
+				found = true
+				break
+			}
+		}
+		if !found {
+			adds = append(adds, mAllowBooker)
+		}
+	}
+	if err := GetSpaceRepository().AddAllowedBookers(space, adds); err != nil {
+		return err
+	}
+	if err := GetSpaceRepository().RemoveAllowedBookers(space, removes); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (router *SpaceRouter) addApprovers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	var approvers []string
+	if UnmarshalBody(r, &approvers) != nil {
+		SendBadRequest(w)
+		return
+	}
+	ok, err := GetGroupRepository().GroupsExistAndBelongToOrg(location.OrganizationID, approvers)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if !ok {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetSpaceRepository().AddApprovers(e, approvers); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *SpaceRouter) removeApprovers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	var approvers []string
+	if UnmarshalBody(r, &approvers) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetSpaceRepository().RemoveApprovers(e, approvers); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *SpaceRouter) getApprovers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(e)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	groups, err := GetGroupRepository().GetAllByIDs(approvers)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	gr := &GroupRouter{}
+	res := []*GetGroupResponse{}
+	for _, e := range groups {
+		m := gr.copyToRestModel(e)
+		res = append(res, m)
+	}
+	SendJSON(w, res)
+}
+
+func (router *SpaceRouter) addAllowedBookers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	var approvers []string
+	if UnmarshalBody(r, &approvers) != nil {
+		SendBadRequest(w)
+		return
+	}
+	ok, err := GetGroupRepository().GroupsExistAndBelongToOrg(location.OrganizationID, approvers)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if !ok {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetSpaceRepository().AddAllowedBookers(e, approvers); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *SpaceRouter) removeAllowedBookers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	var approvers []string
+	if UnmarshalBody(r, &approvers) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetSpaceRepository().RemoveAllowedBookers(e, approvers); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *SpaceRouter) getAllowedBookers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	approvers, err := GetSpaceRepository().GetAllowedBookersGroupIDs(e)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	groups, err := GetGroupRepository().GetAllByIDs(approvers)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	gr := &GroupRouter{}
+	res := []*GetGroupResponse{}
+	for _, e := range groups {
+		m := gr.copyToRestModel(e)
+		res = append(res, m)
+	}
+	SendJSON(w, res)
 }
 
 func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
@@ -471,7 +810,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	return e
 }
 
-func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttributeValue) *GetSpaceResponse {
+func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttributeValue, approvers, allowedBookers []*SpaceGroup) *GetSpaceResponse {
 	m := &GetSpaceResponse{}
 	m.ID = e.ID
 	m.LocationID = e.LocationID
@@ -488,6 +827,22 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 				if attribute.EntityID == e.ID {
 					m.Attributes = append(m.Attributes, SpaceAttributeValueRequest{AttributeID: attribute.AttributeID, Value: attribute.Value})
 				}
+			}
+		}
+	}
+	if approvers != nil {
+		m.ApproverGroupIDs = []string{}
+		for _, approver := range approvers {
+			if approver.SpaceID == e.ID {
+				m.ApproverGroupIDs = append(m.ApproverGroupIDs, approver.GroupID)
+			}
+		}
+	}
+	if allowedBookers != nil {
+		m.AllowedBookerGroupIDs = []string{}
+		for _, allowedBooker := range allowedBookers {
+			if allowedBooker.SpaceID == e.ID {
+				m.AllowedBookerGroupIDs = append(m.AllowedBookerGroupIDs, allowedBooker.GroupID)
 			}
 		}
 	}

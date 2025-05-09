@@ -22,6 +22,7 @@ type Booking struct {
 	Enter    time.Time
 	Leave    time.Time
 	CalDavID string
+	Approved bool
 }
 
 type BookingDetails struct {
@@ -66,15 +67,21 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 22 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT TRUE"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *BookingRepository) Create(e *Booking) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
-		"(user_id, space_id, enter_time, leave_time, caldav_id) "+
-		"VALUES ($1, $2, $3, $4, $5) "+
+		"(user_id, space_id, enter_time, leave_time, caldav_id, approved) "+
+		"VALUES ($1, $2, $3, $4, $5, $6) "+
 		"RETURNING id",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID).Scan(&id)
+		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -84,7 +91,7 @@ func (r *BookingRepository) Create(e *Booking) error {
 
 func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
 	e := &BookingDetails{}
-	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, "+
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
 		"users.email "+
@@ -93,7 +100,7 @@ func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
 		"INNER JOIN users ON bookings.user_id = users.id "+
 		"WHERE bookings.id = $1",
-		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +110,7 @@ func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
 // Get first upcoming booking by user
 func (r *BookingRepository) GetFirstUpcomingBookingByUserID(userID string) (*BookingDetails, error) {
 	e := &BookingDetails{}
-	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, "+
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
 		"users.email "+
@@ -113,7 +120,7 @@ func (r *BookingRepository) GetFirstUpcomingBookingByUserID(userID string) (*Boo
 		"INNER JOIN users ON bookings.user_id = users.id "+
 		"WHERE bookings.user_id = $1 AND bookings.enter_time > $2 "+
 		"ORDER BY bookings.enter_time ASC LIMIT 1",
-		userID, time.Now()).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		userID, time.Now()).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +129,7 @@ func (r *BookingRepository) GetFirstUpcomingBookingByUserID(userID string) (*Boo
 
 func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, "+
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
 		"users.email "+
@@ -138,7 +145,7 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 	defer rows.Close()
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +156,7 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 
 func (r *BookingRepository) GetAllByUser(userID string, startTime time.Time) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, "+
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
 		"users.email "+
@@ -165,7 +172,7 @@ func (r *BookingRepository) GetAllByUser(userID string, startTime time.Time) ([]
 	defer rows.Close()
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -179,9 +186,10 @@ func (r *BookingRepository) Update(e *Booking) error {
 		"space_id = $2, "+
 		"enter_time = $3, "+
 		"leave_time = $4, "+
-		"caldav_id = $5 "+
-		"WHERE id = $6",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.ID)
+		"caldav_id = $5, "+
+		"approved = $6 "+
+		"WHERE id = $7",
+		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.ID)
 	return err
 }
 
@@ -263,7 +271,7 @@ func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Tim
 // get all bookings by a specific user which overlap with the provided time range
 func (r *BookingRepository) GetTimeRangeByUser(userID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved "+
 		"FROM bookings "+
 		"WHERE id::text != $4 AND user_id = $1 AND ("+
 		"($2 <= enter_time AND $3 > enter_time) OR "+ // (overlap start, can end at same time as next start)
@@ -277,7 +285,7 @@ func (r *BookingRepository) GetTimeRangeByUser(userID string, enter time.Time, l
 	defer rows.Close()
 	for rows.Next() {
 		e := &Booking{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved)
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +298,7 @@ func (r *BookingRepository) GetTimeRangeByUser(userID string, enter time.Time, l
 // with the specified enter and leave times.
 func (r *BookingRepository) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id = $2 AND ("+
 		"($3 >= enter_time AND $3 <= leave_time) OR "+
@@ -305,7 +313,7 @@ func (r *BookingRepository) GetConflicts(spaceID string, enter time.Time, leave 
 	defer rows.Close()
 	for rows.Next() {
 		e := &Booking{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved)
 		if err != nil {
 			return nil, err
 		}
@@ -333,7 +341,7 @@ func (r *BookingRepository) GetConcurrent(location *Location, enter time.Time, l
 	if err != nil {
 		return 0, err
 	}
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time "+
+	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id IN (SELECT id FROM spaces WHERE location_id = $2) AND ("+
 		"($3 >= enter_time AND $3 <= leave_time) OR "+
@@ -351,7 +359,7 @@ func (r *BookingRepository) GetConcurrent(location *Location, enter time.Time, l
 	defer rows.Close()
 	for rows.Next() {
 		e := &Booking{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved)
 		e.Enter, _ = time.ParseInLocation(JsDateTimeFormat, e.Enter.Format(JsDateTimeFormat), targetTz)
 		e.Leave, _ = time.ParseInLocation(JsDateTimeFormat, e.Leave.Format(JsDateTimeFormat), targetTz)
 		if err != nil {

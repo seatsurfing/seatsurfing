@@ -92,6 +92,61 @@ func (r *GroupRepository) GetAll(organizationID string) ([]*Group, error) {
 	return result, nil
 }
 
+func (r *GroupRepository) GetAllByIDs(groupIDs []string) ([]*Group, error) {
+	var result []*Group
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
+		"FROM groups "+
+		"WHERE id = ANY($1) "+
+		"ORDER BY name",
+		pq.Array(groupIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &Group{}
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *GroupRepository) GetByKeyword(organizationID string, keyword string) ([]*Group, error) {
+	var result []*Group
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
+		"FROM groups "+
+		"WHERE organization_id = $1 AND LOWER(name) LIKE '%' || $2 || '%' "+
+		"ORDER BY name", organizationID, strings.ToLower(keyword))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &Group{}
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *GroupRepository) GroupsExistAndBelongToOrg(organizationID string, groupIDs []string) (bool, error) {
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+
+		"FROM groups "+
+		"WHERE id = ANY($1) AND organization_id = $2",
+		pq.Array(groupIDs), organizationID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count == len(groupIDs), nil
+}
+
 func (r *GroupRepository) Update(e *Group) error {
 	_, err := GetDatabase().DB().Exec("UPDATE groups SET "+
 		"organization_id = $1, "+

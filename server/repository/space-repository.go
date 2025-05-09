@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -41,6 +42,11 @@ type SpaceDetails struct {
 	Space
 }
 
+type SpaceGroup struct {
+	SpaceID string
+	GroupID string
+}
+
 var spaceRepository *SpaceRepository
 var spaceRepositoryOnce sync.Once
 
@@ -69,7 +75,20 @@ func GetSpaceRepository() *SpaceRepository {
 }
 
 func (r *SpaceRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// No updates yet
+	if curVersion < 22 {
+		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS spaces_approvers (" +
+			"space_id uuid NOT NULL, " +
+			"group_id uuid NOT NULL, " +
+			"PRIMARY KEY (space_id, group_id))"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS spaces_allowed_bookers (" +
+			"space_id uuid NOT NULL, " +
+			"group_id uuid NOT NULL, " +
+			"PRIMARY KEY (space_id, group_id))"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *SpaceRepository) Create(e *Space) error {
@@ -205,6 +224,12 @@ func (r *SpaceRepository) Delete(e *Space) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE entity_id = $1 AND entity_type = $2", e.ID, SpaceAttributeValueEntityTypeSpace); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_approvers WHERE space_id = $1", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_allowed_bookers WHERE space_id = $1", e.ID); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM spaces WHERE id = $1", e.ID)
 	return err
 }
@@ -287,4 +312,140 @@ func (r *SpaceRepository) GetBookingUserIDMap(organizationID string, enter, leav
 		}
 	}
 	return res, nil
+}
+
+func (r *SpaceRepository) GetApproverGroupIDs(e *Space) ([]string, error) {
+	var result []string
+	rows, err := GetDatabase().DB().Query("SELECT group_id "+
+		"FROM spaces_approvers "+
+		"WHERE space_id = $1 "+
+		"ORDER BY group_id",
+		e.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, id)
+	}
+	return result, nil
+}
+
+func (r *SpaceRepository) AddApprovers(e *Space, groupIDs []string) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	sqlStr := "INSERT INTO spaces_approvers (space_id, group_id) VALUES "
+	vals := []interface{}{}
+	i := 1
+	for _, groupID := range groupIDs {
+		sqlStr += fmt.Sprintf("($%d, $%d),", i, i+1)
+		i += 2
+		vals = append(vals, e.ID, groupID)
+	}
+	sqlStr = strings.TrimSuffix(sqlStr, ",")
+	_, err := GetDatabase().DB().Exec(sqlStr, vals...)
+	return err
+}
+
+func (r *SpaceRepository) RemoveApprovers(e *Space, groupIDs []string) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	_, err := GetDatabase().DB().Exec("DELETE FROM spaces_approvers WHERE space_id = $1 AND group_id = ANY($2)", e.ID, pq.Array(groupIDs))
+	return err
+}
+
+func (r *SpaceRepository) GetAllApproversForSpaceList(spaceIDs []string) ([]*SpaceGroup, error) {
+	var result []*SpaceGroup
+	rows, err := GetDatabase().DB().Query("SELECT space_id, group_id "+
+		"FROM spaces_approvers "+
+		"WHERE space_id = ANY($1::uuid[])",
+		pq.StringArray(spaceIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &SpaceGroup{}
+		err = rows.Scan(&e.SpaceID, &e.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *SpaceRepository) GetAllowedBookersGroupIDs(e *Space) ([]string, error) {
+	var result []string
+	rows, err := GetDatabase().DB().Query("SELECT group_id "+
+		"FROM spaces_allowed_bookers "+
+		"WHERE space_id = $1 "+
+		"ORDER BY group_id",
+		e.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, id)
+	}
+	return result, nil
+}
+
+func (r *SpaceRepository) AddAllowedBookers(e *Space, groupIDs []string) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	sqlStr := "INSERT INTO spaces_allowed_bookers (space_id, group_id) VALUES "
+	vals := []interface{}{}
+	i := 1
+	for _, groupID := range groupIDs {
+		sqlStr += fmt.Sprintf("($%d, $%d),", i, i+1)
+		i += 2
+		vals = append(vals, e.ID, groupID)
+	}
+	sqlStr = strings.TrimSuffix(sqlStr, ",")
+	_, err := GetDatabase().DB().Exec(sqlStr, vals...)
+	return err
+}
+
+func (r *SpaceRepository) RemoveAllowedBookers(e *Space, groupIDs []string) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	_, err := GetDatabase().DB().Exec("DELETE FROM spaces_allowed_bookers WHERE space_id = $1 AND group_id = ANY($2)", e.ID, pq.Array(groupIDs))
+	return err
+}
+
+func (r *SpaceRepository) GetAllAllowedBookersForSpaceList(spaceIDs []string) ([]*SpaceGroup, error) {
+	var result []*SpaceGroup
+	rows, err := GetDatabase().DB().Query("SELECT space_id, group_id "+
+		"FROM spaces_allowed_bookers "+
+		"WHERE space_id = ANY($1::uuid[])",
+		pq.StringArray(spaceIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &SpaceGroup{}
+		err = rows.Scan(&e.SpaceID, &e.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
 }

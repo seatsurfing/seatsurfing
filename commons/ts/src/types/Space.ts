@@ -5,6 +5,7 @@ import Formatting from "../util/Formatting";
 import BulkUpdateResponse from "./BulkUpdateResponse";
 import SpaceAttributeValue from "./SpaceAttributeValue";
 import SearchAttribute from "./SearchAttribute";
+import Group from "./Group";
 
 export default class Space extends Entity {
     name: string;
@@ -14,6 +15,8 @@ export default class Space extends Entity {
     height: number;
     rotation: number;
     attributes: SpaceAttributeValue[];
+    approverGroupIds: string[];
+    allowedBookerGroupIds: string[];
     available: boolean;
     locationId: string;
     location: Location;
@@ -28,6 +31,8 @@ export default class Space extends Entity {
         this.height = 0;
         this.rotation = 0;
         this.attributes = [];
+        this.approverGroupIds = [];
+        this.allowedBookerGroupIds = [];
         this.available = false;
         this.locationId = "";
         this.location = new Location();
@@ -43,6 +48,8 @@ export default class Space extends Entity {
             "height": this.height,
             "rotation": this.rotation,
             "attributes": this.attributes.map(a => a.serialize()),
+            "approverGroupIds": this.approverGroupIds,
+            "allowedBookerGroupIds": this.allowedBookerGroupIds,
         });
     }
 
@@ -71,10 +78,16 @@ export default class Space extends Entity {
                 return e;
             });
         }
+        if (input.approverGroupIds) {
+            this.approverGroupIds = input.approverGroupIds;
+        }
+        if (input.allowedBookerGroupIds) {
+            this.allowedBookerGroupIds = input.allowedBookerGroupIds;
+        }
     }
 
     getBackendUrl(): string {
-        return "/location/"+this.locationId+"/space/";
+        return "/location/" + this.locationId + "/space/";
     }
 
     async save(): Promise<Space> {
@@ -85,8 +98,48 @@ export default class Space extends Entity {
         return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
     }
 
+    async getApprovers(): Promise<Group[]> {
+        return Ajax.get(this.getBackendUrl() + this.id + "/approver").then(result => {
+            let list: Group[] = [];
+            (result.json as []).forEach(item => {
+                let e: Group = new Group();
+                e.deserialize(item);
+                list.push(e);
+            });
+            return list;
+        });
+    }
+
+    async addApprovers(groupIds: string[]): Promise<void> {
+        return Ajax.putData(this.getBackendUrl() + this.id + "/approver", groupIds).then(() => undefined);
+    }
+
+    async removeApprovers(groupIds: string[]): Promise<void> {
+        return Ajax.postData(this.getBackendUrl() + this.id + "/approver/remove", groupIds).then(() => undefined);
+    }
+
+    async getAllowedBookers(): Promise<Group[]> {
+        return Ajax.get(this.getBackendUrl() + this.id + "/allowedbooker").then(result => {
+            let list: Group[] = [];
+            (result.json as []).forEach(item => {
+                let e: Group = new Group();
+                e.deserialize(item);
+                list.push(e);
+            });
+            return list;
+        });
+    }
+
+    async addAllowedBookers(groupIds: string[]): Promise<void> {
+        return Ajax.putData(this.getBackendUrl() + this.id + "/allowedbooker", groupIds).then(() => undefined);
+    }
+
+    async removeAllowedBookers(groupIds: string[]): Promise<void> {
+        return Ajax.postData(this.getBackendUrl() + this.id + "/allowedbooker/remove", groupIds).then(() => undefined);
+    }
+
     static async get(locationId: string, id: string): Promise<Space> {
-        return Ajax.get("/location/"+locationId+"/space/" + id).then(result => {
+        return Ajax.get("/location/" + locationId + "/space/" + id).then(result => {
             let e: Space = new Space();
             e.deserialize(result.json);
             return e;
@@ -94,7 +147,7 @@ export default class Space extends Entity {
     }
 
     static async list(locationId: string): Promise<Space[]> {
-        return Ajax.get("/location/"+locationId+"/space/").then(result => {
+        return Ajax.get("/location/" + locationId + "/space/").then(result => {
             let list: Space[] = [];
             (result.json as []).forEach(item => {
                 let e: Space = new Space();
@@ -111,7 +164,7 @@ export default class Space extends Entity {
             leave: Formatting.convertToFakeUTCDate(leave).toISOString(),
             attributes: (attributes ? attributes.map(a => a.serialize()) : [])
         };
-        return Ajax.postData("/location/"+locationId+"/space/availability", payload).then(result => {
+        return Ajax.postData("/location/" + locationId + "/space/availability", payload).then(result => {
             let list: Space[] = [];
             (result.json as []).forEach(item => {
                 let e: Space = new Space();
@@ -128,7 +181,7 @@ export default class Space extends Entity {
             updates: updates,
             deleteIds: deleteIds
         };
-        return Ajax.postData("/location/"+locationId+"/space/bulk", payload).then(result => {
+        return Ajax.postData("/location/" + locationId + "/space/bulk", payload).then(result => {
             let e = new BulkUpdateResponse();
             e.deserialize(result);
             return e;
