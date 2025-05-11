@@ -133,5 +133,11 @@
     "security": "Security",
     "integrations": "Integrations",
     "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
-    "mailNotifications": "Mail notifications"
+    "mailNotifications": "Mail notifications",
+    "colorAlreadyBooked": "Already booked",
+    "colorNotBooked": "Available",
+    "colorSelfBooked": "Booked by me",
+    "colorBuddyBooked": "Booked by buddy",
+    "colorPartiallyBooked": "Partially booked",
+    "colorDisallowed": "Disallowed"
 }

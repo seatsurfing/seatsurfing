@@ -30,6 +30,7 @@ var (
 	PreferenceSelfBookedColor      PreferenceName = PreferenceName{Name: "self_booked_color", Type: SettingTypeString}
 	PreferencePartiallyBookedColor PreferenceName = PreferenceName{Name: "partially_booked_color", Type: SettingTypeString}
 	PreferenceBuddyBookedColor     PreferenceName = PreferenceName{Name: "buddy_booked_color", Type: SettingTypeString}
+	PreferenceDisallowedColor      PreferenceName = PreferenceName{Name: "disallowed_color", Type: SettingTypeString}
 	PreferenceCalDAVURL            PreferenceName = PreferenceName{Name: "caldav_url", Type: SettingTypeString}
 	PreferenceCalDAVUser           PreferenceName = PreferenceName{Name: "caldav_user", Type: SettingTypeString}
 	PreferenceCalDAVPass           PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
@@ -144,7 +145,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 		"($1, '"+PreferenceNotBookedColor.Name+"', '#30d158'), "+
 		"($1, '"+PreferenceSelfBookedColor.Name+"', '#b825de'), "+
 		"($1, '"+PreferencePartiallyBookedColor.Name+"', '#ff9100'), "+
-		"($1, '"+PreferenceBuddyBookedColor.Name+"', '#2415c5') "+
+		"($1, '"+PreferenceBuddyBookedColor.Name+"', '#2415c5'), "+
+		"($1, '"+PreferenceDisallowedColor.Name+"', '#eeeeee') "+
 		"ON CONFLICT (user_id, name) DO NOTHING",
 		userID)
 	return err

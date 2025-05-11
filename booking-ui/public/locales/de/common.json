@@ -128,5 +128,11 @@
     "security": "Sicherheit",
     "integrations": "Integrationen",
     "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen.",
-    "mailNotifications": "E-Mail-Benachrichtigungen"
+    "mailNotifications": "E-Mail-Benachrichtigungen",
+    "colorAlreadyBooked": "Bereits gebucht",
+    "colorNotBooked": "Verfügbar",
+    "colorSelfBooked": "Von mir gebucht",
+    "colorBuddyBooked": "Von einem Kollegen gebucht",
+    "colorPartiallyBooked": "Teilweise gebucht",
+    "colorDisallowed": "Nicht erlaubt"
 }

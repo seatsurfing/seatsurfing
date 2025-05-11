@@ -48,6 +48,7 @@ interface State {
   prefSelfBookedColor: string
   prefPartiallyBookedColor: string
   prefBuddyBookedColor: string
+  prefDisallowedColor: string
   attributeValues: SpaceAttributeValue[]
   searchAttributesLocation: SearchAttribute[]
   searchAttributesSpace: SearchAttribute[]
@@ -115,6 +116,7 @@ class Search extends React.Component<Props, State> {
       prefSelfBookedColor: "#b825de",
       prefPartiallyBookedColor: "#ff9100",
       prefBuddyBookedColor: "#2415c5",
+      prefDisallowedColor: "#eeeeee",
       attributeValues: [],
       searchAttributesLocation: [],
       searchAttributesSpace: [],
@@ -185,6 +187,7 @@ class Search extends React.Component<Props, State> {
           if (s.name === "self_booked_color") state.prefSelfBookedColor = s.value;
           if (s.name === "partially_booked_color") state.prefPartiallyBookedColor = s.value;
           if (s.name === "buddy_booked_color") state.prefBuddyBookedColor = s.value;
+          if (s.name === "disallowed_color") state.prefDisallowedColor = s.value;
         });
         if (RuntimeConfig.INFOS.dailyBasisBooking) {
           state.prefWorkdayStart = 0;
@@ -498,6 +501,9 @@ class Search extends React.Component<Props, State> {
   }
 
   onSpaceSelect = (item: Space) => {
+    if (!item.allowed) {
+      return;
+    }
     if (item.available) {
       this.setState({
         showConfirm: true,
@@ -519,12 +525,16 @@ class Search extends React.Component<Props, State> {
     const buddiesEmails = this.buddies.map(i => i.buddy.email);
     const myBuddyDesk = (bookings.find(b => buddiesEmails.includes(b.user.email)));
 
+    if (mydesk) {
+      return this.state.prefSelfBookedColor;
+    }
+
     if (myBuddyDesk) {
       return this.state.prefBuddyBookedColor;
     }
 
-    if (mydesk) {
-      return this.state.prefSelfBookedColor;
+    if (!item.allowed) {
+      return this.state.prefDisallowedColor;
     }
 
     if (RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled && bookings.length > 0) {
@@ -572,7 +582,7 @@ class Search extends React.Component<Props, State> {
       width: item.width,
       height: item.height,
       transform: "rotate: " + item.rotation + "deg",
-      cursor: (item.available || (bookings && bookings.length > 0)) ? "pointer" : "default",
+      cursor: ((item.allowed && item.available) || (bookings && bookings.length > 0)) ? "pointer" : "default",
       backgroundColor: this.getAvailibilityStyle(item, bookings)
     };
     const textStyle: React.CSSProperties = {

@@ -3,7 +3,9 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"testing"
 	"time"
@@ -109,6 +111,49 @@ func TestBookingsCRUD(t *testing.T) {
 	req = NewHTTPRequest("GET", "/booking/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestBookingsAllowedUsersRestricted(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(adminUser.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	group := &Group{
+		Name:           "Group 1",
+		OrganizationID: org.ID,
+	}
+	GetGroupRepository().Create(group)
+	location := &Location{
+		Name:           "Location 1",
+		OrganizationID: org.ID,
+	}
+	if err := GetLocationRepository().Create(location); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	space := &Space{
+		Name:       "H234",
+		X:          50,
+		Y:          100,
+		Width:      200,
+		Height:     300,
+		Rotation:   90,
+		LocationID: location.ID,
+	}
+	if err := GetSpaceRepository().Create(space); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	if err := GetSpaceRepository().AddAllowedBookers(space, []string{group.ID}); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	log.Println(payload)
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingNotAllowedBooker), res.Header().Get("X-Error-Code"))
 }
 
 func TestBookingsCreateNonExistingUser(t *testing.T) {
