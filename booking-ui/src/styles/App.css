@@ -137,3 +137,13 @@ h2 {
 .addon-button {
     border-color: var(--bs-border-color);
 }
+
+.form-colors input[type="color"].form-control,
+.form-colors label {
+    display: inline;
+}
+
+.form-colors label {
+    padding-left: 10px;
+    vertical-align: super;
+}

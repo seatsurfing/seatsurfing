@@ -70,7 +70,8 @@ type GetSpaceAvailabilityBookingsResponse struct {
 
 type GetSpaceAvailabilityResponse struct {
 	GetSpaceResponse
-	Bookings []*GetSpaceAvailabilityBookingsResponse `json:"bookings"`
+	Bookings  []*GetSpaceAvailabilityBookingsResponse `json:"bookings"`
+	IsAllowed bool                                    `json:"allowed"`
 }
 
 type GetSpaceAvailabilityRequest struct {
@@ -184,6 +185,18 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 		SendInternalServerError(w)
 		return
 	}
+	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	allowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
 		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
@@ -197,6 +210,7 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 			m.Height = e.Height
 			m.Rotation = e.Rotation
 			m.Available = e.Available
+			m.IsAllowed = router.IsUserAllowedToBook(&e.Space, allowedBookers, userGroups)
 			router.appendAttributesToRestModel(&m.GetSpaceResponse, attributeValues)
 			m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
 			for _, booking := range e.Bookings {
@@ -222,6 +236,21 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	SendJSON(w, res)
+}
+
+func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
+	restricted := false
+	for _, allowedBooker := range allowedBookers {
+		if allowedBooker.SpaceID == e.ID {
+			restricted = true
+			for _, userGroup := range userGroups {
+				if allowedBooker.GroupID == userGroup.ID {
+					return true
+				}
+			}
+		}
+	}
+	return !restricted
 }
 
 func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {

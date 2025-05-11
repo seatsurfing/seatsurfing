@@ -301,9 +301,12 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	bookingReq := &BookingRequest{
-		Enter: eNew.Enter,
-		Leave: eNew.Leave,
+	bookingReq := &CreateBookingRequest{
+		SpaceID: m.SpaceID,
+		BookingRequest: BookingRequest{
+			Enter: eNew.Enter,
+			Leave: eNew.Leave,
+		},
 	}
 
 	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, eNew.ID); !valid {
@@ -368,7 +371,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	SendForbiddenCode(w, ResponseCodeBookingMaxHoursBeforeDelete)
 }
 
-func (router *BookingRouter) checkBookingCreateUpdate(m *BookingRequest, location *Location, requestUser *User, bookingID string) (bool, int) {
+func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, location *Location, requestUser *User, bookingID string) (bool, int) {
 	if valid, code := router.isValidBookingRequest(m, requestUser, location.OrganizationID, bookingID); !valid {
 		return false, code
 	}
@@ -404,9 +407,12 @@ func (router *BookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *htt
 		SendInternalServerError(w)
 		return
 	}
-	bookingReq := &BookingRequest{
-		Enter: enterNew,
-		Leave: leaveNew,
+	bookingReq := &CreateBookingRequest{
+		SpaceID: "",
+		BookingRequest: BookingRequest{
+			Enter: enterNew,
+			Leave: leaveNew,
+		},
 	}
 	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, ""); !valid {
 		SendBadRequestCode(w, code)
@@ -453,9 +459,12 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	bookingReq := &BookingRequest{
-		Enter: e.Enter,
-		Leave: e.Leave,
+	bookingReq := &CreateBookingRequest{
+		SpaceID: m.SpaceID,
+		BookingRequest: BookingRequest{
+			Enter: e.Enter,
+			Leave: e.Leave,
+		},
 	}
 
 	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, ""); !valid {
@@ -674,18 +683,18 @@ func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, u
 	return len(curAtTime) < maxConcurrent
 }
 
-func (router *BookingRouter) isValidBookingRequest(m *BookingRequest, user *User, orgID string, bookingID string) (bool, int) {
+func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user *User, orgID string, bookingID string) (bool, int) {
 	isUpdate := bookingID != ""
-	if !router.IsValidBookingDuration(m, orgID, user) {
+	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration
 	}
-	if !router.IsValidBookingAdvance(m, orgID, user) {
+	if !router.IsValidBookingAdvance(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingTooManyDaysInAdvance
 	}
-	if !router.isValidMaxConcurrentBookingsForUser(orgID, user, m, bookingID) {
+	if !router.isValidMaxConcurrentBookingsForUser(orgID, user, &m.BookingRequest, bookingID) {
 		return false, ResponseCodeBookingMaxConcurrentForUser
 	}
-	if !router.isValidMinHoursBooking(m, orgID, user) {
+	if !router.isValidMinHoursBooking(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidMinBookingDuration
 	}
 	if !isUpdate {
@@ -693,10 +702,29 @@ func (router *BookingRouter) isValidBookingRequest(m *BookingRequest, user *User
 			return false, ResponseCodeBookingTooManyUpcomingBookings
 		}
 	}
+	if m.SpaceID == "" {
+		return true, 0
+	}
+	groupMemberships, _ := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	allowedBookers, _ := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{m.SpaceID})
+	if len(allowedBookers) > 0 {
+		allowed := false
+		for _, allowedBooker := range allowedBookers {
+			for _, group := range groupMemberships {
+				if group.ID == allowedBooker.GroupID {
+					allowed = true
+					break
+				}
+			}
+		}
+		if !allowed {
+			return false, ResponseCodeBookingNotAllowedBooker
+		}
+	}
 	return true, 0
 }
 
-func (router *BookingRouter) isValidConcurrent(m *BookingRequest, location *Location, bookingID string) bool {
+func (router *BookingRouter) isValidConcurrent(m *CreateBookingRequest, location *Location, bookingID string) bool {
 	if location.MaxConcurrentBookings == 0 {
 		return true
 	}

@@ -114,6 +114,28 @@ func (r *GroupRepository) GetAllByIDs(groupIDs []string) ([]*Group, error) {
 	return result, nil
 }
 
+func (r *GroupRepository) GetAllWhereUserIsMember(userID string) ([]*Group, error) {
+	var result []*Group
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
+		"FROM groups "+
+		"WHERE id IN (SELECT group_id FROM users_groups WHERE user_id = $1) "+
+		"ORDER BY name",
+		userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &Group{}
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *GroupRepository) GetByKeyword(organizationID string, keyword string) ([]*Group, error) {
 	var result []*Group
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+

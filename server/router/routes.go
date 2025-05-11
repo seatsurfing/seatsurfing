@@ -38,6 +38,7 @@ var (
 	ResponseCodeBookingMaxConcurrentForUser      = 1006
 	ResponseCodeBookingInvalidMinBookingDuration = 1007
 	ResponseCodeBookingMaxHoursBeforeDelete      = 1008
+	ResponseCodeBookingNotAllowedBooker          = 1009
 )
 
 func SendTemporaryRedirect(w http.ResponseWriter, url string) {
