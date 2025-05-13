@@ -139,5 +139,7 @@
     "colorSelfBooked": "Booked by me",
     "colorBuddyBooked": "Booked by buddy",
     "colorPartiallyBooked": "Partially booked",
-    "colorDisallowed": "Disallowed"
+    "colorDisallowed": "Disallowed",
+    "approval": "Approval",
+    "pending": "Pending"
 }

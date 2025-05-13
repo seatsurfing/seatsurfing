@@ -1130,6 +1130,7 @@ class Search extends React.Component<Props, State> {
     confirmModalRows.push({ 'label': this.props.t("area"), 'value': this.getLocationName() });
     confirmModalRows.push({ 'label': this.props.t("enter"), 'value': formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.enter))) });
     confirmModalRows.push({ 'label': this.props.t("leave"), 'value': formatter.format(Formatting.convertToFakeUTCDate(new Date(this.state.leave))) });
+    confirmModalRows.push({ 'label': this.props.t("approval"), 'value': this.state.selectedSpace?.approvalRequired ? this.props.t("yes") : this.props.t("no") });
     this.state.selectedSpace?.attributes.forEach((attribute) => {
       const attributeName = this.availableAttributes.find((attr) => attr.id === attribute.attributeId)?.label;
       const attributeType = this.availableAttributes.find((attr) => attr.id === attribute.attributeId)?.type;

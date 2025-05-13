@@ -22,6 +22,7 @@ export default class Space extends Entity {
     location: Location;
     rawBookings: any[];
     allowed: boolean;
+    approvalRequired: boolean;
 
     constructor() {
         super();
@@ -39,6 +40,7 @@ export default class Space extends Entity {
         this.location = new Location();
         this.rawBookings = [];
         this.allowed = true;
+        this.approvalRequired = false;
     }
 
     serialize(): Object {
@@ -66,6 +68,9 @@ export default class Space extends Entity {
         this.rotation = input.rotation;
         if (input.allowed !== undefined) {
             this.allowed = input.allowed;
+        }
+        if (input.approvalRequired !== undefined) {
+            this.approvalRequired = input.approvalRequired;
         }
         if (input.available) {
             this.available = input.available;

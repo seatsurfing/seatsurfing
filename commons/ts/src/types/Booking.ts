@@ -77,9 +77,9 @@ export default class Booking extends Entity {
         return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
     }
 
-    async approve(approve: boolean): Promise<void> {
+    async approve(approved: boolean): Promise<void> {
         let payload = {
-            approve: approve
+            approved: approved
         };
         return Ajax.postData(this.getBackendUrl() + this.id + "/approve", payload).then(() => undefined);
     }

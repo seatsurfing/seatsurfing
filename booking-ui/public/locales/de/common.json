@@ -134,5 +134,7 @@
     "colorSelfBooked": "Von mir gebucht",
     "colorBuddyBooked": "Von einem Kollegen gebucht",
     "colorPartiallyBooked": "Teilweise gebucht",
-    "colorDisallowed": "Nicht erlaubt"
+    "colorDisallowed": "Nicht erlaubt",
+    "approval": "Genehmigung",
+    "pending": "Ausstehend"
 }

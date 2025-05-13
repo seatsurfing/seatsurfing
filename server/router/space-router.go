@@ -70,8 +70,9 @@ type GetSpaceAvailabilityBookingsResponse struct {
 
 type GetSpaceAvailabilityResponse struct {
 	GetSpaceResponse
-	Bookings  []*GetSpaceAvailabilityBookingsResponse `json:"bookings"`
-	IsAllowed bool                                    `json:"allowed"`
+	Bookings           []*GetSpaceAvailabilityBookingsResponse `json:"bookings"`
+	IsAllowed          bool                                    `json:"allowed"`
+	IsApprovalRequired bool                                    `json:"approvalRequired"`
 }
 
 type GetSpaceAvailabilityRequest struct {
@@ -197,6 +198,12 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 		SendInternalServerError(w)
 		return
 	}
+	approvers, err := GetSpaceRepository().GetAllApproversForSpaceList(spaceIds)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
 		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
@@ -211,6 +218,7 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 			m.Rotation = e.Rotation
 			m.Available = e.Available
 			m.IsAllowed = router.IsUserAllowedToBook(&e.Space, allowedBookers, userGroups)
+			m.IsApprovalRequired = router.IsApprovalRequired(&e.Space, approvers)
 			router.appendAttributesToRestModel(&m.GetSpaceResponse, attributeValues)
 			m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
 			for _, booking := range e.Bookings {
@@ -236,6 +244,15 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	SendJSON(w, res)
+}
+
+func (router *SpaceRouter) IsApprovalRequired(e *Space, approvers []*SpaceGroup) bool {
+	for _, approver := range approvers {
+		if approver.SpaceID == e.ID {
+			return true
+		}
+	}
+	return false
 }
 
 func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
