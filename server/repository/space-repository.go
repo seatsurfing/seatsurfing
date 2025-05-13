@@ -314,13 +314,13 @@ func (r *SpaceRepository) GetBookingUserIDMap(organizationID string, enter, leav
 	return res, nil
 }
 
-func (r *SpaceRepository) GetApproverGroupIDs(e *Space) ([]string, error) {
+func (r *SpaceRepository) GetApproverGroupIDs(spaceID string) ([]string, error) {
 	var result []string
 	rows, err := GetDatabase().DB().Query("SELECT group_id "+
 		"FROM spaces_approvers "+
 		"WHERE space_id = $1 "+
 		"ORDER BY group_id",
-		e.ID)
+		spaceID)
 	if err != nil {
 		return nil, err
 	}

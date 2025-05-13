@@ -529,7 +529,7 @@ func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttr
 }
 
 func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest) error {
-	existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(space)
+	existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	if err != nil {
 		return err
 	}
@@ -699,7 +699,7 @@ func (router *SpaceRouter) getApprovers(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
-	approvers, err := GetSpaceRepository().GetApproverGroupIDs(e)
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(e.ID)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"runtime/debug"
 	"testing"
 	"time"
 
@@ -86,4 +87,88 @@ func TestBookingRepositoryPresenceReport(t *testing.T) {
 	CheckTestInt(t, 0, res[2].Presence[tomorrow.Add(24*5*time.Hour).Format(DateFormat)])
 	CheckTestInt(t, 0, res[2].Presence[tomorrow.Add(24*6*time.Hour).Format(DateFormat)])
 	CheckTestInt(t, 0, res[2].Presence[tomorrow.Add(24*7*time.Hour).Format(DateFormat)])
+}
+
+func TestBookingRepositoryGetBookingsRequiringApproval(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	adminUser := CreateTestUserOrgAdmin(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	group := &Group{
+		Name:           "Group 1",
+		OrganizationID: org.ID,
+	}
+	GetGroupRepository().Create(group)
+	GetGroupRepository().AddMembers(group, []string{adminUser.ID})
+	location := &Location{
+		Name:           "Location 1",
+		OrganizationID: org.ID,
+	}
+	if err := GetLocationRepository().Create(location); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	space := &Space{
+		Name:       "H234",
+		X:          50,
+		Y:          100,
+		Width:      200,
+		Height:     300,
+		Rotation:   90,
+		LocationID: location.ID,
+	}
+	if err := GetSpaceRepository().Create(space); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	if err := GetSpaceRepository().AddApprovers(space, []string{group.ID}); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+
+	bookings, err := GetBookingRepository().GetBookingsRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 0, len(bookings))
+	count, err := GetBookingRepository().GetBookingsCountRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 0, count)
+
+	booking := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    time.Now().Add(2 * time.Hour),
+		Leave:    time.Now().Add(4 * time.Hour),
+		Approved: false,
+	}
+	GetBookingRepository().Create(booking)
+
+	bookings, err = GetBookingRepository().GetBookingsRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 1, len(bookings))
+	CheckTestString(t, booking.ID, bookings[0].ID)
+	count, err = GetBookingRepository().GetBookingsCountRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 1, count)
+
+	booking.Approved = true
+	GetBookingRepository().Update(booking)
+
+	bookings, err = GetBookingRepository().GetBookingsRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 0, len(bookings))
+	count, err = GetBookingRepository().GetBookingsCountRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 0, count)
+
 }

@@ -467,3 +467,47 @@ func (r *BookingRepository) GetPresenceReport(organizationID string, location *L
 	}
 	return res, nil
 }
+
+func (r *BookingRepository) GetBookingsRequiringApproval(approverUserID string) ([]*BookingDetails, error) {
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, "+
+		"spaces.id, spaces.location_id, spaces.name, "+
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
+		"users.email "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
+		"INNER JOIN locations ON spaces.location_id = locations.id "+
+		"INNER JOIN users ON bookings.user_id = users.id "+
+		"WHERE bookings.approved = false AND "+
+		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
+		"SELECT group_id FROM users_groups WHERE user_id = $1"+
+		")) "+
+		"ORDER BY bookings.enter_time ASC", approverUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var result []*BookingDetails
+	for rows.Next() {
+		e := &BookingDetails{}
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *BookingRepository) GetBookingsCountRequiringApproval(approverUserID string) (int, error) {
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(1) "+
+		"FROM bookings "+
+		"WHERE approved = false AND "+
+		"space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
+		"SELECT group_id FROM users_groups WHERE user_id = $1"+
+		"))", approverUserID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

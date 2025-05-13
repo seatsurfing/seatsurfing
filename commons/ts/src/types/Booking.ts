@@ -11,6 +11,7 @@ export default class Booking extends Entity {
     location: Location;
     space: Space;
     user: User;
+    approved: boolean;
 
     constructor() {
         super();
@@ -19,13 +20,14 @@ export default class Booking extends Entity {
         this.location = new Location();
         this.space = new Space();
         this.user = new User();
+        this.approved = false;
     }
 
     serialize(): Object {
         // Convert the local dates to UTC dates without changing the date/time ("fake" UTC)
         let enter = Formatting.convertToFakeUTCDate(this.enter);
         let leave = Formatting.convertToFakeUTCDate(this.leave);
-        
+
         if (this.user) {
             return Object.assign(super.serialize(), {
                 "enter": enter.toISOString(),
@@ -58,6 +60,9 @@ export default class Booking extends Entity {
         if (input.userEmail) {
             this.user.email = input.userEmail;
         }
+        if (input.approved !== undefined) {
+            this.approved = input.approved;
+        }
     }
 
     getBackendUrl(): string {
@@ -70,6 +75,13 @@ export default class Booking extends Entity {
 
     async delete(): Promise<void> {
         return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    }
+
+    async approve(approve: boolean): Promise<void> {
+        let payload = {
+            approve: approve
+        };
+        return Ajax.postData(this.getBackendUrl() + this.id + "/approve", payload).then(() => undefined);
     }
 
     static async get(id: string): Promise<Booking> {
@@ -89,6 +101,24 @@ export default class Booking extends Entity {
                 list.push(e);
             });
             return list;
+        });
+    }
+
+    static async listPendingApprovals(): Promise<Booking[]> {
+        return Ajax.get("/booking/pendingapprovals/").then(result => {
+            let list: Booking[] = [];
+            (result.json as []).forEach(item => {
+                let e: Booking = new Booking();
+                e.deserialize(item);
+                list.push(e);
+            });
+            return list;
+        });
+    }
+
+    static async getPendingApprovalsCount(): Promise<number> {
+        return Ajax.get("/booking/pendingapprovals/count").then(result => {
+            return result.json.count as number;
         });
     }
 

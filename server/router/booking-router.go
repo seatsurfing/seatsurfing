@@ -41,6 +41,7 @@ type GetBookingResponse struct {
 	ID        string           `json:"id"`
 	UserID    string           `json:"userId"`
 	UserEmail string           `json:"userEmail"`
+	Approved  bool             `json:"approved"`
 	Space     GetSpaceResponse `json:"space"`
 	CreateBookingRequest
 }
@@ -70,6 +71,14 @@ type DebugTimeIssuesResponse struct {
 	Result                  time.Time `json:"result"`
 }
 
+type GetPendingApprovalsCountResponse struct {
+	Count int `json:"count"`
+}
+
+type SetBookingApprovalRequest struct {
+	Approved bool `json:"approved" validate:"required"`
+}
+
 type CaldavConfig struct {
 	URL      string
 	Username string
@@ -78,16 +87,103 @@ type CaldavConfig struct {
 }
 
 func (router *BookingRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/pendingapprovals/count", router.getPendingApprovalsCount).Methods("GET")
+	s.HandleFunc("/pendingapprovals/", router.getPendingApprovals).Methods("GET")
 	s.HandleFunc("/debugtimeissues/", router.debugTimeIssues).Methods("POST")
 	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("POST")
 	s.HandleFunc("/filter/", router.getFiltered).Methods("POST")
 	s.HandleFunc("/precheck/", router.preBookingCreateCheck).Methods("POST")
+	s.HandleFunc("/{id}/approve", router.approveBooking).Methods("POST")
 	s.HandleFunc("/{id}/ical", router.getIcal).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+}
+
+func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Request) {
+	requestUser := GetRequestUser(r)
+	if !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetBookingRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+
+	if !router.isValidApproverForSpace(requestUser.ID, e.SpaceID) {
+		SendForbidden(w)
+		return
+	}
+	m := &SetBookingApprovalRequest{}
+	if UnmarshalValidateBody(r, m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if e.Approved {
+		SendUpdated(w)
+		return
+	}
+	if !m.Approved {
+		if err := GetBookingRepository().Delete(e); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		go router.onBookingDeleted(&e.Booking)
+		SendUpdated(w)
+		return
+	}
+	e.Approved = true
+	if err := GetBookingRepository().Update(&e.Booking); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	count, err := GetBookingRepository().GetBookingsCountRequiringApproval(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := &GetPendingApprovalsCountResponse{
+		Count: count,
+	}
+	SendJSON(w, res)
+}
+
+func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	list, err := GetBookingRepository().GetBookingsRequiringApproval(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := []*GetBookingResponse{}
+	for _, e := range list {
+		m := router.copyToRestModel(e)
+		res = append(res, m)
+	}
+	SendJSON(w, res)
 }
 
 func (router *BookingRouter) debugTimeIssues(w http.ResponseWriter, r *http.Request) {
@@ -481,6 +577,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendAleadyExists(w)
 		return
 	}
+	e.Approved = !router.getSpaceRequiresApproval(location.OrganizationID, space)
 	if err := GetBookingRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -876,6 +973,39 @@ func (router *BookingRouter) updateCalDavEvent(e *Booking) {
 	GetBookingRepository().Update(e)
 }
 
+func (router *BookingRouter) isValidApproverForSpace(userID, spaceID string) bool {
+	approverGroups, err := GetSpaceRepository().GetApproverGroupIDs(spaceID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	if len(approverGroups) == 0 {
+		return true
+	}
+	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(userID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	for _, group := range userGroups {
+		for _, approverGroup := range approverGroups {
+			if group.ID == approverGroup {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (router *BookingRouter) getSpaceRequiresApproval(orgID string, e *Space) bool {
+	groupsEnabled, _ := GetSettingsRepository().GetBool(orgID, SettingFeatureGroups.Name)
+	if !groupsEnabled {
+		return false
+	}
+	approvers, _ := GetSpaceRepository().GetApproverGroupIDs(e.ID)
+	return len(approvers) > 0
+}
+
 func (router *BookingRouter) sendMailNotification(e *Booking) {
 	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
 	if err != nil || !active {
@@ -979,6 +1109,7 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.Enter, _ = GetLocationRepository().AttachTimezoneInformation(e.Enter, &e.Space.Location)
 	m.Leave, _ = GetLocationRepository().AttachTimezoneInformation(e.Leave, &e.Space.Location)
 	m.Space.ID = e.Space.ID
+	m.Approved = e.Approved
 	m.Space.LocationID = e.Space.LocationID
 	m.Space.Name = e.Space.Name
 	m.Space.Location = &GetLocationResponse{
