@@ -55,3 +55,7 @@
     font-size: .75rem;
     text-transform: uppercase;
 }
+
+.sidebar .nav-link.disabled {
+    color: #999;
+}

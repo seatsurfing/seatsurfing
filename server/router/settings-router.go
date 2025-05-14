@@ -246,6 +246,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingFeatureNoUserLimit.Name ||
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
+		name == SettingFeatureAuthProviders.Name ||
 		name == SettingConfluenceServerSharedSecret.Name ||
 		name == SettingConfluenceAnonymous.Name ||
 		name == SysSettingOrgSignupDelete ||

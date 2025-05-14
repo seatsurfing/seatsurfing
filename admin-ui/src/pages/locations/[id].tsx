@@ -12,6 +12,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import ProfilePicture from '@/components/ProfilePicture';
+import RuntimeConfig from '@/components/RuntimeConfig';
 
 interface SpaceState {
   id: string
@@ -216,8 +217,8 @@ class EditLocation extends React.Component<Props, State> {
             space.attributes.push(a);
           }
         });
-        space.approverGroupIds = item.approvers?.map((e: any) => e.id) || [];
-        space.allowedBookerGroupIds = item.allowBookers?.map((e: any) => e.id) || [];
+        space.approverGroupIds = RuntimeConfig.INFOS.featureGroups ? (item.approvers?.map((e: any) => e.id) || []) : [];
+        space.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups ? (item.allowBookers?.map((e: any) => e.id) || []) : [];
         if (space.id) {
           updates.push(space);
         } else {
@@ -636,6 +637,7 @@ class EditLocation extends React.Component<Props, State> {
               <Form.Label column sm="4">{this.props.t("approvers")}</Form.Label>
               <Col sm="8">
                 <AsyncTypeahead
+                  disabled={!RuntimeConfig.INFOS.featureGroups}
                   filterBy={this.filterSearch}
                   id="search-approvers"
                   isLoading={this.state.typeaheadApproversLoading}
@@ -655,13 +657,14 @@ class EditLocation extends React.Component<Props, State> {
                     </div>
                   )}
                 />
-                <Form.Text className="text-muted">{this.props.t("setApproversHint")}</Form.Text>
+                <Form.Text className="text-muted" hidden={!RuntimeConfig.INFOS.featureGroups}>{this.props.t("setApproversHint")}</Form.Text>
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4">{this.props.t("allowBookers")}</Form.Label>
               <Col sm="8">
                 <AsyncTypeahead
+                  disabled={!RuntimeConfig.INFOS.featureGroups}
                   filterBy={this.filterSearch}
                   id="search-allowbookers"
                   isLoading={this.state.typeaheadAllowBookersLoading}
@@ -681,7 +684,7 @@ class EditLocation extends React.Component<Props, State> {
                     </div>
                   )}
                 />
-                <Form.Text className="text-muted">{this.props.t("setAllowBookersHint")}</Form.Text>
+                <Form.Text className="text-muted" hidden={!RuntimeConfig.INFOS.featureGroups}>{this.props.t("setAllowBookersHint")}</Form.Text>
               </Col>
             </Form.Group>
             {this.getSpaceAttributeRows()}
