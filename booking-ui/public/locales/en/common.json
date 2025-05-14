@@ -121,6 +121,7 @@
     "reset": "Reset",
     "filter": "Filter",
     "yes": "yes",
+    "no": "no",
     "numSpaces": "# Spaces",
     "numFreeSpaces": "# Free spaces",
     "any": "any",

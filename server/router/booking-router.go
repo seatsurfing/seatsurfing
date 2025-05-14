@@ -21,6 +21,13 @@ import (
 type BookingRouter struct {
 }
 
+type BookingMailNotification int
+
+const (
+	BookingMailNotificationCreated BookingMailNotification = iota
+	BookingMailNotificationDeclined
+)
+
 type BookingRequest struct {
 	Enter     time.Time `json:"enter" validate:"required"`
 	Leave     time.Time `json:"leave" validate:"required"`
@@ -135,7 +142,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 			SendInternalServerError(w)
 			return
 		}
-		go router.onBookingDeleted(&e.Booking)
+		go router.onBookingApproved(&e.Booking)
 		SendUpdated(w)
 		return
 	}
@@ -145,6 +152,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
+	go router.onBookingApproved(&e.Booking)
 	SendUpdated(w)
 }
 
@@ -939,11 +947,6 @@ func (router *BookingRouter) getCalDavEventFromBooking(e *Booking) (*CalDAVEvent
 	return caldavEvent, nil
 }
 
-func (router *BookingRouter) onBookingCreated(e *Booking) {
-	router.createCalDavEvent(e)
-	router.sendMailNotification(e)
-}
-
 func (router *BookingRouter) createCalDavEvent(e *Booking) {
 	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
 	if err != nil {
@@ -1006,7 +1009,7 @@ func (router *BookingRouter) getSpaceRequiresApproval(orgID string, e *Space) bo
 	return len(approvers) > 0
 }
 
-func (router *BookingRouter) sendMailNotification(e *Booking) {
+func (router *BookingRouter) sendMailNotification(e *Booking, notification BookingMailNotification) {
 	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
 	if err != nil || !active {
 		return
@@ -1031,24 +1034,25 @@ func (router *BookingRouter) sendMailNotification(e *Booking) {
 		log.Println(err)
 		return
 	}
-	calDavEvent, err := router.getCalDavEventFromBooking(e)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	caldavClient := &CalDAVClient{}
-	icalEvent := caldavClient.GetCaldavEvent(calDavEvent)
-	var buf bytes.Buffer
-	if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
-		log.Println(err)
-		return
-	}
-	attachments := []*MailAttachment{
-		{
+	attachments := []*MailAttachment{}
+	if notification == BookingMailNotificationCreated {
+		calDavEvent, err := router.getCalDavEventFromBooking(e)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		caldavClient := &CalDAVClient{}
+		icalEvent := caldavClient.GetCaldavEvent(calDavEvent)
+		var buf bytes.Buffer
+		if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
+			log.Println(err)
+			return
+		}
+		attachments = append(attachments, &MailAttachment{
 			Filename: "seatsurfing.ics",
 			MimeType: "text/calendar",
 			Data:     buf.Bytes(),
-		},
+		})
 	}
 	vars := map[string]string{
 		"recipientName": GetLocalPartFromEmailAddress(user.Email),
@@ -1056,7 +1060,11 @@ func (router *BookingRouter) sendMailNotification(e *Booking) {
 		"areaName":      location.Name,
 		"spaceName":     space.Name,
 	}
-	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, GetEmailTemplatePathBookingCreated(), org.Language, vars, attachments); err != nil {
+	template := GetEmailTemplatePathBookingCreated()
+	if notification == BookingMailNotificationDeclined {
+		template = GetEmailTemplatePathBookingDeclined()
+	}
+	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
 		log.Println(err)
 		return
 	}
@@ -1064,7 +1072,23 @@ func (router *BookingRouter) sendMailNotification(e *Booking) {
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
 	router.updateCalDavEvent(e)
-	router.sendMailNotification(e)
+	router.sendMailNotification(e, BookingMailNotificationCreated)
+}
+
+func (router *BookingRouter) onBookingApproved(e *Booking) {
+	if !e.Approved {
+		router.onBookingDeleted(e)
+		router.sendMailNotification(e, BookingMailNotificationDeclined)
+		return
+	}
+	router.onBookingCreated(e)
+}
+
+func (router *BookingRouter) onBookingCreated(e *Booking) {
+	if e.Approved {
+		router.createCalDavEvent(e)
+		router.sendMailNotification(e, BookingMailNotificationCreated)
+	}
 }
 
 func (router *BookingRouter) onBookingDeleted(e *Booking) {
