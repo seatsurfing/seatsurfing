@@ -53,7 +53,7 @@ class SideBar extends React.Component<Props, State> {
             ).catch((error) => {
                 console.error("Error fetching pending approvals count:", error);
             });
-        }, 30000);
+        }, 5000);
     }
 
     getActiveKey = () => {
@@ -135,7 +135,7 @@ class SideBar extends React.Component<Props, State> {
                             <Nav.Link as={Link} eventKey="/bookings" href="/bookings"><IconBook className="feather" /> {this.props.t("bookings")}</Nav.Link>
                         </li>
                         <li className="nav-item">
-                            <Nav.Link as={Link} eventKey="/approvals" href="/approvals"><IconApproval className="feather" /> {this.props.t("approvals")} <Badge bg="primary">{this.state.approvalCount}</Badge></Nav.Link>
+                            <Nav.Link as={Link} eventKey="/approvals" href="/approvals"><IconApproval className="feather" /> {this.props.t("approvals")} <Badge bg="primary" hidden={this.state.approvalCount === 0}>{this.state.approvalCount}</Badge></Nav.Link>
                         </li>
                         <li className="nav-item">
                             <Nav.Link as={Link} eventKey="/report/analysis" href="/report/analysis"><IconAnalysis className="feather" /> {this.props.t("analysis")}</Nav.Link>
