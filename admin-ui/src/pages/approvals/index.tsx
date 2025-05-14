@@ -61,6 +61,8 @@ class Approvals extends React.Component<Props, State> {
     }
     ).catch(() => {
       this.setState({ updating: false });
+      // Re-Load items as another approver may have approved/declined the booking
+      this.loadItems();
     });
   }
 
