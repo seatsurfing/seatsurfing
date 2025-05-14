@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.32.0](https://github.com/seatsurfing/seatsurfing/compare/v1.31.1...v1.32.0) (2025-05-14)
+
+
+### Features
+
+* add ability to approve bookings ([#857](https://github.com/seatsurfing/seatsurfing/issues/857)) ([6425ed5](https://github.com/seatsurfing/seatsurfing/commit/6425ed53be365208b6480e2020716d36d5263e2e))
+* add ability to specify approver and allowed booker groups per space ([#850](https://github.com/seatsurfing/seatsurfing/issues/850)) ([f840abc](https://github.com/seatsurfing/seatsurfing/commit/f840abc7ff9c0a09b47086527b9689a778619516))
+* add user groups support ([#829](https://github.com/seatsurfing/seatsurfing/issues/829)) ([5b05a83](https://github.com/seatsurfing/seatsurfing/commit/5b05a83f7f7efbcf3d9b7905cbbe54183ea2798c))
+* feature flag for auth providers ([#862](https://github.com/seatsurfing/seatsurfing/issues/862)) ([f01703a](https://github.com/seatsurfing/seatsurfing/commit/f01703a7f15675fe4ce2ad37f970894194d50b2f))
+* restrict space-booking by group memberships ([#851](https://github.com/seatsurfing/seatsurfing/issues/851)) ([fbec1da](https://github.com/seatsurfing/seatsurfing/commit/fbec1da168c980c57a06aeb1771505388511526c))
+
+
+### Bug Fixes
+
+* check feature flag when creating an auth provider ([#863](https://github.com/seatsurfing/seatsurfing/issues/863)) ([93afe03](https://github.com/seatsurfing/seatsurfing/commit/93afe03da0a85b75d098d24dc180b8dc9c346db5))
+* **deps:** bump @types/node from 22.15.17 to 22.15.18 in /admin-ui ([#860](https://github.com/seatsurfing/seatsurfing/issues/860)) ([fd6a19c](https://github.com/seatsurfing/seatsurfing/commit/fd6a19c2c419e17f300979526968137327abee81))
+* **deps:** bump @types/node from 22.15.17 to 22.15.18 in /e2e ([#861](https://github.com/seatsurfing/seatsurfing/issues/861)) ([2c5bc97](https://github.com/seatsurfing/seatsurfing/commit/2c5bc97475857530c81a211767a5d53f9082ccfb))
+* **deps:** bump @types/node from 22.15.3 to 22.15.17 in /admin-ui ([#846](https://github.com/seatsurfing/seatsurfing/issues/846)) ([aede052](https://github.com/seatsurfing/seatsurfing/commit/aede052910ce0b002acc5de413f5975621368bf8))
+* **deps:** bump @types/node from 22.15.3 to 22.15.17 in /booking-ui ([#848](https://github.com/seatsurfing/seatsurfing/issues/848)) ([9821513](https://github.com/seatsurfing/seatsurfing/commit/9821513c74a952c2614f9df0351a67e6c6baa89b))
+* **deps:** bump @types/node from 22.15.3 to 22.15.17 in /e2e ([#849](https://github.com/seatsurfing/seatsurfing/issues/849)) ([907ba87](https://github.com/seatsurfing/seatsurfing/commit/907ba87ba609580c1e54b4bbf8b80ba404976efb))
+* **deps:** bump @types/react-dom from 19.1.3 to 19.1.5 in /admin-ui ([#858](https://github.com/seatsurfing/seatsurfing/issues/858)) ([0426826](https://github.com/seatsurfing/seatsurfing/commit/042682617ba10020a59596f4e17116dc4fe211d4))
+* **deps:** bump @types/react-dom from 19.1.3 to 19.1.5 in /booking-ui ([#859](https://github.com/seatsurfing/seatsurfing/issues/859)) ([ab13e85](https://github.com/seatsurfing/seatsurfing/commit/ab13e8522ed417aa37810c5a725753ba2a6f0709))
+* **deps:** bump bootstrap from 5.3.5 to 5.3.6 in /admin-ui ([#832](https://github.com/seatsurfing/seatsurfing/issues/832)) ([891d4b3](https://github.com/seatsurfing/seatsurfing/commit/891d4b32c434c7448ab8aeaba33c2d9d9ef00378))
+* **deps:** bump bootstrap from 5.3.5 to 5.3.6 in /booking-ui ([#835](https://github.com/seatsurfing/seatsurfing/issues/835)) ([5bbd5b8](https://github.com/seatsurfing/seatsurfing/commit/5bbd5b88a4bc749b2f5bf25fd0a2b657c0054d24))
+* **deps:** bump eslint from 9.25.1 to 9.26.0 in /admin-ui ([#831](https://github.com/seatsurfing/seatsurfing/issues/831)) ([13fa44e](https://github.com/seatsurfing/seatsurfing/commit/13fa44eb56fa79a7c5f8b23b267b03de93f710c9))
+* **deps:** bump eslint from 9.25.1 to 9.26.0 in /booking-ui ([#830](https://github.com/seatsurfing/seatsurfing/issues/830)) ([5c50b40](https://github.com/seatsurfing/seatsurfing/commit/5c50b400b0c55a1d1df707b2beebfb3d6c858646))
+* **deps:** bump eslint-config-next from 15.3.1 to 15.3.2 in /admin-ui ([#840](https://github.com/seatsurfing/seatsurfing/issues/840)) ([f61d72f](https://github.com/seatsurfing/seatsurfing/commit/f61d72fd7858e73b8a24a089e29348a7f7979da3))
+* **deps:** bump eslint-config-next from 15.3.1 to 15.3.2 in /booking-ui ([#844](https://github.com/seatsurfing/seatsurfing/issues/844)) ([f05f6d0](https://github.com/seatsurfing/seatsurfing/commit/f05f6d021df94b98bb51f8580696a1e9c88f8e1c))
+* **deps:** bump i18next from 25.0.2 to 25.1.1 in /commons/ts ([#836](https://github.com/seatsurfing/seatsurfing/issues/836)) ([a5419be](https://github.com/seatsurfing/seatsurfing/commit/a5419be40dd565177bcd009b4dbf8e1b2b2fa745))
+* **deps:** bump i18next from 25.1.1 to 25.1.2 in /commons/ts ([#856](https://github.com/seatsurfing/seatsurfing/issues/856)) ([c2acaba](https://github.com/seatsurfing/seatsurfing/commit/c2acaba4cb7332e319c28cc51b24f38cc42758a1))
+* **deps:** bump next from 15.3.1 to 15.3.2 in /admin-ui ([#839](https://github.com/seatsurfing/seatsurfing/issues/839)) ([39b35b3](https://github.com/seatsurfing/seatsurfing/commit/39b35b3d0724d214c133cb1d8ad4cac37322ba40))
+* **deps:** bump next from 15.3.1 to 15.3.2 in /booking-ui ([#842](https://github.com/seatsurfing/seatsurfing/issues/842)) ([e98d90b](https://github.com/seatsurfing/seatsurfing/commit/e98d90b18512b092f78e4492a8b83a0fb08e4614))
+* **deps:** bump react-bootstrap from 2.10.9 to 2.10.10 in /admin-ui ([#852](https://github.com/seatsurfing/seatsurfing/issues/852)) ([28de7ea](https://github.com/seatsurfing/seatsurfing/commit/28de7eac544c317c1947c6eaab4ef3821f3091bd))
+* **deps:** bump react-bootstrap from 2.10.9 to 2.10.10 in /booking-ui ([#855](https://github.com/seatsurfing/seatsurfing/issues/855)) ([e1eb065](https://github.com/seatsurfing/seatsurfing/commit/e1eb06527c298d49e62c762e68020f58a8d5652c))
+* **deps:** bump react-router-dom from 7.5.3 to 7.6.0 in /admin-ui ([#847](https://github.com/seatsurfing/seatsurfing/issues/847)) ([f273a31](https://github.com/seatsurfing/seatsurfing/commit/f273a312e9539c74edb6cb2028fef582c5d0d8e9))
+
 ## [1.31.1](https://github.com/seatsurfing/seatsurfing/compare/v1.31.0...v1.31.1) (2025-05-02)
 
 
