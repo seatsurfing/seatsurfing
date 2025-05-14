@@ -29,6 +29,7 @@ func TestAuthProvidersEmptyResult(t *testing.T) {
 func TestAuthProvidersForbidden(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 	userAdmin := CreateTestUserOrgAdmin(org)
 	loginResponseAdmin := LoginTestUser(userAdmin.ID)
 	user := CreateTestUserInOrg(org)
@@ -64,6 +65,7 @@ func TestAuthProvidersForbidden(t *testing.T) {
 func TestAuthProvidersCRUD(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 	userAdmin := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(userAdmin.ID)
 
@@ -130,6 +132,7 @@ func TestAuthProvidersCRUD(t *testing.T) {
 func TestAuthProvidersGetPublicForOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 	userAdmin := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(userAdmin.ID)
 
