@@ -134,6 +134,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, SettingFeatureNoUserLimit.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 	}
 }
 

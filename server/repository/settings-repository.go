@@ -54,6 +54,7 @@ var (
 	SettingFeatureNoUserLimit             SettingName = SettingName{Name: "feature_no_user_limit", Type: SettingTypeBool}
 	SettingFeatureCustomDomains           SettingName = SettingName{Name: "feature_custom_domains", Type: SettingTypeBool}
 	SettingFeatureGroups                  SettingName = SettingName{Name: "feature_groups", Type: SettingTypeBool}
+	SettingFeatureAuthProviders           SettingName = SettingName{Name: "feature_auth_providers", Type: SettingTypeBool}
 )
 
 var settingsRepository *SettingsRepository

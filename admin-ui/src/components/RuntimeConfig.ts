@@ -7,6 +7,7 @@ interface RuntimeUserInfos {
     pluginMenuItems: any[];
     pluginWelcomeScreens: any[];
     featureGroups: boolean;
+    featureAuthProviders: boolean;
 }
 
 export default class RuntimeConfig {
@@ -17,6 +18,7 @@ export default class RuntimeConfig {
         pluginMenuItems: [],
         pluginWelcomeScreens: [],
         featureGroups: false,
+        featureAuthProviders: false,
     };
 
     static verifyToken = async (resolve: Function) => {
@@ -50,6 +52,7 @@ export default class RuntimeConfig {
                     if (s.name === "_sys_admin_menu_items") RuntimeConfig.INFOS.pluginMenuItems = (s.value ? JSON.parse(s.value) : []);
                     if (s.name === "_sys_admin_welcome_screens") RuntimeConfig.INFOS.pluginWelcomeScreens = (s.value ? JSON.parse(s.value) : []);
                     if (s.name === "feature_groups") RuntimeConfig.INFOS.featureGroups = (s.value ? JSON.parse(s.value) : []);
+                    if (s.name === "feature_auth_providers") RuntimeConfig.INFOS.featureAuthProviders = (s.value ? JSON.parse(s.value) : []);
                 });
                 resolve();
             });

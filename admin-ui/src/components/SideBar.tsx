@@ -95,8 +95,8 @@ class SideBar extends React.Component<Props, State> {
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/users" href="/users"><IconUsers className="feather" /> {this.props.t("users")}</Nav.Link>
                     </li>
-                    <li className="nav-item" hidden={!RuntimeConfig.INFOS.featureGroups}>
-                        <Nav.Link as={Link} eventKey="/groups" href="/groups"><IconGroups className="feather" /> {this.props.t("groups")}</Nav.Link>
+                    <li className="nav-item">
+                        <Nav.Link as={Link} eventKey="/groups" href="/groups" disabled={!RuntimeConfig.INFOS.featureGroups}><IconGroups className="feather" /> {this.props.t("groups")}</Nav.Link>
                     </li>
                     <li className="nav-item">
                         <Nav.Link as={Link} eventKey="/settings" href="/settings"><IconSettings className="feather" /> {this.props.t("settings")}</Nav.Link>
@@ -135,7 +135,7 @@ class SideBar extends React.Component<Props, State> {
                             <Nav.Link as={Link} eventKey="/bookings" href="/bookings"><IconBook className="feather" /> {this.props.t("bookings")}</Nav.Link>
                         </li>
                         <li className="nav-item">
-                            <Nav.Link as={Link} eventKey="/approvals" href="/approvals"><IconApproval className="feather" /> {this.props.t("approvals")} <Badge bg="primary" hidden={this.state.approvalCount === 0}>{this.state.approvalCount}</Badge></Nav.Link>
+                            <Nav.Link as={Link} eventKey="/approvals" href="/approvals" disabled={!RuntimeConfig.INFOS.featureGroups}><IconApproval className="feather" /> {this.props.t("approvals")} <Badge bg="primary" hidden={this.state.approvalCount === 0}>{this.state.approvalCount}</Badge></Nav.Link>
                         </li>
                         <li className="nav-item">
                             <Nav.Link as={Link} eventKey="/report/analysis" href="/report/analysis"><IconAnalysis className="feather" /> {this.props.t("analysis")}</Nav.Link>

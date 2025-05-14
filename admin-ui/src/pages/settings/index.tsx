@@ -8,6 +8,7 @@ import FullLayout from '@/components/FullLayout';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
+import RuntimeConfig from '@/components/RuntimeConfig';
 
 interface State {
   allowAnyUser: boolean
@@ -413,6 +414,8 @@ class Settings extends React.Component<Props, State> {
           </tbody>
         </Table>
       );
+    } else if (!RuntimeConfig.INFOS.featureAuthProviders) {
+      authProviderTable = <p>Feature not available in your plan.</p>
     }
 
     let dangerZone = (
@@ -599,7 +602,7 @@ class Settings extends React.Component<Props, State> {
           <h1 className="h2">{this.props.t("authProviders")}</h1>
           <div className="btn-toolbar mb-2 mb-md-0">
             <div className="btn-group me-2">
-              <Link href="/settings/auth-providers/add" className="btn btn-sm btn-outline-secondary"><IconPlus className="feather" /> {this.props.t("add")}</Link>
+              <Link href="/settings/auth-providers/add" className={"btn btn-sm btn-outline-secondary"+ (RuntimeConfig.INFOS.featureAuthProviders ? "" : " disabled")}><IconPlus className="feather" /> {this.props.t("add")}</Link>
             </div>
           </div>
         </div>
