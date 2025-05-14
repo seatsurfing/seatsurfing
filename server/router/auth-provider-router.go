@@ -173,6 +173,11 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
+	featureAuthProviders, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingFeatureAuthProviders.Name)
+	if !featureAuthProviders {
+		SendPaymentRequired(w)
+		return
+	}
 	if err := GetAuthProviderRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
