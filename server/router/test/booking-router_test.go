@@ -113,6 +113,74 @@ func TestBookingsCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestBookingsApproval(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(adminUser.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+
+	group := &Group{
+		Name:           "Group 1",
+		OrganizationID: org.ID,
+	}
+	GetGroupRepository().Create(group)
+	location := &Location{
+		Name:           "Location 1",
+		OrganizationID: org.ID,
+	}
+	GetGroupRepository().AddMembers(group, []string{adminUser.ID})
+	if err := GetLocationRepository().Create(location); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	space := &Space{
+		Name:       "H234",
+		X:          50,
+		Y:          100,
+		Width:      200,
+		Height:     300,
+		Rotation:   90,
+		LocationID: location.ID,
+	}
+	if err := GetSpaceRepository().Create(space); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	if err := GetSpaceRepository().AddApprovers(space, []string{group.ID}); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+
+	// 1. Create
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	log.Println(payload)
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// 2. Read
+	req = NewHTTPRequest("GET", "/booking/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, false, resBody.Approved)
+
+	// 3. Approve
+	payload = `{"approved": true}`
+	req = NewHTTPRequest("POST", "/booking/"+id+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// 4. Read
+	req = NewHTTPRequest("GET", "/booking/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestBool(t, true, resBody2.Approved)
+}
+
 func TestBookingsAllowedUsersRestricted(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

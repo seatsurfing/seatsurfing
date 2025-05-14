@@ -1,8 +1,8 @@
 import React from 'react';
-import { Home as IconHome, User as IconUsers, Users as IconGroups, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon } from 'react-feather';
-import { Ajax, AjaxCredentials, User } from 'seatsurfing-commons';
+import { Home as IconHome, User as IconUsers, Users as IconGroups, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon, Clock as IconApproval } from 'react-feather';
+import { Ajax, AjaxCredentials, Booking } from 'seatsurfing-commons';
 import { WithTranslation, withTranslation } from 'next-i18next';
-import { Nav } from 'react-bootstrap';
+import { Badge, Nav } from 'react-bootstrap';
 import { NextRouter } from 'next/router';
 import withReadyRouter from './withReadyRouter';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 import RuntimeConfig from './RuntimeConfig';
 
 interface State {
+    approvalCount: number
 }
 
 interface Props extends WithTranslation {
@@ -22,6 +23,7 @@ class SideBar extends React.Component<Props, State> {
     constructor(props: any) {
         super(props);
         this.state = {
+            approvalCount: 0,
         };
     }
 
@@ -33,6 +35,25 @@ class SideBar extends React.Component<Props, State> {
             });
             return;
         }
+        Booking.getPendingApprovalsCount().then((count) => {
+            this.setState({ approvalCount: count });
+        }
+        ).catch((error) => {
+            console.error("Error fetching pending approvals count:", error);
+        });
+        this.updateApprovalCount();
+    }
+
+    updateApprovalCount = () => {
+        window.setTimeout(() => {
+            this.updateApprovalCount();
+            Booking.getPendingApprovalsCount().then((count) => {
+                this.setState({ approvalCount: count });
+            }
+            ).catch((error) => {
+                console.error("Error fetching pending approvals count:", error);
+            });
+        }, 5000);
     }
 
     getActiveKey = () => {
@@ -46,7 +67,8 @@ class SideBar extends React.Component<Props, State> {
             '/groups',
             '/settings',
             '/locations',
-            '/bookings'
+            '/bookings',
+            '/approvals'
         ];
         let result = path;
         startPaths.forEach(startPath => {
@@ -111,6 +133,9 @@ class SideBar extends React.Component<Props, State> {
                         </li>
                         <li className="nav-item">
                             <Nav.Link as={Link} eventKey="/bookings" href="/bookings"><IconBook className="feather" /> {this.props.t("bookings")}</Nav.Link>
+                        </li>
+                        <li className="nav-item">
+                            <Nav.Link as={Link} eventKey="/approvals" href="/approvals"><IconApproval className="feather" /> {this.props.t("approvals")} <Badge bg="primary" hidden={this.state.approvalCount === 0}>{this.state.approvalCount}</Badge></Nav.Link>
                         </li>
                         <li className="nav-item">
                             <Nav.Link as={Link} eventKey="/report/analysis" href="/report/analysis"><IconAnalysis className="feather" /> {this.props.t("analysis")}</Nav.Link>

@@ -35,6 +35,7 @@
     "confirmBooking": "Buchung bestätigen",
     "cancel": "Abbrechen",
     "bookingConfirmed": "Deine Buchung wurde bestätigt!",
+    "bookingPending": "Deine Buchung muss noch genehmigt werden.",
     "cancelBooking": "Buchung stornieren",
     "confirmCancelBooking": "Buchung für {{enter}} stornieren?",
     "noBookings": "Keine Buchungen gefunden.",
@@ -115,6 +116,7 @@
     "reset": "Zurücksetzen",
     "filter": "Filter",
     "yes": "ja",
+    "no": "nein",
     "numSpaces": "# Plätze",
     "numFreeSpaces": "# Freie Plätze",
     "any": "beliebig",
@@ -134,5 +136,7 @@
     "colorSelfBooked": "Von mir gebucht",
     "colorBuddyBooked": "Von einem Kollegen gebucht",
     "colorPartiallyBooked": "Teilweise gebucht",
-    "colorDisallowed": "Nicht erlaubt"
+    "colorDisallowed": "Nicht erlaubt",
+    "approval": "Genehmigung",
+    "pending": "Ausstehend"
 }

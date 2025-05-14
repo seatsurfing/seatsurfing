@@ -81,7 +81,7 @@ func TestSpacesApproversCRUD(t *testing.T) {
 	}
 	GetGroupRepository().Create(g2)
 
-	list, err := GetSpaceRepository().GetApproverGroupIDs(s1)
+	list, err := GetSpaceRepository().GetApproverGroupIDs(s1.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 0, len(list))
 
@@ -91,13 +91,13 @@ func TestSpacesApproversCRUD(t *testing.T) {
 	err = GetSpaceRepository().AddApprovers(s2, []string{g2.ID})
 	CheckTestBool(t, true, err == nil)
 
-	list, err = GetSpaceRepository().GetApproverGroupIDs(s1)
+	list, err = GetSpaceRepository().GetApproverGroupIDs(s1.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 2, len(list))
 	CheckTestBool(t, true, slices.Contains(list, g1.ID))
 	CheckTestBool(t, true, slices.Contains(list, g2.ID))
 
-	list, err = GetSpaceRepository().GetApproverGroupIDs(s2)
+	list, err = GetSpaceRepository().GetApproverGroupIDs(s2.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(list))
 	CheckTestBool(t, true, slices.Contains(list, g2.ID))
@@ -105,12 +105,12 @@ func TestSpacesApproversCRUD(t *testing.T) {
 	err = GetSpaceRepository().RemoveApprovers(s1, []string{g2.ID})
 	CheckTestBool(t, true, err == nil)
 
-	list, err = GetSpaceRepository().GetApproverGroupIDs(s1)
+	list, err = GetSpaceRepository().GetApproverGroupIDs(s1.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(list))
 	CheckTestBool(t, true, slices.Contains(list, g1.ID))
 
-	list, err = GetSpaceRepository().GetApproverGroupIDs(s2)
+	list, err = GetSpaceRepository().GetApproverGroupIDs(s2.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(list))
 	CheckTestBool(t, true, slices.Contains(list, g2.ID))

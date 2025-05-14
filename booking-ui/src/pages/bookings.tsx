@@ -2,7 +2,7 @@ import React from 'react';
 import { Ajax, AjaxError, Booking, Formatting } from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 import { Button, Form, ListGroup, Modal } from 'react-bootstrap';
-import { LogIn as IconEnter, LogOut as IconLeave, MapPin as IconLocation } from 'react-feather';
+import { LogIn as IconEnter, LogOut as IconLeave, MapPin as IconLocation, Clock as IconPending } from 'react-feather';
 import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import NavBar from '@/components/NavBar';
@@ -83,10 +83,15 @@ class Bookings extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
     }
+    let pending = <></>;
+    if (item.approved === false) {
+      pending = <><IconPending className="feather" />&nbsp;{this.props.t("approval")}: {this.props.t("pending")}<br /></>;
+    }
     return (
       <ListGroup.Item key={item.id} action={true} onClick={(e) => { e.preventDefault(); this.onItemPress(item); }}>
         <h5>{Formatting.getDateOffsetText(item.enter, item.leave)}</h5>
         <p>
+          {pending}
           <IconLocation className="feather" />&nbsp;{item.space.location.name}, {item.space.name}<br />
           <IconEnter className="feather" />&nbsp;{formatter.format(item.enter)}<br />
           <IconLeave className="feather" />&nbsp;{formatter.format(item.leave)}

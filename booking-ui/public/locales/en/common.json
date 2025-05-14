@@ -38,6 +38,7 @@
     "confirmBooking": "Confirm booking",
     "cancel": "Cancel",
     "bookingConfirmed": "Your booking has been confirmed!",
+    "bookingPending": "Your booking needs to be confirmed first.",
     "cancelBooking": "Cancel booking",
     "confirmCancelBooking": "Cancel your upcoming booking for {{enter}}?",
     "noBookings": "No bookings.",
@@ -120,6 +121,7 @@
     "reset": "Reset",
     "filter": "Filter",
     "yes": "yes",
+    "no": "no",
     "numSpaces": "# Spaces",
     "numFreeSpaces": "# Free spaces",
     "any": "any",
@@ -139,5 +141,7 @@
     "colorSelfBooked": "Booked by me",
     "colorBuddyBooked": "Booked by buddy",
     "colorPartiallyBooked": "Partially booked",
-    "colorDisallowed": "Disallowed"
+    "colorDisallowed": "Disallowed",
+    "approval": "Approval",
+    "pending": "Pending"
 }
