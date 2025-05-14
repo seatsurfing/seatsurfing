@@ -38,6 +38,7 @@
     "confirmBooking": "Confirm booking",
     "cancel": "Cancel",
     "bookingConfirmed": "Your booking has been confirmed!",
+    "bookingPending": "Your booking needs to be confirmed first.",
     "cancelBooking": "Cancel booking",
     "confirmCancelBooking": "Cancel your upcoming booking for {{enter}}?",
     "noBookings": "No bookings.",

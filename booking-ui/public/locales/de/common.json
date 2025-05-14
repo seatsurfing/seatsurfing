@@ -35,6 +35,7 @@
     "confirmBooking": "Buchung bestätigen",
     "cancel": "Abbrechen",
     "bookingConfirmed": "Deine Buchung wurde bestätigt!",
+    "bookingPending": "Deine Buchung muss noch genehmigt werden.",
     "cancelBooking": "Buchung stornieren",
     "confirmCancelBooking": "Buchung für {{enter}} stornieren?",
     "noBookings": "Keine Buchungen gefunden.",

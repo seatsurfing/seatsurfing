@@ -1214,7 +1214,7 @@ class Search extends React.Component<Props, State> {
           <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>{this.props.t("bookingConfirmed")}</p>
+          <p>{this.state.selectedSpace?.approvalRequired ? this.props.t("bookingPending") : this.props.t("bookingConfirmed")}</p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary" onClick={() => this.props.router.push("/bookings")}>

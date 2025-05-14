@@ -76,7 +76,7 @@ type GetPendingApprovalsCountResponse struct {
 }
 
 type SetBookingApprovalRequest struct {
-	Approved bool `json:"approved" validate:"required"`
+	Approved bool `json:"approved"`
 }
 
 type CaldavConfig struct {
@@ -121,7 +121,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	m := &SetBookingApprovalRequest{}
-	if UnmarshalValidateBody(r, m) != nil {
+	if UnmarshalBody(r, m) != nil {
 		SendBadRequest(w)
 		return
 	}
