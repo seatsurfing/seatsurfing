@@ -282,7 +282,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2">{this.props.t("name")}</Form.Label>
             <Col sm="4">
-              <Form.Control type="name" value={this.state.name} onChange={(e: any) => this.setState({ name: e.target.value })} required={true} />
+              <Form.Control type="name" value={this.state.name} minLength={3} onChange={(e: any) => this.setState({ name: e.target.value })} required={true} />
             </Col>
           </Form.Group>
         </Form>

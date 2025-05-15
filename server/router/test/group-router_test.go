@@ -54,7 +54,7 @@ func TestGroupsCRUD(t *testing.T) {
 	loginResponse := LoginTestUser(user.ID)
 
 	// 1. Create
-	payload := `{"name": "G1"}`
+	payload := `{"name": "G11"}`
 	req := NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -66,7 +66,7 @@ func TestGroupsCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetGroupResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestString(t, "G1", resBody.Name)
+	CheckTestString(t, "G11", resBody.Name)
 
 	// 3. Update
 	payload = `{"name": "G1.2"}`
