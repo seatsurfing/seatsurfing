@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.32.1](https://github.com/seatsurfing/seatsurfing/compare/v1.32.0...v1.32.1) (2025-05-15)
+
+
+### Bug Fixes
+
+* **deps:** update server dependencies ([#868](https://github.com/seatsurfing/seatsurfing/issues/868)) ([a21f6f1](https://github.com/seatsurfing/seatsurfing/commit/a21f6f1e95beb5a8ea5c4e7405ea23034b6d33be))
+* enforce minimum length for group name ([#865](https://github.com/seatsurfing/seatsurfing/issues/865)) ([4b6d8ad](https://github.com/seatsurfing/seatsurfing/commit/4b6d8ad9b5448a5dfcd29553a8dace7f45c4c4e0))
+
 ## [1.32.0](https://github.com/seatsurfing/seatsurfing/compare/v1.31.1...v1.32.0) (2025-05-14)
 
 
