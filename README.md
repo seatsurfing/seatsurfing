@@ -7,7 +7,7 @@
 
 ## 🚀 Seatsurfing SaaS available!
 
-We offer Seatsurfing as a fully-hosted Software-as-a-Service (SaaS) at [seatsurfing.io](https://seatsurfing.io/)!
+We offer Seatsurfing as a fully-hosted Software-as-a-Service (SaaS) at [seatsurfing.io](https://seatsurfing.io/). [Start for free now](https://seatsurfing.io/sign-up)!
 
 - **No installation required** - Get started immediately
 - **Get it free** - Free for up to 10 users
