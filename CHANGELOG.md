@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.32.2](https://github.com/seatsurfing/seatsurfing/compare/v1.32.1...v1.32.2) (2025-05-17)
+
+
+### Bug Fixes
+
+* **deps:** bump i18next from 25.1.2 to 25.1.3 in /commons/ts ([#866](https://github.com/seatsurfing/seatsurfing/issues/866)) ([a0b10ad](https://github.com/seatsurfing/seatsurfing/commit/a0b10adc3f34259ec7f286190865f72e9f0705ca))
+* improved resilience and logging for auth providers ([#871](https://github.com/seatsurfing/seatsurfing/issues/871)) ([b1ab0a4](https://github.com/seatsurfing/seatsurfing/commit/b1ab0a40de72bf4ac71c0ceccaa5febd97109192))
+
 ## [1.32.1](https://github.com/seatsurfing/seatsurfing/compare/v1.32.0...v1.32.1) (2025-05-15)
 
 
