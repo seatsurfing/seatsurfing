@@ -448,6 +448,10 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 	}
 	redir := r.URL.Query().Get("redir")
 	config := router.getConfig(provider)
+	if config == nil {
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
+		return
+	}
 	payload := &AuthStateLoginPayload{
 		LoginType: loginType,
 		UserID:    "",
@@ -472,17 +476,14 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	provider, err := GetAuthProviderRepository().GetOne(vars["id"])
 	if err != nil {
+		log.Printf("Error getting auth provider %s: %s\n", vars["id"], err)
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider))
 		return
 	}
 	claims, payload, err := router.getUserInfo(provider, r.FormValue("state"), r.FormValue("code"))
 	if err != nil {
-		log.Println(err)
+		log.Printf("Error getting user info for provider %s: %s\n", vars["id"], err)
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider))
-		return
-	}
-	if !router.isValidEmailForOrg(provider, claims.Email) {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
 		return
 	}
 	allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
@@ -529,19 +530,19 @@ func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *Aut
 func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthProvider) string {
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
+	if primaryDomain == nil {
+		log.Println("Error compiling redirect failed URL for auth provider " + provider.Name + ": No primary domain found for organization")
+		if loginType == "ui" {
+			return "/ui/login/failed"
+		} else {
+			return "/admin/login/failed"
+		}
+	}
 	if loginType == "ui" {
 		return "https://" + primaryDomain.DomainName + "/ui/login/failed"
 	} else {
 		return "https://" + primaryDomain.DomainName + "/admin/login/failed"
 	}
-}
-
-func (router *AuthRouter) isValidEmailForOrg(provider *AuthProvider, email string) bool {
-	org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
-	if err != nil {
-		return false
-	}
-	return GetOrganizationRepository().IsValidCustomDomainForOrg(email, org)
 }
 
 func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*Claims, *AuthStateLoginPayload, error) {
@@ -606,6 +607,10 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
+	if primaryDomain == nil {
+		log.Println("Error compiling config for auth provider " + provider.Name + ": No primary domain found for organization")
+		return nil
+	}
 	config := &oauth2.Config{
 		RedirectURL:  "https://" + primaryDomain.DomainName + "/auth/" + provider.ID + "/callback",
 		ClientID:     provider.ClientID,
