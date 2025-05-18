@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 
@@ -372,33 +373,48 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	provider, err := GetAuthProviderRepository().GetOne(authState.AuthProviderID)
-	if err != nil {
-		SendNotFound(w)
-		return
-	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
-	user, err := GetUserRepository().GetByEmail(provider.OrganizationID, payload.UserID)
-	// TODO Change email to auth server ID???
-	if err != nil {
-		org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
-		if err != nil {
-			SendInternalServerError(w)
+	var user *User
+	var provider *AuthProvider
+	if authState.AuthProviderID != "" {
+		provider, _ = GetAuthProviderRepository().GetOne(authState.AuthProviderID)
+		if provider == nil {
+			SendNotFound(w)
 			return
 		}
-		if !GetUserRepository().CanCreateUser(org) {
-			SendPaymentRequired(w)
-			return
+		user, _ = GetUserRepository().GetByEmail(provider.OrganizationID, payload.UserID)
+		if user == nil {
+			org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
+			if err != nil {
+				SendInternalServerError(w)
+				return
+			}
+			allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
+			if !allowAnyUser {
+				SendNotFound(w)
+				return
+			}
+			if !GetUserRepository().CanCreateUser(org) {
+				SendPaymentRequired(w)
+				return
+			}
+			user = &User{
+				Email:          payload.UserID,
+				OrganizationID: org.ID,
+				Role:           UserRoleUser,
+			}
+			GetUserRepository().Create(user)
+		} else {
+			if user.OrganizationID != provider.OrganizationID {
+				SendBadRequest(w)
+				return
+			}
 		}
-		user = &User{
-			Email:          payload.UserID,
-			OrganizationID: org.ID,
-			Role:           UserRoleUser,
-		}
-		GetUserRepository().Create(user)
+	} else if err := uuid.Validate(payload.UserID); err == nil {
+		user, _ = GetUserRepository().GetOne(payload.UserID)
 	}
-	if user.OrganizationID != provider.OrganizationID {
-		SendBadRequest(w)
+	if user == nil {
+		SendNotFound(w)
 		return
 	}
 	if user.Disabled {
@@ -420,7 +436,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
-	if provider.LogoutURL == "" {
+	if provider == nil || provider.LogoutURL == "" {
 		return ""
 	}
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)

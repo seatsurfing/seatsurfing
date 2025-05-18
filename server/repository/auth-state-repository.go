@@ -11,9 +11,9 @@ type AuthStateRepository struct {
 type AuthStateType int
 
 const (
-	AuthRequestState         AuthStateType = 1
-	AuthResponseCache        AuthStateType = 2
-	AuthAtlassian            AuthStateType = 3
+	AuthRequestState         AuthStateType = 1 // Request login via OAuth / OIDC using an Auth Provider (fetch user info later)
+	AuthResponseCache        AuthStateType = 2 // Cache response from OAuth / OIDC (user info already fetched)
+	AuthAtlassian            AuthStateType = 3 // Atlassian Auth
 	AuthMergeRequest         AuthStateType = 4
 	AuthResetPasswordRequest AuthStateType = 5
 )
