@@ -19,7 +19,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
 import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
 import { getIcal } from '@/components/Ical';
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { TransformWrapper, TransformComponent, MiniMap, MiniMapProps } from "react-zoom-pan-pinch";
 interface State {
   earliestEnterDate: Date;
   enter: Date
@@ -996,25 +996,42 @@ class Search extends React.Component<Props, State> {
         return this.renderItem(item);
       });
       listOrMap = (
-        <div className="h-100 w-100 position-absolute bg-body-secondary">
+        <div className="h-100 w-100 position-absolute bg-body-secondary" style={{ position: "relative" }}>
           <TransformWrapper
             initialScale={0.8}
             initialPositionY={-100}
-            minScale={0.5}
+            minScale={0.2}
             maxScale={5}
             centerOnInit={true}
           >
-            <TransformComponent
-              wrapperClass="h-100 w-100"
-              contentClass="border border-3"
-            >
-              <div style={floorPlanStyle}>
-                {spaces}
-              </div>
-            </TransformComponent>
+            {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+              <>
+                {window.innerWidth >= 768 && (
+                  <div style={{ position: "absolute", top: 70, right: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
+                    <MiniMap>
+                      <div style={floorPlanStyle}>
+                        {spaces}
+                      </div>
+                    </MiniMap>
+                  </div>
+                )}
+                <div style={{ position: "absolute", top: 70, left: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
+                  <button onClick={() => zoomIn()} aria-label="Zoom in" className="btn btn-outline-primary btn-sm m-1">+</button>
+                  <button onClick={() => zoomOut()} aria-label="Zoom out" className="btn btn-outline-primary btn-sm m-1">-</button>
+                  <button onClick={() => resetTransform()} aria-label="Reset zoom" className="btn btn-outline-primary btn-sm m-1">/</button>
+                </div>
+                <TransformComponent
+                  wrapperClass="h-100 w-100"
+                  contentClass="border border-3"
+                >
+                  <div style={floorPlanStyle}>
+                    {spaces}
+                  </div>
+                </TransformComponent>
+              </>
+            )}
           </TransformWrapper>
         </div>
-
       );
     }
 
