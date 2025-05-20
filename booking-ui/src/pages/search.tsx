@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import { Form, Col, Row, Modal, Button, ListGroup, Badge, InputGroup, Nav } from 'react-bootstrap';
+import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav } from 'react-bootstrap';
 import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
 // @ts-ignore
 import DateTimePicker from 'react-datetime-picker';
@@ -19,6 +19,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
 import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
 import { getIcal } from '@/components/Ical';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 interface State {
   earliestEnterDate: Date;
   enter: Date
@@ -306,26 +307,11 @@ class Search extends React.Component<Props, State> {
       return this.loadSpaces(location.id).then(() => {
         return Ajax.get(location.getMapUrl()).then(mapData => {
           this.mapData = mapData.json;
-          this.centerMapView();
         });
       });
     })
   }
 
-  centerMapView = () => {
-    if (typeof window !== 'undefined') {
-      let timer: number | undefined = undefined;
-      let cb = () => {
-        const el = document.querySelector('.mapScrollContainer');
-        if (el) {
-          window.clearInterval(timer);
-          el.scrollLeft = (this.mapData ? this.mapData.width : 0) / 2 - (window.innerWidth / 2);
-          el.scrollTop = (this.mapData ? this.mapData.height : 0) / 2 - (window.innerHeight / 2);
-        }
-      };
-      timer = window.setInterval(cb, 10);
-    }
-  }
 
   loadSpaces = async (locationId: string) => {
     this.setState({ loading: true });
@@ -733,7 +719,7 @@ class Search extends React.Component<Props, State> {
   toggleListView = () => {
     this.setState({ listView: !this.state.listView }, () => {
       if (!this.state.listView) {
-        this.centerMapView();
+        // this.centerMapView();
       }
     });
   }
@@ -1004,20 +990,31 @@ class Search extends React.Component<Props, State> {
       const floorPlanStyle = {
         width: (this.mapData ? this.mapData.width : 0) + "px",
         height: (this.mapData ? this.mapData.height : 0) + "px",
-        position: 'relative' as 'relative',
         backgroundImage: (this.mapData ? "url(data:image/" + this.mapData.mapMimeType + ";base64," + this.mapData.data + ")" : "")
       };
       let spaces = this.data.map((item) => {
         return this.renderItem(item);
       });
       listOrMap = (
-        <div className="container-map">
-          <div className="mapScrollContainer">
-            <div style={floorPlanStyle}>
-              {spaces}
-            </div>
-          </div>
+        <div className="h-100 w-100 position-absolute bg-body-secondary">
+          <TransformWrapper
+            initialScale={0.8}
+            initialPositionY={-100}
+            minScale={0.5}
+            maxScale={5}
+            centerOnInit={true}
+          >
+            <TransformComponent
+              wrapperClass="h-100 w-100"
+              contentClass="border border-3"
+            >
+              <div style={floorPlanStyle}>
+                {spaces}
+              </div>
+            </TransformComponent>
+          </TransformWrapper>
         </div>
+
       );
     }
 
