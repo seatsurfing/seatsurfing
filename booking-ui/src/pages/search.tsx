@@ -8,7 +8,7 @@ import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import Loading from '../components/Loading';
-import { IoFilter as FilterIcon, IoInformation as InfoIcon, IoEnter as EnterIcon, IoExit as ExitIcon, IoLocation as LocationIcon, IoChevronUp as CollapseIcon, IoChevronDown as CollapseIcon2, IoSettings as SettingsIcon, IoMap as MapIcon, IoCalendar as WeekIcon } from 'react-icons/io5'
+import { IoFilter as FilterIcon, IoInformation as InfoIcon, IoEnter as EnterIcon, IoExit as ExitIcon, IoLocation as LocationIcon, IoChevronUp as CollapseIcon, IoChevronDown as CollapseIcon2, IoSettings as SettingsIcon, IoMap as MapIcon, IoCalendar as WeekIcon, IoScan as ScanIcon, IoAdd as AddIcon, IoRemove as RemoveIcon } from 'react-icons/io5'
 import ErrorText from '../types/ErrorText';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
@@ -1015,9 +1015,9 @@ class Search extends React.Component<Props, State> {
                   </div>
                 )}
                 <div style={{ position: "absolute", top: 70, left: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
-                  <button onClick={() => zoomIn()} aria-label="Zoom in" className="btn btn-outline-primary btn-sm m-1">+</button>
-                  <button onClick={() => zoomOut()} aria-label="Zoom out" className="btn btn-outline-primary btn-sm m-1">-</button>
-                  <button onClick={() => resetTransform()} aria-label="Reset zoom" className="btn btn-outline-primary btn-sm m-1">/</button>
+                  <button onClick={() => zoomIn()} aria-label="Zoom in" className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"><AddIcon /></button>
+                  <button onClick={() => zoomOut()} aria-label="Zoom out" className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"><RemoveIcon /></button>
+                  <button onClick={() => resetTransform()} aria-label="Reset zoom" className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"><ScanIcon /></button>
                 </div>
                 <TransformComponent
                   wrapperClass="h-100 w-100"
