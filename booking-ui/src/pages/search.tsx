@@ -1,7 +1,6 @@
 import React, { RefObject } from 'react';
 import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav } from 'react-bootstrap';
 import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
-// @ts-ignore
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
@@ -19,7 +18,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
 import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
 import { getIcal } from '@/components/Ical';
-import { TransformWrapper, TransformComponent, MiniMap, MiniMapProps } from "react-zoom-pan-pinch";
+import { TransformWrapper, TransformComponent, MiniMap } from "react-zoom-pan-pinch";
 interface State {
   earliestEnterDate: Date;
   enter: Date
@@ -367,7 +366,7 @@ class Search extends React.Component<Props, State> {
       hint = this.props.t("errorMinBookingDuration", { "num": RuntimeConfig.INFOS.minBookingDurationHours });
     }
     let self = this;
-    return new Promise<void>(function (resolve, reject) {
+    return new Promise<void>(function (resolve, _reject) {
       self.setState({
         canSearch: res,
         canSearchHint: hint
@@ -587,7 +586,7 @@ class Search extends React.Component<Props, State> {
   }
 
   renderListItem = (item: Space) => {
-    let bookings: Booking[] = [];
+    let bookings: Booking[];
     bookings = Booking.createFromRawArray(item.rawBookings);
     const bgColor = this.getAvailibilityStyle(item, bookings);
     let bookerCount = 0;
@@ -914,7 +913,7 @@ class Search extends React.Component<Props, State> {
         locationId: newLocationId,
       }, () => {
         this.loadMap(this.state.locationId).then(() => {
-          this.getLocation()?.getAttributes().then((attributes) => {
+          this.getLocation()?.getAttributes().then((_attributes) => {
             this.setState({ loading: false });
           });
         });
@@ -967,7 +966,7 @@ class Search extends React.Component<Props, State> {
       leaveDatePicker = (<div aria-label="Reservation end date"><DatePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} yearAriaLabel="Year" monthAriaLabel="Month" dayAriaLabel="Day" nativeInputAriaLabel="End date" calendarAriaLabel="Toggle end calendar" /></div>);
     }
 
-    let listOrMap = <></>;
+    let listOrMap: React.JSX.Element;
     if ((this.locations.length === 0) || (!this.state.locationId)) {
       listOrMap = (
         <div className="container-signin">
@@ -1004,7 +1003,7 @@ class Search extends React.Component<Props, State> {
             maxScale={5}
             centerOnInit={true}
           >
-            {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+            {({ zoomIn, zoomOut, resetTransform}) => (
               <>
                 {window.innerWidth >= 768 && (
                   <div style={{ position: "absolute", top: 70, right: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
