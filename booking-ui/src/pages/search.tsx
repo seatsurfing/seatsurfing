@@ -1009,6 +1009,7 @@ class Search extends React.Component<Props, State> {
                   <div style={{ position: "absolute", top: 70, right: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
                     <MiniMap>
                       <div style={floorPlanStyle}>
+                        {spaces}
                       </div>
                     </MiniMap>
                   </div>
