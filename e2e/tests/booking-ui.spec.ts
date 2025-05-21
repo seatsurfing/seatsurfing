@@ -18,11 +18,11 @@ test.beforeEach(async ({ page }) => {
 
 test('crud booking', async ({ page }) => {
   await page.getByRole('combobox').selectOption({label: 'Sample Floor'});
-  await page.getByText('Desk 1', { exact: true }).click();
+  await page.getByText('Desk 1', { exact: true }).nth(1).click();
   await page.getByRole('button', { name: 'Confirm booking' }).click();
   await page.getByRole('button', { name: 'My bookings' }).click();
   await expect(page).toHaveURL(/bookings$/);
-  await page.getByText(/Sample Floor/).click();
+  await page.getByText(/Sample Floor/).nth(1).click();
   await page.getByRole('button', { name: 'Cancel booking' }).click();
   await page.getByText('No bookings.');
   await page.getByRole('link', { name: 'Book a space' }).click();
