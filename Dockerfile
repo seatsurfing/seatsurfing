@@ -1,12 +1,16 @@
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
+
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24-bookworm AS server-builder
-ARG TARGETOS
-ARG TARGETARCH
+RUN apk add clang lld
+COPY --from=xx / /
+ARG TARGETPLATFORM
+RUN xx-apk add musl-dev gcc
 RUN export GOBIN=$HOME/work/bin
 WORKDIR /go/src/app
 ADD server/ .
 WORKDIR /go/src/app
 RUN go get -d -v .
-RUN CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s" -o main .
+RUN CGO_ENABLED=1 xx-go build -ldflags="-w -s" -o main && xx-verify main.
 
 FROM gcr.io/distroless/base-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
