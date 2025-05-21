@@ -376,7 +376,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	var user *User
 	var provider *AuthProvider
-	if authState.AuthProviderID != "" {
+	if authState.AuthProviderID != "" && authState.AuthProviderID != GetSettingsRepository().GetNullUUID() {
 		provider, _ = GetAuthProviderRepository().GetOne(authState.AuthProviderID)
 		if provider == nil {
 			SendNotFound(w)
