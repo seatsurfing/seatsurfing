@@ -10,7 +10,7 @@ WORKDIR /go/src/app
 ADD server/ .
 WORKDIR /go/src/app
 RUN go get -d -v .
-RUN CGO_ENABLED=1 xx-go build -ldflags="-w -s" -o main && xx-verify main.
+RUN CGO_ENABLED=1 xx-go build -ldflags="-w -s" -o main && xx-verify main
 
 FROM gcr.io/distroless/base-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
