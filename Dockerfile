@@ -4,7 +4,7 @@ FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24-bookworm AS server-
 RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 ARG TARGETPLATFORM
-RUN xx-apt install -y libc6-dev
+RUN xx-apt install -y libc6-dev binutils gcc libc6-dev
 RUN export GOBIN=$HOME/work/bin
 WORKDIR /go/src/app
 ADD server/ .
