@@ -1,11 +1,11 @@
-FROM node:lts-alpine AS commons-builder
+FROM --platform=$BUILDPLATFORM node:lts-alpine AS commons-builder
 WORKDIR /app
 WORKDIR /app/commons/ts
 ADD ./commons/ /app/commons
 RUN npm install
 RUN npm run build
 
-FROM node:lts-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:lts-alpine AS builder
 ARG CI_VERSION
 ENV NEXT_PUBLIC_PRODUCT_VERSION=$CI_VERSION
 ENV NODE_ENV=production
