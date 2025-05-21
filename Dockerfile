@@ -1,10 +1,10 @@
 FROM --platform=$BUILDPLATFORM docker.io/tonistiigi/xx AS xx
 
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24-bookworm AS server-builder
-RUN apk add clang lld
+RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 ARG TARGETPLATFORM
-RUN xx-apk add musl-dev gcc
+RUN xx-apt install -y libc6-dev
 RUN export GOBIN=$HOME/work/bin
 WORKDIR /go/src/app
 ADD server/ .
