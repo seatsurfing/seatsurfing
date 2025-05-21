@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
+FROM --platform=$BUILDPLATFORM docker.io/tonistiigi/xx AS xx
 
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24-bookworm AS server-builder
 RUN apk add clang lld
