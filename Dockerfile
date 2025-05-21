@@ -1,10 +1,12 @@
-FROM golang:1.24-bookworm AS server-builder
+FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS server-builder
+ARG TARGETOS
+ARG TARGETARCH
 RUN export GOBIN=$HOME/work/bin
 WORKDIR /go/src/app
 ADD server/ .
 WORKDIR /go/src/app
 RUN go get -d -v .
-RUN CGO_ENABLED=1 go build -ldflags="-w -s" -o main .
+RUN CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s" -o main .
 
 FROM gcr.io/distroless/base-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
