@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS server-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24-bookworm AS server-builder
 ARG TARGETOS
 ARG TARGETARCH
 RUN export GOBIN=$HOME/work/bin
