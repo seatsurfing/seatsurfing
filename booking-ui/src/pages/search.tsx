@@ -1,7 +1,6 @@
 import React, { RefObject } from 'react';
-import { Form, Col, Row, Modal, Button, ListGroup, Badge, InputGroup, Nav } from 'react-bootstrap';
+import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav } from 'react-bootstrap';
 import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
-// @ts-ignore
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
@@ -9,7 +8,7 @@ import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import Loading from '../components/Loading';
-import { IoFilter as FilterIcon, IoInformation as InfoIcon, IoEnter as EnterIcon, IoExit as ExitIcon, IoLocation as LocationIcon, IoChevronUp as CollapseIcon, IoChevronDown as CollapseIcon2, IoSettings as SettingsIcon, IoMap as MapIcon, IoCalendar as WeekIcon } from 'react-icons/io5'
+import { IoFilter as FilterIcon, IoInformation as InfoIcon, IoEnter as EnterIcon, IoExit as ExitIcon, IoLocation as LocationIcon, IoChevronUp as CollapseIcon, IoChevronDown as CollapseIcon2, IoSettings as SettingsIcon, IoMap as MapIcon, IoCalendar as WeekIcon, IoScan as ScanIcon, IoAdd as AddIcon, IoRemove as RemoveIcon } from 'react-icons/io5'
 import ErrorText from '../types/ErrorText';
 import { NextRouter } from 'next/router';
 import { WithTranslation, withTranslation } from 'next-i18next';
@@ -19,6 +18,7 @@ import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
 import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
 import { getIcal } from '@/components/Ical';
+import { TransformWrapper, TransformComponent, MiniMap } from "react-zoom-pan-pinch";
 interface State {
   earliestEnterDate: Date;
   enter: Date
@@ -306,26 +306,11 @@ class Search extends React.Component<Props, State> {
       return this.loadSpaces(location.id).then(() => {
         return Ajax.get(location.getMapUrl()).then(mapData => {
           this.mapData = mapData.json;
-          this.centerMapView();
         });
       });
     })
   }
 
-  centerMapView = () => {
-    if (typeof window !== 'undefined') {
-      let timer: number | undefined = undefined;
-      let cb = () => {
-        const el = document.querySelector('.mapScrollContainer');
-        if (el) {
-          window.clearInterval(timer);
-          el.scrollLeft = (this.mapData ? this.mapData.width : 0) / 2 - (window.innerWidth / 2);
-          el.scrollTop = (this.mapData ? this.mapData.height : 0) / 2 - (window.innerHeight / 2);
-        }
-      };
-      timer = window.setInterval(cb, 10);
-    }
-  }
 
   loadSpaces = async (locationId: string) => {
     this.setState({ loading: true });
@@ -381,7 +366,7 @@ class Search extends React.Component<Props, State> {
       hint = this.props.t("errorMinBookingDuration", { "num": RuntimeConfig.INFOS.minBookingDurationHours });
     }
     let self = this;
-    return new Promise<void>(function (resolve, reject) {
+    return new Promise<void>(function (resolve, _reject) {
       self.setState({
         canSearch: res,
         canSearchHint: hint
@@ -601,7 +586,7 @@ class Search extends React.Component<Props, State> {
   }
 
   renderListItem = (item: Space) => {
-    let bookings: Booking[] = [];
+    let bookings: Booking[];
     bookings = Booking.createFromRawArray(item.rawBookings);
     const bgColor = this.getAvailibilityStyle(item, bookings);
     let bookerCount = 0;
@@ -733,7 +718,7 @@ class Search extends React.Component<Props, State> {
   toggleListView = () => {
     this.setState({ listView: !this.state.listView }, () => {
       if (!this.state.listView) {
-        this.centerMapView();
+        // this.centerMapView();
       }
     });
   }
@@ -928,7 +913,7 @@ class Search extends React.Component<Props, State> {
         locationId: newLocationId,
       }, () => {
         this.loadMap(this.state.locationId).then(() => {
-          this.getLocation()?.getAttributes().then((attributes) => {
+          this.getLocation()?.getAttributes().then((_attributes) => {
             this.setState({ loading: false });
           });
         });
@@ -981,7 +966,7 @@ class Search extends React.Component<Props, State> {
       leaveDatePicker = (<div aria-label="Reservation end date"><DatePicker disabled={!this.state.locationId} value={this.state.leave} onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setLeaveDate(value) }} clearIcon={null} required={true} format={Formatting.getDateTimePickerFormatDailyString()} yearAriaLabel="Year" monthAriaLabel="Month" dayAriaLabel="Day" nativeInputAriaLabel="End date" calendarAriaLabel="Toggle end calendar" /></div>);
     }
 
-    let listOrMap = <></>;
+    let listOrMap: React.JSX.Element;
     if ((this.locations.length === 0) || (!this.state.locationId)) {
       listOrMap = (
         <div className="container-signin">
@@ -1004,19 +989,47 @@ class Search extends React.Component<Props, State> {
       const floorPlanStyle = {
         width: (this.mapData ? this.mapData.width : 0) + "px",
         height: (this.mapData ? this.mapData.height : 0) + "px",
-        position: 'relative' as 'relative',
         backgroundImage: (this.mapData ? "url(data:image/" + this.mapData.mapMimeType + ";base64," + this.mapData.data + ")" : "")
       };
       let spaces = this.data.map((item) => {
         return this.renderItem(item);
       });
       listOrMap = (
-        <div className="container-map">
-          <div className="mapScrollContainer">
-            <div style={floorPlanStyle}>
-              {spaces}
-            </div>
-          </div>
+        <div className="h-100 w-100 position-absolute bg-body-secondary" style={{ position: "relative" }}>
+          <TransformWrapper
+            initialScale={0.8}
+            initialPositionY={-100}
+            minScale={0.2}
+            maxScale={5}
+            centerOnInit={true}
+          >
+            {({ zoomIn, zoomOut, resetTransform}) => (
+              <>
+                {window.innerWidth >= 768 && (
+                  <div style={{ position: "absolute", top: 70, right: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
+                    <MiniMap>
+                      <div style={floorPlanStyle}>
+                        {spaces}
+                      </div>
+                    </MiniMap>
+                  </div>
+                )}
+                <div style={{ position: "absolute", top: 70, left: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
+                  <button onClick={() => zoomIn()} aria-label="Zoom in" className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"><AddIcon /></button>
+                  <button onClick={() => zoomOut()} aria-label="Zoom out" className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"><RemoveIcon /></button>
+                  <button onClick={() => resetTransform()} aria-label="Reset zoom" className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"><ScanIcon /></button>
+                </div>
+                <TransformComponent
+                  wrapperClass="h-100 w-100"
+                  contentClass="border border-3"
+                >
+                  <div style={floorPlanStyle}>
+                    {spaces}
+                  </div>
+                </TransformComponent>
+              </>
+            )}
+          </TransformWrapper>
         </div>
       );
     }
