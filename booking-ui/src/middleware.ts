@@ -15,9 +15,21 @@ export async function middleware(req: NextRequest) {
 
   if (req.nextUrl.locale === 'default') {
     const locale = req.cookies.get('NEXT_LOCALE')?.value || 'en';
-    const scheme = req.headers.get('X-Forwarded-Proto') || req.nextUrl.protocol;
+    let scheme = (req.headers.get('X-Forwarded-Proto') || req.nextUrl.protocol).toLowerCase();
+    if ((scheme !== 'http') && (scheme !== 'https')) {
+      scheme = 'https';
+    }
+    let port = req.headers.get('X-Forwarded-Port') || req.nextUrl.port;
+    if ((port === '80') && (scheme === 'http')) {
+      port = '';
+    } else if ((port === '443') && (scheme === 'https')) {
+      port = '';
+    }
     const host = req.headers.get('X-Forwarded-Host') || req.nextUrl.host;
-    const reqUrl = scheme + "://" + host;
+    if ((port !== '') && (host.includes(':'))) {
+      port = '';
+    }
+    const reqUrl = scheme + "://" + host + (port ? ':' + port : '');
     const url = new URL(
       `/ui/${locale}${req.nextUrl.pathname}${req.nextUrl.search}`,
       reqUrl,
