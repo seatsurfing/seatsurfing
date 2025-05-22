@@ -13,6 +13,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type ConfluenceServerClaims struct {
@@ -50,18 +51,18 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		log.Println("JWT header verification failed: parsing JWT failed with: " + err.Error())
-		SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/failed")
+		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed")
 		return
 	}
 	if !token.Valid {
 		log.Println("JWT header verification failed: invalid JWT")
-		SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/failed")
+		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed")
 		return
 	}
 	allowAnonymous, _ := GetSettingsRepository().GetBool(org.ID, SettingConfluenceAnonymous.Name)
 	userID := router.getUserEmailServer(org, claims, allowAnonymous)
 	if userID == "" {
-		SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/confluence/anonymous")
+		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/confluence/anonymous")
 		return
 	}
 	_, err = GetUserRepository().GetByAtlassianID(userID)
@@ -77,7 +78,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	}
 	if err != nil {
 		if !GetUserRepository().CanCreateUser(org) {
-			SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/failed")
+			SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed")
 			return
 		}
 		user := &User{
@@ -103,7 +104,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
-	SendTemporaryRedirect(w, "https://"+primaryDomain.DomainName+"/ui/login/success/"+authState.ID)
+	SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/success/"+authState.ID)
 }
 
 func (router *ConfluenceRouter) getOrgNotFoundBody() []byte {
