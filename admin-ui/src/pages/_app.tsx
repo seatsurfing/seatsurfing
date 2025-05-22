@@ -32,11 +32,6 @@ class App extends React.Component<Props, State> {
     this.state = {
       isLoading: true
     };
-    if (typeof window !== 'undefined') {
-      if (process.env.NODE_ENV.toLowerCase() === "development") {
-        Ajax.URL = "http://" + window.location.host.split(':').shift() + ":8080";
-      }
-    }
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
         this.setState({isLoading: false});
