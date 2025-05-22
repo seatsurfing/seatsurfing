@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
@@ -18,7 +18,7 @@ import (
 type ConfluenceServerClaims struct {
 	UserName string `json:"user"`
 	UserKey  string `json:"key"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 type ConfluenceRouter struct {

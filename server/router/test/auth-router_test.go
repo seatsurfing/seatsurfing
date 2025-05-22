@@ -236,3 +236,40 @@ func TestAuthOrgDetails(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
+
+func TestAuthVerify(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test1.com")
+	authProvider := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "test",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider)
+
+	payloadAuthState := &AuthStateLoginPayload{
+		UserID:    "test@foo.bar",
+		LoginType: "ui",
+		LongLived: true,
+	}
+	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
+	authState := &AuthState{
+		AuthProviderID: authProvider.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthResponseCache,
+		Payload:        string(payloadAuthStateJson),
+	}
+	GetAuthStateRepository().Create(authState)
+
+	req := NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var loginRes JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &loginRes)
+	CheckTestBool(t, true, len(loginRes.AccessToken) > 0)
+	CheckTestBool(t, true, len(loginRes.RefreshToken) > 0)
+
+	user, _ := GetUserRepository().GetByEmail(org.ID, "test@foo.bar")
+	CheckTestBool(t, true, user != nil)
+	CheckTestString(t, "test@foo.bar", user.Email)
+}
