@@ -46,7 +46,7 @@
   "homepage": "/ui/",
   "devDependencies": {
     "@types/node": "22.15.21",
-    "eslint": "^9.26.0",
+    "eslint": "^9.27.0",
     "eslint-config-next": "15.3.2"
   }
 }
