@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.33.0](https://github.com/seatsurfing/seatsurfing/compare/v1.32.2...v1.33.0) (2025-05-22)
+
+
+### Features
+
+* add PUBLIC_SCHEME and PUBLIC_PORT environment variables ([#899](https://github.com/seatsurfing/seatsurfing/issues/899)) ([54353b2](https://github.com/seatsurfing/seatsurfing/commit/54353b22439810f598744e9edc557c51db79dd32))
+* intuitive way of navigating the map by adding react-zoom-pan-pinch to the Booking UI ([#885](https://github.com/seatsurfing/seatsurfing/issues/885)) ([da4eae7](https://github.com/seatsurfing/seatsurfing/commit/da4eae73417e0eb3df56ecf377f3dae1f55178f8))
+
+
+### Bug Fixes
+
+* check for empty UUID in /auth/verify ([#892](https://github.com/seatsurfing/seatsurfing/issues/892)) ([d1d9e14](https://github.com/seatsurfing/seatsurfing/commit/d1d9e1410fafd6a0b149c744eaedae1ea772cb09))
+* **deps:** bump @types/node from 22.15.18 to 22.15.21 in /admin-ui ([#889](https://github.com/seatsurfing/seatsurfing/issues/889)) ([5c94526](https://github.com/seatsurfing/seatsurfing/commit/5c94526d1fc7237f2ff00919c65eb3b12c6e8268))
+* **deps:** bump @types/node from 22.15.18 to 22.15.21 in /booking-ui ([#890](https://github.com/seatsurfing/seatsurfing/issues/890)) ([afd4216](https://github.com/seatsurfing/seatsurfing/commit/afd42169d0181467d189c9d4689454ca2c29538b))
+* **deps:** bump @types/node from 22.15.18 to 22.15.21 in /e2e ([#891](https://github.com/seatsurfing/seatsurfing/issues/891)) ([fc2e380](https://github.com/seatsurfing/seatsurfing/commit/fc2e38039843010328c106a52aeae1c4890c8384))
+* **deps:** bump eslint from 9.26.0 to 9.27.0 in /admin-ui ([#875](https://github.com/seatsurfing/seatsurfing/issues/875)) ([d1cdc2b](https://github.com/seatsurfing/seatsurfing/commit/d1cdc2b81a1e941f70fda9bdff5a5fa42c0ee6a6))
+* **deps:** bump eslint from 9.26.0 to 9.27.0 in /booking-ui ([#880](https://github.com/seatsurfing/seatsurfing/issues/880)) ([ee9b7b7](https://github.com/seatsurfing/seatsurfing/commit/ee9b7b75cd85e4e665c0af6f3600016a07657908))
+* **deps:** bump golang-jwt to v5 ([#894](https://github.com/seatsurfing/seatsurfing/issues/894)) ([489c6ee](https://github.com/seatsurfing/seatsurfing/commit/489c6ee881bd82a816b9d117dbe2f6118ccc07e1))
+* **deps:** bump i18next from 25.1.3 to 25.2.0 in /commons/ts ([#879](https://github.com/seatsurfing/seatsurfing/issues/879)) ([a68f1ce](https://github.com/seatsurfing/seatsurfing/commit/a68f1ce03fb234c56c539c11d4eb28c432b17c7a))
+* **deps:** bump react-i18next from 15.5.1 to 15.5.2 in /admin-ui ([#896](https://github.com/seatsurfing/seatsurfing/issues/896)) ([d4e7433](https://github.com/seatsurfing/seatsurfing/commit/d4e743362f3a4a7bb20db848b0616ccc314c0706))
+* **deps:** bump react-i18next from 15.5.1 to 15.5.2 in /booking-ui ([#897](https://github.com/seatsurfing/seatsurfing/issues/897)) ([dcea359](https://github.com/seatsurfing/seatsurfing/commit/dcea3599904d2d3b0ab3fe0b212947a6b2731d3b))
+* improve auth/verify handling (accept user id directly) ([#873](https://github.com/seatsurfing/seatsurfing/issues/873)) ([877d481](https://github.com/seatsurfing/seatsurfing/commit/877d4819f7ed9c82d384b9ce3c335a303c9609b0))
+* make i18n redirect more resilient ([#898](https://github.com/seatsurfing/seatsurfing/issues/898)) ([06f9163](https://github.com/seatsurfing/seatsurfing/commit/06f916390d100cf3e110f8d59294e33b34ec44cb))
+* remove obsolete dev mode ajax prefixes ([#895](https://github.com/seatsurfing/seatsurfing/issues/895)) ([4944194](https://github.com/seatsurfing/seatsurfing/commit/49441944b3c05bb46f472cc7ff819b0afc32b925))
+* remove obsolete route ([#893](https://github.com/seatsurfing/seatsurfing/issues/893)) ([78f4d00](https://github.com/seatsurfing/seatsurfing/commit/78f4d00a169875e0dca4965ba041aa23e48c9dd1))
+* remove unused spaces from MiniMap component to fix tests and improve performance ([#887](https://github.com/seatsurfing/seatsurfing/issues/887)) ([5571624](https://github.com/seatsurfing/seatsurfing/commit/5571624a58e24754f92b5a2a4221c0820bdb6a31))
+
 ## [1.32.2](https://github.com/seatsurfing/seatsurfing/compare/v1.32.1...v1.32.2) (2025-05-17)
 
 
