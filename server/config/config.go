@@ -45,6 +45,8 @@ type Config struct {
 	CryptKey                            string
 	FilesystemBasePath                  string
 	PluginsSubPath                      string
+	PublicScheme                        string
+	PublicPort                          int
 }
 
 var _configInstance *Config
@@ -111,6 +113,8 @@ func (c *Config) ReadConfig() {
 	pwd, _ := os.Getwd()
 	c.FilesystemBasePath = c.getEnv("FILESYSTEM_BASE_PATH", pwd)
 	c.PluginsSubPath = c.getEnv("PLUGINS_SUB_PATH", "plugins")
+	c.PublicScheme = c.getEnv("PUBLIC_SCHEME", "https")
+	c.PublicPort = c.getEnvInt("PUBLIC_PORT", 443)
 }
 
 func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {

@@ -441,7 +441,7 @@ func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
 	}
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
-	redirectUrl := "https://" + primaryDomain.DomainName + "/ui/login"
+	redirectUrl := FormatURL(primaryDomain.DomainName) + "/ui/login"
 	logoutUrl := strings.ReplaceAll(provider.LogoutURL, "{logoutRedirectUri}", redirectUrl)
 	return logoutUrl
 }
@@ -537,9 +537,9 @@ func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *Aut
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if loginType == "ui" {
-		return "https://" + primaryDomain.DomainName + "/ui/login/success/" + authState.ID
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/success/" + authState.ID
 	} else {
-		return "https://" + primaryDomain.DomainName + "/admin/login/success/" + authState.ID
+		return FormatURL(primaryDomain.DomainName) + "/admin/login/success/" + authState.ID
 	}
 }
 
@@ -555,9 +555,9 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 		}
 	}
 	if loginType == "ui" {
-		return "https://" + primaryDomain.DomainName + "/ui/login/failed"
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed"
 	} else {
-		return "https://" + primaryDomain.DomainName + "/admin/login/failed"
+		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed"
 	}
 }
 
@@ -615,7 +615,7 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"recipientName":  user.Email,
 		"recipientEmail": user.Email,
 		"confirmID":      ID,
-		"orgDomain":      "https://" + domain.DomainName + "/",
+		"orgDomain":      FormatURL(domain.DomainName) + "/",
 	}
 	return SendEmail(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars)
 }
@@ -628,7 +628,7 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 		return nil
 	}
 	config := &oauth2.Config{
-		RedirectURL:  "https://" + primaryDomain.DomainName + "/auth/" + provider.ID + "/callback",
+		RedirectURL:  FormatURL(primaryDomain.DomainName) + "/auth/" + provider.ID + "/callback",
 		ClientID:     provider.ClientID,
 		ClientSecret: provider.ClientSecret,
 		Scopes:       strings.Split(provider.Scopes, ","),
