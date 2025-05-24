@@ -15,17 +15,17 @@ export async function middleware(req: NextRequest) {
 
   if (req.nextUrl.locale === 'default') {
     const locale = req.cookies.get('NEXT_LOCALE')?.value || 'en';
-    let scheme = (req.headers.get('X-Forwarded-Proto') || req.nextUrl.protocol).toLowerCase();
+    let scheme = (req.headers.get('X-Forwarded-Proto') || '').toLowerCase();
     if ((scheme !== 'http') && (scheme !== 'https')) {
       scheme = 'https';
     }
-    let port = req.headers.get('X-Forwarded-Port') || req.nextUrl.port;
+    let port = (req.headers.get('X-Forwarded-Port') || '').toLowerCase();
     if ((port === '80') && (scheme === 'http')) {
       port = '';
     } else if ((port === '443') && (scheme === 'https')) {
       port = '';
     }
-    const host = req.headers.get('X-Forwarded-Host') || req.nextUrl.host;
+    const host = (req.headers.get('X-Forwarded-Host') || '').toLowerCase();
     if ((port !== '') && (host.includes(':'))) {
       port = '';
     }
