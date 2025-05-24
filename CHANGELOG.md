@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.1](https://github.com/seatsurfing/seatsurfing/compare/v1.33.0...v1.33.1) (2025-05-24)
+
+
+### Bug Fixes
+
+* incorrect i18n redirects in admin and booking ui ([#900](https://github.com/seatsurfing/seatsurfing/issues/900)) ([2d096f6](https://github.com/seatsurfing/seatsurfing/commit/2d096f68f845059c563db7ba11a7997f724a8d37))
+
 ## [1.33.0](https://github.com/seatsurfing/seatsurfing/compare/v1.32.2...v1.33.0) (2025-05-22)
 
 
