@@ -226,7 +226,7 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 	if host == "" {
 		host = r.Host
 	}
-	protocol := r.Header.Get("X-Forwarded-Proto")
+	protocol := strings.ToLower(r.Header.Get("X-Forwarded-Proto"))
 	if protocol == "" {
 		if r.TLS == nil {
 			protocol = "http"
@@ -234,9 +234,23 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 			protocol = "https"
 		}
 	}
+	port := r.Header.Get("X-Forwarded-Port")
+	if port == "" {
+		hostParts := strings.Split(r.Host, ":")
+		if len(hostParts) > 1 {
+			port = hostParts[1]
+		} else {
+			if protocol == "http" {
+				port = "80"
+			} else {
+				port = "443"
+			}
+		}
+	}
 	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
 	proxyReq.Header.Set("X-Forwarded-Host", host)
 	proxyReq.Header.Set("X-Forwarded-Proto", protocol)
+	proxyReq.Header.Set("X-Forwarded-Port", port)
 	resp, err := http.DefaultClient.Do(proxyReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
