@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const bookingUiUrl = process.env.BOOKING_UI_URL ? process.env.BOOKING_UI_URL : 'http://localhost:3001';
+const bookingUiUrl = process.env.BOOKING_UI_URL ? process.env.BOOKING_UI_URL : 'http://localhost:8080';
 
 test.beforeEach(async ({ page }) => {
   // Open login page
