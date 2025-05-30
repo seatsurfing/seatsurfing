@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.33.2](https://github.com/seatsurfing/seatsurfing/compare/v1.33.1...v1.33.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.15.21 to 22.15.24 in /admin-ui ([#909](https://github.com/seatsurfing/seatsurfing/issues/909)) ([3e9c8f7](https://github.com/seatsurfing/seatsurfing/commit/3e9c8f75e95bb6cffbcddb55870e5c2009c2ff3f))
+* **deps:** bump @types/node from 22.15.21 to 22.15.24 in /booking-ui ([#910](https://github.com/seatsurfing/seatsurfing/issues/910)) ([2c8ad06](https://github.com/seatsurfing/seatsurfing/commit/2c8ad0649af71ef806937ea65d91a0acf3e6d5b9))
+* **deps:** bump @types/node from 22.15.21 to 22.15.24 in /e2e ([#911](https://github.com/seatsurfing/seatsurfing/issues/911)) ([8c085a9](https://github.com/seatsurfing/seatsurfing/commit/8c085a992afcca06769f497c940829b4881e3c47))
+* **deps:** bump i18next from 25.2.0 to 25.2.1 in /commons/ts ([#904](https://github.com/seatsurfing/seatsurfing/issues/904)) ([32b5dc0](https://github.com/seatsurfing/seatsurfing/commit/32b5dc08d6f234b99ef9906a0deadf141bb3d811))
+* **deps:** bump next from 15.3.2 to 15.3.3 in /admin-ui ([#915](https://github.com/seatsurfing/seatsurfing/issues/915)) ([9bbac5a](https://github.com/seatsurfing/seatsurfing/commit/9bbac5ab19d16abecc2836c253588e07eb9c1592))
+* **deps:** bump next from 15.3.2 to 15.3.3 in /booking-ui ([#919](https://github.com/seatsurfing/seatsurfing/issues/919)) ([26fd159](https://github.com/seatsurfing/seatsurfing/commit/26fd1594e4d6c6dbd304ac8ce1b9111ce8211e9d))
+* **deps:** bump react-router-dom from 7.6.0 to 7.6.1 in /admin-ui ([#903](https://github.com/seatsurfing/seatsurfing/issues/903)) ([dad6b7f](https://github.com/seatsurfing/seatsurfing/commit/dad6b7f27c67756f0d4d5d0893257887250352b7))
+
 ## [1.33.1](https://github.com/seatsurfing/seatsurfing/compare/v1.33.0...v1.33.1) (2025-05-24)
 
 
