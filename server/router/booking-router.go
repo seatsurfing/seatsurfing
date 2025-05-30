@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -36,6 +37,7 @@ type BookingRequest struct {
 
 type CreateBookingRequest struct {
 	SpaceID string `json:"spaceId" validate:"required"`
+	Subject string `json:"subject"`
 	BookingRequest
 }
 
@@ -534,6 +536,10 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	space, err := GetSpaceRepository().GetOne(m.SpaceID)
 	if err != nil {
 		SendBadRequest(w)
+		return
+	}
+	if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
 		return
 	}
 	location, err := GetLocationRepository().GetOne(space.LocationID)
@@ -1109,6 +1115,7 @@ func (router *BookingRouter) onBookingDeleted(e *Booking) {
 func (router *BookingRouter) copyFromRestModel(m *CreateBookingRequest, location *Location) (*Booking, error) {
 	e := &Booking{}
 	e.SpaceID = m.SpaceID
+	e.Subject = m.Subject
 	e.Enter = m.Enter
 	e.Leave = m.Leave
 	enterNew, err := GetLocationRepository().AttachTimezoneInformation(e.Enter, location)
@@ -1130,6 +1137,7 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.UserID = e.UserID
 	m.UserEmail = e.UserEmail
 	m.SpaceID = e.SpaceID
+	m.Subject = e.Subject
 	m.Enter, _ = GetLocationRepository().AttachTimezoneInformation(e.Enter, &e.Space.Location)
 	m.Leave, _ = GetLocationRepository().AttachTimezoneInformation(e.Leave, &e.Space.Location)
 	m.Space.ID = e.Space.ID

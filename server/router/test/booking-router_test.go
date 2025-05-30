@@ -58,7 +58,7 @@ func TestBookingsCRUD(t *testing.T) {
 	loginResponse := LoginTestUser(user.ID)
 
 	// 1. Create
-	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -76,6 +76,7 @@ func TestBookingsCRUD(t *testing.T) {
 	CheckTestString(t, "H234", resBody.Space.Name)
 	CheckTestString(t, locationID, resBody.Space.Location.ID)
 	CheckTestString(t, "Location 1", resBody.Space.Location.Name)
+	CheckTestString(t, "Test Event", resBody.Subject)
 
 	// 3. Update by admin
 	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-01T08:45:00Z\", \"leave\": \"2030-09-01T18:15:00Z\"}"
@@ -111,6 +112,58 @@ func TestBookingsCRUD(t *testing.T) {
 	req = NewHTTPRequest("GET", "/booking/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestBookingsSubjectRequired(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(adminUser.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+
+	location := &Location{
+		Name:           "Location 1",
+		OrganizationID: org.ID,
+	}
+	if err := GetLocationRepository().Create(location); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	space := &Space{
+		Name:           "H234",
+		X:              50,
+		Y:              100,
+		Width:          200,
+		Height:         300,
+		Rotation:       90,
+		LocationID:     location.ID,
+		RequireSubject: true,
+	}
+	if err := GetSpaceRepository().Create(space); err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+
+	// 1. Create without subject - should fail
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingSubjectRequired), res.Header().Get("X-Error-Code"))
+
+	// 2. Create with subject - should succeed
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// 3. Read
+	req = NewHTTPRequest("GET", "/booking/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "Test Event", resBody.Subject)
 }
 
 func TestBookingsApproval(t *testing.T) {
@@ -2342,6 +2395,7 @@ func TestBookingsUserConcurrentLimitOkOnUpdate(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
+
 func TestBookingsUserConcurrentLimitExceededOnUpdate(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
