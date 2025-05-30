@@ -69,6 +69,16 @@ func (a *App) InitializeRouter() {
 	routers["/space-attribute/"] = &SpaceAttributeRouter{}
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
+	// routers["/esign/"] = &EsignRouter{}
+
+	esignRouter := mux.NewRouter()
+	(&EsignRouter{}).SetupRoutes(esignRouter)
+
+	a.Router.PathPrefix("/esign/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		esignRouter.ServeHTTP(w, r)
+	}))
+
+
 	for _, plg := range plugin.GetPlugins() {
 		for route, router := range (*plg).GetPublicRoutes() {
 			routers[route] = router
