@@ -106,9 +106,10 @@ func TestSpacesCRUD(t *testing.T) {
 	CheckTestUint(t, 200, resBody.Width)
 	CheckTestUint(t, 300, resBody.Height)
 	CheckTestUint(t, 90, resBody.Rotation)
+	CheckTestBool(t, false, resBody.RequireSubject)
 
 	// 3. Update
-	payload = `{"name": "H235", "x": 51, "y": 101, "width": 201, "height": 301, "rotation": 91}`
+	payload = `{"name": "H235", "x": 51, "y": 101, "width": 201, "height": 301, "rotation": 91, "requireSubject": true}`
 	req = NewHTTPRequest("PUT", "/location/"+locationID+"/space/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -125,6 +126,7 @@ func TestSpacesCRUD(t *testing.T) {
 	CheckTestUint(t, 201, resBody2.Width)
 	CheckTestUint(t, 301, resBody2.Height)
 	CheckTestUint(t, 91, resBody2.Rotation)
+	CheckTestBool(t, true, resBody2.RequireSubject)
 
 	// 4. Delete
 	req = NewHTTPRequest("DELETE", "/location/"+locationID+"/space/"+id, loginResponse.UserID, nil)

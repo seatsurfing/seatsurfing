@@ -14,6 +14,7 @@ export default class Space extends Entity {
     width: number;
     height: number;
     rotation: number;
+    requireSubject: boolean;
     attributes: SpaceAttributeValue[];
     approverGroupIds: string[];
     allowedBookerGroupIds: string[];
@@ -32,6 +33,7 @@ export default class Space extends Entity {
         this.width = 0;
         this.height = 0;
         this.rotation = 0;
+        this.requireSubject = false;
         this.attributes = [];
         this.approverGroupIds = [];
         this.allowedBookerGroupIds = [];
@@ -51,6 +53,7 @@ export default class Space extends Entity {
             "width": this.width,
             "height": this.height,
             "rotation": this.rotation,
+            "requireSubject": this.requireSubject,
             "attributes": this.attributes.map(a => a.serialize()),
             "approverGroupIds": this.approverGroupIds,
             "allowedBookerGroupIds": this.allowedBookerGroupIds,
@@ -66,6 +69,7 @@ export default class Space extends Entity {
         this.width = input.width;
         this.height = input.height;
         this.rotation = input.rotation;
+        this.requireSubject = input.requireSubject;
         if (input.allowed !== undefined) {
             this.allowed = input.allowed;
         }
