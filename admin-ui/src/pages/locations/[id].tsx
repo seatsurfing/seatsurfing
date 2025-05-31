@@ -22,6 +22,7 @@ interface SpaceState {
   width: string
   height: string
   rotation: number
+  requireSubject: boolean
   changed: boolean
   attributes: Map<string, string>
   enabledAttributes: string[]
@@ -207,6 +208,7 @@ class EditLocation extends React.Component<Props, State> {
         space.width = parseInt(item.width.replace(/^\D+/g, ''));
         space.height = parseInt(item.height.replace(/^\D+/g, ''));
         space.rotation = item.rotation;
+        space.requireSubject = item.requireSubject;
         space.attributes = [];
         item.enabledAttributes.forEach(attributeId => {
           let value = item.attributes.get(attributeId);
@@ -298,6 +300,7 @@ class EditLocation extends React.Component<Props, State> {
       width: (e ? e.width + "px" : "100px"),
       height: (e ? e.height + "px" : "100px"),
       rotation: 0,
+      requireSubject: (e ? e.requireSubject : false),
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -345,6 +348,15 @@ class EditLocation extends React.Component<Props, State> {
     let spaces = this.state.spaces;
     let space = { ...spaces[i] };
     space.name = name;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  }
+
+  setSpaceRequireSubject = (i: number, checked: boolean) => {
+    let spaces = this.state.spaces;
+    let space = { ...spaces[i] };
+    space.requireSubject = checked;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -631,6 +643,12 @@ class EditLocation extends React.Component<Props, State> {
               <Form.Label column sm="4">{this.props.t("name")}</Form.Label>
               <Col sm="8">
                 <Form.Control type="text" value={this.getSelectedSpace()?.name} onChange={(e: any) => this.setSpaceName(this.state.selectedSpace!, e.target.value)} required={true} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm="4">{this.props.t("requireSubject")}</Form.Label>
+              <Col sm="8">
+                <Form.Check type="checkbox" id="check-requireSubject" label={this.props.t("yes")} checked={this.getSelectedSpace()?.requireSubject} onChange={(e: any) => this.setSpaceRequireSubject(this.state.selectedSpace!, e.target.checked)} />
               </Col>
             </Form.Group>
             <Form.Group as={Row}>

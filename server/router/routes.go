@@ -39,6 +39,7 @@ var (
 	ResponseCodeBookingInvalidMinBookingDuration = 1007
 	ResponseCodeBookingMaxHoursBeforeDelete      = 1008
 	ResponseCodeBookingNotAllowedBooker          = 1009
+	ResponseCodeBookingSubjectRequired           = 1010
 )
 
 func SendTemporaryRedirect(w http.ResponseWriter, url string) {

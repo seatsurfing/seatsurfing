@@ -25,6 +25,7 @@ type CreateSpaceRequest struct {
 	Width                 uint                         `json:"width"`
 	Height                uint                         `json:"height"`
 	Rotation              uint                         `json:"rotation"`
+	RequireSubject        bool                         `json:"requireSubject"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
@@ -216,6 +217,7 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 			m.Width = e.Width
 			m.Height = e.Height
 			m.Rotation = e.Rotation
+			m.RequireSubject = e.RequireSubject
 			m.Available = e.Available
 			m.IsAllowed = router.IsUserAllowedToBook(&e.Space, allowedBookers, userGroups)
 			m.IsApprovalRequired = router.IsApprovalRequired(&e.Space, approvers)
@@ -853,6 +855,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Width = m.Width
 	e.Height = m.Height
 	e.Rotation = m.Rotation
+	e.RequireSubject = m.RequireSubject
 	return e
 }
 
@@ -866,6 +869,7 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.Width = e.Width
 	m.Height = e.Height
 	m.Rotation = e.Rotation
+	m.RequireSubject = e.RequireSubject
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {
