@@ -138,5 +138,6 @@
     "colorPartiallyBooked": "Teilweise gebucht",
     "colorDisallowed": "Nicht erlaubt",
     "approval": "Genehmigung",
-    "pending": "Ausstehend"
+    "pending": "Ausstehend",
+    "subject": "Betreff"
 }

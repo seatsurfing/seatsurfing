@@ -30,6 +30,7 @@ type SpaceAvailabilityBookingEntry struct {
 	UserEmail string
 	Enter     time.Time
 	Leave     time.Time
+	Subject   string
 }
 
 type SpaceAvailability struct {
@@ -134,7 +135,7 @@ func (r *SpaceRepository) GetAllInTime(locationID string, enter, leave time.Time
 		")"
 	rows, err := GetDatabase().DB().Query("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, "+
 		"NOT EXISTS(SELECT id FROM bookings WHERE "+subQueryWhere+"), "+
-		"ARRAY(SELECT CONCAT(users.id, '@@@', users.email, '@@@', bookings.enter_time, '@@@', bookings.leave_time, '@@@', bookings.id) FROM bookings INNER JOIN users ON users.id = bookings.user_id WHERE "+subQueryWhere+" ORDER BY bookings.enter_time ASC) "+
+		"ARRAY(SELECT CONCAT(users.id, '@@@', users.email, '@@@', bookings.enter_time, '@@@', bookings.leave_time, '@@@', bookings.id, '@@@', bookings.subject) FROM bookings INNER JOIN users ON users.id = bookings.user_id WHERE "+subQueryWhere+" ORDER BY bookings.enter_time ASC) "+
 		"FROM spaces "+
 		"WHERE location_id = $3 "+
 		"ORDER BY name", enter, leave, locationID)
@@ -157,6 +158,7 @@ func (r *SpaceRepository) GetAllInTime(locationID string, enter, leave time.Time
 				UserEmail: tokens[1],
 				Enter:     enter,
 				Leave:     leave,
+				Subject:   tokens[5],
 			}
 			e.Bookings = append(e.Bookings, entry)
 		}

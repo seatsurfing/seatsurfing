@@ -67,6 +67,7 @@ type GetSpaceAvailabilityBookingsResponse struct {
 	UserEmail string    `json:"userEmail"`
 	Enter     time.Time `json:"enter"`
 	Leave     time.Time `json:"leave"`
+	Subject   string    `json:"subject"`
 }
 
 type GetSpaceAvailabilityResponse struct {
@@ -239,6 +240,7 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 					UserEmail: outUserEmail,
 					Enter:     enter,
 					Leave:     leave,
+					Subject:   booking.Subject,
 				}
 				m.Bookings = append(m.Bookings, entry)
 			}

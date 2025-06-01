@@ -55,6 +55,7 @@ interface State {
   confirmingBooking: boolean
   activeTabFilterModal: string
   createdBookingId: string
+  subject: string;
 }
 
 interface Props extends WithTranslation {
@@ -122,6 +123,7 @@ class Search extends React.Component<Props, State> {
       searchAttributesSpace: [],
       activeTabFilterModal: "tab-filter-area",
       createdBookingId: "",
+      subject: "",
     };
   }
 
@@ -617,6 +619,7 @@ class Search extends React.Component<Props, State> {
 
     return (
       <p key={booking.id}>
+        <h6 hidden={!booking.subject}>{booking.subject}</h6>
         {booking.user.email}<br />
         {Formatting.getFormatterShort().format(new Date(booking.enter))}
         &nbsp;&mdash;&nbsp;
@@ -630,7 +633,10 @@ class Search extends React.Component<Props, State> {
     );
   }
 
-  onConfirmBooking = () => {
+  onConfirmBooking = (e: any) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (this.state.selectedSpace == null) {
       return;
     }
@@ -638,6 +644,7 @@ class Search extends React.Component<Props, State> {
       confirmingBooking: true
     });
     let booking: Booking = new Booking();
+    booking.subject = this.state.subject;
     booking.enter = new Date(this.state.enter);
     booking.leave = new Date(this.state.leave);
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
@@ -649,7 +656,8 @@ class Search extends React.Component<Props, State> {
         createdBookingId: booking.id,
         confirmingBooking: false,
         showConfirm: false,
-        showSuccess: true
+        showSuccess: true,
+        subject: "",
       });
     }).catch(e => {
       let code: number = 0;
@@ -1003,7 +1011,7 @@ class Search extends React.Component<Props, State> {
             maxScale={5}
             centerOnInit={true}
           >
-            {({ zoomIn, zoomOut, resetTransform}) => (
+            {({ zoomIn, zoomOut, resetTransform }) => (
               <>
                 {window.innerWidth >= 768 && (
                   <div style={{ position: "absolute", top: 70, right: 10, zIndex: 10, border: "1px solid #ccc", background: "#fff", borderRadius: "5px" }}>
@@ -1154,33 +1162,41 @@ class Search extends React.Component<Props, State> {
     });
     let confirmModal = (
       <Modal show={this.state.showConfirm} onHide={() => this.setState({ showConfirm: false })}>
-        <Modal.Header closeButton={true}>
-          <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {confirmModalRows.map((row, index) => {
-            return (
-              <Row key={"confirm-modal-row" + this.state.selectedSpace?.id + "-" + index} style={{ marginBottom: '5px' }}>
-                <Col sm="4">
-                  {row.label}:
-                </Col>
-                <Col sm="8">
-                  {row.value}
-                </Col>
-              </Row>
-            );
-          }
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })} disabled={this.state.confirmingBooking}>
-            {this.props.t("cancel")}
-          </Button>
-          <Button variant="primary" onClick={this.onConfirmBooking} disabled={this.state.confirmingBooking}>
-            {this.props.t("confirmBooking")}
-            {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
-          </Button>
-        </Modal.Footer>
+        <Form onSubmit={this.onConfirmBooking}>
+          <Modal.Header closeButton={true}>
+            <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {confirmModalRows.map((row, index) => {
+              return (
+                <Row key={"confirm-modal-row" + this.state.selectedSpace?.id + "-" + index} style={{ marginBottom: '5px' }}>
+                  <Col sm="4">
+                    {row.label}:
+                  </Col>
+                  <Col sm="8">
+                    {row.value}
+                  </Col>
+                </Row>
+              );
+            }
+            )}
+            <Form.Group as={Row} style={{ marginTop: '25px' }}>
+              <Form.Label column sm="4">{this.props.t("subject")}:</Form.Label>
+              <Col sm="8">
+                <Form.Control type="text" autoFocus={true} placeholder={this.props.t("subject")} value={this.state.subject} onChange={(e: any) => this.setState({ subject: e.target.value })} minLength={this.state.selectedSpace?.requireSubject ? 3 : 0} required={this.state.selectedSpace?.requireSubject} />
+              </Col>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })} disabled={this.state.confirmingBooking}>
+              {this.props.t("cancel")}
+            </Button>
+            <Button type="submit" variant="primary" disabled={this.state.confirmingBooking}>
+              {this.props.t("confirmBooking")}
+              {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
     );
     let bookings: Booking[] = [];

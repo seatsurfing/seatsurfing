@@ -242,7 +242,6 @@ func (router *LocationRouter) searchAttachBuddiesOnSite(attributeValues []*Space
 	if err != nil {
 		return nil, err
 	}
-	log.Println(buddies)
 	usersOnSite, err := GetSpaceRepository().GetBookingUserIDMap(user.OrganizationID, enter, leave)
 	if err != nil {
 		return nil, err
@@ -261,7 +260,6 @@ func (router *LocationRouter) searchAttachBuddiesOnSite(attributeValues []*Space
 		if err != nil {
 			return nil, err
 		}
-		log.Println(string(json))
 		attributeValues = append(attributeValues, &SpaceAttributeValue{
 			AttributeID: SearchAttributeBuddyOnSite,
 			EntityID:    k,

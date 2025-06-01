@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"runtime/debug"
 	"strconv"
@@ -205,7 +204,6 @@ func TestBookingsApproval(t *testing.T) {
 
 	// 1. Create
 	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
-	log.Println(payload)
 	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -270,7 +268,6 @@ func TestBookingsAllowedUsersRestricted(t *testing.T) {
 	}
 
 	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
-	log.Println(payload)
 	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
