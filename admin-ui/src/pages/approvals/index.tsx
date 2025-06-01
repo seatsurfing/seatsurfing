@@ -79,6 +79,7 @@ class Approvals extends React.Component<Props, State> {
         <td>{booking.space.name}</td>
         <td>{Formatting.getFormatterShort().format(booking.enter)}</td>
         <td>{Formatting.getFormatterShort().format(booking.leave)}</td>
+        <td>{booking.subject}</td>
         <td><Button variant="success" id="approveBookingButton" disabled={this.state.updating} style={btnStyle} onClick={e => { this.approveBooking(booking, true); }}><IconOK className="feather" /></Button></td>
         <td><Button variant="danger" id="cancelBookingButton" disabled={this.state.updating} style={btnStyle} onClick={e => { this.approveBooking(booking, false); }}><IconX className="feather" /></Button></td>
       </tr>
@@ -133,6 +134,7 @@ class Approvals extends React.Component<Props, State> {
               <th>{this.props.t("space")}</th>
               <th>{this.props.t("enter")}</th>
               <th>{this.props.t("leave")}</th>
+              <th>{this.props.t("subject")}</th>
               <th></th>
               <th></th>
             </tr>
