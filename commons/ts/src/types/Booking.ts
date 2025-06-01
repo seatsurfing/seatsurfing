@@ -12,6 +12,7 @@ export default class Booking extends Entity {
     space: Space;
     user: User;
     approved: boolean;
+    subject: string;
 
     constructor() {
         super();
@@ -21,6 +22,7 @@ export default class Booking extends Entity {
         this.space = new Space();
         this.user = new User();
         this.approved = false;
+        this.subject = "";
     }
 
     serialize(): Object {
@@ -33,13 +35,15 @@ export default class Booking extends Entity {
                 "enter": enter.toISOString(),
                 "leave": leave.toISOString(),
                 "spaceId": this.space.id,
-                "userEmail": this.user.email
+                "subject": this.subject,
+                "userEmail": this.user.email,
             });
         } else {
             return Object.assign(super.serialize(), {
                 "enter": enter.toISOString(),
                 "leave": leave.toISOString(),
                 "spaceId": this.space.id,
+                "subject": this.subject,
             });
         }
     }
@@ -62,6 +66,9 @@ export default class Booking extends Entity {
         }
         if (input.approved !== undefined) {
             this.approved = input.approved;
+        }
+        if (input.subject) {
+            this.subject = input.subject;
         }
     }
 

@@ -143,5 +143,6 @@
     "colorPartiallyBooked": "Partially booked",
     "colorDisallowed": "Disallowed",
     "approval": "Approval",
-    "pending": "Pending"
+    "pending": "Pending",
+    "subject": "Subject"
 }

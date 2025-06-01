@@ -44,6 +44,7 @@ interface State {
     prefWorkdays: number[]
     prefLocationId: string
     selfEmail: string;
+    subject: string;
 }
 
 interface Props extends WithTranslation {
@@ -108,6 +109,7 @@ class EditBooking extends React.Component<Props, State> {
             prefWorkdays: [],
             prefLocationId: "",
             selfEmail: "",
+            subject: "",
         }
     }
 
@@ -155,6 +157,7 @@ class EditBooking extends React.Component<Props, State> {
                         isDisabledSpace: false,
                         canSave: canSave,
                         canEdit: canSave,
+                        subject: this.entity.subject,
                         // loading: false,
                     });
                     this.loadSpaces(this.entity.space.locationId, this.entity.enter, this.entity.leave);
@@ -345,6 +348,7 @@ class EditBooking extends React.Component<Props, State> {
             this.entity.leave = this.state.leave;
             this.entity.space.id = this.state.selectedSpaceId;
             this.entity.user.email = user;
+            this.entity.subject = this.state.subject;
             this.entity.save().then(() => {
                 this.isNewBooking = false;
                 this.props.router.push("/bookings/" + this.entity.id);
@@ -367,6 +371,7 @@ class EditBooking extends React.Component<Props, State> {
             this.entity.leave = this.state.leave;
             this.entity.space.id = this.state.selectedSpaceId;
             this.entity.user.email = this.state.selectedUserEmail;
+            this.entity.subject = this.state.subject;
             this.entity.save().then(() => {
                 this.setState({
                     saved: true,
@@ -577,6 +582,13 @@ class EditBooking extends React.Component<Props, State> {
         });
     };
 
+    getSelectedSpace = () => {
+        if (this.state.selectedSpaceId) {
+            return this.state.spaces.find(space => space.id === this.state.selectedSpaceId);
+        }
+        return undefined;
+    }
+
     render() {
         if (this.state.goBack) {
             this.props.router.push('/bookings');
@@ -735,6 +747,13 @@ class EditBooking extends React.Component<Props, State> {
                                     }
                                 })}
                             </Form.Select>
+                        </Col>
+                    </Form.Group>
+
+                    <Form.Group as={Row}>
+                        <Form.Label column sm="2">{this.props.t("subject")}</Form.Label>
+                        <Col sm="4">
+                            <Form.Control type="subject" value={this.state.subject} minLength={this.getSelectedSpace()?.requireSubject ? 3 : 0} onChange={(e: any) => this.setState({ subject: e.target.value })} required={this.getSelectedSpace()?.requireSubject} />
                         </Col>
                     </Form.Group>
 

@@ -168,5 +168,7 @@
     "setApproversHint": "Leer, wenn keine Genehmigung erforderlich ist.",
     "allowBookers": "Erlaubte Bucher",
     "setAllowBookersHint": "Leer, wenn Buchung nicht eingeschränkt ist.",
-    "approvals": "Genehmigungen"
+    "approvals": "Genehmigungen",
+    "requireSubject": "Betreff erforderlich",
+    "subject": "Betreff"
 }

@@ -90,6 +90,7 @@ class Bookings extends React.Component<Props, State> {
     return (
       <ListGroup.Item key={item.id} action={true} onClick={(e) => { e.preventDefault(); this.onItemPress(item); }}>
         <h5>{Formatting.getDateOffsetText(item.enter, item.leave)}</h5>
+        <h6 hidden={!item.subject}>{item.subject}</h6>
         <p>
           {pending}
           <IconLocation className="feather" />&nbsp;{item.space.location.name}, {item.space.name}<br />
@@ -135,6 +136,7 @@ class Bookings extends React.Component<Props, State> {
             <Modal.Title>{this.props.t("cancelBooking")}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
+            <h6 hidden={!this.state.selectedItem?.subject}>{this.state.selectedItem?.subject}</h6>
             <p>{this.props.t("confirmCancelBooking", { enter: formatter.format(this.state.selectedItem?.enter), interpolation: { escapeValue: false } })}</p>
           </Modal.Body>
           <Modal.Footer>

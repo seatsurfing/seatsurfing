@@ -175,5 +175,7 @@
     "setApproversHint": "Leave empty if no approval is required.",
     "allowBookers": "Allowed bookers",
     "setAllowBookersHint": "Leave empty if booking is not limited.",
-    "approvals": "Approvals"
+    "approvals": "Approvals",
+    "requireSubject": "Require subject",
+    "subject": "Subject"
 }
