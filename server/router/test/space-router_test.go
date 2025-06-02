@@ -556,3 +556,45 @@ func createTestSpaces(t *testing.T, loginResponse *LoginResponse) (lID, s1ID, s2
 
 	return locationID, space1ID, space2ID, space3ID
 }
+
+func TestSpacesAvailabilitySingleSpace(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	locationID, spaceID1, spaceID2, _ := createTestSpaces(t, loginResponse)
+
+	// Create booking
+	payload := "{\"spaceId\": \"" + spaceID1 + "\", \"enter\": \"2030-09-01T07:00:00Z\", \"leave\": \"2030-09-01T09:00:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Check #1
+	payload = `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID1+"/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected array with 1 element")
+	}
+	CheckTestString(t, "H234", resBody[0].Name)
+	CheckTestBool(t, false, resBody[0].Available)
+
+	// Check #2
+	payload = `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID2+"/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 []*GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	if len(resBody2) != 1 {
+		t.Fatalf("Expected array with 1 element")
+	}
+	CheckTestString(t, "H236", resBody2[0].Name)
+	CheckTestBool(t, true, resBody2[0].Available)
+}
