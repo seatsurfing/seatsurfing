@@ -25,8 +25,7 @@ func (c contextKey) String() string {
 }
 
 var (
-	contextKeyUserID     = contextKey("UserID")
-	contextKeyAuthHeader = contextKey("AuthHeader")
+	contextKeyUserID = contextKey("UserID")
 )
 
 var (
@@ -193,6 +192,47 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		return false
 	}
 
+	var handleServiceAccountAuth = func(w http.ResponseWriter, r *http.Request) bool {
+		username, password, ok := r.BasicAuth()
+		if !ok {
+			return false
+		}
+		if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+			return false
+		}
+		organizationId := username[:36]
+		email := username[37:]
+		user, err := GetUserRepository().GetByEmail(organizationId, email)
+		if err != nil || user == nil {
+			return false
+		}
+		if user.Role != UserRoleServiceAccount {
+			return false
+		}
+		if user.HashedPassword == "" {
+			return false
+		}
+		if user.Disabled {
+			return false
+		}
+		if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
+			return false
+		}
+		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+		return true
+	}
+
+	var handleTokenAuth = func(w http.ResponseWriter, r *http.Request) bool {
+		claims, _, err := ExtractClaimsFromRequest(r)
+		if err != nil {
+			return false
+		}
+		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+		return true
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			next.ServeHTTP(w, r)
@@ -202,15 +242,11 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		claims, authHeader, err := ExtractClaimsFromRequest(r)
-		if err != nil {
-			log.Println(err)
+		success := handleTokenAuth(w, r) || handleServiceAccountAuth(w, r)
+		if !success {
 			SendUnauthorized(w)
 			return
 		}
-		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
-		ctx = context.WithValue(ctx, contextKeyAuthHeader, authHeader)
-		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -232,14 +268,6 @@ func GetRequestUserID(r *http.Request) string {
 		return ""
 	}
 	return userID.(string)
-}
-
-func GetAuthHeaderFromContext(r *http.Request) string {
-	authHeader := r.Context().Value(contextKeyAuthHeader)
-	if authHeader == nil {
-		return ""
-	}
-	return authHeader.(string)
 }
 
 func GetRequestUser(r *http.Request) *User {

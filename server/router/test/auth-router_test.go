@@ -273,3 +273,24 @@ func TestAuthVerify(t *testing.T) {
 	CheckTestBool(t, true, user != nil)
 	CheckTestString(t, "test@foo.bar", user.Email)
 }
+
+func TestAuthServiceAccountNoLogin(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccount,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		t.Fatal(err)
+	}
+
+	// Log in
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}

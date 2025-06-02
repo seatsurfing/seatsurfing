@@ -1,6 +1,7 @@
 import { Ajax, AjaxCredentials, User, Settings as OrgSettings } from 'seatsurfing-commons'
 
 interface RuntimeUserInfos {
+    organizationId: string;
     superAdmin: boolean;
     spaceAdmin: boolean;
     orgAdmin: boolean;
@@ -12,6 +13,7 @@ interface RuntimeUserInfos {
 
 export default class RuntimeConfig {
     static INFOS: RuntimeUserInfos = {
+        organizationId: "",
         superAdmin: false,
         spaceAdmin: false,
         orgAdmin: false,
@@ -61,6 +63,7 @@ export default class RuntimeConfig {
 
     static loadUserAndSettings = async (): Promise<void> => {
         return User.getSelf().then(user => {
+            RuntimeConfig.INFOS.organizationId = user.organizationId;
             RuntimeConfig.INFOS.superAdmin = user.superAdmin;
             RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
             RuntimeConfig.INFOS.orgAdmin = user.admin;
