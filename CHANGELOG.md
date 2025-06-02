@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.34.0](https://github.com/seatsurfing/seatsurfing/compare/v1.33.2...v1.34.0) (2025-06-02)
+
+
+### Features
+
+* endpoint for querying a single space's availability ([#924](https://github.com/seatsurfing/seatsurfing/issues/924)) ([0408cec](https://github.com/seatsurfing/seatsurfing/commit/0408cec7439987ada262936e6706605638e31368))
+* option for mandatory booking subjects per space  ([#921](https://github.com/seatsurfing/seatsurfing/issues/921)) ([d6c6555](https://github.com/seatsurfing/seatsurfing/commit/d6c6555cf7d4d1e268862b4806d4d4968d0f6857))
+* service accounts ([#923](https://github.com/seatsurfing/seatsurfing/issues/923)) ([bed7c72](https://github.com/seatsurfing/seatsurfing/commit/bed7c72c71f9c897d6174a5f2c63c8c814d2b895))
+
 ## [1.33.2](https://github.com/seatsurfing/seatsurfing/compare/v1.33.1...v1.33.2) (2025-06-01)
 
 
