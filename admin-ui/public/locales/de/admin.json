@@ -121,6 +121,7 @@
     "roleUser": "Benutzer",
     "roleSpaceAdmin": "Raumplan-Administrator",
     "roleOrgAdmin": "Organisations-Administrator",
+    "roleServiceAccount": "Service account",
     "roleSuperAdmin": "Super-Administrator",
     "user": "Benutzer",
     "area": "Bereich",

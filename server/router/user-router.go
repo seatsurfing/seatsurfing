@@ -302,7 +302,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
-	if eNew.Role > user.Role {
+	if eNew.Role > user.Role && eNew.Role != UserRoleServiceAccount {
 		eNew.Role = e.Role
 	}
 	eNew.OrganizationID = e.OrganizationID
@@ -361,7 +361,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	if e.OrganizationID == "" || !GetUserRepository().IsSuperAdmin(user) {
 		e.OrganizationID = user.OrganizationID
 	}
-	if e.Role > user.Role {
+	if e.Role > user.Role && e.Role != UserRoleServiceAccount {
 		e.Role = UserRoleUser
 	}
 	org, err := GetOrganizationRepository().GetOne(e.OrganizationID)

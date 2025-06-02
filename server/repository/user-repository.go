@@ -22,10 +22,11 @@ type UserRole int
 const DefaultUserLimit int = 10
 
 const (
-	UserRoleUser       UserRole = 0
-	UserRoleSpaceAdmin UserRole = 10
-	UserRoleOrgAdmin   UserRole = 20
-	UserRoleSuperAdmin UserRole = 90
+	UserRoleUser           UserRole = 0
+	UserRoleSpaceAdmin     UserRole = 10
+	UserRoleOrgAdmin       UserRole = 20
+	UserRoleServiceAccount UserRole = 21
+	UserRoleSuperAdmin     UserRole = 90
 )
 
 type User struct {

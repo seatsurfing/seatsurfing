@@ -209,6 +209,10 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		SendUpdated(w)
 		return
 	}
+	if user.Role == UserRoleServiceAccount {
+		SendUpdated(w)
+		return
+	}
 	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
 	if org == nil || err != nil {
 		SendUpdated(w)
@@ -253,6 +257,10 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 		return
 	}
 	if user.Disabled {
+		SendNotFound(w)
+		return
+	}
+	if user.Role == UserRoleServiceAccount {
 		SendNotFound(w)
 		return
 	}
@@ -319,6 +327,10 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
+	if user.Role == UserRoleServiceAccount {
+		SendNotFound(w)
+		return
+	}
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
 		SendNotFound(w)
@@ -343,6 +355,10 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 		return
 	}
 	if user.Disabled {
+		SendNotFound(w)
+		return
+	}
+	if user.Role == UserRoleServiceAccount {
 		SendNotFound(w)
 		return
 	}
@@ -418,6 +434,10 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user.Disabled {
+		SendNotFound(w)
+		return
+	}
+	if user.Role == UserRoleServiceAccount {
 		SendNotFound(w)
 		return
 	}

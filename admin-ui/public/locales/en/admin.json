@@ -126,6 +126,7 @@
     "roleUser": "User",
     "roleSpaceAdmin": "Floor plan administrator",
     "roleOrgAdmin": "Organisation administrator",
+    "roleServiceAccount": "Service account",
     "roleSuperAdmin": "Super administrator",
     "user": "User",
     "area": "Area",

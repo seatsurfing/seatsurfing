@@ -332,3 +332,27 @@ func TestUserCreateInOwnOrgsVerifiedDomain(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
+
+func TestUserListWithServiceAccount(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := &User{
+		Email:          "sa@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccount,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		t.Fatal(err)
+	}
+	CreateTestUserInOrg(org)
+
+	req, _ := http.NewRequest("GET", "/user/", nil)
+	req.SetBasicAuth(org.ID+"_sa@test.com", "12345678")
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, len(resBody))
+}
