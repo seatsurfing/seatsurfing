@@ -78,8 +78,9 @@ type GetSpaceAvailabilityResponse struct {
 }
 
 type GetSpaceAvailabilityRequest struct {
-	Enter      time.Time         `json:"enter" validate:"required"`
-	Leave      time.Time         `json:"leave" validate:"required"`
+	Enter      time.Time         `json:"enter"`
+	Leave      time.Time         `json:"leave"`
+	SpaceID    string            `json:"spaceId"`
 	Attributes []SearchAttribute `json:"attributes"`
 }
 
@@ -92,6 +93,7 @@ func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/allowedbooker/remove", router.removeAllowedBookers).Methods("POST")
 	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
 	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
+	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("POST")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -139,13 +141,36 @@ func (router *SpaceRouter) getOne(w http.ResponseWriter, r *http.Request) {
 	SendJSON(w, res)
 }
 
-func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Request) {
+func (router *SpaceRouter) getSingleSpaceAvailability(w http.ResponseWriter, r *http.Request) {
 	var m GetSpaceAvailabilityRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
 		return
 	}
 	vars := mux.Vars(r)
+	if m.SpaceID == "" && vars["id"] != "" {
+		m.SpaceID = vars["id"]
+	}
+	router._getAvailability(&m, w, r)
+}
+
+func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Request) {
+	var m GetSpaceAvailabilityRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	router._getAvailability(&m, w, r)
+}
+
+func (router *SpaceRouter) _getAvailability(m *GetSpaceAvailabilityRequest, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	if m.Enter.IsZero() {
+		m.Enter = time.Now().UTC().Add(time.Minute * -1)
+	}
+	if m.Leave.IsZero() {
+		m.Leave = time.Now().UTC().Add(time.Minute * +1)
+	}
 	location, err := GetLocationRepository().GetOne(vars["locationId"])
 	if err != nil {
 		SendBadRequest(w)
@@ -208,6 +233,9 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 	}
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
+		if m.SpaceID != "" && e.ID != m.SpaceID {
+			continue
+		}
 		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
 			m := &GetSpaceAvailabilityResponse{}
 			m.ID = e.ID
