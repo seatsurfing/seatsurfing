@@ -209,7 +209,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		SendUpdated(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccount {
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
 		SendUpdated(w)
 		return
 	}
@@ -260,7 +260,7 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccount {
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
 		SendNotFound(w)
 		return
 	}
@@ -327,7 +327,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccount {
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
 		SendNotFound(w)
 		return
 	}
@@ -358,7 +358,7 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccount {
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
 		SendNotFound(w)
 		return
 	}
@@ -437,7 +437,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccount {
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
 		SendNotFound(w)
 		return
 	}

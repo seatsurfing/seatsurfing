@@ -340,7 +340,7 @@ func TestUserListWithServiceAccount(t *testing.T) {
 	user := &User{
 		Email:          "sa@test.com",
 		OrganizationID: org.ID,
-		Role:           UserRoleServiceAccount,
+		Role:           UserRoleServiceAccountRO,
 		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
 	}
 	if err := GetUserRepository().Create(user); err != nil {
@@ -355,4 +355,50 @@ func TestUserListWithServiceAccount(t *testing.T) {
 	var resBody []GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 2, len(resBody))
+}
+
+func TestUserCreateWithServiceAccount(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := &User{
+		Email:          "sa@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRW,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		t.Fatal(err)
+	}
+	CreateTestUserInOrg(org)
+
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	req, _ := http.NewRequest("POST", "/user/", bytes.NewBufferString(payload))
+	req.SetBasicAuth(org.ID+"_sa@test.com", "12345678")
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+}
+
+func TestUserCreateWithROServiceAccount(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := &User{
+		Email:          "sa@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRO,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		t.Fatal(err)
+	}
+	CreateTestUserInOrg(org)
+
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	req, _ := http.NewRequest("POST", "/user/", bytes.NewBufferString(payload))
+	req.SetBasicAuth(org.ID+"_sa@test.com", "12345678")
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }

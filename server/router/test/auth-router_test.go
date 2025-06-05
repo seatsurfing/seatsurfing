@@ -281,7 +281,7 @@ func TestAuthServiceAccountNoLogin(t *testing.T) {
 	user := &User{
 		Email:          uuid.New().String() + "@test.com",
 		OrganizationID: org.ID,
-		Role:           UserRoleServiceAccount,
+		Role:           UserRoleServiceAccountRO,
 		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
 	}
 	if err := GetUserRepository().Create(user); err != nil {

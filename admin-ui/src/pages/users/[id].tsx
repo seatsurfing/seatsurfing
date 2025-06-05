@@ -61,6 +61,10 @@ class EditUser extends React.Component<Props, State> {
     this.loadData();
   }
 
+  isServiceAccount = (role: number) => {
+    return role === User.UserRoleServiceAccountRO || role === User.UserRoleServiceAccountRW;
+  }
+
   loadData = () => {
     let promises: Promise<any>[] = [
       OrgSettings.getOne("feature_no_user_limit"),
@@ -157,7 +161,7 @@ class EditUser extends React.Component<Props, State> {
   }
 
   changeRole = (role: number) => {
-    let changePassword = (role === User.UserRoleServiceAccount ? true : this.state.changePassword);
+    let changePassword = (this.isServiceAccount(role) ? true : this.state.changePassword);
     this.setState({ role: role, changePassword })
     if (changePassword) {
       this.generatePassword();
@@ -208,7 +212,7 @@ class EditUser extends React.Component<Props, State> {
       changePasswordLabel = this.props.t("passwordChange");
     }
     let changePassword = (
-      <Form.Group as={Row} hidden={this.state.role === User.UserRoleServiceAccount}>
+      <Form.Group as={Row} hidden={this.isServiceAccount(this.state.role)}>
         <Col sm="6">
           <Form.Check type="checkbox" id="check-changePassword" label={changePasswordLabel} checked={this.state.changePassword} onChange={(e: any) => this.setState({ changePassword: e.target.checked })} />
         </Col>
@@ -221,7 +225,8 @@ class EditUser extends React.Component<Props, State> {
           <option value={User.UserRoleUser}>{this.props.t("roleUser")}</option>
           { this.adminUserRole >= User.UserRoleSpaceAdmin ? <option value={User.UserRoleSpaceAdmin}>{this.props.t("roleSpaceAdmin")}</option> : <></> }
           { this.adminUserRole >= User.UserRoleOrgAdmin ? <option value={User.UserRoleOrgAdmin}>{this.props.t("roleOrgAdmin")}</option> : <></> }
-          { this.adminUserRole >= User.UserRoleOrgAdmin ? <option value={User.UserRoleServiceAccount}>{this.props.t("roleServiceAccount")}</option> : <></> }
+          { this.adminUserRole >= User.UserRoleOrgAdmin ? <option value={User.UserRoleServiceAccountRO}>{this.props.t("roleServiceAccountRO")}</option> : <></> }
+          { this.adminUserRole >= User.UserRoleOrgAdmin ? <option value={User.UserRoleServiceAccountRW}>{this.props.t("roleServiceAccountRW")}</option> : <></> }
           { this.adminUserRole >= User.UserRoleSuperAdmin ? <option value={User.UserRoleSuperAdmin}>{this.props.t("roleSuperAdmin")}</option> : <></> }
         </Form.Select>
       );
@@ -233,8 +238,11 @@ class EditUser extends React.Component<Props, State> {
       if (this.state.role === User.UserRoleOrgAdmin) {
         role = this.props.t("roleOrgAdmin");
       }
-      if (this.state.role === User.UserRoleServiceAccount) {
-        role = this.props.t("roleServiceAccount");
+      if (this.state.role === User.UserRoleServiceAccountRO) {
+        role = this.props.t("roleServiceAccountRO");
+      }
+      if (this.state.role === User.UserRoleServiceAccountRW) {
+        role = this.props.t("roleServiceAccountRW");
       }
       if (this.state.role === User.UserRoleSuperAdmin) {
         role = this.props.t("roleSuperAdmin");
@@ -265,11 +273,11 @@ class EditUser extends React.Component<Props, State> {
               <Form.Control type="email" placeholder="some@domain.com" value={this.state.email} onChange={(e: any) => this.setState({ email: e.target.value })} required={true} />
             </Col>
           </Form.Group>
-          <Form.Group as={Row} hidden={this.state.role !== User.UserRoleServiceAccount}>
+          <Form.Group as={Row} hidden={!this.isServiceAccount(this.state.role)}>
             <Form.Label column sm="2">{this.props.t("username")}</Form.Label>
             <Col sm="4">
               <InputGroup>
-                <Form.Control type="text" readOnly={true} defaultValue={this.state.role === User.UserRoleServiceAccount ? RuntimeConfig.INFOS.organizationId + "_" + this.state.email : this.state.email} />
+                <Form.Control type="text" readOnly={true} defaultValue={this.isServiceAccount(this.state.role) ? RuntimeConfig.INFOS.organizationId + "_" + this.state.email : this.state.email} />
                 <Button onClick={() => this.copyUsernameToClipboard()} disabled={this.state.email === ""} variant="outline-secondary">{copyUsernameIcon}</Button>
               </InputGroup>
             </Col>
@@ -279,9 +287,9 @@ class EditUser extends React.Component<Props, State> {
             <Form.Label column sm="2">{this.props.t("password")}</Form.Label>
             <Col sm="4">
               <InputGroup>
-                <Form.Control type={this.state.role === User.UserRoleServiceAccount ? "text" : "password"} value={this.state.password} onChange={(e: any) => this.setState({ password: e.target.value })} required={!this.entity.id || this.state.changePassword} disabled={!this.state.changePassword || this.state.role === User.UserRoleServiceAccount} minLength={this.state.role === User.UserRoleServiceAccount ? 32 : 8} />
-                <Button onClick={() => this.generatePassword()} hidden={this.state.role !== User.UserRoleServiceAccount} variant="outline-secondary"><IconRefresh className="feather" /></Button>
-                <Button onClick={() => this.copyPasswordToClipboard()} disabled={this.state.password === ""} hidden={this.state.role !== User.UserRoleServiceAccount} variant="outline-secondary">{copyPasswordIcon}</Button>
+                <Form.Control type={this.isServiceAccount(this.state.role) ? "text" : "password"} value={this.state.password} onChange={(e: any) => this.setState({ password: e.target.value })} required={!this.entity.id || this.state.changePassword} disabled={!this.state.changePassword || this.isServiceAccount(this.state.role)} minLength={this.isServiceAccount(this.state.role) ? 32 : 8} />
+                <Button onClick={() => this.generatePassword()} hidden={!this.isServiceAccount(this.state.role)} variant="outline-secondary"><IconRefresh className="feather" /></Button>
+                <Button onClick={() => this.copyPasswordToClipboard()} disabled={this.state.password === ""} hidden={!this.isServiceAccount(this.state.role)} variant="outline-secondary">{copyPasswordIcon}</Button>
               </InputGroup>
             </Col>
           </Form.Group>
