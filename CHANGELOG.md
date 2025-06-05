@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.34.1](https://github.com/seatsurfing/seatsurfing/compare/v1.34.0...v1.34.1) (2025-06-05)
+
+
+### Bug Fixes
+
+* changed several read-only endpoints to GET ([#934](https://github.com/seatsurfing/seatsurfing/issues/934)) ([7d2a150](https://github.com/seatsurfing/seatsurfing/commit/7d2a1508992f6b5083c674790e6e6e6c041b3311))
+* **deps:** bump @types/node from 22.15.28 to 22.15.29 in /admin-ui ([#929](https://github.com/seatsurfing/seatsurfing/issues/929)) ([d00fa5a](https://github.com/seatsurfing/seatsurfing/commit/d00fa5af5be0c5b14c1f61a87e96e30a5c800292))
+* **deps:** bump @types/node from 22.15.28 to 22.15.29 in /booking-ui ([#928](https://github.com/seatsurfing/seatsurfing/issues/928)) ([47c8d51](https://github.com/seatsurfing/seatsurfing/commit/47c8d51a6e38f550dfdaa26be3b0d73527ce9923))
+* **deps:** bump @types/node from 22.15.28 to 22.15.29 in /e2e ([#930](https://github.com/seatsurfing/seatsurfing/issues/930)) ([048902f](https://github.com/seatsurfing/seatsurfing/commit/048902f4a7efb081fa6bfea4c555f60f14b8d7e3))
+* **deps:** bump @types/react-dom from 19.1.5 to 19.1.6 in /admin-ui ([#932](https://github.com/seatsurfing/seatsurfing/issues/932)) ([212b1e8](https://github.com/seatsurfing/seatsurfing/commit/212b1e81cd90cccd2f17a0a0dbb86d75e9f4ecd6))
+* **deps:** bump @types/react-dom from 19.1.5 to 19.1.6 in /booking-ui ([#933](https://github.com/seatsurfing/seatsurfing/issues/933)) ([77e6184](https://github.com/seatsurfing/seatsurfing/commit/77e6184a031057c2bc5eafef96c7c7a47a9989f7))
+* **deps:** bump eslint from 9.27.0 to 9.28.0 in /admin-ui ([#925](https://github.com/seatsurfing/seatsurfing/issues/925)) ([b014d6b](https://github.com/seatsurfing/seatsurfing/commit/b014d6b3034a8164b4977948bdf7c16227baedc4))
+* **deps:** bump eslint from 9.27.0 to 9.28.0 in /booking-ui ([#926](https://github.com/seatsurfing/seatsurfing/issues/926)) ([6b8614d](https://github.com/seatsurfing/seatsurfing/commit/6b8614ddac4829de09b9013225ec1bbcfed70233))
+* **deps:** bump react-router-dom from 7.6.1 to 7.6.2 in /admin-ui ([#931](https://github.com/seatsurfing/seatsurfing/issues/931)) ([55e3227](https://github.com/seatsurfing/seatsurfing/commit/55e3227163f00be6bc91bdd666a9aee7d479763d))
+
 ## [1.34.0](https://github.com/seatsurfing/seatsurfing/compare/v1.33.2...v1.34.0) (2025-06-02)
 
 
