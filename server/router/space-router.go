@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -85,7 +86,7 @@ type GetSpaceAvailabilityRequest struct {
 }
 
 func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
-	s.HandleFunc("/availability", router.getAvailability).Methods("POST")
+	s.HandleFunc("/availability", router.getAvailability).Methods("GET")
 	s.HandleFunc("/bulk", router.bulkUpdate).Methods("POST")
 	s.HandleFunc("/{id}/approver/remove", router.removeApprovers).Methods("POST")
 	s.HandleFunc("/{id}/approver", router.getApprovers).Methods("GET")
@@ -93,7 +94,7 @@ func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/allowedbooker/remove", router.removeAllowedBookers).Methods("POST")
 	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
 	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
-	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("POST")
+	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -142,46 +143,44 @@ func (router *SpaceRouter) getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *SpaceRouter) getSingleSpaceAvailability(w http.ResponseWriter, r *http.Request) {
-	var m GetSpaceAvailabilityRequest
-	if UnmarshalValidateBody(r, &m) != nil {
-		SendBadRequest(w)
-		return
-	}
 	vars := mux.Vars(r)
-	if m.SpaceID == "" && vars["id"] != "" {
-		m.SpaceID = vars["id"]
-	}
-	router._getAvailability(&m, w, r)
+	router._getAvailability(vars["id"], w, r)
 }
 
 func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Request) {
-	var m GetSpaceAvailabilityRequest
-	if UnmarshalValidateBody(r, &m) != nil {
-		SendBadRequest(w)
-		return
-	}
-	router._getAvailability(&m, w, r)
+	router._getAvailability("", w, r)
 }
 
-func (router *SpaceRouter) _getAvailability(m *GetSpaceAvailabilityRequest, w http.ResponseWriter, r *http.Request) {
+func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	if m.Enter.IsZero() {
-		m.Enter = time.Now().UTC().Add(time.Minute * -1)
+	locationId := vars["locationId"]
+	enter := time.Now().UTC().Add(time.Minute * -1)
+	leave := time.Now().UTC().Add(time.Minute * +1)
+	if r.URL.Query().Has("enter") {
+		var err error
+		if enter, err = time.Parse(time.RFC3339Nano, r.URL.Query().Get("enter")); err != nil {
+			SendBadRequest(w)
+			return
+		}
 	}
-	if m.Leave.IsZero() {
-		m.Leave = time.Now().UTC().Add(time.Minute * +1)
+	if r.URL.Query().Has("leave") {
+		var err error
+		if leave, err = time.Parse(time.RFC3339Nano, r.URL.Query().Get("leave")); err != nil {
+			SendBadRequest(w)
+			return
+		}
 	}
-	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	location, err := GetLocationRepository().GetOne(locationId)
 	if err != nil {
 		SendBadRequest(w)
 		return
 	}
-	enterNew, err := GetLocationRepository().AttachTimezoneInformation(m.Enter, location)
+	enterNew, err := GetLocationRepository().AttachTimezoneInformation(enter, location)
 	if err != nil {
 		SendInternalServerError(w)
 		return
 	}
-	leaveNew, err := GetLocationRepository().AttachTimezoneInformation(m.Leave, location)
+	leaveNew, err := GetLocationRepository().AttachTimezoneInformation(leave, location)
 	if err != nil {
 		SendInternalServerError(w)
 		return
@@ -231,12 +230,16 @@ func (router *SpaceRouter) _getAvailability(m *GetSpaceAvailabilityRequest, w ht
 		SendInternalServerError(w)
 		return
 	}
+	attributes := []SearchAttribute{}
+	if r.URL.Query().Has("attributes") {
+		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
+	}
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
-		if m.SpaceID != "" && e.ID != m.SpaceID {
+		if spaceID != "" && e.ID != spaceID {
 			continue
 		}
-		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
+		if MatchesSearchAttributes(e.ID, &attributes, attributeValues) {
 			m := &GetSpaceAvailabilityResponse{}
 			m.ID = e.ID
 			m.LocationID = e.LocationID

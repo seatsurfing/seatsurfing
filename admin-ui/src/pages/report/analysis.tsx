@@ -51,13 +51,11 @@ class ReportAnalysis extends React.Component<Props, State> {
 
   loadItems = () => {
     let end = new Date(this.state.end);
-    end.setUTCHours(23, 59, 59);
-    let payload = {
-      start: new Date(this.state.start),
-      end: end,
-      locationId: this.state.locationId,
-    };
-    Ajax.postData("/booking/report/presence/", payload).then((res) => {
+    end.setHours(23, 59, 59);
+    let params = "start=" + encodeURIComponent(Formatting.convertToFakeUTCDate(new Date(this.state.start)).toISOString());
+        params += "&end=" + encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
+        params += "&locationId=" + encodeURIComponent(this.state.locationId);
+    Ajax.get("/booking/report/presence/?"+params).then((res) => {
       this.data = res.json;
       this.setState({ loading: false });
     });

@@ -99,8 +99,8 @@ func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/pendingapprovals/count", router.getPendingApprovalsCount).Methods("GET")
 	s.HandleFunc("/pendingapprovals/", router.getPendingApprovals).Methods("GET")
 	s.HandleFunc("/debugtimeissues/", router.debugTimeIssues).Methods("POST")
-	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("POST")
-	s.HandleFunc("/filter/", router.getFiltered).Methods("POST")
+	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("GET")
+	s.HandleFunc("/filter/", router.getFiltered).Methods("GET")
 	s.HandleFunc("/precheck/", router.preBookingCreateCheck).Methods("POST")
 	s.HandleFunc("/{id}/approve", router.approveBooking).Methods("POST")
 	s.HandleFunc("/{id}/ical", router.getIcal).Methods("GET")
@@ -253,12 +253,17 @@ func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
-	var m GetBookingFilterRequest
-	if UnmarshalValidateBody(r, &m) != nil {
+	start, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("start"))
+	if err != nil {
 		SendBadRequest(w)
 		return
 	}
-	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, m.Start, m.End)
+	end, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("end"))
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -656,14 +661,20 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 		SendForbidden(w)
 		return
 	}
-	var m GetBookingFilterRequest
-	if UnmarshalValidateBody(r, &m) != nil {
+	start, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("start"))
+	if err != nil {
 		SendBadRequest(w)
 		return
 	}
+	end, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("end"))
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	locationID := r.URL.Query().Get("locationId")
 	var location *Location = nil
-	if m.LocationID != "" {
-		location, _ = GetLocationRepository().GetOne(m.LocationID)
+	if locationID != "" {
+		location, _ = GetLocationRepository().GetOne(locationID)
 		if location == nil {
 			SendNotFound(w)
 			return
@@ -673,7 +684,7 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 			return
 		}
 	}
-	items, err := GetBookingRepository().GetPresenceReport(user.OrganizationID, location, m.Start, m.End, 1000, 0)
+	items, err := GetBookingRepository().GetPresenceReport(user.OrganizationID, location, start, end, 1000, 0)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)

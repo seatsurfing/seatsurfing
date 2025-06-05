@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -384,8 +385,9 @@ func TestSpacesAvailabilityOuter(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Check
-	payload = `{"enter": "2030-09-01T08:30:00+02:00", "leave": "2030-09-01T17:00:00+02:00"}`
-	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
@@ -417,8 +419,9 @@ func TestSpacesAvailabilityInner(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Check
-	payload = `{"enter": "2020-09-01T08:30:00+02:00", "leave": "2030-09-01T17:00:00+02:00"}`
-	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
@@ -450,8 +453,9 @@ func TestSpacesAvailabilityStart(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Check
-	payload = `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
-	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
@@ -483,8 +487,9 @@ func TestSpacesAvailabilityEnd(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Check
-	payload = `{"enter": "2030-09-01T08:30:00+02:00", "leave": "2030-09-01T17:00:00+02:00"}`
-	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
@@ -508,8 +513,9 @@ func TestSpacesAvailabilityNoBookings(t *testing.T) {
 
 	locationID, _, _, _ := createTestSpaces(t, loginResponse)
 
-	payload := `{"enter": "2020-09-01T08:30:00+02:00", "leave": "2020-09-01T17:00:00+02:00"}`
-	req := NewHTTPRequest("POST", "/location/"+locationID+"/space/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter := "2020-09-01T08:30:00+02:00"
+	leave := "2020-09-01T17:00:00+02:00"
+	req := NewHTTPRequest("GET", "/location/"+locationID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
@@ -573,8 +579,14 @@ func TestSpacesAvailabilitySingleSpace(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Check #1
-	payload = `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
-	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID1+"/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/"+spaceID1+"/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
+
+	/*
+		payload = `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+		req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID1+"/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	*/
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
@@ -586,8 +598,9 @@ func TestSpacesAvailabilitySingleSpace(t *testing.T) {
 	CheckTestBool(t, false, resBody[0].Available)
 
 	// Check #2
-	payload = `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
-	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/"+spaceID2+"/availability", loginResponse.UserID, bytes.NewBufferString(payload))
+	enter = "2030-09-01T08:30:00+02:00"
+	leave = "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/"+spaceID2+"/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody2 []*GetSpaceResponse

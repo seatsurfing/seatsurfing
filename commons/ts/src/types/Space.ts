@@ -173,12 +173,12 @@ export default class Space extends Entity {
     }
 
     static async listAvailability(locationId: string, enter: Date, leave: Date, attributes?: SearchAttribute[]): Promise<Space[]> {
-        let payload = {
-            enter: Formatting.convertToFakeUTCDate(enter).toISOString(),
-            leave: Formatting.convertToFakeUTCDate(leave).toISOString(),
-            attributes: (attributes ? attributes.map(a => a.serialize()) : [])
-        };
-        return Ajax.postData("/location/" + locationId + "/space/availability", payload).then(result => {
+        let params = "enter=" + encodeURIComponent(Formatting.convertToFakeUTCDate(enter).toISOString());
+        params += "&leave=" + encodeURIComponent(Formatting.convertToFakeUTCDate(leave).toISOString());
+        if (attributes && attributes.length > 0) {
+            params += "&attributes=" + encodeURIComponent(JSON.stringify(attributes.map(a => a.serialize())));
+        }
+        return Ajax.get("/location/" + locationId + "/space/availability?" + params).then(result => {
             let list: Space[] = [];
             (result.json as []).forEach(item => {
                 let e: Space = new Space();
