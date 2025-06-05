@@ -130,11 +130,9 @@ export default class Booking extends Entity {
     }
 
     static async listFiltered(start: Date, end: Date): Promise<Booking[]> {
-        let payload = {
-            start: start,
-            end: end
-        };
-        return Ajax.postData("/booking/filter/", payload).then(result => {
+        let params = "start=" + encodeURIComponent(Formatting.convertToFakeUTCDate(start).toISOString());
+        params += "&end=" + encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
+        return Ajax.get("/booking/filter/?"+params).then(result => {
             let list: Booking[] = [];
             (result.json as []).forEach(item => {
                 let e: Booking = new Booking();

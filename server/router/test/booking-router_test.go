@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"strconv"
 	"testing"
@@ -2093,8 +2094,7 @@ func TestBookingsPresenceReport(t *testing.T) {
 
 	end := tomorrow.Add(24 * 7 * time.Hour)
 	end = time.Date(end.Year(), end.Month(), end.Day(), 8, 0, 0, 0, end.Location())
-	payload := "{\"start\": \"" + tomorrow.Format(JsDateTimeFormatWithTimezone) + "\", \"end\": \"" + end.Format(JsDateTimeFormatWithTimezone) + "\"}"
-	req := NewHTTPRequest("POST", "/booking/report/presence/", user3.ID, bytes.NewBufferString(payload))
+	req := NewHTTPRequest("GET", "/booking/report/presence/?start="+url.QueryEscape(tomorrow.Format(JsDateTimeFormatWithTimezone))+"&end="+url.QueryEscape(end.Format(JsDateTimeFormatWithTimezone)), user3.ID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetPresenceReportResult
