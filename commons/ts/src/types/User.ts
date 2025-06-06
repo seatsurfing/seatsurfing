@@ -8,7 +8,8 @@ export default class User extends Entity {
     static UserRoleUser: number = 0;
     static UserRoleSpaceAdmin: number = 10;
     static UserRoleOrgAdmin: number = 20;
-    static UserRoleServiceAccount: number = 21;
+    static UserRoleServiceAccountRO: number = 21;
+    static UserRoleServiceAccountRW: number = 22;
     static UserRoleSuperAdmin: number = 90;
 
     id: string;

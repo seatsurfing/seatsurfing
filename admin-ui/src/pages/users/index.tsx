@@ -70,8 +70,11 @@ class Users extends React.Component<Props, State> {
     if (user.role === User.UserRoleOrgAdmin) {
       role = this.props.t("roleOrgAdmin");
     }
-    if (user.role === User.UserRoleServiceAccount) {
-      role = this.props.t("roleServiceAccount");
+    if (user.role === User.UserRoleServiceAccountRO) {
+      role = this.props.t("roleServiceAccountRO");
+    }
+    if (user.role === User.UserRoleServiceAccountRW) {
+      role = this.props.t("roleServiceAccountRW");
     }
     if (user.role === User.UserRoleSuperAdmin) {
       role = this.props.t("roleSuperAdmin");

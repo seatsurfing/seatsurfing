@@ -206,7 +206,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		if err != nil || user == nil {
 			return false
 		}
-		if user.Role != UserRoleServiceAccount {
+		if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
 			return false
 		}
 		if user.HashedPassword == "" {
@@ -216,6 +216,9 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return false
 		}
 		if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
+			return false
+		}
+		if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
