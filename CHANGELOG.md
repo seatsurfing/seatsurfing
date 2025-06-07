@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.1](https://github.com/seatsurfing/seatsurfing/compare/v1.35.0...v1.35.1) (2025-06-07)
+
+
+### Bug Fixes
+
+* incorrect timezone when querying availability without params ([#943](https://github.com/seatsurfing/seatsurfing/issues/943)) ([29d446d](https://github.com/seatsurfing/seatsurfing/commit/29d446d107a8b22171f4c5a4d31292800a1e2cbe))
+
 ## [1.35.0](https://github.com/seatsurfing/seatsurfing/compare/v1.34.1...v1.35.0) (2025-06-07)
 
 
