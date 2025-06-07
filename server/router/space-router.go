@@ -154,24 +154,36 @@ func (router *SpaceRouter) getAvailability(w http.ResponseWriter, r *http.Reques
 func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	locationId := vars["locationId"]
-	enter := time.Now().UTC().Add(time.Minute * -1)
-	leave := time.Now().UTC().Add(time.Minute * +1)
-	if r.URL.Query().Has("enter") {
+	location, err := GetLocationRepository().GetOne(locationId)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	var enter, leave time.Time
+	if !r.URL.Query().Has("enter") && !r.URL.Query().Has("leave") {
+		tz := location.Timezone
+		if tz == "" {
+			tz, _ = GetSettingsRepository().Get(location.OrganizationID, SettingDefaultTimezone.Name)
+		}
+		tzLocation, err := time.LoadLocation(tz)
+		if err != nil || tzLocation == nil {
+			log.Println("Error loading timezone:", tz, "Error:", err)
+			SendInternalServerError(w)
+			return
+		}
+		enter = time.Now().In(tzLocation).Add(time.Minute * -1)
+		leave = time.Now().In(tzLocation).Add(time.Minute * +1)
+	} else if r.URL.Query().Has("enter") && r.URL.Query().Has("leave") {
 		var err error
 		if enter, err = time.Parse(time.RFC3339Nano, r.URL.Query().Get("enter")); err != nil {
 			SendBadRequest(w)
 			return
 		}
-	}
-	if r.URL.Query().Has("leave") {
-		var err error
 		if leave, err = time.Parse(time.RFC3339Nano, r.URL.Query().Get("leave")); err != nil {
 			SendBadRequest(w)
 			return
 		}
-	}
-	location, err := GetLocationRepository().GetOne(locationId)
-	if err != nil {
+	} else {
 		SendBadRequest(w)
 		return
 	}
