@@ -9,6 +9,7 @@ import RuntimeConfig from '@/components/RuntimeConfig';
 
 interface State {
   iFrameLoaded: boolean
+  pluginId: string
   pluginMenuItem: any
 }
 
@@ -21,6 +22,7 @@ class PluginPage extends React.Component<Props, State> {
     super(props);
     this.state = {
       iFrameLoaded: false,
+      pluginId: "",
       pluginMenuItem: {},
     };
   }
@@ -29,11 +31,20 @@ class PluginPage extends React.Component<Props, State> {
     this.loadData();
   }
 
+  componentDidUpdate = () => {
+    const { id } = this.props.router.query;
+    if (this.state.pluginId !== id) {
+      this.setState({ pluginId: id as string });
+      this.loadData();
+    }
+  }
+
   loadData = () => {
     const { id } = this.props.router.query;
     for (let item of RuntimeConfig.INFOS.pluginMenuItems) {
       if (item.id === id) {
         this.setState({
+          pluginId: id as string,
           pluginMenuItem: item
         });
         this.checkiFrameHeight();
