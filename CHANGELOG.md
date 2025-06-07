@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.35.0](https://github.com/seatsurfing/seatsurfing/compare/v1.34.1...v1.35.0) (2025-06-07)
+
+
+### Features
+
+* split service accounts into read-only and read-write ([#936](https://github.com/seatsurfing/seatsurfing/issues/936)) ([68f2d79](https://github.com/seatsurfing/seatsurfing/commit/68f2d79956cfb303ae7cebc466282df4944da6ed))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.15.29 to 22.15.30 in /admin-ui ([#938](https://github.com/seatsurfing/seatsurfing/issues/938)) ([64453aa](https://github.com/seatsurfing/seatsurfing/commit/64453aa5eacb600a460e2605c5122a08c705bca9))
+* **deps:** bump @types/node from 22.15.29 to 22.15.30 in /e2e ([#939](https://github.com/seatsurfing/seatsurfing/issues/939)) ([4832495](https://github.com/seatsurfing/seatsurfing/commit/483249524853e64cf1af60ae43ee85e1252af482))
+* use correct timezone in availability endpoint ([#942](https://github.com/seatsurfing/seatsurfing/issues/942)) ([274c8aa](https://github.com/seatsurfing/seatsurfing/commit/274c8aa08f2b3290f2c322ebf5134015faf583e0))
+
 ## [1.34.1](https://github.com/seatsurfing/seatsurfing/compare/v1.34.0...v1.34.1) (2025-06-05)
 
 
