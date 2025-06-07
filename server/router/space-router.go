@@ -161,10 +161,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	}
 	var enter, leave time.Time
 	if !r.URL.Query().Has("enter") && !r.URL.Query().Has("leave") {
-		tz := location.Timezone
-		if tz == "" {
-			tz, _ = GetSettingsRepository().Get(location.OrganizationID, SettingDefaultTimezone.Name)
-		}
+		tz := GetLocationRepository().GetTimezone(location)
 		tzLocation, err := time.LoadLocation(tz)
 		if err != nil || tzLocation == nil {
 			log.Println("Error loading timezone:", tz, "Error:", err)
@@ -183,18 +180,18 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 			SendBadRequest(w)
 			return
 		}
+		enter, err = GetLocationRepository().AttachTimezoneInformation(enter, location)
+		if err != nil {
+			SendInternalServerError(w)
+			return
+		}
+		leave, err = GetLocationRepository().AttachTimezoneInformation(leave, location)
+		if err != nil {
+			SendInternalServerError(w)
+			return
+		}
 	} else {
 		SendBadRequest(w)
-		return
-	}
-	enterNew, err := GetLocationRepository().AttachTimezoneInformation(enter, location)
-	if err != nil {
-		SendInternalServerError(w)
-		return
-	}
-	leaveNew, err := GetLocationRepository().AttachTimezoneInformation(leave, location)
-	if err != nil {
-		SendInternalServerError(w)
 		return
 	}
 	user := GetRequestUser(r)
@@ -208,7 +205,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	} else {
 		showNames, _ = GetSettingsRepository().GetBool(location.OrganizationID, SettingShowNames.Name)
 	}
-	list, err := GetSpaceRepository().GetAllInTime(location.ID, enterNew, leaveNew)
+	list, err := GetSpaceRepository().GetAllInTime(location.ID, enter, leave)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
