@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.2](https://github.com/seatsurfing/seatsurfing/compare/v1.35.1...v1.35.2) (2025-06-07)
+
+
+### Bug Fixes
+
+* allow switchting between iFrames ([#945](https://github.com/seatsurfing/seatsurfing/issues/945)) ([fe4e639](https://github.com/seatsurfing/seatsurfing/commit/fe4e6399c790a07d92996c5380a7bab2f6eb78eb))
+
 ## [1.35.1](https://github.com/seatsurfing/seatsurfing/compare/v1.35.0...v1.35.1) (2025-06-07)
 
 
