@@ -29,17 +29,6 @@ const (
 	BookingMailNotificationDeclined
 )
 
-type RecurringBookingRequest struct {
-	SpaceID  string         `json:"spaceId" validate:"required"`
-	Subject  string         `json:"subject"`
-	Enter    time.Time      `json:"enter" validate:"required"`
-	Leave    time.Time      `json:"leave" validate:"required"`
-	End      time.Time      `json:"end" validate:"required"`
-	Cadence  Cadence        `json:"cadence" validate:"required,min=1,max=2"`
-	Cycle    int            `json:"cycle" validate:"required,min=1"`
-	Weekdays []time.Weekday `json:"weekdays"`
-}
-
 type BookingRequest struct {
 	Enter     time.Time `json:"enter" validate:"required"`
 	Leave     time.Time `json:"leave" validate:"required"`
