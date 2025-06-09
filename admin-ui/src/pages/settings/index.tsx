@@ -995,9 +995,7 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           {authProviderTable}
-          ee
           {dangerZone}
-          ww
         </Form>
       </FullLayout>
     );
