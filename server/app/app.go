@@ -222,35 +222,7 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 	for h, val := range r.Header {
 		proxyReq.Header[h] = val
 	}
-	host := r.Header.Get("X-Forwarded-Host")
-	if host == "" {
-		host = r.Host
-	}
-	protocol := strings.ToLower(r.Header.Get("X-Forwarded-Proto"))
-	if protocol == "" {
-		if r.TLS == nil {
-			protocol = "http"
-		} else {
-			protocol = "https"
-		}
-	}
-	port := r.Header.Get("X-Forwarded-Port")
-	if port == "" {
-		hostParts := strings.Split(r.Host, ":")
-		if len(hostParts) > 1 {
-			port = hostParts[1]
-		} else {
-			if protocol == "http" {
-				port = "80"
-			} else {
-				port = "443"
-			}
-		}
-	}
-	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
-	proxyReq.Header.Set("X-Forwarded-Host", host)
-	proxyReq.Header.Set("X-Forwarded-Proto", protocol)
-	proxyReq.Header.Set("X-Forwarded-Port", port)
+	a.setProxyForwardHeaders(r, proxyReq)
 	resp, err := http.DefaultClient.Do(proxyReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -269,6 +241,29 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 	}
 	w.WriteHeader(resp.StatusCode)
 	w.Write(bodyRes)
+}
+
+func (a *App) setProxyForwardHeaders(r *http.Request, proxyReq *http.Request) {
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	protocol := strings.ToLower(r.Header.Get("X-Forwarded-Proto"))
+	if protocol == "" {
+		if r.TLS == nil {
+			protocol = "http"
+		} else {
+			protocol = "https"
+		}
+	}
+	port := r.Header.Get("X-Forwarded-Port")
+
+	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
+	proxyReq.Header.Set("X-Forwarded-Host", host)
+	proxyReq.Header.Set("X-Forwarded-Proto", protocol)
+	if port != "" {
+		proxyReq.Header.Set("X-Forwarded-Port", port)
+	}
 }
 
 func (a *App) setupBookingUIProxy(router *mux.Router) {
