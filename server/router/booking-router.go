@@ -29,6 +29,17 @@ const (
 	BookingMailNotificationDeclined
 )
 
+type RecurringBookingRequest struct {
+	SpaceID  string         `json:"spaceId" validate:"required"`
+	Subject  string         `json:"subject"`
+	Enter    time.Time      `json:"enter" validate:"required"`
+	Leave    time.Time      `json:"leave" validate:"required"`
+	End      time.Time      `json:"end" validate:"required"`
+	Cadence  Cadence        `json:"cadence" validate:"required,min=1,max=2"`
+	Cycle    int            `json:"cycle" validate:"required,min=1"`
+	Weekdays []time.Weekday `json:"weekdays"`
+}
+
 type BookingRequest struct {
 	Enter     time.Time `json:"enter" validate:"required"`
 	Leave     time.Time `json:"leave" validate:"required"`
@@ -47,11 +58,12 @@ type PreCreateBookingRequest struct {
 }
 
 type GetBookingResponse struct {
-	ID        string           `json:"id"`
-	UserID    string           `json:"userId"`
-	UserEmail string           `json:"userEmail"`
-	Approved  bool             `json:"approved"`
-	Space     GetSpaceResponse `json:"space"`
+	ID          string           `json:"id"`
+	UserID      string           `json:"userId"`
+	UserEmail   string           `json:"userEmail"`
+	Approved    bool             `json:"approved"`
+	Space       GetSpaceResponse `json:"space"`
+	RecurringID string           `json:"recurringId"`
 	CreateBookingRequest
 }
 
@@ -1152,6 +1164,7 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.Enter, _ = GetLocationRepository().AttachTimezoneInformation(e.Enter, &e.Space.Location)
 	m.Leave, _ = GetLocationRepository().AttachTimezoneInformation(e.Leave, &e.Space.Location)
 	m.Space.ID = e.Space.ID
+	m.RecurringID = string(e.RecurringID)
 	m.Approved = e.Approved
 	m.Space.LocationID = e.Space.LocationID
 	m.Space.Name = e.Space.Name

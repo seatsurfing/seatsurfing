@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav } from 'react-bootstrap';
+import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav, Carousel } from 'react-bootstrap';
 import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';
@@ -16,7 +16,7 @@ import NavBar from '@/components/NavBar';
 import RuntimeConfig from '@/components/RuntimeConfig';
 import withReadyRouter from '@/components/withReadyRouter';
 import { Tooltip } from 'react-tooltip';
-import { Loader as IconLoad, Calendar as IconCalendar } from 'react-feather';
+import { Loader as IconLoad, Calendar as IconCalendar, RefreshCw as IconRefresh } from 'react-feather';
 import { getIcal } from '@/components/Ical';
 import { TransformWrapper, TransformComponent, MiniMap } from "react-zoom-pan-pinch";
 interface State {
@@ -56,6 +56,14 @@ interface State {
   activeTabFilterModal: string
   createdBookingId: string
   subject: string;
+  showRecurringOptions: boolean
+  recurrence: {
+    active: boolean
+    cadence: number
+    cycle: number
+    weekdays: number[]
+    end: Date
+  }
 }
 
 interface Props extends WithTranslation {
@@ -124,6 +132,14 @@ class Search extends React.Component<Props, State> {
       activeTabFilterModal: "tab-filter-area",
       createdBookingId: "",
       subject: "",
+      showRecurringOptions: false,
+      recurrence: {
+        active: false,
+        cadence: 0, // 1 = daily, 2 = weekly, 3 = monthly
+        cycle: 1, // every x days/weeks/months
+        weekdays: [], // only used if cadence is weekly
+        end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // default to one year from now
+      },
     };
   }
 
@@ -195,6 +211,10 @@ class Search extends React.Component<Props, State> {
           state.prefWorkdayStart = 0;
           state.prefWorkdayEnd = 23;
         }
+        state.recurrence = {
+          ...self.state.recurrence,
+          weekdays: state.prefWorkdays,
+        };
         self.setState({
           ...state
         }, () => resolve());
@@ -393,6 +413,10 @@ class Search extends React.Component<Props, State> {
     this.setEnterDate(enter);
     this.setLeaveDate(leave);
     this.setState({ daySlider: value });
+  }
+
+  setRecurrenceEndDate = (value: Date | [Date | null, Date | null]) => {
+    // TODO
   }
 
   setEnterDate = (value: Date | [Date | null, Date | null]) => {
@@ -953,6 +977,29 @@ class Search extends React.Component<Props, State> {
     });
   }
 
+  renderWeekdayButtons = () => {
+    const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
+    return weekdays.map((day, index) => {
+      const isActive = this.state.recurrence.weekdays.includes(index);
+      return (
+        <Button
+          key={index}
+          variant={isActive ? "primary" : "secondary"}
+          size="sm"
+          onClick={() => {
+            const newWorkdays = isActive
+              ? this.state.recurrence.weekdays.filter(d => d !== index)
+              : [...this.state.recurrence.weekdays, index];
+            this.setState({ recurrence: { ...this.state.recurrence, weekdays: newWorkdays } });
+          }}
+          style={{ marginRight: '5px' }}
+        >
+          {day}
+        </Button>
+      );
+    });
+  }
+
   render() {
     let hint = <></>;
     if ((!this.state.canSearch) && (this.state.canSearchHint)) {
@@ -1161,12 +1208,12 @@ class Search extends React.Component<Props, State> {
       }
     });
     let confirmModal = (
-      <Modal show={this.state.showConfirm} onHide={() => this.setState({ showConfirm: false })}>
+      <Modal show={this.state.showConfirm} onHide={() => this.setState({ showConfirm: false, showRecurringOptions: false })}>
         <Form onSubmit={this.onConfirmBooking}>
           <Modal.Header closeButton={true}>
             <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body hidden={this.state.showRecurringOptions}>
             {confirmModalRows.map((row, index) => {
               return (
                 <Row key={"confirm-modal-row" + this.state.selectedSpace?.id + "-" + index} style={{ marginBottom: '5px' }}>
@@ -1187,13 +1234,66 @@ class Search extends React.Component<Props, State> {
               </Col>
             </Form.Group>
           </Modal.Body>
-          <Modal.Footer>
+          <Modal.Body hidden={!this.state.showRecurringOptions}>
+            <Form.Group as={Row} className="d-flex margin-top-10">
+              <Form.Label column sm="4">{this.props.t("repeat")}:</Form.Label>
+              <Col sm="8">
+                <Form.Select value={this.state.recurrence.cadence} onChange={(e: any) => this.setState({ recurrence: { ...this.state.recurrence, cadence: window.parseInt(e.target.value), active: window.parseInt(e.target.value) !== 0 } })}>
+                  <option value="0">{this.props.t("never")}</option>
+                  <option value="1">{this.props.t("daily")}</option>
+                  <option value="2">{this.props.t("weekly")}</option>
+                </Form.Select>
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="d-flex margin-top-10" hidden={!this.state.recurrence.active}>
+              <Form.Label column sm="4">{this.props.t("every")}:</Form.Label>
+              <Col sm="8">
+              {JSON.stringify(this.state.recurrence)}
+                <InputGroup>
+                  <Form.Control type="number" min={1} max={30} value={this.state.recurrence.cycle} onChange={(e: any) => this.setState({ recurrence: { ...this.state.recurrence, cycle: window.parseInt(e.target.value) } })} />
+                  <InputGroup.Text>{this.state.recurrence.cadence === 1 ? this.props.t("days") : this.props.t("weeks")}</InputGroup.Text>
+                </InputGroup>
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="d-flex margin-top-10" hidden={this.state.recurrence.cadence !== 2}>
+              <Form.Label column sm="4">{this.props.t("on")}:</Form.Label>
+              <Col sm="8">
+                {this.renderWeekdayButtons()}
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="d-flex margin-top-10">
+              <Form.Label column sm="4">{this.props.t("end")}:</Form.Label>
+              <Col sm="8">
+                <DatePicker
+                  value={this.state.recurrence.end}
+                  onChange={(value: Date | null | [Date | null, Date | null]) => { if (value != null) this.setRecurrenceEndDate(value) }}
+                  format={Formatting.getDateTimePickerFormatDailyString()}
+                  clearIcon={null}
+                  required={this.state.recurrence.active}
+                  yearAriaLabel="Year"
+                  monthAriaLabel="Month"
+                  dayAriaLabel="Day"
+                  nativeInputAriaLabel="Recurrence end date"
+                  calendarAriaLabel="Toggle recurrence end calendar"
+                />
+              </Col>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer hidden={this.state.showRecurringOptions}>
             <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })} disabled={this.state.confirmingBooking}>
               {this.props.t("cancel")}
+            </Button>
+            <Button variant="secondary" onClick={() => this.setState({ showRecurringOptions: true })} disabled={this.state.confirmingBooking} active={this.state.showRecurringOptions || this.state.recurrence.active}>
+              <IconRefresh className="feather" />
             </Button>
             <Button type="submit" variant="primary" disabled={this.state.confirmingBooking}>
               {this.props.t("confirmBooking")}
               {this.state.confirmingBooking ? <IconLoad className="feather loader" style={{ marginLeft: '5px' }} /> : <></>}
+            </Button>
+          </Modal.Footer>
+          <Modal.Footer hidden={!this.state.showRecurringOptions}>
+            <Button variant="secondary" onClick={() => this.setState({ showRecurringOptions: false })}>
+              {this.props.t("back")}
             </Button>
           </Modal.Footer>
         </Form>
