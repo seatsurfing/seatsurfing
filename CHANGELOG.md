@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.35.3](https://github.com/seatsurfing/seatsurfing/compare/v1.35.2...v1.35.3) (2025-06-09)
+
+
+### Bug Fixes
+
+* move admin setting "allowAnyUser" to auth provider section and add tooltip ([#949](https://github.com/seatsurfing/seatsurfing/issues/949)) ([27090fb](https://github.com/seatsurfing/seatsurfing/commit/27090fb3c34d702d403c0ab550a42eaec44b6575))
+* nginx reverse proxy improvements ([#951](https://github.com/seatsurfing/seatsurfing/issues/951)) ([831a3bf](https://github.com/seatsurfing/seatsurfing/commit/831a3bf552db044610f009e9ad3759d73469a201))
+* show absolute URL for auth provider's callback URL ([#950](https://github.com/seatsurfing/seatsurfing/issues/950)) ([b5fdb5d](https://github.com/seatsurfing/seatsurfing/commit/b5fdb5d20d149e346dcf09d592c40473f0ce274f))
+
 ## [1.35.2](https://github.com/seatsurfing/seatsurfing/compare/v1.35.1...v1.35.2) (2025-06-07)
 
 
