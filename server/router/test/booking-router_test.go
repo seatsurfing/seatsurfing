@@ -1505,7 +1505,7 @@ func TestBookingsValidMaxUpcomingBookings(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &BookingRouter{}
-	res := router.IsValidMaxUpcomingBookings(org.ID, user)
+	res := router.IsValidMaxUpcomingBookings(org.ID, user, 0)
 	CheckTestBool(t, true, res)
 }
 
@@ -1534,7 +1534,7 @@ func TestBookingsInvalidMaxUpcomingBookings(t *testing.T) {
 	GetBookingRepository().Create(b)
 
 	router := &BookingRouter{}
-	res := router.IsValidMaxUpcomingBookings(org.ID, user)
+	res := router.IsValidMaxUpcomingBookings(org.ID, user, 0)
 	CheckTestBool(t, false, res)
 }
 

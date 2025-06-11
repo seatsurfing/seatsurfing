@@ -26,6 +26,14 @@ type CreateRecurringBookingRequest struct {
 	Weekdays []time.Weekday `json:"weekdays"`
 }
 
+type CreateRecurringBookingResponse struct {
+	Enter     time.Time `json:"enter"`
+	Leave     time.Time `json:"leave"`
+	Success   bool      `json:"success"`
+	ErrorCode int       `json:"errorCode,omitempty"`
+	ID        string    `json:"id"`
+}
+
 type GetRecurringBookingResponse struct {
 	ID     string `json:"id"`
 	UserID string `json:"userId"`
@@ -33,8 +41,67 @@ type GetRecurringBookingResponse struct {
 }
 
 func (router *RecurringBookingRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/precheck", router.preBookingCreateCheck).Methods("POST")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/", router.create).Methods("POST")
+}
+
+func (router *RecurringBookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *http.Request) {
+	var m CreateRecurringBookingRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	space, err := GetSpaceRepository().GetOne(m.SpaceID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	requestUser := GetRequestUser(r)
+	if !CanAccessOrg(requestUser, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	e, err := router.copyFromRestModel(&m, location)
+	if err != nil {
+		SendInternalServerError(w)
+		return
+	}
+	bookingRouter := &BookingRouter{}
+	bookings := GetRecurringBookingRepository().CreateBookings(e)
+	// TODO Check num max upcoming bookings
+	res := make([]CreateRecurringBookingResponse, 0)
+	for idx, b := range bookings {
+		bookingReq := &CreateBookingRequest{
+			SpaceID: b.SpaceID,
+			BookingRequest: BookingRequest{
+				Enter: b.Enter,
+				Leave: b.Leave,
+			},
+		}
+		valid, code := bookingRouter.checkBookingCreateUpdate(bookingReq, location, requestUser, "", idx)
+		if valid {
+			conflicts, _ := GetBookingRepository().GetConflicts(e.SpaceID, b.Enter, b.Leave, "")
+			if len(conflicts) > 0 {
+				valid = false
+				code = ResponseCodeBookingSlotConflict
+			}
+		}
+		item := CreateRecurringBookingResponse{
+			Enter:     b.Enter,
+			Leave:     b.Leave,
+			Success:   valid,
+			ErrorCode: code,
+			ID:        b.ID,
+		}
+		res = append(res, item)
+	}
+	SendJSON(w, res)
 }
 
 func (router *RecurringBookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
