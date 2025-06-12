@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav, Carousel } from 'react-bootstrap';
+import { Form, Col, Row, Modal, Button, ListGroup, InputGroup, Nav } from 'react-bootstrap';
 import { Location, Booking, Buddy, User, Ajax, Formatting, Space, AjaxError, UserPreference, SpaceAttributeValue, SpaceAttribute, SearchAttribute } from 'seatsurfing-commons';
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';
@@ -1245,23 +1245,22 @@ class Search extends React.Component<Props, State> {
                 </Form.Select>
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="d-flex margin-top-10" hidden={!this.state.recurrence.active}>
+            <Form.Group as={Row} className={this.state.recurrence.active ? "d-flex margin-top-10": ""} hidden={!this.state.recurrence.active}>
               <Form.Label column sm="4">{this.props.t("every")}:</Form.Label>
               <Col sm="8">
-              {JSON.stringify(this.state.recurrence)}
                 <InputGroup>
                   <Form.Control type="number" min={1} max={30} value={this.state.recurrence.cycle} onChange={(e: any) => this.setState({ recurrence: { ...this.state.recurrence, cycle: window.parseInt(e.target.value) } })} />
                   <InputGroup.Text>{this.state.recurrence.cadence === 1 ? this.props.t("days") : this.props.t("weeks")}</InputGroup.Text>
                 </InputGroup>
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="d-flex margin-top-10" hidden={this.state.recurrence.cadence !== 2}>
+            <Form.Group as={Row} className={this.state.recurrence.cadence === 2 ? "d-flex margin-top-10" : ""} hidden={this.state.recurrence.cadence !== 2}>
               <Form.Label column sm="4">{this.props.t("on")}:</Form.Label>
               <Col sm="8">
                 {this.renderWeekdayButtons()}
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="d-flex margin-top-10">
+            <Form.Group as={Row} className={this.state.recurrence.active ? "d-flex margin-top-10": ""} hidden={!this.state.recurrence.active}>
               <Form.Label column sm="4">{this.props.t("end")}:</Form.Label>
               <Col sm="8">
                 <DatePicker
@@ -1283,7 +1282,7 @@ class Search extends React.Component<Props, State> {
             <Button variant="secondary" onClick={() => this.setState({ showConfirm: false })} disabled={this.state.confirmingBooking}>
               {this.props.t("cancel")}
             </Button>
-            <Button variant="secondary" onClick={() => this.setState({ showRecurringOptions: true })} disabled={this.state.confirmingBooking} active={this.state.showRecurringOptions || this.state.recurrence.active}>
+            <Button variant={this.state.recurrence.active ? "primary" : "secondary"} onClick={() => this.setState({ showRecurringOptions: true })} disabled={this.state.confirmingBooking}>
               <IconRefresh className="feather" />
             </Button>
             <Button type="submit" variant="primary" disabled={this.state.confirmingBooking}>
