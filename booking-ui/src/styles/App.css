@@ -128,12 +128,6 @@ h2 {
     text-align: center;
 }
 
-.btn:focus,
-.btn:active {
-    background-color: #fff;
-    box-shadow: none;
-}
-
 .addon-button {
     border-color: var(--bs-border-color);
 }
