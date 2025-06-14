@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.35.4](https://github.com/seatsurfing/seatsurfing/compare/v1.35.3...v1.35.4) (2025-06-14)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 22.15.30 to 24.0.1 in /booking-ui ([#963](https://github.com/seatsurfing/seatsurfing/issues/963)) ([062ec84](https://github.com/seatsurfing/seatsurfing/commit/062ec844309aac0a2738bded6d2e93fdb63e07d1))
+* **deps:** bump @types/node from 22.15.30 to 24.0.1 in /e2e ([#965](https://github.com/seatsurfing/seatsurfing/issues/965)) ([a6dab6a](https://github.com/seatsurfing/seatsurfing/commit/a6dab6aac0de86b43efc387b2ad1ea97e19d8008))
+* **deps:** bump eslint from 9.28.0 to 9.29.0 in /admin-ui ([#966](https://github.com/seatsurfing/seatsurfing/issues/966)) ([bae4219](https://github.com/seatsurfing/seatsurfing/commit/bae421935c0e359922380ad09129831b7d42fd25))
+* **deps:** bump eslint from 9.28.0 to 9.29.0 in /booking-ui ([#967](https://github.com/seatsurfing/seatsurfing/issues/967)) ([42e05b3](https://github.com/seatsurfing/seatsurfing/commit/42e05b3f5a68846f19fe4eadc83ba2f00d4a3e5f))
+* **deps:** bump i18next-browser-languagedetector from 8.1.0 to 8.2.0 in /admin-ui ([#959](https://github.com/seatsurfing/seatsurfing/issues/959)) ([8c08973](https://github.com/seatsurfing/seatsurfing/commit/8c08973caf086ea25fb18be12d31c82f4de47400))
+* **deps:** bump react-i18next from 15.5.2 to 15.5.3 in /admin-ui ([#961](https://github.com/seatsurfing/seatsurfing/issues/961)) ([e8f216b](https://github.com/seatsurfing/seatsurfing/commit/e8f216bebbe8886306a8dac48df151477ec51621))
+* **deps:** bump react-i18next from 15.5.2 to 15.5.3 in /booking-ui ([#964](https://github.com/seatsurfing/seatsurfing/issues/964)) ([6c27a99](https://github.com/seatsurfing/seatsurfing/commit/6c27a99adf2769796950041397be2a7be34cbb6b))
+* **deps:** bump react-tooltip from 5.28.1 to 5.29.0 in /booking-ui ([#955](https://github.com/seatsurfing/seatsurfing/issues/955)) ([4aba141](https://github.com/seatsurfing/seatsurfing/commit/4aba14196c0eaf11bf906f3626ca3d1c071c007a))
+* replace "organisation" by "organization" in English translation ([#960](https://github.com/seatsurfing/seatsurfing/issues/960)) ([137bb40](https://github.com/seatsurfing/seatsurfing/commit/137bb401f8027d5453f1576f224adfc559be0f4e))
+
 ## [1.35.3](https://github.com/seatsurfing/seatsurfing/compare/v1.35.2...v1.35.3) (2025-06-09)
 
 
