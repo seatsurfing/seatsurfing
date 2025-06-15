@@ -1,10 +1,13 @@
 package test
 
 import (
+	"log"
 	"runtime/debug"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
@@ -171,4 +174,69 @@ func TestBookingRepositoryGetBookingsRequiringApproval(t *testing.T) {
 	}
 	CheckTestInt(t, 0, count)
 
+}
+
+func TestBookingRepositoryRecurringUUID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+	}
+	GetLocationRepository().Create(location)
+	space := &Space{
+		Name:       "Test 1",
+		LocationID: location.ID,
+	}
+	GetSpaceRepository().Create(space)
+
+	recurringID := uuid.New()
+	log.Println("Recurring ID 1:", recurringID.String())
+	booking := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       time.Now().Add(1 * time.Hour),
+		Leave:       time.Now().Add(2 * time.Hour),
+		RecurringID: api.NullUUID(recurringID.String()),
+	}
+	log.Println("Recurring ID 2:", string(booking.RecurringID))
+	err := GetBookingRepository().Create(booking)
+	CheckTestBool(t, true, err == nil)
+
+	bookingFromDB, err := GetBookingRepository().GetOne(booking.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, bookingFromDB != nil)
+	CheckTestString(t, recurringID.String(), string(bookingFromDB.RecurringID))
+}
+
+func TestBookingRepositoryRecurringUUIDNull(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+	}
+	GetLocationRepository().Create(location)
+	space := &Space{
+		Name:       "Test 1",
+		LocationID: location.ID,
+	}
+	GetSpaceRepository().Create(space)
+
+	booking := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       time.Now().Add(1 * time.Hour),
+		Leave:       time.Now().Add(2 * time.Hour),
+		RecurringID: api.NullUUID(""),
+	}
+	err := GetBookingRepository().Create(booking)
+	CheckTestBool(t, true, err == nil)
+
+	bookingFromDB, err := GetBookingRepository().GetOne(booking.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, bookingFromDB != nil)
+	CheckTestString(t, "", string(bookingFromDB.RecurringID))
 }

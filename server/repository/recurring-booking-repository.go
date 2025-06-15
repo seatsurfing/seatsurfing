@@ -124,7 +124,7 @@ func (r *RecurringBookingRepository) Delete(e *RecurringBooking) error {
 	}
 	enter := time.Now().In(tzLocation)
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
-		"recurring_id = $1 AND enter > $2", e.ID, enter); err != nil {
+		"recurring_id = $1 AND enter_time > $2", e.ID, enter); err != nil {
 		return err
 	}
 	if _, err := GetDatabase().DB().Exec("UPDATE bookings SET "+
@@ -146,7 +146,7 @@ func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) []*Book
 			Enter:       cur,
 			Leave:       cur.Add(e.Leave.Sub(e.Enter)),
 			Subject:     e.Subject,
-			RecurringID: NullString(e.ID),
+			RecurringID: NullUUID(e.ID),
 		}
 		res = append(res, booking)
 		cur = r.getNextBookingTime(e, cur)

@@ -25,7 +25,7 @@ type Booking struct {
 	CalDavID    string
 	Approved    bool
 	Subject     string
-	RecurringID NullString
+	RecurringID NullUUID
 }
 
 type BookingDetails struct {
@@ -96,7 +96,7 @@ func (r *BookingRepository) Create(e *Booking) error {
 		"(user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id) "+
 		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "+
 		"RETURNING id",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullString(e.RecurringID)).Scan(&id)
+		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID)).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (r *BookingRepository) Update(e *Booking) error {
 		"subject = $7, "+
 		"recurring_id = $8 "+
 		"WHERE id = $9",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullString(e.RecurringID), e.ID)
+		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), e.ID)
 	return err
 }
 
