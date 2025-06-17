@@ -855,10 +855,10 @@ class Search extends React.Component<Props, State> {
         }}
         className="d-flex justify-content-between align-items-start space-list-item"
       >
-        <div className="ms-2 me-auto space-list-item-div">
+        <div className="ms-2 me-auto">
           <div className="fw-bold space-list-item-content">{item.name}</div>
           {bookings.map((booking) => (
-            <div key={booking.user.id} className="space-list-item-content space-list-item-text">
+            <div key={booking.user.id} className="space-list-item-content">
               {booking.user.email}
             </div>
           ))}
