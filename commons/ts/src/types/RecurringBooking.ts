@@ -70,6 +70,20 @@ export default class RecurringBooking extends Entity {
         return Ajax.saveEntity(this, this.getBackendUrl()).then(() => this);
     }
 
+    async precheck(): Promise<RecurringBookingCreateResult[]> {
+        return Ajax.postData(this.getBackendUrl() + "precheck", this.serialize()).then(res => {
+            return res.json.map((item: any) => {
+                let result = new RecurringBookingCreateResult();
+                result.enter = new Date(Formatting.stripTimezoneDetails(item.enter));
+                result.leave = new Date(Formatting.stripTimezoneDetails(item.leave));
+                result.success = item.success;
+                result.errorCode = item.errorCode;
+                result.id = item.id || "";
+                return result;
+            });
+        });
+    }
+
     async delete(): Promise<void> {
         return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
     }
@@ -82,3 +96,19 @@ export default class RecurringBooking extends Entity {
         });
     }
 }
+
+export class RecurringBookingCreateResult {
+    enter: Date;
+    leave: Date;
+    success: boolean;
+    errorCode: number;
+    id: string;
+
+    constructor() {
+        this.enter = new Date();
+        this.leave = new Date();
+        this.success = false;
+        this.errorCode = 0;
+        this.id = "";
+    }
+} 
