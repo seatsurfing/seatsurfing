@@ -137,6 +137,7 @@ class Search extends React.Component<Props, State> {
   leaveChangeTimer: number | undefined;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
+  recurrenceMaxEndDate: Date;
 
   constructor(props: any) {
     super(props);
@@ -148,11 +149,11 @@ class Search extends React.Component<Props, State> {
     this.searchContainerRef = React.createRef();
     this.enterChangeTimer = undefined;
     this.leaveChangeTimer = undefined;
-    let recurrenceEndDate = new Date(
+    this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000
     );
-    recurrenceEndDate.setHours(23, 59, 59, 0);
+    this.recurrenceMaxEndDate.setHours(23, 59, 59, 0);
     this.state = {
       earliestEnterDate: new Date(),
       enter: new Date(),
@@ -196,7 +197,7 @@ class Search extends React.Component<Props, State> {
         cadence: 0, // 1 = daily, 2 = weekly, 3 = monthly
         cycle: 1, // every x days/weeks/months
         weekdays: [], // only used if cadence is weekly
-        end: recurrenceEndDate,
+        end: new Date(this.recurrenceMaxEndDate.valueOf()),
         precheckResults: [],
         precheckLoading: false,
         precheckNumSuccess: 0,
@@ -586,12 +587,15 @@ class Search extends React.Component<Props, State> {
       return;
     }
     date.setHours(23, 59, 59, 0);
-    this.setState({
-      recurrence: {
-        ...this.state.recurrence,
-        end: date,
+    this.setState(
+      {
+        recurrence: {
+          ...this.state.recurrence,
+          end: date,
+        },
       },
-    });
+      () => this.onRecurrenceOptionsChanged()
+    );
   };
 
   setEnterDate = (value: Date | [Date | null, Date | null]) => {
@@ -1387,16 +1391,34 @@ class Search extends React.Component<Props, State> {
     return rb;
   };
 
-  applyRecurrence = () => {
+  onRecurrenceOptionsChanged = () => {
     this.setState({
       recurrence: {
         ...this.state.recurrence,
-        precheckLoading: true,
         precheckResults: [],
         precheckNumErrors: 0,
         precheckNumSuccess: 0,
       },
     });
+  };
+
+  applyRecurrence = () => {
+    let precheckRequired =
+      this.state.recurrence.active &&
+      this.state.recurrence.precheckResults.length === 0;
+    this.setState({
+      recurrence: {
+        ...this.state.recurrence,
+        precheckLoading: precheckRequired,
+        precheckResults: [],
+        precheckNumErrors: 0,
+        precheckNumSuccess: 0,
+      },
+    });
+    if (!precheckRequired) {
+      this.setState({ showRecurringOptions: false });
+      return;
+    }
     let rb = this.getRecurrenceObject();
     rb.precheck().then((res) => {
       let errorCodes: number[] = [];
@@ -1411,7 +1433,7 @@ class Search extends React.Component<Props, State> {
       });
       let numSuccess = res.length - numErrors;
       this.setState({
-        showRecurringOptions: false,
+        showRecurringOptions: numErrors > 0,
         recurrence: {
           ...this.state.recurrence,
           precheckLoading: false,
@@ -1440,6 +1462,7 @@ class Search extends React.Component<Props, State> {
             this.setState({
               recurrence: { ...this.state.recurrence, weekdays: newWorkdays },
             });
+            this.onRecurrenceOptionsChanged();
           }}
           style={{ marginRight: "5px" }}
         >
@@ -2041,15 +2064,18 @@ class Search extends React.Component<Props, State> {
               <Col sm="8">
                 <Form.Select
                   value={this.state.recurrence.cadence}
-                  onChange={(e: any) =>
-                    this.setState({
-                      recurrence: {
-                        ...this.state.recurrence,
-                        cadence: window.parseInt(e.target.value),
-                        active: window.parseInt(e.target.value) !== 0,
+                  onChange={(e: any) => {
+                    this.setState(
+                      {
+                        recurrence: {
+                          ...this.state.recurrence,
+                          cadence: window.parseInt(e.target.value),
+                          active: window.parseInt(e.target.value) !== 0,
+                        },
                       },
-                    })
-                  }
+                      () => this.onRecurrenceOptionsChanged()
+                    );
+                  }}
                 >
                   <option value="0">{this.props.t("never")}</option>
                   <option value="1">{this.props.t("daily")}</option>
@@ -2074,14 +2100,17 @@ class Search extends React.Component<Props, State> {
                     min={1}
                     max={30}
                     value={this.state.recurrence.cycle}
-                    onChange={(e: any) =>
-                      this.setState({
-                        recurrence: {
-                          ...this.state.recurrence,
-                          cycle: window.parseInt(e.target.value),
+                    onChange={(e: any) => {
+                      this.setState(
+                        {
+                          recurrence: {
+                            ...this.state.recurrence,
+                            cycle: window.parseInt(e.target.value),
+                          },
                         },
-                      })
-                    }
+                        () => this.onRecurrenceOptionsChanged()
+                      );
+                    }}
                   />
                   <InputGroup.Text>
                     {this.state.recurrence.cadence === 1
@@ -2138,11 +2167,9 @@ class Search extends React.Component<Props, State> {
               as={Row}
               className="margin-top-10"
               hidden={
-                this.state.recurrence.end.getTime() <
-                new Date(
-                  new Date().valueOf() +
-                    RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000
-                ).getTime()
+                !this.state.recurrence.active ||
+                this.state.recurrence.end.getTime() <=
+                  this.recurrenceMaxEndDate.getTime()
               }
             >
               <Col sm="4"></Col>
@@ -2187,7 +2214,11 @@ class Search extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
           <Modal.Footer hidden={!this.state.showRecurringOptions}>
-            <Alert variant="warning" className="margin-bottom-10">
+            <Alert
+              variant="warning"
+              className="margin-bottom-10"
+              hidden={this.state.recurrence.precheckNumErrors === 0}
+            >
               {this.state.recurrence.precheckNumErrors} of{" "}
               {this.state.recurrence.precheckResults.length} occurrences of your
               series are not available.
@@ -2205,7 +2236,7 @@ class Search extends React.Component<Props, State> {
               Apply recurrence to book available time slots anyway?
             </Alert>
             <Button
-              variant="secondary"
+              variant="primary"
               onClick={() => this.applyRecurrence()}
               disabled={this.state.recurrence.precheckLoading}
             >
