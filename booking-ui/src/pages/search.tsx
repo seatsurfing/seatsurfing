@@ -2253,9 +2253,7 @@ class Search extends React.Component<Props, State> {
               className="margin-bottom-10"
               hidden={this.state.recurrence.precheckNumErrors === 0}
             >
-              {this.state.recurrence.precheckNumErrors} of{" "}
-              {this.state.recurrence.precheckResults.length} occurrences of your
-              series are not available.
+              {this.props.t("recurrenceAvailabilityError", {numErr: this.state.recurrence.precheckNumErrors, numTotal: this.state.recurrence.precheckResults.length})}
               <ul
                 hidden={this.state.recurrence.precheckErrorCodes.length === 0}
               >
@@ -2267,7 +2265,7 @@ class Search extends React.Component<Props, State> {
                   );
                 })}
               </ul>
-              Apply recurrence to book available time slots anyway?
+              {this.props.t("askApplyRecurrenceAnyway")}
             </Alert>
             <Button
               variant="secondary"

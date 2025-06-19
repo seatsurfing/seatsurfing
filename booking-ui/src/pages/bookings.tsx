@@ -217,7 +217,7 @@ class Bookings extends React.Component<Props, State> {
                   this.setState({ cancelSeries: e.target.checked })
                 }
                 checked={this.state.cancelSeries}
-                label="cancel all upcoming bookings"
+                label={this.props.t("cancelAllUpcomingBookings")}
               />
             </p>
           </Modal.Body>
