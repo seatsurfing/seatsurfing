@@ -599,10 +599,10 @@ class Search extends React.Component<Props, State> {
     }
     return (
       <ListGroup.Item key={item.id} action={true} onClick={(e) => { e.preventDefault(); this.onSpaceSelect(item); }} className="d-flex justify-content-between align-items-start space-list-item">
-        <div className="ms-2 me-auto">
+        <div className="ms-2 me-auto space-list-item-div">
           <div className="fw-bold space-list-item-content">{item.name}</div>
           {bookings.map((booking) => (
-            <div key={booking.user.id} className="space-list-item-content">
+            <div key={booking.user.id} className="space-list-item-content space-list-item-text">
               {booking.user.email}
             </div>
           ))}
