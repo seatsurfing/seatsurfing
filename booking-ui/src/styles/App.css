@@ -141,3 +141,9 @@ h2 {
     padding-left: 10px;
     vertical-align: super;
 }
+
+.recurring-booking-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
