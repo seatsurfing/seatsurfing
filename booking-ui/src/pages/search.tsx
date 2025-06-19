@@ -2090,7 +2090,7 @@ class Search extends React.Component<Props, State> {
               </Col>
             </Form.Group>
           </Modal.Body>
-          <Modal.Body hidden={!this.state.showRecurringOptions}>
+          <Modal.Body hidden={!this.state.showRecurringOptions || !RuntimeConfig.INFOS.featureRecurringBookings}>
             <Form.Group as={Row} className="d-flex margin-top-10">
               <Form.Label column sm="4">
                 {this.props.t("repeat")}:
@@ -2227,6 +2227,7 @@ class Search extends React.Component<Props, State> {
             <Button
               variant={this.state.recurrence.active ? "primary" : "secondary"}
               onClick={() => this.setState({ showRecurringOptions: true })}
+              hidden={!RuntimeConfig.INFOS.featureRecurringBookings}
               disabled={this.state.confirmingBooking}
             >
               <IconRefresh className="feather" />

@@ -136,6 +136,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
 	}
 }
 

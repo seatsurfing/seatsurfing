@@ -68,6 +68,11 @@ func (router *RecurringBookingRouter) preBookingCreateCheck(w http.ResponseWrite
 		SendForbidden(w)
 		return
 	}
+	featureRecurringBookings, _ := GetSettingsRepository().GetBool(requestUser.OrganizationID, SettingFeatureRecurringBookings.Name)
+	if !featureRecurringBookings {
+		SendPaymentRequired(w)
+		return
+	}
 	e, err := router.copyFromRestModel(&m, location)
 	if err != nil {
 		SendInternalServerError(w)
@@ -190,6 +195,11 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 	requestUser := GetRequestUser(r)
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
 		SendForbidden(w)
+		return
+	}
+	featureRecurringBookings, _ := GetSettingsRepository().GetBool(requestUser.OrganizationID, SettingFeatureRecurringBookings.Name)
+	if !featureRecurringBookings {
+		SendPaymentRequired(w)
 		return
 	}
 	e, err := router.copyFromRestModel(&m, location)
