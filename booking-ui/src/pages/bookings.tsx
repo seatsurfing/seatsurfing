@@ -209,7 +209,7 @@ class Bookings extends React.Component<Props, State> {
                 interpolation: { escapeValue: false },
               })}
             </p>
-            <p>
+            <p hidden={!this.state.selectedItem?.isRecurring()}>
               <Form.Check
                 type="checkbox"
                 id="cancelAllUpcomingBookings"
