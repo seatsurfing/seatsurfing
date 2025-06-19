@@ -229,6 +229,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingMaxHoursPartiallyBookedEnabled.Name ||
 		name == SettingDefaultTimezone.Name ||
 		name == SettingDisableBuddies.Name ||
+		name == SettingFeatureRecurringBookings.Name ||
 		name == SysSettingVersion {
 		return true
 	}

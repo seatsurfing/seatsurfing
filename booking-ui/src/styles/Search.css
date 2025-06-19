@@ -188,10 +188,14 @@
     text-overflow: ellipsis;
 }
 
+.invalid-recurrence-config,
 .invalid-search-config {
     width: 100%;
     font-size: .875em;
     color: #dc3545;
+}
+
+.invalid-search-config {
     margin-left: -2em;
 }
 

@@ -128,12 +128,6 @@ h2 {
     text-align: center;
 }
 
-.btn:focus,
-.btn:active {
-    background-color: #fff;
-    box-shadow: none;
-}
-
 .addon-button {
     border-color: var(--bs-border-color);
 }
@@ -146,4 +140,10 @@ h2 {
 .form-colors label {
     padding-left: 10px;
     vertical-align: super;
+}
+
+.recurring-booking-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
 }

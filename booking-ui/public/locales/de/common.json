@@ -139,5 +139,17 @@
     "colorDisallowed": "Nicht erlaubt",
     "approval": "Genehmigung",
     "pending": "Ausstehend",
-    "subject": "Betreff"
+    "subject": "Betreff",
+    "cancelAllUpcomingBookings": "Alle zukünftigen Buchungen stornieren",
+    "repeat": "Wiederholen",
+    "never": "niemals",
+    "daily": "täglich",
+    "weekly": "wöchentlich",
+    "every": "Jede(n)",
+    "days": "Tage",
+    "weeks": "Wochen",
+    "on": "Am",
+    "end": "Bis zum",
+    "recurrenceAvailabilityError": "{{numErr}} von {{numTotal}} Zeiträume sind für die ausgewählte Reihe nicht verfügbar.",
+    "askApplyRecurrenceAnyway": "Möchtest Du die Wiederholung trotzdem anwenden?"
 }

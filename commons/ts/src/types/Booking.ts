@@ -13,6 +13,7 @@ export default class Booking extends Entity {
     user: User;
     approved: boolean;
     subject: string;
+    recurringId: string;
 
     constructor() {
         super();
@@ -23,6 +24,7 @@ export default class Booking extends Entity {
         this.user = new User();
         this.approved = false;
         this.subject = "";
+        this.recurringId = "";
     }
 
     serialize(): Object {
@@ -70,10 +72,17 @@ export default class Booking extends Entity {
         if (input.subject) {
             this.subject = input.subject;
         }
+        if (input.recurringId) {
+            this.recurringId = input.recurringId;
+        }
     }
 
     getBackendUrl(): string {
         return "/booking/";
+    }
+
+    isRecurring(): boolean {
+        return this.recurringId !== undefined && this.recurringId !== "";
     }
 
     async save(): Promise<Booking> {

@@ -17,6 +17,7 @@ interface RuntimeUserInfos {
     disableBuddies: boolean;
     maxHoursPartiallyBooked: number;
     maxHoursPartiallyBookedEnabled: boolean;
+    featureRecurringBookings: boolean;
 }
 
 export default class RuntimeConfig {
@@ -38,6 +39,7 @@ export default class RuntimeConfig {
         maxHoursPartiallyBookedEnabled: false,
         showNames: false,
         defaultTimezone: "",
+        featureRecurringBookings: false,
     };
 
     static verifyToken = async (resolve: Function) => {
@@ -88,6 +90,7 @@ export default class RuntimeConfig {
                     if (s.name === "disable_buddies") RuntimeConfig.INFOS.disableBuddies = (s.value === "1");
                     if (s.name === "custom_logo_url") RuntimeConfig.INFOS.customLogoUrl = s.value;
                     if (s.name === "default_timezone") RuntimeConfig.INFOS.defaultTimezone = s.value;
+                    if (s.name === "feature_recurring_bookings") RuntimeConfig.INFOS.featureRecurringBookings = (s.value === "1");
                 });
                 resolve();
             });

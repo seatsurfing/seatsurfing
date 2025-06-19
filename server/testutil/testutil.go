@@ -37,6 +37,7 @@ var DatabaseTables = [...]string{
 	"locations",
 	"organizations",
 	"organizations_domains",
+	"recurring_bookings",
 	"refresh_tokens",
 	"settings",
 	"spaces_attributes",

@@ -21,6 +21,7 @@ export { default as Stats } from './types/Stats';
 export { default as User } from './types/User';
 export { default as UserPreference } from './types/UserPreference';
 export { default as MergeRequest } from './types/MergeRequest';
+export { default as RecurringBooking, RecurringBookingCreateResult } from './types/RecurringBooking';
 export { default as SearchAttribute } from './types/SearchAttribute';
 export { default as SpaceAttribute } from './types/SpaceAttribute';
 export { default as SpaceAttributeValue } from './types/SpaceAttributeValue';

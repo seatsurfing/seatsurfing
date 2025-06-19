@@ -144,5 +144,17 @@
     "colorDisallowed": "Disallowed",
     "approval": "Approval",
     "pending": "Pending",
-    "subject": "Subject"
+    "subject": "Subject",
+    "cancelAllUpcomingBookings": "Cancel all upcoming bookings",
+    "repeat": "Repeat",
+    "never": "never",
+    "daily": "daily",
+    "weekly": "weekly",
+    "every": "Every",
+    "days": "days",
+    "weeks": "weeks",
+    "on": "On",
+    "end": "Until",
+    "recurrenceAvailabilityError": "{{numErr}} of {{numTotal}} occurrences are not available for the selected recurrence.",
+    "askApplyRecurrenceAnyway": "Apply recurrence to book available time slots anyway?"
 }
