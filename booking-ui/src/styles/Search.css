@@ -174,10 +174,18 @@
     background-color: rgba(36, 21, 197, 0.9) !important;
 }
 
+.space-list-item-div {
+    overflow: hidden;
+}
+
 .space-list-item-content {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+}
+
+.space-list-item-text {
+    text-overflow: ellipsis;
 }
 
 .invalid-search-config {
