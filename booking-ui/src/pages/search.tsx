@@ -910,14 +910,31 @@ class Search extends React.Component<Props, State> {
     this.setState({
       confirmingBooking: true,
     });
-    let booking: Booking = new Booking();
-    booking.subject = this.state.subject;
-    booking.enter = new Date(this.state.enter);
-    booking.leave = new Date(this.state.leave);
-    if (!RuntimeConfig.INFOS.dailyBasisBooking) {
-      booking.leave.setSeconds(booking.leave.getSeconds() - 1);
+    let booking: any;
+    if (this.state.recurrence.active) {
+      booking = new RecurringBooking();
+      booking.subject = this.state.subject;
+      booking.enter = new Date(this.state.enter);
+      booking.leave = new Date(this.state.leave);
+      if (!RuntimeConfig.INFOS.dailyBasisBooking) {
+        booking.leave.setSeconds(booking.leave.getSeconds() - 1);
+      }
+      booking.end = new Date(this.state.recurrence.end);
+      booking.spaceId = this.state.selectedSpace.id;
+      booking.cadence = this.state.recurrence.cadence;
+      booking.cycle = this.state.recurrence.cycle;
+      booking.weekdays = this.state.recurrence.weekdays;
+    } else {
+      booking = new Booking();
+      booking.subject = this.state.subject;
+      booking.enter = new Date(this.state.enter);
+      booking.leave = new Date(this.state.leave);
+      if (!RuntimeConfig.INFOS.dailyBasisBooking) {
+        booking.leave.setSeconds(booking.leave.getSeconds() - 1);
+      }
+      booking.space = this.state.selectedSpace;
+
     }
-    booking.space = this.state.selectedSpace;
     booking
       .save()
       .then(() => {
@@ -929,7 +946,7 @@ class Search extends React.Component<Props, State> {
           subject: "",
         });
       })
-      .catch((e) => {
+      .catch((e: any) => {
         let code: number = 0;
         if (e instanceof AjaxError) {
           code = e.appErrorCode;
@@ -1402,6 +1419,24 @@ class Search extends React.Component<Props, State> {
     });
   };
 
+  resetRecurrence = () => {
+    this.setState({
+      recurrence: {
+        active: false,
+        cadence: 0,
+        cycle: 1,
+        weekdays: this.state.prefWorkdays,
+        end: new Date(this.recurrenceMaxEndDate.valueOf()),
+        precheckLoading: false,
+        precheckResults: [],
+        precheckNumErrors: 0,
+        precheckNumSuccess: 0,
+        precheckErrorCodes: [],
+      },
+      showRecurringOptions: false,
+    });
+  }
+
   applyRecurrence = () => {
     let precheckRequired =
       this.state.recurrence.active &&
@@ -1461,8 +1496,7 @@ class Search extends React.Component<Props, State> {
               : [...this.state.recurrence.weekdays, index];
             this.setState({
               recurrence: { ...this.state.recurrence, weekdays: newWorkdays },
-            });
-            this.onRecurrenceOptionsChanged();
+            }, () => this.onRecurrenceOptionsChanged());
           }}
           style={{ marginRight: "5px" }}
         >
@@ -2235,6 +2269,13 @@ class Search extends React.Component<Props, State> {
               </ul>
               Apply recurrence to book available time slots anyway?
             </Alert>
+            <Button
+              variant="secondary"
+              onClick={() => this.resetRecurrence()}
+              disabled={this.state.recurrence.precheckLoading}
+            >
+              {this.props.t("reset")}
+            </Button>
             <Button
               variant="primary"
               onClick={() => this.applyRecurrence()}
