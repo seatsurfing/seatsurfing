@@ -19,6 +19,8 @@ type Config struct {
 	JwtPrivateKey                       *rsa.PrivateKey
 	JwtPublicKey                        *rsa.PublicKey
 	DisableUiProxy                      bool
+	StaticAdminUiPath                   string
+	StaticBookingUiPath                 string
 	AdminUiBackend                      string
 	BookingUiBackend                    string
 	MailService                         string
@@ -65,6 +67,8 @@ func (c *Config) ReadConfig() {
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
 	c.DisableUiProxy = (c.getEnv("DISABLE_UI_PROXY", "0") == "1")
+	c.StaticAdminUiPath = strings.TrimSuffix(c.getEnv("STATIC_ADMIN_UI_PATH", "/app/adminui"), "/") + "/"
+	c.StaticBookingUiPath = strings.TrimSuffix(c.getEnv("STATIC_BOOKING_UI_PATH", "/app/bookingui"), "/") + "/"
 	c.AdminUiBackend = c.getEnv("ADMIN_UI_BACKEND", "localhost:3000")
 	c.BookingUiBackend = c.getEnv("BOOKING_UI_BACKEND", "localhost:3001")
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")

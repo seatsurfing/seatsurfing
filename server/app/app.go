@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -79,10 +80,13 @@ func (a *App) InitializeRouter() {
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
 	}
-	if !GetConfig().DisableUiProxy {
-		a.setupBookingUIProxy(a.Router)
-		a.setupAdminUIProxy(a.Router)
-	}
+	/*
+		if GetConfig().Development {
+			a.setupBookingUIProxy(a.Router)
+			a.setupAdminUIProxy(a.Router)
+		} else {
+	*/
+	a.setupStaticUserRoutes(a.Router)
 	//a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
 	a.Router.Path("/").Methods("GET").HandlerFunc(a.RedirectRootPath)
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
@@ -280,6 +284,41 @@ func (a *App) setupAdminUIProxy(router *mux.Router) {
 	router.Path(basePath).HandlerFunc(a.adminUIProxyHandler)
 	router.Path(basePath + "/").HandlerFunc(a.adminUIProxyHandler)
 	router.PathPrefix(basePath + "/").HandlerFunc(a.adminUIProxyHandler)
+}
+
+func (a *App) stripStaticPrefix(fs http.Handler, prefix string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r2 := new(http.Request)
+		*r2 = *r
+		r2.URL = new(url.URL)
+		*r2.URL = *r.URL
+		r2.URL.Path = strings.TrimPrefix(r.URL.Path, prefix)
+		fs.ServeHTTP(w, r2)
+	})
+}
+
+func (a *App) setupStaticUserRoutes(router *mux.Router) {
+	const basePath = "/ui"
+	/*
+		paths := []string{
+			"/login",
+			"/search",
+			"/bookings",
+			"/preferences",
+			"/resetpw",
+			"/debugtime",
+		}
+	*/
+	fs := http.FileServer(http.Dir(GetConfig().StaticBookingUiPath))
+	/*
+		for _, path := range paths {
+			path = basePath + path
+			router.PathPrefix(path).Handler(a.stripStaticPrefix(fs, path))
+		}
+	*/
+	router.Path(basePath + "/").Handler(a.stripStaticPrefix(fs, basePath+"/"))
+	router.PathPrefix(basePath + "/").Handler(http.StripPrefix(basePath+"/", fs))
+	//router.PathPrefix(basePath + "/").Handler(fs)
 }
 
 func (a *App) startPublicHttpServer() {
