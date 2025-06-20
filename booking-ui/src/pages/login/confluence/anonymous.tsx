@@ -1,11 +1,12 @@
-import { WithTranslation, withTranslation } from 'next-i18next';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 import React from 'react';
 import { Form, Alert } from 'react-bootstrap';
 
 interface State {
 }
 
-interface Props extends WithTranslation {
+interface Props {
+  t: TranslationFunc;
 }
 
 class ConfluenceAnonymous extends React.Component<Props, State> {
@@ -21,4 +22,4 @@ class ConfluenceAnonymous extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(ConfluenceAnonymous as any);
+export default withTranslation(ConfluenceAnonymous as any);

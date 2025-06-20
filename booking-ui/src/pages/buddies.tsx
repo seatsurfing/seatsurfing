@@ -3,11 +3,11 @@ import { Ajax, Buddy, User, Formatting } from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 import { Button, Form, ListGroup, Modal } from 'react-bootstrap';
 import { LogIn as IconEnter, LogOut as IconLeave, MapPin as IconLocation } from 'react-feather';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import NavBar from '@/components/NavBar';
 import withReadyRouter from '@/components/withReadyRouter';
 import RuntimeConfig from '@/components/RuntimeConfig';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -15,8 +15,9 @@ interface State {
   email: string
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class Buddies extends React.Component<Props, State> {
@@ -198,4 +199,4 @@ class Buddies extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(withReadyRouter(Buddies as any));
+export default withTranslation(withReadyRouter(Buddies as any));

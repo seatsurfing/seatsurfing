@@ -1,5 +1,4 @@
 import Document, { Html, Head, Main, NextScript, DocumentProps } from 'next/document'
-import i18nextConfig from '../../next-i18next.config'
 import { randomBytes } from 'crypto'
 
 type Props = DocumentProps & {
@@ -24,11 +23,8 @@ class Doc extends Document<Props> {
     csp.keys().forEach((key) => {
       cspString += `${key} ${csp.get(key)?.join(' ')}; `;
     });
-    const currentLocale =
-      this.props.__NEXT_DATA__.locale ??
-      i18nextConfig.i18n.defaultLocale
     return (
-      <Html lang={currentLocale}>
+      <Html lang={"en"}>
         <Head nonce={nonce}>
           <meta name="robots" content="noindex" />
           <meta httpEquiv="Content-Security-Policy" content={cspString} />
