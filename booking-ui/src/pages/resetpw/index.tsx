@@ -1,8 +1,8 @@
 import React from 'react';
 import { Ajax, Organization } from 'seatsurfing-commons';
 import { Button, Form } from 'react-bootstrap';
-import { withTranslation, WithTranslation } from 'next-i18next';
 import Link from 'next/link';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -11,7 +11,8 @@ interface State {
   email: string
 }
 
-interface Props extends WithTranslation {
+interface Props {
+  t: TranslationFunc;
 }
 
 class InitPasswordReset extends React.Component<Props, State> {
@@ -101,4 +102,4 @@ class InitPasswordReset extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(InitPasswordReset as any);
+export default withTranslation(InitPasswordReset as any);

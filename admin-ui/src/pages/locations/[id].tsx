@@ -5,7 +5,6 @@ import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete, MapPin
 import Loading from '../../components/Loading';
 import { Ajax, Group, Location, Search, SearchOptions, Space, SpaceAttribute, SpaceAttributeValue } from 'seatsurfing-commons';
 import { Rnd } from 'react-rnd';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
 import withReadyRouter from '@/components/withReadyRouter';
@@ -13,6 +12,7 @@ import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import ProfilePicture from '@/components/ProfilePicture';
 import RuntimeConfig from '@/components/RuntimeConfig';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface SpaceState {
   id: string
@@ -59,8 +59,9 @@ interface State {
   typeaheadAllowBookersLoading: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc
 }
 
 class EditLocation extends React.Component<Props, State> {
@@ -977,4 +978,4 @@ class EditLocation extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(EditLocation as any));
+export default withTranslation(withReadyRouter(EditLocation as any));

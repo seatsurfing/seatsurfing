@@ -2,11 +2,11 @@ import React from 'react';
 import { Ajax, Location, User, UserPreference } from 'seatsurfing-commons';
 import Loading from '../components/Loading';
 import { Alert, Button, ButtonGroup, Col, Form, Nav, Row } from 'react-bootstrap';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import NavBar from '@/components/NavBar';
 import withReadyRouter from '@/components/withReadyRouter';
 import RuntimeConfig from '@/components/RuntimeConfig';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -37,8 +37,9 @@ interface State {
   mailNotifications: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class Preferences extends React.Component<Props, State> {
@@ -491,4 +492,4 @@ class Preferences extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(withReadyRouter(Preferences as any));
+export default withTranslation(withReadyRouter(Preferences as any));

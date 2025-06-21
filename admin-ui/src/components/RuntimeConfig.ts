@@ -70,4 +70,18 @@ export default class RuntimeConfig {
             return RuntimeConfig.loadSettings();
         });
     }
+
+    static getLanguage(): string {
+    if (typeof window !== "undefined") {
+      let curLang = window.localStorage.getItem("next-export-i18n-lang");
+      if (curLang) {
+        return curLang;
+      }
+    }
+    return "en";
+  }
+
+  static getAvailableLanguages(): string[] {
+    return ["en", "de", "et", "fr", "he", "hu", "it", "nl", "ro"];
+  }
 }

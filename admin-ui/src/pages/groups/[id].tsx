@@ -2,7 +2,6 @@ import React from 'react';
 import { Form, Col, Row, Button, Alert, Table, InputGroup } from 'react-bootstrap';
 import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete } from 'react-feather';
 import { Ajax, Group, Search, SearchOptions, User } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 import FullLayout from '@/components/FullLayout';
@@ -11,6 +10,7 @@ import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import ProfilePicture from '@/components/ProfilePicture';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -26,8 +26,9 @@ interface State {
   removeUserIds: string[]
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class EditUser extends React.Component<Props, State> {
@@ -292,4 +293,4 @@ class EditUser extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(EditUser as any));
+export default withTranslation(withReadyRouter(EditUser as any));

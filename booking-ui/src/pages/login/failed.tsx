@@ -1,13 +1,14 @@
 import React from 'react';
 import { Form, Alert } from 'react-bootstrap';
 import RuntimeConfig from '../../components/RuntimeConfig';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import Link from 'next/link';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
 }
 
-interface Props extends WithTranslation {
+interface Props {
+  t: TranslationFunc;
 }
 
 class LoginFailed extends React.Component<Props, State> {
@@ -29,4 +30,4 @@ class LoginFailed extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(LoginFailed as any);
+export default withTranslation(LoginFailed as any);

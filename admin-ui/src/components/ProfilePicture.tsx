@@ -1,4 +1,3 @@
-import { WithTranslation, withTranslation } from 'next-i18next';
 import React from 'react';
 import { User as IconUser} from 'react-feather';
 import styles from './ProfilePicture.module.css';
@@ -6,7 +5,7 @@ import styles from './ProfilePicture.module.css';
 interface State {
 }
 
-interface Props extends WithTranslation {
+interface Props {
     width: number;
     height: number;
 }
@@ -21,4 +20,4 @@ class ProfilePicture extends React.Component<Props, State> {
     }
 }
 
-export default withTranslation()(ProfilePicture as any);
+export default ProfilePicture;

@@ -1,20 +1,21 @@
 import React from 'react';
 import { Home as IconHome, User as IconUsers, Users as IconGroups, Map as IconMap, Book as IconBook, Settings as IconSettings, Box as IconBox, Activity as IconAnalysis, ExternalLink as IconExternalLink, Icon, Clock as IconApproval } from 'react-feather';
 import { Ajax, AjaxCredentials, Booking } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { Badge, Nav } from 'react-bootstrap';
 import { NextRouter } from 'next/router';
 import withReadyRouter from './withReadyRouter';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import RuntimeConfig from './RuntimeConfig';
+import { TranslationFunc, withTranslation } from './withTranslation';
 
 interface State {
     approvalCount: number
 }
 
-interface Props extends WithTranslation {
+interface Props {
     router: NextRouter
+    t: TranslationFunc;
 }
 
 class SideBar extends React.Component<Props, State> {
@@ -169,4 +170,4 @@ class SideBar extends React.Component<Props, State> {
     }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(SideBar as any));
+export default withTranslation(withReadyRouter(SideBar as any));

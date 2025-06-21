@@ -50,7 +50,6 @@ import {
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
-import { WithTranslation, withTranslation } from "next-i18next";
 import NavBar from "@/components/NavBar";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -66,7 +65,7 @@ import {
   TransformComponent,
   MiniMap,
 } from "react-zoom-pan-pinch";
-import { error } from "console";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 interface State {
   earliestEnterDate: Date;
   enter: Date;
@@ -119,8 +118,9 @@ interface State {
   };
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter;
+  t: TranslationFunc;
 }
 
 class Search extends React.Component<Props, State> {
@@ -2448,4 +2448,4 @@ class Search extends React.Component<Props, State> {
   };
 }
 
-export default withTranslation()(withReadyRouter(Search as any));
+export default withTranslation(withReadyRouter(Search as any));

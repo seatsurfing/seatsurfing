@@ -1,5 +1,5 @@
 import withReadyRouter from '@/components/withReadyRouter';
-import { WithTranslation, withTranslation } from 'next-i18next';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 import { NextRouter } from 'next/router';
 import React from 'react';
 import { Button } from 'react-bootstrap';
@@ -8,8 +8,9 @@ import { Copy as IconCopy } from 'react-feather';
 interface State {
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class ConfluenceHint extends React.Component<Props, State> {
@@ -75,4 +76,4 @@ class ConfluenceHint extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(withReadyRouter(ConfluenceHint as any));
+export default withTranslation(withReadyRouter(ConfluenceHint as any));

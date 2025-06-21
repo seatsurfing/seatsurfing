@@ -2,13 +2,13 @@ import React from 'react';
 import {Ajax, AjaxError, Booking, Formatting, Settings as OrgSettings} from 'seatsurfing-commons';
 import { Table, Form, Col, Row, Button } from 'react-bootstrap';
 import { Plus as IconPlus, Search as IconSearch, Download as IconDownload, X as IconX } from 'react-feather';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import type * as CSS from 'csstype';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 
 interface State {
@@ -18,8 +18,9 @@ interface State {
   end: string
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class Bookings extends React.Component<Props, State> {
@@ -201,4 +202,4 @@ class Bookings extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(Bookings as any));
+export default withTranslation(withReadyRouter(Bookings as any));

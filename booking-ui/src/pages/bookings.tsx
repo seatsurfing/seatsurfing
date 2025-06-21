@@ -15,7 +15,6 @@ import {
   Clock as IconPending,
   RefreshCw as IconRecurring,
 } from "react-feather";
-import { WithTranslation, withTranslation } from "next-i18next";
 import { NextRouter } from "next/router";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -23,6 +22,7 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import ErrorText from "@/types/ErrorText";
 import { Loader as IconLoad, Calendar as IconCalendar } from "react-feather";
 import { getIcal } from "@/components/Ical";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 interface State {
   loading: boolean;
@@ -31,8 +31,9 @@ interface State {
   cancelSeries: boolean;
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter;
+  t: TranslationFunc;
 }
 
 class Bookings extends React.Component<Props, State> {
@@ -265,4 +266,4 @@ class Bookings extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(withReadyRouter(Bookings as any));
+export default withTranslation(withReadyRouter(Bookings as any));

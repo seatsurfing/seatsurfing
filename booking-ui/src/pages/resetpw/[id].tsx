@@ -1,10 +1,10 @@
 import React from 'react';
 import { Ajax } from 'seatsurfing-commons';
 import { Button, Form } from 'react-bootstrap';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
 import withReadyRouter from '@/components/withReadyRouter';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -13,8 +13,9 @@ interface State {
   newPassword: string
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class CompletePasswordReset extends React.Component<Props, State> {
@@ -77,4 +78,4 @@ class CompletePasswordReset extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation()(withReadyRouter(CompletePasswordReset as any));
+export default withTranslation(withReadyRouter(CompletePasswordReset as any));

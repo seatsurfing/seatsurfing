@@ -3,10 +3,10 @@ import { Navbar, Nav, Modal, Button, Form, Badge, Container, NavLink } from 'rea
 import { Ajax, User, MergeRequest, AjaxCredentials } from 'seatsurfing-commons';
 import RuntimeConfig from './RuntimeConfig';
 import { Users as IconMerge, Bell as IconAlert, Settings as IconSettings, Calendar as IconCalendar, PlusSquare as IconPlus } from 'react-feather';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import withReadyRouter from './withReadyRouter';
 import Link from 'next/link';
+import { TranslationFunc, withTranslation } from './withTranslation';
 
 interface State {
     redirect: string | null
@@ -20,8 +20,9 @@ interface State {
     allowAdmin: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
     router: NextRouter
+    t: TranslationFunc;
 }
 
 class NavBar extends React.Component<Props, State> {
@@ -246,4 +247,4 @@ class NavBar extends React.Component<Props, State> {
     }
 }
 
-export default withTranslation()(withReadyRouter(NavBar as any));
+export default withTranslation(withReadyRouter(NavBar as any));

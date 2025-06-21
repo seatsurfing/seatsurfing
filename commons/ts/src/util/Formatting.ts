@@ -1,8 +1,6 @@
-import { TFunction } from "i18next";
-
 export default class Formatting {
     static Language: string = "en";
-    static t: TFunction;
+    static t: (key: string, view?: object) => any;
 
     static tbool(s: string) {
         return Formatting.t(s) === "1";

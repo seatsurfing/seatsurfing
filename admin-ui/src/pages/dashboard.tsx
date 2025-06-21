@@ -1,11 +1,11 @@
 import React from 'react';
 import { Ajax, Stats, User } from 'seatsurfing-commons';
 import { Card, Row, Col, ProgressBar, Alert } from 'react-bootstrap';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import FullLayout from '@/components/FullLayout';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -15,8 +15,9 @@ interface State {
   latestVersion: any
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class Dashboard extends React.Component<Props, State> {
@@ -180,4 +181,4 @@ class Dashboard extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(Dashboard as any));
+export default withTranslation(withReadyRouter(Dashboard as any));

@@ -50,34 +50,19 @@ This repository contains the Backend, which consists of:
 ### Start using Docker Compose
 
 ```
-version: '3.7'
-
 services:
   server:
     image: ghcr.io/seatsurfing/backend
     restart: always
     networks:
       sql:
-      http:
     ports:
       - 8080:8080
     environment:
       POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
-      BOOKING_UI_BACKEND: 'booking-ui:3001'
-      ADMIN_UI_BACKEND: 'admin-ui:3000'
       CRYPT_KEY: 'some-random-32-bytes-long-string'
-  booking-ui:
-    image: ghcr.io/seatsurfing/booking-ui
-    restart: always
-    networks:
-      http:
-  admin-ui:
-    image: ghcr.io/seatsurfing/admin-ui
-    restart: always
-    networks:
-      http:
   db:
-    image: postgres:16
+    image: postgres:17
     restart: always
     networks:
       sql:
@@ -93,7 +78,6 @@ volumes:
 
 networks:
   sql:
-  http:
 ```
 
 This starts...

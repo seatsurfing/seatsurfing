@@ -1,5 +1,5 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
-import { TFunction } from "i18next";
+import { TranslationFunc } from "@/components/withTranslation";
 
 //var ResponseCodeBookingSlotConflict: number             = 1001;
 var ResponseCodeBookingLocationMaxConcurrent: number = 1002;
@@ -11,7 +11,7 @@ var ResponseCodeBookingInvalidMinBookingDuration: number = 1007;
 var ResponseCodeBookingMaxHoursBeforeDelete: number = 1008;
 
 export default class ErrorText {
-    static getTextForAppCode(code: number, t: TFunction): string {
+    static getTextForAppCode(code: number, t: TranslationFunc): string {
         if (code === ResponseCodeBookingLocationMaxConcurrent) {
             return t("errorTooManyConcurrent");
         } else if (code === ResponseCodeBookingInvalidMaxBookingDuration) {
