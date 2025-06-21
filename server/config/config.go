@@ -18,11 +18,8 @@ type Config struct {
 	PostgresURL                         string
 	JwtPrivateKey                       *rsa.PrivateKey
 	JwtPublicKey                        *rsa.PublicKey
-	DisableUiProxy                      bool
 	StaticAdminUiPath                   string
 	StaticBookingUiPath                 string
-	AdminUiBackend                      string
-	BookingUiBackend                    string
 	MailService                         string
 	MailSenderAddress                   string
 	SMTPHost                            string
@@ -66,11 +63,8 @@ func (c *Config) ReadConfig() {
 	log.Println("Reading config...")
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
-	c.DisableUiProxy = (c.getEnv("DISABLE_UI_PROXY", "0") == "1")
-	c.StaticAdminUiPath = strings.TrimSuffix(c.getEnv("STATIC_ADMIN_UI_PATH", "/app/adminui"), "/") + "/"
-	c.StaticBookingUiPath = strings.TrimSuffix(c.getEnv("STATIC_BOOKING_UI_PATH", "/app/bookingui"), "/") + "/"
-	c.AdminUiBackend = c.getEnv("ADMIN_UI_BACKEND", "localhost:3000")
-	c.BookingUiBackend = c.getEnv("BOOKING_UI_BACKEND", "localhost:3001")
+	c.StaticAdminUiPath = strings.TrimSuffix(c.getEnv("STATIC_ADMIN_UI_PATH", "/app/admin-ui"), "/") + "/"
+	c.StaticBookingUiPath = strings.TrimSuffix(c.getEnv("STATIC_BOOKING_UI_PATH", "/app/booking-ui"), "/") + "/"
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")
 	privateKey, _ := c.loadPrivateKey(c.getEnv("JWT_PRIVATE_KEY", ""))
 	publicKey, _ := c.loadPublicKey(c.getEnv("JWT_PUBLIC_KEY", ""))

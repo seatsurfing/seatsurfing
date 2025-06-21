@@ -49,36 +49,6 @@ jobs:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push booking ui
-      uses: docker/build-push-action@v6
-      with:
-        build-args: CI_VERSION=${{ env.CI_VERSION }}
-        context: ./
-        file: Dockerfile.booking-ui
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/seatsurfing/booking-ui:${{ env.CI_VERSION }}
-          ${{ env.REGISTRY }}/seatsurfing/booking-ui:latest
-          docker.io/seatsurfing/booking-ui:${{ env.CI_VERSION }}
-          docker.io/seatsurfing/booking-ui:latest
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new
-    - name: Build and push admin ui
-      uses: docker/build-push-action@v6
-      with:
-        build-args: CI_VERSION=${{ env.CI_VERSION }}
-        context: ./
-        file: Dockerfile.admin-ui
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/seatsurfing/admin-ui:${{ env.CI_VERSION }}
-          ${{ env.REGISTRY }}/seatsurfing/admin-ui:latest
-          docker.io/seatsurfing/admin-ui:${{ env.CI_VERSION }}
-          docker.io/seatsurfing/admin-ui:latest
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new
     - name: Build and push backend
       uses: docker/build-push-action@v6
       with:
