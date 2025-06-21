@@ -1,19 +1,19 @@
 import React from 'react';
 import { Form, Col, Row, Button, Alert } from 'react-bootstrap';
 import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete } from 'react-feather';
-import { Ajax, Location, Space, Booking, Formatting, User, AuthProvider, Settings as OrgSettings, UserPreference } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
+import { Ajax, Location, Space, Booking, Formatting, User, Settings as OrgSettings, UserPreference } from 'seatsurfing-commons';
 import { NextRouter } from 'next/router';
 import FullLayout from '../../components/FullLayout';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
-import Autosuggest, { InputProps } from 'react-autosuggest';
+import Autosuggest from 'react-autosuggest';
 import DateTimePicker from 'react-datetime-picker';
 import DatePicker from 'react-date-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-clock/dist/Clock.css';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 interface State {
     loading: boolean
     saved: boolean
@@ -47,8 +47,9 @@ interface State {
     subject: string;
 }
 
-interface Props extends WithTranslation {
+interface Props {
     router: NextRouter
+    t: TranslationFunc;
 }
 
 class EditBooking extends React.Component<Props, State> {
@@ -765,4 +766,4 @@ class EditBooking extends React.Component<Props, State> {
 
 }
 
-export default withTranslation(['admin'])(withReadyRouter(EditBooking as any));
+export default withTranslation(withReadyRouter(EditBooking as any));

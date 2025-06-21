@@ -1,11 +1,11 @@
 import React from 'react';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import { NextRouter } from 'next/router';
 import { Ajax } from 'seatsurfing-commons';
 import RuntimeConfig from '@/components/RuntimeConfig';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   iFrameLoaded: boolean
@@ -13,8 +13,9 @@ interface State {
   pluginMenuItem: any
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class PluginPage extends React.Component<Props, State> {
@@ -88,4 +89,4 @@ class PluginPage extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(PluginPage as any));
+export default withTranslation(withReadyRouter(PluginPage as any));

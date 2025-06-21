@@ -2,20 +2,21 @@ import React from 'react';
 import { Table } from 'react-bootstrap';
 import { Plus as IconPlus, Download as IconDownload, Tag as IconTag } from 'react-feather';
 import { Ajax, SpaceAttribute } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   selectedItem: string
   loading: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class Attributes extends React.Component<Props, State> {
@@ -126,4 +127,4 @@ class Attributes extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(Attributes as any));
+export default withTranslation(withReadyRouter(Attributes as any));

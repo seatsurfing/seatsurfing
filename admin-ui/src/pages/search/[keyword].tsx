@@ -1,19 +1,20 @@
 import React from 'react';
 import { Ajax, Search, SearchOptions } from 'seatsurfing-commons';
 import { Card, ListGroup, Col, Row } from 'react-bootstrap';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import FullLayout from '@/components/FullLayout';
 import Loading from '@/components/Loading';
 import Link from 'next/link';
 import withReadyRouter from '@/components/withReadyRouter';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class SearchResult extends React.Component<Props, State> {
@@ -158,4 +159,4 @@ class SearchResult extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(SearchResult as any));
+export default withTranslation(withReadyRouter(SearchResult as any));

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Loader as IconLoad } from 'react-feather';
 import { Ajax } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
 import withReadyRouter from '@/components/withReadyRouter';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -12,8 +12,9 @@ interface State {
   domain: string
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class ConfirmSignup extends React.Component<Props, State> {
@@ -81,4 +82,4 @@ class ConfirmSignup extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(ConfirmSignup as any));
+export default withTranslation(withReadyRouter(ConfirmSignup as any));

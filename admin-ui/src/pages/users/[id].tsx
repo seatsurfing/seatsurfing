@@ -2,13 +2,13 @@ import React from 'react';
 import { Form, Col, Row, Button, Alert, InputGroup } from 'react-bootstrap';
 import { ChevronLeft as IconBack, Save as IconSave, Trash2 as IconDelete, RefreshCw as IconRefresh, Clipboard as IconCopy, Check as IconCheck } from 'react-feather';
 import { User, Settings as OrgSettings, Ajax } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import FullLayout from '@/components/FullLayout';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import RuntimeConfig from '@/components/RuntimeConfig';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -25,8 +25,9 @@ interface State {
   showPasswordCopied: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class EditUser extends React.Component<Props, State> {
@@ -299,4 +300,4 @@ class EditUser extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(EditUser as any));
+export default withTranslation(withReadyRouter(EditUser as any));

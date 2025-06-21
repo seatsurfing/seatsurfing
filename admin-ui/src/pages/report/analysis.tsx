@@ -2,11 +2,11 @@ import React from 'react';
 import { Ajax, Formatting, Location } from 'seatsurfing-commons';
 import { Table, Form, Col, Row, Button } from 'react-bootstrap';
 import { Search as IconSearch, Download as IconDownload, Check as IconCheck } from 'react-feather';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import Loading from '@/components/Loading';
 import { NextRouter } from 'next/router';
 import withReadyRouter from '@/components/withReadyRouter';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   loading: boolean
@@ -15,8 +15,9 @@ interface State {
   locationId: string
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class ReportAnalysis extends React.Component<Props, State> {
@@ -172,4 +173,4 @@ class ReportAnalysis extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(ReportAnalysis as any));
+export default withTranslation(withReadyRouter(ReportAnalysis as any));

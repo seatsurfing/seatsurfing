@@ -1,4 +1,4 @@
-import { WithTranslation, withTranslation } from 'next-i18next';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 import Link from 'next/link';
 import React from 'react';
 import { Form, Alert } from 'react-bootstrap';
@@ -6,7 +6,8 @@ import { Form, Alert } from 'react-bootstrap';
 interface State {
 }
 
-interface Props extends WithTranslation {
+interface Props {
+  t: TranslationFunc;
 }
 
 class LoginFailed extends React.Component<Props, State> {
@@ -23,4 +24,4 @@ class LoginFailed extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(LoginFailed as any);
+export default withTranslation(LoginFailed as any);

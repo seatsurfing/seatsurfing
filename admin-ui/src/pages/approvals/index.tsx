@@ -2,12 +2,12 @@ import React from 'react';
 import { Ajax, Booking, Formatting } from 'seatsurfing-commons';
 import { Table, Button } from 'react-bootstrap';
 import { Download as IconDownload, X as IconX, Check as IconOK } from 'react-feather';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import FullLayout from '@/components/FullLayout';
 import { NextRouter } from 'next/router';
 import Loading from '@/components/Loading';
 import withReadyRouter from '@/components/withReadyRouter';
 import type * as CSS from 'csstype';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   data: Booking[]
@@ -15,8 +15,9 @@ interface State {
   updating: boolean
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class Approvals extends React.Component<Props, State> {
@@ -148,4 +149,4 @@ class Approvals extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(Approvals as any));
+export default withTranslation(withReadyRouter(Approvals as any));

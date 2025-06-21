@@ -6,12 +6,12 @@ import {
   Trash2 as IconDelete,
 } from "react-feather";
 import { Ajax, AuthProvider } from "seatsurfing-commons";
-import { WithTranslation, withTranslation } from "next-i18next";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 interface State {
   loading: boolean;
@@ -31,8 +31,9 @@ interface State {
   logoutUrl: string;
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter;
+  t: TranslationFunc;
 }
 
 class EditAuthProvider extends React.Component<Props, State> {
@@ -477,6 +478,4 @@ class EditAuthProvider extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(["admin"])(
-  withReadyRouter(EditAuthProvider as any)
-);
+export default withTranslation(withReadyRouter(EditAuthProvider as any));

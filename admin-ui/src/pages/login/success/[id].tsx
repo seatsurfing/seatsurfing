@@ -3,16 +3,17 @@ import Loading from '../../../components/Loading';
 import { Form } from 'react-bootstrap';
 import { Ajax, JwtDecoder, User } from 'seatsurfing-commons';
 import { NextRouter } from 'next/router';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import withReadyRouter from '@/components/withReadyRouter';
 import RuntimeConfig from '@/components/RuntimeConfig';
+import { TranslationFunc, withTranslation } from '@/components/withTranslation';
 
 interface State {
   redirect: string | null
 }
 
-interface Props extends WithTranslation {
+interface Props {
   router: NextRouter
+  t: TranslationFunc;
 }
 
 class LoginSuccess extends React.Component<Props, State> {
@@ -84,4 +85,4 @@ class LoginSuccess extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(LoginSuccess as any));
+export default withTranslation(withReadyRouter(LoginSuccess as any));
