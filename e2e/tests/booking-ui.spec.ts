@@ -18,7 +18,6 @@ test.beforeEach(async ({ page }) => {
 
 test('crud booking', async ({ page }) => {
   await page.getByRole('combobox').selectOption({label: 'Sample Floor'});
-  await page.waitForSelector('#dynamic-content');
   await page.getByText('Desk 1', { exact: true }).click();
   await page.getByRole('button', { name: 'Confirm booking' }).click();
   await page.getByRole('button', { name: 'My bookings' }).click();
