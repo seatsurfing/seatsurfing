@@ -5,7 +5,7 @@ const adminUiURL = process.env.ADMIN_UI_URL ? process.env.ADMIN_UI_URL : 'http:/
 test.beforeEach(async ({ page }) => {
   // Open login page
   await page.goto(adminUiURL + '/admin/login');
-  await expect(page).toHaveURL(/login$/);
+  await expect(page).toHaveURL(/login\/$/);
 
   // Enter credentials
   await page.getByPlaceholder('Email address').fill('admin@seatsurfing.local');
@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole('button', { name: '➤' }).click();
 
   // Ensure we've reached the dashboard
-  await expect(page).toHaveURL(/dashboard$/);
+  await expect(page).toHaveURL(/dashboard\/$/);
 });
 
 test('crud location', async ({ page }) => {
@@ -21,11 +21,11 @@ test('crud location', async ({ page }) => {
 
   // Navigate to "Areas"
   await page.getByRole('link', { name: 'Areas' }).click();
-  await expect(page).toHaveURL(/locations$/);
+  await expect(page).toHaveURL(/locations\/$/);
 
   // Add a new area
   await page.getByRole('link', { name: 'Add' }).click();
-  await expect(page).toHaveURL(/locations\/add$/);
+  await expect(page).toHaveURL(/locations\/add\/$/);
 
   // Fill the basic information
   await page.getByPlaceholder('Name').fill(name);
@@ -46,17 +46,17 @@ test('crud location', async ({ page }) => {
   // Save & go back to area list
   await page.getByRole('button', { name: 'Save' }).click();
   await page.getByRole('link', { name: 'Back' }).click();
-  await expect(page).toHaveURL(/locations$/);
+  await expect(page).toHaveURL(/locations\/$/);
 
   // Re-open area from list
   await page.getByRole('cell', { name: name }).click();
-  await expect(page).toHaveURL(/locations\/.+$/);
+  await expect(page).toHaveURL(/locations\/.+\/$/);
 
   // Delete area
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Delete' }).click();
 
   // Check that area is not included in list anymore
-  await expect(page).toHaveURL(/locations$/);
+  await expect(page).toHaveURL(/locations\/$/);
   await expect(page.getByRole('cell', { name: name })).toHaveCount(0);
 });
