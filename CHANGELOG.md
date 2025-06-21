@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.36.0](https://github.com/seatsurfing/seatsurfing/compare/v1.35.4...v1.36.0) (2025-06-21)
+
+
+### Features
+
+* recurring bookings ([#947](https://github.com/seatsurfing/seatsurfing/issues/947)) ([13b95ec](https://github.com/seatsurfing/seatsurfing/commit/13b95ecbf1a7717eadd025b50bf08f04ce32b407))
+* static web exports ([#983](https://github.com/seatsurfing/seatsurfing/issues/983)) ([c735f62](https://github.com/seatsurfing/seatsurfing/commit/c735f623f1c62e45e9a0c30de1521e0058dc3c71))
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test to 1.53.1 ([#988](https://github.com/seatsurfing/seatsurfing/issues/988)) ([9773e16](https://github.com/seatsurfing/seatsurfing/commit/9773e1677b6f540aa0812f9ba63cc1932ea0104b))
+
 ## [1.35.4](https://github.com/seatsurfing/seatsurfing/compare/v1.35.3...v1.35.4) (2025-06-19)
 
 
