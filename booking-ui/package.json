@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "PORT=3001 next start",
-    "build": "next build",
+    "build": "next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
     "dev": "PORT=3001 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
     "lint": "next lint",
     "install-commons": "npm remove --save seatsurfing-commons && npm install --save ../commons/ts"

@@ -1,10 +1,8 @@
 package app
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"io"
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/url"
@@ -80,13 +78,8 @@ func (a *App) InitializeRouter() {
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
 	}
-	/*
-		if GetConfig().Development {
-			a.setupBookingUIProxy(a.Router)
-			a.setupAdminUIProxy(a.Router)
-		} else {
-	*/
-	a.setupStaticUserRoutes(a.Router)
+	a.setupStaticAdminUIRoutes(a.Router)
+	a.setupStaticBookingUIRoutes(a.Router)
 	//a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
 	a.Router.Path("/").Methods("GET").HandlerFunc(a.RedirectRootPath)
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
@@ -203,87 +196,16 @@ func (a *App) CheckDomainAccessibilityTimer() {
 	}
 }
 
-func (a *App) bookingUIProxyHandler(w http.ResponseWriter, r *http.Request) {
-	a.proxyHandler(w, r, GetConfig().BookingUiBackend)
-}
-
-func (a *App) adminUIProxyHandler(w http.ResponseWriter, r *http.Request) {
-	a.proxyHandler(w, r, GetConfig().AdminUiBackend)
-}
-
-func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend string) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	r.Body = io.NopCloser(bytes.NewReader(body))
-	url := fmt.Sprintf("%s://%s%s", "http", backend, r.RequestURI)
-	proxyReq, err := http.NewRequest(r.Method, url, bytes.NewReader(body))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	proxyReq.Header = make(http.Header)
-	for h, val := range r.Header {
-		proxyReq.Header[h] = val
-	}
-	a.setProxyForwardHeaders(r, proxyReq)
-	resp, err := http.DefaultClient.Do(proxyReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-	bodyRes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	for h, vals := range resp.Header {
-		for _, val := range vals {
-			w.Header().Set(h, val)
-		}
-	}
-	w.WriteHeader(resp.StatusCode)
-	w.Write(bodyRes)
-}
-
-func (a *App) setProxyForwardHeaders(r *http.Request, proxyReq *http.Request) {
-	host := r.Header.Get("X-Forwarded-Host")
-	if host == "" {
-		host = r.Host
-	}
-	protocol := strings.ToLower(r.Header.Get("X-Forwarded-Proto"))
-	if protocol == "" {
-		if r.TLS == nil {
-			protocol = "http"
-		} else {
-			protocol = "https"
-		}
-	}
-	port := r.Header.Get("X-Forwarded-Port")
-
-	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
-	proxyReq.Header.Set("X-Forwarded-Host", host)
-	proxyReq.Header.Set("X-Forwarded-Proto", protocol)
-	if port != "" {
-		proxyReq.Header.Set("X-Forwarded-Port", port)
-	}
-}
-
-func (a *App) setupBookingUIProxy(router *mux.Router) {
-	const basePath = "/ui"
-	router.Path(basePath).HandlerFunc(a.bookingUIProxyHandler)
-	router.Path(basePath + "/").HandlerFunc(a.bookingUIProxyHandler)
-	router.PathPrefix(basePath + "/").HandlerFunc(a.bookingUIProxyHandler)
-}
-
-func (a *App) setupAdminUIProxy(router *mux.Router) {
-	const basePath = "/admin"
-	router.Path(basePath).HandlerFunc(a.adminUIProxyHandler)
-	router.Path(basePath + "/").HandlerFunc(a.adminUIProxyHandler)
-	router.PathPrefix(basePath + "/").HandlerFunc(a.adminUIProxyHandler)
+func (a *App) attributePathHandler(fs http.Handler, prefix, path string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r2 := new(http.Request)
+		*r2 = *r
+		r2.URL = new(url.URL)
+		*r2.URL = *r.URL
+		r2.URL.Path = path
+		r2.URL.Path = strings.TrimPrefix(r2.URL.Path, prefix)
+		fs.ServeHTTP(w, r2)
+	})
 }
 
 func (a *App) stripStaticPrefix(fs http.Handler, prefix string) http.HandlerFunc {
@@ -297,28 +219,40 @@ func (a *App) stripStaticPrefix(fs http.Handler, prefix string) http.HandlerFunc
 	})
 }
 
-func (a *App) setupStaticUserRoutes(router *mux.Router) {
+func (a *App) setupStaticBookingUIRoutes(router *mux.Router) {
 	const basePath = "/ui"
-	/*
-		paths := []string{
-			"/login",
-			"/search",
-			"/bookings",
-			"/preferences",
-			"/resetpw",
-			"/debugtime",
-		}
-	*/
+	attributesPaths := a.getAttributePaths(GetConfig().StaticBookingUiPath)
 	fs := http.FileServer(http.Dir(GetConfig().StaticBookingUiPath))
-	/*
-		for _, path := range paths {
-			path = basePath + path
-			router.PathPrefix(path).Handler(a.stripStaticPrefix(fs, path))
-		}
-	*/
+	for _, attrPath := range attributesPaths {
+		path := strings.ReplaceAll(attrPath, "[", "{")
+		path = strings.ReplaceAll(path, "]", "}/")
+		router.Path(basePath + path).Handler(a.attributePathHandler(fs, basePath+"/", basePath+attrPath+"/"))
+	}
 	router.Path(basePath + "/").Handler(a.stripStaticPrefix(fs, basePath+"/"))
 	router.PathPrefix(basePath + "/").Handler(http.StripPrefix(basePath+"/", fs))
-	//router.PathPrefix(basePath + "/").Handler(fs)
+}
+
+func (a *App) setupStaticAdminUIRoutes(router *mux.Router) {
+	const basePath = "/admin"
+	attributesPaths := a.getAttributePaths(GetConfig().StaticAdminUiPath)
+	fs := http.FileServer(http.Dir(GetConfig().StaticAdminUiPath))
+	for _, attrPath := range attributesPaths {
+		path := strings.ReplaceAll(attrPath, "[", "{")
+		path = strings.ReplaceAll(path, "]", "}/")
+		router.Path(basePath + path).Handler(a.attributePathHandler(fs, basePath+"/", basePath+attrPath+"/"))
+	}
+	router.Path(basePath + "/").Handler(a.stripStaticPrefix(fs, basePath+"/"))
+	router.PathPrefix(basePath + "/").Handler(http.StripPrefix(basePath+"/", fs))
+}
+
+func (a *App) getAttributePaths(dir string) []string {
+	b, err := os.ReadFile(dir + "_attr.json")
+	if err != nil {
+		return []string{}
+	}
+	var res []string
+	json.Unmarshal(b, &res)
+	return res
 }
 
 func (a *App) startPublicHttpServer() {
