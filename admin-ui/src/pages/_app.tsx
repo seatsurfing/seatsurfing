@@ -10,20 +10,20 @@ import '@/styles/SideBar.css'
 import 'react-calendar/dist/Calendar.css';
 import '@/styles/Booking.css'
 import type { AppProps } from 'next/app'
-import nextI18nConfig from '../../next-i18next.config'
-import { WithTranslation, appWithTranslation, withTranslation } from 'next-i18next'
 import { Ajax, Formatting } from 'seatsurfing-commons'
 import React from 'react'
 import Loading from '@/components/Loading'
 import Head from 'next/head'
 import RuntimeConfig from '@/components/RuntimeConfig'
+import { TranslationFunc, withTranslation } from '@/components/withTranslation'
 
 
 interface State {
   isLoading: boolean;
 }
 
-interface Props extends WithTranslation, AppProps {
+interface Props extends AppProps {
+  t: TranslationFunc;
 }
 
 class App extends React.Component<Props, State> {
@@ -40,13 +40,12 @@ class App extends React.Component<Props, State> {
   }
 
   render() {
-    if ((this.state.isLoading) || (!this.props.tReady)) {
+    if (this.state.isLoading) {
       return <Loading />;
     }
 
     const { Component, pageProps } = this.props;
-    Formatting.Language = this.props.i18n.language;
-    // @ts-ignore
+    Formatting.Language = RuntimeConfig.getLanguage();
     Formatting.t = this.props.t;
     return (
       <>
@@ -68,4 +67,4 @@ class App extends React.Component<Props, State> {
   }
 }
 
-export default appWithTranslation(withTranslation(['admin'])(App), nextI18nConfig);
+export default withTranslation(App as any);

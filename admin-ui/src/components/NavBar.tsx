@@ -1,18 +1,19 @@
 import React from 'react';
 import { Nav, Button, Form } from 'react-bootstrap';
 import { Ajax, AjaxCredentials } from 'seatsurfing-commons';
-import { WithTranslation, withTranslation } from 'next-i18next';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
 import withReadyRouter from './withReadyRouter';
+import { TranslationFunc, withTranslation } from './withTranslation';
 
 interface State {
     search: string
     redirect: string | null
 }
 
-interface Props extends WithTranslation {
+interface Props {
     router: NextRouter
+    t: TranslationFunc;
 }
 
 class NavBar extends React.Component<Props, State> {
@@ -84,4 +85,4 @@ class NavBar extends React.Component<Props, State> {
     }
 }
 
-export default withTranslation(['admin'])(withReadyRouter(NavBar as any));
+export default withTranslation(withReadyRouter(NavBar as any));

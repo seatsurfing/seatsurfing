@@ -1,14 +1,15 @@
-import { WithTranslation, withTranslation } from 'next-i18next';
 import React from 'react';
 import { Loader as IconLoad } from 'react-feather';
+import { TranslationFunc, withTranslation } from './withTranslation';
 
 interface State {
 }
 
-interface Props extends WithTranslation {
+interface Props {
     showText: boolean
     paddingTop: boolean
     visible: boolean
+    t: TranslationFunc;
 }
 
 class Loading extends React.Component<Props, State> {
@@ -22,4 +23,4 @@ class Loading extends React.Component<Props, State> {
     }
 }
 
-export default withTranslation()(Loading as any);
+export default withTranslation(Loading as any);

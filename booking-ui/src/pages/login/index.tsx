@@ -256,15 +256,6 @@ class Login extends React.Component<Props, State> {
     window.location.href = target;
   };
 
-  changeLanguage = (lng: string) => {
-    const expiry = new Date();
-    expiry.setTime(expiry.getTime() + 365 * 24 * 60 * 60 * 1000);
-    window.document.cookie =
-      "NEXT_LOCALE=" + lng + "; expires=" + expiry.toUTCString() + "; path=/";
-    const { pathname, asPath, query } = this.props.router;
-    this.props.router.push({ pathname, query }, asPath, { locale: lng });
-  };
-
   render() {
     if (this.state.redirect != null) {
       this.props.router.push(this.state.redirect);
@@ -298,7 +289,6 @@ class Login extends React.Component<Props, State> {
             <LanguageSwitcher key={"lng-" + l} lang={l}>
               <Dropdown.Item
                 key={"lng-btn-" + l}
-                onClick={() => this.changeLanguage(l)}
                 active={l === RuntimeConfig.getLanguage()}
               >
                 {l}

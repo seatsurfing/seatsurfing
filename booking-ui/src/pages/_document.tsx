@@ -1,5 +1,6 @@
 import Document, { Html, Head, Main, NextScript, DocumentProps } from 'next/document'
 import { randomBytes } from 'crypto'
+import RuntimeConfig from '@/components/RuntimeConfig';
 
 type Props = DocumentProps & {
   // add custom document props
@@ -24,7 +25,7 @@ class Doc extends Document<Props> {
       cspString += `${key} ${csp.get(key)?.join(' ')}; `;
     });
     return (
-      <Html lang={"en"}>
+      <Html lang={RuntimeConfig.getLanguage()}>
         <Head nonce={nonce}>
           <meta name="robots" content="noindex" />
           <meta httpEquiv="Content-Security-Policy" content={cspString} />
