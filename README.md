@@ -10,7 +10,7 @@
 We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS) at. [Start for free now](https://seatsurfing.io/sign-up)!
 
 - **No installation required** - Get started immediately
-- **MS Teams app** - See [Microsoft AppSource marketplace](https://appsource.microsoft.com/product/office/WA200008773)
+- **Microsoft Teams integration** - See [Microsoft AppSource marketplace](https://appsource.microsoft.com/product/office/WA200008773)
 - **Get it free** - Free for up to 10 users
 - **Automatic updates** - Always enjoy the latest features
 - **Managed infrastructure** - Servers in Germany (EU)
