@@ -63,7 +63,7 @@
    ./run.sh
    ```
 
-You should now be able to access the Admin UI at http://localhost:8080/admin/ and the Booking UI at http://localhost:8080/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`).
+You should now be able to access the Admin UI at http://localhost:3000/admin/ and the Booking UI at http://localhost:3001/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`).
 
 ## Running tests
 
@@ -85,6 +85,11 @@ If you add/modify major frontend functionality, please add/modify the e2e tests.
       cd e2e
       npm ci
       npx playwright install --with-deps
+      ```
+
+   1. Build Booking and Admin UI:
+      ```shell
+      npm run build
       ```
 
    1. Run the tests:
