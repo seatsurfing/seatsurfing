@@ -267,7 +267,7 @@ class Login extends React.Component<Props, State> {
         variant="outline-secondary"
         drop="up"
       >
-        {(this.props.router.locales as string[])
+        {RuntimeConfig.getAvailableLanguages()
           .sort()
           .filter((l) => l !== "default")
           .map((l) => (
