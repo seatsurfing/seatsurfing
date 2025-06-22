@@ -63,12 +63,13 @@ type GetSpaceResponse struct {
 }
 
 type GetSpaceAvailabilityBookingsResponse struct {
-	BookingID string    `json:"id"`
-	UserID    string    `json:"userId"`
-	UserEmail string    `json:"userEmail"`
-	Enter     time.Time `json:"enter"`
-	Leave     time.Time `json:"leave"`
-	Subject   string    `json:"subject"`
+	BookingID   string    `json:"id"`
+	RecurringID string    `json:"recurringId"`
+	UserID      string    `json:"userId"`
+	UserEmail   string    `json:"userEmail"`
+	Enter       time.Time `json:"enter"`
+	Leave       time.Time `json:"leave"`
+	Subject     string    `json:"subject"`
 }
 
 type GetSpaceAvailabilityResponse struct {
@@ -275,12 +276,13 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 					outUserEmail = booking.UserEmail
 				}
 				entry := &GetSpaceAvailabilityBookingsResponse{
-					BookingID: booking.BookingID,
-					UserID:    outUserId,
-					UserEmail: outUserEmail,
-					Enter:     enter,
-					Leave:     leave,
-					Subject:   booking.Subject,
+					BookingID:   booking.BookingID,
+					RecurringID: booking.RecurringID,
+					UserID:      outUserId,
+					UserEmail:   outUserEmail,
+					Enter:       enter,
+					Leave:       leave,
+					Subject:     booking.Subject,
 				}
 				m.Bookings = append(m.Bookings, entry)
 			}
