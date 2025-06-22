@@ -3,12 +3,9 @@ package repository
 import (
 	"strconv"
 	"sync"
-
-	"github.com/coocood/freecache"
 )
 
 type SettingsRepository struct {
-	Cache *freecache.Cache
 }
 
 type OrgSetting struct {
@@ -75,7 +72,6 @@ func GetSettingsRepository() *SettingsRepository {
 		if err != nil {
 			panic(err)
 		}
-		settingsRepository.Cache = freecache.NewCache(10 * 1024 * 1024) // 10 MB cache
 	})
 	return settingsRepository
 }
@@ -111,7 +107,7 @@ func (r *SettingsRepository) Set(organizationID string, name string, value strin
 		organizationID, name, value); err != nil {
 		return err
 	}
-	r.Cache.Set([]byte(organizationID+"_"+name), []byte(value), 60*5) // cache for 5 minutes
+	GetCache().Set(organizationID+"_"+name, []byte(value), 60*5) // cache for 5 minutes
 	return nil
 }
 
@@ -120,13 +116,13 @@ func (r *SettingsRepository) Delete(organizationID string, name string) error {
 		organizationID, name); err != nil {
 		return err
 	}
-	r.Cache.Del([]byte(organizationID + "_" + name)) // remove from cache
+	GetCache().Delete(organizationID + "_" + name) // remove from cache
 	return nil
 }
 
 func (r *SettingsRepository) Get(organizationID string, name string) (string, error) {
 	// Check cache first
-	cachRes, err := r.Cache.Get([]byte(organizationID + "_" + name))
+	cachRes, err := GetCache().Get(organizationID + "_" + name)
 	if err == nil {
 		// cache hit
 		return string(cachRes), nil
@@ -139,7 +135,7 @@ func (r *SettingsRepository) Get(organizationID string, name string) (string, er
 	if err != nil {
 		return "", err
 	}
-	r.Cache.Set([]byte(organizationID+"_"+name), []byte(res), 60*5) // cache for 5 minutes
+	GetCache().Set(organizationID+"_"+name, []byte(res), 60*5) // cache for 5 minutes
 	return res, nil
 }
 
@@ -227,7 +223,7 @@ func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error
 			return nil, err
 		}
 		result = append(result, e)
-		r.Cache.Set([]byte(organizationID+"_"+e.Name), []byte(e.Value), 60*5) // cache for 5 minutes
+		GetCache().Set(organizationID+"_"+e.Name, []byte(e.Value), 60*5) // cache for 5 minutes
 	}
 	return result, nil
 }
