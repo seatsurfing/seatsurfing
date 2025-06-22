@@ -98,7 +98,6 @@ func (c *Cache) getValkeyClient() (valkey.Client, error) {
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress: []string{cfg.ValkeyHost},
 		AuthCredentialsFn: func(ctx valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
-			// Replace with your actual authentication logic if needed
 			return valkey.AuthCredentials{
 				Username: cfg.ValkeyUsername,
 				Password: cfg.ValkeyPassword,
