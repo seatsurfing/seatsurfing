@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.36.0](https://github.com/seatsurfing/seatsurfing/compare/v1.35.4...v1.36.0) (2025-06-22)
+
+
+### Features
+
+* add in-memory-cache for settings to improve performance ([#991](https://github.com/seatsurfing/seatsurfing/issues/991)) ([bc19625](https://github.com/seatsurfing/seatsurfing/commit/bc1962507ee37f1761c1ae9a0178d51aa0be4bdf))
+* allow canceling a recurring booking from the search view ([#993](https://github.com/seatsurfing/seatsurfing/issues/993)) ([08a1fd7](https://github.com/seatsurfing/seatsurfing/commit/08a1fd751d68cacb4181eefb02e67ae28b025154))
+* indicate recurring bookings in admin ui ([#994](https://github.com/seatsurfing/seatsurfing/issues/994)) ([e3a01ed](https://github.com/seatsurfing/seatsurfing/commit/e3a01ed6c1750b22166ac122ae3171be3aeea801))
+* recurring bookings ([#947](https://github.com/seatsurfing/seatsurfing/issues/947)) ([13b95ec](https://github.com/seatsurfing/seatsurfing/commit/13b95ecbf1a7717eadd025b50bf08f04ce32b407))
+* static web exports ([#983](https://github.com/seatsurfing/seatsurfing/issues/983)) ([c735f62](https://github.com/seatsurfing/seatsurfing/commit/c735f623f1c62e45e9a0c30de1521e0058dc3c71))
+* support caching via Valkey.io ([#996](https://github.com/seatsurfing/seatsurfing/issues/996)) ([52e01d3](https://github.com/seatsurfing/seatsurfing/commit/52e01d35c7b4ed11f74d7b71fac33cd5a54fb1a2))
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test to 1.53.1 ([#988](https://github.com/seatsurfing/seatsurfing/issues/988)) ([9773e16](https://github.com/seatsurfing/seatsurfing/commit/9773e1677b6f540aa0812f9ba63cc1932ea0104b))
+* encapsulate in-memory cache ([#995](https://github.com/seatsurfing/seatsurfing/issues/995)) ([4c657f9](https://github.com/seatsurfing/seatsurfing/commit/4c657f9cb6a1220761e09e7cf327b9cb3a79d732))
+* omit markup when creating recurring bookings ([#990](https://github.com/seatsurfing/seatsurfing/issues/990)) ([70f7397](https://github.com/seatsurfing/seatsurfing/commit/70f7397ad7cb9268c0e03a8987c169f0911860b4))
+* show number of bookings to be confirmed ([#992](https://github.com/seatsurfing/seatsurfing/issues/992)) ([9638eab](https://github.com/seatsurfing/seatsurfing/commit/9638eab6b79ae922e9866a694fbd19df510b13ea))
+* warnings for deprecated env vars ([#989](https://github.com/seatsurfing/seatsurfing/issues/989)) ([ffcbcb1](https://github.com/seatsurfing/seatsurfing/commit/ffcbcb1539595ccbc1a1176e0e5302f0dffa749f))
+
 ## [1.35.4](https://github.com/seatsurfing/seatsurfing/compare/v1.35.3...v1.35.4) (2025-06-19)
 
 
