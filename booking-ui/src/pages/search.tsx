@@ -104,6 +104,7 @@ interface State {
   createdBookingId: string;
   subject: string;
   showRecurringOptions: boolean;
+  cancelSeries: boolean;
   recurrence: {
     precheckResults: RecurringBookingCreateResult[];
     precheckLoading: boolean;
@@ -193,6 +194,7 @@ class Search extends React.Component<Props, State> {
       createdBookingId: "",
       subject: "",
       showRecurringOptions: false,
+      cancelSeries: false,
       recurrence: {
         active: false,
         finalNumBookings: 0,
@@ -715,6 +717,7 @@ class Search extends React.Component<Props, State> {
       this.setState({
         showConfirm: true,
         selectedSpace: item,
+        cancelSeries: false,
       });
     } else {
       let bookings = Booking.createFromRawArray(item.rawBookings);
@@ -877,10 +880,17 @@ class Search extends React.Component<Props, State> {
 
   renderBookingNameRow = (booking: Booking) => {
     const buddiesEmails = this.buddies.map((i) => i.buddy.email);
+    let recurringIcon = <></>;
+    if (booking.isRecurring()) {
+      recurringIcon = (
+        <IconRefresh className="feather recurring-booking-icon" />
+      );
+    }
 
     return (
-      <p key={booking.id}>
+      <div key={booking.id} className="booking-name-row">
         <h6 hidden={!booking.subject}>{booking.subject}</h6>
+        {recurringIcon}
         {booking.user.email}
         <br />
         {Formatting.getFormatterShort().format(new Date(booking.enter))}
@@ -901,7 +911,7 @@ class Search extends React.Component<Props, State> {
               {this.props.t("addBuddy")}
             </Button>
           )}
-      </p>
+      </div>
     );
   };
 
@@ -1359,11 +1369,19 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  cancelBooking = (item: Booking | null) => {
+  cancelBooking = async (item: Booking | null) => {
+    if (item == null) {
+      return;
+    }
     this.setState({
       confirmingBooking: true,
     });
-    item?.delete().then(
+    let deleteItem: any;
+    deleteItem = item;
+    if (this.state.cancelSeries && item.isRecurring()) {
+      deleteItem = await RecurringBooking.get(item.recurringId);
+    }
+    deleteItem.delete().then(
       () => {
         this.setState(
           {
@@ -2350,6 +2368,7 @@ class Search extends React.Component<Props, State> {
         </>
       );
     }
+    let isRecurring = false;
     let bookingNamesModal = (
       <Modal
         show={this.state.showBookingNames}
@@ -2360,10 +2379,22 @@ class Search extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>
           {bookings.map((item) => {
+            isRecurring = isRecurring || item.isRecurring();
             return (
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
+          <p hidden={!isRecurring}>
+            <Form.Check
+              type="checkbox"
+              id="cancelAllUpcomingBookings"
+              onChange={(e) =>
+                this.setState({ cancelSeries: e.target.checked })
+              }
+              checked={this.state.cancelSeries}
+              label={this.props.t("cancelAllUpcomingBookings")}
+            />
+          </p>
         </Modal.Body>
         <Modal.Footer>
           <Button
