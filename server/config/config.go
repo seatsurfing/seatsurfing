@@ -113,6 +113,17 @@ func (c *Config) ReadConfig() {
 	c.PluginsSubPath = c.getEnv("PLUGINS_SUB_PATH", "plugins")
 	c.PublicScheme = c.getEnv("PUBLIC_SCHEME", "https")
 	c.PublicPort = c.getEnvInt("PUBLIC_PORT", 443)
+
+	// Check deprecated environment variables
+	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
+		log.Println("Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
+	}
+	if c.getEnv("BOOKING_UI_BACKEND", "") != "" {
+		log.Println("Warning: BOOKING_UI_BACKEND is deprecated. The Booking UI now uses the same backend as the Admin UI. Please remove this environment variable.")
+	}
+	if c.getEnv("DISABLE_UI_PROXY", "") != "" {
+		log.Println("Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
+	}
 }
 
 func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {
