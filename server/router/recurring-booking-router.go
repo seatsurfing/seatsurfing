@@ -217,7 +217,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 	spaceRequiresApproval := bookingRouter.getSpaceRequiresApproval(location.OrganizationID, space)
 	bookings := GetRecurringBookingRepository().CreateBookings(e)
 	res := make([]CreateRecurringBookingResponse, 0)
-	for idx, b := range bookings {
+	for _, b := range bookings {
 		bookingReq := &CreateBookingRequest{
 			SpaceID: b.SpaceID,
 			BookingRequest: BookingRequest{
@@ -225,7 +225,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 				Leave: b.Leave,
 			},
 		}
-		valid, code := bookingRouter.checkBookingCreateUpdate(bookingReq, location, requestUser, "", idx)
+		valid, code := bookingRouter.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0)
 		if valid {
 			conflicts, _ := GetBookingRepository().GetConflicts(e.SpaceID, b.Enter, b.Leave, "")
 			if len(conflicts) > 0 {
