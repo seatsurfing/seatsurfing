@@ -3,9 +3,12 @@ package repository
 import (
 	"strconv"
 	"sync"
+
+	"github.com/coocood/freecache"
 )
 
 type SettingsRepository struct {
+	Cache *freecache.Cache
 }
 
 type OrgSetting struct {
@@ -72,6 +75,7 @@ func GetSettingsRepository() *SettingsRepository {
 		if err != nil {
 			panic(err)
 		}
+		settingsRepository.Cache = freecache.NewCache(10 * 1024 * 1024) // 10 MB cache
 	})
 	return settingsRepository
 }
@@ -101,27 +105,41 @@ func (r *SettingsRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 }
 
 func (r *SettingsRepository) Set(organizationID string, name string, value string) error {
-	_, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
+	if _, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES ($1, $2, $3) "+
 		"ON CONFLICT (organization_id, name) DO UPDATE SET value = $3",
-		organizationID, name, value)
-	return err
+		organizationID, name, value); err != nil {
+		return err
+	}
+	r.Cache.Set([]byte(organizationID+"_"+name), []byte(value), 60*5) // cache for 5 minutes
+	return nil
 }
 
 func (r *SettingsRepository) Delete(organizationID string, name string) error {
-	_, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE organization_id = $1 AND name = $2",
-		organizationID, name)
-	return err
+	if _, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE organization_id = $1 AND name = $2",
+		organizationID, name); err != nil {
+		return err
+	}
+	r.Cache.Del([]byte(organizationID + "_" + name)) // remove from cache
+	return nil
 }
 
 func (r *SettingsRepository) Get(organizationID string, name string) (string, error) {
+	// Check cache first
+	cachRes, err := r.Cache.Get([]byte(organizationID + "_" + name))
+	if err == nil {
+		// cache hit
+		return string(cachRes), nil
+	}
+	// cache miss, query the database
 	var res string
-	err := GetDatabase().DB().QueryRow("SELECT value FROM settings "+
+	err = GetDatabase().DB().QueryRow("SELECT value FROM settings "+
 		"WHERE organization_id = $1 AND name = $2",
 		organizationID, name).Scan(&res)
 	if err != nil {
 		return "", err
 	}
+	r.Cache.Set([]byte(organizationID+"_"+name), []byte(res), 60*5) // cache for 5 minutes
 	return res, nil
 }
 
