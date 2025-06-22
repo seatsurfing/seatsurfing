@@ -46,6 +46,10 @@ type Config struct {
 	PluginsSubPath                      string
 	PublicScheme                        string
 	PublicPort                          int
+	CacheType                           string // "valkey" or "default"
+	ValkeyHosts                         []string
+	ValkeyUsername                      string
+	ValkeyPassword                      string
 }
 
 var _configInstance *Config
@@ -113,6 +117,14 @@ func (c *Config) ReadConfig() {
 	c.PluginsSubPath = c.getEnv("PLUGINS_SUB_PATH", "plugins")
 	c.PublicScheme = c.getEnv("PUBLIC_SCHEME", "https")
 	c.PublicPort = c.getEnvInt("PUBLIC_PORT", 443)
+	c.CacheType = c.getEnv("CACHE_TYPE", "default")
+	if c.CacheType != "valkey" && c.CacheType != "default" {
+		log.Println("Warning: Invalid CACHE_TYPE set. Only 'valkey' and 'default' are allowed. Defaulting to 'default'.")
+		c.CacheType = "default"
+	}
+	c.ValkeyHosts = strings.Split(c.getEnv("VALKEY_HOSTS", "127.0.0.1:6379"), ",")
+	c.ValkeyUsername = c.getEnv("VALKEY_USERNAME", "default")
+	c.ValkeyPassword = c.getEnv("VALKEY_PASSWORD", "")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
