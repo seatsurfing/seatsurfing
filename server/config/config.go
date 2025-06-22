@@ -47,7 +47,7 @@ type Config struct {
 	PublicScheme                        string
 	PublicPort                          int
 	CacheType                           string // "valkey" or "default"
-	ValkeyHost                          string
+	ValkeyHosts                         []string
 	ValkeyUsername                      string
 	ValkeyPassword                      string
 }
@@ -122,7 +122,7 @@ func (c *Config) ReadConfig() {
 		log.Println("Warning: Invalid CACHE_TYPE set. Only 'valkey' and 'default' are allowed. Defaulting to 'default'.")
 		c.CacheType = "default"
 	}
-	c.ValkeyHost = c.getEnv("VALKEY_HOST", "127.0.0.1:6379")
+	c.ValkeyHosts = strings.Split(c.getEnv("VALKEY_HOSTS", "127.0.0.1:6379"), ",")
 	c.ValkeyUsername = c.getEnv("VALKEY_USERNAME", "default")
 	c.ValkeyPassword = c.getEnv("VALKEY_PASSWORD", "")
 
