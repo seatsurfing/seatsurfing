@@ -227,6 +227,7 @@ func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error
 			return nil, err
 		}
 		result = append(result, e)
+		r.Cache.Set([]byte(organizationID+"_"+e.Name), []byte(e.Value), 60*5) // cache for 5 minutes
 	}
 	return result, nil
 }
