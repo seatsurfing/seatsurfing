@@ -1,7 +1,7 @@
 import React from 'react';
 import {Ajax, AjaxError, Booking, Formatting, Settings as OrgSettings} from 'seatsurfing-commons';
 import { Table, Form, Col, Row, Button } from 'react-bootstrap';
-import { Plus as IconPlus, Search as IconSearch, Download as IconDownload, X as IconX } from 'react-feather';
+import { Plus as IconPlus, Search as IconSearch, Download as IconDownload, X as IconX, RefreshCw as IconRecurring } from 'react-feather';
 import FullLayout from '@/components/FullLayout';
 import { NextRouter } from 'next/router';
 import Link from 'next/link';
@@ -104,6 +104,7 @@ class Bookings extends React.Component<Props, State> {
     };
     return (
       <tr key={booking.id} onClick={() => this.onItemSelect(booking)}>
+        <td>{booking.recurringId ? <IconRecurring className="feather" /> : <></>}</td>
         <td>{booking.user.email}</td>
         <td>{booking.space.location.name}</td>
         <td>{booking.space.name}</td>
@@ -184,6 +185,7 @@ class Bookings extends React.Component<Props, State> {
         <Table striped={true} hover={true} className="clickable-table" id="datatable">
           <thead>
             <tr>
+              <th></th>
               <th>{this.props.t("user")}</th>
               <th>{this.props.t("area")}</th>
               <th>{this.props.t("space")}</th>
