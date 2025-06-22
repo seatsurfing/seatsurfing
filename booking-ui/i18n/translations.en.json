@@ -156,5 +156,6 @@
     "on": "On",
     "end": "Until",
     "recurrenceAvailabilityError": "{{numErr}} of {{numTotal}} occurrences are not available for the selected recurrence.",
-    "askApplyRecurrenceAnyway": "Apply recurrence to book available time slots anyway?"
+    "askApplyRecurrenceAnyway": "Apply recurrence to book available time slots anyway?",
+    "confirmMultipleBookings": "Confirm {{num}} bookings"
 }

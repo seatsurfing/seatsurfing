@@ -151,5 +151,6 @@
     "on": "Am",
     "end": "Bis zum",
     "recurrenceAvailabilityError": "{{numErr}} von {{numTotal}} Zeiträume sind für die ausgewählte Reihe nicht verfügbar.",
-    "askApplyRecurrenceAnyway": "Möchtest Du die Wiederholung trotzdem anwenden?"
+    "askApplyRecurrenceAnyway": "Möchtest Du die Wiederholung trotzdem anwenden?",
+    "confirmMultipleBookings": "{{num}} Buchungen bestätigen"
 }

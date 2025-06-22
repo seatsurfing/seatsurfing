@@ -111,6 +111,7 @@ interface State {
     precheckNumErrors: number;
     precheckErrorCodes: number[];
     active: boolean;
+    finalNumBookings: number;
     cadence: number;
     cycle: number;
     weekdays: number[];
@@ -194,6 +195,7 @@ class Search extends React.Component<Props, State> {
       showRecurringOptions: false,
       recurrence: {
         active: false,
+        finalNumBookings: 0,
         cadence: 0, // 1 = daily, 2 = weekly, 3 = monthly
         cycle: 1, // every x days/weeks/months
         weekdays: [], // only used if cadence is weekly
@@ -858,7 +860,10 @@ class Search extends React.Component<Props, State> {
         <div className="ms-2 me-auto space-list-item-div">
           <div className="fw-bold space-list-item-content">{item.name}</div>
           {bookings.map((booking) => (
-            <div key={booking.user.id} className="space-list-item-content space-list-item-text">
+            <div
+              key={booking.user.id}
+              className="space-list-item-content space-list-item-text"
+            >
               {booking.user.email}
             </div>
           ))}
@@ -933,7 +938,6 @@ class Search extends React.Component<Props, State> {
         booking.leave.setSeconds(booking.leave.getSeconds() - 1);
       }
       booking.space = this.state.selectedSpace;
-
     }
     booking
       .save()
@@ -1423,6 +1427,7 @@ class Search extends React.Component<Props, State> {
     this.setState({
       recurrence: {
         active: false,
+        finalNumBookings: 0,
         cadence: 0,
         cycle: 1,
         weekdays: this.state.prefWorkdays,
@@ -1435,7 +1440,7 @@ class Search extends React.Component<Props, State> {
       },
       showRecurringOptions: false,
     });
-  }
+  };
 
   applyRecurrence = () => {
     let precheckRequired =
@@ -1472,6 +1477,7 @@ class Search extends React.Component<Props, State> {
         recurrence: {
           ...this.state.recurrence,
           precheckLoading: false,
+          finalNumBookings: numSuccess,
           precheckResults: res,
           precheckNumErrors: numErrors,
           precheckNumSuccess: numSuccess,
@@ -1494,9 +1500,12 @@ class Search extends React.Component<Props, State> {
             const newWorkdays = isActive
               ? this.state.recurrence.weekdays.filter((d) => d !== index)
               : [...this.state.recurrence.weekdays, index];
-            this.setState({
-              recurrence: { ...this.state.recurrence, weekdays: newWorkdays },
-            }, () => this.onRecurrenceOptionsChanged());
+            this.setState(
+              {
+                recurrence: { ...this.state.recurrence, weekdays: newWorkdays },
+              },
+              () => this.onRecurrenceOptionsChanged()
+            );
           }}
           style={{ marginRight: "5px" }}
         >
@@ -2090,7 +2099,12 @@ class Search extends React.Component<Props, State> {
               </Col>
             </Form.Group>
           </Modal.Body>
-          <Modal.Body hidden={!this.state.showRecurringOptions || !RuntimeConfig.INFOS.featureRecurringBookings}>
+          <Modal.Body
+            hidden={
+              !this.state.showRecurringOptions ||
+              !RuntimeConfig.INFOS.featureRecurringBookings
+            }
+          >
             <Form.Group as={Row} className="d-flex margin-top-10">
               <Form.Label column sm="4">
                 {this.props.t("repeat")}:
@@ -2237,7 +2251,11 @@ class Search extends React.Component<Props, State> {
               variant="primary"
               disabled={this.state.confirmingBooking}
             >
-              {this.props.t("confirmBooking")}
+              {this.state.recurrence.active
+                ? this.props.t("confirmMultipleBookings", {
+                    num: this.state.recurrence.finalNumBookings,
+                  })
+                : this.props.t("confirmBooking")}
               {this.state.confirmingBooking ? (
                 <IconLoad
                   className="feather loader"
@@ -2254,7 +2272,10 @@ class Search extends React.Component<Props, State> {
               className="margin-bottom-10"
               hidden={this.state.recurrence.precheckNumErrors === 0}
             >
-              {this.props.t("recurrenceAvailabilityError", {numErr: this.state.recurrence.precheckNumErrors, numTotal: this.state.recurrence.precheckResults.length})}
+              {this.props.t("recurrenceAvailabilityError", {
+                numErr: this.state.recurrence.precheckNumErrors,
+                numTotal: this.state.recurrence.precheckResults.length,
+              })}
               <ul
                 hidden={this.state.recurrence.precheckErrorCodes.length === 0}
               >
