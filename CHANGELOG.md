@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.4](https://github.com/seatsurfing/seatsurfing/compare/v1.36.3...v1.36.4) (2025-06-23)
+
+
+### Bug Fixes
+
+* prevent placing a recurring booking with zero actual bookings ([#1010](https://github.com/seatsurfing/seatsurfing/issues/1010)) ([4971c4f](https://github.com/seatsurfing/seatsurfing/commit/4971c4f23439bd8d399ec99c05dd999b2a2e719d))
+
 ## [1.36.3](https://github.com/seatsurfing/seatsurfing/compare/v1.36.2...v1.36.3) (2025-06-23)
 
 
