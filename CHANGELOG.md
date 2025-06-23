@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.1](https://github.com/seatsurfing/seatsurfing/compare/v1.36.0...v1.36.1) (2025-06-23)
+
+
+### Bug Fixes
+
+* incorrect IdP URL ([#1000](https://github.com/seatsurfing/seatsurfing/issues/1000)) ([469d5d7](https://github.com/seatsurfing/seatsurfing/commit/469d5d7249c3361519d9b90911b4fdae624e571c))
+
 ## [1.36.0](https://github.com/seatsurfing/seatsurfing/compare/v1.35.4...v1.36.0) (2025-06-22)
 
 
