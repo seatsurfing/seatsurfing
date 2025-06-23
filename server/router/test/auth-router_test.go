@@ -155,7 +155,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "Hallo "+user.Email+","))
 
 	// Extract Confirm ID from email
-	rx := regexp.MustCompile(`/resetpw/([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})?"`)
+	rx := regexp.MustCompile(`/resetpw/([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})?/"`)
 	confirmTokens := rx.FindStringSubmatch(SendMailMockContent)
 	CheckTestInt(t, 2, len(confirmTokens))
 	confirmID := confirmTokens[1]
