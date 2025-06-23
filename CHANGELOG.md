@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.36.3](https://github.com/seatsurfing/seatsurfing/compare/v1.36.2...v1.36.3) (2025-06-23)
+
+
+### Bug Fixes
+
+* add missing version information ([#1008](https://github.com/seatsurfing/seatsurfing/issues/1008)) ([8603b3b](https://github.com/seatsurfing/seatsurfing/commit/8603b3b17efcc6b9ab4739f5db5c1ffb838e757f))
+* incorrect html escapes ([#1009](https://github.com/seatsurfing/seatsurfing/issues/1009)) ([62e9fff](https://github.com/seatsurfing/seatsurfing/commit/62e9fff805c981dac64f3d33f1b9965574222851))
+* login via confluence app ([#1005](https://github.com/seatsurfing/seatsurfing/issues/1005)) ([435d4c7](https://github.com/seatsurfing/seatsurfing/commit/435d4c7939dd9839f3fb3a9689c786410d9cd7fb))
+* test case for password reset ([#1007](https://github.com/seatsurfing/seatsurfing/issues/1007)) ([0817e51](https://github.com/seatsurfing/seatsurfing/commit/0817e5167b354749f18103e9e314dc3601434725))
+
 ## [1.36.2](https://github.com/seatsurfing/seatsurfing/compare/v1.36.1...v1.36.2) (2025-06-23)
 
 
