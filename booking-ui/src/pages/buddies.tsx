@@ -183,7 +183,7 @@ class Buddies extends React.Component<Props, State> {
             <Modal.Title>{this.props.t("removeBuddy")}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>{this.props.t("confirmRemoveBuddy", { interpolation: { escapeValue: false } })}</p>
+            <p>{this.props.t("confirmRemoveBuddy")}</p>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => this.setState({ selectedItem: null })}>
