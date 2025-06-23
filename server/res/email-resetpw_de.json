@@ -8,7 +8,7 @@
         {
             "paragraph": "Wenn diese Anfrage von Ihnen stammt, können Sie Ihr Kennwort hier ändern:",
             "label": "Kennwort ändern",
-            "url": "{{orgDomain}}ui/resetpw/{{confirmID}}"
+            "url": "{{orgDomain}}ui/resetpw/{{confirmID}}/"
         }
     ],
     "finalParagraphs": [
