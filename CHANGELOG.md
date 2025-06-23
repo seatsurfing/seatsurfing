@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.36.2](https://github.com/seatsurfing/seatsurfing/compare/v1.36.1...v1.36.2) (2025-06-23)
+
+
+### Bug Fixes
+
+* incorrect links in mail templates ([d86897f](https://github.com/seatsurfing/seatsurfing/commit/d86897f1b153deca621c038ccd96f2f54d8b421a))
+* incorrect links in mail templates ([#1004](https://github.com/seatsurfing/seatsurfing/issues/1004)) ([6310001](https://github.com/seatsurfing/seatsurfing/commit/6310001715cb316502965400a9b0cd771eb44517))
+
 ## [1.36.1](https://github.com/seatsurfing/seatsurfing/compare/v1.36.0...v1.36.1) (2025-06-23)
 
 
