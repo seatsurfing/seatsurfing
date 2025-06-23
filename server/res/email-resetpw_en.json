@@ -8,7 +8,7 @@
         {
             "paragraph": "If this request was yours, you can change your password here:",
             "label": "Change password",
-            "url": "{{orgDomain}}ui/resetpw/{{confirmID}}"
+            "url": "{{orgDomain}}ui/resetpw/{{confirmID}}/"
         }
     ],
     "finalParagraphs": [
