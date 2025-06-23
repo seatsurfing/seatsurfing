@@ -557,9 +557,9 @@ func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *Aut
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if loginType == "ui" {
-		return FormatURL(primaryDomain.DomainName) + "/ui/login/success/" + authState.ID
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/success/" + authState.ID + "/"
 	} else {
-		return FormatURL(primaryDomain.DomainName) + "/admin/login/success/" + authState.ID
+		return FormatURL(primaryDomain.DomainName) + "/admin/login/success/" + authState.ID + "/"
 	}
 }
 
