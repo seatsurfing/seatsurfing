@@ -104,7 +104,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
-	SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/success/"+authState.ID)
+	SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/success/"+authState.ID+"/")
 }
 
 func (router *ConfluenceRouter) getOrgNotFoundBody() []byte {
