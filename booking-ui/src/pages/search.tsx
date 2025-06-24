@@ -1442,13 +1442,17 @@ class Search extends React.Component<Props, State> {
   };
 
   resetRecurrence = () => {
+    let weekdays = Object.assign([], this.state.prefWorkdays);
+    if (weekdays.indexOf(this.state.enter.getDay()) === -1) {
+      weekdays.push(this.state.enter.getDay());
+    }
     this.setState({
       recurrence: {
         active: false,
         finalNumBookings: 0,
         cadence: 0,
         cycle: 1,
-        weekdays: this.state.prefWorkdays,
+        weekdays: weekdays,
         end: new Date(this.recurrenceMaxEndDate.valueOf()),
         precheckLoading: false,
         precheckResults: [],
@@ -1513,6 +1517,7 @@ class Search extends React.Component<Props, State> {
         <Button
           key={index}
           variant={isActive ? "primary" : "secondary"}
+          disabled={this.state.enter.getDay() === index}
           size="sm"
           onClick={() => {
             const newWorkdays = isActive
