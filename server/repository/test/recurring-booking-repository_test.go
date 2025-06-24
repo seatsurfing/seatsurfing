@@ -313,3 +313,26 @@ func TestRecurringBookingRepositoryCreateBookingsWeeklyCadenceWeekdayTomorrow(t 
 
 	CheckTestInt(t, 2, len(bookings))
 }
+
+func TestRecurringBookingRepositoryCreateBookingsWeeklyCadenceNoWeekdays(t *testing.T) {
+
+	today := time.Now()
+	future14days := time.Now().Add(14 * 24 * time.Hour)
+
+	rb := &RecurringBooking{
+		UserID:  "user1",
+		SpaceID: "space1",
+		Enter:   time.Date(today.Year(), today.Month(), today.Day(), 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(today.Year(), today.Month(), today.Day(), 17, 0, 0, 0, time.UTC),
+		Subject: "Test Weekly Booking without weekdays",
+		Cadence: CadenceWeekly,
+		Details: &CadenceWeeklyDetails{
+			Cycle:    1,
+			Weekdays: []time.Weekday{},
+		},
+		End: time.Date(future14days.Year(), future14days.Month(), future14days.Day(), 10, 0, 0, 0, time.UTC),
+	}
+	bookings := GetRecurringBookingRepository().CreateBookings(rb)
+
+	CheckTestInt(t, 0, len(bookings))
+}

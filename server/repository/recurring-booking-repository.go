@@ -143,6 +143,11 @@ func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) []*Book
 	// for weekly cadence, we need to make sure the start date is on a CadenceWeeklyDetails' weekday
 	if e.Cadence == CadenceWeekly {
 		weekdays := e.Details.(*CadenceWeeklyDetails).Weekdays
+
+		if len(weekdays) == 0 {
+			return res
+		}
+
 		for {
 			found := slices.Contains(weekdays, cur.Weekday())
 			if found {
