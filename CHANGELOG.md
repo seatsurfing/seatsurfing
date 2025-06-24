@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.36.5](https://github.com/seatsurfing/seatsurfing/compare/v1.36.4...v1.36.5) (2025-06-24)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.0.3 to 24.0.4 in /admin-ui ([#1015](https://github.com/seatsurfing/seatsurfing/issues/1015)) ([b4c36c1](https://github.com/seatsurfing/seatsurfing/commit/b4c36c12b64b21e13d2d365ac8101bdb718a865d))
+* **deps:** bump @types/node from 24.0.3 to 24.0.4 in /booking-ui ([#1016](https://github.com/seatsurfing/seatsurfing/issues/1016)) ([a918273](https://github.com/seatsurfing/seatsurfing/commit/a9182739f0dcb1041f13aaf2f4b02d70fecc85c8))
+* **deps:** bump @types/node from 24.0.3 to 24.0.4 in /e2e ([#1017](https://github.com/seatsurfing/seatsurfing/issues/1017)) ([f1c3f93](https://github.com/seatsurfing/seatsurfing/commit/f1c3f93ef224fcda6624df4f3e175d12e1ba0c30))
+* ensure that a recurring booking includes start date's weekday (frontend) ([#1018](https://github.com/seatsurfing/seatsurfing/issues/1018)) ([a6be286](https://github.com/seatsurfing/seatsurfing/commit/a6be2868e6c1444840baef56e9cd010c74e7bf21))
+* prevent crash when a weekly recurring booking does not include start date's weekday (backend) ([#1013](https://github.com/seatsurfing/seatsurfing/issues/1013)) ([ba8ade4](https://github.com/seatsurfing/seatsurfing/commit/ba8ade4b4fcf148a4c55bd2e39df64ac186903b6))
+* update French translation in booking UI ([#1014](https://github.com/seatsurfing/seatsurfing/issues/1014)) ([ff1b96f](https://github.com/seatsurfing/seatsurfing/commit/ff1b96f5d6cbd73e4f605153db18db41ae9f8066))
+
 ## [1.36.4](https://github.com/seatsurfing/seatsurfing/compare/v1.36.3...v1.36.4) (2025-06-23)
 
 
