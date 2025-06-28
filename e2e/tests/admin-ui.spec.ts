@@ -45,6 +45,8 @@ test('crud location', async ({ page }) => {
 
   // Save & go back to area list
   await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Entry updated.')).toBeVisible();
+  await expect(page).toHaveURL(/locations\/.+\/$/);
   await page.getByRole('link', { name: 'Back' }).click();
   await expect(page).toHaveURL(/locations\/$/);
 
