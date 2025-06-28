@@ -30,22 +30,16 @@ jobs:
     - name: Build TypeScript commons
       working-directory: ./commons/ts
       run: npm install && npm run build
+    - name: Build Admin UI
+      working-directory: ./admin-ui
+      run: npm install && npm run install-commons && npm run build
+    - name: Build Booking UI
+      working-directory: ./booking-ui
+      run: npm install && npm run install-commons && npm run build
 
-    - name: Build UIs and Server
-      uses: qoomon/actions--parallel-steps@v1
-      id: parallel-steps
-      with:
-        steps: |
-          - name: Build Admin UI
-            working-directory: ./admin-ui
-            run: npm install && npm run install-commons && npm run build
-          - name: Build Booking UI
-            working-directory: ./booking-ui
-            run: npm install && npm run install-commons && npm run build
-          - name: Install server dependencies
-            working-directory: ./server
-            run: go get -d -v ./...
-
+    - name: Install server dependencies
+      working-directory: ./server
+      run: go get -d -v ./...
     - uses: JarvusInnovations/background-action@v1
       name: Run server in background
       with:
