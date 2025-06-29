@@ -173,5 +173,14 @@
   "setAllowBookersHint": "Leer, wenn Buchung nicht eingeschränkt ist.",
   "approvals": "Genehmigungen",
   "requireSubject": "Betreff erforderlich",
-  "subject": "Betreff"
+  "subject": "Betreff",
+  "addSpace": "Add space",
+  "bookingLink": "Booking Link",
+  "disableBuddies": "Disable buddies",
+  "errorDeleteBooking": "Could not cancel booking due to an error.",
+  "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before.",
+  "errorMinBookingDuration": "The minimum booking duration is {{num}} hours.",
+  "maxHoursBeforeDelete": "Max. hours to cancel a booking before its start time",
+  "minBookingDurationHours": "Min. booking duration",
+  "saveAreaToGetLink": "Save area to get a valid link"
 }
