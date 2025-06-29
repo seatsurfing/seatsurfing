@@ -174,13 +174,13 @@
   "approvals": "Genehmigungen",
   "requireSubject": "Betreff erforderlich",
   "subject": "Betreff",
-  "addSpace": "Add space",
-  "bookingLink": "Booking Link",
-  "disableBuddies": "Disable buddies",
-  "errorDeleteBooking": "Could not cancel booking due to an error.",
-  "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before.",
-  "errorMinBookingDuration": "The minimum booking duration is {{num}} hours.",
-  "maxHoursBeforeDelete": "Max. hours to cancel a booking before its start time",
-  "minBookingDurationHours": "Min. booking duration",
-  "saveAreaToGetLink": "Save area to get a valid link"
+  "addSpace": "Platz hinzufügen",
+  "bookingLink": "Buchungslink",
+  "disableBuddies": "Buddies deaktivieren",
+  "errorDeleteBooking": "Fehler beim Löschen der Buchung.",
+  "errorDeleteBookingBeforeMaxCancel": "Die Buchung kann nicht weniger als {{num}} Stunden vor Beginn storniert werden.",
+  "errorMinBookingDuration": "Die Buchung muss mindestens {{num}} Stunden dauern.",
+  "maxHoursBeforeDelete": "Max. Stunden vor Beginn zum Löschen",
+  "minBookingDurationHours": "Min. Buchungsdauer",
+  "saveAreaToGetLink": "Speichern, um den Link zu erhalten"
 }
