@@ -15,6 +15,7 @@ ENV NODE_ENV=production
 COPY --from=commons-builder /app/commons/ts/ /app/commons/ts
 ADD admin-ui /app/
 WORKDIR /app
+RUN ./add-missing-translations.sh
 RUN npm install
 RUN npm install --save ./commons/ts
 RUN npm run build
@@ -27,6 +28,7 @@ ENV NODE_ENV=production
 COPY --from=commons-builder /app/commons/ts/ /app/commons/ts
 ADD booking-ui /app/
 WORKDIR /app
+RUN ./add-missing-translations.sh
 RUN npm install
 RUN npm install --save ./commons/ts
 RUN npm run build
