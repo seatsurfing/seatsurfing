@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.36.6](https://github.com/seatsurfing/seatsurfing/compare/v1.36.5...v1.36.6) (2025-06-29)
+
+
+### Bug Fixes
+
+* add missing German translations ([#1028](https://github.com/seatsurfing/seatsurfing/issues/1028)) ([5c6c3db](https://github.com/seatsurfing/seatsurfing/commit/5c6c3db6d53bc7c612e1a59f7acc99f5e2f87b90))
+* **deps:** bump @types/node from 24.0.4 to 24.0.5 in /admin-ui ([#1022](https://github.com/seatsurfing/seatsurfing/issues/1022)) ([ec18a16](https://github.com/seatsurfing/seatsurfing/commit/ec18a162e218a9d3ac32dd760caf51b3f8b1d8fc))
+* **deps:** bump @types/node from 24.0.4 to 24.0.5 in /booking-ui ([#1023](https://github.com/seatsurfing/seatsurfing/issues/1023)) ([3cb1ebc](https://github.com/seatsurfing/seatsurfing/commit/3cb1ebc38c5c6d0c79097b80a8651d21696ec741))
+* **deps:** bump @types/node from 24.0.4 to 24.0.5 in /e2e ([#1024](https://github.com/seatsurfing/seatsurfing/issues/1024)) ([96fc6d2](https://github.com/seatsurfing/seatsurfing/commit/96fc6d2400e7a1858e219d301e8cc6ce7547c762))
+* **deps:** bump react-router-dom from 7.6.2 to 7.6.3 in /admin-ui ([#1021](https://github.com/seatsurfing/seatsurfing/issues/1021)) ([85cd91a](https://github.com/seatsurfing/seatsurfing/commit/85cd91a9f04a0abbc140b31ba5c5d05205c838ca))
+* improved playwright test resilience ([#1025](https://github.com/seatsurfing/seatsurfing/issues/1025)) ([913a913](https://github.com/seatsurfing/seatsurfing/commit/913a913fd6a2c34f647ae96d5cbe7adf20927722))
+* script for adding missing translations ([#1027](https://github.com/seatsurfing/seatsurfing/issues/1027)) ([e32da8d](https://github.com/seatsurfing/seatsurfing/commit/e32da8d94a639d9a4d7a1a80615a3690239fa19f))
+
 ## [1.36.5](https://github.com/seatsurfing/seatsurfing/compare/v1.36.4...v1.36.5) (2025-06-24)
 
 
