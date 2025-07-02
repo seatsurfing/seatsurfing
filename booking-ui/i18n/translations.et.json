@@ -157,5 +157,6 @@
   "repeat": "Repeat",
   "subject": "Subject",
   "weekly": "weekly",
-  "weeks": "weeks"
+  "weeks": "weeks",
+  "noFilters": "No filters available"
 }

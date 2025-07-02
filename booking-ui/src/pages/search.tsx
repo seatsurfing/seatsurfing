@@ -1262,13 +1262,15 @@ class Search extends React.Component<Props, State> {
     } else {
       searchAttributes = this.state.searchAttributesLocation;
     }
-    return this.availableAttributes.map((attribute) => {
+    let attributesApplicable = false;
+    const searchFormRows = this.availableAttributes.map((attribute) => {
       if (type === "location" && !attribute.locationApplicable) {
         return <></>;
       }
       if (type === "space" && !attribute.spaceApplicable) {
         return <></>;
       }
+      attributesApplicable = true;
       return (
         <Form.Group as={Row} key={type + "-attribute-" + attribute.id}>
           <Form.Label column sm="4">
@@ -1296,6 +1298,12 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     });
+
+    return attributesApplicable ? (
+      searchFormRows
+    ) : (
+      <i>{this.props.t("noFilters")}</i>
+    );
   };
 
   getSearchFormRowsArea = () => {

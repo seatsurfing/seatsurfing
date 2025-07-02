@@ -157,5 +157,6 @@
   "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before. Contact an admin.",
   "errorMinBookingDuration": "The minimum booking duration is {{num}} hours.",
   "map": "Map",
-  "week": "Week"
+  "week": "Week",
+  "noFilters": "Keine Filter verfügbar"
 }
