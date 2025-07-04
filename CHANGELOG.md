@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.36.7](https://github.com/seatsurfing/seatsurfing/compare/v1.36.6...v1.36.7) (2025-07-04)
+
+
+### Bug Fixes
+
+* hide "cancel upcoming bookings" checkbox if not my booking ([#1038](https://github.com/seatsurfing/seatsurfing/issues/1038)) ([2dfb5d8](https://github.com/seatsurfing/seatsurfing/commit/2dfb5d8e1cb136bb1f08de539f28fb194360370a))
+* show "no filters available info" in filter dialog ([#1037](https://github.com/seatsurfing/seatsurfing/issues/1037)) ([e52bfae](https://github.com/seatsurfing/seatsurfing/commit/e52bfae376000d3f5797d9224815dc2e2cc0d526))
+
 ## [1.36.6](https://github.com/seatsurfing/seatsurfing/compare/v1.36.5...v1.36.6) (2025-06-29)
 
 
