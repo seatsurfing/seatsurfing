@@ -714,11 +714,14 @@ class Search extends React.Component<Props, State> {
       return;
     }
     if (item.available) {
-      this.setState({
-        showConfirm: true,
-        selectedSpace: item,
-        cancelSeries: false,
-      }, () => this.resetRecurrence());
+      this.setState(
+        {
+          showConfirm: true,
+          selectedSpace: item,
+          cancelSeries: false,
+        },
+        () => this.resetRecurrence()
+      );
     } else {
       let bookings = Booking.createFromRawArray(item.rawBookings);
       if (!item.available && bookings && bookings.length > 0) {
@@ -2280,7 +2283,11 @@ class Search extends React.Component<Props, State> {
             <Button
               type="submit"
               variant="primary"
-              disabled={this.state.confirmingBooking || (this.state.recurrence.active && this.state.recurrence.finalNumBookings === 0)}
+              disabled={
+                this.state.confirmingBooking ||
+                (this.state.recurrence.active &&
+                  this.state.recurrence.finalNumBookings === 0)
+              }
             >
               {this.state.recurrence.active
                 ? this.props.t("confirmMultipleBookings", {
@@ -2397,7 +2404,7 @@ class Search extends React.Component<Props, State> {
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
-          <p hidden={!isRecurring}>
+          <p hidden={!myBooking || !isRecurring}>
             <Form.Check
               type="checkbox"
               id="cancelAllUpcomingBookings"
