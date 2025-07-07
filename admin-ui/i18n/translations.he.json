@@ -70,6 +70,7 @@
   "searchForX": "חיפוש אחר ‚{{keyword}}’",
   "errorLoginFailed": "הכניסה נכשלה.",
   "loginFailedDescription": "כנראה שהחשבון שלך לא מופעל לארגון הזה.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "map": "מפה",
   "admin": "הנהלה",
   "yes": "כן",

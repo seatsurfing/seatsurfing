@@ -73,6 +73,7 @@
   "searchForX": "Suche nach '{{keyword}}'",
   "errorLoginFailed": "Login fehlgeschlagen.",
   "loginFailedDescription": "Möglicherweise ist das verwendete Konto nicht für diese Organisation freigeschaltet.",
+  "loginUseUsernamePassword": "Login mit Benutzername und Passwort",
   "map": "Karte",
   "admin": "Administrator",
   "yes": "Ja",

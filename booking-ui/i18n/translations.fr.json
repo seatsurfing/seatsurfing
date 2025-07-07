@@ -51,6 +51,7 @@
   "confluenceClientIdHint3": "Nous serons heureux de vous aider.",
   "errorLoginFailed": "Échec de la connexion.",
   "loginFailedDescription": "Il est possible que votre compte ne soit pas activé dans cette organisation.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "mergeUserAccounts": "Fusionner des comptes",
   "mergeUserAccountsHint": "Vous pouvez facilement fusionner ce compte utilisateur Seatsurfing pour votre utilisateur Confluence avec votre compte utilisateur Seatsurfing habituel. Cela vous permet d’utiliser à la fois l’application mobile et l’intégration Confluence pour gérer vos réservations. Entrez l’adresse e-mail de votre compte Seatsurfing habituel pour commencer.",
   "requestMerge": "Demander une fusion",

@@ -101,6 +101,7 @@
   "leave": "Leave",
   "loadingHint": "Loading data...",
   "loginFailedDescription": "Possibly your account is not activated in this organization.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "loginMeans": "Login",
   "logout": "Log out",
   "mangageOrgHeadline": "Manage organization.",

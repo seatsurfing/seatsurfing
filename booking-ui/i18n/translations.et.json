@@ -54,6 +54,7 @@
   "confluenceClientIdHint3": "Aitame hea meelega.",
   "errorLoginFailed": "Sisselogimine ebaõnnestus.",
   "loginFailedDescription": "Võimalik, et sinu konto pole selles organisatsioonis aktiveeritud.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "mergeUserAccounts": "Ühenda kontod",
   "mergeUserAccountsHint": "Saad hõlpsasti ühendada selle Seatsurfingu kasutajakonto oma tavapärase Seatsurfingu kasutajakontoga. See võimaldab kasutada nii mobiilirakendust kui Confluence integratsiooni. Sisesta oma tavapärase Seatsurfingu konto e-posti aadress.",
   "requestMerge": "Taotle ühendamist",
