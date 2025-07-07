@@ -6,8 +6,7 @@
     "build": "rm -rf ./dist && tsc && npm pack"
   },
   "dependencies": {
-    "async-mutex": "^0.5.0",
-    "i18next": "^25.2.1"
+    "async-mutex": "^0.5.0"
   },
   "devDependencies": {
     "typescript": "~5.8.3"
