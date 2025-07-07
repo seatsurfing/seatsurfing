@@ -51,6 +51,7 @@
   "confluenceClientIdHint3": "We helpen u graag verder.",
   "errorLoginFailed": "Inloggen mislukt.",
   "loginFailedDescription": "Mogelijk is uw account bij deze organisatie niet geactiveerd.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "mergeUserAccounts": "Accounts samenvoegen",
   "mergeUserAccountsHint": "U kunt dit Seatsurfing-gebruikersaccount voor uw Confluence-gebruiker eenvoudig samenvoegen met uw gewone Seatsurfing-gebruikersaccount. Hierdoor kunt u zowel de mobiele app als de Confluence-integratie gebruiken om uw boekingen te beheren. Voer het e-mailadres van uw normale Seatsurfing-account in om aan de slag te gaan.",
   "requestMerge": "Samenvoeging aanvragen",

@@ -51,6 +51,7 @@
   "confluenceClientIdHint3": "Örömmel segítünk.",
   "errorLoginFailed": "Sikertelen bejelentkezés.",
   "loginFailedDescription": "Lehet, hogy a fiókod nincs aktiválva ebben a szervezetben.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "mergeUserAccounts": "Fiókok egyesítése",
   "mergeUserAccountsHint": "Könnyedén egyesítheted ezt a Confluence Seatsurfing fiókot a hagyományos Seatsurfing fiókoddal. Ezt követően a mobil appon és a Confluence integráción keresztül is tudod majd kezelni a foglalásaid. Add meg a hagyományos Seatsurfing fiókod email címét a kezdéshez.",
   "requestMerge": "Egyesítési kérelem",

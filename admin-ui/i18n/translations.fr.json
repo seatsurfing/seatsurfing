@@ -70,6 +70,7 @@
   "searchForX": "Rechercher '{{keyword}}'",
   "errorLoginFailed": "Échec de la connexion.",
   "loginFailedDescription": "Il est possible que votre compte ne soit pas activé dans cette organisation.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "map": "Carte",
   "admin": "Administrateur",
   "yes": "Oui",

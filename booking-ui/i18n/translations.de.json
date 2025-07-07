@@ -52,6 +52,7 @@
   "confluenceClientIdHint3": "Wir freuen uns, Dich zu unterstützen.",
   "errorLoginFailed": "Login fehlgeschlagen.",
   "loginFailedDescription": "Möglicherweise ist das verwendete Konto nicht für diese Organisation freigeschaltet.",
+  "loginUseUsernamePassword": "Login mit Usernamen und Passwort",
   "mergeUserAccounts": "Konten zusammenführen",
   "mergeUserAccountsHint": "Du kannst diesen Seatsurfing Benutzer-Account für Deinen Confluence-User mit deinem regulären Seatsurfing-Konto zusammenführen. Das ermöglicht es Dir, die mobile App und die Confluence-Integration gleichermaßen zur Verwaltung Deiner Buchungen zu nutzen. Gib die E-Mail-Adresse Deines regulären Benutzerkontos ein, um loszulegen.",
   "requestMerge": "Zusammenführen anfragen",

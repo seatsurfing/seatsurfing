@@ -74,6 +74,7 @@
   "searchForX": "Cerca '{{keyword}}'",
   "errorLoginFailed": "Login fallito.",
   "loginFailedDescription": "Probabilmente il tuo account non è attivo in questa organizzazione.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "map": "Mappa",
   "admin": "Administrator",
   "yes": "Si",

@@ -51,6 +51,7 @@
   "confluenceClientIdHint3": "נשמח לעזור.",
   "errorLoginFailed": "הכניסה נכשלה.",
   "loginFailedDescription": "אולי החשבון שלך לא מופעל בארגון הזה.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "mergeUserAccounts": "מיזוג חשבונות",
   "mergeUserAccountsHint": "אפשר למזג את חשבון המשתמש ב־Seatsurfing למשתמש ה־Confluence שלך עם חשבון המשתמש הרגיל שלך ב־Seatsurfing. מצב זה יאפשר לך להשתמש גם ביישומון לניידים וגם בשילוב מול Confluence כדי לנהל את ההזמנות שלך. נא למלא את כתובת הדוא״ל של חשבון ה־Seatsurfing הרגיל שלך כדי להתחיל.",
   "requestMerge": "בקשת מיזוג",

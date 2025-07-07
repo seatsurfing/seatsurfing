@@ -69,6 +69,7 @@
   "searchForX": "Zoeken naar '{{keyword}}'",
   "errorLoginFailed": "Aanmelden mislukt.",
   "loginFailedDescription": "Mogelijk is uw account bij deze organisatie niet geactiveerd.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "map": "Kaart",
   "admin": "Administrator",
   "yes": "Ja",

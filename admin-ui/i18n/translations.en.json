@@ -76,6 +76,7 @@
   "searchForX": "Search for '{{keyword}}'",
   "errorLoginFailed": "Login failed.",
   "loginFailedDescription": "Possibly your account is not activated in this organization.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "map": "Map",
   "bookingLink": "Booking Link",
   "admin": "Administrator",

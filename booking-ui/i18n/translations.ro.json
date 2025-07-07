@@ -51,6 +51,7 @@
   "confluenceClientIdHint3": "Vom fi bucuroși să te ajutăm.",
   "errorLoginFailed": "Autentificarea a eșuat.",
   "loginFailedDescription": "Probabil contul tău nu este activat în această organizație.",
+  "loginUseUsernamePassword": "Sign in with username and password",
   "mergeUserAccounts": "Combină conturile",
   "mergeUserAccountsHint": "Poți combina ușor acest cont de utilizator Seatsurfing pentru utilizatorul tău Confluence cu contul tău obișnuit de Seatsurfing. Acest lucru îți permite să folosești atât aplicația mobilă cât și integrarea cu Confluence pentru a-ți gestiona rezervările. Introdu adresa de email a contului tău obișnuit de Seatsurfing pentru a începe.",
   "requestMerge": "Solicită combinarea",

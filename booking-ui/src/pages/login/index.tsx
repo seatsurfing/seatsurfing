@@ -66,7 +66,7 @@ class Login extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (this.state.email === "") {
-      let emailParam = this.props.router.query["email"];
+      const emailParam = this.props.router.query["email"];
       if (emailParam !== "") {
         this.setState({
           email: emailParam as string,
@@ -140,7 +140,7 @@ class Login extends React.Component<Props, State> {
 
   onLegacySubmit = (e: any) => {
     e.preventDefault();
-    let email = this.state.email.split("@");
+    const email = this.state.email.split("@");
     if (email.length !== 2) {
       // Error
       return;
@@ -148,7 +148,7 @@ class Login extends React.Component<Props, State> {
     this.setState({
       inPreflight: true,
     });
-    let payload = {
+    const payload = {
       email: this.state.email,
     };
     Ajax.postData("/auth/preflight", payload)
@@ -175,7 +175,7 @@ class Login extends React.Component<Props, State> {
     this.setState({
       inPasswordSubmit: true,
     });
-    let payload = {
+    const payload = {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
@@ -199,7 +199,7 @@ class Login extends React.Component<Props, State> {
               );
             }
             RuntimeConfig.setLoginDetails().then(() => {
-              let redirect =
+              const redirect =
                 (this.props.router.query["redir"] as string) || "/search";
               this.setState({ redirect });
             });
@@ -249,7 +249,7 @@ class Login extends React.Component<Props, State> {
     if (this.state.rememberMe) {
       target += "/1";
     }
-    let redir = this.props.router.query["redir"] as string;
+    const redir = this.props.router.query["redir"] as string;
     if (redir) {
       target += "?redir=" + encodeURIComponent(redir);
     }
@@ -274,7 +274,7 @@ class Login extends React.Component<Props, State> {
       );
     }
 
-    let languageSelectDropdown = (
+    const languageSelectDropdown = (
       <DropdownButton
         title={RuntimeConfig.getLanguage()}
         className="lng-selector"
@@ -298,7 +298,7 @@ class Login extends React.Component<Props, State> {
       </DropdownButton>
     );
 
-    let copyrightFooter = (
+    const copyrightFooter = (
       <div className="copyright-footer">
         &copy; Seatsurfing &#183; Version{" "}
         {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
@@ -348,7 +348,7 @@ class Login extends React.Component<Props, State> {
     }
 
     if (this.state.providers != null) {
-      let buttons = this.state.providers.map((provider) =>
+      const buttons = this.state.providers.map((provider) =>
         this.renderAuthProviderButton(provider)
       );
       let providerSelection = (
@@ -377,7 +377,7 @@ class Login extends React.Component<Props, State> {
                 variant="link"
                 onClick={() => this.setState({ providers: null })}
               >
-                {this.props.t("back")}
+                {this.props.t("loginUseUsernamePassword")}
               </Button>
             </p>
           </Form>
