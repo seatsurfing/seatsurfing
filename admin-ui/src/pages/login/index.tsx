@@ -3,8 +3,8 @@ import {
   Form,
   Button,
   InputGroup,
-  DropdownButton,
   Dropdown,
+  DropdownButton,
   Alert,
 } from "react-bootstrap";
 import {
@@ -67,7 +67,7 @@ class Login extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (this.state.email === "") {
-      let emailParam = this.props.router.query["email"];
+      const emailParam = this.props.router.query["email"];
       if (emailParam !== "") {
         this.setState({
           email: emailParam as string,
@@ -141,7 +141,7 @@ class Login extends React.Component<Props, State> {
 
   onLegacySubmit = (e: any) => {
     e.preventDefault();
-    let email = this.state.email.split("@");
+    const email = this.state.email.split("@");
     if (email.length !== 2) {
       // Error
       return;
@@ -149,7 +149,7 @@ class Login extends React.Component<Props, State> {
     this.setState({
       inPreflight: true,
     });
-    let payload = {
+    const payload = {
       email: this.state.email,
     };
     Ajax.postData("/auth/preflight", payload)
@@ -163,7 +163,7 @@ class Login extends React.Component<Props, State> {
           inPreflight: false,
         });
       })
-      .catch((e) => {
+      .catch(() => {
         this.setState({
           invalid: true,
           inPreflight: false,
@@ -176,7 +176,7 @@ class Login extends React.Component<Props, State> {
     this.setState({
       inPasswordSubmit: true,
     });
-    let payload = {
+    const payload = {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
@@ -209,7 +209,7 @@ class Login extends React.Component<Props, State> {
           }
         );
       })
-      .catch((e) => {
+      .catch(() => {
         this.setState({
           invalid: true,
           inPasswordSubmit: false,
@@ -259,7 +259,7 @@ class Login extends React.Component<Props, State> {
       );
     }
 
-    let languageSelectDropdown = (
+    const languageSelectDropdown = (
       <DropdownButton
         title={RuntimeConfig.getLanguage()}
         className="lng-selector"
@@ -283,7 +283,7 @@ class Login extends React.Component<Props, State> {
       </DropdownButton>
     );
 
-    let copyrightFooter = (
+    const copyrightFooter = (
       <div className="copyright-footer">
         &copy; Seatsurfing &#183; Version{" "}
         {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
@@ -337,7 +337,7 @@ class Login extends React.Component<Props, State> {
     }
 
     if (this.state.providers != null) {
-      let buttons = this.state.providers.map((provider) =>
+      const buttons = this.state.providers.map((provider) =>
         this.renderAuthProviderButton(provider)
       );
       let providerSelection = (
@@ -367,13 +367,14 @@ class Login extends React.Component<Props, State> {
             {legacyAlert}
             {providerSelection}
             {buttons}
-            <Button
-              variant="secondary"
-              className="btn-auth-provider"
-              onClick={() => this.setState({ providers: null })}
-            >
-              {this.props.t("back")}
-            </Button>
+            <p className="margin-top-50">
+              <Button
+                variant="link"
+                onClick={() => this.setState({ providers: null })}
+              >
+                {this.props.t("loginUseUsernamePassword")}
+              </Button>
+            </p>
           </Form>
           {copyrightFooter}
         </div>
