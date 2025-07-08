@@ -1,80 +1,84 @@
 html,
 body,
 div#__next {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .feather {
-    width: 16px;
-    height: 16px;
-    vertical-align: text-bottom;
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
 }
 
 .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255,255,255,0.4);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .clickable-table tbody tr {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 h2 {
-    margin-top: 100px;
+  margin-top: 100px;
 }
 
 .loader {
-    -webkit-animation: spin 4s linear infinite;
-    -moz-animation: spin 4s linear infinite;
-    animation: spin 4s linear infinite;
+  -webkit-animation: spin 4s linear infinite;
+  -moz-animation: spin 4s linear infinite;
+  animation: spin 4s linear infinite;
 }
 
 main {
-    padding-bottom: 50px;
-    min-height: calc(100vh - 48px);
+  padding-bottom: 50px;
+  min-height: calc(100vh - 48px);
 }
 
 .padding-top {
-    padding-top: 75px;
+  padding-top: 75px;
+}
+
+.margin-top-50 {
+  margin-top: 50px;
 }
 
 .center {
-    text-align: center;
+  text-align: center;
 }
 
 .no-wrap {
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 form .row {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 form .row .form-check {
-    padding-top: 7px;
+  padding-top: 7px;
 }
 
 @-moz-keyframes spin {
-    100% {
-        -moz-transform: rotate(360deg);
-    }
+  100% {
+    -moz-transform: rotate(360deg);
+  }
 }
 
 @-webkit-keyframes spin {
-    100% {
-        -webkit-transform: rotate(360deg);
-    }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }
 
 @keyframes spin {
-    100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }
