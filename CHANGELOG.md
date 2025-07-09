@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.36.7](https://github.com/seatsurfing/seatsurfing/compare/v1.36.6...v1.36.7) (2025-07-09)
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.53.1 to 1.53.2 in /e2e ([#1035](https://github.com/seatsurfing/seatsurfing/issues/1035)) ([1113653](https://github.com/seatsurfing/seatsurfing/commit/1113653602553e01a4cd0b2bda4e318a5cb1d402))
+* **deps:** bump @types/node from 24.0.7 to 24.0.12 in /admin-ui ([#1060](https://github.com/seatsurfing/seatsurfing/issues/1060)) ([fbafd4c](https://github.com/seatsurfing/seatsurfing/commit/fbafd4cb73462125d87f81045e8a3d57d70c3bc4))
+* **deps:** bump @types/node from 24.0.7 to 24.0.12 in /booking-ui ([#1061](https://github.com/seatsurfing/seatsurfing/issues/1061)) ([9dc94f3](https://github.com/seatsurfing/seatsurfing/commit/9dc94f34cd775a49b37c56b21a134a923796fd52))
+* **deps:** bump @types/node from 24.0.7 to 24.0.12 in /e2e ([#1062](https://github.com/seatsurfing/seatsurfing/issues/1062)) ([754702d](https://github.com/seatsurfing/seatsurfing/commit/754702de90d69aed2114496988cd60845826ff9a))
+* **deps:** bump eslint from 9.29.0 to 9.30.1 in /admin-ui ([#1041](https://github.com/seatsurfing/seatsurfing/issues/1041)) ([dcaa712](https://github.com/seatsurfing/seatsurfing/commit/dcaa7129b0247c4fab371bca78315d19b77b98c3))
+* **deps:** bump eslint from 9.29.0 to 9.30.1 in /booking-ui ([#1043](https://github.com/seatsurfing/seatsurfing/issues/1043)) ([eabecf8](https://github.com/seatsurfing/seatsurfing/commit/eabecf88bf5688c4930a9873ebf422115f3bf3f8))
+* **deps:** bump eslint-config-next from 15.3.4 to 15.3.5 in /admin-ui ([#1047](https://github.com/seatsurfing/seatsurfing/issues/1047)) ([4b9625d](https://github.com/seatsurfing/seatsurfing/commit/4b9625df0f44f00f9f4ca8b9e2df086728a8c33e))
+* **deps:** bump eslint-config-next from 15.3.4 to 15.3.5 in /booking-ui ([#1049](https://github.com/seatsurfing/seatsurfing/issues/1049)) ([9aa3667](https://github.com/seatsurfing/seatsurfing/commit/9aa366728302f49cabefae10c293721d2f76e664))
+* **deps:** bump next from 15.3.4 to 15.3.5 in /admin-ui ([#1048](https://github.com/seatsurfing/seatsurfing/issues/1048)) ([d703a79](https://github.com/seatsurfing/seatsurfing/commit/d703a795f557a41431b8240c1c4e74af520498f8))
+* **deps:** bump next from 15.3.4 to 15.3.5 in /booking-ui ([#1050](https://github.com/seatsurfing/seatsurfing/issues/1050)) ([da2c0bd](https://github.com/seatsurfing/seatsurfing/commit/da2c0bd8071c913158f4177e28ae6b676308d4da))
+* hide "cancel upcoming bookings" checkbox if not my booking ([#1038](https://github.com/seatsurfing/seatsurfing/issues/1038)) ([2dfb5d8](https://github.com/seatsurfing/seatsurfing/commit/2dfb5d8e1cb136bb1f08de539f28fb194360370a))
+* remove i18next dependency ([#1046](https://github.com/seatsurfing/seatsurfing/issues/1046)) ([ad1e3af](https://github.com/seatsurfing/seatsurfing/commit/ad1e3afa5cc1a006f6da5642159ae6a599496e8b))
+* show "no filters available info" in filter dialog ([#1037](https://github.com/seatsurfing/seatsurfing/issues/1037)) ([e52bfae](https://github.com/seatsurfing/seatsurfing/commit/e52bfae376000d3f5797d9224815dc2e2cc0d526))
+* update fallback login link in admin login form ([#1053](https://github.com/seatsurfing/seatsurfing/issues/1053)) ([8dd59b5](https://github.com/seatsurfing/seatsurfing/commit/8dd59b5c407f8e6c92c51860e964bfaf9f3f9b9f))
+* update link text to fallback login form ([#1052](https://github.com/seatsurfing/seatsurfing/issues/1052)) ([6cc0732](https://github.com/seatsurfing/seatsurfing/commit/6cc073234e1fa291d788b3020cbf1a3b55a17766))
+
 ## [1.36.6](https://github.com/seatsurfing/seatsurfing/compare/v1.36.5...v1.36.6) (2025-06-29)
 
 
