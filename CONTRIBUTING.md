@@ -74,22 +74,34 @@ If you modify existing backend functionality, please modify/add corresponding te
 If you add/modify major frontend functionality, please add/modify the e2e tests.
 
 1. To run the backend/server unit tests:
+
    ```shell
    cd server
    ./test.sh
    ```
 
 1. To run the e2e [Playwright](https://playwright.dev/) tests:
+
    1. Install the dependencies:
+
       ```shell
       cd e2e
       npm ci
       npx playwright install --with-deps
       ```
 
-   1. Build Booking and Admin UI:
+   1. Build Admin UI:
+
       ```shell
-      npm run build
+      cd admin-ui
+      npm install && npm run install-commons && npm run build
+      ```
+
+   1. Build Booking UI:
+
+      ```shell
+      cd booking-ui
+      npm install && npm run install-commons && npm run build
       ```
 
    1. Run the tests:
