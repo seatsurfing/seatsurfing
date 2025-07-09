@@ -17,7 +17,7 @@ We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-
 
 ## 📖 Introduction
 
-Seatsurfing is a software which enables your organisation's employees to book seats, desks and rooms.
+Seatsurfing is a software which enables your organization's employees to book seats, desks and rooms.
 
 This repository contains the Backend, which consists of:
 
