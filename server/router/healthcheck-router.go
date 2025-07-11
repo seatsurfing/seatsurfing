@@ -11,7 +11,6 @@ type HealthcheckRouter struct{}
 
 func (router *HealthcheckRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("", HealthcheckHandler).Methods("GET", "HEAD")
-	s.HandleFunc("/", HealthcheckHandler).Methods("GET", "HEAD")
 }
 
 var CheckDatabase = func() error {
