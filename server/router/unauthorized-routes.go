@@ -15,6 +15,7 @@ var unauthorizedRoutes = []string{
 	"/confluence",
 	"/booking/debugtimeissues/",
 	"/robots.txt",
+	"/healthcheck/",
 }
 
 var unauthorizedRoutesOnce sync.Once

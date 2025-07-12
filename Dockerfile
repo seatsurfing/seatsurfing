@@ -49,11 +49,19 @@ FROM gcr.io/distroless/base-debian12
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
       org.opencontainers.image.url="https://seatsurfing.io" \
       org.opencontainers.image.documentation="https://seatsurfing.io/docs/"
+COPY --from=busybox:latest /bin/wget /bin/wget
 COPY --from=server-builder /go/src/app/main /app/
 COPY --from=admin-ui-builder /app/build/ /app/admin-ui
 COPY --from=booking-ui-builder /app/build/ /app/booking-ui
 COPY server/res/ /app/res
 ADD version.txt /app/
+
+HEALTHCHECK --interval=30s \
+      --timeout=5s \
+      --start-period=10s \
+      --retries=3 \
+      CMD ["/bin/wget", "-qO-", "http://localhost:8080/healthcheck"]
+
 WORKDIR /app
 EXPOSE 8080
 USER 65532:65532
