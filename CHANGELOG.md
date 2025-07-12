@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.0](https://github.com/seatsurfing/seatsurfing/compare/v1.36.8...v1.37.0) (2025-07-12)
+
+
+### Features
+
+* healthcheck route for native docker healtcheck instruction ([#1069](https://github.com/seatsurfing/seatsurfing/issues/1069)) ([654ec0b](https://github.com/seatsurfing/seatsurfing/commit/654ec0b515559b1ebe30ab25ba2dd58cda8c111a))
+
 ## [1.36.8](https://github.com/seatsurfing/seatsurfing/compare/v1.36.7...v1.36.8) (2025-07-12)
 
 
