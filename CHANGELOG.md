@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.36.8](https://github.com/seatsurfing/seatsurfing/compare/v1.36.7...v1.36.8) (2025-07-12)
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.53.2 to 1.54.1 in /e2e ([#1068](https://github.com/seatsurfing/seatsurfing/issues/1068)) ([c56ba61](https://github.com/seatsurfing/seatsurfing/commit/c56ba61dfed6c5e3b3699e4bd382b58fe8de487a))
+* **deps:** bump @types/node from 24.0.12 to 24.0.13 in /admin-ui ([#1065](https://github.com/seatsurfing/seatsurfing/issues/1065)) ([93b5718](https://github.com/seatsurfing/seatsurfing/commit/93b57185fb97d935dd9716bc2164afd2179f08d1))
+* **deps:** bump @types/node from 24.0.12 to 24.0.13 in /booking-ui ([#1066](https://github.com/seatsurfing/seatsurfing/issues/1066)) ([98586b3](https://github.com/seatsurfing/seatsurfing/commit/98586b3cd0f8a0e6fcf0dfebc5ab9ec783626920))
+* **deps:** bump @types/node from 24.0.12 to 24.0.13 in /e2e ([#1067](https://github.com/seatsurfing/seatsurfing/issues/1067)) ([9d26b39](https://github.com/seatsurfing/seatsurfing/commit/9d26b397b602321d09e2eecbecf3d08618ffe74c))
+* **deps:** bump excellentexport from 3.9.9 to 3.9.10 in /admin-ui ([#1063](https://github.com/seatsurfing/seatsurfing/issues/1063)) ([d4f4276](https://github.com/seatsurfing/seatsurfing/commit/d4f42763f3d6fd4bef767b2208e4f96368f64e7d))
+
 ## [1.36.7](https://github.com/seatsurfing/seatsurfing/compare/v1.36.6...v1.36.7) (2025-07-09)
 
 
