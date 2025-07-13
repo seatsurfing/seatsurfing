@@ -44,7 +44,7 @@ jobs:
       name: Run server in background
       with:
         working-directory: ./server
-        run: DEV=1 STATIC_BOOKING_UI_PATH=../booking-ui/build STATIC_ADMIN_UI_PATH=../admin-ui/build PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable go run `ls *.go | grep -v _test.go`
+        run: STATIC_BOOKING_UI_PATH=../booking-ui/build STATIC_ADMIN_UI_PATH=../admin-ui/build PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable go run `ls *.go | grep -v _test.go`
         wait-on: http-get://localhost:8080/auth/singleorg
 
     - name: Install dependencies
