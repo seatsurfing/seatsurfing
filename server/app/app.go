@@ -1,8 +1,11 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -220,8 +223,51 @@ func (a *App) stripStaticPrefix(fs http.Handler, prefix string) http.HandlerFunc
 	})
 }
 
+func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend string) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewReader(body))
+	url := fmt.Sprintf("%s://%s%s", "http", backend, r.RequestURI)
+	proxyReq, err := http.NewRequest(r.Method, url, bytes.NewReader(body))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	proxyReq.Header = make(http.Header)
+	for h, val := range r.Header {
+		proxyReq.Header[h] = val
+	}
+	resp, err := http.DefaultClient.Do(proxyReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+	bodyRes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	for h, vals := range resp.Header {
+		for _, val := range vals {
+			w.Header().Set(h, val)
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+	w.Write(bodyRes)
+}
+
 func (a *App) setupStaticBookingUIRoutes(router *mux.Router) {
 	const basePath = "/ui"
+	if GetConfig().Development {
+		router.PathPrefix(basePath + "/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			a.proxyHandler(w, r, "localhost:3000")
+		})
+		return
+	}
 	attributesPaths := a.getAttributePaths(GetConfig().StaticBookingUiPath)
 	fs := http.FileServer(http.Dir(GetConfig().StaticBookingUiPath))
 	for _, attrPath := range attributesPaths {
@@ -235,6 +281,12 @@ func (a *App) setupStaticBookingUIRoutes(router *mux.Router) {
 
 func (a *App) setupStaticAdminUIRoutes(router *mux.Router) {
 	const basePath = "/admin"
+	if GetConfig().Development {
+		router.PathPrefix(basePath + "/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			a.proxyHandler(w, r, "localhost:3000")
+		})
+		return
+	}
 	attributesPaths := a.getAttributePaths(GetConfig().StaticAdminUiPath)
 	fs := http.FileServer(http.Dir(GetConfig().StaticAdminUiPath))
 	for _, attrPath := range attributesPaths {
