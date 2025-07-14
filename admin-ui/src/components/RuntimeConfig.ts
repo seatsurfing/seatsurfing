@@ -9,6 +9,8 @@ interface RuntimeUserInfos {
     pluginWelcomeScreens: any[];
     featureGroups: boolean;
     featureAuthProviders: boolean;
+    cloudHosted: boolean;
+    subscriptionActive: boolean;
 }
 
 export default class RuntimeConfig {
@@ -21,6 +23,8 @@ export default class RuntimeConfig {
         pluginWelcomeScreens: [],
         featureGroups: false,
         featureAuthProviders: false,
+        cloudHosted: false,
+        subscriptionActive: false,
     };
 
     static verifyToken = async (resolve: Function) => {
@@ -55,6 +59,8 @@ export default class RuntimeConfig {
                     if (s.name === "_sys_admin_welcome_screens") RuntimeConfig.INFOS.pluginWelcomeScreens = (s.value ? JSON.parse(s.value) : []);
                     if (s.name === "feature_groups") RuntimeConfig.INFOS.featureGroups = (s.value ? JSON.parse(s.value) : []);
                     if (s.name === "feature_auth_providers") RuntimeConfig.INFOS.featureAuthProviders = (s.value ? JSON.parse(s.value) : []);
+                    if (s.name === "cloud_hosted") RuntimeConfig.INFOS.cloudHosted = (s.value ? JSON.parse(s.value) : []);
+                    if (s.name === "subscription_active") RuntimeConfig.INFOS.subscriptionActive = (s.value ? JSON.parse(s.value) : []);
                 });
                 resolve();
             });

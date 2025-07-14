@@ -181,5 +181,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "subject": "Subject",
   "text": "Text",
-  "upgradeCloud": "Upgrade"
+  "upgradeCloud": "Upgrade",
+  "cloudUpgradeHintHeadline": "Unlock additional features and unlimited users",
+  "cloudUpgradeHintText": "Upgrade to Seatsurfing Professional with just one click"
 }

@@ -3,6 +3,8 @@ package repository
 import (
 	"strconv"
 	"sync"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
 type UserPreferencesRepository struct {
