@@ -181,5 +181,7 @@
   "setAllowBookersHint": "Leave empty if booking is not limited.",
   "approvals": "Approvals",
   "requireSubject": "Require subject",
-  "subject": "Subject"
+  "subject": "Subject",
+  "cloudUpgradeHintHeadline": "Unlock additional features and unlimited users",
+  "cloudUpgradeHintText": "Upgrade to Seatsurfing Professional with just one click"
 }

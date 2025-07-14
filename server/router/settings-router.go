@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -158,6 +159,15 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		res = append(res, router.getAdminMenuItems())
 	}
 	res = append(res, router.getSysSettingVersion())
+	for _, plg := range plugin.GetPlugins() {
+		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
+		for _, setting := range plgSettings {
+			res = append(res, &GetSettingsResponse{
+				Name:  setting.Name,
+				Value: setting.Value,
+			})
+		}
+	}
 	SendJSON(w, res)
 }
 

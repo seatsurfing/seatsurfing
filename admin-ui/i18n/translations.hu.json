@@ -181,5 +181,7 @@
   "verifyNow": "Verify now",
   "yes": "Yes",
   "yesterday": "Yesterday",
-  "yourDomainPlaceholder": "seatsurfing.your-domain.com"
+  "yourDomainPlaceholder": "seatsurfing.your-domain.com",
+  "cloudUpgradeHintHeadline": "Unlock additional features and unlimited users",
+  "cloudUpgradeHintText": "Upgrade to Seatsurfing Professional with just one click"
 }

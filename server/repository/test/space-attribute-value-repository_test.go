@@ -5,6 +5,8 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
 func TestSpaceAttributeValueRepositoryCRUD(t *testing.T) {

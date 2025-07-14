@@ -3,6 +3,8 @@ package repository
 import (
 	"strconv"
 	"sync"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
 type SettingsRepository struct {
@@ -13,16 +15,6 @@ type OrgSetting struct {
 	Name           string
 	Value          string
 }
-
-type SettingType int
-
-const (
-	SettingTypeInt             SettingType = 1
-	SettingTypeBool            SettingType = 2
-	SettingTypeString          SettingType = 3
-	SettingTypeIntArray        SettingType = 4
-	SettingTypeEncryptedString SettingType = 5
-)
 
 type SettingName struct {
 	Name string
