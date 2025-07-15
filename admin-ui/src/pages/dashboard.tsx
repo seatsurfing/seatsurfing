@@ -7,6 +7,7 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import Link from "next/link";
 
 interface State {
   loading: boolean;
@@ -203,14 +204,11 @@ class Dashboard extends React.Component<Props, State> {
                 {this.props.t("cloudUpgradeHintHeadline")}
               </p>
               <p>
-                <a
-                  href="#"
-                  onClick={() =>
-                    this.setState({ redirect: "/plugin/subscription/" })
-                  }
+                <Link
+                  href="/plugin/subscription/"
                 >
                   {this.props.t("cloudUpgradeHintText")}
-                </a>{" "}
+                </Link>{" "}
                 🚀
               </p>
             </Alert>

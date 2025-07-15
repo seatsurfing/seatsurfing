@@ -183,5 +183,6 @@
   "requireSubject": "Require subject",
   "subject": "Subject",
   "cloudUpgradeHintHeadline": "Unlock additional features and unlimited users",
-  "cloudUpgradeHintText": "Upgrade to Seatsurfing Professional with just one click"
+  "cloudUpgradeHintText": "Upgrade to Seatsurfing Professional with just one click",
+  "cloudFeatureHeadline": "This feature is only available in the Professional Edition."
 }
