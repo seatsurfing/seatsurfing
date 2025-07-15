@@ -60,16 +60,19 @@ class SideBar extends React.Component<Props, State> {
     getActiveKey = () => {
         let path = this.props.router.pathname;
         if (path.startsWith('/plugin/')) {
-            return window.location.pathname.replace('/admin', '');
+            path = window.location.pathname.replace('/admin', '');
         }
-        const startPaths = [
+        let startPaths = [
             '/organizations',
             '/users',
             '/groups',
             '/settings',
             '/locations',
             '/bookings',
-            '/approvals'
+            '/approvals',
+            ...RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
+                return '/plugin/' + item.id;
+            })
         ];
         let result = path;
         startPaths.forEach(startPath => {
