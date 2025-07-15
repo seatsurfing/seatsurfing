@@ -185,5 +185,6 @@
   "minBookingDurationHours": "Min. Buchungsdauer",
   "saveAreaToGetLink": "Speichern, um den Link zu erhalten",
   "cloudUpgradeHintHeadline": "Erhalte Zugriff auf zusätzliche Funktionen und unbegrenzte Benutzer",
-  "cloudUpgradeHintText": "Upgrade auf Seatsurfing Professional mit nur einem Klick 🚀"
+  "cloudUpgradeHintText": "Upgrade auf Seatsurfing Professional mit nur einem Klick 🚀",
+  "cloudFeatureHeadline": "Dieses Feature ist nur in der Professional Edition verfügbar."
 }
