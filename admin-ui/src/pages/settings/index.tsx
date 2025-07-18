@@ -33,6 +33,8 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
+import CloudFeatureHint from "@/components/CloudFeatureHint";
 
 interface State {
   allowAnyUser: boolean;
@@ -553,12 +555,13 @@ class Settings extends React.Component<Props, State> {
         </Form.Group>
       );
     });
-
     let authProviderRows = this.authProviders.map((item) =>
       this.renderAuthProviderItem(item)
     );
     let authProviderTable = <p>{this.props.t("noRecords")}</p>;
-    if (authProviderRows.length > 0) {
+    if (RuntimeConfig.INFOS.cloudHosted && !RuntimeConfig.INFOS.subscriptionActive) {
+      authProviderTable = <CloudFeatureHint />;
+    } else if (authProviderRows.length > 0) {
       authProviderTable = (
         <Table striped={true} hover={true} className="clickable-table">
           <thead>
@@ -571,7 +574,7 @@ class Settings extends React.Component<Props, State> {
         </Table>
       );
     } else if (!RuntimeConfig.INFOS.featureAuthProviders) {
-      authProviderTable = <p>Feature not available in your plan.</p>;
+      authProviderTable = <p>Feature not enabled.</p>;
     }
 
     let dangerZone = <></>;
@@ -940,6 +943,7 @@ class Settings extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2">
               {this.props.t("domains")}
+              <PremiumFeatureIcon />
             </Form.Label>
             <Col sm="4">
               {domains}
@@ -964,7 +968,9 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 className="h2">{this.props.t("authProviders")}</h1>
+            <h4>
+              {this.props.t("authProviders")}
+            </h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
                 <Link

@@ -8,6 +8,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Link from "next/link";
+import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 
 interface State {
   loading: boolean;
@@ -201,6 +202,7 @@ class Dashboard extends React.Component<Props, State> {
           <Col sm="8">
             <Alert variant="info">
               <p style={{ fontWeight: "bold" }}>
+                <PremiumFeatureIcon style={{marginLeft: "0px", marginRight: "5px"}} />
                 {this.props.t("cloudUpgradeHintHeadline")}
               </p>
               <p>

@@ -20,6 +20,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import RuntimeConfig from "./RuntimeConfig";
 import { TranslationFunc, withTranslation } from "./withTranslation";
+import PremiumFeatureIcon from "./PremiumFeatureIcon";
 
 interface State {
   approvalCount: number;
@@ -128,6 +129,7 @@ class SideBar extends React.Component<Props, State> {
               }
             >
               <IconGroups className="feather" /> {this.props.t("groups")}
+              <PremiumFeatureIcon />
             </Nav.Link>
           </li>
           <li className="nav-item">
@@ -196,8 +198,9 @@ class SideBar extends React.Component<Props, State> {
                   !RuntimeConfig.INFOS.cloudHosted
                 }
               >
-                <IconApproval className="feather" /> {this.props.t("approvals")}{" "}
-                <Badge bg="primary" hidden={this.state.approvalCount === 0}>
+                <IconApproval className="feather" /> {this.props.t("approvals")}
+                <PremiumFeatureIcon />
+                <Badge bg="primary" hidden={this.state.approvalCount === 0} style={{ marginLeft: "5px" }}>
                   {this.state.approvalCount}
                 </Badge>
               </Nav.Link>
