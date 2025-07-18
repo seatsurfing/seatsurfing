@@ -2,6 +2,7 @@ import React from "react";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Alert, Col, Row } from "react-bootstrap";
 import Link from "next/link";
+import PremiumFeatureIcon from "./PremiumFeatureIcon";
 
 interface State {}
 
@@ -16,6 +17,7 @@ class CloudFeatureHint extends React.Component<Props, State> {
         <Col sm="8">
           <Alert variant="info">
             <p style={{ fontWeight: "bold" }}>
+              <PremiumFeatureIcon style={{marginLeft: "0px", marginRight: "5px"}} />
               {this.props.t("cloudFeatureHeadline")}
             </p>
             <p>
