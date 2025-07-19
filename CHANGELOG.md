@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.37.0](https://github.com/seatsurfing/seatsurfing/compare/v1.36.8...v1.37.0) (2025-07-19)
+
+
+### Features
+
+* add proxy to frontends in dev mode ([#1073](https://github.com/seatsurfing/seatsurfing/issues/1073)) ([f6e4a14](https://github.com/seatsurfing/seatsurfing/commit/f6e4a14edc1725ddb63b07d0bc8222f3d23c7524))
+* display subscription upgrade hint in Admin UI (cloud-hosted only) ([#1075](https://github.com/seatsurfing/seatsurfing/issues/1075)) ([61bbdaa](https://github.com/seatsurfing/seatsurfing/commit/61bbdaa9cc12be9bdbb28abf09c5a489a0e063fb))
+* display upgrade hints in approvals and groups page (cloud-hosted only) ([#1087](https://github.com/seatsurfing/seatsurfing/issues/1087)) ([0dcece1](https://github.com/seatsurfing/seatsurfing/commit/0dcece1e9006900b619b54847f726b1e242070de))
+* healthcheck route for native docker healtcheck instruction ([#1069](https://github.com/seatsurfing/seatsurfing/issues/1069)) ([654ec0b](https://github.com/seatsurfing/seatsurfing/commit/654ec0b515559b1ebe30ab25ba2dd58cda8c111a))
+
+
+### Bug Fixes
+
+* **deps:** bump next from 15.3.5 to 15.4.1 in /admin-ui ([#1080](https://github.com/seatsurfing/seatsurfing/issues/1080)) ([ef49cd5](https://github.com/seatsurfing/seatsurfing/commit/ef49cd5620456855439f425ede2667ddf6639aa5))
+* **deps:** bump next from 15.3.5 to 15.4.1 in /booking-ui ([#1084](https://github.com/seatsurfing/seatsurfing/issues/1084)) ([0586e58](https://github.com/seatsurfing/seatsurfing/commit/0586e58e30770d758a516ecf4f0aba3640e886c9))
+* **deps:** upgrade server dependencies ([#1072](https://github.com/seatsurfing/seatsurfing/issues/1072)) ([d02ec29](https://github.com/seatsurfing/seatsurfing/commit/d02ec29a503f1710d871d30e3f76f2270a5eebb5))
+* disable "allow any user" checkbox if no auth provider exists ([#1091](https://github.com/seatsurfing/seatsurfing/issues/1091)) ([77cd89d](https://github.com/seatsurfing/seatsurfing/commit/77cd89d48a893295b538eabd56ba4ab6217ae975))
+* highlight items in Admin UI Sidebar ([#1086](https://github.com/seatsurfing/seatsurfing/issues/1086)) ([03fb359](https://github.com/seatsurfing/seatsurfing/commit/03fb3590597d0ea3fc0febdf754115f0c448afaa))
+* improve cloud upgrade hints ([#1090](https://github.com/seatsurfing/seatsurfing/issues/1090)) ([60bb808](https://github.com/seatsurfing/seatsurfing/commit/60bb8086a78ef4ac8fc58087434cb4d954a1116d))
+
 ## [1.36.8](https://github.com/seatsurfing/seatsurfing/compare/v1.36.7...v1.36.8) (2025-07-12)
 
 
