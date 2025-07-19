@@ -995,6 +995,7 @@ class Settings extends React.Component<Props, State> {
                 title={this.props.t("allowAnyUserTooltip")}
                 label={this.props.t("allowAnyUser")}
                 checked={this.state.allowAnyUser}
+                disabled={this.authProviders.length === 0}
                 onChange={(e: any) =>
                   this.setState({ allowAnyUser: e.target.checked })
                 }
