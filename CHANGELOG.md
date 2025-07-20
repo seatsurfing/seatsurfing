@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.37.0](https://github.com/seatsurfing/seatsurfing/compare/v1.36.8...v1.37.0) (2025-07-20)
+
+
+### Features
+
+* add proxy to frontends in dev mode ([#1073](https://github.com/seatsurfing/seatsurfing/issues/1073)) ([f6e4a14](https://github.com/seatsurfing/seatsurfing/commit/f6e4a14edc1725ddb63b07d0bc8222f3d23c7524))
+* display subscription upgrade hint in Admin UI (cloud-hosted only) ([#1075](https://github.com/seatsurfing/seatsurfing/issues/1075)) ([61bbdaa](https://github.com/seatsurfing/seatsurfing/commit/61bbdaa9cc12be9bdbb28abf09c5a489a0e063fb))
+* display upgrade hints in approvals and groups page (cloud-hosted only) ([#1087](https://github.com/seatsurfing/seatsurfing/issues/1087)) ([0dcece1](https://github.com/seatsurfing/seatsurfing/commit/0dcece1e9006900b619b54847f726b1e242070de))
+* feedback button in admin ui (cloud-hosted only) ([#1092](https://github.com/seatsurfing/seatsurfing/issues/1092)) ([cf81173](https://github.com/seatsurfing/seatsurfing/commit/cf81173c6351898aa4251ec781922b3986495c23))
+* healthcheck route for native docker healtcheck instruction ([#1069](https://github.com/seatsurfing/seatsurfing/issues/1069)) ([654ec0b](https://github.com/seatsurfing/seatsurfing/commit/654ec0b515559b1ebe30ab25ba2dd58cda8c111a))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.0.13 to 24.0.14 in /admin-ui ([#1081](https://github.com/seatsurfing/seatsurfing/issues/1081)) ([25cc5d0](https://github.com/seatsurfing/seatsurfing/commit/25cc5d04be9d4f3722bfe230a35513db0e7a4f41))
+* **deps:** bump @types/node from 24.0.13 to 24.0.14 in /booking-ui ([#1082](https://github.com/seatsurfing/seatsurfing/issues/1082)) ([b9f3b84](https://github.com/seatsurfing/seatsurfing/commit/b9f3b84caf35443a9ce200bf837920e99a0d99f1))
+* **deps:** bump @types/node from 24.0.13 to 24.0.14 in /e2e ([#1085](https://github.com/seatsurfing/seatsurfing/issues/1085)) ([9834c76](https://github.com/seatsurfing/seatsurfing/commit/9834c769cfbf0999adeef80a5db5f9b0a5c904de))
+* **deps:** bump @types/node from 24.0.14 to 24.0.15 in /admin-ui ([#1097](https://github.com/seatsurfing/seatsurfing/issues/1097)) ([4889541](https://github.com/seatsurfing/seatsurfing/commit/48895412a9051eaa24d0d2c5d778953c07b0e9da))
+* **deps:** bump @types/node from 24.0.14 to 24.0.15 in /booking-ui ([#1101](https://github.com/seatsurfing/seatsurfing/issues/1101)) ([0880e46](https://github.com/seatsurfing/seatsurfing/commit/0880e46cea90e6a5fbeb7bc7bca0c4b13ce4c237))
+* **deps:** bump @types/node from 24.0.14 to 24.0.15 in /e2e ([#1102](https://github.com/seatsurfing/seatsurfing/issues/1102)) ([49576aa](https://github.com/seatsurfing/seatsurfing/commit/49576aa973cf6d6c6b5a5b54e5e797e2dd22012d))
+* **deps:** bump eslint from 9.30.1 to 9.31.0 in /admin-ui ([#1078](https://github.com/seatsurfing/seatsurfing/issues/1078)) ([130486c](https://github.com/seatsurfing/seatsurfing/commit/130486c30729e9f9258632475a820af2ff30f2ab))
+* **deps:** bump eslint from 9.30.1 to 9.31.0 in /booking-ui ([#1077](https://github.com/seatsurfing/seatsurfing/issues/1077)) ([8b778d7](https://github.com/seatsurfing/seatsurfing/commit/8b778d75044a8961d45e14115042998c094b0dfb))
+* **deps:** bump eslint-config-next from 15.3.5 to 15.4.1 in /admin-ui ([#1079](https://github.com/seatsurfing/seatsurfing/issues/1079)) ([0806ef9](https://github.com/seatsurfing/seatsurfing/commit/0806ef9f8f28cf8cc7d81058ed568dbd5e450afe))
+* **deps:** bump eslint-config-next from 15.3.5 to 15.4.1 in /booking-ui ([#1083](https://github.com/seatsurfing/seatsurfing/issues/1083)) ([21f581e](https://github.com/seatsurfing/seatsurfing/commit/21f581ebb7d9f02fc1cfa15f8d467ce713cbd715))
+* **deps:** bump eslint-config-next from 15.4.1 to 15.4.2 in /admin-ui ([#1098](https://github.com/seatsurfing/seatsurfing/issues/1098)) ([652ffc5](https://github.com/seatsurfing/seatsurfing/commit/652ffc5b8d891338c3bcbfdd923ed4f682387098))
+* **deps:** bump eslint-config-next from 15.4.1 to 15.4.2 in /booking-ui ([#1100](https://github.com/seatsurfing/seatsurfing/issues/1100)) ([27f1959](https://github.com/seatsurfing/seatsurfing/commit/27f195952cffb2980b13d045b6d5d9cd8742e6e8))
+* **deps:** bump next from 15.3.5 to 15.4.1 in /admin-ui ([#1080](https://github.com/seatsurfing/seatsurfing/issues/1080)) ([ef49cd5](https://github.com/seatsurfing/seatsurfing/commit/ef49cd5620456855439f425ede2667ddf6639aa5))
+* **deps:** bump next from 15.3.5 to 15.4.1 in /booking-ui ([#1084](https://github.com/seatsurfing/seatsurfing/issues/1084)) ([0586e58](https://github.com/seatsurfing/seatsurfing/commit/0586e58e30770d758a516ecf4f0aba3640e886c9))
+* **deps:** bump next from 15.4.1 to 15.4.2 in /admin-ui ([#1096](https://github.com/seatsurfing/seatsurfing/issues/1096)) ([54a4ba9](https://github.com/seatsurfing/seatsurfing/commit/54a4ba95344be76e79c0cdc9ebb5a6b813411f47))
+* **deps:** bump next from 15.4.1 to 15.4.2 in /booking-ui ([#1099](https://github.com/seatsurfing/seatsurfing/issues/1099)) ([b2ba650](https://github.com/seatsurfing/seatsurfing/commit/b2ba65088891d0187aa761948c03e0e4913c5a3f))
+* **deps:** bump react-router-dom from 7.6.3 to 7.7.0 in /admin-ui ([#1089](https://github.com/seatsurfing/seatsurfing/issues/1089)) ([7dd15b9](https://github.com/seatsurfing/seatsurfing/commit/7dd15b925f900e8be23298f5924f8f7abb69baf1))
+* **deps:** bump server dependencies ([#1093](https://github.com/seatsurfing/seatsurfing/issues/1093)) ([fdfe497](https://github.com/seatsurfing/seatsurfing/commit/fdfe4973d8d70f7e71e50607d4e93d4060536486))
+* **deps:** upgrade server dependencies ([#1072](https://github.com/seatsurfing/seatsurfing/issues/1072)) ([d02ec29](https://github.com/seatsurfing/seatsurfing/commit/d02ec29a503f1710d871d30e3f76f2270a5eebb5))
+* disable "allow any user" checkbox if no auth provider exists ([#1091](https://github.com/seatsurfing/seatsurfing/issues/1091)) ([77cd89d](https://github.com/seatsurfing/seatsurfing/commit/77cd89d48a893295b538eabd56ba4ab6217ae975))
+* highlight items in Admin UI Sidebar ([#1086](https://github.com/seatsurfing/seatsurfing/issues/1086)) ([03fb359](https://github.com/seatsurfing/seatsurfing/commit/03fb3590597d0ea3fc0febdf754115f0c448afaa))
+* improve cloud upgrade hints ([#1090](https://github.com/seatsurfing/seatsurfing/issues/1090)) ([60bb808](https://github.com/seatsurfing/seatsurfing/commit/60bb8086a78ef4ac8fc58087434cb4d954a1116d))
+
 ## [1.36.8](https://github.com/seatsurfing/seatsurfing/compare/v1.36.7...v1.36.8) (2025-07-12)
 
 
