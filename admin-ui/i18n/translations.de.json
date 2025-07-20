@@ -186,5 +186,11 @@
   "saveAreaToGetLink": "Speichern, um den Link zu erhalten",
   "cloudUpgradeHintHeadline": "Erhalte Zugriff auf zusätzliche Funktionen und unbegrenzte Benutzer",
   "cloudUpgradeHintText": "Upgrade auf Seatsurfing Professional mit nur einem Klick 🚀",
-  "cloudFeatureHeadline": "Dieses Feature ist nur in der Professional Edition verfügbar."
+  "cloudFeatureHeadline": "Dieses Feature ist nur in der Professional Edition verfügbar.",
+  "cloudFeedbackError": "Ein Fehler ist beim Senden des Feedbacks aufgetreten. Bitte versuche es später erneut.",
+  "cloudFeedbackHeadline": "Teile Dein Feedback mit uns!",
+  "cloudFeedbackPlaceholder": "Dein Feedback...",
+  "cloudFeedbackPrompt": "Was gefällt Dir, was würdest Du an Seatsurfing verbessern wollen?",
+  "cloudFeedbackThanks": "Danke, dass Du Dein Feedback mit uns teilst",
+  "send": "Senden"
 }

@@ -2,6 +2,7 @@ import React, { JSX, ReactNode } from 'react';
 import NavBar from './NavBar';
 import SideBar from './SideBar';
 import RuntimeConfig from './RuntimeConfig';
+import FeedbackButton from './FeedbackButton';
 
 interface Props {
   headline: string
@@ -60,6 +61,7 @@ export default class FullLayout extends React.Component<Props, State> {
                 </div>
               </div>
               {this.props.children}
+              <FeedbackButton />
             </main>
           </div>
         </div>

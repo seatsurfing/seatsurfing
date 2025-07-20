@@ -184,5 +184,11 @@
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
   "cloudUpgradeHintHeadline": "Unlock additional features and unlimited users",
   "cloudUpgradeHintText": "Upgrade to Seatsurfing Professional with just one click",
-  "cloudFeatureHeadline": "This feature is only available in the Professional Edition."
+  "cloudFeatureHeadline": "This feature is only available in the Professional Edition.",
+  "cloudFeedbackError": "An error occurred while sending your feedback. Please try again later.",
+  "cloudFeedbackHeadline": "Share your feedback with us!",
+  "cloudFeedbackPlaceholder": "Your feedback...",
+  "cloudFeedbackPrompt": "What do you like, what would you want us to improve about Seatsurfing?",
+  "cloudFeedbackThanks": "Thanks for sharing your feedback with us",
+  "send": "Send"
 }
