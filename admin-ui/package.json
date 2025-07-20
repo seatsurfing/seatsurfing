@@ -46,6 +46,6 @@
     "@types/node": "24.0.14",
     "@types/react-autosuggest": "^10.1.11",
     "eslint": "^9.31.0",
-    "eslint-config-next": "^15.4.1"
+    "eslint-config-next": "^15.4.2"
   }
 }
