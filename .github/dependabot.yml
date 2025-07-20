@@ -1,7 +1,7 @@
 version: 2
 updates:
 - package-ecosystem: gomod
-  directory: "/"
+  directory: "/server/"
   schedule:
     interval: daily
   commit-message:
@@ -26,7 +26,7 @@ updates:
     prefix: "fix(deps)"
   open-pull-requests-limit: 10
 - package-ecosystem: github-actions
-  directory: "/"
+  directory: "/.github/workflows/"
   schedule:
     interval: weekly
   commit-message:
