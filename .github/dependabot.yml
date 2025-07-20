@@ -6,7 +6,7 @@ updates:
     interval: daily
   commit-message:
     prefix: "fix(deps)"
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 50
 - package-ecosystem: npm
   directories:
     - "/admin-ui/"
@@ -17,14 +17,14 @@ updates:
     interval: daily
   commit-message:
     prefix: "fix(deps)"
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 50
 - package-ecosystem: docker
   directory: "/"
   schedule:
     interval: daily
   commit-message:
     prefix: "fix(deps)"
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 50
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
