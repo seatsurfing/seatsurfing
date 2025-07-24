@@ -204,11 +204,11 @@ class EditLocation extends React.Component<Props, State> {
         }
         space.locationId = this.entity.id;
         space.name = item.name;
-        space.x = item.x;
-        space.y = item.y;
+        space.x = Math.round(item.x);
+        space.y = Math.round(item.y);
         space.width = parseInt(item.width.replace(/^\D+/g, ''));
         space.height = parseInt(item.height.replace(/^\D+/g, ''));
-        space.rotation = item.rotation;
+        space.rotation = Math.round(item.rotation);
         space.requireSubject = item.requireSubject;
         space.attributes = [];
         item.enabledAttributes.forEach(attributeId => {
