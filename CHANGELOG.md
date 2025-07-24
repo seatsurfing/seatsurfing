@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.37.1](https://github.com/seatsurfing/seatsurfing/compare/v1.37.0...v1.37.1) (2025-07-24)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.0.15 to 24.1.0 in /admin-ui ([#1104](https://github.com/seatsurfing/seatsurfing/issues/1104)) ([19522e6](https://github.com/seatsurfing/seatsurfing/commit/19522e6fae7ef81c3ee2e26e70bb6aec19004f94))
+* **deps:** bump @types/node from 24.0.15 to 24.1.0 in /booking-ui ([#1105](https://github.com/seatsurfing/seatsurfing/issues/1105)) ([4c2d847](https://github.com/seatsurfing/seatsurfing/commit/4c2d84730489ca38569d72d33a73af08a802edb2))
+* **deps:** bump @types/node from 24.0.15 to 24.1.0 in /e2e ([#1106](https://github.com/seatsurfing/seatsurfing/issues/1106)) ([a95d46a](https://github.com/seatsurfing/seatsurfing/commit/a95d46ac145fcff4fad8035ba3ec25b334349609))
+* **deps:** bump eslint-config-next from 15.4.2 to 15.4.3 in /admin-ui ([#1107](https://github.com/seatsurfing/seatsurfing/issues/1107)) ([311cc13](https://github.com/seatsurfing/seatsurfing/commit/311cc1352c09d0587392479fdf0911de2d852556))
+* **deps:** bump eslint-config-next from 15.4.2 to 15.4.3 in /booking-ui ([#1109](https://github.com/seatsurfing/seatsurfing/issues/1109)) ([899895b](https://github.com/seatsurfing/seatsurfing/commit/899895b8cbefc39d93a381264d4a92a34718933d))
+* **deps:** bump next from 15.4.2 to 15.4.3 in /admin-ui ([#1108](https://github.com/seatsurfing/seatsurfing/issues/1108)) ([27c94a2](https://github.com/seatsurfing/seatsurfing/commit/27c94a2d8ca93058d3fcba8ee5f6aa55877fdd20))
+* **deps:** bump next from 15.4.2 to 15.4.3 in /booking-ui ([#1110](https://github.com/seatsurfing/seatsurfing/issues/1110)) ([ddd22b1](https://github.com/seatsurfing/seatsurfing/commit/ddd22b1d773762592409dce208d2a3cb92b25b1b))
+* **deps:** bump react-router-dom from 7.7.0 to 7.7.1 in /admin-ui ([#1111](https://github.com/seatsurfing/seatsurfing/issues/1111)) ([2d9d0f8](https://github.com/seatsurfing/seatsurfing/commit/2d9d0f80cac7a4015451be034a507e22e0162faf))
+* ensure space position is int instead of float ([#1113](https://github.com/seatsurfing/seatsurfing/issues/1113)) ([3ec437c](https://github.com/seatsurfing/seatsurfing/commit/3ec437c0c78c3f9781768c9a7ad1f43987aa8b52))
+
 ## [1.37.0](https://github.com/seatsurfing/seatsurfing/compare/v1.36.8...v1.37.0) (2025-07-20)
 
 
