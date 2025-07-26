@@ -50,6 +50,7 @@ type Config struct {
 	ValkeyHosts                         []string
 	ValkeyUsername                      string
 	ValkeyPassword                      string
+	DNSServer                           string // DNS server address for custom resolver
 }
 
 var _configInstance *Config
@@ -125,6 +126,12 @@ func (c *Config) ReadConfig() {
 	c.ValkeyHosts = strings.Split(c.getEnv("VALKEY_HOSTS", "127.0.0.1:6379"), ",")
 	c.ValkeyUsername = c.getEnv("VALKEY_USERNAME", "default")
 	c.ValkeyPassword = c.getEnv("VALKEY_PASSWORD", "")
+	c.DNSServer = c.getEnv("DNS_SERVER", "")
+	if c.DNSServer != "" {
+		if !strings.ContainsRune(c.DNSServer, ':') {
+			c.DNSServer += ":53" // Default DNS port
+		}
+	}
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {

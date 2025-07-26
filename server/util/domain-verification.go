@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -23,7 +24,8 @@ type DomainAccessibilityPayload struct {
 }
 
 func IsValidTXTRecord(domain, uuid string) bool {
-	records, err := net.LookupTXT(domain)
+	resolver := GetDNSResolver()
+	records, err := resolver.LookupTXT(context.Background(), domain)
 	if err != nil {
 		log.Println(err)
 		return false
@@ -35,6 +37,21 @@ func IsValidTXTRecord(domain, uuid string) bool {
 		}
 	}
 	return false
+}
+
+func GetDNSResolver() *net.Resolver {
+	if GetConfig().DNSServer != "" {
+		return &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: time.Millisecond * time.Duration(5000),
+				}
+				return d.DialContext(ctx, network, GetConfig().DNSServer)
+			},
+		}
+	}
+	return &net.Resolver{}
 }
 
 func IsDomainAccessible(domain, orgID string) (bool, error) {
