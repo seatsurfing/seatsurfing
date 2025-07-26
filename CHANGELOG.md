@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.0](https://github.com/seatsurfing/seatsurfing/compare/v1.37.2...v1.38.0) (2025-07-26)
+
+
+### Features
+
+* use custom DNS resolver in domain accessibility verification http client ([#1125](https://github.com/seatsurfing/seatsurfing/issues/1125)) ([c76fa86](https://github.com/seatsurfing/seatsurfing/commit/c76fa86d8080ddd96129a0d43792dabc21f8b04c))
+
 ## [1.37.2](https://github.com/seatsurfing/seatsurfing/compare/v1.37.1...v1.37.2) (2025-07-26)
 
 
