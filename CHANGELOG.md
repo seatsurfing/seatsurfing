@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.37.2](https://github.com/seatsurfing/seatsurfing/compare/v1.37.1...v1.37.2) (2025-07-26)
+
+
+### Bug Fixes
+
+* **deps:** bump eslint from 9.31.0 to 9.32.0 in /admin-ui ([#1118](https://github.com/seatsurfing/seatsurfing/issues/1118)) ([c0d9f19](https://github.com/seatsurfing/seatsurfing/commit/c0d9f196fbaacc7a5bc57706027ef6170945926c))
+* **deps:** bump eslint from 9.31.0 to 9.32.0 in /booking-ui ([#1122](https://github.com/seatsurfing/seatsurfing/issues/1122)) ([13f7ab1](https://github.com/seatsurfing/seatsurfing/commit/13f7ab11d2543d00b6b605fe5d2a1a7270bfb6b7))
+* **deps:** bump eslint-config-next from 15.4.3 to 15.4.4 in /admin-ui ([#1117](https://github.com/seatsurfing/seatsurfing/issues/1117)) ([3acd7ce](https://github.com/seatsurfing/seatsurfing/commit/3acd7ce37e8c03554a23917e5ae5e79d7d48b21e))
+* **deps:** bump eslint-config-next from 15.4.3 to 15.4.4 in /booking-ui ([#1121](https://github.com/seatsurfing/seatsurfing/issues/1121)) ([c8d1f28](https://github.com/seatsurfing/seatsurfing/commit/c8d1f284cb2288dac11ec36646131cf2d1ed25e9))
+* **deps:** bump next from 15.4.3 to 15.4.4 in /admin-ui ([#1119](https://github.com/seatsurfing/seatsurfing/issues/1119)) ([4998ba2](https://github.com/seatsurfing/seatsurfing/commit/4998ba2453e37b243913362630d6dd639ba3d458))
+* **deps:** bump next from 15.4.3 to 15.4.4 in /booking-ui ([#1120](https://github.com/seatsurfing/seatsurfing/issues/1120)) ([0929268](https://github.com/seatsurfing/seatsurfing/commit/0929268e538935d4f33f2ef5468128bcb3878437))
+
 ## [1.37.1](https://github.com/seatsurfing/seatsurfing/compare/v1.37.0...v1.37.1) (2025-07-24)
 
 
