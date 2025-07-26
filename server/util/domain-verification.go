@@ -2,17 +2,14 @@ package util
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 )
@@ -39,21 +36,6 @@ func IsValidTXTRecord(domain, uuid string) bool {
 	return false
 }
 
-func GetDNSResolver() *net.Resolver {
-	if GetConfig().DNSServer != "" {
-		return &net.Resolver{
-			PreferGo: true,
-			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-				d := net.Dialer{
-					Timeout: time.Millisecond * time.Duration(5000),
-				}
-				return d.DialContext(ctx, network, GetConfig().DNSServer)
-			},
-		}
-	}
-	return &net.Resolver{}
-}
-
 func IsDomainAccessible(domain, orgID string) (bool, error) {
 	if err := isDomainAccessible("https", domain, 443, orgID); err == nil {
 		return true, nil
@@ -77,13 +59,7 @@ func isDomainAccessible(scheme, domain string, port int, orgID string) error {
 	if err != nil {
 		return err
 	}
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{
-		Timeout:   time.Second * 10,
-		Transport: tr,
-	}
+	client := GetHTTPClientWithCustomDNS(true)
 	res, err := client.Do(req)
 	if err != nil {
 		return err
