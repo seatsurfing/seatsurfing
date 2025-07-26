@@ -1,17 +1,15 @@
 package util
 
 import (
-	"crypto/tls"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 )
@@ -23,7 +21,8 @@ type DomainAccessibilityPayload struct {
 }
 
 func IsValidTXTRecord(domain, uuid string) bool {
-	records, err := net.LookupTXT(domain)
+	resolver := GetDNSResolver()
+	records, err := resolver.LookupTXT(context.Background(), domain)
 	if err != nil {
 		log.Println(err)
 		return false
@@ -60,13 +59,7 @@ func isDomainAccessible(scheme, domain string, port int, orgID string) error {
 	if err != nil {
 		return err
 	}
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{
-		Timeout:   time.Second * 10,
-		Transport: tr,
-	}
+	client := GetHTTPClientWithCustomDNS(true)
 	res, err := client.Do(req)
 	if err != nil {
 		return err
