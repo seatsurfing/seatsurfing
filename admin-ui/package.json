@@ -8,7 +8,7 @@
     "excellentexport": "^3.9.10",
     "next": "^15.4.4",
     "next-export-i18n": "^2.4.3",
-    "react": "^19.0.0",
+    "react": "^19.1.1",
     "react-autosuggest": "^10.1.0",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-typeahead": "^6.4.1",
