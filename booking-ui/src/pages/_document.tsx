@@ -11,7 +11,7 @@ class Doc extends Document<Props> {
     const nonce = randomBytes(128).toString('base64')
     let csp = new Map<string, string[]>();
     csp.set('default-src', ["'self'"]);
-    csp.set('img-src', ["'self'", "data:", "'unsafe-eval'"]);
+    csp.set('img-src', ["'self'", "data:", "https:", "'unsafe-eval'"]);
     csp.set('style-src', ["'self'", "data:", "'unsafe-inline'"]);
     csp.set('object-src', ["data:", "'unsafe-eval'"]);
     csp.set('base-uri', ["'none'"]);
