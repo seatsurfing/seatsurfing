@@ -658,6 +658,7 @@ class Settings extends React.Component<Props, State> {
                 readOnly={true}
                 defaultValue={this.org?.name}
               />
+              <Link href={`/settings/org`}>{this.props.t("edit")}</Link>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

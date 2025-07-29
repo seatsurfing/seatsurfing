@@ -16,6 +16,7 @@ const (
 	AuthAtlassian            AuthStateType = 3 // Atlassian Auth
 	AuthMergeRequest         AuthStateType = 4
 	AuthResetPasswordRequest AuthStateType = 5
+	AuthChangeOrgEmail       AuthStateType = 6
 )
 
 type AuthState struct {

@@ -38,6 +38,11 @@ type GetDomainResponse struct {
 	AccessCheck *time.Time `json:"accessCheck"`
 }
 
+type ChangeOrgEmailPayload struct {
+	OrgID string `json:"orgId" validate:"required,uuid"`
+	Email string `json:"email" validate:"required,email"`
+}
+
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
@@ -298,7 +303,8 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 
 func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !GetUserRepository().IsSuperAdmin(user) {
+	vars := mux.Vars(r)
+	if !GetUserRepository().IsSuperAdmin(user) && !CanAdminOrg(user, vars["id"]) {
 		SendForbidden(w)
 		return
 	}
@@ -307,7 +313,6 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	vars := mux.Vars(r)
 	e := router.copyFromRestModel(&m)
 	e.ID = vars["id"]
 	if err := GetOrganizationRepository().Update(e); err != nil {
