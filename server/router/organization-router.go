@@ -1,8 +1,11 @@
 package router
 
 import (
+	"encoding/json"
 	"log"
+	"math/rand/v2"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,6 +44,15 @@ type GetDomainResponse struct {
 type ChangeOrgEmailPayload struct {
 	OrgID string `json:"orgId" validate:"required,uuid"`
 	Email string `json:"email" validate:"required,email"`
+	Code  int    `json:"code" validate:"required,numeric"`
+}
+
+type ChangeOrgEmailResponse struct {
+	VerifyUUID string `json:"verifyUuid"`
+}
+
+type ChangeEmailAddressVerifyRequest struct {
+	Code string `json:"code" validate:"required,numeric"`
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
@@ -51,6 +63,7 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/domain/{domain}/primary", router.setPrimaryDomain).Methods("POST")
 	s.HandleFunc("/{id}/domain/{domain}", router.removeDomain).Methods("DELETE")
 	s.HandleFunc("/{id}/domain/{domain}", router.addDomain).Methods("POST")
+	s.HandleFunc("/{id}/verifyemail/{uuid}", router.verifyEmail).Methods("POST")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -210,6 +223,53 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 	SendCreated(w, domainName)
 }
 
+func (router *OrganizationRouter) verifyEmail(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetOrganizationRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !GetUserRepository().IsSuperAdmin(user) && !CanAdminOrg(user, e.ID) {
+		SendForbidden(w)
+		return
+	}
+	authState, err := GetAuthStateRepository().GetOne(vars["uuid"])
+	if err != nil || authState == nil {
+		SendNotFound(w)
+		return
+	}
+	var m ChangeEmailAddressVerifyRequest
+	if err := UnmarshalValidateBody(r, &m); err != nil {
+		SendBadRequest(w)
+		return
+	}
+	var authStatePayload ChangeOrgEmailPayload
+	if err := json.Unmarshal([]byte(authState.Payload), &authStatePayload); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if authStatePayload.OrgID != e.ID {
+		log.Println("AuthState payload does not match organization ID")
+		SendNotFound(w)
+		return
+	}
+	if strconv.Itoa(authStatePayload.Code) != m.Code {
+		log.Println("Invalid verification code")
+		SendNotFound(w)
+		return
+	}
+	e.ContactEmail = authStatePayload.Email
+	if err := GetOrganizationRepository().Update(e); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
 func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
@@ -313,14 +373,61 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	e := router.copyFromRestModel(&m)
-	e.ID = vars["id"]
+	e, err := GetOrganizationRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	eIncoming := router.copyFromRestModel(&m)
+	e.Name = eIncoming.Name
+	e.Language = eIncoming.Language
+	e.ContactFirstname = eIncoming.ContactFirstname
+	e.ContactLastname = eIncoming.ContactLastname
+	res := &ChangeOrgEmailResponse{
+		VerifyUUID: "",
+	}
+	if !GetUserRepository().IsSuperAdmin(user) && CanAdminOrg(user, vars["id"]) && !strings.EqualFold(e.ContactEmail, eIncoming.ContactEmail) {
+		payload := &ChangeOrgEmailPayload{
+			OrgID: e.ID,
+			Email: eIncoming.ContactEmail,
+			Code:  rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())).IntN(1000000), // Random 6-digit code
+		}
+		json, _ := json.Marshal(payload)
+		authState := &AuthState{
+			AuthStateType:  AuthChangeOrgEmail,
+			Payload:        string(json),
+			Expiry:         time.Now().Add(time.Minute * 5),
+			AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		}
+		if err := GetAuthStateRepository().Create(authState); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		res.VerifyUUID = authState.ID
+		if err := router.sendVerifyEmailAddressEmail(e, eIncoming.ContactEmail, strconv.Itoa(payload.Code)); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+	} else {
+		e.ContactEmail = eIncoming.ContactEmail
+	}
 	if err := GetOrganizationRepository().Update(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	SendUpdated(w)
+	SendJSON(w, res)
+}
+
+func (router *OrganizationRouter) sendVerifyEmailAddressEmail(org *Organization, newEmail string, code string) error {
+	vars := map[string]string{
+		"recipientName":  org.ContactFirstname + " " + org.ContactLastname,
+		"recipientEmail": newEmail,
+		"code":           code,
+	}
+	return SendEmail(&MailAddress{Address: newEmail}, GetEmailTemplatePathChangeEmailAddress(), org.Language, vars)
 }
 
 func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request) {

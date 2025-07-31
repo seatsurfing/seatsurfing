@@ -192,5 +192,8 @@
   "cloudFeedbackPlaceholder": "Dein Feedback...",
   "cloudFeedbackPrompt": "Was gefällt Dir, was würdest Du an Seatsurfing verbessern wollen?",
   "cloudFeedbackThanks": "Danke, dass Du Dein Feedback mit uns teilst",
-  "send": "Senden"
+  "send": "Senden",
+  "code": "Code",
+  "verification": "Verifizierung",
+  "verifyEmailHint": "Bitte überprüfe Deine E-Mails und gib den Verifizierungscode ein, um fortzufahren."
 }

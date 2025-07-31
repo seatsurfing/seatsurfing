@@ -1,9 +1,6 @@
 import React from "react";
 import { Form, Col, Row, Button, Alert } from "react-bootstrap";
-import {
-  ChevronLeft as IconBack,
-  Save as IconSave,
-} from "react-feather";
+import { ChevronLeft as IconBack, Save as IconSave } from "react-feather";
 import { Ajax, Organization } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -23,6 +20,8 @@ interface State {
   lastname: string;
   email: string;
   language: string;
+  verifyUuid: string;
+  code: string;
 }
 
 interface Props {
@@ -45,6 +44,8 @@ class EditOrg extends React.Component<Props, State> {
       lastname: "",
       email: "",
       language: "de",
+      verifyUuid: "",
+      code: "",
     };
   }
 
@@ -71,6 +72,31 @@ class EditOrg extends React.Component<Props, State> {
     });
   };
 
+  onSubmitVerify = (e: any) => {
+    e.preventDefault();
+    this.setState({
+      error: false,
+      saved: false,
+    });
+    let payload = {
+      code: this.state.code,
+    };
+    Ajax.postData(
+      this.entity.getBackendUrl() + this.entity.id + "/verifyemail/" + this.state.verifyUuid,
+      payload
+    )
+      .then(() => {
+        this.setState({
+          saved: true,
+          verifyUuid: "",
+          code: "",
+        });
+      })
+      .catch(() => {
+        this.setState({ error: true });
+      });
+  }
+
   onSubmit = (e: any) => {
     e.preventDefault();
     this.setState({
@@ -78,15 +104,16 @@ class EditOrg extends React.Component<Props, State> {
       saved: false,
     });
     this.entity.name = this.state.name;
+    this.entity.language = this.state.language;
     this.entity.contactFirstname = this.state.firstname;
     this.entity.contactLastname = this.state.lastname;
     this.entity.contactEmail = this.state.email;
-    this.entity.language = this.state.language;
-    let createUser = !this.entity.id;
-    this.entity
-      .save()
-      .then(() => {
-        this.setState({ saved: true });
+    Ajax.saveEntity(this.entity, this.entity.getBackendUrl())
+      .then((res) => {
+        this.setState({
+          saved: res.json.verifyUuid ? false : true,
+          verifyUuid: res.json.verifyUuid ? res.json.verifyUuid : "",
+        });
       })
       .catch(() => {
         this.setState({ error: true });
@@ -121,7 +148,7 @@ class EditOrg extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         type="submit"
-        form="form"
+        form={this.state.verifyUuid ? "formVerify" : "form"}
       >
         <IconSave className="feather" /> {this.props.t("save")}
       </Button>
@@ -143,7 +170,11 @@ class EditOrg extends React.Component<Props, State> {
     let languages = ["de", "en"];
     return (
       <FullLayout headline={this.props.t("editOrg")} buttons={buttons}>
-        <Form onSubmit={this.onSubmit} id="form">
+        <Form
+          onSubmit={this.onSubmit}
+          id="form"
+          hidden={this.state.verifyUuid ? true : false}
+        >
           {hint}
           <Form.Group as={Row}>
             <Form.Label column sm="2">
@@ -222,6 +253,38 @@ class EditOrg extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+              />
+            </Col>
+          </Form.Group>
+        </Form>
+        <Form
+          onSubmit={this.onSubmitVerify}
+          id="formVerify"
+          hidden={!this.state.verifyUuid}
+        >
+          {hint}
+          <Form.Group as={Row}>
+            <Form.Label column sm="6" className="lead text-uppercase">
+              {this.props.t("verification")}
+            </Form.Label>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="6">
+              {this.props.t("verifyEmailHint")}
+            </Form.Label>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("code")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                minLength={6}
+                maxLength={6}
+                value={this.state.code}
+                onChange={(e: any) => this.setState({ code: e.target.value })}
+                required={this.state.verifyUuid ? true : false}
               />
             </Col>
           </Form.Group>

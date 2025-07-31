@@ -2,7 +2,7 @@
     "subject": "Reset your Seatsurfing password",
     "headline": "Hello {{recipientName}},",
     "paragraphs": [
-        "we've received a request to reset your password."
+        "We've received a request to reset your password."
     ],
     "buttons": [
         {

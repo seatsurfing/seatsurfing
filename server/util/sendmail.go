@@ -52,6 +52,10 @@ func GetEmailTemplatePathResetpassword() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.json")
 }
 
+func GetEmailTemplatePathChangeEmailAddress() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-change-email.json")
+}
+
 func GetEmailTemplatePathBookingCreated() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-created.json")
 }
