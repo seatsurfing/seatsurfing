@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.38.0](https://github.com/seatsurfing/seatsurfing/compare/v1.37.2...v1.38.0) (2025-07-31)
+
+
+### Features
+
+* add ability to change org name and contact details in Admin UI ([#1140](https://github.com/seatsurfing/seatsurfing/issues/1140)) ([b054dc5](https://github.com/seatsurfing/seatsurfing/commit/b054dc5082d18eb03163b6455d84b98bfb333dd7))
+* use custom DNS resolver in domain accessibility verification http client ([#1125](https://github.com/seatsurfing/seatsurfing/issues/1125)) ([c76fa86](https://github.com/seatsurfing/seatsurfing/commit/c76fa86d8080ddd96129a0d43792dabc21f8b04c))
+
+
+### Bug Fixes
+
+* allow images via https in booking ui in order to show custom logos ([#1132](https://github.com/seatsurfing/seatsurfing/issues/1132)) ([fb8ce27](https://github.com/seatsurfing/seatsurfing/commit/fb8ce27c2b91dc75fce9bb3679184375de0e4f62))
+* **deps:** bump @types/react-dom from 19.1.6 to 19.1.7 in /admin-ui ([#1133](https://github.com/seatsurfing/seatsurfing/issues/1133)) ([a1e2548](https://github.com/seatsurfing/seatsurfing/commit/a1e2548d37f927c414f8f1cd90d88183d911c68a))
+* **deps:** bump @types/react-dom from 19.1.6 to 19.1.7 in /booking-ui ([#1134](https://github.com/seatsurfing/seatsurfing/issues/1134)) ([9b8a2bd](https://github.com/seatsurfing/seatsurfing/commit/9b8a2bd592886052a4f0e73e2322a61a7b9fc4e3))
+* **deps:** bump eslint-config-next from 15.4.4 to 15.4.5 in /admin-ui ([#1136](https://github.com/seatsurfing/seatsurfing/issues/1136)) ([c8fe53b](https://github.com/seatsurfing/seatsurfing/commit/c8fe53b4ad9107e1f24335f5158806ee3f36cf2d))
+* **deps:** bump eslint-config-next from 15.4.4 to 15.4.5 in /booking-ui ([#1138](https://github.com/seatsurfing/seatsurfing/issues/1138)) ([ec316bc](https://github.com/seatsurfing/seatsurfing/commit/ec316bc24762cd927dd86647a0d833d990a799bb))
+* **deps:** bump github.com/golang-jwt/jwt/v5 from 5.2.3 to 5.3.0 in /server ([#1139](https://github.com/seatsurfing/seatsurfing/issues/1139)) ([d0a798d](https://github.com/seatsurfing/seatsurfing/commit/d0a798d57c20b617a7333584bef89ec895a87dd0))
+* **deps:** bump next from 15.4.4 to 15.4.5 in /admin-ui ([#1135](https://github.com/seatsurfing/seatsurfing/issues/1135)) ([1da8e63](https://github.com/seatsurfing/seatsurfing/commit/1da8e630de03ace6ee2561440585448dac8cded9))
+* **deps:** bump next from 15.4.4 to 15.4.5 in /booking-ui ([#1137](https://github.com/seatsurfing/seatsurfing/issues/1137)) ([304ee72](https://github.com/seatsurfing/seatsurfing/commit/304ee72480f39f490e1c523a1777490dc004c585))
+* **deps:** bump react-dom from 19.1.0 to 19.1.1 in /admin-ui ([#1127](https://github.com/seatsurfing/seatsurfing/issues/1127)) ([9fd6e0c](https://github.com/seatsurfing/seatsurfing/commit/9fd6e0c1360e4ec9d15aa2d018e4923e7bd031a0))
+* **deps:** bump react-dom from 19.1.0 to 19.1.1 in /booking-ui ([#1130](https://github.com/seatsurfing/seatsurfing/issues/1130)) ([3fe4af8](https://github.com/seatsurfing/seatsurfing/commit/3fe4af8b8c40c82af7c0fe6b8ac6ef90a15219a3))
+* **deps:** bump typescript from 5.8.3 to 5.9.2 in /commons/ts ([#1141](https://github.com/seatsurfing/seatsurfing/issues/1141)) ([97cfb8d](https://github.com/seatsurfing/seatsurfing/commit/97cfb8d1d69ddba9146674a847e0bb05e45fc94f))
+
 ## [1.37.2](https://github.com/seatsurfing/seatsurfing/compare/v1.37.1...v1.37.2) (2025-07-26)
 
 
