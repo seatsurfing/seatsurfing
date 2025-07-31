@@ -559,7 +559,10 @@ class Settings extends React.Component<Props, State> {
       this.renderAuthProviderItem(item)
     );
     let authProviderTable = <p>{this.props.t("noRecords")}</p>;
-    if (RuntimeConfig.INFOS.cloudHosted && !RuntimeConfig.INFOS.subscriptionActive) {
+    if (
+      RuntimeConfig.INFOS.cloudHosted &&
+      !RuntimeConfig.INFOS.subscriptionActive
+    ) {
       authProviderTable = <CloudFeatureHint />;
     } else if (authProviderRows.length > 0) {
       authProviderTable = (
@@ -658,6 +661,7 @@ class Settings extends React.Component<Props, State> {
                 readOnly={true}
                 defaultValue={this.org?.name}
               />
+              <Link href={`/settings/org`}>{this.props.t("edit")}</Link>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -968,9 +972,7 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>
-              {this.props.t("authProviders")}
-            </h4>
+            <h4>{this.props.t("authProviders")}</h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
                 <Link

@@ -190,5 +190,8 @@
   "cloudFeedbackThanks": "Thanks for sharing your feedback with us",
   "cloudFeedbackError": "An error occurred while sending your feedback. Please try again later.",
   "cloudFeedbackPlaceholder": "Your feedback...",
-  "send": "Send"
+  "send": "Send",
+  "verification": "Verification",
+  "verifyEmailHint": "Please enter the verification code that has been sent to your new email address in order to persist the changed email address.",
+  "code": "Code"
 }

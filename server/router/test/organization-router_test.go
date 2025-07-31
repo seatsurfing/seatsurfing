@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 func TestOrganizationsEmptyResult(t *testing.T) {
@@ -52,6 +54,110 @@ func TestOrganizationsForbidden(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
+func TestOrganizationsUpdateWithoutMailChange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	org.Name = "Some Company Ltd."
+	org.ContactFirstname = "Foo"
+	org.ContactLastname = "Bar"
+	org.ContactEmail = "foo@seatsurfing.app"
+	org.Language = "de"
+	GetOrganizationRepository().Update(org)
+
+	// Update
+	payload := `{
+		"name": "Some Company 2 Ltd.",
+		"firstname": "Foo 2",
+		"lastname": "Bar 2",
+		"email": "foo@seatsurfing.app",
+		"language": "us"
+	}`
+	req := NewHTTPRequest("PUT", "/organization/"+org.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *ChangeOrgEmailResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "", resBody.VerifyUUID)
+
+	// Read
+	req = NewHTTPRequest("GET", "/organization/"+org.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetOrganizationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestString(t, "Some Company 2 Ltd.", resBody2.Name)
+	CheckTestString(t, "Foo 2", resBody2.Firstname)
+	CheckTestString(t, "Bar 2", resBody2.Lastname)
+	CheckTestString(t, "foo@seatsurfing.app", resBody2.Email)
+	CheckTestString(t, "us", resBody2.Language)
+}
+
+func TestOrganizationsUpdateWithMailChange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	org.Name = "Some Company Ltd."
+	org.ContactFirstname = "Foo"
+	org.ContactLastname = "Bar"
+	org.ContactEmail = "foo@seatsurfing.app"
+	org.Language = "de"
+	GetOrganizationRepository().Update(org)
+
+	// Update
+	payload := `{
+		"name": "Some Company 2 Ltd.",
+		"firstname": "Foo 2",
+		"lastname": "Bar 2",
+		"email": "foo2@seatsurfing.app",
+		"language": "us"
+	}`
+	req := NewHTTPRequest("PUT", "/organization/"+org.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *ChangeOrgEmailResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.VerifyUUID != "")
+
+	// Extract Code from email
+	rx := regexp.MustCompile(`<p>([0-9]{6})<\/p>`)
+	codes := rx.FindStringSubmatch(SendMailMockContent)
+	CheckTestInt(t, 2, len(codes))
+	code := codes[1]
+
+	// Read
+	req = NewHTTPRequest("GET", "/organization/"+org.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetOrganizationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestString(t, "Some Company 2 Ltd.", resBody2.Name)
+	CheckTestString(t, "Foo 2", resBody2.Firstname)
+	CheckTestString(t, "Bar 2", resBody2.Lastname)
+	CheckTestString(t, "foo@seatsurfing.app", resBody2.Email)
+	CheckTestString(t, "us", resBody2.Language)
+
+	// Verify
+	payload = `{
+		"code": "` + code + `"
+	}`
+	req = NewHTTPRequest("POST", "/organization/"+org.ID+"/verifyemail/"+resBody.VerifyUUID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Read again
+	req = NewHTTPRequest("GET", "/organization/"+org.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody3 *GetOrganizationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody3)
+	CheckTestString(t, "foo2@seatsurfing.app", resBody3.Email)
+}
+
 func TestOrganizationsCRUD(t *testing.T) {
 	ClearTestDB()
 	user := CreateTestUserSuperAdmin()
@@ -92,7 +198,7 @@ func TestOrganizationsCRUD(t *testing.T) {
 	}`
 	req = NewHTTPRequest("PUT", "/organization/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
 	// Read
 	req = NewHTTPRequest("GET", "/organization/"+id, loginResponse.UserID, nil)

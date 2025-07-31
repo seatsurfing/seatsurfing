@@ -190,5 +190,8 @@
   "cloudFeedbackPlaceholder": "Your feedback...",
   "cloudFeedbackPrompt": "What do you like, what would you want us to improve about Seatsurfing?",
   "cloudFeedbackThanks": "Thanks for sharing your feedback with us",
-  "send": "Send"
+  "send": "Send",
+  "code": "Code",
+  "verification": "Verification",
+  "verifyEmailHint": "Please enter the verification code that has been sent to your new email address in order to persist the changed email address."
 }
