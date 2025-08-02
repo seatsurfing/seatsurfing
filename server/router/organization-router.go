@@ -3,7 +3,6 @@ package router
 import (
 	"encoding/json"
 	"log"
-	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"strings"
@@ -390,7 +389,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		payload := &ChangeOrgEmailPayload{
 			OrgID: e.ID,
 			Email: eIncoming.ContactEmail,
-			Code:  rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())).IntN(1000000), // Random 6-digit code
+			Code:  GetRandomNumber(100000, 999999), // Random 6-digit code
 		}
 		json, _ := json.Marshal(payload)
 		authState := &AuthState{

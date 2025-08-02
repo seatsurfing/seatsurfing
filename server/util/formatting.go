@@ -1,6 +1,7 @@
 package util
 
 import (
+	"math/rand/v2"
 	"strings"
 	"time"
 )
@@ -35,4 +36,12 @@ func GetDomainFromEmail(email string) string {
 	}
 	domain := strings.ToLower(mailParts[1])
 	return domain
+}
+
+func GetRandomNumber(min, max int) int {
+	if min >= max {
+		return min
+	}
+	rnd := rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64()))
+	return min + rnd.IntN(max-min)
 }
