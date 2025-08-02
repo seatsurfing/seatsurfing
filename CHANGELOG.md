@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.1](https://github.com/seatsurfing/seatsurfing/compare/v1.38.0...v1.38.1) (2025-08-02)
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.54.1 to 1.54.2 in /e2e ([#1144](https://github.com/seatsurfing/seatsurfing/issues/1144)) ([9e6e731](https://github.com/seatsurfing/seatsurfing/commit/9e6e731bb7bb9e0f41f4b6f141d3425ec60fc144))
+* make sure random code generator always returns a 6 digit code ([#1145](https://github.com/seatsurfing/seatsurfing/issues/1145)) ([794a913](https://github.com/seatsurfing/seatsurfing/commit/794a913e246c0b9d1f7314d94bd4b7434aea7b0e))
+
 ## [1.38.0](https://github.com/seatsurfing/seatsurfing/compare/v1.37.2...v1.38.0) (2025-07-31)
 
 
