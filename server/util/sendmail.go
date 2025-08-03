@@ -12,6 +12,7 @@ import (
 	"net/smtp"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -112,10 +113,31 @@ func SendEmailWithAttachments(recipient *MailAddress, templateFile, language str
 	if err != nil {
 		return err
 	}
+	body = ReplaceVarsInTemplate(body, vars)
+	return SendEmailWithBodyAndAttachment(recipient, mailTemplate.Subject, body, language, attachments)
+}
+
+func ReplaceVarsInTemplate(body string, vars map[string]string) string {
+	for key, val := range vars {
+		rx := regexp.MustCompile(`{{if ` + key + `}}(.*?){{end}}`)
+		if val == "1" {
+			body = rx.ReplaceAllString(body, "$1")
+		} else {
+			body = rx.ReplaceAllString(body, "")
+		}
+	}
+	for key, val := range vars {
+		rx := regexp.MustCompile(`{{if \!` + key + `}}(.*?){{end}}`)
+		if val != "1" {
+			body = rx.ReplaceAllString(body, "$1")
+		} else {
+			body = rx.ReplaceAllString(body, "")
+		}
+	}
 	for key, val := range vars {
 		body = strings.ReplaceAll(body, "{{"+key+"}}", val)
 	}
-	return SendEmailWithBodyAndAttachment(recipient, mailTemplate.Subject, body, language, attachments)
+	return body
 }
 
 func SendEmailWithBody(recipient *MailAddress, subject, body, language string) error {
