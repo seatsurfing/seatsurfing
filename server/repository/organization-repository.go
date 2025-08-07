@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -196,6 +197,33 @@ func (r *OrganizationRepository) GetAll() ([]*Organization, error) {
 	var result []*Organization
 	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date " +
 		"FROM organizations ORDER BY name")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &Organization{}
+		err = rows.Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *OrganizationRepository) GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*Organization, error) {
+	var result []*Organization
+	interval := strconv.Itoa(daysPassed)
+	settingExistsQuery := "AND $1 = $1 "
+	if settingExists != "" {
+		settingExistsQuery += "AND NOT EXISTS (SELECT 1 FROM settings WHERE settings.organization_id = organizations.id AND settings.name = $1)"
+	}
+	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
+		"FROM organizations "+
+		"WHERE (CURRENT_DATE - signup_date) = INTERVAL '"+interval+"' DAY "+
+		settingExistsQuery+" "+
+		"ORDER BY name", settingExists)
 	if err != nil {
 		return nil, err
 	}
