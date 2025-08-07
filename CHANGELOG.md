@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.38.2](https://github.com/seatsurfing/seatsurfing/compare/v1.38.1...v1.38.2) (2025-08-07)
+
+
+### Bug Fixes
+
+* add method for selecting orgs by signup date ([#1158](https://github.com/seatsurfing/seatsurfing/issues/1158)) ([c5d59cb](https://github.com/seatsurfing/seatsurfing/commit/c5d59cbc508569da09409fc60ba15d862de578d5))
+* **deps:** bump @types/node from 24.1.0 to 24.2.0 in /admin-ui ([#1150](https://github.com/seatsurfing/seatsurfing/issues/1150)) ([3ef1eb6](https://github.com/seatsurfing/seatsurfing/commit/3ef1eb6cbb18bf04332c56e9123b91ebdc4fce36))
+* **deps:** bump @types/node from 24.1.0 to 24.2.0 in /booking-ui ([#1149](https://github.com/seatsurfing/seatsurfing/issues/1149)) ([aecfc37](https://github.com/seatsurfing/seatsurfing/commit/aecfc37e4c7a3759d1720450dbfa81628643f872))
+* **deps:** bump @types/node from 24.1.0 to 24.2.0 in /e2e ([#1151](https://github.com/seatsurfing/seatsurfing/issues/1151)) ([c77a581](https://github.com/seatsurfing/seatsurfing/commit/c77a58107a10c1e82dc7143a1e8f160a4af64615))
+* **deps:** bump react-date-picker from 11.0.0 to 12.0.1 in /admin-ui ([#1153](https://github.com/seatsurfing/seatsurfing/issues/1153)) ([1228816](https://github.com/seatsurfing/seatsurfing/commit/12288168078917e8752d4a98b3312b6cc1f9ebe3))
+* **deps:** bump react-date-picker from 11.0.0 to 12.0.1 in /booking-ui ([#1154](https://github.com/seatsurfing/seatsurfing/issues/1154)) ([201e0bb](https://github.com/seatsurfing/seatsurfing/commit/201e0bb142d5c5b80de7b30af9289236f3031d83))
+* **deps:** bump react-datetime-picker from 6.0.1 to 7.0.1 in /admin-ui ([#1156](https://github.com/seatsurfing/seatsurfing/issues/1156)) ([e8cc0cd](https://github.com/seatsurfing/seatsurfing/commit/e8cc0cd5463bf7f531084d79bd73fa981cc01bc5))
+* **deps:** bump react-datetime-picker from 6.0.1 to 7.0.1 in /booking-ui ([#1155](https://github.com/seatsurfing/seatsurfing/issues/1155)) ([ec19d00](https://github.com/seatsurfing/seatsurfing/commit/ec19d00453a1c6edd87c97ce4f208d07507979ef))
+* support conditions in email templates ([#1147](https://github.com/seatsurfing/seatsurfing/issues/1147)) ([3b550a3](https://github.com/seatsurfing/seatsurfing/commit/3b550a3dc77b270374c19c57ea2c0e263063e494))
+
 ## [1.38.1](https://github.com/seatsurfing/seatsurfing/compare/v1.38.0...v1.38.1) (2025-08-02)
 
 
