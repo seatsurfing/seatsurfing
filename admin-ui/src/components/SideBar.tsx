@@ -80,7 +80,7 @@ class SideBar extends React.Component<Props, State> {
           console.error("Error fetching pending approvals count:", error);
           this.updateApprovalCount();
         });
-    }, 5000);
+    }, 30 * 1000); // Poll every 30 seconds
   };
 
   getActiveKey = () => {
