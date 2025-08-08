@@ -12,7 +12,7 @@ import {
   Icon,
   Clock as IconApproval,
 } from "react-feather";
-import { Ajax, AjaxCredentials, Booking } from "seatsurfing-commons";
+import { Ajax, AjaxCredentials, AjaxError, Booking } from "seatsurfing-commons";
 import { Badge, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
@@ -60,16 +60,27 @@ class SideBar extends React.Component<Props, State> {
   };
 
   updateApprovalCount = () => {
+    if (!Ajax.CREDENTIALS.accessToken) {
+      // Do nothing if we don't have an access token
+      return;
+    }
     window.setTimeout(() => {
-      this.updateApprovalCount();
       Booking.getPendingApprovalsCount()
         .then((count) => {
+          // Successfully fetched pending approvals count, update state & continue polling
           this.setState({ approvalCount: count });
+          this.updateApprovalCount();
         })
         .catch((error) => {
+          if (error instanceof AjaxError && error.httpStatusCode === 401) {
+            // Not authenticated anymore, stop polling
+            return;
+          }
+          // Some other error occurred, try again in next interval
           console.error("Error fetching pending approvals count:", error);
+          this.updateApprovalCount();
         });
-    }, 5000);
+    }, 30 * 1000); // Poll every 30 seconds
   };
 
   getActiveKey = () => {
@@ -200,7 +211,11 @@ class SideBar extends React.Component<Props, State> {
               >
                 <IconApproval className="feather" /> {this.props.t("approvals")}
                 <PremiumFeatureIcon />
-                <Badge bg="primary" hidden={this.state.approvalCount === 0} style={{ marginLeft: "5px" }}>
+                <Badge
+                  bg="primary"
+                  hidden={this.state.approvalCount === 0}
+                  style={{ marginLeft: "5px" }}
+                >
                   {this.state.approvalCount}
                 </Badge>
               </Nav.Link>
