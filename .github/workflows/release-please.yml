@@ -21,7 +21,7 @@ jobs:
         with:
           release-type: simple
   call-release-workflow:
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.release_created && startsWith(github.event.head_commit.message, 'chore(main)')  }}
     needs: release-please
     uses: ./.github/workflows/release.yml
     secrets: inherit
