@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.38.3](https://github.com/seatsurfing/seatsurfing/compare/v1.38.2...v1.38.3) (2025-08-08)
+
+
+### Bug Fixes
+
+* **deps:** bump eslint-config-next from 15.4.5 to 15.4.6 in /admin-ui ([#1162](https://github.com/seatsurfing/seatsurfing/issues/1162)) ([5e4f4f7](https://github.com/seatsurfing/seatsurfing/commit/5e4f4f74ec1739107d67a5eed0f661fe8aae1d4c))
+* **deps:** bump eslint-config-next from 15.4.5 to 15.4.6 in /booking-ui ([#1164](https://github.com/seatsurfing/seatsurfing/issues/1164)) ([3d32866](https://github.com/seatsurfing/seatsurfing/commit/3d32866eb484bef5265b77fe1f513a549aad71f9))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.63 to 1.0.64 in /server ([#1166](https://github.com/seatsurfing/seatsurfing/issues/1166)) ([10b7e13](https://github.com/seatsurfing/seatsurfing/commit/10b7e13c9d98f61d1ae0afb4989107cdde9531e4))
+* **deps:** bump golang.org/x/crypto from 0.40.0 to 0.41.0 in /server ([#1165](https://github.com/seatsurfing/seatsurfing/issues/1165)) ([fb86183](https://github.com/seatsurfing/seatsurfing/commit/fb86183ba3132af29da31f37822315d2b5c55e89))
+* **deps:** bump next from 15.4.5 to 15.4.6 in /admin-ui ([#1161](https://github.com/seatsurfing/seatsurfing/issues/1161)) ([7b43a8e](https://github.com/seatsurfing/seatsurfing/commit/7b43a8ec596df8c18892bde752c44d109f13d01b))
+* **deps:** bump next from 15.4.5 to 15.4.6 in /booking-ui ([#1163](https://github.com/seatsurfing/seatsurfing/issues/1163)) ([3923062](https://github.com/seatsurfing/seatsurfing/commit/39230624183193837839079a98aeadacaed90f68))
+* **deps:** bump react-router-dom from 7.7.1 to 7.8.0 in /admin-ui ([#1160](https://github.com/seatsurfing/seatsurfing/issues/1160)) ([c41155a](https://github.com/seatsurfing/seatsurfing/commit/c41155aa9e8dbe4f20644e662248101d139d11ee))
+* stop polling pending approvals after logout ([#1167](https://github.com/seatsurfing/seatsurfing/issues/1167)) ([e8eb864](https://github.com/seatsurfing/seatsurfing/commit/e8eb86423d0471c29a167f731c59dd52ce68b603))
+
 ## [1.38.2](https://github.com/seatsurfing/seatsurfing/compare/v1.38.1...v1.38.2) (2025-08-07)
 
 
