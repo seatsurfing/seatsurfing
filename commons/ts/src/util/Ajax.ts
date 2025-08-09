@@ -171,6 +171,7 @@ export default class Ajax {
       cache: "no-cache",
       credentials: "same-origin",
       headers: headers,
+      signal: AbortSignal.timeout(30000),
     };
     if (data) {
       if (data instanceof File) {
