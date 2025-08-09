@@ -29,7 +29,7 @@ class SearchResult extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.CREDENTIALS.accessToken) {
+    if (!Ajax.hasAccessToken()) {
       this.props.router.push("/login");
       return;
     }

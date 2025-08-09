@@ -212,7 +212,7 @@ class Search extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.CREDENTIALS.accessToken) {
+    if (!Ajax.hasAccessToken()) {
       this.props.router.push({
         pathname: "/login",
         query: { redir: this.props.router.asPath },

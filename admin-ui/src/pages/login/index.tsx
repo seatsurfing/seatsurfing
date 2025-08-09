@@ -13,6 +13,7 @@ import {
   Ajax,
   JwtDecoder,
   User,
+  AjaxCredentials,
 } from "seatsurfing-commons";
 import Loading from "../../components/Loading";
 import { NextRouter } from "next/router";
@@ -180,7 +181,6 @@ class Login extends React.Component<Props, State> {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
-      longLived: false,
     };
     Ajax.postData("/auth/login", payload)
       .then((res) => {
@@ -191,23 +191,22 @@ class Login extends React.Component<Props, State> {
           });
           return;
         }
-        Ajax.CREDENTIALS = {
+        const credentials: AjaxCredentials = {
           accessToken: res.json.accessToken,
-          refreshToken: res.json.refreshToken,
+          //refreshToken: res.json.refreshToken,
           accessTokenExpiry: new Date(
             new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET
           ),
           logoutUrl: res.json.logoutUrl,
         };
-        Ajax.PERSISTER.updateCredentialsSessionStorage(Ajax.CREDENTIALS).then(
-          () => {
-            RuntimeConfig.loadUserAndSettings().then(() => {
-              this.setState({
-                redirect: "/dashboard",
-              });
-            });
-          }
-        );
+        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
+        //}
+        Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
+        RuntimeConfig.loadUserAndSettings().then(() => {
+          this.setState({
+            redirect: "/dashboard",
+          });
+        });
       })
       .catch(() => {
         this.setState({
@@ -241,7 +240,7 @@ class Login extends React.Component<Props, State> {
   };
 
   useProvider = (providerId: string) => {
-    let target = Ajax.getBackendUrl() + "/auth/" + providerId + "/login/web";
+    let target = Ajax.getBackendUrl() + "/auth/" + providerId + "/login/web/";
     window.location.href = target;
   };
 

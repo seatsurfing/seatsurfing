@@ -7,7 +7,12 @@ import {
   DropdownButton,
   Alert,
 } from "react-bootstrap";
-import { Organization, AuthProvider, Ajax } from "seatsurfing-commons";
+import {
+  Organization,
+  AuthProvider,
+  Ajax,
+  AjaxCredentials,
+} from "seatsurfing-commons";
 import RuntimeConfig from "../../components/RuntimeConfig";
 import Loading from "../../components/Loading";
 import { NextRouter } from "next/router";
@@ -19,7 +24,6 @@ import { LanguageSwitcher } from "next-export-i18n";
 interface State {
   email: string;
   password: string;
-  rememberMe: boolean;
   invalid: boolean;
   redirect: string | null;
   requirePassword: boolean;
@@ -48,7 +52,6 @@ class Login extends React.Component<Props, State> {
     this.state = {
       email: "",
       password: "",
-      rememberMe: false,
       invalid: false,
       redirect: null,
       requirePassword: false,
@@ -179,32 +182,23 @@ class Login extends React.Component<Props, State> {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
-      longLived: this.state.rememberMe,
     };
     Ajax.postData("/auth/login", payload)
       .then((res) => {
-        Ajax.CREDENTIALS = {
+        const credentials: AjaxCredentials = {
           accessToken: res.json.accessToken,
-          refreshToken: res.json.refreshToken,
           accessTokenExpiry: new Date(
             new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET
           ),
           logoutUrl: res.json.logoutUrl,
         };
-        Ajax.PERSISTER.updateCredentialsSessionStorage(Ajax.CREDENTIALS).then(
-          () => {
-            if (this.state.rememberMe) {
-              Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
-                Ajax.CREDENTIALS
-              );
-            }
-            RuntimeConfig.setLoginDetails().then(() => {
-              const redirect =
-                (this.props.router.query["redir"] as string) || "/search";
-              this.setState({ redirect });
-            });
-          }
-        );
+        Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
+        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
+        RuntimeConfig.setLoginDetails().then(() => {
+          const redirect =
+            (this.props.router.query["redir"] as string) || "/search";
+          this.setState({ redirect });
+        });
       })
       .catch(() => {
         this.setState({
@@ -245,10 +239,7 @@ class Login extends React.Component<Props, State> {
     this.setState({
       inAuthProviderLogin: true,
     });
-    let target = Ajax.getBackendUrl() + "/auth/" + providerId + "/login/ui";
-    if (this.state.rememberMe) {
-      target += "/1";
-    }
+    let target = Ajax.getBackendUrl() + "/auth/" + providerId + "/login/ui/";
     const redir = this.props.router.query["redir"] as string;
     if (redir) {
       target += "?redir=" + encodeURIComponent(redir);
@@ -261,7 +252,7 @@ class Login extends React.Component<Props, State> {
       this.props.router.push(this.state.redirect);
       return <></>;
     }
-    if (Ajax.CREDENTIALS.accessToken) {
+    if (Ajax.hasAccessToken()) {
       this.props.router.push("/search");
       return <></>;
     }
@@ -416,15 +407,6 @@ class Login extends React.Component<Props, State> {
             <Form.Control.Feedback type="invalid">
               {this.props.t("errorInvalidEmail")}
             </Form.Control.Feedback>
-            <Form.Check
-              type="checkbox"
-              id="check-rememberme"
-              label={this.props.t("rememberMe")}
-              checked={this.state.rememberMe}
-              onChange={(e: any) =>
-                this.setState({ rememberMe: e.target.checked })
-              }
-            />
             <p className="margin-top-50" hidden={!this.org}>
               <Link href="/resetpw">{this.props.t("forgotPassword")}</Link>
             </p>
@@ -479,15 +461,6 @@ class Login extends React.Component<Props, State> {
           <Form.Control.Feedback type="invalid">
             {this.props.t("errorInvalidEmail")}
           </Form.Control.Feedback>
-          <Form.Check
-            type="checkbox"
-            id="check-rememberme"
-            label={this.props.t("rememberMe")}
-            checked={this.state.rememberMe}
-            onChange={(e: any) =>
-              this.setState({ rememberMe: e.target.checked })
-            }
-          />
           <p className="margin-top-50" hidden={!this.org}>
             <Link href="/resetpw">{this.props.t("forgotPassword")}</Link>
           </p>

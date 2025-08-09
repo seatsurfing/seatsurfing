@@ -25,7 +25,6 @@ import (
 type JWTResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
-	LongLived    bool   `json:"longLived"`
 	LogoutURL    string `json:"logoutUrl"`
 }
 
@@ -63,7 +62,6 @@ type AuthPasswordRequest struct {
 	Email          string `json:"email" validate:"required,email"`
 	Password       string `json:"password" validate:"required,min=8"`
 	OrganizationID string `json:"organizationId" validate:"required"`
-	LongLived      bool   `json:"longLived"`
 }
 
 type RefreshRequest struct {
@@ -73,7 +71,6 @@ type RefreshRequest struct {
 type AuthStateLoginPayload struct {
 	UserID    string `json:"userId"`
 	LoginType string `json:"type"`
-	LongLived bool   `json:"longLived"`
 	Redirect  string `json:"redirect,omitempty"`
 }
 
@@ -82,8 +79,7 @@ type AuthRouter struct {
 
 func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/verify/{id}", router.verify).Methods("GET")
-	s.HandleFunc("/{id}/login/{type}/{longLived}", router.login).Methods("GET")
-	s.HandleFunc("/{id}/login/{type}", router.login).Methods("GET")
+	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/preflight", router.preflight).Methods("POST")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
@@ -178,9 +174,8 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	claims := router.createClaims(user)
-	longLived := refreshToken.Expiry.Sub(refreshToken.Created) > time.Duration(time.Minute*60*25)
 	accessToken := router.CreateAccessToken(claims)
-	newRefreshToken := router.createRefreshToken(claims, longLived)
+	newRefreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
@@ -339,7 +334,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
 	claims := router.createClaims(user)
 	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims, m.LongLived)
+	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -366,7 +361,7 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
 	claims := router.createClaims(user)
 	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims, payload.LongLived)
+	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -445,11 +440,10 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
 	claims := router.createClaims(user)
 	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims, payload.LongLived)
+	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		LongLived:    payload.LongLived,
 		LogoutURL:    router.getLogoutUrl(provider),
 	}
 	SendJSON(w, res)
@@ -478,10 +472,6 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
 		return
 	}
-	longLived := false
-	if vars["longLived"] == "1" {
-		longLived = true
-	}
 	redir := r.URL.Query().Get("redir")
 	config := router.getConfig(provider)
 	if config == nil {
@@ -491,7 +481,6 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 	payload := &AuthStateLoginPayload{
 		LoginType: loginType,
 		UserID:    "",
-		LongLived: longLived, // TODO
 		Redirect:  redir,
 	}
 	authState := &AuthState{
@@ -533,7 +522,6 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	payloadNew := &AuthStateLoginPayload{
 		UserID:    claims.Email,
 		LoginType: payload.LoginType,
-		LongLived: payload.LongLived,
 	}
 	authState := &AuthState{
 		AuthProviderID: provider.ID,
@@ -569,15 +557,15 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 	if primaryDomain == nil {
 		log.Println("Error compiling redirect failed URL for auth provider " + provider.Name + ": No primary domain found for organization")
 		if loginType == "ui" {
-			return "/ui/login/failed"
+			return "/ui/login/failed/"
 		} else {
-			return "/admin/login/failed"
+			return "/admin/login/failed/"
 		}
 	}
 	if loginType == "ui" {
-		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed"
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/"
 	} else {
-		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed"
+		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed/"
 	}
 }
 
@@ -684,13 +672,9 @@ func (router *AuthRouter) CreateAccessToken(claims *Claims) string {
 	return jwtString
 }
 
-func (router *AuthRouter) createRefreshToken(claims *Claims, longLived bool) string {
+func (router *AuthRouter) createRefreshToken(claims *Claims) string {
 	var expiry time.Time
-	if longLived {
-		expiry = time.Now().Add(60 * 24 * 28 * time.Minute)
-	} else {
-		expiry = time.Now().Add(60 * 24 * time.Minute)
-	}
+	expiry = time.Now().Add(60 * 24 * 28 * time.Minute)
 	refreshToken := &RefreshToken{
 		UserID:  claims.UserID,
 		Expiry:  expiry,

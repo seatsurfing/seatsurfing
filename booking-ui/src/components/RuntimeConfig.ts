@@ -48,15 +48,15 @@ export default class RuntimeConfig {
   };
 
   static verifyToken = async (resolve: Function) => {
-    Ajax.CREDENTIALS = await Ajax.PERSISTER.readCredentialsFromSessionStorage();
-    if (!Ajax.CREDENTIALS.accessToken) {
-      Ajax.CREDENTIALS =
-        await Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
-      if (Ajax.CREDENTIALS.refreshToken) {
-        await Ajax.refreshAccessToken(Ajax.CREDENTIALS.refreshToken);
+    let credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    if (!credentials.accessToken) {
+      const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
+      if (refreshToken) {
+        await Ajax.refreshAccessToken(refreshToken);
+        credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
       }
     }
-    if (Ajax.CREDENTIALS.accessToken) {
+    if (credentials.accessToken) {
       User.getSelf()
         .then((user) => {
           RuntimeConfig.loadSettings().then(() => {
@@ -66,15 +66,11 @@ export default class RuntimeConfig {
           });
         })
         .catch((e) => {
-          Ajax.CREDENTIALS = new AjaxCredentials();
-          Ajax.PERSISTER.deleteCredentialsFromSessionStorage().then(() => {
-            resolve();
-            //this.setState({ isLoading: false });
-          });
+          Ajax.PERSISTER.deleteCredentialsFromStorage();
+          resolve();
         });
     } else {
       resolve();
-      //this.setState({ isLoading: false });
     }
   };
 
