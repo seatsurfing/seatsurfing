@@ -13,8 +13,7 @@ interface AjaxResult {
 
 export default class Ajax {
   static URL: string = "";
-  //static ACCESS_TOKEN_EXPIRY_OFFSET: number = 60 * 5 * 1000; // 5 minutes
-  static ACCESS_TOKEN_EXPIRY_OFFSET: number = 10 * 1000; // 10 seconds
+  static ACCESS_TOKEN_EXPIRY_OFFSET: number = 60 * 5 * 1000; // 5 minutes
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
