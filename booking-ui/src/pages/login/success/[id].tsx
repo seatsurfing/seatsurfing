@@ -52,13 +52,13 @@ class LoginSuccess extends React.Component<Props, State> {
             });
           } else {
             this.setState({
-              redirect: "/login/failed",
+              redirect: "/login/failed/",
             });
           }
         })
         .catch(() => {
           this.setState({
-            redirect: "/login/failed",
+            redirect: "/login/failed/",
           });
         });
     }

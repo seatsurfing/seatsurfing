@@ -51,12 +51,12 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		log.Println("JWT header verification failed: parsing JWT failed with: " + err.Error())
-		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed")
+		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed/")
 		return
 	}
 	if !token.Valid {
 		log.Println("JWT header verification failed: invalid JWT")
-		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed")
+		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed/")
 		return
 	}
 	allowAnonymous, _ := GetSettingsRepository().GetBool(org.ID, SettingConfluenceAnonymous.Name)

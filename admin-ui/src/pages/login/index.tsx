@@ -240,7 +240,7 @@ class Login extends React.Component<Props, State> {
   };
 
   useProvider = (providerId: string) => {
-    let target = Ajax.getBackendUrl() + "/auth/" + providerId + "/login/web";
+    let target = Ajax.getBackendUrl() + "/auth/" + providerId + "/login/web/";
     window.location.href = target;
   };
 

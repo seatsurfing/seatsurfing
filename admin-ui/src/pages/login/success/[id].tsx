@@ -37,7 +37,7 @@ class LoginSuccess extends React.Component<Props, State> {
             let jwtPayload = JwtDecoder.getPayload(res.json.accessToken);
             if (jwtPayload.role < User.UserRoleSpaceAdmin) {
               this.setState({
-                redirect: "/login/failed",
+                redirect: "/login/failed/",
               });
               return;
             }
@@ -59,13 +59,13 @@ class LoginSuccess extends React.Component<Props, State> {
             });
           } else {
             this.setState({
-              redirect: "/login/failed",
+              redirect: "/login/failed/",
             });
           }
         })
         .catch(() => {
           this.setState({
-            redirect: "/login/failed",
+            redirect: "/login/failed/",
           });
         });
     }

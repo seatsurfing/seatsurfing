@@ -80,7 +80,6 @@ type AuthRouter struct {
 func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/verify/{id}", router.verify).Methods("GET")
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
-	s.HandleFunc("/{id}/login/{type}", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/preflight", router.preflight).Methods("POST")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
@@ -558,15 +557,15 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 	if primaryDomain == nil {
 		log.Println("Error compiling redirect failed URL for auth provider " + provider.Name + ": No primary domain found for organization")
 		if loginType == "ui" {
-			return "/ui/login/failed"
+			return "/ui/login/failed/"
 		} else {
-			return "/admin/login/failed"
+			return "/admin/login/failed/"
 		}
 	}
 	if loginType == "ui" {
-		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed"
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/"
 	} else {
-		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed"
+		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed/"
 	}
 }
 
