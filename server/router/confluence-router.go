@@ -92,7 +92,6 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	payload := &AuthStateLoginPayload{
 		LoginType: "",
 		UserID:    userID,
-		LongLived: false,
 	}
 	authState := &AuthState{
 		AuthProviderID: GetSettingsRepository().GetNullUUID(),

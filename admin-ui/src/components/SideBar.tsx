@@ -43,10 +43,8 @@ class SideBar extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!RuntimeConfig.INFOS.spaceAdmin) {
-      Ajax.CREDENTIALS = new AjaxCredentials();
-      Ajax.PERSISTER.deleteCredentialsFromSessionStorage().then(() => {
-        this.props.router.push("/login");
-      });
+      Ajax.PERSISTER.deleteCredentialsFromStorage();
+      this.props.router.push("/login");
       return;
     }
     Booking.getPendingApprovalsCount()
@@ -60,7 +58,7 @@ class SideBar extends React.Component<Props, State> {
   };
 
   updateApprovalCount = () => {
-    if (!Ajax.CREDENTIALS.accessToken) {
+    if (!Ajax.hasAccessToken()) {
       // Do nothing if we don't have an access token
       return;
     }

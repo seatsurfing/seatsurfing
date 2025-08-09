@@ -250,7 +250,6 @@ func TestAuthVerify(t *testing.T) {
 	payloadAuthState := &AuthStateLoginPayload{
 		UserID:    "test@foo.bar",
 		LoginType: "ui",
-		LongLived: true,
 	}
 	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
 	authState := &AuthState{

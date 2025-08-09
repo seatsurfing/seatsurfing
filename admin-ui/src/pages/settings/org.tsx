@@ -50,7 +50,7 @@ class EditOrg extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.CREDENTIALS.accessToken || !RuntimeConfig.INFOS.orgAdmin) {
+    if (!Ajax.hasAccessToken() || !RuntimeConfig.INFOS.orgAdmin) {
       this.props.router.push("/login");
       return;
     }

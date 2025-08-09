@@ -117,7 +117,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.CREDENTIALS.accessToken) {
+    if (!Ajax.hasAccessToken()) {
       this.props.router.push("/login");
       return;
     }
@@ -439,10 +439,8 @@ class Settings extends React.Component<Props, State> {
     if (window.confirm(this.props.t("confirmDeleteOrg"))) {
       if (window.confirm(this.props.t("confirmDeleteOrg2"))) {
         this.org?.delete().then(() => {
-          Ajax.CREDENTIALS = new AjaxCredentials();
-          Ajax.PERSISTER.deleteCredentialsFromSessionStorage().then(() => {
-            window.location.href = "/admin/";
-          });
+          Ajax.PERSISTER.deleteCredentialsFromStorage();
+          window.location.href = "/admin/";
         });
       }
     }
