@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.39.0](https://github.com/seatsurfing/seatsurfing/compare/v1.38.3...v1.39.0) (2025-08-09)
+
+
+### Features
+
+* refactored credentials handling and persistence in frontends ([#1174](https://github.com/seatsurfing/seatsurfing/issues/1174)) ([f80b630](https://github.com/seatsurfing/seatsurfing/commit/f80b630f2a3dd713775d9ea6f812e177594d7a02))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.2.0 to 24.2.1 in /admin-ui ([#1171](https://github.com/seatsurfing/seatsurfing/issues/1171)) ([d0f1aec](https://github.com/seatsurfing/seatsurfing/commit/d0f1aecf5414d86661b079207464902c766178c8))
+* **deps:** bump @types/node from 24.2.0 to 24.2.1 in /booking-ui ([#1172](https://github.com/seatsurfing/seatsurfing/issues/1172)) ([f92eb79](https://github.com/seatsurfing/seatsurfing/commit/f92eb79746513bf358ba94f46d14c679b8d113c2))
+* **deps:** bump @types/node from 24.2.0 to 24.2.1 in /e2e ([#1173](https://github.com/seatsurfing/seatsurfing/issues/1173)) ([b3f344c](https://github.com/seatsurfing/seatsurfing/commit/b3f344cb53030e176e0e345e7914fc69fcca97d1))
+* improve resilience when saving locations/spaces ([#1177](https://github.com/seatsurfing/seatsurfing/issues/1177)) ([0f31067](https://github.com/seatsurfing/seatsurfing/commit/0f31067d1a8ffc53a4d56fdaf4041cb4ca9a2175))
+* incorrect access token expiry ([#1176](https://github.com/seatsurfing/seatsurfing/issues/1176)) ([3f0007e](https://github.com/seatsurfing/seatsurfing/commit/3f0007ea7404559f12d113ab55e5497fcdccc893))
+
 ## [1.38.3](https://github.com/seatsurfing/seatsurfing/compare/v1.38.2...v1.38.3) (2025-08-08)
 
 
