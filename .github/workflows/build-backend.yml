@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set version env
       run: echo "CI_VERSION=$(cat version.txt | awk NF)" >> $GITHUB_ENV
     - name: Set up QEMU
