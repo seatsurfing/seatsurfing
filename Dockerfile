@@ -33,7 +33,7 @@ RUN npm install
 RUN npm install --save ./commons/ts
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24-bookworm AS server-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25-bookworm AS server-builder
 RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 ARG TARGETPLATFORM
