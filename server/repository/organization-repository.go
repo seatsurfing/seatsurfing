@@ -215,15 +215,15 @@ func (r *OrganizationRepository) GetAll() ([]*Organization, error) {
 func (r *OrganizationRepository) GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*Organization, error) {
 	var result []*Organization
 	interval := strconv.Itoa(daysPassed)
-	settingExistsQuery := "AND $1 = $1 "
+	settingExistsQuery := "AND $2 = $2 "
 	if settingExists != "" {
-		settingExistsQuery += "AND NOT EXISTS (SELECT 1 FROM settings WHERE settings.organization_id = organizations.id AND settings.name = $1)"
+		settingExistsQuery += "AND NOT EXISTS (SELECT 1 FROM settings WHERE settings.organization_id = organizations.id AND settings.name = $2)"
 	}
 	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
 		"FROM organizations "+
-		"WHERE (CURRENT_DATE - signup_date) = INTERVAL '"+interval+"' DAY "+
+		"WHERE (CURRENT_DATE::date - signup_date::date) = $1 "+
 		settingExistsQuery+" "+
-		"ORDER BY name", settingExists)
+		"ORDER BY name", interval, settingExists)
 	if err != nil {
 		return nil, err
 	}
