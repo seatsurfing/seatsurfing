@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.39.1](https://github.com/seatsurfing/seatsurfing/compare/v1.39.0...v1.39.1) (2025-08-15)
+
+
+### Bug Fixes
+
+* **deps:** bump eslint from 9.32.0 to 9.33.0 in /admin-ui ([#1179](https://github.com/seatsurfing/seatsurfing/issues/1179)) ([f3037c6](https://github.com/seatsurfing/seatsurfing/commit/f3037c68b2982fb84b5665241897a808bb251896))
+* **deps:** bump eslint from 9.32.0 to 9.33.0 in /booking-ui ([#1180](https://github.com/seatsurfing/seatsurfing/issues/1180)) ([880f543](https://github.com/seatsurfing/seatsurfing/commit/880f543246c1a1f8662e16f01b4584a5e5477cb3))
+* **deps:** bump library/golang from 1.24-bookworm to 1.25-bookworm ([#1182](https://github.com/seatsurfing/seatsurfing/issues/1182)) ([5062367](https://github.com/seatsurfing/seatsurfing/commit/5062367cb59760ebbb44d748cf0e17f352ed9b60))
+* update german translation for "add" ([#1181](https://github.com/seatsurfing/seatsurfing/issues/1181)) ([a57e282](https://github.com/seatsurfing/seatsurfing/commit/a57e282b69877cfaa894b8c06226ad96926998d5))
+
 ## [1.39.0](https://github.com/seatsurfing/seatsurfing/compare/v1.38.3...v1.39.0) (2025-08-09)
 
 
