@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.2](https://github.com/seatsurfing/seatsurfing/compare/v1.39.1...v1.39.2) (2025-08-15)
+
+
+### Bug Fixes
+
+* improve GetAllDaysPassedSinceSignup function ([#1187](https://github.com/seatsurfing/seatsurfing/issues/1187)) ([98ed8d1](https://github.com/seatsurfing/seatsurfing/commit/98ed8d16bcbcbe6da6565ace41cb47d9ef08419d))
+
 ## [1.39.1](https://github.com/seatsurfing/seatsurfing/compare/v1.39.0...v1.39.1) (2025-08-15)
 
 
