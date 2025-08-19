@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.39.3](https://github.com/seatsurfing/seatsurfing/compare/v1.39.2...v1.39.3) (2025-08-19)
+
+
+### Bug Fixes
+
+* add Portuguese translations ([#1192](https://github.com/seatsurfing/seatsurfing/issues/1192)) ([001d797](https://github.com/seatsurfing/seatsurfing/commit/001d7972e6ea27b76c4f8c0d961bad2085ae4655))
+* **deps:** bump @types/node from 24.2.1 to 24.3.0 in /admin-ui ([#1184](https://github.com/seatsurfing/seatsurfing/issues/1184)) ([1b100ed](https://github.com/seatsurfing/seatsurfing/commit/1b100ed979a1e151620ef4335f32f60f86543ab2))
+* **deps:** bump @types/node from 24.2.1 to 24.3.0 in /booking-ui ([#1185](https://github.com/seatsurfing/seatsurfing/issues/1185)) ([719aaab](https://github.com/seatsurfing/seatsurfing/commit/719aaabe073e316b5e61ff8e4f519193dd734262))
+* **deps:** bump @types/node from 24.2.1 to 24.3.0 in /e2e ([#1186](https://github.com/seatsurfing/seatsurfing/issues/1186)) ([5566e65](https://github.com/seatsurfing/seatsurfing/commit/5566e65cebf7ebbc9d35692840138992c0ca2859))
+* **deps:** bump react-router-dom from 7.8.0 to 7.8.1 in /admin-ui ([#1191](https://github.com/seatsurfing/seatsurfing/issues/1191)) ([0ad8ab2](https://github.com/seatsurfing/seatsurfing/commit/0ad8ab205001ce6c4ebf864c57fc513a4ea566b9))
+
 ## [1.39.2](https://github.com/seatsurfing/seatsurfing/compare/v1.39.1...v1.39.2) (2025-08-15)
 
 
