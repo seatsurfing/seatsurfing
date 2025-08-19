@@ -6,6 +6,7 @@ var he = require("./translations.he.json");
 var hu = require("./translations.hu.json");
 var it = require("./translations.it.json");
 var nl = require("./translations.nl.json");
+var pt = require("./translations.pt.json");
 var ro = require("./translations.ro.json");
 
 const i18n = {
@@ -18,6 +19,7 @@ const i18n = {
     hu,
     it,
     nl,
+    pt,
     ro,
   },
   defaultLang: "en",
