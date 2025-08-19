@@ -40,7 +40,7 @@
   },
   "homepage": "/ui/",
   "devDependencies": {
-    "@types/node": "24.2.1",
+    "@types/node": "24.3.0",
     "eslint": "^9.33.0",
     "eslint-config-next": "15.4.6"
   }
