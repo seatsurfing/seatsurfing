@@ -6,7 +6,7 @@
     "@types/react-dom": "^19.1.7",
     "bootstrap": "^5.3.7",
     "excellentexport": "^3.9.10",
-    "next": "^15.4.6",
+    "next": "^15.4.7",
     "next-export-i18n": "^2.4.3",
     "react": "^19.0.0",
     "react-autosuggest": "^10.1.0",
