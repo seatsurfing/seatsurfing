@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.39.4](https://github.com/seatsurfing/seatsurfing/compare/v1.39.3...v1.39.4) (2025-08-22)
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.54.2 to 1.55.0 in /e2e ([#1204](https://github.com/seatsurfing/seatsurfing/issues/1204)) ([0726e2c](https://github.com/seatsurfing/seatsurfing/commit/0726e2ccc3a66d7503cb8f28a4be9cdcf8bad9bf))
+* **deps:** bump eslint-config-next from 15.4.6 to 15.5.0 in /admin-ui ([#1201](https://github.com/seatsurfing/seatsurfing/issues/1201)) ([9e07feb](https://github.com/seatsurfing/seatsurfing/commit/9e07febff08ad6cf0c746f93939c5f02982295e2))
+* **deps:** bump eslint-config-next from 15.4.6 to 15.5.0 in /booking-ui ([#1203](https://github.com/seatsurfing/seatsurfing/issues/1203)) ([c317bc8](https://github.com/seatsurfing/seatsurfing/commit/c317bc8ad24f7e0ffacaa4bdfee9c91d07e53582))
+* **deps:** bump next from 15.4.6 to 15.5.0 in /admin-ui ([#1200](https://github.com/seatsurfing/seatsurfing/issues/1200)) ([f5dfbd5](https://github.com/seatsurfing/seatsurfing/commit/f5dfbd5978ec11c5f20e47dc46c9a8f7fd5d52bf))
+* **deps:** bump next from 15.4.6 to 15.5.0 in /booking-ui ([#1202](https://github.com/seatsurfing/seatsurfing/issues/1202)) ([9f21fac](https://github.com/seatsurfing/seatsurfing/commit/9f21fac9509c88177567cfbd8c6b2f798c5b717a))
+* **deps:** bump react-router-dom from 7.8.1 to 7.8.2 in /admin-ui ([#1206](https://github.com/seatsurfing/seatsurfing/issues/1206)) ([c83e9bb](https://github.com/seatsurfing/seatsurfing/commit/c83e9bbe7a60043eb0b100fa1b8ce3b4a7ee39e4))
+* **lang:** add Polish translations ([#1194](https://github.com/seatsurfing/seatsurfing/issues/1194)) ([6fbbae6](https://github.com/seatsurfing/seatsurfing/commit/6fbbae615eafd64211a5a284b35fe6f9bd95fb65))
+
 ## [1.39.3](https://github.com/seatsurfing/seatsurfing/compare/v1.39.2...v1.39.3) (2025-08-19)
 
 
