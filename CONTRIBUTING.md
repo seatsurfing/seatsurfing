@@ -71,7 +71,7 @@ The frontend translations are located in:
 * admin-ui/i18n
 * booking-ui/i18n
 
-**To add a new language,** copy the ```i18n/translations.en.json``` files and name it according to the two-letter ISO 639 language codes. Do *not* change the keys of the file, but only translate the values. Then, add the new language to the ```i18n/index.js``` files.
+**To add a new language,** copy the ```i18n/translations.en.json``` files and name it according to the two-letter ISO 639 language codes. Do *not* change the keys of the file, but only translate the values. Then, add the new language to the ```i18n/index.js``` and the ```src/components/RuntimeConfig.ts``` files.
 
 **To modify translations in an existing language,** just open the corresponding ```i18n/translations.xx.json``` files and update the values.
 
