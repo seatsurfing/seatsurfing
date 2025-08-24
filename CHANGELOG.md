@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.5](https://github.com/seatsurfing/seatsurfing/compare/v1.39.4...v1.39.5) (2025-08-24)
+
+
+### Bug Fixes
+
+* **lang:** add Spanish translation ([#1208](https://github.com/seatsurfing/seatsurfing/issues/1208)) ([ea868b5](https://github.com/seatsurfing/seatsurfing/commit/ea868b5d26873a251702e9c51be56fede130d789))
+
 ## [1.39.4](https://github.com/seatsurfing/seatsurfing/compare/v1.39.3...v1.39.4) (2025-08-22)
 
 
