@@ -113,6 +113,6 @@ export default class RuntimeConfig {
   }
 
   static getAvailableLanguages(): string[] {
-    return ["en", "de", "et", "fr", "he", "hu", "it", "nl", "pl", "pt", "ro"];
+    return ["en", "de", "et", "fr", "he", "hu", "it", "nl", "pl", "pt", "ro", "es"];
   }
 }

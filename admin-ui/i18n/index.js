@@ -9,6 +9,7 @@ var nl = require("./translations.nl.json");
 var pl = require("./translations.pl.json");
 var pt = require("./translations.pt.json");
 var ro = require("./translations.ro.json");
+var es = require("./translations.es.json");
 
 const i18n = {
   translations: {
@@ -23,6 +24,7 @@ const i18n = {
     pl,
     pt,
     ro,
+    es,
   },
   defaultLang: "en",
   useBrowserDefault: true,
