@@ -7,6 +7,7 @@ import {
 
 interface RuntimeUserInfos {
   username: string;
+  idpLogin: boolean;
   isLoading: boolean;
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
@@ -29,6 +30,7 @@ export default class RuntimeConfig {
   static EMBEDDED: boolean = false;
   static INFOS: RuntimeUserInfos = {
     username: "",
+    idpLogin: false,
     isLoading: true,
     maxBookingsPerUser: 0,
     maxConcurrentBookingsPerUser: 0,
@@ -60,6 +62,7 @@ export default class RuntimeConfig {
       User.getSelf()
         .then((user) => {
           RuntimeConfig.loadSettings().then(() => {
+            RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
             RuntimeConfig.setDetails(user.email);
             resolve();
             //this.setState({ isLoading: false });
@@ -134,6 +137,7 @@ export default class RuntimeConfig {
 
   static async setLoginDetails(): Promise<void> {
     return User.getSelf().then((user) => {
+      RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
       RuntimeConfig.setDetails(user.email);
     });
   }
