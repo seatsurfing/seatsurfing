@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.6](https://github.com/seatsurfing/seatsurfing/compare/v1.39.5...v1.39.6) (2025-08-25)
+
+
+### Bug Fixes
+
+* disable password change when logging in via IdP ([#1212](https://github.com/seatsurfing/seatsurfing/issues/1212)) ([61660c9](https://github.com/seatsurfing/seatsurfing/commit/61660c9fd1b513fce8f68b20f078c85f5e29a656))
+
 ## [1.39.5](https://github.com/seatsurfing/seatsurfing/compare/v1.39.4...v1.39.5) (2025-08-24)
 
 
