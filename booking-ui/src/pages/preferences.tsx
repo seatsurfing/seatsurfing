@@ -361,7 +361,7 @@ class Preferences extends React.Component<Props, State> {
               <Nav.Item>
                 <Nav.Link eventKey="tab-bookings">{this.props.t('bookings')}</Nav.Link>
               </Nav.Item>
-              <Nav.Item>
+              <Nav.Item hidden={RuntimeConfig.INFOS.idpLogin}>
                 <Nav.Link eventKey="tab-security">{this.props.t('security')}</Nav.Link>
               </Nav.Item>
               <Nav.Item>
