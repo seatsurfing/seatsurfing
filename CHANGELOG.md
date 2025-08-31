@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.7](https://github.com/seatsurfing/seatsurfing/compare/v1.39.6...v1.39.7) (2025-08-31)
+
+
+### Bug Fixes
+
+* fix calculation for min. booking hours ([#1231](https://github.com/seatsurfing/seatsurfing/issues/1231)) ([636b30f](https://github.com/seatsurfing/seatsurfing/commit/636b30f3d311ff30ef4481819a7deb3a890cf1a1))
+
 ## [1.39.6](https://github.com/seatsurfing/seatsurfing/compare/v1.39.5...v1.39.6) (2025-08-31)
 
 
