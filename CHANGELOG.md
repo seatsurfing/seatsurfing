@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.39.6](https://github.com/seatsurfing/seatsurfing/compare/v1.39.5...v1.39.6) (2025-08-31)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/react-dom from 19.1.7 to 19.1.9 in /admin-ui ([#1229](https://github.com/seatsurfing/seatsurfing/issues/1229)) ([41406a1](https://github.com/seatsurfing/seatsurfing/commit/41406a17ccc4700171bfb5886d3beb5587a42005))
+* **deps:** bump @types/react-dom from 19.1.7 to 19.1.9 in /booking-ui ([#1230](https://github.com/seatsurfing/seatsurfing/issues/1230)) ([3ea4477](https://github.com/seatsurfing/seatsurfing/commit/3ea4477350941176a24785dc56191877491bc5fc))
+* **deps:** bump bootstrap from 5.3.7 to 5.3.8 in /admin-ui ([#1220](https://github.com/seatsurfing/seatsurfing/issues/1220)) ([05c6f86](https://github.com/seatsurfing/seatsurfing/commit/05c6f8608133510ff2dfcb121b543578a4d0e405))
+* **deps:** bump bootstrap from 5.3.7 to 5.3.8 in /booking-ui ([#1221](https://github.com/seatsurfing/seatsurfing/issues/1221)) ([f8c1174](https://github.com/seatsurfing/seatsurfing/commit/f8c117457c7bd7d12a8c7a175bf487c9dfc9edbe))
+* **deps:** bump eslint from 9.33.0 to 9.34.0 in /admin-ui ([#1216](https://github.com/seatsurfing/seatsurfing/issues/1216)) ([259be02](https://github.com/seatsurfing/seatsurfing/commit/259be02070d288afc4af55faa80650167d96c1af))
+* **deps:** bump eslint from 9.33.0 to 9.34.0 in /booking-ui ([#1215](https://github.com/seatsurfing/seatsurfing/issues/1215)) ([41a1918](https://github.com/seatsurfing/seatsurfing/commit/41a1918db963c9570caefac57098d0eb18f8426b))
+* **deps:** bump eslint-config-next from 15.5.0 to 15.5.2 in /admin-ui ([#1227](https://github.com/seatsurfing/seatsurfing/issues/1227)) ([6ad0947](https://github.com/seatsurfing/seatsurfing/commit/6ad0947bb14b3169077403a2220ac43757700814))
+* **deps:** bump eslint-config-next from 15.5.0 to 15.5.2 in /booking-ui ([#1228](https://github.com/seatsurfing/seatsurfing/issues/1228)) ([a0a7779](https://github.com/seatsurfing/seatsurfing/commit/a0a7779099069267c29d4acf9d0e3e24bf476365))
+* **deps:** bump next from 15.5.0 to 15.5.2 in /admin-ui ([#1226](https://github.com/seatsurfing/seatsurfing/issues/1226)) ([f5b7d8d](https://github.com/seatsurfing/seatsurfing/commit/f5b7d8de109374341d21f30e6f8706e6238f9dd3))
+* **deps:** bump next from 15.5.0 to 15.5.2 in /booking-ui ([#1225](https://github.com/seatsurfing/seatsurfing/issues/1225)) ([c4d2938](https://github.com/seatsurfing/seatsurfing/commit/c4d2938e4caaacf3265effb9816b84ba72786ec5))
+* disable password change when logging in via IdP ([#1212](https://github.com/seatsurfing/seatsurfing/issues/1212)) ([61660c9](https://github.com/seatsurfing/seatsurfing/commit/61660c9fd1b513fce8f68b20f078c85f5e29a656))
+
 ## [1.39.5](https://github.com/seatsurfing/seatsurfing/compare/v1.39.4...v1.39.5) (2025-08-24)
 
 
