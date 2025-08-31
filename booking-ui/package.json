@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@types/react-dom": "^19.1.9",
-    "bootstrap": "^5.3.7",
+    "bootstrap": "^5.3.8",
     "next": "^15.5.2",
     "next-export-i18n": "^2.4.3",
     "react": "^19.0.0",
