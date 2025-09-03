@@ -1,42 +1,15 @@
-version: '3.7'
-
 services:
   server:
     image: seatsurfing/backend
-    #build:
-    #  context: .
-    #  dockerfile: Dockerfile
     restart: always
     networks:
       sql:
-      http:
     ports:
       - 8080:8080
-    depends_on:
-      - db
     environment:
       POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
-      BOOKING_UI_BACKEND: 'booking-ui:3001'
-      ADMIN_UI_BACKEND: 'admin-ui:3000'
-      CRYPT_KEY: 'some-random-32-bytes-long-string'
-  booking-ui:
-    image: seatsurfing/booking-ui
-    #build:
-    #  context: .
-    #  dockerfile: Dockerfile.booking-ui
-    restart: always
-    networks:
-      http:
-  admin-ui:
-    image: seatsurfing/admin-ui:dev
-    #build:
-    #  context: .
-    #  dockerfile: Dockerfile.admin-ui
-    restart: always
-    networks:
-      http:
   db:
-    image: postgres:15-alpine
+    image: postgres:17
     restart: always
     networks:
       sql:
@@ -52,5 +25,3 @@ volumes:
 
 networks:
   sql:
-  http:
-
