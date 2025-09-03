@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.8](https://github.com/seatsurfing/seatsurfing/compare/v1.39.7...v1.39.8) (2025-09-03)
+
+
+### Bug Fixes
+
+* docker healthcheck ([#1236](https://github.com/seatsurfing/seatsurfing/issues/1236)) ([6e53149](https://github.com/seatsurfing/seatsurfing/commit/6e53149a62658d5d4204a29f6987157a6e91e9c7))
+
 ## [1.39.7](https://github.com/seatsurfing/seatsurfing/compare/v1.39.6...v1.39.7) (2025-08-31)
 
 
