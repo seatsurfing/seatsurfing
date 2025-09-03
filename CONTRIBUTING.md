@@ -8,6 +8,12 @@
    node -v
    ```
 
+1. Make sure Go 1.23 or later is installed:
+
+   ```shell
+   go version
+   ```
+
 1. Set up a local PostgreSQL database, i.e. using a container:
 
    ```shell
@@ -68,14 +74,15 @@ You should now be able to access the Admin UI at http://localhost:3000/admin/ an
 ## Adding translations
 
 The frontend translations are located in:
-* admin-ui/i18n
-* booking-ui/i18n
 
-**To add a new language,** copy the ```i18n/translations.en.json``` files and name it according to the two-letter ISO 639 language codes. Do *not* change the keys of the file, but only translate the values. Then, add the new language to the ```i18n/index.js``` and the ```src/components/RuntimeConfig.ts``` files.
+- admin-ui/i18n
+- booking-ui/i18n
 
-**To modify translations in an existing language,** just open the corresponding ```i18n/translations.xx.json``` files and update the values.
+**To add a new language,** copy the `i18n/translations.en.json` files and name it according to the two-letter ISO 639 language codes. Do _not_ change the keys of the file, but only translate the values. Then, add the new language to the `i18n/index.js` and the `src/components/RuntimeConfig.ts` files.
 
-**To add new keys to the translation files** in order to use them in new frontend functionalities, add the corresponding keys to the ```i18n/translations.xx.json``` files. To make work easier, you can add the translations to the English ```i18n/translations.en.json``` files only and then run the ```add-missing-translations.sh``` scripts which add the keys and untranslated values to the other language files.
+**To modify translations in an existing language,** just open the corresponding `i18n/translations.xx.json` files and update the values.
+
+**To add new keys to the translation files** in order to use them in new frontend functionalities, add the corresponding keys to the `i18n/translations.xx.json` files. To make work easier, you can add the translations to the English `i18n/translations.en.json` files only and then run the `add-missing-translations.sh` scripts which add the keys and untranslated values to the other language files.
 
 ## Running tests
 
