@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.9](https://github.com/seatsurfing/seatsurfing/compare/v1.39.8...v1.39.9) (2025-09-05)
+
+
+### Bug Fixes
+
+* add missing German translations ([#1245](https://github.com/seatsurfing/seatsurfing/issues/1245)) ([64fe53d](https://github.com/seatsurfing/seatsurfing/commit/64fe53ddaad23fbb8c6d5dfda565631c82ba5beb))
+
 ## [1.39.8](https://github.com/seatsurfing/seatsurfing/compare/v1.39.7...v1.39.8) (2025-09-03)
 
 
