@@ -154,9 +154,9 @@
   "askApplyRecurrenceAnyway": "Möchtest Du die Wiederholung trotzdem anwenden?",
   "confirmMultipleBookings": "{{num}} Buchungen bestätigen",
   "errorDeleteBooking": "An error occurred while deleting your booking.",
-  "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before. Contact an admin.",
-  "errorMinBookingDuration": "The minimum booking duration is {{num}} hours.",
-  "map": "Map",
-  "week": "Week",
+  "errorDeleteBookingBeforeMaxCancel": "Die Buchung kann nicht weniger als {{num}} Stunden vor Beginn storniert werden. Kontaktiere einen Administrator.",
+  "errorMinBookingDuration": "Die Buchung muss mindestens {{num}} Stunden dauern.",
+  "map": "Karte",
+  "week": "Woche",
   "noFilters": "Keine Filter verfügbar"
 }
