@@ -1,8 +1,5 @@
 package repository
 
-
-import "fmt"
-
 import (
 	"sync"
 )
@@ -90,11 +87,12 @@ func (r *AuthProviderRepository) Create(e *AuthProvider) error {
 func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 	e := &AuthProvider{}
 
-
-	err := GetDatabase().DB().QueryRow("SELECT id, auth_providers.organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, CONCAT(organizations_domains.domain, ' test') "+
+	err := GetDatabase().DB().QueryRow("SELECT id, auth_providers.organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, "+
+		"CASE WHEN organizations_domains_primary.domain IS NOT NULL THEN CONCAT('https://', organizations_domains_primary.domain, '/auth/', id, '/callback') WHEN organizations_domains_active.domain IS NOT NULL THEN CONCAT('https://', organizations_domains_active.domain, '/auth/', id, '/callback') ELSE '' END AS callback_url "+
 		"FROM auth_providers "+
-		"JOIN organizations_domains ON (organizations_domains.organization_id = auth_providers.organization_id AND primary_domain = TRUE) "+
-		"WHERE auth_providers.id = $1", 
+		"LEFT JOIN organizations_domains AS organizations_domains_primary ON (organizations_domains_primary.organization_id = auth_providers.organization_id AND primary_domain = TRUE AND organizations_domains_primary.active = TRUE) "+
+		"LEFT JOIN organizations_domains AS organizations_domains_active ON (organizations_domains_active.organization_id = auth_providers.organization_id AND organizations_domains_active.active = TRUE) "+
+		"WHERE auth_providers.id = $1",
 		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.CallbackURL)
 	if err != nil {
 		return nil, err
@@ -104,18 +102,11 @@ func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 
 func (r *AuthProviderRepository) GetAll(organizationID string) ([]*AuthProvider, error) {
 	var result []*AuthProvider
-
-	fmt.Println("SELECT id, auth_providers.organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, CONCAT(organizations_domains.domain, ' test') "+
+	rows, err := GetDatabase().DB().Query("SELECT id, auth_providers.organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, "+
+		"CASE WHEN organizations_domains_primary.domain IS NOT NULL THEN CONCAT('https://', organizations_domains_primary.domain, '/auth/', id, '/callback') WHEN organizations_domains_active.domain IS NOT NULL THEN CONCAT('https://', organizations_domains_active.domain, '/auth/', id, '/callback') ELSE '' END AS callback_url "+
 		"FROM auth_providers "+
-		"JOIN organizations_domains ON (organizations_domains.organization_id = auth_providers.organization_id AND primary_domain = TRUE) "+
-		"WHERE auth_providers.organization_id = $1 "+
-		"ORDER BY name")
-	fmt.Println(organizationID)
-
-	rows, err := GetDatabase().DB().Query("SELECT id, auth_providers.organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, CONCAT(organizations_domains.domain, ' test') "+
-		"FROM auth_providers "+
-		"JOIN organizations_domains ON (organizations_domains.organization_id = auth_providers.organization_id AND primary_domain = TRUE) "+
-		"WHERE auth_providers.organization_id = $1 "+
+		"LEFT JOIN organizations_domains AS organizations_domains_primary ON (organizations_domains_primary.organization_id = auth_providers.organization_id AND primary_domain = TRUE AND organizations_domains_primary.active = TRUE) "+
+		"LEFT JOIN organizations_domains AS organizations_domains_active ON (organizations_domains_active.organization_id = auth_providers.organization_id AND organizations_domains_active.active = TRUE) "+"WHERE auth_providers.organization_id = $1 "+
 		"ORDER BY name", organizationID)
 	if err != nil {
 		return nil, err
