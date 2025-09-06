@@ -86,7 +86,6 @@ func (r *AuthProviderRepository) Create(e *AuthProvider) error {
 
 func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 	e := &AuthProvider{}
-
 	err := GetDatabase().DB().QueryRow("SELECT id, auth_providers.organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, "+
 		"CASE WHEN organizations_domains_primary.domain IS NOT NULL THEN organizations_domains_primary.domain WHEN organizations_domains_active.domain IS NOT NULL THEN organizations_domains_active.domain ELSE '' END AS callback_url_domain "+
 		"FROM auth_providers "+
