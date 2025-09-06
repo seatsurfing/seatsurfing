@@ -28,6 +28,7 @@ type CreateAuthProviderRequest struct {
 	ClientID           string `json:"clientId" validate:"required"`
 	ClientSecret       string `json:"clientSecret" validate:"required"`
 	LogoutURL          string `json:"logoutUrl"`
+	CallbackURL        string `json:"callbackUrl"`
 }
 
 type GetAuthProviderResponse struct {
@@ -199,6 +200,7 @@ func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest
 	e.UserInfoEmailField = m.UserInfoEmailField
 	e.ProviderType = m.ProviderType
 	e.LogoutURL = m.LogoutURL
+	e.CallbackURL = m.CallbackURL
 	return e
 }
 
@@ -217,5 +219,6 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.UserInfoEmailField = e.UserInfoEmailField
 	m.ProviderType = e.ProviderType
 	m.LogoutURL = e.LogoutURL
+	m.CallbackURL = e.CallbackURL
 	return m
 }

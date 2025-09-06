@@ -29,6 +29,7 @@ interface State {
   clientId: string;
   clientSecret: string;
   logoutUrl: string;
+  callbackUrl: string;
 }
 
 interface Props {
@@ -57,6 +58,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       clientId: "",
       clientSecret: "",
       logoutUrl: "",
+      callbackUrl: "",
     };
   }
 
@@ -85,6 +87,7 @@ class EditAuthProvider extends React.Component<Props, State> {
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
           logoutUrl: authProvider.logoutUrl,
+          callbackUrl: authProvider.callbackUrl,
           loading: false,
         });
       });
@@ -108,6 +111,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.clientId = this.state.clientId;
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
+    this.entity.callbackUrl = this.state.callbackUrl;
     this.entity.save().then(() => {
       this.props.router.push("/settings/auth-providers/" + this.entity.id);
       this.setState({
@@ -135,6 +139,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoUrl: "https://www.googleapis.com/oauth2/v3/userinfo",
       userInfoEmailField: "email",
       logoutUrl: "",
+      callbackUrl: "",
     });
   };
 
@@ -150,6 +155,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoEmailField: "email",
       logoutUrl:
         "https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={logoutRedirectUri}",
+      callbackUrl: "",
     });
   };
 
@@ -168,6 +174,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoEmailField: "email",
       logoutUrl:
         "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/logout?post_logout_redirect_uri={logoutRedirectUri}",
+      callbackUrl: "",
     });
   };
 
@@ -183,6 +190,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoEmailField: "email",
       logoutUrl:
         "https://tenantname.okta.com/oauth2/default/v1/logout?post_logout_redirect_uri={logoutRedirectUri}",
+      callbackUrl: "",
     });
   };
 
@@ -251,7 +259,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               plaintext={true}
               readOnly={true}
               onClick={(e: any) => e.target.select()}
-              defaultValue={`${window.location.origin}/auth/${this.entity.id}/callback`}
+              defaultValue={this.state.callbackUrl}
             />
           </Col>
         </Form.Group>
