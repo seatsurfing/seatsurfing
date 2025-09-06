@@ -70,6 +70,13 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.loadData();
   };
 
+  getCallbackUrl = (callbackUrlDomain: string, id: string) =>
+    `${
+      callbackUrlDomain
+        ? `https://${callbackUrlDomain}`
+        : window.location.origin
+    }/auth/${id}/callback`;
+
   loadData = () => {
     const { id } = this.props.router.query;
     if (id && typeof id === "string" && id !== "add") {
@@ -87,11 +94,7 @@ class EditAuthProvider extends React.Component<Props, State> {
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
           logoutUrl: authProvider.logoutUrl,
-          callbackUrl: `${
-            authProvider.callbackUrlDomain
-              ? `https://${authProvider.callbackUrlDomain}`
-              : window.location.origin
-          }/auth/${id}/callback`,
+          callbackUrl: this.getCallbackUrl(authProvider.callbackUrlDomain, id),
           loading: false,
         });
       });
@@ -119,6 +122,10 @@ class EditAuthProvider extends React.Component<Props, State> {
       this.props.router.push("/settings/auth-providers/" + this.entity.id);
       this.setState({
         saved: true,
+        callbackUrl: this.getCallbackUrl(
+          this.entity.callbackUrlDomain,
+          this.entity.id
+        ),
       });
     });
   };
