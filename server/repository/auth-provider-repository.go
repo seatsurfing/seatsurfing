@@ -88,7 +88,7 @@ func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 	e := &AuthProvider{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, CONCAT(organizations_domain.domain, ' test') "+
 		"FROM auth_providers "+
-		"JOIN organizations_domain ON (organizations_domain.organization_id = auth_providers.organization_id AND primary_domain = TRUE)"+
+		"JOIN organizations_domains ON (organizations_domains.organization_id = auth_providers.organization_id AND primary_domain = TRUE)"+
 		"WHERE id = $1",
 		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.CallbackURL)
 	if err != nil {
@@ -102,7 +102,7 @@ func (r *AuthProviderRepository) GetAll(organizationID string) ([]*AuthProvider,
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, client_id, client_secret, logout_url, CONCAT(organizations_domain.domain, ' test') "+
 		"FROM auth_providers "+
 		"WHERE organization_id = $1 "+
-		"JOIN organizations_domain ON (organizations_domain.organization_id = auth_providers.organization_id AND primary_domain = TRUE)"+
+		"JOIN organizations_domains ON (organizations_domains.organization_id = auth_providers.organization_id AND primary_domain = TRUE)"+
 		"ORDER BY name", organizationID)
 	if err != nil {
 		return nil, err
