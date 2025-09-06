@@ -87,7 +87,11 @@ class EditAuthProvider extends React.Component<Props, State> {
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
           logoutUrl: authProvider.logoutUrl,
-          callbackUrl: authProvider.callbackUrl,
+          callbackUrl: `${
+            authProvider.callbackUrlDomain
+              ? `https://${authProvider.callbackUrlDomain}`
+              : window.location.origin
+          }/auth/${id}/callback`,
           loading: false,
         });
       });
@@ -111,7 +115,6 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.clientId = this.state.clientId;
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
-    this.entity.callbackUrl = this.state.callbackUrl;
     this.entity.save().then(() => {
       this.props.router.push("/settings/auth-providers/" + this.entity.id);
       this.setState({
