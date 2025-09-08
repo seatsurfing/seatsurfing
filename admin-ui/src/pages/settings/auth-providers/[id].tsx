@@ -375,6 +375,8 @@ class EditAuthProvider extends React.Component<Props, State> {
                   this.setState({ clientId: e.target.value })
                 }
                 required={true}
+                pattern="[^\s]+"
+                title="Client ID (whitespaces are not allowed)"
               />
             </Col>
           </Form.Group>
@@ -391,6 +393,8 @@ class EditAuthProvider extends React.Component<Props, State> {
                   this.setState({ clientSecret: e.target.value })
                 }
                 required={true}
+                pattern="[^\s]+"
+                title="Client Secret (whitespaces are not allowed)"
               />
             </Col>
           </Form.Group>
