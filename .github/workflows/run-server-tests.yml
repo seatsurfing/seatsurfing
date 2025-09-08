@@ -5,10 +5,10 @@ on: [pull_request, workflow_dispatch]
 jobs:
   container-job:
     runs-on: ubuntu-latest
-    container: golang:1.23-alpine
+    container: golang:1.25-alpine
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:17-alpine
         env:
           POSTGRES_PASSWORD: root
           POSTGRES_DB: seatsurfing_test
