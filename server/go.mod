@@ -1,6 +1,6 @@
 module github.com/seatsurfing/seatsurfing/server
 
-go 1.23.6
+go 1.24.0
 
 require (
 	github.com/coocood/freecache v1.2.4
@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/valkey-io/valkey-go v1.0.64
 	golang.org/x/crypto v0.41.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 )
 
 require (
