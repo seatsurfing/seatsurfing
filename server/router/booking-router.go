@@ -402,6 +402,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.ID = e.ID
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
+	eNew.Approved = e.Approved
 	if m.UserEmail != "" && m.UserEmail != requestUser.Email {
 		if !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
 			SendForbidden(w)
