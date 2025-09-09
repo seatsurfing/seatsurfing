@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.39.10](https://github.com/seatsurfing/seatsurfing/compare/v1.39.9...v1.39.10) (2025-09-09)
+
+
+### Bug Fixes
+
+* add missing error logging in organization router ([#1258](https://github.com/seatsurfing/seatsurfing/issues/1258)) ([327242c](https://github.com/seatsurfing/seatsurfing/commit/327242c9c88de114b0870e9a710687d1cdf7dc36))
+* add reason and error details to login failed URL ([#1259](https://github.com/seatsurfing/seatsurfing/issues/1259)) ([8608f73](https://github.com/seatsurfing/seatsurfing/commit/8608f7349a195eaa7a7dc7bfc1f59db14aa2bacb))
+* do not reset approval state when updating booking ([#1261](https://github.com/seatsurfing/seatsurfing/issues/1261)) ([46bb41f](https://github.com/seatsurfing/seatsurfing/commit/46bb41fd7c4a5a2c0ac4896bb12527a82fb28c7e))
+* docker healthcheck ([#1260](https://github.com/seatsurfing/seatsurfing/issues/1260)) ([be99c49](https://github.com/seatsurfing/seatsurfing/commit/be99c49825f53a99b1ca720ce386a7eab1a65852))
+
 ## [1.39.9](https://github.com/seatsurfing/seatsurfing/compare/v1.39.8...v1.39.9) (2025-09-09)
 
 
