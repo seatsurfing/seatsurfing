@@ -28,8 +28,8 @@
 1. Create databases named `seatsurfing` (for running the application) and `seatsurfing_test` (for running the tests) in your PostgreSQL database:
 
    ```sql
-   CREATE database seatsurfing;
-   CREATE database seatsurfing_test;
+   CREATE DATABASE seatsurfing;
+   CREATE DATABASE seatsurfing_test;
    ```
 
 1. Check out Seatsurfing's code:
