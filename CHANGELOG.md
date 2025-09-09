@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.39.9](https://github.com/seatsurfing/seatsurfing/compare/v1.39.8...v1.39.9) (2025-09-09)
+
+
+### Bug Fixes
+
+* add missing German translations ([#1245](https://github.com/seatsurfing/seatsurfing/issues/1245)) ([64fe53d](https://github.com/seatsurfing/seatsurfing/commit/64fe53ddaad23fbb8c6d5dfda565631c82ba5beb))
+* **deps:** bump @types/node from 24.3.0 to 24.3.1 in /admin-ui ([#1239](https://github.com/seatsurfing/seatsurfing/issues/1239)) ([90b18e2](https://github.com/seatsurfing/seatsurfing/commit/90b18e22165033a2b74167ee3e5538cfe38a9c2d))
+* **deps:** bump @types/node from 24.3.0 to 24.3.1 in /booking-ui ([#1240](https://github.com/seatsurfing/seatsurfing/issues/1240)) ([15b8140](https://github.com/seatsurfing/seatsurfing/commit/15b8140934e17d7f133c0d7775b7bd3d166e2606))
+* **deps:** bump @types/node from 24.3.0 to 24.3.1 in /e2e ([#1241](https://github.com/seatsurfing/seatsurfing/issues/1241)) ([b2aac50](https://github.com/seatsurfing/seatsurfing/commit/b2aac5000d83a1a1d431007c32ca3749bc9cbb1b))
+* **deps:** bump eslint from 9.34.0 to 9.35.0 in /admin-ui ([#1247](https://github.com/seatsurfing/seatsurfing/issues/1247)) ([67f7e29](https://github.com/seatsurfing/seatsurfing/commit/67f7e29ebf6cc74f39b4618e9537eacfbeff6696))
+* **deps:** bump eslint from 9.34.0 to 9.35.0 in /booking-ui ([#1248](https://github.com/seatsurfing/seatsurfing/issues/1248)) ([6203036](https://github.com/seatsurfing/seatsurfing/commit/62030367469ec9318121a90ff591fd4f5734a04a))
+* **deps:** bump golang.org/x/crypto from 0.41.0 to 0.42.0 in /server ([#1252](https://github.com/seatsurfing/seatsurfing/issues/1252)) ([fb3dddf](https://github.com/seatsurfing/seatsurfing/commit/fb3dddfded7002b974cb89a4cd8ff0c0aa4487f8))
+* **deps:** bump golang.org/x/oauth2 from 0.30.0 to 0.31.0 in /server ([#1253](https://github.com/seatsurfing/seatsurfing/issues/1253)) ([33ea6f0](https://github.com/seatsurfing/seatsurfing/commit/33ea6f0706e88f1ba1d7406e105ed58ea09ca5f4))
+* prevent whitespaces in OAuth provider client id and client secret ([#1251](https://github.com/seatsurfing/seatsurfing/issues/1251)) ([cb125e7](https://github.com/seatsurfing/seatsurfing/commit/cb125e7f8cf577ec1c56d96f9dd485fc306512f3))
+
 ## [1.39.8](https://github.com/seatsurfing/seatsurfing/compare/v1.39.7...v1.39.8) (2025-09-03)
 
 
