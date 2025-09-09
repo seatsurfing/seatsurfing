@@ -157,6 +157,7 @@ func (router *OrganizationRouter) getDomains(w http.ResponseWriter, r *http.Requ
 	}
 	list, err := GetOrganizationRepository().GetDomains(e)
 	if err != nil {
+		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
@@ -447,6 +448,7 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if err := GetOrganizationRepository().Delete(e); err != nil {
+		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
