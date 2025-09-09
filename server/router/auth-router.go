@@ -469,13 +469,13 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 	}
 	provider, err := GetAuthProviderRepository().GetOne(vars["id"])
 	if err != nil {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "provider"))
 		return
 	}
 	redir := r.URL.Query().Get("redir")
 	config := router.getConfig(provider)
 	if config == nil {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "config"))
 		return
 	}
 	payload := &AuthStateLoginPayload{
@@ -490,7 +490,7 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		Payload:        marshalAuthStateLoginPayload(payload),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "authState"))
 		return
 	}
 	url := config.AuthCodeURL(authState.ID)
@@ -502,20 +502,30 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	provider, err := GetAuthProviderRepository().GetOne(vars["id"])
 	if err != nil {
 		log.Printf("Error getting auth provider %s: %s\n", vars["id"], err)
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider, "provider"))
 		return
 	}
 	claims, payload, err := router.getUserInfo(provider, r.FormValue("state"), r.FormValue("code"))
 	if err != nil {
 		log.Printf("Error getting user info for provider %s: %s\n", vars["id"], err)
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider))
+
+		// forward error and error_description from callback URL to our login failed page
+		redirectUrl := router.getRedirectFailedUrl("ui", provider, "userinfo")
+		if error := r.FormValue("error"); error != "" {
+			redirectUrl += "&error=" + url.QueryEscape(error)
+		}
+		if errorDesc := r.FormValue("error_description"); errorDesc != "" {
+			redirectUrl += "&error_description=" + url.QueryEscape(errorDesc)
+		}
+		SendTemporaryRedirect(w, redirectUrl)
+
 		return
 	}
 	allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
 	if !allowAnyUser {
 		_, err := GetUserRepository().GetByEmail(provider.OrganizationID, claims.Email)
 		if err != nil {
-			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
+			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
 			return
 		}
 	}
@@ -531,7 +541,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		log.Println(err)
-		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider))
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "authState"))
 		return
 	}
 	redirectUrl := router.getRedirectSuccessUrl(payload.LoginType, authState, provider)
@@ -551,21 +561,24 @@ func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *Aut
 	}
 }
 
-func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthProvider) string {
+func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthProvider, reason string) string {
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
+
+	queryString := "?reason=" + url.QueryEscape(reason)
+
 	if primaryDomain == nil {
 		log.Println("Error compiling redirect failed URL for auth provider " + provider.Name + ": No primary domain found for organization")
 		if loginType == "ui" {
-			return "/ui/login/failed/"
+			return "/ui/login/failed/" + queryString
 		} else {
-			return "/admin/login/failed/"
+			return "/admin/login/failed/" + queryString
 		}
 	}
 	if loginType == "ui" {
-		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/"
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/" + queryString
 	} else {
-		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed/"
+		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed/" + queryString
 	}
 }
 
