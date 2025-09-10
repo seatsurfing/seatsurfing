@@ -291,8 +291,10 @@ class Login extends React.Component<Props, State> {
 
     const copyrightFooter = (
       <div className="copyright-footer">
-        &copy; Seatsurfing &#183; Version{" "}
-        {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
+        &copy; Seatsurfing &#183;{" "}
+        <a href="https://seatsurfing.io" target="_blank">
+          https://seatsurfing.io
+        </a>
         {languageSelectDropdown}
       </div>
     );

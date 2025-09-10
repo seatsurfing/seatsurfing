@@ -54,7 +54,6 @@ type AuthPreflightResponse struct {
 	Organization    *GetOrganizationResponse         `json:"organization"`
 	AuthProviders   []*GetAuthProviderPublicResponse `json:"authProviders"`
 	RequirePassword bool                             `json:"requirePassword"`
-	BackendVersion  string                           `json:"backendVersion"`
 	Domain          string                           `json:"domain"`
 }
 
@@ -725,7 +724,6 @@ func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPre
 		},
 		RequirePassword: false,
 		AuthProviders:   []*GetAuthProviderPublicResponse{},
-		BackendVersion:  GetProductVersion(),
 	}
 	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
 	if domain != nil && err == nil {
