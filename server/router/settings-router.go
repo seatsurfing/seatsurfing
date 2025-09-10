@@ -86,6 +86,11 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		SendJSON(w, router.getAdminWelcomeScreens(list))
 		return
 	}
+	if vars["name"] == SysSettingOrgPrimaryDomain {
+		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(user.OrganizationID)
+		SendJSON(w, sysSettingOrgPrimaryDomain.Value)
+		return
+	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
 	if err != nil {
 		log.Println(err)
@@ -242,6 +247,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingDefaultTimezone.Name ||
 		name == SettingDisableBuddies.Name ||
 		name == SettingFeatureRecurringBookings.Name ||
+		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion {
 		return true
 	}
