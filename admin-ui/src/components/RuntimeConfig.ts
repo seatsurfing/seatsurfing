@@ -16,6 +16,7 @@ interface RuntimeUserInfos {
   featureAuthProviders: boolean;
   cloudHosted: boolean;
   subscriptionActive: boolean;
+  orgPrimaryDomain: string;
 }
 
 export default class RuntimeConfig {
@@ -30,6 +31,7 @@ export default class RuntimeConfig {
     featureAuthProviders: false,
     cloudHosted: false,
     subscriptionActive: false,
+    orgPrimaryDomain: "",
   };
 
   static verifyToken = async (resolve: Function) => {
@@ -59,7 +61,7 @@ export default class RuntimeConfig {
   };
 
   static loadSettings = async (): Promise<void> => {
-    return new Promise<void>(function (resolve, reject) {
+    return new Promise<void>(function (resolve, _reject) {
       OrgSettings.list().then((settings) => {
         settings.forEach((s) => {
           if (s.name === "_sys_admin_menu_items")
@@ -86,6 +88,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.subscriptionActive = s.value
               ? JSON.parse(s.value)
               : [];
+          if (s.name === "_sys_org_primary_domain")
+            RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
         });
         resolve();
       });
@@ -113,6 +117,19 @@ export default class RuntimeConfig {
   }
 
   static getAvailableLanguages(): string[] {
-    return ["en", "de", "et", "fr", "he", "hu", "it", "nl", "pl", "pt", "ro", "es"];
+    return [
+      "en",
+      "de",
+      "et",
+      "fr",
+      "he",
+      "hu",
+      "it",
+      "nl",
+      "pl",
+      "pt",
+      "ro",
+      "es",
+    ];
   }
 }

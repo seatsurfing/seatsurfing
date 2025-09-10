@@ -46,6 +46,7 @@ var (
 	SysSettingVersion             = "_sys_version"
 	SysSettingAdminMenuItems      = "_sys_admin_menu_items"
 	SysSettingAdminWelcomeScreens = "_sys_admin_welcome_screens"
+	SysSettingOrgPrimaryDomain    = "_sys_org_primary_domain"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -159,6 +160,7 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		res = append(res, router.getAdminMenuItems())
 	}
 	res = append(res, router.getSysSettingVersion())
+	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
 	for _, plg := range plugin.GetPlugins() {
 		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
 		for _, setting := range plgSettings {
@@ -451,5 +453,20 @@ func (router *SettingsRouter) getSysSettingVersion() *GetSettingsResponse {
 	return &GetSettingsResponse{
 		Name:  SysSettingVersion,
 		Value: GetProductVersion(),
+	}
+}
+
+func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSettingsResponse {
+	org, _ := GetOrganizationRepository().GetOne(orgId)
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
+
+	primaryDomainValue := ""
+	if primaryDomain != nil {
+		primaryDomainValue = primaryDomain.DomainName
+	}
+
+	return &GetSettingsResponse{
+		Name:  SysSettingOrgPrimaryDomain,
+		Value: primaryDomainValue,
 	}
 }
