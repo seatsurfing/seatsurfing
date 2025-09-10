@@ -12,6 +12,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   loading: boolean;
@@ -251,7 +252,11 @@ class EditAuthProvider extends React.Component<Props, State> {
               plaintext={true}
               readOnly={true}
               onClick={(e: any) => e.target.select()}
-              defaultValue={`${window.location.origin}/auth/${this.entity.id}/callback`}
+              defaultValue={`${
+                RuntimeConfig.INFOS.orgPrimaryDomain
+                  ? `https://${RuntimeConfig.INFOS.orgPrimaryDomain}`
+                  : window.location.origin
+              }/auth/${this.entity.id}/callback`}
             />
           </Col>
         </Form.Group>

@@ -46,6 +46,7 @@ var (
 	SysSettingVersion             = "_sys_version"
 	SysSettingAdminMenuItems      = "_sys_admin_menu_items"
 	SysSettingAdminWelcomeScreens = "_sys_admin_welcome_screens"
+	SysSettingOrgPrimaryDomain    = "_sys_org_primary_domain"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -83,6 +84,11 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	if vars["name"] == SysSettingAdminWelcomeScreens {
 		list, _ := GetSettingsRepository().GetAll(user.OrganizationID)
 		SendJSON(w, router.getAdminWelcomeScreens(list))
+		return
+	}
+	if vars["name"] == SysSettingOrgPrimaryDomain {
+		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(user.OrganizationID)
+		SendJSON(w, sysSettingOrgPrimaryDomain.Value)
 		return
 	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
@@ -159,6 +165,7 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		res = append(res, router.getAdminMenuItems())
 	}
 	res = append(res, router.getSysSettingVersion())
+	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
 	for _, plg := range plugin.GetPlugins() {
 		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
 		for _, setting := range plgSettings {
@@ -240,6 +247,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingDefaultTimezone.Name ||
 		name == SettingDisableBuddies.Name ||
 		name == SettingFeatureRecurringBookings.Name ||
+		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion {
 		return true
 	}
@@ -451,5 +459,20 @@ func (router *SettingsRouter) getSysSettingVersion() *GetSettingsResponse {
 	return &GetSettingsResponse{
 		Name:  SysSettingVersion,
 		Value: GetProductVersion(),
+	}
+}
+
+func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSettingsResponse {
+	org, _ := GetOrganizationRepository().GetOne(orgId)
+	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
+
+	primaryDomainValue := ""
+	if primaryDomain != nil {
+		primaryDomainValue = primaryDomain.DomainName
+	}
+
+	return &GetSettingsResponse{
+		Name:  SysSettingOrgPrimaryDomain,
+		Value: primaryDomainValue,
 	}
 }
