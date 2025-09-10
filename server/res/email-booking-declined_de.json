@@ -1,10 +1,11 @@
 {
-    "subject": "Deine Seatsurfing Buchung: Abgelehnt",
-    "headline": "Hallo {{recipientName}},",
-    "paragraphs": [
-        "Deine Buchungsanfrage wurde abgelehnt.",
-        "Datum: {{date}}",
-        "Bereich: {{areaName}}",
-        "Platz: {{spaceName}}"
-    ]
+  "subject": "Deine Seatsurfing Buchung: Abgelehnt",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "Deine Buchungsanfrage wurde abgelehnt.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ]
 }

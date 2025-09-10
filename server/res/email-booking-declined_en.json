@@ -1,10 +1,11 @@
 {
-    "subject": "Your Seatsurfing booking: Declined",
-    "headline": "Hello {{recipientName}},",
-    "paragraphs": [
-        "Your booking request has been declined.",
-        "Date: {{date}}",
-        "Area: {{areaName}}",
-        "Space: {{spaceName}}"
-    ]
+  "subject": "Your Seatsurfing booking: Declined",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Your booking request has been declined.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ]
 }
