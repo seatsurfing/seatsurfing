@@ -1,10 +1,11 @@
 {
-    "subject": "Your Seatsurfing booking",
-    "headline": "Hello {{recipientName}},",
-    "paragraphs": [
-        "Your booking has been confirmed.",
-        "Date: {{date}}",
-        "Area: {{areaName}}",
-        "Space: {{spaceName}}"
-    ]
+  "subject": "Your Seatsurfing booking",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Your booking has been confirmed.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ]
 }
