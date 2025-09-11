@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.40.0](https://github.com/seatsurfing/seatsurfing/compare/v1.39.10...v1.40.0) (2025-09-11)
+
+
+### Features
+
+* add subject to email booking notification ([#1270](https://github.com/seatsurfing/seatsurfing/issues/1270)) ([9dd7bd5](https://github.com/seatsurfing/seatsurfing/commit/9dd7bd56309efe12bd8fdebe5d45c8b09474a39d))
+
+
+### Bug Fixes
+
+* make booking subject readonly for past bookings ([#1268](https://github.com/seatsurfing/seatsurfing/issues/1268)) ([a696e64](https://github.com/seatsurfing/seatsurfing/commit/a696e64a4c5bc5ce90b69d49a752b721a4189015))
+* remove public version info ([#1265](https://github.com/seatsurfing/seatsurfing/issues/1265)) ([fbaca67](https://github.com/seatsurfing/seatsurfing/commit/fbaca67004da87249191fe776d07c9f03d4c7104))
+* show org's primary domain in OAuth callback URL ([#1266](https://github.com/seatsurfing/seatsurfing/issues/1266)) ([b34c1ed](https://github.com/seatsurfing/seatsurfing/commit/b34c1ed00cbac5bbb6f6f5d750f7d145f4fe026a))
+
 ## [1.39.10](https://github.com/seatsurfing/seatsurfing/compare/v1.39.9...v1.39.10) (2025-09-09)
 
 
