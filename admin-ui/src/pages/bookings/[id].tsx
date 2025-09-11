@@ -754,7 +754,16 @@ class EditBooking extends React.Component<Props, State> {
                     <Form.Group as={Row}>
                         <Form.Label column sm="2">{this.props.t("subject")}</Form.Label>
                         <Col sm="4">
-                            <Form.Control type="subject" value={this.state.subject} minLength={this.getSelectedSpace()?.requireSubject ? 3 : 0} onChange={(e: any) => this.setState({ subject: e.target.value })} required={this.getSelectedSpace()?.requireSubject} />
+						  <Form.Control
+							type="subject"
+							value={this.state.subject}
+							minLength={this.getSelectedSpace()?.requireSubject ? 3 : 0}
+							disabled={!this.state.canEdit}
+							onChange={(e: any) =>
+							  this.setState({ subject: e.target.value })
+							}
+							required={this.getSelectedSpace()?.requireSubject}
+						  />
                         </Col>
                     </Form.Group>
 
