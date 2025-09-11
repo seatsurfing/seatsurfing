@@ -1,10 +1,10 @@
 // @ts-check
 const nextConfig = {
-  distDir: 'build',
+  distDir: "build",
   trailingSlash: true,
-  output: 'export',
+  output: "export",
   reactStrictMode: true,
-  basePath: '/ui',
-}
+  basePath: "/ui",
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

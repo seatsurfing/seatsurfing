@@ -1,149 +1,162 @@
 html,
 body,
 div#__next {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .feather {
-    width: 16px;
-    height: 16px;
-    vertical-align: text-bottom;
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
 }
 
 .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255,255,255,0.4);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .display-block {
-    display: block;
+  display: block;
 }
 
 .display-none {
-    display: none;
+  display: none;
 }
 
 .loader {
-    -webkit-animation: spin 4s linear infinite;
-    -moz-animation: spin 4s linear infinite;
-    animation: spin 4s linear infinite;
+  -webkit-animation: spin 4s linear infinite;
+  -moz-animation: spin 4s linear infinite;
+  animation: spin 4s linear infinite;
 }
 
 @-moz-keyframes spin {
-    100% {
-        -moz-transform: rotate(360deg);
-    }
+  100% {
+    -moz-transform: rotate(360deg);
+  }
 }
 
 @-webkit-keyframes spin {
-    100% {
-        -webkit-transform: rotate(360deg);
-    }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }
 
 @keyframes spin {
-    100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }
 
 #root-loading {
-    min-height: 100%;
-    min-height: 100%;
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-align: center;
-    background-color: #f5f5f5;
-    text-align: center;
-    padding-top: 75px;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    position: relative;
+  min-height: 100%;
+  min-height: 100%;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  background-color: #f5f5f5;
+  text-align: center;
+  padding-top: 75px;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    "Liberation Sans",
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji";
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  position: relative;
 }
 
 .feather-lg {
-    width: 24px;
-    height: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 .feather-btn {
-    width: 16px;
-    height: 16px;
-    line-height: 1.0;
+  width: 16px;
+  height: 16px;
+  line-height: 1;
 }
 
 .button-link {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    display: inline;
-    vertical-align: baseline;
-    line-height: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: inline;
+  vertical-align: baseline;
+  line-height: 1;
 }
 
 .badge-top {
-    vertical-align: top;
-    margin-left: -3px;
+  vertical-align: top;
+  margin-left: -3px;
 }
 
 .margin-top-50 {
-    margin-top: 50px;
+  margin-top: 50px;
 }
 
 .margin-top-15 {
-    margin-top: 15px;
+  margin-top: 15px;
 }
 
 .margin-top-10 {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .icon-link {
-    padding-top: 4px;
-    padding-bottom: 4px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .clickable-table tbody tr {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 h2 {
-    margin-top: 100px;
+  margin-top: 100px;
 }
 
 .padding-top {
-    padding-top: 75px;
+  padding-top: 75px;
 }
 
 .center {
-    text-align: center;
+  text-align: center;
 }
 
 .addon-button {
-    border-color: var(--bs-border-color);
+  border-color: var(--bs-border-color);
 }
 
 .form-colors input[type="color"].form-control,
 .form-colors label {
-    display: inline;
+  display: inline;
 }
 
 .form-colors label {
-    padding-left: 10px;
-    vertical-align: super;
+  padding-left: 10px;
+  vertical-align: super;
 }
 
 .recurring-booking-icon {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }

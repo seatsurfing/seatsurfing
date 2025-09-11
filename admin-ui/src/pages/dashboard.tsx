@@ -63,7 +63,7 @@ class Dashboard extends React.Component<Props, State> {
             {
               latestVersion: res.json,
             },
-            () => resolve()
+            () => resolve(),
           );
         })
         .catch(() => {
@@ -73,7 +73,7 @@ class Dashboard extends React.Component<Props, State> {
             {
               latestVersion: res,
             },
-            () => resolve()
+            () => resolve(),
           );
         });
     });
@@ -89,7 +89,7 @@ class Dashboard extends React.Component<Props, State> {
               spaceAdmin: user.spaceAdmin,
               orgAdmin: user.admin,
             },
-            () => resolve()
+            () => resolve(),
           );
         })
         .catch((e) => reject(e));
@@ -202,13 +202,13 @@ class Dashboard extends React.Component<Props, State> {
           <Col sm="8">
             <Alert variant="info">
               <p style={{ fontWeight: "bold" }}>
-                <PremiumFeatureIcon style={{marginLeft: "0px", marginRight: "5px"}} />
+                <PremiumFeatureIcon
+                  style={{ marginLeft: "0px", marginRight: "5px" }}
+                />
                 {this.props.t("cloudUpgradeHintHeadline")}
               </p>
               <p>
-                <Link
-                  href="/plugin/subscription/"
-                >
+                <Link href="/plugin/subscription/">
                   {this.props.t("cloudUpgradeHintText")}
                 </Link>{" "}
                 🚀
@@ -227,44 +227,44 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numUsers,
             this.props.t("users"),
-            this.state.orgAdmin ? "/users/" : ""
+            this.state.orgAdmin ? "/users/" : "",
           )}
           {this.renderStatsCard(
             this.stats?.numLocations,
             this.props.t("areas"),
-            "/locations/"
+            "/locations/",
           )}
           {this.renderStatsCard(
             this.stats?.numSpaces,
             this.props.t("spaces"),
-            "/locations/"
+            "/locations/",
           )}
           {this.renderStatsCard(
             this.stats?.numBookings,
             this.props.t("bookings"),
-            "/bookings/"
+            "/bookings/",
           )}
         </Row>
         <Row className="mb-4">
           {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
-            "/bookings/"
+            "/bookings/",
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
-            "/bookings/"
+            "/bookings/",
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
-            "/bookings/"
+            "/bookings/",
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsLastWeek,
             this.props.t("lastWeek"),
-            "/bookings/"
+            "/bookings/",
           )}
         </Row>
         <Row className="mb-4">
@@ -274,19 +274,19 @@ class Dashboard extends React.Component<Props, State> {
                 <Card.Title>{this.props.t("utilization")}</Card.Title>
                 {this.renderProgressBar(
                   this.stats?.spaceLoadToday,
-                  this.props.t("today")
+                  this.props.t("today"),
                 )}
                 {this.renderProgressBar(
                   this.stats?.spaceLoadYesterday,
-                  this.props.t("yesterday")
+                  this.props.t("yesterday"),
                 )}
                 {this.renderProgressBar(
                   this.stats?.spaceLoadThisWeek,
-                  this.props.t("thisWeek")
+                  this.props.t("thisWeek"),
                 )}
                 {this.renderProgressBar(
                   this.stats?.spaceLoadLastWeek,
-                  this.props.t("lastWeek")
+                  this.props.t("lastWeek"),
                 )}
               </Card.Body>
             </Card>

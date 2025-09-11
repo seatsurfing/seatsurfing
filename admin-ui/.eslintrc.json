@@ -1,7 +1,7 @@
 {
   "extends": "next",
   "rules": {
-      "@next/next/no-img-element": "off",
-      "react/display-name": "off"
+    "@next/next/no-img-element": "off",
+    "react/display-name": "off"
   }
 }

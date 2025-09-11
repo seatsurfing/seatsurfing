@@ -1,95 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <style type="text/css" rel="stylesheet" media="all">
-            *:not(br):not(tr):not(html) {
-                font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "system-ui", "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-                -webkit-box-sizing: border-box;
-                box-sizing: border-box;
-            }
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style type="text/css" rel="stylesheet" media="all">
+      *:not(br):not(tr):not(html) {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          Ubuntu,
+          Cantarell,
+          "Noto Sans",
+          sans-serif,
+          "system-ui",
+          "Segoe UI",
+          Helvetica,
+          Arial,
+          sans-serif,
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol";
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+      }
 
-            html, body {
-                padding: 0;
-                margin: 0;
-                width: 100% !important;
-                height: 100%;
-                line-height: 1.4;
-                background-color: #fff;
-                color: #494949;
-            }
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+        width: 100% !important;
+        height: 100%;
+        line-height: 1.4;
+        background-color: #fff;
+        color: #494949;
+      }
 
-            div.header {
-                background-color: #F2F4F6;
-                padding: 25px;
-                text-align: center;
-            }
+      div.header {
+        background-color: #f2f4f6;
+        padding: 25px;
+        text-align: center;
+      }
 
-            div.header img {
-                height: 2rem;
-            }
+      div.header img {
+        height: 2rem;
+      }
 
-            #main {
-                padding: 25px;
-                max-width: 600px;
-            }
+      #main {
+        padding: 25px;
+        max-width: 600px;
+      }
 
-            #main p {
-                margin-bottom: 15px;
-                display: block;
-                font-size: 16px;
-            }
+      #main p {
+        margin-bottom: 15px;
+        display: block;
+        font-size: 16px;
+      }
 
-            a.btn {
-                padding: 15px;
-                padding-left: 25px;
-                padding-right: 25px;
-                display: inline-block;
-                background-color: silver;
-                text-decoration: none;
-                font-weight: bold;
-                color: #000;
-                border-radius: 5px;
-                font-size: 18px;
-            }
+      a.btn {
+        padding: 15px;
+        padding-left: 25px;
+        padding-right: 25px;
+        display: inline-block;
+        background-color: silver;
+        text-decoration: none;
+        font-weight: bold;
+        color: #000;
+        border-radius: 5px;
+        font-size: 18px;
+      }
 
-            a.btn-primary {
-                background-color: #007BFF;
-                color: #fff;
-            }
-            
-            #footer {
-                padding: 25px;
-                max-width: 600px;
-                font-size: 12px;
-                color: #999;
-            }
+      a.btn-primary {
+        background-color: #007bff;
+        color: #fff;
+      }
 
-            #footer p {
-                display: block;
-                margin-bottom: 2px;
-                margin-top: 0px;
-            }
+      #footer {
+        padding: 25px;
+        max-width: 600px;
+        font-size: 12px;
+        color: #999;
+      }
 
-            #footer hr {
-                border: 0;
-                border-top: 1px solid #eee;
-                margin-bottom: 10px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <img alt="Seatsurfing" src="cid:seatsurfing-logo" />
-        </div>
-        <div id="main">
-            <h2>{{headline}}</h2>
-            {{body}}
-        </div>
-        <div id="footer">
-            <hr />
-            {{footer}}
-        </div>
-    </body>
+      #footer p {
+        display: block;
+        margin-bottom: 2px;
+        margin-top: 0px;
+      }
+
+      #footer hr {
+        border: 0;
+        border-top: 1px solid #eee;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img alt="Seatsurfing" src="cid:seatsurfing-logo" />
+    </div>
+    <div id="main">
+      <h2>{{headline}}</h2>
+      {{body}}
+    </div>
+    <div id="footer">
+      <hr />
+      {{footer}}
+    </div>
+  </body>
 </html>

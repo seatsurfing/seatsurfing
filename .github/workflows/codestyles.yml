@@ -1,0 +1,21 @@
+name: Code styling
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  container-job:
+    name: Prettier code styling
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+      - name: Install npm packages
+        run: npm ci --ignore-scripts
+      - name: Check code style
+        run: npm run prettier:check

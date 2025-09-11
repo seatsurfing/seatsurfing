@@ -149,7 +149,7 @@ class EditLocation extends React.Component<Props, State> {
       });
     });
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default)
+      (imp) => (this.ExcellentExport = imp.default),
     );
   };
 
@@ -219,7 +219,7 @@ class EditLocation extends React.Component<Props, State> {
             changedAttributeIds: [],
             deletedAttributeIds: [],
           },
-          () => resolve()
+          () => resolve(),
         );
       });
     });
@@ -281,7 +281,7 @@ class EditLocation extends React.Component<Props, State> {
       this.entity.id,
       creates,
       updates,
-      this.state.deleteIds
+      this.state.deleteIds,
     );
     let iUpdates = 0;
     for (let item of this.state.spaces) {
@@ -650,7 +650,7 @@ class EditLocation extends React.Component<Props, State> {
     }
     return (
       this.state.spaces[this.state.selectedSpace].enabledAttributes.indexOf(
-        attributeId
+        attributeId,
       ) > -1
     );
   };
@@ -841,7 +841,7 @@ class EditLocation extends React.Component<Props, State> {
                   onChange={(e: any) =>
                     this.setSpaceRequireSubject(
                       this.state.selectedSpace!,
-                      e.target.checked
+                      e.target.checked,
                     )
                   }
                 />
@@ -953,7 +953,7 @@ class EditLocation extends React.Component<Props, State> {
     }
     let changedAttributeIds: string[] = Object.assign(
       [],
-      this.state.changedAttributeIds
+      this.state.changedAttributeIds,
     );
     if (changedAttributeIds.indexOf(id) === -1) {
       changedAttributeIds.push(id);
@@ -973,7 +973,7 @@ class EditLocation extends React.Component<Props, State> {
     });
     let deletedAttributeIds: string[] = Object.assign(
       [],
-      this.state.deletedAttributeIds
+      this.state.deletedAttributeIds,
     );
     if (deletedAttributeIds.indexOf(id) === -1) {
       deletedAttributeIds.push(id);
@@ -1059,7 +1059,7 @@ class EditLocation extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-spaces", format: "xlsx" },
-      [{ name: "Seatsurfing Spaces", from: { table: "datatable" } }]
+      [{ name: "Seatsurfing Spaces", from: { table: "datatable" } }],
     );
   };
 

@@ -340,7 +340,7 @@ class NavBar extends React.Component<Props, State> {
           <Modal.Body>
             <p>{this.props.t("introIncomingMergeRequests")}</p>
             {this.state.mergeRequests.map((item) =>
-              this.renderMergeRequest(item)
+              this.renderMergeRequest(item),
             )}
           </Modal.Body>
         </Modal>

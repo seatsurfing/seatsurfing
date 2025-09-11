@@ -1,10 +1,9 @@
-import { TranslationFunc, withTranslation } from '@/components/withTranslation';
-import Link from 'next/link';
-import React from 'react';
-import { Form, Alert } from 'react-bootstrap';
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Link from "next/link";
+import React from "react";
+import { Form, Alert } from "react-bootstrap";
 
-interface State {
-}
+interface State {}
 
 interface Props {
   t: TranslationFunc;
@@ -17,10 +16,12 @@ class LoginFailed extends React.Component<Props, State> {
         <Form className="form-signin">
           <Alert variant="danger">{this.props.t("errorLoginFailed")}</Alert>
           <p>{this.props.t("loginFailedDescription")}</p>
-          <Link className="btn btn-primary" href="/login">{this.props.t("back")}</Link>
+          <Link className="btn btn-primary" href="/login">
+            {this.props.t("back")}
+          </Link>
         </Form>
       </div>
-    )
+    );
   }
 }
 

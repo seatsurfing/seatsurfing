@@ -45,7 +45,7 @@ class Approvals extends React.Component<Props, State> {
       return;
     }
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default)
+      (imp) => (this.ExcellentExport = imp.default),
     );
     this.loadItems();
   };
@@ -134,7 +134,7 @@ class Approvals extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
-      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }]
+      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
     );
   };
 

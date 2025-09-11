@@ -1,9 +1,8 @@
-import React from 'react';
-import withReadyRouter from '@/components/withReadyRouter';
-import { NextRouter } from 'next/router';
+import React from "react";
+import withReadyRouter from "@/components/withReadyRouter";
+import { NextRouter } from "next/router";
 
-interface State {
-}
+interface State {}
 
 interface Props {
   router: NextRouter;
@@ -16,7 +15,7 @@ class Index extends React.Component<Props, State> {
 
   render() {
     this.props.router.push("/login");
-    return <></>
+    return <></>;
   }
 }
 
