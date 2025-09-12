@@ -1,0 +1,11 @@
+{
+  "subject": "Your Seatsurfing booking: Deleted",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Your booking request has been deleted.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ]
+}
