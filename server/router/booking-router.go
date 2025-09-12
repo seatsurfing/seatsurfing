@@ -27,6 +27,9 @@ type BookingMailNotification int
 const (
 	BookingMailNotificationCreated BookingMailNotification = iota
 	BookingMailNotificationDeclined
+	BookingMailNotificationUpdated
+	BookingMailNotificationApproved
+	BookingMailNotificationDeleted
 )
 
 type BookingRequest struct {
@@ -145,7 +148,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 			SendInternalServerError(w)
 			return
 		}
-		go router.onBookingApproved(&e.Booking)
+		go router.onBookingDeclinedOrApproved(&e.Booking)
 		SendUpdated(w)
 		return
 	}
@@ -155,7 +158,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
-	go router.onBookingApproved(&e.Booking)
+	go router.onBookingDeclinedOrApproved(&e.Booking)
 	SendUpdated(w)
 }
 
@@ -473,7 +476,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	requestUser := GetRequestUser(r)
 	// Check for the date, If the BookingRequest is to close with SettingsMaxHoursBeforeDelete, the Delete can not be performed.
 	if router.isValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
-		go router.onBookingDeleted(&e.Booking)
+		go router.onBookingDeleted(&e.Booking, true)
 		if err := GetBookingRepository().Delete(e); err != nil {
 			SendInternalServerError(w)
 			return
@@ -1069,7 +1072,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		return
 	}
 	attachments := []*MailAttachment{}
-	if notification == BookingMailNotificationCreated {
+	if notification == BookingMailNotificationCreated || notification == BookingMailNotificationUpdated || notification == BookingMailNotificationApproved {
 		calDavEvent, err := router.getCalDavEventFromBooking(e)
 		if err != nil {
 			log.Println(err)
@@ -1101,8 +1104,14 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		"subject":       subject,
 	}
 	template := GetEmailTemplatePathBookingCreated()
-	if notification == BookingMailNotificationDeclined {
+	if notification == BookingMailNotificationUpdated {
+		template = GetEmailTemplatePathBookingUpdated()
+	} else if notification == BookingMailNotificationDeclined {
 		template = GetEmailTemplatePathBookingDeclined()
+	} else if notification == BookingMailNotificationApproved {
+		template = GetEmailTemplatePathBookingApproved()
+	} else if notification == BookingMailNotificationDeleted {
+		template = GetEmailTemplatePathBookingDeleted()
 	}
 	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
 		log.Println(err)
@@ -1112,16 +1121,17 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
 	router.updateCalDavEvent(e)
-	router.sendMailNotification(e, BookingMailNotificationCreated)
+	router.sendMailNotification(e, BookingMailNotificationUpdated)
 }
 
-func (router *BookingRouter) onBookingApproved(e *Booking) {
+func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 	if !e.Approved {
-		router.onBookingDeleted(e)
+		router.onBookingDeleted(e, false)
 		router.sendMailNotification(e, BookingMailNotificationDeclined)
-		return
+	} else {
+		router.createCalDavEvent(e)
+		router.sendMailNotification(e, BookingMailNotificationApproved)
 	}
-	router.onBookingCreated(e)
 }
 
 func (router *BookingRouter) onBookingCreated(e *Booking) {
@@ -1131,18 +1141,19 @@ func (router *BookingRouter) onBookingCreated(e *Booking) {
 	}
 }
 
-func (router *BookingRouter) onBookingDeleted(e *Booking) {
+func (router *BookingRouter) onBookingDeleted(e *Booking, sendNotification bool) {
 	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
-	if err != nil {
-		return
+	if err == nil {
+		if e.CalDavID != "" {
+			caldavEvent.ID = e.CalDavID
+			if err := caldavClient.DeleteEvent(path, caldavEvent); err != nil {
+				log.Println(err)
+			}
+		}
 	}
-	if e.CalDavID == "" {
-		return
-	}
-	caldavEvent.ID = e.CalDavID
-	if err := caldavClient.DeleteEvent(path, caldavEvent); err != nil {
-		log.Println(err)
-		return
+
+	if sendNotification {
+		router.sendMailNotification(e, BookingMailNotificationDeleted)
 	}
 }
 
