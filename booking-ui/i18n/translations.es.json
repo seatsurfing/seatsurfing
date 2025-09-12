@@ -145,6 +145,7 @@
   "approval": "Aprobación",
   "pending": "Pendiente",
   "subject": "Asunto",
+  "subjectOptional": "Subject (optional)",
   "cancelAllUpcomingBookings": "Cancelar todas las reservas próximas",
   "repeat": "Repetir",
   "never": "nunca",

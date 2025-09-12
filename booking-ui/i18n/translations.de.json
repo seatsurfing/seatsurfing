@@ -140,6 +140,7 @@
   "approval": "Genehmigung",
   "pending": "Ausstehend",
   "subject": "Betreff",
+  "subjectOptional": "Betreff (optional)",
   "cancelAllUpcomingBookings": "Alle zukünftigen Buchungen stornieren",
   "repeat": "Wiederholen",
   "never": "niemals",

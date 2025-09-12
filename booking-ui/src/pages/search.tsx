@@ -2122,7 +2122,11 @@ class Search extends React.Component<Props, State> {
                 <Form.Control
                   type="text"
                   autoFocus={true}
-                  placeholder={this.props.t("subject")}
+                  placeholder={this.props.t(
+                    this.state.selectedSpace?.requireSubject
+                      ? "subject"
+                      : "subjectOptional"
+                  )}
                   value={this.state.subject}
                   onChange={(e: any) =>
                     this.setState({ subject: e.target.value })
