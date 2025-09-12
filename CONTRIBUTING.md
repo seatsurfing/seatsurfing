@@ -100,7 +100,6 @@ If you add/modify major frontend functionality, please add/modify the e2e tests.
    ```
 
 1. To run the e2e [Playwright](https://playwright.dev/) tests:
-
    1. Install the dependencies:
 
       ```shell

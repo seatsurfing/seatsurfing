@@ -1,134 +1,136 @@
 .react-date-picker,
 .react-datetime-picker {
-    padding: 5px 10px 4px;
-    display: block;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: .25rem;
-    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    width: 100%;
+  padding: 5px 10px 4px;
+  display: block;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+  width: 100%;
 }
 
 .react-date-picker__wrapper,
 .react-datetime-picker__wrapper {
-    border: 0 !important;
+  border: 0 !important;
 }
 
 .react-datetime-picker__inputGroup {
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 .container-map {
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 70px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-bottom: 270px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 70px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 270px;
 }
 
 .mapScrollContainer {
-    max-width: 100%;
-    overflow-y: scroll;
+  max-width: 100%;
+  overflow-y: scroll;
 }
 
 .mapScrollContainer::-webkit-scrollbar {
-    -webkit-appearance: none;
-    width: 7px;
+  -webkit-appearance: none;
+  width: 7px;
 }
 
 .mapScrollContainer::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, .5);
-    -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 .space-box {
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
 }
 
 .space-box p {
-    width: 100%;
-    height: auto;
-    font-size: 12px;
-    color: white;
-    text-align: center;
-    margin: 0;
-    overflow: hidden;
-    white-space: nowrap;
+  width: 100%;
+  height: auto;
+  font-size: 12px;
+  color: white;
+  text-align: center;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .space-box-vertical p {
-    writing-mode: vertical-rl;
-    text-orientation: sideways;
-    width: auto;
-    height: 100%;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  width: auto;
+  height: 100%;
 }
 
 .container-search-config {
-    position: fixed;
-    top: auto;
-    bottom: 0px;
-    left: 0px;
-    width: 100%;
-    max-height: 350px;
-    padding: 20px;
-    padding-top: 0px;
-    border-radius: 10px;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
-    box-shadow: 0px 0px 3px #555;
-    background-color: white;
-    opacity: 0.95;
-    z-index: 100;
-    transition: all .2s;
+  position: fixed;
+  top: auto;
+  bottom: 0px;
+  left: 0px;
+  width: 100%;
+  max-height: 350px;
+  padding: 20px;
+  padding-top: 0px;
+  border-radius: 10px;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+  box-shadow: 0px 0px 3px #555;
+  background-color: white;
+  opacity: 0.95;
+  z-index: 100;
+  transition: all 0.2s;
 }
 
 .container-search-config .content-minimized {
-    display: none;
+  display: none;
 }
 
 .container-search-config .btn-outline-dark:hover {
-    background-color: #eee;
+  background-color: #eee;
 }
 
 .container-search-config.minimized {
-    width: 100%;
-    height: 130px;
-    padding: 20px;
-    padding-top: 0px;
-    transition: all .2s;
+  width: 100%;
+  height: 130px;
+  padding: 20px;
+  padding-top: 0px;
+  transition: all 0.2s;
 }
 
 .container-search-config.minimized .content {
-    display: none;
+  display: none;
 }
 
 .container-search-config .collapse-bar {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    text-align: right;
-    cursor: pointer;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: right;
+  cursor: pointer;
 }
 
 .container-search-config.minimized .collapse-bar {
-    text-align: center;
-    padding-top: 0px;
-    padding-bottom: 0px;
+  text-align: center;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 .container-search-config .input-group .btn.disabled,
 .container-search-config .input-group .btn:disabled {
-    border-color: var(--bs-border-color);
+  border-color: var(--bs-border-color);
 }
 
 .container-search-config .collapse-bar .expand-icon,
@@ -137,93 +139,93 @@
 .container-search-config .collapse-bar .collapse-icon-bigscreen,
 .container-search-config.minimized .collapse-bar .expand-icon-bigscreen,
 .container-search-config.minimized .collapse-bar .collapse-icon {
-    display: none;
+  display: none;
 }
 
 .container-search-config.minimized .content-minimized,
 .container-search-config .collapse-bar .collapse-icon-smallscreen {
-    display: block;
+  display: block;
 }
 
 .container-search-config.minimized .collapse-bar .expand-icon-smallscreen {
-    display: inline;
+  display: inline;
 }
 
 .space-list {
-    text-align: left;
-    padding-bottom: 250px;
+  text-align: left;
+  padding-bottom: 250px;
 }
 
 .space {
-    color: white;
+  color: white;
 }
 
 .space-available {
-    background-color: rgba(48, 209, 88, 0.9) !important;
+  background-color: rgba(48, 209, 88, 0.9) !important;
 }
 
 .space-notavailable {
-    background-color: rgba(255, 69, 58, 0.9) !important;
+  background-color: rgba(255, 69, 58, 0.9) !important;
 }
 
 .space-mydesk {
-    background-color: rgba(184, 37, 222, 0.9) !important;
+  background-color: rgba(184, 37, 222, 0.9) !important;
 }
 
 .space-buddy-desk {
-    background-color: rgba(36, 21, 197, 0.9) !important;
+  background-color: rgba(36, 21, 197, 0.9) !important;
 }
 
 .space-list-item-div {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 .space-list-item-content {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .space-list-item-text {
-    text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 .invalid-recurrence-config,
 .invalid-search-config {
-    width: 100%;
-    font-size: .875em;
-    color: #dc3545;
+  width: 100%;
+  font-size: 0.875em;
+  color: #dc3545;
 }
 
 .invalid-search-config {
-    margin-left: -2em;
+  margin-left: -2em;
 }
 
 .space-list.maximized {
-    padding-bottom: 130px;
+  padding-bottom: 130px;
 }
 
 .container-map.maximized {
-    padding-bottom: 150px;
+  padding-bottom: 150px;
 }
 
 form#filter-locations-form .row {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 .input-group .btn {
-    z-index: auto;
+  z-index: auto;
 }
 
 .booking-name-row {
-    position: relative;
-    margin-bottom: 15px;
+  position: relative;
+  margin-bottom: 15px;
 }
 
 @media only screen and (min-width: 440px) {
-    .container-search-config {
-        width: calc(100% - 20px);
-        max-width: 420px;
-        left: 10px;
-    }
+  .container-search-config {
+    width: calc(100% - 20px);
+    max-width: 420px;
+    left: 10px;
+  }
 }

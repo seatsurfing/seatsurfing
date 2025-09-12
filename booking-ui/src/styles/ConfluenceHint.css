@@ -1,20 +1,20 @@
 .container-confluence {
-    margin: 0;
+  margin: 0;
 }
 
 .container-confluence .copy-input {
-    border: 0;
-    font-family: Consolas, monospace;
-    margin: 0;
-    padding: 0;
+  border: 0;
+  font-family: Consolas, monospace;
+  margin: 0;
+  padding: 0;
 }
 
 .container-confluence li {
-    margin-bottom: 5px;
+  margin-bottom: 5px;
 }
 
 .container-confluence .copy-button {
-    padding: 0;
-    margin: 0;
-    border: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
 }

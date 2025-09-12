@@ -35,12 +35,12 @@ class LoginSuccess extends React.Component<Props, State> {
             const credentials: AjaxCredentials = {
               accessToken: res.json.accessToken,
               accessTokenExpiry: new Date(
-                new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET
+                new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
               ),
               logoutUrl: res.json.logoutUrl,
             };
             Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
-              res.json.refreshToken
+              res.json.refreshToken,
             );
             Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
             RuntimeConfig.setLoginDetails().then(() => {

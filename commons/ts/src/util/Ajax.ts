@@ -29,7 +29,7 @@ export default class Ajax {
   static async query(
     method: string,
     url: string,
-    data?: any
+    data?: any,
   ): Promise<AjaxResult> {
     url = Ajax.getBackendUrl() + url;
     return new Promise<AjaxResult>(function (resolve, reject) {
@@ -39,7 +39,7 @@ export default class Ajax {
         const options: RequestInit = Ajax.getFetchOptions(
           method,
           credentials.accessToken,
-          data
+          data,
         );
         fetch(url, options)
           .then((response) => {
@@ -55,7 +55,7 @@ export default class Ajax {
             } else {
               let appCode = response.headers.get("X-Error-Code");
               reject(
-                new AjaxError(response.status, appCode ? parseInt(appCode) : 0)
+                new AjaxError(response.status, appCode ? parseInt(appCode) : 0),
               );
             }
           })
@@ -105,13 +105,13 @@ export default class Ajax {
                   let c: AjaxCredentials = {
                     accessToken: json.accessToken,
                     accessTokenExpiry: new Date(
-                      new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET
+                      new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
                     ),
                     logoutUrl: json.logoutUrl,
                   };
                   Ajax.PERSISTER.updateCredentialsSessionStorage(c);
                   Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
-                    json.refreshToken
+                    json.refreshToken,
                   );
                   release();
                   resolve();
@@ -156,7 +156,7 @@ export default class Ajax {
   static getFetchOptions(
     method: string,
     accessToken?: string | null,
-    data?: any
+    data?: any,
   ): RequestInit {
     let headers = new Headers();
     if (accessToken) {

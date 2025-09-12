@@ -64,8 +64,13 @@ class FeedbackButton extends React.Component<Props, State> {
     }
     return (
       <>
-        <div className={styles.feedbackButtonContainer} hidden={!this.state.showForm}>
-          <p style={{ fontWeight: "bold" }}>{this.props.t("cloudFeedbackHeadline")}</p>
+        <div
+          className={styles.feedbackButtonContainer}
+          hidden={!this.state.showForm}
+        >
+          <p style={{ fontWeight: "bold" }}>
+            {this.props.t("cloudFeedbackHeadline")}
+          </p>
           <p hidden={this.state.success}>
             {this.props.t("cloudFeedbackPrompt")}
           </p>
@@ -100,7 +105,11 @@ class FeedbackButton extends React.Component<Props, State> {
         </div>
         <div
           id="feedback-button"
-          className={this.state.showForm ? styles.feedbackButtonActive : styles.feedbackButton}
+          className={
+            this.state.showForm
+              ? styles.feedbackButtonActive
+              : styles.feedbackButton
+          }
           onClick={() => this.showFeedbackForm()}
         >
           <IoChatboxOutline className={styles.feedbackButtonIcon} />
