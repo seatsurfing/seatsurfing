@@ -39,12 +39,6 @@
    cd seatsurfing
    ```
 
-1. Typescript commons: Build the common typescript files:
-
-   ```shell
-   cd commons/ts && npm install && npm run build
-   ```
-
 1. Admin UI: Install dependencies and start the admin interface. Use a dedicated terminal for that:
 
    ```shell
