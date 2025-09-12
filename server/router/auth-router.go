@@ -679,7 +679,6 @@ func (router *AuthRouter) CreateAccessToken(claims *Claims) string {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 	jwtString, err := accessToken.SignedString(GetConfig().JwtPrivateKey)
 	if err != nil {
-		log.Println(err)
 		return ""
 	}
 	return jwtString
