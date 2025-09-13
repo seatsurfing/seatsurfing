@@ -4,7 +4,7 @@ FROM --platform=$BUILDPLATFORM node:lts-alpine AS commons-builder
 WORKDIR /app
 ADD ./commons/ /app/commons
 WORKDIR /app/commons/ts
-RUN npm install
+RUN npm ci
 RUN npm run build
 
 FROM --platform=$BUILDPLATFORM node:lts-alpine AS admin-ui-builder
@@ -16,7 +16,7 @@ COPY --from=commons-builder /app/commons/ts/ /app/commons/ts
 ADD admin-ui /app/
 WORKDIR /app
 RUN ./add-missing-translations.sh
-RUN npm install
+RUN npm ci
 RUN npm install --save ./commons/ts
 RUN npm run build
 
@@ -29,7 +29,7 @@ COPY --from=commons-builder /app/commons/ts/ /app/commons/ts
 ADD booking-ui /app/
 WORKDIR /app
 RUN ./add-missing-translations.sh
-RUN npm install
+RUN npm ci
 RUN npm install --save ./commons/ts
 RUN npm run build
 

@@ -22,7 +22,7 @@ jobs:
         run: npm run lint
       - name: Install Admin UI dependencies
         working-directory: ./admin-ui
-        run: npm install
+        run: npm ci
       - name: Run Admin UI linting
         working-directory: ./admin-ui
         run: npm run lint
