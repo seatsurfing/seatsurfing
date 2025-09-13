@@ -26,13 +26,12 @@ jobs:
         run: curl -fsSL https://deb.nodesource.com/setup_22.x -o - | bash && apt-get install -y nodejs
       - name: Install dependencies
         run: apt-get update && apt-get install -y jq
-
       - name: Build Admin UI
         working-directory: ./admin-ui
-        run: npm install && npm run install-commons && npm run build
+        run: npm ci && npm run install-commons && npm run build
       - name: Build Booking UI
         working-directory: ./booking-ui
-        run: npm install && npm run install-commons && npm run build
+        run: npm ci && npm run install-commons && npm run build
 
       - name: Install server dependencies
         working-directory: ./server

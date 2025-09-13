@@ -4,9 +4,9 @@ BASEDIR=$(dirname "$SCRIPT")
 cd $BASEDIR || exit 1
 
 echo "commons" 
-cd $BASEDIR/commons/ts && npm install --force --verbose && npm run build --verbose && \
+cd $BASEDIR/commons/ts && npm ci --force --verbose && npm run build --verbose && \
 echo "admin-ui" && \
-cd $BASEDIR/admin-ui && npm install --force --verbose && REACT_APP_PRODUCT_VERSION=$(cat ../version.txt | awk NF) npm run build  --verbose && \
+cd $BASEDIR/admin-ui && npm ci --force --verbose && REACT_APP_PRODUCT_VERSION=$(cat ../version.txt | awk NF) npm run build  --verbose && \
 cd $BASEDIR && \
 echo DONE
 
