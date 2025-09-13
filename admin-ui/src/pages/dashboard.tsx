@@ -1,5 +1,5 @@
 import React from "react";
-import { Ajax, Stats, User } from "seatsurfing-commons";
+import { Ajax, Stats, User, DateUtil } from "seatsurfing-commons";
 import { Card, Row, Col, ProgressBar, Alert, Button } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -219,6 +219,9 @@ class Dashboard extends React.Component<Props, State> {
       );
     }
 
+    const todayDateString = DateUtil.getTodayDateString();
+    const yesterdayDateString = DateUtil.getDateString(-1);
+
     return (
       <FullLayout headline="Dashboard">
         {cloudUpgradeHint}
@@ -249,22 +252,22 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
-            "/bookings/",
+            `/bookings/?enter=${todayDateString}&leave=${todayDateString}`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
-            "/bookings/",
+            `/bookings/?enter=${yesterdayDateString}&leave=${yesterdayDateString}`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
-            "/bookings/",
+            `/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}&leave=${DateUtil.getThisWeekSundayDateString()}`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsLastWeek,
             this.props.t("lastWeek"),
-            "/bookings/",
+            `/bookings/?enter=${DateUtil.getLastWeekMondayDateString()}&leave=${DateUtil.getLastWeekSundayDateString()}`,
           )}
         </Row>
         <Row className="mb-4">

@@ -4,6 +4,7 @@ import {
   AjaxError,
   Booking,
   Formatting,
+  DateUtil,
   Settings as OrgSettings,
 } from "seatsurfing-commons";
 import { Table, Form, Col, Row, Button } from "react-bootstrap";
@@ -42,15 +43,26 @@ class Bookings extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.data = [];
-    let end = new Date();
-    let start = new Date();
-    start.setDate(start.getDate() - 7);
-    end.setDate(end.getDate() + 7);
+
+    const getDateFromQuery = (
+      paramName: string,
+      defaultOffset: number,
+    ): string => {
+      const queryValue = this.props.router.query[paramName] as string;
+      if (queryValue && DateUtil.isValidDate(queryValue)) {
+        return queryValue;
+      }
+
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + defaultOffset);
+      return Formatting.getISO8601(defaultDate);
+    };
+
     this.state = {
       selectedItem: "",
       loading: true,
-      start: Formatting.getISO8601(start),
-      end: Formatting.getISO8601(end),
+      start: getDateFromQuery("enter", -7),
+      end: getDateFromQuery("leave", +7),
     };
     this.loadSettings();
   }
@@ -66,12 +78,31 @@ class Bookings extends React.Component<Props, State> {
     this.loadItems();
   };
 
+  updateUrlParams = (start: string, end: string) => {
+    const currentPath = this.props.router.pathname;
+    const currentQuery = {
+      ...this.props.router.query,
+      enter: start,
+      leave: end,
+    };
+
+    this.props.router.replace(
+      {
+        pathname: currentPath,
+        query: currentQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
+
   loadItems = () => {
     let end = new Date(this.state.end);
     end.setHours(23, 59, 59);
     Booking.listFiltered(new Date(this.state.start), end).then((list) => {
       this.data = list;
       this.setState({ loading: false });
+      this.updateUrlParams(this.state.start, this.state.end);
     });
   };
 
@@ -111,7 +142,6 @@ class Bookings extends React.Component<Props, State> {
         if (s.name === "max_hours_before_delete") {
           this.maxHoursBeforeDelete = window.parseInt(s.value);
         }
-        // this.setState({ loading: false });
       });
     });
   };
