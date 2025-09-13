@@ -78,12 +78,31 @@ class Bookings extends React.Component<Props, State> {
     this.loadItems();
   };
 
+  updateUrlParams = (start: string, end: string) => {
+    const currentPath = this.props.router.pathname;
+    const currentQuery = {
+      ...this.props.router.query,
+      enter: start,
+      leave: end,
+    };
+
+    this.props.router.replace(
+      {
+        pathname: currentPath,
+        query: currentQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
+
   loadItems = () => {
     let end = new Date(this.state.end);
     end.setHours(23, 59, 59);
     Booking.listFiltered(new Date(this.state.start), end).then((list) => {
       this.data = list;
       this.setState({ loading: false });
+      this.updateUrlParams(this.state.start, this.state.end);
     });
   };
 
