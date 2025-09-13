@@ -4,6 +4,7 @@ import {
   AjaxError,
   Booking,
   Formatting,
+  DateUtil,
   Settings as OrgSettings,
 } from "seatsurfing-commons";
 import { Table, Form, Col, Row, Button } from "react-bootstrap";
@@ -42,15 +43,26 @@ class Bookings extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.data = [];
-    let end = new Date();
-    let start = new Date();
-    start.setDate(start.getDate() - 7);
-    end.setDate(end.getDate() + 7);
+
+    const getDateFromQuery = (
+      paramName: string,
+      defaultOffset: number
+    ): string => {
+      const queryValue = this.props.router.query[paramName] as string;
+      if (queryValue && DateUtil.isValidDate(queryValue)) {
+        return queryValue;
+      }
+
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + defaultOffset);
+      return Formatting.getISO8601(defaultDate);
+    };
+
     this.state = {
       selectedItem: "",
       loading: true,
-      start: Formatting.getISO8601(start),
-      end: Formatting.getISO8601(end),
+      start: getDateFromQuery("enter", -7),
+      end: getDateFromQuery("leave", +7),
     };
     this.loadSettings();
   }
@@ -61,7 +73,7 @@ class Bookings extends React.Component<Props, State> {
       return;
     }
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
+      (imp) => (this.ExcellentExport = imp.default)
     );
     this.loadItems();
   };
@@ -95,13 +107,13 @@ class Bookings extends React.Component<Props, State> {
           window.alert(
             this.props.t("errorDeleteBookingBeforeMaxCancel", {
               num: this.maxHoursBeforeDelete,
-            }),
+            })
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
         }
         this.loadItems();
-      },
+      }
     );
   };
 
@@ -111,7 +123,6 @@ class Bookings extends React.Component<Props, State> {
         if (s.name === "max_hours_before_delete") {
           this.maxHoursBeforeDelete = window.parseInt(s.value);
         }
-        // this.setState({ loading: false });
       });
     });
   };
@@ -163,7 +174,7 @@ class Bookings extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
-      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }]
     );
   };
 

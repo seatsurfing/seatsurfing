@@ -1,4 +1,5 @@
 export { default as Ajax } from "./util/Ajax";
+export { default as DateUtil } from "./util/DateUtil";
 export { default as AjaxError } from "./util/AjaxError";
 export type { default as AjaxConfigPersister } from "./util/AjaxConfigPersister";
 export { default as AjaxCredentials } from "./util/AjaxCredentials";
