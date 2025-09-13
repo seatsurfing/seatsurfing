@@ -1,20 +1,19 @@
 export abstract class Entity {
-    id: string = "";
+  id: string = "";
 
-    constructor(id?: string) {
-        if (id) {
-            this.id = id;
-        }
+  constructor(id?: string) {
+    if (id) {
+      this.id = id;
     }
+  }
 
-    serialize(): Object {
-        return {
-        };
-    }
+  serialize(): Object {
+    return {};
+  }
 
-    deserialize(input: any): void {
-        this.id = input.id;
-    }
+  deserialize(input: any): void {
+    this.id = input.id;
+  }
 
-    abstract getBackendUrl(): string;
+  abstract getBackendUrl(): string;
 }

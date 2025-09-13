@@ -1,15 +1,14 @@
-
 export default class BulkUpdateItem {
-    id: string;
-    success: boolean;
+  id: string;
+  success: boolean;
 
-    constructor() {
-        this.id = "";
-        this.success = false;
-    }
+  constructor() {
+    this.id = "";
+    this.success = false;
+  }
 
-    deserialize(input: any): void {
-        this.id = input.id;
-        this.success = input.success;
-    }
+  deserialize(input: any): void {
+    this.id = input.id;
+    this.success = input.success;
+  }
 }

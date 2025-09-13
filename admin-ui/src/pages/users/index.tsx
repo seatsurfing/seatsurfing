@@ -1,21 +1,21 @@
-import React from 'react';
-import { Table } from 'react-bootstrap';
-import { Plus as IconPlus, Download as IconDownload } from 'react-feather';
-import { User, AuthProvider, Ajax } from 'seatsurfing-commons';
-import FullLayout from '@/components/FullLayout';
-import Loading from '@/components/Loading';
-import Link from 'next/link';
-import { NextRouter } from 'next/router';
-import withReadyRouter from '@/components/withReadyRouter';
-import { TranslationFunc, withTranslation } from '@/components/withTranslation';
+import React from "react";
+import { Table } from "react-bootstrap";
+import { Plus as IconPlus, Download as IconDownload } from "react-feather";
+import { User, AuthProvider, Ajax } from "seatsurfing-commons";
+import FullLayout from "@/components/FullLayout";
+import Loading from "@/components/Loading";
+import Link from "next/link";
+import { NextRouter } from "next/router";
+import withReadyRouter from "@/components/withReadyRouter";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 interface State {
-  selectedItem: string
-  loading: boolean
+  selectedItem: string;
+  loading: boolean;
 }
 
 interface Props {
-  router: NextRouter
+  router: NextRouter;
   t: TranslationFunc;
 }
 
@@ -28,7 +28,7 @@ class Users extends React.Component<Props, State> {
     super(props);
     this.state = {
       selectedItem: "",
-      loading: true
+      loading: true,
     };
   }
 
@@ -37,25 +37,27 @@ class Users extends React.Component<Props, State> {
       this.props.router.push("/login");
       return;
     }
-    import('excellentexport').then(imp => this.ExcellentExport = imp.default);
+    import("excellentexport").then(
+      (imp) => (this.ExcellentExport = imp.default),
+    );
     this.loadItems();
-  }
+  };
 
   loadItems = () => {
-    AuthProvider.list().then(providers => {
-      providers.forEach(provider => {
+    AuthProvider.list().then((providers) => {
+      providers.forEach((provider) => {
         this.authProviders[provider.id] = provider.name;
       });
-      User.list().then(list => {
+      User.list().then((list) => {
         this.data = list;
         this.setState({ loading: false });
       });
     });
-  }
+  };
 
   onItemSelect = (user: User) => {
     this.setState({ selectedItem: user.id });
-  }
+  };
 
   renderItem = (user: User) => {
     let authProvider = "";
@@ -87,26 +89,37 @@ class Users extends React.Component<Props, State> {
         <td>{authProvider}</td>
       </tr>
     );
-  }
+  };
 
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-users", format: "xlsx" },
-      [{ name: "Seatsurfing Users", from: { table: "datatable" } }]
+      [{ name: "Seatsurfing Users", from: { table: "datatable" } }],
     );
-  }
+  };
 
   render() {
     if (this.state.selectedItem) {
       this.props.router.push(`/users/${this.state.selectedItem}`);
-      return <></>
+      return <></>;
     }
     // eslint-disable-next-line
-    let downloadButton = <a download="seatsurfing-users.xlsx" href="#" className="btn btn-sm btn-outline-secondary" onClick={this.exportTable}><IconDownload className="feather" /> {this.props.t("download")}</a>;
+    let downloadButton = (
+      <a
+        download="seatsurfing-users.xlsx"
+        href="#"
+        className="btn btn-sm btn-outline-secondary"
+        onClick={this.exportTable}
+      >
+        <IconDownload className="feather" /> {this.props.t("download")}
+      </a>
+    );
     let buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link href="/users/add" className="btn btn-sm btn-outline-secondary"><IconPlus className="feather" /> {this.props.t("add")}</Link>
+        <Link href="/users/add" className="btn btn-sm btn-outline-secondary">
+          <IconPlus className="feather" /> {this.props.t("add")}
+        </Link>
       </>
     );
 
@@ -118,7 +131,7 @@ class Users extends React.Component<Props, State> {
       );
     }
 
-    let rows = this.data.map(item => this.renderItem(item));
+    let rows = this.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("users")} buttons={buttons}>
@@ -128,7 +141,12 @@ class Users extends React.Component<Props, State> {
     }
     return (
       <FullLayout headline={this.props.t("users")} buttons={buttons}>
-        <Table striped={true} hover={true} className="clickable-table" id="datatable">
+        <Table
+          striped={true}
+          hover={true}
+          className="clickable-table"
+          id="datatable"
+        >
           <thead>
             <tr>
               <th>{this.props.t("username")}</th>
@@ -136,9 +154,7 @@ class Users extends React.Component<Props, State> {
               <th>{this.props.t("loginMeans")}</th>
             </tr>
           </thead>
-          <tbody>
-            {rows}
-          </tbody>
+          <tbody>{rows}</tbody>
         </Table>
       </FullLayout>
     );

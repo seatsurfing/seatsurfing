@@ -1,19 +1,19 @@
-import React from 'react';
-import { Ajax, Search, SearchOptions } from 'seatsurfing-commons';
-import { Card, ListGroup, Col, Row } from 'react-bootstrap';
-import { NextRouter } from 'next/router';
-import FullLayout from '@/components/FullLayout';
-import Loading from '@/components/Loading';
-import Link from 'next/link';
-import withReadyRouter from '@/components/withReadyRouter';
-import { TranslationFunc, withTranslation } from '@/components/withTranslation';
+import React from "react";
+import { Ajax, Search, SearchOptions } from "seatsurfing-commons";
+import { Card, ListGroup, Col, Row } from "react-bootstrap";
+import { NextRouter } from "next/router";
+import FullLayout from "@/components/FullLayout";
+import Loading from "@/components/Loading";
+import Link from "next/link";
+import withReadyRouter from "@/components/withReadyRouter";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 interface State {
-  loading: boolean
+  loading: boolean;
 }
 
 interface Props {
-  router: NextRouter
+  router: NextRouter;
   t: TranslationFunc;
 }
 
@@ -24,7 +24,7 @@ class SearchResult extends React.Component<Props, State> {
     super(props);
     this.data = new Search();
     this.state = {
-      loading: true
+      loading: true,
     };
   }
 
@@ -34,109 +34,123 @@ class SearchResult extends React.Component<Props, State> {
       return;
     }
     this.loadItems();
-  }
+  };
 
   componentDidUpdate = (prevProps: Props) => {
     const { keyword } = this.props.router.query;
-    if (keyword !== prevProps.router.query['keyword']) {
+    if (keyword !== prevProps.router.query["keyword"]) {
       this.loadItems();
     }
-  }
+  };
 
   loadItems = () => {
     const { keyword } = this.props.router.query;
-    if (typeof keyword === 'string') {
+    if (typeof keyword === "string") {
       let options = new SearchOptions();
       options.includeUsers = true;
       options.includeLocations = true;
       options.includeSpaces = true;
       options.includeGroups = true;
-      Search.search(keyword ? keyword : "", options).then(res => {
+      Search.search(keyword ? keyword : "", options).then((res) => {
         this.data = res;
         this.setState({ loading: false });
       });
     } else {
       this.setState({ loading: false });
     }
-  }
+  };
 
   escapeHTML = (s: string): string => {
     return s;
-  }
+  };
 
   renderUserResults = () => {
-    let items = this.data.users.map(user => {
+    let items = this.data.users.map((user) => {
       let link = "/users/" + user.id;
       return (
-        <ListGroup.Item key={user.id}><Link href={link}>{user.email}</Link></ListGroup.Item>
+        <ListGroup.Item key={user.id}>
+          <Link href={link}>{user.email}</Link>
+        </ListGroup.Item>
       );
     });
     if (items.length === 0) {
-      items.push(<ListGroup.Item key="users-no-results">{this.props.t("noResults")}</ListGroup.Item>);
+      items.push(
+        <ListGroup.Item key="users-no-results">
+          {this.props.t("noResults")}
+        </ListGroup.Item>,
+      );
     }
     return (
       <Col sm="4" className="mb-4">
         <Card>
           <Card.Header>{this.props.t("users")}</Card.Header>
-          <ListGroup variant="flush">
-            {items}
-          </ListGroup>
+          <ListGroup variant="flush">{items}</ListGroup>
         </Card>
       </Col>
     );
-  }
+  };
 
   renderLocationResults = () => {
-    let items = this.data.locations.map(location => {
+    let items = this.data.locations.map((location) => {
       let link = "/locations/" + location.id;
       return (
-        <ListGroup.Item key={location.id}><Link href={link}>{location.name}</Link></ListGroup.Item>
+        <ListGroup.Item key={location.id}>
+          <Link href={link}>{location.name}</Link>
+        </ListGroup.Item>
       );
     });
     if (items.length === 0) {
-      items.push(<ListGroup.Item key="locations-no-results">{this.props.t("noResults")}</ListGroup.Item>);
+      items.push(
+        <ListGroup.Item key="locations-no-results">
+          {this.props.t("noResults")}
+        </ListGroup.Item>,
+      );
     }
     return (
       <Col sm="4" className="mb-4">
         <Card>
           <Card.Header>{this.props.t("areas")}</Card.Header>
-          <ListGroup variant="flush">
-            {items}
-          </ListGroup>
+          <ListGroup variant="flush">{items}</ListGroup>
         </Card>
       </Col>
     );
-  }
+  };
 
   renderSpaceResults = () => {
-    let items = this.data.spaces.map(space => {
+    let items = this.data.spaces.map((space) => {
       let link = "/locations/" + space.locationId;
       return (
-        <ListGroup.Item key={space.id}><Link href={link}>{space.name}</Link></ListGroup.Item>
+        <ListGroup.Item key={space.id}>
+          <Link href={link}>{space.name}</Link>
+        </ListGroup.Item>
       );
     });
     if (items.length === 0) {
-      items.push(<ListGroup.Item key="spaces-no-results">{this.props.t("noResults")}</ListGroup.Item>);
+      items.push(
+        <ListGroup.Item key="spaces-no-results">
+          {this.props.t("noResults")}
+        </ListGroup.Item>,
+      );
     }
     return (
       <Col sm="4" className="mb-4">
         <Card>
           <Card.Header>{this.props.t("spaces")}</Card.Header>
-          <ListGroup variant="flush">
-            {items}
-          </ListGroup>
+          <ListGroup variant="flush">{items}</ListGroup>
         </Card>
       </Col>
     );
-  }
+  };
 
   render() {
     const { keyword } = this.props.router.query;
-    let headline = '';
-    if (typeof keyword === 'string') {
-      headline = this.props.t("searchForX", {keyword: this.escapeHTML(keyword ? keyword : "")});
+    let headline = "";
+    if (typeof keyword === "string") {
+      headline = this.props.t("searchForX", {
+        keyword: this.escapeHTML(keyword ? keyword : ""),
+      });
     } else {
-      headline = this.props.t("searchForX", {keyword: ""});
+      headline = this.props.t("searchForX", { keyword: "" });
     }
 
     if (this.state.loading) {

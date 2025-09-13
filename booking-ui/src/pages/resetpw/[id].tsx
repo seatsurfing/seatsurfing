@@ -1,20 +1,20 @@
-import React from 'react';
-import { Ajax } from 'seatsurfing-commons';
-import { Button, Form } from 'react-bootstrap';
-import { NextRouter } from 'next/router';
-import Link from 'next/link';
-import withReadyRouter from '@/components/withReadyRouter';
-import { TranslationFunc, withTranslation } from '@/components/withTranslation';
+import React from "react";
+import { Ajax } from "seatsurfing-commons";
+import { Button, Form } from "react-bootstrap";
+import { NextRouter } from "next/router";
+import Link from "next/link";
+import withReadyRouter from "@/components/withReadyRouter";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 interface State {
-  loading: boolean
-  complete: boolean
-  success: boolean
-  newPassword: string
+  loading: boolean;
+  complete: boolean;
+  success: boolean;
+  newPassword: string;
 }
 
 interface Props {
-  router: NextRouter
+  router: NextRouter;
   t: TranslationFunc;
 }
 
@@ -25,7 +25,7 @@ class CompletePasswordReset extends React.Component<Props, State> {
       loading: false,
       complete: false,
       success: false,
-      newPassword: ""
+      newPassword: "",
     };
   }
 
@@ -37,27 +37,33 @@ class CompletePasswordReset extends React.Component<Props, State> {
     }
     this.setState({ loading: true, complete: false, success: false });
     let payload = {
-      "password": this.state.newPassword
+      password: this.state.newPassword,
     };
-    Ajax.postData("/auth/pwreset/" + id, payload).then((res) => {
-      if (res.status >= 200 && res.status <= 299) {
-        this.setState({ loading: false, complete: true, success: true });
-      } else {
+    Ajax.postData("/auth/pwreset/" + id, payload)
+      .then((res) => {
+        if (res.status >= 200 && res.status <= 299) {
+          this.setState({ loading: false, complete: true, success: true });
+        } else {
+          this.setState({ loading: false, complete: true, success: false });
+        }
+      })
+      .catch((e) => {
         this.setState({ loading: false, complete: true, success: false });
-      }
-    }).catch((e) => {
-      this.setState({ loading: false, complete: true, success: false });
-    });
-  }
+      });
+  };
 
   render() {
-    if (this.state.complete && this.state.success) {
+    if (this.state.complete && this.state.success) {
       return (
         <div className="container-center">
           <div className="container-center-inner">
             <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
             <p>{this.props.t("passwordChanged")}</p>
-            <p><Link href="/login" className="btn btn-primary">{this.props.t("proceedToLogin")}</Link></p>
+            <p>
+              <Link href="/login" className="btn btn-primary">
+                {this.props.t("proceedToLogin")}
+              </Link>
+            </p>
           </div>
         </div>
       );
@@ -65,13 +71,37 @@ class CompletePasswordReset extends React.Component<Props, State> {
 
     return (
       <div className="container-center">
-        <Form className="container-center-inner" onSubmit={this.onPasswordSubmit}>
+        <Form
+          className="container-center-inner"
+          onSubmit={this.onPasswordSubmit}
+        >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <Form.Group>
-            <Form.Control type="password" placeholder={this.props.t("newPassword")} value={this.state.newPassword} onChange={(e: any) => this.setState({ newPassword: e.target.value, complete: false })} required={true} autoFocus={true} minLength={8} disabled={this.state.loading} isInvalid={this.state.complete && !this.state.success} />
-            <Form.Control.Feedback type="invalid">{this.props.t("errorInvalidPassword")}</Form.Control.Feedback>
+            <Form.Control
+              type="password"
+              placeholder={this.props.t("newPassword")}
+              value={this.state.newPassword}
+              onChange={(e: any) =>
+                this.setState({ newPassword: e.target.value, complete: false })
+              }
+              required={true}
+              autoFocus={true}
+              minLength={8}
+              disabled={this.state.loading}
+              isInvalid={this.state.complete && !this.state.success}
+            />
+            <Form.Control.Feedback type="invalid">
+              {this.props.t("errorInvalidPassword")}
+            </Form.Control.Feedback>
           </Form.Group>
-          <Button className="margin-top-10" variant="primary" type="submit" disabled={this.state.loading}>{this.props.t("changePassword")}</Button>
+          <Button
+            className="margin-top-10"
+            variant="primary"
+            type="submit"
+            disabled={this.state.loading}
+          >
+            {this.props.t("changePassword")}
+          </Button>
         </Form>
       </div>
     );

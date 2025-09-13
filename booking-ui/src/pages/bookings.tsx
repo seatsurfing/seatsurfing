@@ -92,13 +92,13 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData
+          this.loadData,
         );
       },
       (reason: any) => {
         if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
           window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t)
+            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
@@ -109,9 +109,9 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData
+          this.loadData,
         );
-      }
+      },
     );
   };
 
@@ -204,10 +204,13 @@ class Bookings extends React.Component<Props, State> {
             <h6 hidden={!this.state.selectedItem?.subject}>
               {this.state.selectedItem?.subject}
             </h6>
-            <p dangerouslySetInnerHTML={{__html: this.props.t("confirmCancelBooking", {
-                enter: formatter.format(this.state.selectedItem?.enter),
-              })}}>
-            </p>
+            <p
+              dangerouslySetInnerHTML={{
+                __html: this.props.t("confirmCancelBooking", {
+                  enter: formatter.format(this.state.selectedItem?.enter),
+                }),
+              }}
+            ></p>
             <p hidden={!this.state.selectedItem?.isRecurring()}>
               <Form.Check
                 type="checkbox"
@@ -232,7 +235,7 @@ class Bookings extends React.Component<Props, State> {
               variant="secondary"
               onClick={() =>
                 getIcal(
-                  this.state.selectedItem ? this.state.selectedItem.id : ""
+                  this.state.selectedItem ? this.state.selectedItem.id : "",
                 )
               }
             >

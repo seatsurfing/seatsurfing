@@ -1,11 +1,10 @@
-import React from 'react';
-import { Form, Alert } from 'react-bootstrap';
-import RuntimeConfig from '../../components/RuntimeConfig';
-import Link from 'next/link';
-import { TranslationFunc, withTranslation } from '@/components/withTranslation';
+import React from "react";
+import { Form, Alert } from "react-bootstrap";
+import RuntimeConfig from "../../components/RuntimeConfig";
+import Link from "next/link";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
-interface State {
-}
+interface State {}
 
 interface Props {
   t: TranslationFunc;
@@ -15,7 +14,11 @@ class LoginFailed extends React.Component<Props, State> {
   render() {
     let backButton = <></>;
     if (!RuntimeConfig.EMBEDDED) {
-      backButton = <Link className="btn btn-primary" href="/login">{this.props.t("back")}</Link>;
+      backButton = (
+        <Link className="btn btn-primary" href="/login">
+          {this.props.t("back")}
+        </Link>
+      );
     }
 
     return (
@@ -26,7 +29,7 @@ class LoginFailed extends React.Component<Props, State> {
           {backButton}
         </Form>
       </div>
-    )
+    );
   }
 }
 

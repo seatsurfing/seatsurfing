@@ -24,7 +24,7 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
       window.sessionStorage.setItem("accessToken", c.accessToken);
       window.sessionStorage.setItem(
         "accessTokenExpiry",
-        c.accessTokenExpiry.getTime().toString()
+        c.accessTokenExpiry.getTime().toString(),
       );
       window.sessionStorage.setItem("logoutUrl", c.logoutUrl);
     } catch (e) {}

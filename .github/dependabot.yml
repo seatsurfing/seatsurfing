@@ -1,34 +1,34 @@
 version: 2
 updates:
-- package-ecosystem: gomod
-  directory: "/server/"
-  schedule:
-    interval: daily
-  commit-message:
-    prefix: "fix(deps)"
-  open-pull-requests-limit: 50
-- package-ecosystem: npm
-  directories:
-    - "/admin-ui/"
-    - "/booking-ui/"
-    - "/commons/ts/"
-    - "/e2e/"
-  schedule:
-    interval: daily
-  commit-message:
-    prefix: "fix(deps)"
-  open-pull-requests-limit: 50
-- package-ecosystem: docker
-  directory: "/"
-  schedule:
-    interval: daily
-  commit-message:
-    prefix: "fix(deps)"
-  open-pull-requests-limit: 50
-- package-ecosystem: github-actions
-  directory: "/.github/workflows/"
-  schedule:
-    interval: weekly
-  commit-message:
-    prefix: "build"
-    include: "scope"
+  - package-ecosystem: gomod
+    directory: "/server/"
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "fix(deps)"
+    open-pull-requests-limit: 50
+  - package-ecosystem: npm
+    directories:
+      - "/admin-ui/"
+      - "/booking-ui/"
+      - "/commons/ts/"
+      - "/e2e/"
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "fix(deps)"
+    open-pull-requests-limit: 50
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "fix(deps)"
+    open-pull-requests-limit: 50
+  - package-ecosystem: github-actions
+    directory: "/.github/workflows/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
+      include: "scope"

@@ -1,63 +1,63 @@
 .feedbackButtonActive,
 .feedbackButton {
-    position: fixed;
-    width: 64px;
-    height: 64px;
-    background-color: #cff4fc;
-    border: 1px solid #9eeaf9;
-    right: 20px;
-    bottom: 20px;
-    border-radius: 100%; 
-    cursor: pointer;
-    opacity: 0.9;
+  position: fixed;
+  width: 64px;
+  height: 64px;
+  background-color: #cff4fc;
+  border: 1px solid #9eeaf9;
+  right: 20px;
+  bottom: 20px;
+  border-radius: 100%;
+  cursor: pointer;
+  opacity: 0.9;
 }
 
 .feedbackButtonActive,
 .feedbackButton:hover {
-    background-color: #b3efff;
+  background-color: #b3efff;
 }
 
 .feedbackButtonIcon {
-    width: 32px;
-    height: 32px;
-    margin-left: 16px;
-    margin-top: 16px;
-    color: #007bff;
+  width: 32px;
+  height: 32px;
+  margin-left: 16px;
+  margin-top: 16px;
+  color: #007bff;
 }
 
 .feedbackButtonContainer {
-    position: fixed;
-    width: 300px;
-    right: 20px;
-    bottom: 20px;
-    background-color: #cff4fc;
-    border: 1px solid #9eeaf9;
-    border-radius: 6px;
-    border-bottom-right-radius: 32px;
-    font-family: Helvetica, sans-serif;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 24px;
-    padding: 16px;
-    padding-bottom: 32px;
-    color: rgb(5, 81, 96);
-    opacity: 1.0;
-    animation-name: showFeedbackFormAnimation;
-	animation-iteration-count: 1;
-	animation-timing-function: ease-in;
-	animation-duration: 0.2s;
+  position: fixed;
+  width: 300px;
+  right: 20px;
+  bottom: 20px;
+  background-color: #cff4fc;
+  border: 1px solid #9eeaf9;
+  border-radius: 6px;
+  border-bottom-right-radius: 32px;
+  font-family: Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  padding: 16px;
+  padding-bottom: 32px;
+  color: rgb(5, 81, 96);
+  opacity: 1;
+  animation-name: showFeedbackFormAnimation;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in;
+  animation-duration: 0.2s;
 }
 
 @keyframes showFeedbackFormAnimation {
-	0% {
-		opacity: 0;
-	}
-	100% {
-		opacity: 1;
-	}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .feedbackSendButton {
-    text-decoration: none;
-    padding-left: 0px;
+  text-decoration: none;
+  padding-left: 0px;
 }
