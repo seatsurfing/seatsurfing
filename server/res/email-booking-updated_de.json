@@ -1,0 +1,11 @@
+{
+  "subject": "Deine Seatsurfing Buchung: Aktualisiert",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "Deine Buchung wurde aktualisiert.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ]
+}

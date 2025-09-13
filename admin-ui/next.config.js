@@ -1,9 +1,9 @@
 const nextConfig = {
-  distDir: 'build',
+  distDir: "build",
   trailingSlash: true,
-  output: 'export',
+  output: "export",
   reactStrictMode: true,
-  basePath: '/admin',
-}
+  basePath: "/admin",
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

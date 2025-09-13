@@ -82,8 +82,11 @@ class EditOrg extends React.Component<Props, State> {
       code: this.state.code,
     };
     Ajax.postData(
-      this.entity.getBackendUrl() + this.entity.id + "/verifyemail/" + this.state.verifyUuid,
-      payload
+      this.entity.getBackendUrl() +
+        this.entity.id +
+        "/verifyemail/" +
+        this.state.verifyUuid,
+      payload,
     )
       .then(() => {
         this.setState({
@@ -95,7 +98,7 @@ class EditOrg extends React.Component<Props, State> {
       .catch(() => {
         this.setState({ error: true });
       });
-  }
+  };
 
   onSubmit = (e: any) => {
     e.preventDefault();

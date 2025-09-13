@@ -69,6 +69,8 @@
    ./run.sh
    ```
 
+   _Optionally: Add a custom `.env` file in the folder `./server` to set additional environment variables._
+
 You should now be able to access the Admin UI at http://localhost:3000/admin/ and the Booking UI at http://localhost:3001/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`). To check notification e-mails sent by the system open the MailHog interface at http://localhost:8025/.
 
 ## Adding translations
@@ -100,7 +102,6 @@ If you add/modify major frontend functionality, please add/modify the e2e tests.
    ```
 
 1. To run the e2e [Playwright](https://playwright.dev/) tests:
-
    1. Install the dependencies:
 
       ```shell

@@ -1,53 +1,53 @@
 .mapScrollContainer {
-    max-width: 100%;
-    overflow-y: scroll;
+  max-width: 100%;
+  overflow-y: scroll;
 }
 
 .space-dragger {
-    background-color: hsl(190,45%,60%);
-    border: 1px solid black;
-    color: white;
-    font-size: 12px;
-    display: -ms-flexbox !important;
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-    position: relative;
+  background-color: hsl(190, 45%, 60%);
+  border: 1px solid black;
+  color: white;
+  font-size: 12px;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 .space-dragger-vertical {
-    writing-mode: vertical-rl;
-    text-orientation: sideways;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
 }
 
 .space-dragger input {
-    width: 100%;
-    border: 0;
-    font-size: 12px;
-    background-color: transparent;
-    color: white;
-    text-align: center;
+  width: 100%;
+  border: 0;
+  font-size: 12px;
+  background-color: transparent;
+  color: white;
+  text-align: center;
 }
 
 .space-dragger-vertical input {
-    transform: rotate(-90deg);
+  transform: rotate(-90deg);
 }
 
 .space-dragger input:focus {
-    outline: none;
+  outline: none;
 }
 
 .space-dragger-selected {
-    background-color: hsl(12,75%,55%);
+  background-color: hsl(12, 75%, 55%);
 }
 
 .mapScrollContainer::-webkit-scrollbar {
-    -webkit-appearance: none;
-    width: 7px;
+  -webkit-appearance: none;
+  width: 7px;
 }
 
 .mapScrollContainer::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, .5);
-    -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
 }

@@ -61,8 +61,20 @@ func GetEmailTemplatePathBookingCreated() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-created.json")
 }
 
+func GetEmailTemplatePathBookingUpdated() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-updated.json")
+}
+
 func GetEmailTemplatePathBookingDeclined() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-declined.json")
+}
+
+func GetEmailTemplatePathBookingApproved() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-approved.json")
+}
+
+func GetEmailTemplatePathBookingDeleted() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-deleted.json")
 }
 
 func GetEmailTemplatePathFooter() string {

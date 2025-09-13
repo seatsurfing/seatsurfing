@@ -19,25 +19,25 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v5
-    - name: Install server dependencies
-      working-directory: ./server
-      run: go get -d -v ./...
-    - name: Run util tests
-      working-directory: ./server/util/test
-      run: go test -cover -v
-      env:
-        POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
-        CGO_ENABLED: 0
-    - name: Run repository tests
-      working-directory: ./server/repository/test
-      run: go test -cover -v
-      env:
-        POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
-        CGO_ENABLED: 0
-    - name: Run router tests
-      working-directory: ./server/router/test
-      run: go test -cover -v
-      env:
-        POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
-        CGO_ENABLED: 0
+      - uses: actions/checkout@v5
+      - name: Install server dependencies
+        working-directory: ./server
+        run: go get -d -v ./...
+      - name: Run util tests
+        working-directory: ./server/util/test
+        run: go test -cover -v
+        env:
+          POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
+          CGO_ENABLED: 0
+      - name: Run repository tests
+        working-directory: ./server/repository/test
+        run: go test -cover -v
+        env:
+          POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
+          CGO_ENABLED: 0
+      - name: Run router tests
+        working-directory: ./server/router/test
+        run: go test -cover -v
+        env:
+          POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
+          CGO_ENABLED: 0

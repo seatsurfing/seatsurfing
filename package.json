@@ -1,0 +1,11 @@
+{
+  "name": "Seatsurfing",
+  "private": true,
+  "scripts": {
+    "prettier:check": "prettier --check \"**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}\"",
+    "prettier:format": "prettier --write \"**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}\""
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

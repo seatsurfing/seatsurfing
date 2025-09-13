@@ -1,17 +1,15 @@
 {
-    "subject": "Reset your Seatsurfing password",
-    "headline": "Hello {{recipientName}},",
-    "paragraphs": [
-        "We've received a request to reset your password."
-    ],
-    "buttons": [
-        {
-            "paragraph": "If this request was yours, you can change your password here:",
-            "label": "Change password",
-            "url": "{{orgDomain}}ui/resetpw/{{confirmID}}/"
-        }
-    ],
-    "finalParagraphs": [
-        "If you did not initiate a password reset for your Seatsurfing account, you can safely ignore this email. We won't change your password if you don't click the link above."
-    ]
+  "subject": "Reset your Seatsurfing password",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": ["We've received a request to reset your password."],
+  "buttons": [
+    {
+      "paragraph": "If this request was yours, you can change your password here:",
+      "label": "Change password",
+      "url": "{{orgDomain}}ui/resetpw/{{confirmID}}/"
+    }
+  ],
+  "finalParagraphs": [
+    "If you did not initiate a password reset for your Seatsurfing account, you can safely ignore this email. We won't change your password if you don't click the link above."
+  ]
 }
