@@ -29,13 +29,13 @@ jobs:
 
       - name: Build TypeScript commons
         working-directory: ./commons/ts
-        run: npm install && npm run build
+        run: npm ci && npm run build
       - name: Build Admin UI
         working-directory: ./admin-ui
-        run: npm install && npm run install-commons && npm run build
+        run: npm ci && npm run install-commons && npm run build
       - name: Build Booking UI
         working-directory: ./booking-ui
-        run: npm install && npm run install-commons && npm run build
+        run: npm ci && npm run install-commons && npm run build
 
       - name: Install server dependencies
         working-directory: ./server

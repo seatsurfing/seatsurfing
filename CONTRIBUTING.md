@@ -114,14 +114,14 @@ If you add/modify major frontend functionality, please add/modify the e2e tests.
 
       ```shell
       cd admin-ui
-      npm install && npm run install-commons && npm run build
+      npm ci && npm run install-commons && npm run build
       ```
 
    1. Build Booking UI:
 
       ```shell
       cd booking-ui
-      npm install && npm run install-commons && npm run build
+      npm ci && npm run install-commons && npm run build
       ```
 
    1. Run the tests:
