@@ -2125,7 +2125,7 @@ class Search extends React.Component<Props, State> {
                   placeholder={this.props.t(
                     this.state.selectedSpace?.requireSubject
                       ? "subject"
-                      : "subjectOptional"
+                      : "subjectOptional",
                   )}
                   value={this.state.subject}
                   onChange={(e: any) =>
