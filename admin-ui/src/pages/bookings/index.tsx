@@ -46,7 +46,7 @@ class Bookings extends React.Component<Props, State> {
 
     const getDateFromQuery = (
       paramName: string,
-      defaultOffset: number
+      defaultOffset: number,
     ): string => {
       const queryValue = this.props.router.query[paramName] as string;
       if (queryValue && DateUtil.isValidDate(queryValue)) {
@@ -73,7 +73,7 @@ class Bookings extends React.Component<Props, State> {
       return;
     }
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default)
+      (imp) => (this.ExcellentExport = imp.default),
     );
     this.loadItems();
   };
@@ -107,13 +107,13 @@ class Bookings extends React.Component<Props, State> {
           window.alert(
             this.props.t("errorDeleteBookingBeforeMaxCancel", {
               num: this.maxHoursBeforeDelete,
-            })
+            }),
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
         }
         this.loadItems();
-      }
+      },
     );
   };
 
@@ -174,7 +174,7 @@ class Bookings extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
-      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }]
+      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
     );
   };
 
