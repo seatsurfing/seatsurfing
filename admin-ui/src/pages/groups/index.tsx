@@ -39,7 +39,7 @@ class Groups extends React.Component<Props, State> {
       return;
     }
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default)
+      (imp) => (this.ExcellentExport = imp.default),
     );
     this.loadItems();
   };
@@ -66,7 +66,7 @@ class Groups extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-groups", format: "xlsx" },
-      [{ name: "Seatsurfing Groups", from: { table: "datatable" } }]
+      [{ name: "Seatsurfing Groups", from: { table: "datatable" } }],
     );
   };
 

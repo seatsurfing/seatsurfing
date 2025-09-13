@@ -5,7 +5,7 @@ export function getIcal(bookingId: string) {
   let options: RequestInit = Ajax.getFetchOptions(
     "GET",
     credentials.accessToken,
-    null
+    null,
   );
   fetch(Ajax.getBackendUrl() + "/booking/" + bookingId + "/ical", options).then(
     (response) => {
@@ -26,6 +26,6 @@ export function getIcal(bookingId: string) {
           window.URL.revokeObjectURL(url);
         })
         .catch(() => {});
-    }
+    },
   );
 }

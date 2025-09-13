@@ -1,21 +1,21 @@
-import React from 'react';
-import { Table } from 'react-bootstrap';
-import { Plus as IconPlus } from 'react-feather';
-import { Ajax, Organization } from 'seatsurfing-commons';
-import FullLayout from '@/components/FullLayout';
-import Loading from '@/components/Loading';
-import Link from 'next/link';
-import { NextRouter } from 'next/router';
-import withReadyRouter from '@/components/withReadyRouter';
-import { TranslationFunc, withTranslation } from '@/components/withTranslation';
+import React from "react";
+import { Table } from "react-bootstrap";
+import { Plus as IconPlus } from "react-feather";
+import { Ajax, Organization } from "seatsurfing-commons";
+import FullLayout from "@/components/FullLayout";
+import Loading from "@/components/Loading";
+import Link from "next/link";
+import { NextRouter } from "next/router";
+import withReadyRouter from "@/components/withReadyRouter";
+import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 interface State {
-  selectedItem: string
-  loading: boolean
+  selectedItem: string;
+  loading: boolean;
 }
 
 interface Props {
-  router: NextRouter
+  router: NextRouter;
   t: TranslationFunc;
 }
 
@@ -26,28 +26,28 @@ class Organizations extends React.Component<Props, State> {
     super(props);
     this.state = {
       selectedItem: "",
-      loading: true
+      loading: true,
     };
   }
-  
+
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
       this.props.router.push("/login");
       return;
     }
     this.loadItems();
-  }
+  };
 
   loadItems = () => {
-    Organization.list().then(list => {
+    Organization.list().then((list) => {
       this.data = list;
       this.setState({ loading: false });
     });
-  }
+  };
 
   onItemSelect = (org: Organization) => {
     this.setState({ selectedItem: org.id });
-  }
+  };
 
   renderItem = (org: Organization) => {
     return (
@@ -55,15 +55,22 @@ class Organizations extends React.Component<Props, State> {
         <td>{org.name}</td>
       </tr>
     );
-  }
+  };
 
   render() {
     if (this.state.selectedItem) {
       this.props.router.push(`/organizations/${this.state.selectedItem}`);
-      return <></>
+      return <></>;
     }
 
-    let buttons = <Link href="/organizations/add" className="btn btn-sm btn-outline-secondary"><IconPlus className="feather" /> {this.props.t("add")}</Link>;
+    let buttons = (
+      <Link
+        href="/organizations/add"
+        className="btn btn-sm btn-outline-secondary"
+      >
+        <IconPlus className="feather" /> {this.props.t("add")}
+      </Link>
+    );
 
     if (this.state.loading) {
       return (
@@ -73,7 +80,7 @@ class Organizations extends React.Component<Props, State> {
       );
     }
 
-    let rows = this.data.map(item => this.renderItem(item));
+    let rows = this.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("organizations")} buttons={buttons}>
@@ -89,9 +96,7 @@ class Organizations extends React.Component<Props, State> {
               <th>{this.props.t("org")}</th>
             </tr>
           </thead>
-          <tbody>
-            {rows}
-          </tbody>
+          <tbody>{rows}</tbody>
         </Table>
       </FullLayout>
     );

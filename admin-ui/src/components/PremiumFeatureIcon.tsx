@@ -1,8 +1,6 @@
 import React, { CSSProperties } from "react";
 import { withTranslation } from "./withTranslation";
-import {
-  IoDiamond as DiamondIcon,
-} from "react-icons/io5";
+import { IoDiamond as DiamondIcon } from "react-icons/io5";
 import RuntimeConfig from "./RuntimeConfig";
 
 interface State {}
@@ -17,11 +15,18 @@ class PremiumFeatureIcon extends React.Component<Props, State> {
     if (this.props.hidden) {
       return <></>;
     }
-    if (RuntimeConfig.INFOS.cloudHosted && !RuntimeConfig.INFOS.subscriptionActive) {
-          return (
-              <DiamondIcon className="feather" style={{marginLeft: "5px", ...this.props.style}} color="#007bff" />
-          );
-        }
+    if (
+      RuntimeConfig.INFOS.cloudHosted &&
+      !RuntimeConfig.INFOS.subscriptionActive
+    ) {
+      return (
+        <DiamondIcon
+          className="feather"
+          style={{ marginLeft: "5px", ...this.props.style }}
+          color="#007bff"
+        />
+      );
+    }
   }
 }
 

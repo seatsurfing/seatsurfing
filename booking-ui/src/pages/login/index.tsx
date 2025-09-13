@@ -100,7 +100,7 @@ class Login extends React.Component<Props, State> {
           } else {
             this.setState({ loading: false });
           }
-        }
+        },
       );
     } else {
       this.setState({ loading: false });
@@ -188,7 +188,7 @@ class Login extends React.Component<Props, State> {
         const credentials: AjaxCredentials = {
           accessToken: res.json.accessToken,
           accessTokenExpiry: new Date(
-            new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET
+            new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
           ),
           logoutUrl: res.json.logoutUrl,
         };
@@ -342,7 +342,7 @@ class Login extends React.Component<Props, State> {
 
     if (this.state.providers != null) {
       const buttons = this.state.providers.map((provider) =>
-        this.renderAuthProviderButton(provider)
+        this.renderAuthProviderButton(provider),
       );
       let providerSelection = (
         <p>

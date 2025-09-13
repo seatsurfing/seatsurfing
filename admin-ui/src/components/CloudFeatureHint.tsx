@@ -17,7 +17,9 @@ class CloudFeatureHint extends React.Component<Props, State> {
         <Col sm="8">
           <Alert variant="info">
             <p style={{ fontWeight: "bold" }}>
-              <PremiumFeatureIcon style={{marginLeft: "0px", marginRight: "5px"}} />
+              <PremiumFeatureIcon
+                style={{ marginLeft: "0px", marginRight: "5px" }}
+              />
               {this.props.t("cloudFeatureHeadline")}
             </p>
             <p>
