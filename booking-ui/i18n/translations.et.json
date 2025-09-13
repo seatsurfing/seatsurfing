@@ -156,6 +156,7 @@
   "recurrenceAvailabilityError": "{{numErr}} of {{numTotal}} occurrences are not available for the selected recurrence.",
   "repeat": "Repeat",
   "subject": "Subject",
+  "subjectOptional": "Subject (optional)",
   "weekly": "weekly",
   "weeks": "weeks",
   "noFilters": "No filters available"

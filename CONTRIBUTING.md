@@ -42,14 +42,14 @@
 1. Typescript commons: Build the common typescript files:
 
    ```shell
-   cd commons/ts && npm install && npm run build
+   cd commons/ts && npm ci && npm run build
    ```
 
 1. Admin UI: Install dependencies and start the admin interface. Use a dedicated terminal for that:
 
    ```shell
    cd admin-ui
-   npm install && npm run install-commons
+   npm ci && npm run install-commons
    npm run dev
    ```
 
@@ -57,7 +57,7 @@
 
    ```shell
    cd booking-ui
-   npm install && npm run install-commons
+   npm ci && npm run install-commons
    npm run dev
    ```
 
@@ -114,14 +114,14 @@ If you add/modify major frontend functionality, please add/modify the e2e tests.
 
       ```shell
       cd admin-ui
-      npm install && npm run install-commons && npm run build
+      npm ci && npm run install-commons && npm run build
       ```
 
    1. Build Booking UI:
 
       ```shell
       cd booking-ui
-      npm install && npm run install-commons && npm run build
+      npm ci && npm run install-commons && npm run build
       ```
 
    1. Run the tests:

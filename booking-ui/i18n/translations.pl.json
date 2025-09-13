@@ -145,6 +145,7 @@
   "approval": "Akceptacja",
   "pending": "Oczekujące",
   "subject": "Temat",
+  "subjectOptional": "Subject (optional)",
   "cancelAllUpcomingBookings": "Anuluj wszystkie nadchodzące rezerwacje",
   "repeat": "Powtarzaj",
   "never": "nigdy",
