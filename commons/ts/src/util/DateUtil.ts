@@ -1,5 +1,13 @@
 export default class DateUtil {
   /**
+   * @param date Date object to format
+   * @returns formatted date string in YYYY-MM-DD format
+   */
+  private static formatToDateString(date: Date): string {
+    return date.toISOString().split("T")[0];
+  }
+
+  /**
    * @param s string to test
    * @returns true if string is in data format YYYY-MM-DD
    */
@@ -14,7 +22,7 @@ export default class DateUtil {
       return false;
     }
 
-    return s === date.toISOString().split("T")[0];
+    return s === this.formatToDateString(date);
   }
 
   static getTodayDateString(): string {
@@ -29,30 +37,30 @@ export default class DateUtil {
   static getDateString(offset: number): string {
     const date = new Date();
     date.setDate(date.getDate() + offset);
-    return date.toISOString().split("T")[0];
+    return this.formatToDateString(date);
   }
 
   static getLastWeekMondayDateString(): string {
     const d = new Date();
     d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) - 7);
-    return d.toISOString().split("T")[0];
+    return this.formatToDateString(d);
   }
 
   static getLastWeekSundayDateString(): string {
     const d = new Date();
     d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) - 1);
-    return d.toISOString().split("T")[0];
+    return this.formatToDateString(d);
   }
 
   static getThisWeekMondayDateString(): string {
     const d = new Date();
     d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1));
-    return d.toISOString().split("T")[0];
+    return this.formatToDateString(d);
   }
 
   static getThisWeekSundayDateString(): string {
     const d = new Date();
     d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) + 6);
-    return d.toISOString().split("T")[0];
+    return this.formatToDateString(d);
   }
 }
