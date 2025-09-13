@@ -27,7 +27,7 @@
     "build": "next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
     "dev": "PORT=3000 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
     "lint": "next lint",
-    "install-commons": "npm remove --save seatsurfing-commons && npm install --save ../commons/ts"
+    "install-commons": "cd ../commons/ts && npm ci && npm run build && cd ../../admin-ui && npm remove --save seatsurfing-commons && npm install --save ../commons/ts"
   },
   "browserslist": {
     "production": [
