@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.41.0](https://github.com/seatsurfing/seatsurfing/compare/v1.40.0...v1.41.0) (2025-09-13)
+
+
+### Features
+
+* add mail notifications if a booking was approved, updated or deleted ([#1282](https://github.com/seatsurfing/seatsurfing/issues/1282)) ([e2220e0](https://github.com/seatsurfing/seatsurfing/commit/e2220e0c8d0c6e392d403f704cdddf630f60b22a))
+* add optional info to subject placeholder ([#1281](https://github.com/seatsurfing/seatsurfing/issues/1281)) ([85d9ab5](https://github.com/seatsurfing/seatsurfing/commit/85d9ab555a8e698a264dc3796fc4e5ed20793512))
+* booking cards on admin dashboard link to filtered bookings view ([#1287](https://github.com/seatsurfing/seatsurfing/issues/1287)) ([479984d](https://github.com/seatsurfing/seatsurfing/commit/479984dcdcea21c37874800d1fd2347b183456e0))
+
+
+### Bug Fixes
+
+* add error logging when generating access token failed ([#1278](https://github.com/seatsurfing/seatsurfing/issues/1278)) ([9ab4241](https://github.com/seatsurfing/seatsurfing/commit/9ab4241bf8925880c5f245405cbf8de62fa3bcae))
+* **deps:** bump eslint-config-next from 15.5.2 to 15.5.3 in /admin-ui ([#1274](https://github.com/seatsurfing/seatsurfing/issues/1274)) ([846e32f](https://github.com/seatsurfing/seatsurfing/commit/846e32f6fc80f1a6a191e076aa843e3800d98162))
+* **deps:** bump eslint-config-next from 15.5.2 to 15.5.3 in /booking-ui ([#1276](https://github.com/seatsurfing/seatsurfing/issues/1276)) ([28530cc](https://github.com/seatsurfing/seatsurfing/commit/28530cca5bb0ed8375631297e5e3a0c2143988da))
+* **deps:** bump next from 15.5.2 to 15.5.3 in /admin-ui ([#1273](https://github.com/seatsurfing/seatsurfing/issues/1273)) ([973797b](https://github.com/seatsurfing/seatsurfing/commit/973797bac0e1578dc42dd851b9db8c2b0a56a2c2))
+* **deps:** bump next from 15.5.2 to 15.5.3 in /booking-ui ([#1275](https://github.com/seatsurfing/seatsurfing/issues/1275)) ([185faaf](https://github.com/seatsurfing/seatsurfing/commit/185faaf7bbba3dfc29e1cbd7ceace0649397aa84))
+* **deps:** bump react-router-dom from 7.8.2 to 7.9.0 in /admin-ui ([#1283](https://github.com/seatsurfing/seatsurfing/issues/1283)) ([254c1b2](https://github.com/seatsurfing/seatsurfing/commit/254c1b2f23d60089e27e1283638b14abb6a0d4df))
+
 ## [1.40.0](https://github.com/seatsurfing/seatsurfing/compare/v1.39.10...v1.40.0) (2025-09-11)
 
 
