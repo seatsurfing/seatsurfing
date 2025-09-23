@@ -727,6 +727,65 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
+func TestBookingsMaxHoursRespectsLocationTimezone(t *testing.T) {
+
+	ClearTestDB()
+	timezone := "Europe/Berlin"
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+
+	// Turning on the check and set bookings can only be deleted more than 2 before enter time
+	GetSettingsRepository().Set(org.ID, SettingEnableMaxHourBeforeDelete.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "2")
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
+
+	// Prepare location in timezone "Europe/Berlin"
+	location := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+		Timezone:       timezone}
+	GetLocationRepository().Create(location)
+	space := &Space{Name: "Test 1", LocationID: location.ID}
+	GetSpaceRepository().Create(space)
+
+	now, _ := GetUTCNowInTimezone(timezone) // create now as UTC time (without timezone information)
+	router := &BookingRouter{}
+
+	// test booking one hour in future can not be deleted
+	bookingOneHourInFuture := &BookingDetails{
+		Space: SpaceDetails{
+			Space: Space{
+				ID: space.ID,
+			},
+		},
+		UserEmail: user.Email,
+		Booking: Booking{
+			Enter: now.Add(1 * time.Hour),
+			Leave: now.Add(2 * time.Hour),
+		},
+	}
+	CheckTestBool(t, false, router.IsValidBookingHoursBeforeDelete(bookingOneHourInFuture, user, org.ID))
+
+	// test booking two hours in future can be deleted
+	bookingTwoHourInFuture := &BookingDetails{
+		Space: SpaceDetails{
+			Space: Space{
+				ID: space.ID,
+			},
+			Location: Location{
+				ID: location.ID,
+			},
+		},
+		UserEmail: user.Email,
+		Booking: Booking{
+			Enter: now.Add(2 * time.Hour).Add(5 * time.Minute),
+			Leave: now.Add(3 * time.Hour).Add(5 * time.Minute),
+		},
+	}
+	CheckTestBool(t, true, router.IsValidBookingHoursBeforeDelete(bookingTwoHourInFuture, user, org.ID))
+
+}
+
 func TestBookingsDeleteToCloseBeeingAdmin(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
