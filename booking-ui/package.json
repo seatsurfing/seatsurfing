@@ -5,7 +5,7 @@
   "dependencies": {
     "@types/react-dom": "^19.1.9",
     "bootstrap": "^5.3.8",
-    "next": "^15.5.3",
+    "next": "^15.5.4",
     "next-export-i18n": "^2.4.3",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.10",
