@@ -869,7 +869,7 @@ func (router *BookingRouter) isValidConcurrent(m *CreateBookingRequest, location
 
 func (router *BookingRouter) IsValidBookingHoursBeforeDelete(e *BookingDetails, user *User, organizationID string) bool {
 
-	// test if user is admin and "no admin" restrictions are enabled
+	// test if user is admin and "no admin" restrictions is enabled
 	noAdminRestrictions, err := GetSettingsRepository().GetBool(organizationID, SettingNoAdminRestrictions.Name)
 	if err != nil {
 		log.Println(err)
