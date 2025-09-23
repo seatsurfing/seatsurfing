@@ -613,7 +613,7 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "24")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "timezone": "UTC"}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -683,8 +683,8 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "1")
 
 	// Create booking for today plus 1 hour, this SHOULD NOT BE deleted
-	today_en := time.Now().UTC().Add((2 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
-	today_ex := time.Now().UTC().Add((2 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
+	today_en := time.Now().UTC().Add((1 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
+	today_ex := time.Now().UTC().Add((1 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
 	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\":" + "\"" + today_en + "\"" + ", \"leave\":" + "\"" + today_ex + "\"" + "}"
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
@@ -692,8 +692,8 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	id4 := res.Header().Get("X-Object-Id")
 
 	// Create booking for today plus 2 hours, this SHOULD BE deleted
-	today_next_en := time.Now().UTC().Add(3 * time.Hour).Format("2006-01-02T15:04:05-07:00")
-	today_next_ex := time.Now().UTC().Add(3 * time.Hour).Format("2006-01-02T15:04:05-07:00")
+	today_next_en := time.Now().UTC().Add(2 * time.Hour).Format("2006-01-02T15:04:05-07:00")
+	today_next_ex := time.Now().UTC().Add(2 * time.Hour).Format("2006-01-02T15:04:05-07:00")
 	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\":" + "\"" + today_next_en + "\"" + ", \"leave\":" + "\"" + today_next_ex + "\"" + "}"
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
