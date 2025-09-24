@@ -1298,7 +1298,10 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ timezone: e.target.value })
                 }
               >
-                <option value="">({this.props.t("default")} - {RuntimeConfig.INFOS.defaultTimezone})</option>
+                <option value="">
+                  ({this.props.t("default")} -{" "}
+                  {RuntimeConfig.INFOS.defaultTimezone})
+                </option>
                 {this.timezones.map((tz) => (
                   <option key={tz} value={tz}>
                     {tz}
