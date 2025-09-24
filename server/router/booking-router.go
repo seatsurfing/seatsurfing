@@ -474,8 +474,9 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	requestUser := GetRequestUser(r)
-	// Check for the date, If the BookingRequest is to close with SettingsMaxHoursBeforeDelete, the Delete can not be performed.
-	if router.isValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
+
+	// Check for the date, if the booking request is too close with SettingsMaxHoursBeforeDelete and the deletion can not be performed
+	if router.IsValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
 		go router.onBookingDeleted(&e.Booking, true)
 		if err := GetBookingRepository().Delete(e); err != nil {
 			SendInternalServerError(w)
@@ -866,11 +867,19 @@ func (router *BookingRouter) isValidConcurrent(m *CreateBookingRequest, location
 	return true
 }
 
-func (router *BookingRouter) isValidBookingHoursBeforeDelete(e *BookingDetails, user *User, organizationID string) bool {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(organizationID, SettingNoAdminRestrictions.Name)
+func (router *BookingRouter) IsValidBookingHoursBeforeDelete(e *BookingDetails, user *User, organizationID string) bool {
+
+	// test if user is admin and "no admin" restrictions is enabled
+	noAdminRestrictions, err := GetSettingsRepository().GetBool(organizationID, SettingNoAdminRestrictions.Name)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
 	if noAdminRestrictions && CanSpaceAdminOrg(user, organizationID) {
 		return true
 	}
+
+	// test "max hour before delete" settings
 	enable_check, err := GetSettingsRepository().GetBool(organizationID, SettingEnableMaxHourBeforeDelete.Name)
 	if err != nil {
 		log.Println(err)
@@ -884,10 +893,25 @@ func (router *BookingRouter) isValidBookingHoursBeforeDelete(e *BookingDetails, 
 		log.Println(err)
 		return false
 	}
-	enterTime := e.Enter
-	now := time.Now().UTC()
-	difference_in_hours := int64(enterTime.Sub(now).Hours())
-	return difference_in_hours > int64(max_hours) || (max_hours == 0)
+	if max_hours == 0 {
+		return true
+	}
+
+	// get the enter time in the location's time zone
+	location, err := GetLocationRepository().GetOne(e.Space.Location.ID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	enterTime, err := GetLocationRepository().AttachTimezoneInformation(e.Enter, location)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	now := time.Now()
+	difference_in_hours := int64(enterTime.Sub(now).Hours()) // int64 rounds down
+	return difference_in_hours >= int64(max_hours)
 }
 
 func (router *BookingRouter) isValidMinHoursBooking(e *BookingRequest, organizationID string, user *User) bool {

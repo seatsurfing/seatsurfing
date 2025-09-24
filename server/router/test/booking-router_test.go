@@ -613,7 +613,7 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "24")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "timezone": "UTC"}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -683,8 +683,8 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "1")
 
 	// Create booking for today plus 1 hour, this SHOULD NOT BE deleted
-	today_en := time.Now().UTC().Add((2 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
-	today_ex := time.Now().UTC().Add((2 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
+	today_en := time.Now().UTC().Add((1 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
+	today_ex := time.Now().UTC().Add((1 * time.Hour)).Format("2006-01-02T15:04:05-07:00")
 	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\":" + "\"" + today_en + "\"" + ", \"leave\":" + "\"" + today_ex + "\"" + "}"
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
@@ -692,8 +692,8 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	id4 := res.Header().Get("X-Object-Id")
 
 	// Create booking for today plus 2 hours, this SHOULD BE deleted
-	today_next_en := time.Now().UTC().Add(3 * time.Hour).Format("2006-01-02T15:04:05-07:00")
-	today_next_ex := time.Now().UTC().Add(3 * time.Hour).Format("2006-01-02T15:04:05-07:00")
+	today_next_en := time.Now().UTC().Add(2 * time.Hour).Format("2006-01-02T15:04:05-07:00")
+	today_next_ex := time.Now().UTC().Add(2 * time.Hour).Format("2006-01-02T15:04:05-07:00")
 	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\":" + "\"" + today_next_en + "\"" + ", \"leave\":" + "\"" + today_next_ex + "\"" + "}"
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
@@ -725,6 +725,65 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	req = NewHTTPRequest("DELETE", "/booking/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestBookingsMaxHoursRespectsLocationTimezone(t *testing.T) {
+
+	ClearTestDB()
+	timezone := "Europe/Berlin"
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+
+	// Turning on the check and set bookings can only be deleted more than 2 before enter time
+	GetSettingsRepository().Set(org.ID, SettingEnableMaxHourBeforeDelete.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "2")
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
+
+	// Prepare location in timezone "Europe/Berlin"
+	location := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+		Timezone:       timezone}
+	GetLocationRepository().Create(location)
+	space := &Space{Name: "Test 1", LocationID: location.ID}
+	GetSpaceRepository().Create(space)
+
+	now, _ := GetUTCNowInTimezone(timezone) // create now as UTC time (without timezone information)
+	router := &BookingRouter{}
+
+	// test booking one hour in future can not be deleted
+	bookingOneHourInFuture := &BookingDetails{
+		Space: SpaceDetails{
+			Space: Space{
+				ID: space.ID,
+			},
+		},
+		UserEmail: user.Email,
+		Booking: Booking{
+			Enter: now.Add(1 * time.Hour),
+			Leave: now.Add(2 * time.Hour),
+		},
+	}
+	CheckTestBool(t, false, router.IsValidBookingHoursBeforeDelete(bookingOneHourInFuture, user, org.ID))
+
+	// test booking two hours in future can be deleted
+	bookingTwoHourInFuture := &BookingDetails{
+		Space: SpaceDetails{
+			Space: Space{
+				ID: space.ID,
+			},
+			Location: Location{
+				ID: location.ID,
+			},
+		},
+		UserEmail: user.Email,
+		Booking: Booking{
+			Enter: now.Add(2 * time.Hour).Add(5 * time.Minute),
+			Leave: now.Add(3 * time.Hour).Add(5 * time.Minute),
+		},
+	}
+	CheckTestBool(t, true, router.IsValidBookingHoursBeforeDelete(bookingTwoHourInFuture, user, org.ID))
+
 }
 
 func TestBookingsDeleteToCloseBeeingAdmin(t *testing.T) {
