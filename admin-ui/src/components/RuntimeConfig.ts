@@ -17,6 +17,7 @@ interface RuntimeUserInfos {
   cloudHosted: boolean;
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
+  defaultTimezone: string;
 }
 
 export default class RuntimeConfig {
@@ -32,6 +33,7 @@ export default class RuntimeConfig {
     cloudHosted: false,
     subscriptionActive: false,
     orgPrimaryDomain: "",
+    defaultTimezone: "",
   };
 
   static verifyToken = async (resolve: Function) => {
@@ -88,6 +90,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.subscriptionActive = s.value
               ? JSON.parse(s.value)
               : [];
+          if (s.name === "default_timezone")
+            RuntimeConfig.INFOS.defaultTimezone = s.value;
           if (s.name === "_sys_org_primary_domain")
             RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
         });
