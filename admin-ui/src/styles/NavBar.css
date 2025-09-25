@@ -11,16 +11,19 @@
   right: 1rem;
 }
 
-.navbar .form-control {
-  padding: 0.75rem 1rem;
-  border-width: 0;
-  border-radius: 0;
+.navbar form {
+  padding: 6px;
+}
+
+.navbar form input {
+  border: 0;
+  color: #000;
 }
 
 .form-control-dark {
   color: #fff;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .form-control-dark:focus {
