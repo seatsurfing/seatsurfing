@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.42.0](https://github.com/seatsurfing/seatsurfing/compare/v1.41.0...v1.42.0) (2025-09-26)
+
+
+### Features
+
+* improve visibility of search bar in admin UI ([#1318](https://github.com/seatsurfing/seatsurfing/issues/1318)) ([0f04875](https://github.com/seatsurfing/seatsurfing/commit/0f04875dd6c898c67e71c177c2bcc1d892511d39))
+* show default time zone on area admin page ([#1316](https://github.com/seatsurfing/seatsurfing/issues/1316)) ([0aaadab](https://github.com/seatsurfing/seatsurfing/commit/0aaadabc21f3ec6991adaac953028c2435fc97dd))
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.55.0 to 1.55.1 in /e2e ([#1315](https://github.com/seatsurfing/seatsurfing/issues/1315)) ([eca2b7c](https://github.com/seatsurfing/seatsurfing/commit/eca2b7c42dff57d45a7ae3cfabff1536d4ffe0ec))
+* **deps:** bump @types/node from 24.3.1 to 24.5.2 in /admin-ui ([#1303](https://github.com/seatsurfing/seatsurfing/issues/1303)) ([57bf92f](https://github.com/seatsurfing/seatsurfing/commit/57bf92ff53baf1ec26f58a514e97c595f6942d63))
+* **deps:** bump @types/node from 24.3.1 to 24.5.2 in /booking-ui ([#1304](https://github.com/seatsurfing/seatsurfing/issues/1304)) ([4e7d627](https://github.com/seatsurfing/seatsurfing/commit/4e7d6273865b2c6247d6502d870ccf4c11739014))
+* **deps:** bump @types/node from 24.3.1 to 24.5.2 in /e2e ([#1305](https://github.com/seatsurfing/seatsurfing/issues/1305)) ([f90de15](https://github.com/seatsurfing/seatsurfing/commit/f90de158aca023b53d75525e051910c82d6278b9))
+* **deps:** bump eslint from 9.35.0 to 9.36.0 in /admin-ui ([#1306](https://github.com/seatsurfing/seatsurfing/issues/1306)) ([5f9aec7](https://github.com/seatsurfing/seatsurfing/commit/5f9aec7b5adccef63d08a1ab7498bb66e8deaa67))
+* **deps:** bump eslint from 9.35.0 to 9.36.0 in /booking-ui ([#1307](https://github.com/seatsurfing/seatsurfing/issues/1307)) ([2e0e6d1](https://github.com/seatsurfing/seatsurfing/commit/2e0e6d1edc5e78289c7ba84929d080505e0401e2))
+* **deps:** bump eslint-config-next from 15.5.3 to 15.5.4 in /admin-ui ([#1312](https://github.com/seatsurfing/seatsurfing/issues/1312)) ([d2e0837](https://github.com/seatsurfing/seatsurfing/commit/d2e0837dcfb0be5929eb6f256ca852a2b24acb85))
+* **deps:** bump eslint-config-next from 15.5.3 to 15.5.4 in /booking-ui ([#1314](https://github.com/seatsurfing/seatsurfing/issues/1314)) ([b848802](https://github.com/seatsurfing/seatsurfing/commit/b848802bc83a8f5c5d43074864441d52495044bf))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.64 to 1.0.65 in /server ([#1308](https://github.com/seatsurfing/seatsurfing/issues/1308)) ([4191182](https://github.com/seatsurfing/seatsurfing/commit/4191182b7cfd7fe71b6af5b243d695d54d858606))
+* **deps:** bump next from 15.5.3 to 15.5.4 in /admin-ui ([#1311](https://github.com/seatsurfing/seatsurfing/issues/1311)) ([239d366](https://github.com/seatsurfing/seatsurfing/commit/239d3660cd976887861eed44df08063945f8ba76))
+* **deps:** bump next from 15.5.3 to 15.5.4 in /booking-ui ([#1313](https://github.com/seatsurfing/seatsurfing/issues/1313)) ([5b03aa9](https://github.com/seatsurfing/seatsurfing/commit/5b03aa931935a7d39e4fa43107a108e55ad7baed))
+* **deps:** bump react-router-dom from 7.9.0 to 7.9.1 in /admin-ui ([#1294](https://github.com/seatsurfing/seatsurfing/issues/1294)) ([e6aff38](https://github.com/seatsurfing/seatsurfing/commit/e6aff384a2fa7d41fc6499d9af7cb4d009bcc905))
+* **deps:** bump react-router-dom from 7.9.1 to 7.9.2 in /admin-ui ([#1317](https://github.com/seatsurfing/seatsurfing/issues/1317)) ([aac9607](https://github.com/seatsurfing/seatsurfing/commit/aac96079179e7149ed06c28c266515db78d1af49))
+* respect location timezone when testing if booking can be canceled ([#1310](https://github.com/seatsurfing/seatsurfing/issues/1310)) ([cf32df5](https://github.com/seatsurfing/seatsurfing/commit/cf32df51c36c707e2824a899d51e8f46412731cb))
+
 ## [1.41.0](https://github.com/seatsurfing/seatsurfing/compare/v1.40.0...v1.41.0) (2025-09-13)
 
 
