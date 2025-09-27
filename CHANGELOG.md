@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.43.1](https://github.com/seatsurfing/seatsurfing/compare/v1.43.0...v1.43.1) (2025-09-27)
+
+
+### Bug Fixes
+
+* set min-width for admin ui sidebar and fix hiding texts on mobile viewport ([#1322](https://github.com/seatsurfing/seatsurfing/issues/1322)) ([fe93ea6](https://github.com/seatsurfing/seatsurfing/commit/fe93ea6f448df04378a5f6188b9a60275ff351ac))
+
 ## [1.43.0](https://github.com/seatsurfing/seatsurfing/compare/v1.42.0...v1.43.0) (2025-09-27)
 
 
