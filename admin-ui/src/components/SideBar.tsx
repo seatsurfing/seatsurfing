@@ -147,7 +147,7 @@ class SideBar extends React.Component<Props, State> {
               <span className="d-none d-md-inline">
                 {this.props.t("groups")}
               </span>
-              <PremiumFeatureIcon />
+              <PremiumFeatureIcon className="d-none d-md-inline" />
             </Nav.Link>
           </li>
           <li className="nav-item">
@@ -233,7 +233,7 @@ class SideBar extends React.Component<Props, State> {
                   {" "}
                   {this.props.t("approvals")}
                 </span>
-                <PremiumFeatureIcon />
+                <PremiumFeatureIcon className="d-none d-md-inline" />
                 <Badge
                   bg="primary"
                   hidden={this.state.approvalCount === 0}
