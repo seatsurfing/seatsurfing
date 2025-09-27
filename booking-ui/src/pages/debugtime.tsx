@@ -1,6 +1,7 @@
 import React from "react";
-import { Ajax, Formatting } from "seatsurfing-commons";
 import Loading from "../components/Loading";
+import Formatting from "@/util/Formatting";
+import Ajax from "@/util/Ajax";
 
 interface State {
   loading: boolean;

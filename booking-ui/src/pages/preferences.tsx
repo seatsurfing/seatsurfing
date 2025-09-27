@@ -1,5 +1,4 @@
 import React from "react";
-import { Ajax, Location, User, UserPreference } from "seatsurfing-commons";
 import Loading from "../components/Loading";
 import {
   Alert,
@@ -15,6 +14,9 @@ import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Ajax from "@/util/Ajax";
+import UserPreference from "@/types/UserPreference";
+import Location from "@/types/Location";
 
 interface State {
   loading: boolean;

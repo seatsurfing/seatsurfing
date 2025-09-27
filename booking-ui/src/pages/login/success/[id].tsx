@@ -1,10 +1,11 @@
 import React from "react";
 import { Form } from "react-bootstrap";
-import { Ajax, AjaxCredentials } from "seatsurfing-commons";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Loading from "@/components/Loading";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
+import Ajax from "@/util/Ajax";
+import AjaxCredentials from "@/util/AjaxCredentials";
 
 interface State {
   redirect: string | null;
