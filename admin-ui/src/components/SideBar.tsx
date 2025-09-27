@@ -8,11 +8,11 @@ import {
   Settings as IconSettings,
   Box as IconBox,
   Activity as IconAnalysis,
-  ExternalLink as IconExternalLink,
+  Clipboard as IconClipboard,
   Icon,
   Clock as IconApproval,
 } from "react-feather";
-import { Ajax, AjaxCredentials, AjaxError, Booking } from "seatsurfing-commons";
+import { Ajax, AjaxError, Booking } from "seatsurfing-commons";
 import { Badge, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
@@ -113,7 +113,10 @@ class SideBar extends React.Component<Props, State> {
       orgItem = (
         <li className="nav-item">
           <Nav.Link as={Link} eventKey="/organizations" href="/organizations">
-            <IconBox className="feather" /> {this.props.t("organizations")}
+            <IconBox className="feather" />{" "}
+            <span className="d-none d-md-inline">
+              {this.props.t("organizations")}
+            </span>
           </Nav.Link>
         </li>
       );
@@ -124,7 +127,10 @@ class SideBar extends React.Component<Props, State> {
         <>
           <li className="nav-item">
             <Nav.Link as={Link} eventKey="/users" href="/users">
-              <IconUsers className="feather" /> {this.props.t("users")}
+              <IconUsers className="feather" />{" "}
+              <span className="d-none d-md-inline">
+                {this.props.t("users")}
+              </span>
             </Nav.Link>
           </li>
           <li className="nav-item">
@@ -137,13 +143,19 @@ class SideBar extends React.Component<Props, State> {
                 !RuntimeConfig.INFOS.cloudHosted
               }
             >
-              <IconGroups className="feather" /> {this.props.t("groups")}
-              <PremiumFeatureIcon />
+              <IconGroups className="feather" />{" "}
+              <span className="d-none d-md-inline">
+                {this.props.t("groups")}
+              </span>
+              <PremiumFeatureIcon className="d-none d-md-inline" />
             </Nav.Link>
           </li>
           <li className="nav-item">
             <Nav.Link as={Link} eventKey="/settings" href="/settings">
-              <IconSettings className="feather" /> {this.props.t("settings")}
+              <IconSettings className="feather" />{" "}
+              <span className="d-none d-md-inline">
+                {this.props.t("settings")}
+              </span>
             </Nav.Link>
           </li>
           {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
@@ -177,24 +189,33 @@ class SideBar extends React.Component<Props, State> {
     return (
       <Nav
         id="sidebarMenu"
-        className="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse"
+        className="col-1 col-md-3 col-lg-2 d-md-block bg-light sidebar"
         activeKey={this.getActiveKey()}
       >
         <div className="sidebar-sticky pt-3">
           <ul className="nav flex-column">
             <li className="nav-item">
               <Nav.Link as={Link} eventKey="/dashboard" href="/dashboard">
-                <IconHome className="feather" /> {this.props.t("dashboard")}
+                <IconClipboard className="feather" />{" "}
+                <span className="d-none d-md-inline">
+                  {this.props.t("dashboard")}
+                </span>
               </Nav.Link>
             </li>
             <li className="nav-item">
               <Nav.Link as={Link} eventKey="/locations" href="/locations">
-                <IconMap className="feather" /> {this.props.t("areas")}
+                <IconMap className="feather" />{" "}
+                <span className="d-none d-md-inline">
+                  {this.props.t("areas")}
+                </span>
               </Nav.Link>
             </li>
             <li className="nav-item">
               <Nav.Link as={Link} eventKey="/bookings" href="/bookings">
-                <IconBook className="feather" /> {this.props.t("bookings")}
+                <IconBook className="feather" />{" "}
+                <span className="d-none d-md-inline">
+                  {this.props.t("bookings")}
+                </span>
               </Nav.Link>
             </li>
             <li className="nav-item">
@@ -207,8 +228,12 @@ class SideBar extends React.Component<Props, State> {
                   !RuntimeConfig.INFOS.cloudHosted
                 }
               >
-                <IconApproval className="feather" /> {this.props.t("approvals")}
-                <PremiumFeatureIcon />
+                <IconApproval className="feather" />
+                <span className="d-none d-md-inline">
+                  {" "}
+                  {this.props.t("approvals")}
+                </span>
+                <PremiumFeatureIcon className="d-none d-md-inline" />
                 <Badge
                   bg="primary"
                   hidden={this.state.approvalCount === 0}
@@ -224,7 +249,11 @@ class SideBar extends React.Component<Props, State> {
                 eventKey="/report/analysis"
                 href="/report/analysis"
               >
-                <IconAnalysis className="feather" /> {this.props.t("analysis")}
+                <IconAnalysis className="feather" />
+                <span className="d-none d-md-inline">
+                  {" "}
+                  {this.props.t("analysis")}
+                </span>
               </Nav.Link>
             </li>
             {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
@@ -249,7 +278,8 @@ class SideBar extends React.Component<Props, State> {
                     eventKey={"/plugin/" + item.id}
                     href={"/plugin/" + item.id}
                   >
-                    <PluginIcon className="feather" /> {item.title}
+                    <PluginIcon className="feather" />{" "}
+                    <span className="d-none d-md-inline">{item.title}</span>
                   </Nav.Link>
                 </li>
               );
@@ -263,8 +293,10 @@ class SideBar extends React.Component<Props, State> {
                   window.location.href = "/ui/";
                 }}
               >
-                <IconExternalLink className="feather" />{" "}
-                {this.props.t("bookingui")}
+                <IconHome className="feather" />{" "}
+                <span className="d-none d-md-inline">
+                  {this.props.t("bookingui")}
+                </span>
               </Nav.Link>
             </li>
           </ul>
