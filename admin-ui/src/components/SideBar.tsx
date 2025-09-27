@@ -167,7 +167,7 @@ class SideBar extends React.Component<Props, State> {
               PluginIcon = dynamic(
                 () =>
                   import("react-feather/dist/icons/" + item.icon.toLowerCase()),
-                { ssr: true }
+                { ssr: true },
               ) as Icon;
               this.dynamicIcons.set(item.icon, PluginIcon);
             }
@@ -267,7 +267,7 @@ class SideBar extends React.Component<Props, State> {
                     import(
                       "react-feather/dist/icons/" + item.icon.toLowerCase()
                     ),
-                  { ssr: true }
+                  { ssr: true },
                 ) as Icon;
                 this.dynamicIcons.set(item.icon, PluginIcon);
               }
