@@ -178,7 +178,8 @@ class SideBar extends React.Component<Props, State> {
                   eventKey={"/plugin/" + item.id}
                   href={"/plugin/" + item.id}
                 >
-                  <PluginIcon className="feather" /> {item.title}
+                  <PluginIcon className="feather" />{" "}
+                  <span className="d-none d-md-inline">{item.title}</span>
                 </Nav.Link>
               </li>
             );
