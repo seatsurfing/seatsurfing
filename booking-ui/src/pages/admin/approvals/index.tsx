@@ -1,5 +1,4 @@
 import React from "react";
-import { Ajax, Booking, Formatting } from "seatsurfing-commons";
 import { Table, Button } from "react-bootstrap";
 import {
   Download as IconDownload,
@@ -15,6 +14,9 @@ import type * as CSS from "csstype";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
+import Booking from "@/types/Booking";
+import Ajax from "@/util/Ajax";
+import Formatting from "@/util/Formatting";
 
 interface State {
   data: Booking[];
