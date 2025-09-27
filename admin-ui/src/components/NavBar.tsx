@@ -66,24 +66,22 @@ class NavBar extends React.Component<Props, State> {
     }
 
     return (
-      <Nav className="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+      <Nav className="navbar navbar-dark sticky-top bg-dark flex-nowrap p-0 shadow">
         <Link
-          className="navbar-brand col-md-3 col-lg-2 me-0 px-3"
+          className="navbar-brand col-1 col-md-3 col-lg-2 me-0 px-3"
           href="/dashboard"
         >
-          <img src="/admin/seatsurfing_white.svg" alt="Seatsurfing" />
+          <img
+            src="/admin/seatsurfing_white.svg"
+            alt="Seatsurfing"
+            className="d-none d-md-block"
+          />
+          <img
+            src="/admin/seatsurfing_white_logo.svg"
+            alt="Seatsurfing"
+            className="d-block d-md-none"
+          />
         </Link>
-        <button
-          className="navbar-toggler position-absolute d-md-none collapsed"
-          type="button"
-          data-toggle="collapse"
-          data-target="#sidebarMenu"
-          aria-controls="sidebarMenu"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
         <Form onSubmit={this.submitSearchForm} className="w-100">
           <Form.Control
             type="text"
