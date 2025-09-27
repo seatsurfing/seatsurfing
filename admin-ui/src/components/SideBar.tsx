@@ -8,7 +8,7 @@ import {
   Settings as IconSettings,
   Box as IconBox,
   Activity as IconAnalysis,
-  Globe as Globe,
+  Clipboard as IconClipboard,
   Icon,
   Clock as IconApproval,
 } from "react-feather";
@@ -196,7 +196,7 @@ class SideBar extends React.Component<Props, State> {
           <ul className="nav flex-column">
             <li className="nav-item">
               <Nav.Link as={Link} eventKey="/dashboard" href="/dashboard">
-                <IconHome className="feather" />{" "}
+                <IconClipboard className="feather" />{" "}
                 <span className="d-none d-md-inline">
                   {this.props.t("dashboard")}
                 </span>
@@ -293,7 +293,7 @@ class SideBar extends React.Component<Props, State> {
                   window.location.href = "/ui/";
                 }}
               >
-                <Globe className="feather" />{" "}
+                <IconHome className="feather" />{" "}
                 <span className="d-none d-md-inline">
                   {this.props.t("bookingui")}
                 </span>
