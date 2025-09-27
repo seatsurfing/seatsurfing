@@ -9,7 +9,6 @@ import {
   Container,
   NavLink,
 } from "react-bootstrap";
-import { Ajax, User, MergeRequest, AjaxCredentials } from "seatsurfing-commons";
 import RuntimeConfig from "./RuntimeConfig";
 import {
   Users as IconMerge,
@@ -22,6 +21,9 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
 import Link from "next/link";
 import { TranslationFunc, withTranslation } from "./withTranslation";
+import MergeRequest from "@/types/MergeRequest";
+import User from "@/types/User";
+import Ajax from "@/util/Ajax";
 
 interface State {
   redirect: string | null;

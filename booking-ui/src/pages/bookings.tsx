@@ -1,11 +1,4 @@
 import React from "react";
-import {
-  Ajax,
-  AjaxError,
-  Booking,
-  Formatting,
-  RecurringBooking,
-} from "seatsurfing-commons";
 import Loading from "../components/Loading";
 import { Button, Form, ListGroup, Modal } from "react-bootstrap";
 import {
@@ -23,6 +16,11 @@ import ErrorText from "@/types/ErrorText";
 import { Loader as IconLoad, Calendar as IconCalendar } from "react-feather";
 import { getIcal } from "@/components/Ical";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Booking from "@/types/Booking";
+import Ajax from "@/util/Ajax";
+import RecurringBooking from "@/types/RecurringBooking";
+import Formatting from "@/util/Formatting";
+import AjaxError from "@/util/AjaxError";
 
 interface State {
   loading: boolean;

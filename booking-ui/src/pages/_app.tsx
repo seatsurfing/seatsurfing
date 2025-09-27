@@ -6,12 +6,13 @@ import "@/styles/ConfluenceHint.css";
 import "@/styles/Login.css";
 import "@/styles/Search.css";
 import type { AppProps } from "next/app";
-import { Ajax, Formatting } from "seatsurfing-commons";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import React from "react";
 import Loading from "@/components/Loading";
 import Head from "next/head";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Ajax from "@/util/Ajax";
+import Formatting from "@/util/Formatting";
 
 interface State {
   isLoading: boolean;

@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@types/react-dom": "^19.1.9",
+    "async-mutex": "^0.5.0",
     "bootstrap": "^5.3.8",
     "next": "^15.5.4",
     "next-export-i18n": "^2.4.3",
@@ -16,15 +17,13 @@
     "react-icons": "^5.5.0",
     "react-tooltip": "^5.29.1",
     "react-zoom-pan-pinch": "^3.7.0",
-    "seatsurfing-commons": "file:../commons/ts",
     "typescript": "^5.8.2"
   },
   "scripts": {
     "start": "PORT=3001 next start",
     "build": "next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
     "dev": "PORT=3001 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
-    "lint": "next lint",
-    "install-commons": "cd ../commons/ts && npm ci && npm run build && cd ../../booking-ui && npm remove --save seatsurfing-commons && npm install --save ../commons/ts"
+    "lint": "next lint"
   },
   "browserslist": {
     "production": [

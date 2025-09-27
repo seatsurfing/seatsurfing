@@ -10,22 +10,6 @@ import {
   Nav,
   Alert,
 } from "react-bootstrap";
-import {
-  Location,
-  Booking,
-  Buddy,
-  User,
-  Ajax,
-  Formatting,
-  Space,
-  AjaxError,
-  UserPreference,
-  SpaceAttributeValue,
-  SpaceAttribute,
-  SearchAttribute,
-  RecurringBooking,
-  RecurringBookingCreateResult,
-} from "seatsurfing-commons";
 import DateTimePicker from "react-datetime-picker";
 import DatePicker from "react-date-picker";
 import "react-datetime-picker/dist/DateTimePicker.css";
@@ -66,6 +50,19 @@ import {
   MiniMap,
 } from "react-zoom-pan-pinch";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import SpaceAttributeValue from "@/types/SpaceAttributeValue";
+import SearchAttribute from "@/types/SearchAttribute";
+import Buddy from "@/types/Buddy";
+import SpaceAttribute from "@/types/SpaceAttribute";
+import Location from "@/types/Location";
+import Space from "@/types/Space";
+import Ajax from "@/util/Ajax";
+import Booking from "@/types/Booking";
+import Formatting from "@/util/Formatting";
+import RecurringBooking, { RecurringBookingCreateResult } from "@/types/RecurringBooking";
+import AjaxError from "@/util/AjaxError";
+import UserPreference from "@/types/UserPreference";
+import User from "@/types/User";
 interface State {
   earliestEnterDate: Date;
   enter: Date;

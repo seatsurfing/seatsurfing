@@ -1,4 +1,4 @@
-import { Ajax } from "seatsurfing-commons";
+import Ajax from "@/util/Ajax";
 
 export function getIcal(bookingId: string) {
   const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();

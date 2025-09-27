@@ -1,5 +1,4 @@
 import React from "react";
-import { Ajax, Buddy, User, Formatting } from "seatsurfing-commons";
 import Loading from "../components/Loading";
 import { Button, Form, ListGroup, Modal } from "react-bootstrap";
 import {
@@ -12,6 +11,10 @@ import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Buddy from "@/types/Buddy";
+import Ajax from "@/util/Ajax";
+import User from "@/types/User";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;

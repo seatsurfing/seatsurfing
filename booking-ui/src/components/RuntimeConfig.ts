@@ -1,9 +1,6 @@
-import {
-  Ajax,
-  AjaxCredentials,
-  User,
-  Settings as OrgSettings,
-} from "seatsurfing-commons";
+import User from "@/types/User";
+import OrgSettings from "@/types/Settings";
+import Ajax from "@/util/Ajax";
 
 interface RuntimeUserInfos {
   username: string;

@@ -1,8 +1,9 @@
 import React from "react";
-import { Ajax, Organization } from "seatsurfing-commons";
 import { Button, Form } from "react-bootstrap";
 import Link from "next/link";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Organization from "@/types/Organization";
+import Ajax from "@/util/Ajax";
 
 interface State {
   loading: boolean;
