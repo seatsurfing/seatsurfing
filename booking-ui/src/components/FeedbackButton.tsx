@@ -4,7 +4,7 @@ import { IoChatboxOutline, IoSend } from "react-icons/io5";
 import styles from "./FeedbackButton.module.css";
 import RuntimeConfig from "./RuntimeConfig";
 import { Button, Form } from "react-bootstrap";
-import { Ajax } from "seatsurfing-commons";
+import Ajax from "@/util/Ajax";
 
 interface State {
   feedbackText: string;

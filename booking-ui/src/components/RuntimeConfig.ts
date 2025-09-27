@@ -21,6 +21,17 @@ interface RuntimeUserInfos {
   maxHoursPartiallyBooked: number;
   maxHoursPartiallyBookedEnabled: boolean;
   featureRecurringBookings: boolean;
+  organizationId: string;
+  superAdmin: boolean;
+  spaceAdmin: boolean;
+  orgAdmin: boolean;
+  pluginMenuItems: any[];
+  pluginWelcomeScreens: any[];
+  featureGroups: boolean;
+  featureAuthProviders: boolean;
+  cloudHosted: boolean;
+  subscriptionActive: boolean;
+  orgPrimaryDomain: string;
 }
 
 export default class RuntimeConfig {
@@ -44,6 +55,17 @@ export default class RuntimeConfig {
     showNames: false,
     defaultTimezone: "",
     featureRecurringBookings: false,
+    organizationId: "",
+    superAdmin: false,
+    spaceAdmin: false,
+    orgAdmin: false,
+    pluginMenuItems: [],
+    pluginWelcomeScreens: [],
+    featureGroups: false,
+    featureAuthProviders: false,
+    cloudHosted: false,
+    subscriptionActive: false,
+    orgPrimaryDomain: "",
   };
 
   static verifyToken = async (resolve: Function) => {
@@ -56,15 +78,10 @@ export default class RuntimeConfig {
       }
     }
     if (credentials.accessToken) {
-      User.getSelf()
-        .then((user) => {
-          RuntimeConfig.loadSettings().then(() => {
-            RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-            RuntimeConfig.setDetails(user.email);
+      RuntimeConfig.loadUserAndSettings()
+        .then(() => {
             resolve();
-            //this.setState({ isLoading: false });
-          });
-        })
+          })
         .catch((e) => {
           Ajax.PERSISTER.deleteCredentialsFromStorage();
           resolve();
@@ -120,6 +137,32 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.defaultTimezone = s.value;
           if (s.name === "feature_recurring_bookings")
             RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
+          if (s.name === "_sys_admin_menu_items")
+            RuntimeConfig.INFOS.pluginMenuItems = s.value
+              ? JSON.parse(s.value)
+              : [];
+          if (s.name === "_sys_admin_welcome_screens")
+            RuntimeConfig.INFOS.pluginWelcomeScreens = s.value
+              ? JSON.parse(s.value)
+              : [];
+          if (s.name === "feature_groups")
+            RuntimeConfig.INFOS.featureGroups = s.value
+              ? JSON.parse(s.value)
+              : [];
+          if (s.name === "feature_auth_providers")
+            RuntimeConfig.INFOS.featureAuthProviders = s.value
+              ? JSON.parse(s.value)
+              : [];
+          if (s.name === "cloud_hosted")
+            RuntimeConfig.INFOS.cloudHosted = s.value
+              ? JSON.parse(s.value)
+              : [];
+          if (s.name === "subscription_active")
+            RuntimeConfig.INFOS.subscriptionActive = s.value
+              ? JSON.parse(s.value)
+              : [];
+          if (s.name === "_sys_org_primary_domain")
+            RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
         });
         resolve();
       });
@@ -138,6 +181,18 @@ export default class RuntimeConfig {
       RuntimeConfig.setDetails(user.email);
     });
   }
+
+  static loadUserAndSettings = async (): Promise<void> => {
+    return User.getSelf().then((user) => {
+      RuntimeConfig.INFOS.organizationId = user.organizationId;
+      RuntimeConfig.INFOS.superAdmin = user.superAdmin;
+      RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
+      RuntimeConfig.INFOS.orgAdmin = user.admin;
+      RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
+      RuntimeConfig.setDetails(user.email);
+      return RuntimeConfig.loadSettings();
+    });
+  };
 
   static getLanguage(): string {
     if (typeof window !== "undefined") {

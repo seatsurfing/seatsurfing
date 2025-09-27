@@ -12,7 +12,6 @@ import {
   Icon,
   Clock as IconApproval,
 } from "react-feather";
-import { Ajax, AjaxError, Booking } from "seatsurfing-commons";
 import { Badge, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
@@ -21,6 +20,9 @@ import dynamic from "next/dynamic";
 import RuntimeConfig from "./RuntimeConfig";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import PremiumFeatureIcon from "./PremiumFeatureIcon";
+import Ajax from "@/util/Ajax";
+import Booking from "@/types/Booking";
+import AjaxError from "@/util/AjaxError";
 
 interface State {
   approvalCount: number;

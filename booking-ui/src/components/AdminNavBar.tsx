@@ -1,10 +1,10 @@
 import React from "react";
 import { Nav, Button, Form } from "react-bootstrap";
-import { Ajax, AjaxCredentials } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import Link from "next/link";
-import withReadyRouter from "./withReadyRouter";
-import { TranslationFunc, withTranslation } from "./withTranslation";
+import withReadyRouter from "../../../admin-ui/src/components/withReadyRouter";
+import { TranslationFunc, withTranslation } from "../../../admin-ui/src/components/withTranslation";
+import Ajax from "@/util/Ajax";
 
 interface State {
   search: string;
@@ -16,7 +16,7 @@ interface Props {
   t: TranslationFunc;
 }
 
-class NavBar extends React.Component<Props, State> {
+class AdminNavBar extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -106,4 +106,4 @@ class NavBar extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(NavBar as any));
+export default withTranslation(withReadyRouter(AdminNavBar as any));
