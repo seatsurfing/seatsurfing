@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.43.0](https://github.com/seatsurfing/seatsurfing/compare/v1.42.0...v1.43.0) (2025-09-27)
+
+
+### Features
+
+* show sidebar in admin interface on mobile viewport ([#1320](https://github.com/seatsurfing/seatsurfing/issues/1320)) ([f8de296](https://github.com/seatsurfing/seatsurfing/commit/f8de296dc3c7823103f7ba48cb5eda5abf5eee94))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.65 to 1.0.66 in /server ([#1319](https://github.com/seatsurfing/seatsurfing/issues/1319)) ([af7bbb1](https://github.com/seatsurfing/seatsurfing/commit/af7bbb14c527cf2e7fa3ae373fc7844e41af9da7))
+
 ## [1.42.0](https://github.com/seatsurfing/seatsurfing/compare/v1.41.0...v1.42.0) (2025-09-26)
 
 
