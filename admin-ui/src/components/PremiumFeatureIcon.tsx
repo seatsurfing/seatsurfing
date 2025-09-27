@@ -8,6 +8,7 @@ interface State {}
 interface Props {
   hidden?: boolean;
   style?: CSSProperties | undefined;
+  className?: string;
 }
 
 class PremiumFeatureIcon extends React.Component<Props, State> {
@@ -19,9 +20,10 @@ class PremiumFeatureIcon extends React.Component<Props, State> {
       RuntimeConfig.INFOS.cloudHosted &&
       !RuntimeConfig.INFOS.subscriptionActive
     ) {
+      const combinedClassName = `feather${this.props.className ? ` ${this.props.className}` : ""}`;
       return (
         <DiamondIcon
-          className="feather"
+          className={combinedClassName}
           style={{ marginLeft: "5px", ...this.props.style }}
           color="#007bff"
         />
