@@ -15,7 +15,7 @@ import {
   User,
   AjaxCredentials,
 } from "seatsurfing-commons";
-import Loading from "../../components/Loading";
+import Loading from "../../../../../admin-ui/src/components/Loading";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";

@@ -16,7 +16,7 @@ import {
   UserPreference,
 } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
-import FullLayout from "../../components/FullLayout";
+import FullLayout from "../../../../../admin-ui/src/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";

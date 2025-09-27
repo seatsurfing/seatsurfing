@@ -1,5 +1,5 @@
 import React from "react";
-import Loading from "../../../components/Loading";
+import Loading from "../../../../../../admin-ui/src/components/Loading";
 import { Form } from "react-bootstrap";
 import { Ajax, AjaxCredentials, JwtDecoder, User } from "seatsurfing-commons";
 import { NextRouter } from "next/router";

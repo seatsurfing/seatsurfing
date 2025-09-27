@@ -1,5 +1,4 @@
 import React from "react";
-import { Ajax, Stats, User, DateUtil } from "seatsurfing-commons";
 import { Card, Row, Col, ProgressBar, Alert, Button } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -9,6 +8,10 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Link from "next/link";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
+import Stats from "@/types/Stats";
+import Ajax from "@/util/Ajax";
+import User from "@/types/User";
+import DateUtil from "@/util/DateUtil";
 
 interface State {
   loading: boolean;

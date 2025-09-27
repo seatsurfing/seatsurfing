@@ -1,5 +1,5 @@
 import React, { JSX, ReactNode } from "react";
-import NavBar from "./NavBar";
+import AdminNavBar from "./AdminNavBar";
 import SideBar from "./SideBar";
 import RuntimeConfig from "./RuntimeConfig";
 import FeedbackButton from "./FeedbackButton";
@@ -53,7 +53,7 @@ export default class FullLayout extends React.Component<Props, State> {
 
     return (
       <div>
-        <NavBar />
+        <AdminNavBar />
         <div className="container-fluid">
           <div className="row">
             <SideBar />

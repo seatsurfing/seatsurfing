@@ -1,5 +1,5 @@
 import React from "react";
-import FullLayout from "../../components/FullLayout";
+import FullLayout from "../../../../../admin-ui/src/components/FullLayout";
 import {
   Form,
   Col,
@@ -22,7 +22,7 @@ import {
   Download as IconDownload,
   Tag as IconTag,
 } from "react-feather";
-import Loading from "../../components/Loading";
+import Loading from "../../../../../admin-ui/src/components/Loading";
 import {
   Ajax,
   Group,
