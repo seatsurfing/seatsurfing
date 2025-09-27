@@ -12,18 +12,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - name: Build TypeScript commons
-        working-directory: ./commons/ts
-        run: npm ci && npm run build
       - name: Install Booking UI dependencies
         working-directory: ./booking-ui
         run: npm ci
       - name: Run Booking UI linting
         working-directory: ./booking-ui
-        run: npm run lint
-      - name: Install Admin UI dependencies
-        working-directory: ./admin-ui
-        run: npm ci
-      - name: Run Admin UI linting
-        working-directory: ./admin-ui
         run: npm run lint

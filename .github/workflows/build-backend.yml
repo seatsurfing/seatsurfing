@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - server/**
-      - admin-ui/**
       - booking-ui/**
       - commons/ts/**
 
