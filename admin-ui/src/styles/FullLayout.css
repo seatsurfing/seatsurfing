@@ -1,0 +1,3 @@
+main[role="main"] {
+  max-width: calc(100% - 50px);
+}
