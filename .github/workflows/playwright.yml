@@ -27,9 +27,9 @@ jobs:
         run: curl -fsSL https://deb.nodesource.com/setup_22.x -o - | bash && apt-get install -y nodejs
       - name: Install dependencies
         run: apt-get update && apt-get install -y jq
-      - name: Build Booking UI
-        working-directory: ./booking-ui
-        run: npm ci && npm run install-commons && npm run build
+      - name: Build UI
+        working-directory: ./ui
+        run: npm ci && npm run build
 
       - name: Install server dependencies
         working-directory: ./server
@@ -38,7 +38,7 @@ jobs:
         name: Run server in background
         with:
           working-directory: ./server
-          run: STATIC_BOOKING_UI_PATH=../booking-ui/build PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable go run `ls *.go | grep -v _test.go`
+          run: STATIC_UI_PATH=../ui/build PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable go run `ls *.go | grep -v _test.go`
           wait-on: http-get://localhost:8080/auth/singleorg
 
       - name: Install dependencies
@@ -49,7 +49,7 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         working-directory: ./e2e
-        run: BOOKING_UI_URL="http://localhost:8080" npx playwright test
+        run: UI_URL="http://localhost:8080" npx playwright test
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
