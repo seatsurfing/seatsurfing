@@ -39,19 +39,11 @@
    cd seatsurfing
    ```
 
-1. Admin UI: Install dependencies and start the admin interface. Use a dedicated terminal for that:
+1. UI: Install dependencies and start the web interface. Use a dedicated terminal for that:
 
    ```shell
-   cd admin-ui
-   npm ci && npm run install-commons
-   npm run dev
-   ```
-
-1. Booking UI: Install dependencies and start the booking interface. Use a dedicated terminal for that:
-
-   ```shell
-   cd booking-ui
-   npm ci && npm run install-commons
+   cd ui
+   npm ci
    npm run dev
    ```
 
@@ -71,8 +63,7 @@ You should now be able to access the Admin UI at http://localhost:3000/admin/ an
 
 The frontend translations are located in:
 
-- admin-ui/i18n
-- booking-ui/i18n
+- ui/i18n
 
 **To add a new language,** copy the `i18n/translations.en.json` files and name it according to the two-letter ISO 639 language codes. Do _not_ change the keys of the file, but only translate the values. Then, add the new language to the `i18n/index.js` and the `src/components/RuntimeConfig.ts` files.
 
@@ -104,18 +95,11 @@ If you add/modify major frontend functionality, please add/modify the e2e tests.
       npx playwright install --with-deps
       ```
 
-   1. Build Admin UI:
+   1. Build UI:
 
       ```shell
-      cd admin-ui
-      npm ci && npm run install-commons && npm run build
-      ```
-
-   1. Build Booking UI:
-
-      ```shell
-      cd booking-ui
-      npm ci && npm run install-commons && npm run build
+      cd ui
+      npm ci && npm run build
       ```
 
    1. Run the tests:

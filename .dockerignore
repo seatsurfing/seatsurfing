@@ -1,10 +1,4 @@
-commons/ts/dist/
-commons/ts/node_modules/
-commons/ts/*.tgz
-admin-ui/.next/
-admin-ui/node_modules/
-admin-ui/build/
-booking-ui/.next/
-booking-ui/node_modules/
-booking-ui/build/
+ui/.next/
+ui/node_modules/
+ui/build/
 e2e/

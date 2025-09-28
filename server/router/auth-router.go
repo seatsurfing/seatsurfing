@@ -556,7 +556,7 @@ func (router *AuthRouter) getRedirectSuccessUrl(loginType string, authState *Aut
 	if loginType == "ui" {
 		return FormatURL(primaryDomain.DomainName) + "/ui/login/success/" + authState.ID + "/"
 	} else {
-		return FormatURL(primaryDomain.DomainName) + "/admin/login/success/" + authState.ID + "/"
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/success/" + authState.ID + "/"
 	}
 }
 
@@ -571,13 +571,13 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 		if loginType == "ui" {
 			return "/ui/login/failed/" + queryString
 		} else {
-			return "/admin/login/failed/" + queryString
+			return "/ui/login/failed/" + queryString
 		}
 	}
 	if loginType == "ui" {
 		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/" + queryString
 	} else {
-		return FormatURL(primaryDomain.DomainName) + "/admin/login/failed/" + queryString
+		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/" + queryString
 	}
 }
 

@@ -18,8 +18,7 @@ type Config struct {
 	PostgresURL                         string
 	JwtPrivateKey                       *rsa.PrivateKey
 	JwtPublicKey                        *rsa.PublicKey
-	StaticAdminUiPath                   string
-	StaticBookingUiPath                 string
+	StaticUiPath                        string
 	MailService                         string
 	MailSenderAddress                   string
 	SMTPHost                            string
@@ -68,8 +67,7 @@ func (c *Config) ReadConfig() {
 	log.Println("Reading config...")
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
-	c.StaticAdminUiPath = strings.TrimSuffix(c.getEnv("STATIC_ADMIN_UI_PATH", "/app/admin-ui"), "/") + "/"
-	c.StaticBookingUiPath = strings.TrimSuffix(c.getEnv("STATIC_BOOKING_UI_PATH", "/app/booking-ui"), "/") + "/"
+	c.StaticUiPath = strings.TrimSuffix(c.getEnv("STATIC_UI_PATH", "/app/ui"), "/") + "/"
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")
 	privateKey, _ := c.loadPrivateKey(c.getEnv("JWT_PRIVATE_KEY", ""))
 	publicKey, _ := c.loadPublicKey(c.getEnv("JWT_PUBLIC_KEY", ""))

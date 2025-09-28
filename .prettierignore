@@ -1,6 +1,4 @@
 **/.next/*
-admin-ui/build/**/*
-booking-ui/build/**/*
-commons/ts/dist/**/*
+ui/build/**/*
 CHANGELOG.md
 .release-please-manifest.json

@@ -82,9 +82,10 @@ func (a *App) InitializeRouter() {
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
 	}
-	a.setupStaticAdminUIRoutes(a.Router)
-	a.setupStaticBookingUIRoutes(a.Router)
+	a.setupStaticUIRoutes(a.Router)
 	//a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
+	a.Router.PathPrefix("/admin/").Methods("GET").HandlerFunc(a.RedirectAdminPath)
+	a.Router.Path("/admin").Methods("GET").HandlerFunc(a.RedirectAdminPath)
 	a.Router.Path("/").Methods("GET").HandlerFunc(a.RedirectRootPath)
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)
@@ -98,6 +99,20 @@ func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) RedirectRootPath(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", "/ui/")
+	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (a *App) RedirectAdminPath(w http.ResponseWriter, r *http.Request) {
+	// Extract the path after /admin and redirect to /ui/admin with the same path
+	adminPath := strings.TrimPrefix(r.URL.Path, "/admin")
+	if adminPath == "" || adminPath == "/" {
+		adminPath = "/"
+	}
+	redirectURL := "/ui/admin" + adminPath
+	if r.URL.RawQuery != "" {
+		redirectURL += "?" + r.URL.RawQuery
+	}
+	w.Header().Set("Location", redirectURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
@@ -260,35 +275,16 @@ func (a *App) proxyHandler(w http.ResponseWriter, r *http.Request, backend strin
 	w.Write(bodyRes)
 }
 
-func (a *App) setupStaticBookingUIRoutes(router *mux.Router) {
+func (a *App) setupStaticUIRoutes(router *mux.Router) {
 	const basePath = "/ui"
 	if GetConfig().Development {
 		router.PathPrefix(basePath + "/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			a.proxyHandler(w, r, "localhost:3000")
+			a.proxyHandler(w, r, "localhost:3001")
 		})
 		return
 	}
-	attributesPaths := a.getAttributePaths(GetConfig().StaticBookingUiPath)
-	fs := http.FileServer(http.Dir(GetConfig().StaticBookingUiPath))
-	for _, attrPath := range attributesPaths {
-		path := strings.ReplaceAll(attrPath, "[", "{")
-		path = strings.ReplaceAll(path, "]", "}/")
-		router.Path(basePath + path).Handler(a.attributePathHandler(fs, basePath+"/", basePath+attrPath+"/"))
-	}
-	router.Path(basePath + "/").Handler(a.stripStaticPrefix(fs, basePath+"/"))
-	router.PathPrefix(basePath + "/").Handler(http.StripPrefix(basePath+"/", fs))
-}
-
-func (a *App) setupStaticAdminUIRoutes(router *mux.Router) {
-	const basePath = "/admin"
-	if GetConfig().Development {
-		router.PathPrefix(basePath + "/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			a.proxyHandler(w, r, "localhost:3000")
-		})
-		return
-	}
-	attributesPaths := a.getAttributePaths(GetConfig().StaticAdminUiPath)
-	fs := http.FileServer(http.Dir(GetConfig().StaticAdminUiPath))
+	attributesPaths := a.getAttributePaths(GetConfig().StaticUiPath)
+	fs := http.FileServer(http.Dir(GetConfig().StaticUiPath))
 	for _, attrPath := range attributesPaths {
 		path := strings.ReplaceAll(attrPath, "[", "{")
 		path = strings.ReplaceAll(path, "]", "}/")
