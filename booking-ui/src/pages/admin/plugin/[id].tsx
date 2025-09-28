@@ -3,9 +3,9 @@ import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { NextRouter } from "next/router";
-import { Ajax } from "seatsurfing-commons";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Ajax from "@/util/Ajax";
 
 interface State {
   iFrameLoaded: boolean;

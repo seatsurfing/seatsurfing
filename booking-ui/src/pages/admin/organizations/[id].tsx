@@ -5,13 +5,16 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
 } from "react-feather";
-import { Ajax, Domain, Organization, User } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Organization from "@/types/Organization";
+import Domain from "@/types/Domain";
+import Ajax from "@/util/Ajax";
+import User from "@/types/User";
 
 interface State {
   loading: boolean;

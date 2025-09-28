@@ -2,9 +2,9 @@ import React from "react";
 import { Nav, Button, Form } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import Link from "next/link";
-import withReadyRouter from "../../../admin-ui/src/components/withReadyRouter";
-import { TranslationFunc, withTranslation } from "../../../admin-ui/src/components/withTranslation";
 import Ajax from "@/util/Ajax";
+import { TranslationFunc, withTranslation } from "./withTranslation";
+import withReadyRouter from "./withReadyRouter";
 
 interface State {
   search: string;

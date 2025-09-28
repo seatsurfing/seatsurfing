@@ -5,7 +5,6 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
 } from "react-feather";
-import { Ajax, AuthProvider } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
@@ -13,6 +12,8 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import AuthProvider from "@/types/AuthProvider";
+import Ajax from "@/util/Ajax";
 
 interface State {
   loading: boolean;

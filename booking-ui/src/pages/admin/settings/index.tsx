@@ -1,14 +1,5 @@
 import React from "react";
 import {
-  User,
-  Organization,
-  AuthProvider,
-  Settings as OrgSettings,
-  Domain,
-  Ajax,
-  AjaxCredentials,
-} from "seatsurfing-commons";
-import {
   Form,
   Col,
   Row,
@@ -35,6 +26,12 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
+import Domain from "@/types/Domain";
+import Organization from "@/types/Organization";
+import AuthProvider from "@/types/AuthProvider";
+import Ajax from "@/util/Ajax";
+import User from "@/types/User";
+import OrgSettings from "@/types/Settings";
 
 interface State {
   allowAnyUser: boolean;

@@ -1,11 +1,14 @@
 import React from "react";
-import Loading from "../../../../../../admin-ui/src/components/Loading";
 import { Form } from "react-bootstrap";
-import { Ajax, AjaxCredentials, JwtDecoder, User } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Ajax from "@/util/Ajax";
+import JwtDecoder from "@/util/JwtDecoder";
+import User from "@/types/User";
+import AjaxCredentials from "@/util/AjaxCredentials";
+import Loading from "@/components/Loading";
 
 interface State {
   redirect: string | null;

@@ -7,20 +7,18 @@ import {
   DropdownButton,
   Alert,
 } from "react-bootstrap";
-import {
-  Organization,
-  AuthProvider,
-  Ajax,
-  JwtDecoder,
-  User,
-  AjaxCredentials,
-} from "seatsurfing-commons";
-import Loading from "../../../../../admin-ui/src/components/Loading";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import { LanguageSwitcher } from "next-export-i18n";
+import AuthProvider from "@/types/AuthProvider";
+import Organization from "@/types/Organization";
+import Ajax from "@/util/Ajax";
+import JwtDecoder from "@/util/JwtDecoder";
+import User from "@/types/User";
+import AjaxCredentials from "@/util/AjaxCredentials";
+import Loading from "@/components/Loading";
 
 interface State {
   email: string;

@@ -1,7 +1,6 @@
 import React from "react";
-import { Alert, Col, Row, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { Plus as IconPlus, Download as IconDownload } from "react-feather";
-import { Ajax, Group } from "seatsurfing-commons";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
@@ -10,6 +9,8 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
+import Ajax from "@/util/Ajax";
+import Group from "@/types/Group";
 
 interface State {
   selectedItem: string;

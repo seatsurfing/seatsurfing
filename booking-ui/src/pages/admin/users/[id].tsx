@@ -8,7 +8,6 @@ import {
   Clipboard as IconCopy,
   Check as IconCheck,
 } from "react-feather";
-import { User, Settings as OrgSettings, Ajax } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
@@ -16,6 +15,9 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import User from "@/types/User";
+import Ajax from "@/util/Ajax";
+import OrgSettings from "@/types/Settings";
 
 interface State {
   loading: boolean;

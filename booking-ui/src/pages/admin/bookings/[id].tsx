@@ -5,20 +5,10 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
 } from "react-feather";
-import {
-  Ajax,
-  Location,
-  Space,
-  Booking,
-  Formatting,
-  User,
-  Settings as OrgSettings,
-  UserPreference,
-} from "seatsurfing-commons";
 import { NextRouter } from "next/router";
-import FullLayout from "../../../../../admin-ui/src/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import OrgSettings from "@/types/Settings";
 import withReadyRouter from "@/components/withReadyRouter";
 import Autosuggest from "react-autosuggest";
 import DateTimePicker from "react-datetime-picker";
@@ -27,6 +17,14 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-date-picker/dist/DatePicker.css";
 import "react-clock/dist/Clock.css";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Space from "@/types/Space";
+import User from "@/types/User";
+import Location from "@/types/Location";
+import Booking from "@/types/Booking";
+import Ajax from "@/util/Ajax";
+import UserPreference from "@/types/UserPreference";
+import Formatting from "@/util/Formatting";
+import FullLayout from "@/components/FullLayout";
 interface State {
   loading: boolean;
   saved: boolean;

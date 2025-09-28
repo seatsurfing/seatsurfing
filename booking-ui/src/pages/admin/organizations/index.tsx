@@ -1,13 +1,14 @@
 import React from "react";
 import { Table } from "react-bootstrap";
 import { Plus as IconPlus } from "react-feather";
-import { Ajax, Organization } from "seatsurfing-commons";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Organization from "@/types/Organization";
+import Ajax from "@/util/Ajax";
 
 interface State {
   selectedItem: string;

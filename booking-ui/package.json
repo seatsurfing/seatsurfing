@@ -10,12 +10,15 @@
     "next": "^15.5.4",
     "next-export-i18n": "^2.4.3",
     "react": "^19.0.0",
+    "react-autosuggest": "^10.1.0",
     "react-bootstrap": "^2.10.10",
+    "react-bootstrap-typeahead": "^6.4.1",
     "react-date-picker": "^12.0.1",
     "react-datetime-picker": "^7.0.1",
     "react-dom": "^19.1.1",
     "react-feather": "^2.0.10",
     "react-icons": "^5.5.0",
+    "react-rnd": "^10.5.2",
     "react-tooltip": "^5.29.1",
     "react-zoom-pan-pinch": "^3.7.0",
     "typescript": "^5.8.2"
@@ -41,6 +44,7 @@
   "homepage": "/ui/",
   "devDependencies": {
     "@types/node": "24.5.2",
+    "@types/react-autosuggest": "^10.1.11",
     "eslint": "^9.36.0",
     "eslint-config-next": "15.5.4"
   }

@@ -1,5 +1,4 @@
 import React from "react";
-import FullLayout from "../../../../../admin-ui/src/components/FullLayout";
 import {
   Form,
   Col,
@@ -22,17 +21,6 @@ import {
   Download as IconDownload,
   Tag as IconTag,
 } from "react-feather";
-import Loading from "../../../../../admin-ui/src/components/Loading";
-import {
-  Ajax,
-  Group,
-  Location,
-  Search,
-  SearchOptions,
-  Space,
-  SpaceAttribute,
-  SpaceAttributeValue,
-} from "seatsurfing-commons";
 import { Rnd } from "react-rnd";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -42,6 +30,15 @@ import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import SpaceAttributeValue from "@/types/SpaceAttributeValue";
+import SpaceAttribute from "@/types/SpaceAttribute";
+import Group from "@/types/Group";
+import Location from "@/types/Location";
+import Ajax from "@/util/Ajax";
+import Space from "@/types/Space";
+import Search, { SearchOptions } from "@/types/Search";
+import FullLayout from "@/components/FullLayout";
+import Loading from "@/components/Loading";
 
 interface SpaceState {
   id: string;

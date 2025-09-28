@@ -13,7 +13,6 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
 } from "react-feather";
-import { Ajax, Group, Search, SearchOptions, User } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import FullLayout from "@/components/FullLayout";
@@ -23,6 +22,10 @@ import withReadyRouter from "@/components/withReadyRouter";
 import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import User from "@/types/User";
+import Group from "@/types/Group";
+import Ajax from "@/util/Ajax";
+import Search, { SearchOptions } from "@/types/Search";
 
 interface State {
   loading: boolean;

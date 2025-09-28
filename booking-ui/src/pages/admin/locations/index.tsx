@@ -5,13 +5,14 @@ import {
   Download as IconDownload,
   Tag as IconTag,
 } from "react-feather";
-import { Ajax, Location } from "seatsurfing-commons";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Ajax from "@/util/Ajax";
+import Location from "@/types/Location";
 
 interface State {
   selectedItem: string;

@@ -1,7 +1,6 @@
 import React from "react";
 import { Form, Col, Row, Button, Alert } from "react-bootstrap";
 import { ChevronLeft as IconBack, Save as IconSave } from "react-feather";
-import { Ajax, Organization } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -9,6 +8,8 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import Organization from "@/types/Organization";
+import Ajax from "@/util/Ajax";
 
 interface State {
   loading: boolean;

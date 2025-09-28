@@ -1,5 +1,4 @@
 import React from "react";
-import { Ajax, Formatting, Location } from "seatsurfing-commons";
 import { Table, Form, Col, Row, Button } from "react-bootstrap";
 import {
   Search as IconSearch,
@@ -11,6 +10,9 @@ import Loading from "@/components/Loading";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Formatting from "@/util/Formatting";
+import Ajax from "@/util/Ajax";
+import Location from "@/types/Location";
 
 interface State {
   loading: boolean;

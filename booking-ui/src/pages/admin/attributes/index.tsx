@@ -5,13 +5,14 @@ import {
   Download as IconDownload,
   Tag as IconTag,
 } from "react-feather";
-import { Ajax, SpaceAttribute } from "seatsurfing-commons";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import SpaceAttribute from "@/types/SpaceAttribute";
+import Ajax from "@/util/Ajax";
 
 interface State {
   selectedItem: string;

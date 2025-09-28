@@ -1,8 +1,8 @@
 import React from "react";
 import { Form, Alert } from "react-bootstrap";
-import RuntimeConfig from "../../components/RuntimeConfig";
 import Link from "next/link";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {}
 

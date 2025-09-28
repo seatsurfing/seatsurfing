@@ -7,8 +7,6 @@ import {
   DropdownButton,
   Alert,
 } from "react-bootstrap";
-import RuntimeConfig from "../../components/RuntimeConfig";
-import Loading from "../../components/Loading";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -18,6 +16,8 @@ import AuthProvider from "@/types/AuthProvider";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
 import AjaxCredentials from "@/util/AjaxCredentials";
+import RuntimeConfig from "@/components/RuntimeConfig";
+import Loading from "@/components/Loading";
 
 interface State {
   email: string;

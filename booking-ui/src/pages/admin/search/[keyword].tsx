@@ -1,5 +1,4 @@
 import React from "react";
-import { Ajax, Search, SearchOptions } from "seatsurfing-commons";
 import { Card, ListGroup, Col, Row } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -7,6 +6,8 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Search, { SearchOptions } from "@/types/Search";
+import Ajax from "@/util/Ajax";
 
 interface State {
   loading: boolean;

@@ -1,12 +1,4 @@
 import React from "react";
-import {
-  Ajax,
-  AjaxError,
-  Booking,
-  Formatting,
-  DateUtil,
-  Settings as OrgSettings,
-} from "seatsurfing-commons";
 import { Table, Form, Col, Row, Button } from "react-bootstrap";
 import {
   Plus as IconPlus,
@@ -22,6 +14,12 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import type * as CSS from "csstype";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Booking from "@/types/Booking";
+import DateUtil from "@/util/DateUtil";
+import Formatting from "@/util/Formatting";
+import OrgSettings from "@/types/Settings";
+import Ajax from "@/util/Ajax";
+import AjaxError from "@/util/AjaxError";
 
 interface State {
   selectedItem: string;

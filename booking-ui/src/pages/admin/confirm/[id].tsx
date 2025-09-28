@@ -1,10 +1,10 @@
 import React from "react";
 import { Loader as IconLoad } from "react-feather";
-import { Ajax } from "seatsurfing-commons";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import Ajax from "@/util/Ajax";
 
 interface State {
   loading: boolean;
