@@ -21,6 +21,14 @@ div#__next {
   background-color: rgba(255, 255, 255, 0.4);
 }
 
+.clickable-table tbody tr {
+  cursor: pointer;
+}
+
+h2 {
+  margin-top: 100px;
+}
+
 .display-block {
   display: block;
 }
@@ -33,6 +41,35 @@ div#__next {
   -webkit-animation: spin 4s linear infinite;
   -moz-animation: spin 4s linear infinite;
   animation: spin 4s linear infinite;
+}
+
+main {
+  padding-bottom: 50px;
+  min-height: calc(100vh - 48px);
+}
+
+.padding-top {
+  padding-top: 75px;
+}
+
+.margin-top-50 {
+  margin-top: 50px;
+}
+
+.center {
+  text-align: center;
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+form .row {
+  margin-bottom: 15px;
+}
+
+form .row .form-check {
+  padding-top: 7px;
 }
 
 @-moz-keyframes spin {

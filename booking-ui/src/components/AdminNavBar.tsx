@@ -5,6 +5,7 @@ import Link from "next/link";
 import Ajax from "@/util/Ajax";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import withReadyRouter from "./withReadyRouter";
+import RuntimeConfig from "./RuntimeConfig";
 
 interface State {
   search: string;
@@ -43,7 +44,7 @@ class AdminNavBar extends React.Component<Props, State> {
     e.preventDefault();
     window.sessionStorage.setItem("searchKeyword", this.state.search);
     this.setState({
-      redirect: "/search/" + window.encodeURIComponent(this.state.search),
+      redirect: "/admin/search/" + window.encodeURIComponent(this.state.search),
     });
   };
 
@@ -65,21 +66,18 @@ class AdminNavBar extends React.Component<Props, State> {
       return <></>;
     }
 
+    const logoUrl = RuntimeConfig.INFOS.customLogoUrl || "/ui/seatsurfing_white.svg";
+
     return (
       <Nav className="navbar navbar-dark sticky-top bg-dark flex-nowrap p-0 shadow">
         <Link
           className="navbar-brand col-1 col-md-3 col-lg-2 me-0 px-3"
-          href="/dashboard"
+          href="/admin/dashboard"
         >
           <img
-            src="/admin/seatsurfing_white.svg"
+            src={logoUrl}
             alt="Seatsurfing"
             className="d-none d-md-block"
-          />
-          <img
-            src="/admin/seatsurfing_white_logo.svg"
-            alt="Seatsurfing"
-            className="d-block d-md-none"
           />
         </Link>
         <Form onSubmit={this.submitSearchForm} className="w-100">

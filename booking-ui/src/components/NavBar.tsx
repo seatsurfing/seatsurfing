@@ -93,13 +93,6 @@ class NavBar extends React.Component<Props, State> {
     });
   };
 
-  gotoAdmin = (e: any) => {
-    e.preventDefault();
-    if (typeof window !== "undefined") {
-      window.location.href = "/admin/dashboard/";
-    }
-  };
-
   showMergeModal = (e: any) => {
     e.preventDefault();
     this.setState({ showMergeInit: true });
@@ -169,7 +162,7 @@ class NavBar extends React.Component<Props, State> {
     if (!RuntimeConfig.EMBEDDED) {
       if (this.state.allowAdmin) {
         adminButton = (
-          <Nav.Link onClick={this.gotoAdmin}>
+          <Nav.Link as={Link} href="/admin/dashboard/">
             {this.props.t("administration")}
           </Nav.Link>
         );
