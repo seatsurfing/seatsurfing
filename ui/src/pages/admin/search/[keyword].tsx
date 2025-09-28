@@ -67,7 +67,7 @@ class SearchResult extends React.Component<Props, State> {
 
   renderUserResults = () => {
     let items = this.data.users.map((user) => {
-      let link = "/users/" + user.id;
+      let link = "/admin/users/" + user.id;
       return (
         <ListGroup.Item key={user.id}>
           <Link href={link}>{user.email}</Link>
@@ -93,7 +93,7 @@ class SearchResult extends React.Component<Props, State> {
 
   renderLocationResults = () => {
     let items = this.data.locations.map((location) => {
-      let link = "/locations/" + location.id;
+      let link = "/admin/locations/" + location.id;
       return (
         <ListGroup.Item key={location.id}>
           <Link href={link}>{location.name}</Link>
@@ -119,7 +119,7 @@ class SearchResult extends React.Component<Props, State> {
 
   renderSpaceResults = () => {
     let items = this.data.spaces.map((space) => {
-      let link = "/locations/" + space.locationId;
+      let link = "/admin/locations/" + space.locationId;
       return (
         <ListGroup.Item key={space.id}>
           <Link href={link}>{space.name}</Link>

@@ -195,7 +195,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     }
 
     let backButton = (
-      <Link href="/settings" className="btn btn-sm btn-outline-secondary">
+      <Link href="/admin/settings" className="btn btn-sm btn-outline-secondary">
         <IconBack className="feather" /> {this.props.t("back")}
       </Link>
     );

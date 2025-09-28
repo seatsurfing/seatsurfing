@@ -764,7 +764,7 @@ class EditBooking extends React.Component<Props, State> {
     }
 
     let backButton = (
-      <Link href="/bookings" className="btn btn-sm btn-outline-secondary">
+      <Link href="/admin/bookings" className="btn btn-sm btn-outline-secondary">
         <IconBack className="feather" /> {this.props.t("back")}
       </Link>
     );

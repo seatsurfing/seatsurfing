@@ -233,44 +233,44 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numUsers,
             this.props.t("users"),
-            this.state.orgAdmin ? "/users/" : "",
+            this.state.orgAdmin ? "/admin/users/" : "",
           )}
           {this.renderStatsCard(
             this.stats?.numLocations,
             this.props.t("areas"),
-            "/locations/",
+            "/admin/locations/",
           )}
           {this.renderStatsCard(
             this.stats?.numSpaces,
             this.props.t("spaces"),
-            "/locations/",
+            "/admin/locations/",
           )}
           {this.renderStatsCard(
             this.stats?.numBookings,
             this.props.t("bookings"),
-            "/bookings/",
+            "/admin/bookings/",
           )}
         </Row>
         <Row className="mb-4">
           {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
-            `/bookings/?enter=${todayDateString}&leave=${todayDateString}`,
+            `/admin/bookings/?enter=${todayDateString}&leave=${todayDateString}`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
-            `/bookings/?enter=${yesterdayDateString}&leave=${yesterdayDateString}`,
+            `/admin/bookings/?enter=${yesterdayDateString}&leave=${yesterdayDateString}`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
-            `/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}&leave=${DateUtil.getThisWeekSundayDateString()}`,
+            `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}&leave=${DateUtil.getThisWeekSundayDateString()}`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsLastWeek,
             this.props.t("lastWeek"),
-            `/bookings/?enter=${DateUtil.getLastWeekMondayDateString()}&leave=${DateUtil.getLastWeekSundayDateString()}`,
+            `/admin/bookings/?enter=${DateUtil.getLastWeekMondayDateString()}&leave=${DateUtil.getLastWeekSundayDateString()}`,
           )}
         </Row>
         <Row className="mb-4">

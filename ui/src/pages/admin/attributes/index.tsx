@@ -3,7 +3,6 @@ import { Table } from "react-bootstrap";
 import {
   Plus as IconPlus,
   Download as IconDownload,
-  Tag as IconTag,
 } from "react-feather";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
@@ -104,7 +103,7 @@ class Attributes extends React.Component<Props, State> {
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         <Link
-          href="/attributes/add"
+          href="/admin/attributes/add"
           className="btn btn-sm btn-outline-secondary"
         >
           <IconPlus className="feather" /> {this.props.t("add")}

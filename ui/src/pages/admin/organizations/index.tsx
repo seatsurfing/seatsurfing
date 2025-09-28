@@ -66,7 +66,7 @@ class Organizations extends React.Component<Props, State> {
 
     let buttons = (
       <Link
-        href="/organizations/add"
+        href="/admin/organizations/add"
         className="btn btn-sm btn-outline-secondary"
       >
         <IconPlus className="feather" /> {this.props.t("add")}

@@ -656,7 +656,7 @@ class Settings extends React.Component<Props, State> {
                 readOnly={true}
                 defaultValue={this.org?.name}
               />
-              <Link href={`/settings/org`}>{this.props.t("edit")}</Link>
+              <Link href={`/admin/settings/org`}>{this.props.t("edit")}</Link>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -971,7 +971,7 @@ class Settings extends React.Component<Props, State> {
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
                 <Link
-                  href="/settings/auth-providers/add"
+                  href="/admin/settings/auth-providers/add"
                   className={
                     "btn btn-sm btn-outline-secondary" +
                     (RuntimeConfig.INFOS.featureAuthProviders

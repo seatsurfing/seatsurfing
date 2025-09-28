@@ -1068,7 +1068,7 @@ class EditLocation extends React.Component<Props, State> {
 
     let backButton = (
       <Link
-        href="/locations"
+        href="/admin/locations"
         onClick={this.onBackButtonClick}
         className="btn btn-sm btn-outline-secondary"
       >
