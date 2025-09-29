@@ -111,7 +111,10 @@ class EditAttribute extends React.Component<Props, State> {
     }
 
     let backButton = (
-      <Link href="/admin/attributes" className="btn btn-sm btn-outline-secondary">
+      <Link
+        href="/admin/attributes"
+        className="btn btn-sm btn-outline-secondary"
+      >
         <IconBack className="feather" /> {this.props.t("back")}
       </Link>
     );

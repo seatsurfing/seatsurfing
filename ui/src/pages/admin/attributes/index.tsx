@@ -1,9 +1,6 @@
 import React from "react";
 import { Table } from "react-bootstrap";
-import {
-  Plus as IconPlus,
-  Download as IconDownload,
-} from "react-feather";
+import { Plus as IconPlus, Download as IconDownload } from "react-feather";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Link from "next/link";

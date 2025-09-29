@@ -225,7 +225,10 @@ class Bookings extends React.Component<Props, State> {
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         {searchButton}
-        <Link href="/admin/bookings/add" className="btn btn-sm btn-outline-secondary">
+        <Link
+          href="/admin/bookings/add"
+          className="btn btn-sm btn-outline-secondary"
+        >
           <IconPlus className="feather" /> {this.props.t("add")}
         </Link>
       </>

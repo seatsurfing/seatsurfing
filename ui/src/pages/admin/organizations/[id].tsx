@@ -137,7 +137,10 @@ class EditOrganization extends React.Component<Props, State> {
     }
 
     let backButton = (
-      <Link href="/admin/organizations" className="btn btn-sm btn-outline-secondary">
+      <Link
+        href="/admin/organizations"
+        className="btn btn-sm btn-outline-secondary"
+      >
         <IconBack className="feather" /> {this.props.t("back")}
       </Link>
     );

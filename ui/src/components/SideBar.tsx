@@ -114,7 +114,11 @@ class SideBar extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.superAdmin) {
       orgItem = (
         <li className="nav-item">
-          <Nav.Link as={Link} eventKey="/admin/organizations" href="/admin/organizations">
+          <Nav.Link
+            as={Link}
+            eventKey="/admin/organizations"
+            href="/admin/organizations"
+          >
             <IconBox className="feather" />{" "}
             <span className="d-none d-md-inline">
               {this.props.t("organizations")}
@@ -153,7 +157,11 @@ class SideBar extends React.Component<Props, State> {
             </Nav.Link>
           </li>
           <li className="nav-item">
-            <Nav.Link as={Link} eventKey="/admin/settings" href="/admin/settings">
+            <Nav.Link
+              as={Link}
+              eventKey="/admin/settings"
+              href="/admin/settings"
+            >
               <IconSettings className="feather" />{" "}
               <span className="d-none d-md-inline">
                 {this.props.t("settings")}
@@ -198,7 +206,11 @@ class SideBar extends React.Component<Props, State> {
         <div className="sidebar-sticky pt-3">
           <ul className="nav flex-column">
             <li className="nav-item">
-              <Nav.Link as={Link} eventKey="/admin/dashboard" href="/admin/dashboard">
+              <Nav.Link
+                as={Link}
+                eventKey="/admin/dashboard"
+                href="/admin/dashboard"
+              >
                 <IconClipboard className="feather" />{" "}
                 <span className="d-none d-md-inline">
                   {this.props.t("dashboard")}
@@ -206,7 +218,11 @@ class SideBar extends React.Component<Props, State> {
               </Nav.Link>
             </li>
             <li className="nav-item">
-              <Nav.Link as={Link} eventKey="/admin/locations" href="/admin/locations">
+              <Nav.Link
+                as={Link}
+                eventKey="/admin/locations"
+                href="/admin/locations"
+              >
                 <IconMap className="feather" />{" "}
                 <span className="d-none d-md-inline">
                   {this.props.t("areas")}
@@ -214,7 +230,11 @@ class SideBar extends React.Component<Props, State> {
               </Nav.Link>
             </li>
             <li className="nav-item">
-              <Nav.Link as={Link} eventKey="/admin/bookings" href="/admin/bookings">
+              <Nav.Link
+                as={Link}
+                eventKey="/admin/bookings"
+                href="/admin/bookings"
+              >
                 <IconBook className="feather" />{" "}
                 <span className="d-none d-md-inline">
                   {this.props.t("bookings")}
@@ -290,10 +310,7 @@ class SideBar extends React.Component<Props, State> {
             {orgAdminItems}
             {orgItem}
             <li className="nav-item">
-              <Nav.Link
-                as={Link}
-                href="/search/"
-              >
+              <Nav.Link as={Link} href="/search/">
                 <IconHome className="feather" />{" "}
                 <span className="d-none d-md-inline">
                   {this.props.t("bookingui")}

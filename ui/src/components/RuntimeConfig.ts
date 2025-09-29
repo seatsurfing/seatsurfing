@@ -80,8 +80,8 @@ export default class RuntimeConfig {
     if (credentials.accessToken) {
       RuntimeConfig.loadUserAndSettings()
         .then(() => {
-            resolve();
-          })
+          resolve();
+        })
         .catch((e) => {
           Ajax.PERSISTER.deleteCredentialsFromStorage();
           resolve();

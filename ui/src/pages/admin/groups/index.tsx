@@ -101,7 +101,10 @@ class Groups extends React.Component<Props, State> {
     let buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link href="/admin/groups/add" className="btn btn-sm btn-outline-secondary">
+        <Link
+          href="/admin/groups/add"
+          className="btn btn-sm btn-outline-secondary"
+        >
           <IconPlus className="feather" /> {this.props.t("add")}
         </Link>
       </>

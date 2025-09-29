@@ -59,7 +59,9 @@ import Space from "@/types/Space";
 import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import Formatting from "@/util/Formatting";
-import RecurringBooking, { RecurringBookingCreateResult } from "@/types/RecurringBooking";
+import RecurringBooking, {
+  RecurringBookingCreateResult,
+} from "@/types/RecurringBooking";
 import AjaxError from "@/util/AjaxError";
 import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";

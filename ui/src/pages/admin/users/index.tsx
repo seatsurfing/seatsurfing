@@ -119,7 +119,10 @@ class Users extends React.Component<Props, State> {
     let buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link href="/admin/users/add" className="btn btn-sm btn-outline-secondary">
+        <Link
+          href="/admin/users/add"
+          className="btn btn-sm btn-outline-secondary"
+        >
           <IconPlus className="feather" /> {this.props.t("add")}
         </Link>
       </>
