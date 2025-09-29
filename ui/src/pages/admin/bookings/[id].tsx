@@ -421,7 +421,7 @@ class EditBooking extends React.Component<Props, State> {
         .save()
         .then(() => {
           this.isNewBooking = false;
-          this.props.router.push("/bookings/" + this.entity.id);
+          this.props.router.push("/admin/bookings/" + this.entity.id);
           this.setState({
             saved: true,
             isDisabledLocation: false,
@@ -692,7 +692,7 @@ class EditBooking extends React.Component<Props, State> {
 
   render() {
     if (this.state.goBack) {
-      this.props.router.push("/bookings");
+      this.props.router.push("/admin/bookings");
       return <></>;
     }
 

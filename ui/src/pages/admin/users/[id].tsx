@@ -120,7 +120,7 @@ class EditUser extends React.Component<Props, State> {
     this.entity
       .save()
       .then(() => {
-        this.props.router.push("/users/" + this.entity.id);
+        this.props.router.push("/admin/users/" + this.entity.id);
         if (this.state.changePassword) {
           this.entity
             .setPassword(this.state.password)
@@ -198,7 +198,7 @@ class EditUser extends React.Component<Props, State> {
 
   render() {
     if (this.state.goBack) {
-      this.props.router.push("/users");
+      this.props.router.push("/admin/users");
       return <></>;
     }
 

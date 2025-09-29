@@ -60,7 +60,7 @@ class Organizations extends React.Component<Props, State> {
 
   render() {
     if (this.state.selectedItem) {
-      this.props.router.push(`/organizations/${this.state.selectedItem}`);
+      this.props.router.push(`/admin/organizations/${this.state.selectedItem}`);
       return <></>;
     }
 

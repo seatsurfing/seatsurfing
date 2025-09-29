@@ -108,12 +108,12 @@ class EditOrganization extends React.Component<Props, State> {
             user.requirePassword = true;
             user.role = 20;
             user.save().then(() => {
-              this.props.router.push("/organizations/" + this.entity.id);
+              this.props.router.push("/admin/organizations/" + this.entity.id);
               this.setState({ saved: true });
             });
           });
         } else {
-          this.props.router.push("/organizations/" + this.entity.id);
+          this.props.router.push("/admin/organizations/" + this.entity.id);
           this.setState({ saved: true });
         }
       })
@@ -132,7 +132,7 @@ class EditOrganization extends React.Component<Props, State> {
 
   render() {
     if (this.state.goBack) {
-      this.props.router.push("/organizations");
+      this.props.router.push("/admin/organizations");
       return <></>;
     }
 

@@ -324,7 +324,7 @@ class EditLocation extends React.Component<Props, State> {
                     .setMap(this.state.files.item(0) as File)
                     .then(() => {
                       this.loadData(this.entity.id);
-                      this.props.router.push("/locations/" + this.entity.id);
+                      this.props.router.push("/admin/locations/" + this.entity.id);
                       this.setState({
                         files: null,
                         saved: true,
@@ -1062,7 +1062,7 @@ class EditLocation extends React.Component<Props, State> {
 
   render() {
     if (this.state.goBack) {
-      this.props.router.push(`/locations`);
+      this.props.router.push(`/admin/locations`);
       return <></>;
     }
 

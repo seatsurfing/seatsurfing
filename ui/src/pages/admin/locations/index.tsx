@@ -82,7 +82,7 @@ class Locations extends React.Component<Props, State> {
 
   render() {
     if (this.state.selectedItem) {
-      this.props.router.push(`/locations/${this.state.selectedItem}`);
+      this.props.router.push(`/admin/locations/${this.state.selectedItem}`);
       return <></>;
     }
 

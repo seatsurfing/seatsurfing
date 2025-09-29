@@ -102,7 +102,7 @@ class Users extends React.Component<Props, State> {
 
   render() {
     if (this.state.selectedItem) {
-      this.props.router.push(`/users/${this.state.selectedItem}`);
+      this.props.router.push(`/admin/users/${this.state.selectedItem}`);
       return <></>;
     }
     // eslint-disable-next-line

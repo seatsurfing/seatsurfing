@@ -459,7 +459,7 @@ class Settings extends React.Component<Props, State> {
   render() {
     if (this.state.selectedAuthProvider) {
       this.props.router.push(
-        `/settings/auth-providers/${this.state.selectedAuthProvider}`,
+        `/admin/settings/auth-providers/${this.state.selectedAuthProvider}`,
       );
       return <></>;
     }

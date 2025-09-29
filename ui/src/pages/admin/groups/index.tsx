@@ -84,7 +84,7 @@ class Groups extends React.Component<Props, State> {
     }
 
     if (this.state.selectedItem) {
-      this.props.router.push(`/groups/${this.state.selectedItem}`);
+      this.props.router.push(`/admin/groups/${this.state.selectedItem}`);
       return <></>;
     }
     // eslint-disable-next-line

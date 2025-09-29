@@ -197,7 +197,7 @@ class Bookings extends React.Component<Props, State> {
 
   render() {
     if (this.state.selectedItem) {
-      this.props.router.push(`/bookings/${this.state.selectedItem}`);
+      this.props.router.push(`/admin/bookings/${this.state.selectedItem}`);
       return <></>;
     }
     let searchButton = (

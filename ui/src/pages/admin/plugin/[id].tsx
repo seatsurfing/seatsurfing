@@ -56,7 +56,7 @@ class PluginPage extends React.Component<Props, State> {
 
   checkiFrameHeight(): void {
     window.setTimeout(() => {
-      if (!window.location.pathname.startsWith("/admin/plugin/")) return;
+      if (!window.location.pathname.startsWith("/ui/admin/plugin/")) return;
       this.checkiFrameHeight();
       let iFrame = document.getElementById(
         "plugin-iframe",

@@ -69,7 +69,7 @@ class ConfirmSignup extends React.Component<Props, State> {
           <div>
             <p>{this.props.t("orgSignupSuccess")}</p>
             <Link
-              href={"https://" + this.state.domain + "/admin/login"}
+              href={"https://" + this.state.domain + "/ui/login"}
               className="btn btn-primary"
             >
               {this.props.t("orgSignupGoToLogin")}

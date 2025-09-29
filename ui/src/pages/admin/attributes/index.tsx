@@ -81,7 +81,7 @@ class Attributes extends React.Component<Props, State> {
 
   render() {
     if (this.state.selectedItem) {
-      this.props.router.push(`/attributes/${this.state.selectedItem}`);
+      this.props.router.push(`/admin/attributes/${this.state.selectedItem}`);
       return <></>;
     }
 

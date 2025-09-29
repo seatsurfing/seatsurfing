@@ -116,7 +116,7 @@ class EditUser extends React.Component<Props, State> {
       .save()
       .then((e) => {
         this.entity.id = e.id;
-        this.props.router.push("/groups/" + this.entity.id);
+        this.props.router.push("/admin/groups/" + this.entity.id);
         this.setState({ saved: true });
       })
       .catch(() => {
@@ -218,7 +218,7 @@ class EditUser extends React.Component<Props, State> {
 
   render() {
     if (this.state.goBack) {
-      this.props.router.push("/groups");
+      this.props.router.push("/admin/groups");
       return <></>;
     }
 

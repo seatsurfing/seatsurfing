@@ -88,7 +88,7 @@ class EditAttribute extends React.Component<Props, State> {
     this.entity
       .save()
       .then(() => {
-        this.props.router.push("/attributes/" + this.entity.id);
+        this.props.router.push("/admin/attributes/" + this.entity.id);
         this.setState({ saved: true });
       })
       .catch(() => {
@@ -106,7 +106,7 @@ class EditAttribute extends React.Component<Props, State> {
 
   render() {
     if (this.state.goBack) {
-      this.props.router.push("/attributes");
+      this.props.router.push("/admin/attributes");
       return <></>;
     }
 
