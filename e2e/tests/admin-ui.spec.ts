@@ -1,21 +1,25 @@
 import { test, expect } from "@playwright/test";
 
-const adminUiURL = process.env.ADMIN_UI_URL
-  ? process.env.ADMIN_UI_URL
-  : "http://localhost:8080";
+const uiURL = process.env.UI_URL ? process.env.UI_URL : "http://localhost:8080";
 
 test.beforeEach(async ({ page }) => {
   // Open login page
-  await page.goto(adminUiURL + "/admin/login");
+  await page.goto(uiURL + "/ui/login/");
   await expect(page).toHaveURL(/login\/$/);
 
   // Enter credentials
-  await page.getByPlaceholder("Email address").fill("admin@seatsurfing.local");
+  await page
+    .getByPlaceholder("you@company.com")
+    .fill("admin@seatsurfing.local");
   await page.getByPlaceholder("Password").fill("12345678");
   await page.getByRole("button", { name: "➤" }).click();
 
   // Ensure we've reached the dashboard
-  await expect(page).toHaveURL(/dashboard\/$/);
+  await expect(page).toHaveURL(/search\/$/);
+
+  // Navigate to "Administration"
+  await page.getByRole("link", { name: "Administration" }).click();
+  await expect(page).toHaveURL(/admin\/dashboard\/$/);
 });
 
 test("crud location", async ({ page }) => {
@@ -53,7 +57,7 @@ test("crud location", async ({ page }) => {
 
   // Save & go back to area list
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Entry updated.")).toBeVisible();
+  await expect(page.getByText("Record saved.")).toBeVisible();
   await expect(page).toHaveURL(/locations\/.+\/$/);
   await page.getByRole("link", { name: "Back" }).click();
   await expect(page).toHaveURL(/locations\/$/);
