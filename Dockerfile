@@ -1,16 +1,14 @@
 FROM --platform=$BUILDPLATFORM docker.io/tonistiigi/xx AS xx
 
-FROM --platform=$BUILDPLATFORM node:lts-alpine AS booking-ui-builder
+FROM --platform=$BUILDPLATFORM node:lts-alpine AS ui-builder
 RUN apk add --no-cache jq bash
 ARG CI_VERSION
 ENV NEXT_PUBLIC_PRODUCT_VERSION=$CI_VERSION
 ENV NODE_ENV=production
-COPY --from=commons-builder /app/commons/ts/ /app/commons/ts
-ADD booking-ui /app/
+ADD ui /app/
 WORKDIR /app
 RUN ./add-missing-translations.sh
 RUN npm ci
-RUN npm install --save ./commons/ts
 RUN npm run build
 
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25-bookworm AS server-builder
