@@ -37,7 +37,7 @@ LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfin
       org.opencontainers.image.documentation="https://seatsurfing.io/docs/"
 COPY --from=server-builder /go/src/app/main /app/
 COPY --from=healthcheck-builder /go/src/healthcheck/healthcheck /app/
-COPY --from=booking-ui-builder /app/build/ /app/booking-ui
+COPY --from=ui-builder /app/build/ /app/ui
 COPY server/res/ /app/res
 ADD version.txt /app/
 WORKDIR /app
