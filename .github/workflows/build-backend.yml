@@ -7,8 +7,7 @@ on:
       - main
     paths:
       - server/**
-      - booking-ui/**
-      - commons/ts/**
+      - ui/**
 
 env:
   REGISTRY: ghcr.io

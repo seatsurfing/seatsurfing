@@ -9,8 +9,7 @@ updates:
     open-pull-requests-limit: 50
   - package-ecosystem: npm
     directories:
-      - "/booking-ui/"
-      - "/commons/ts/"
+      - "/ui/"
       - "/e2e/"
     schedule:
       interval: daily
