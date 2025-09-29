@@ -111,7 +111,9 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
     this.entity.save().then(() => {
-      this.props.router.push("/admin/settings/auth-providers/" + this.entity.id);
+      this.props.router.push(
+        "/admin/settings/auth-providers/" + this.entity.id,
+      );
       this.setState({
         saved: true,
       });

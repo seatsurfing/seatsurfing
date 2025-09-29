@@ -162,7 +162,11 @@ class NavBar extends React.Component<Props, State> {
     if (!RuntimeConfig.EMBEDDED) {
       if (this.state.allowAdmin) {
         adminButton = (
-          <Nav.Link as={Link} eventKey="/admin/dashboard" href="/admin/dashboard">
+          <Nav.Link
+            as={Link}
+            eventKey="/admin/dashboard"
+            href="/admin/dashboard"
+          >
             {this.props.t("administration")}
           </Nav.Link>
         );
