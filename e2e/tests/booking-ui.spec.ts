@@ -4,7 +4,7 @@ const uiURL = process.env.UI_URL ? process.env.UI_URL : "http://localhost:8080";
 
 test.beforeEach(async ({ page }) => {
   // Open login page
-  await page.goto(uiURL + "/ui/login");
+  await page.goto(uiURL + "/ui/login/");
   await expect(page).toHaveURL(/login\/$/);
 
   // Enter credentials
