@@ -192,7 +192,7 @@ class Login extends React.Component<Props, State> {
         };
         Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
         Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
-        RuntimeConfig.setLoginDetails().then(() => {
+        RuntimeConfig.loadUserAndSettings().then(() => {
           const redirect =
             (this.props.router.query["redir"] as string) || "/search";
           this.setState({ redirect });

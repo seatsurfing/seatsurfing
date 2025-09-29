@@ -119,7 +119,7 @@
   "end": "Bis zum",
   "enter": "Beginn",
   "entryCreated": "Eintrag wurde erstellt.",
-  "entryUpdated": "Einstellungen gespeichert.",
+  "entryUpdated": "Eingaben gespeichert.",
   "errorAddDomain": "Fehler beim Hinzufügen der Domain.",
   "errorBookingLimit": "Das Limit von {{num}} Buchungen wurde erreicht.",
   "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen.",
