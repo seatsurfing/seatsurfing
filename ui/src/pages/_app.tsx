@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@/styles/App.css";
+import "@/styles/AdminNavBar.css";
 import "@/styles/NavBar.css";
 import "@/styles/CenterContent.css";
 import "@/styles/Dashboard.css";
