@@ -279,7 +279,7 @@ func (a *App) setupStaticUIRoutes(router *mux.Router) {
 	const basePath = "/ui"
 	if GetConfig().Development {
 		router.PathPrefix(basePath + "/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			a.proxyHandler(w, r, "localhost:3001")
+			a.proxyHandler(w, r, "localhost:3000")
 		})
 		return
 	}

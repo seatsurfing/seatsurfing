@@ -24,9 +24,9 @@
     "typescript": "^5.9.2"
   },
   "scripts": {
-    "start": "PORT=3001 next start",
+    "start": "PORT=3000 next start",
     "build": "next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
-    "dev": "PORT=3001 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
+    "dev": "PORT=3000 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
     "lint": "next lint"
   },
   "browserslist": {
