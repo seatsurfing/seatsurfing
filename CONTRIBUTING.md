@@ -57,7 +57,7 @@
 
    _Optionally: Add a custom `.env` file in the folder `./server` to set additional environment variables._
 
-You should now be able to access the Admin UI at http://localhost:3000/admin/ and the Booking UI at http://localhost:3001/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`). To check notification e-mails sent by the system open the MailHog interface at http://localhost:8025/.
+You should now be able to access the UI at http://localhost:3000/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`). To check notification e-mails sent by the system open the MailHog interface at http://localhost:8025/.
 
 ## Adding translations
 
