@@ -76,6 +76,11 @@ class AdminNavBar extends React.Component<Props, State> {
           href="/admin/dashboard"
         >
           <img src={logoUrl} alt="Seatsurfing" className="d-none d-md-block" />
+          <img
+            src="/ui/seatsurfing_white_logo.svg"
+            alt="Seatsurfing"
+            className="d-block d-md-none"
+          />
         </Link>
         <Form onSubmit={this.submitSearchForm} className="w-100">
           <Form.Control

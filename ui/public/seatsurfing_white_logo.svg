@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="4.7624998mm"
+   height="5.2916698mm"
+   viewBox="0 0 4.7624998 5.2916698"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (ebf0e94, 2025-05-08)"
+   sodipodi:docname="seatsurfing_white_logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.6364969"
+     inkscape:cx="-6.4161441"
+     inkscape:cy="132.29478"
+     inkscape:window-width="3840"
+     inkscape:window-height="2054"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-106.62708,-113.50625)">
+    <path
+       style="display:inline;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+       d="m 111.38958,116.41667 c 0,-1.21735 -1.19989,-2.91042 -2.38125,-2.91042 -1.18137,0 -2.38125,1.69307 -2.38125,2.91042 0,1.29593 1.07976,1.55072 2.11666,1.58274 v 0.26934 h -0.79375 v 0.52917 h 2.11667 v -0.52917 h -0.79375 v -0.26934 c 1.0369,-0.032 2.11667,-0.28681 2.11667,-1.58274 z m -4.23334,0 c 0,-0.94033 0.99325,-2.38125 1.85209,-2.38125 0.85883,0 1.85208,1.44092 1.85208,2.38125 0,0.53525 -0.14314,1.05833 -1.85208,1.05833 -1.70895,0 -1.85209,-0.52308 -1.85209,-1.05833 z"
+       id="path11" />
+    <path
+       style="display:inline;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+       d="m 109.80208,116.94584 h 0.52916 c 0,-0.46779 -0.69718,-0.79375 -1.32291,-0.79375 -0.62574,0 -1.32292,0.32596 -1.32292,0.79375 l 0.52705,0.0156 c 0.0341,-0.0855 0.37042,-0.2802 0.79587,-0.2802 0.42545,0 0.76173,0.19474 0.79375,0.26459 z"
+       id="path13" />
+  </g>
+</svg>
