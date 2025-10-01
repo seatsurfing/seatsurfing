@@ -999,11 +999,19 @@ func (router *BookingRouter) getCalDavEventFromBooking(e *Booking) (*CalDAVEvent
 	if err != nil {
 		return nil, err
 	}
+	enterTime, err := GetLocationRepository().AttachTimezoneInformation(e.Enter, location)
+	if err != nil {
+		return nil, err
+	}
+	leaveTime, err := GetLocationRepository().AttachTimezoneInformation(e.Leave, location)
+	if err != nil {
+		return nil, err
+	}
 	caldavEvent := &CalDAVEvent{
 		Title:    "Seat Reservation: " + space.Name + ", " + location.Name,
 		Location: space.Name + ", " + location.Name,
-		Start:    e.Enter,
-		End:      e.Leave,
+		Start:    enterTime,
+		End:      leaveTime,
 	}
 	return caldavEvent, nil
 }

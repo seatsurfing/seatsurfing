@@ -123,7 +123,7 @@ func (c *CalDAVClient) GetCaldavEvent(e *CalDAVEvent) *ical.Calendar {
 
 	event := ical.NewEvent()
 	event.Props.SetText(ical.PropSummary, e.Title)
-	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
+	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now().UTC())
 	event.Props.SetDateTime(ical.PropDateTimeStart, e.Start)
 	event.Props.SetDateTime(ical.PropDateTimeEnd, e.End)
 	event.Props.SetText(ical.PropLocation, e.Location)
