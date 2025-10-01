@@ -28,6 +28,7 @@ type Config struct {
 	SMTPAuth                            bool
 	SMTPAuthUser                        string
 	SMTPAuthPass                        string
+	SMTPAuthMethod                      string
 	ACSHost                             string
 	ACSAccessKey                        string
 	MockSendmail                        bool
@@ -87,6 +88,7 @@ func (c *Config) ReadConfig() {
 	c.SMTPAuth = (c.getEnv("SMTP_AUTH", "0") == "1")
 	c.SMTPAuthUser = c.getEnv("SMTP_AUTH_USER", "")
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
+	c.SMTPAuthMethod = c.getEnv("SMTP_AUTH_METHOD", "PLAIN")
 	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@seatsurfing.local")
 	if c.MailSenderAddress == "" {
 		// Deprecated
