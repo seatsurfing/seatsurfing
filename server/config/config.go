@@ -88,15 +88,20 @@ func (c *Config) ReadConfig() {
 	c.SMTPAuth = (c.getEnv("SMTP_AUTH", "0") == "1")
 	c.SMTPAuthUser = c.getEnv("SMTP_AUTH_USER", "")
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
-	c.SMTPAuthMethod = c.getEnv("SMTP_AUTH_METHOD", "PLAIN")
+	c.SMTPAuthMethod = strings.ToUpper(c.getEnv("SMTP_AUTH_METHOD", "PLAIN"))
+	if c.SMTPAuthMethod != "PLAIN" && c.SMTPAuthMethod != "LOGIN" {
+		log.Println("Warning: Invalid SMTP_AUTH_METHOD set. Only 'PLAIN' and 'LOGIN' are allowed. Defaulting to 'PLAIN'.")
+		c.SMTPAuthMethod = "PLAIN"
+	}
 	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@seatsurfing.local")
 	if c.MailSenderAddress == "" {
 		// Deprecated
 		c.MailSenderAddress = c.getEnv("SMTP_SENDER_ADDRESS", "no-reply@seatsurfing.local")
 	}
-	c.MailService = c.getEnv("MAIL_SERVICE", "smtp")
+	c.MailService = strings.ToLower(c.getEnv("MAIL_SERVICE", "smtp"))
 	if c.MailService != "smtp" && c.MailService != "acs" {
 		log.Println("Warning: Invalid MAIL_SERVICE set. Only 'smtp' and 'acs' are allowed. Defaulting to 'smtp'.")
+		c.MailService = "smtp"
 	}
 	c.ACSHost = c.getEnv("ACS_HOST", "")
 	c.ACSAccessKey = c.getEnv("ACS_ACCESS_KEY", "")
