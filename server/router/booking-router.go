@@ -313,11 +313,15 @@ func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	filename := fmt.Sprintf("seatsurfing-%s-%s.ics", calDavEvent.Start.Format("20060102"), calDavEvent.Start.Format("1504"))
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	w.Header().Set("Content-Type", "text/calendar")
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+router.getICalFilename(calDavEvent)+"\"")
 	w.Write(buf.Bytes())
+}
+
+func (router *BookingRouter) getICalFilename(calDavEvent *CalDAVEvent) string {
+	filename := fmt.Sprintf("seatsurfing-%s-%s.ics", calDavEvent.Start.Format("20060102"), calDavEvent.Start.Format("1504"))
+	return filename
 }
 
 func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
@@ -1121,7 +1125,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 			return
 		}
 		attachments = append(attachments, &MailAttachment{
-			Filename: "seatsurfing.ics",
+			Filename: router.getICalFilename(calDavEvent),
 			MimeType: "text/calendar",
 			Data:     buf.Bytes(),
 		})
