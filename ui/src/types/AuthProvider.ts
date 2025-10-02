@@ -13,6 +13,8 @@ export default class AuthProvider extends Entity {
   clientId: string;
   clientSecret: string;
   logoutUrl: string;
+  profilePageUrl: string;
+  readOnly: boolean;
 
   constructor() {
     super();
@@ -27,6 +29,8 @@ export default class AuthProvider extends Entity {
     this.clientId = "";
     this.clientSecret = "";
     this.logoutUrl = "";
+    this.profilePageUrl = "";
+    this.readOnly = false;
   }
 
   serialize(): Object {
@@ -42,6 +46,7 @@ export default class AuthProvider extends Entity {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       logoutUrl: this.logoutUrl,
+      profilePageUrl: this.profilePageUrl
     });
   }
 
@@ -58,6 +63,8 @@ export default class AuthProvider extends Entity {
     this.clientId = input.clientId;
     this.clientSecret = input.clientSecret;
     this.logoutUrl = input.logoutUrl;
+    this.profilePageUrl = input.profilePageUrl;
+    this.readOnly = input.readOnly;
   }
 
   getBackendUrl(): string {
