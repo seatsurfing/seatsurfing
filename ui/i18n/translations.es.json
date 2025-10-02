@@ -307,5 +307,7 @@
   "workingHours": "Horario laboral",
   "yes": "sí",
   "yesterday": "Ayer",
-  "yourDomainPlaceholder": "seatsurfing.tu-dominio.com"
+  "yourDomainPlaceholder": "seatsurfing.tu-dominio.com",
+  "manageProfile": "Manage profile",
+  "profile": "Profile"
 }

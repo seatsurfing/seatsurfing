@@ -681,7 +681,7 @@ class Preferences extends React.Component<Props, State> {
               </Button>
             </Form>
             <div hidden={this.state.activeTab !== "tab-idp"}>
-              <h5 className="margin-top-15">{this.props.t("security")}</h5>
+              <h5 className="margin-top-15">{this.props.t("profile")}</h5>
               <a
                 href={profilePageUrl}
                 target="_blank"
