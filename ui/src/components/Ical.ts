@@ -12,6 +12,14 @@ export function getIcal(bookingId: string) {
       if (!response.ok) {
         return;
       }
+      let contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "seatsurfing.ics";
+      if (contentDisposition) {
+        let filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
       response
         .blob()
         .then((data) => {
@@ -20,7 +28,7 @@ export function getIcal(bookingId: string) {
           let a = document.createElement("a");
           a.style = "display: none";
           a.href = url;
-          a.download = "seatsurfing.ics";
+          a.download = filename;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
