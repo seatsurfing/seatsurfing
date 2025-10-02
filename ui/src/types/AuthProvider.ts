@@ -46,7 +46,7 @@ export default class AuthProvider extends Entity {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       logoutUrl: this.logoutUrl,
-      profilePageUrl: this.profilePageUrl
+      profilePageUrl: this.profilePageUrl,
     });
   }
 

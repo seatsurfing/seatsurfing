@@ -424,7 +424,9 @@ class Preferences extends React.Component<Props, State> {
                   {this.props.t("security")}
                 </Nav.Link>
               </Nav.Item>
-              <Nav.Item hidden={!RuntimeConfig.INFOS.idpLogin || !profilePageUrl}>
+              <Nav.Item
+                hidden={!RuntimeConfig.INFOS.idpLogin || !profilePageUrl}
+              >
                 <Nav.Link eventKey="tab-idp">
                   {this.props.t("security")}
                 </Nav.Link>
@@ -678,11 +680,15 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
-            <div
-              hidden={this.state.activeTab !== "tab-idp"}
-            >
+            <div hidden={this.state.activeTab !== "tab-idp"}>
               <h5 className="margin-top-15">{this.props.t("security")}</h5>
-              <a href={profilePageUrl} target="_blank" className="btn btn-primary">{this.props.t("manageProfile")}</a>
+              <a
+                href={profilePageUrl}
+                target="_blank"
+                className="btn btn-primary"
+              >
+                {this.props.t("manageProfile")}
+              </a>
             </div>
             <Form
               onSubmit={this.saveCaldavSettings}
