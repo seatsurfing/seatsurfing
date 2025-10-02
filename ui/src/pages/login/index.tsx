@@ -1,23 +1,16 @@
 import React from "react";
-import {
-  Form,
-  Button,
-  InputGroup,
-  Dropdown,
-  DropdownButton,
-  Alert,
-} from "react-bootstrap";
+import { Form, Button, InputGroup, Alert } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import { LanguageSwitcher } from "next-export-i18n";
 import AuthProvider from "@/types/AuthProvider";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
 import AjaxCredentials from "@/util/AjaxCredentials";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Loading from "@/components/Loading";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface State {
   email: string;
@@ -263,37 +256,13 @@ class Login extends React.Component<Props, State> {
       );
     }
 
-    const languageSelectDropdown = (
-      <DropdownButton
-        title={RuntimeConfig.getLanguage()}
-        className="lng-selector"
-        size="sm"
-        variant="outline-secondary"
-        drop="up"
-      >
-        {RuntimeConfig.getAvailableLanguages()
-          .sort()
-          .filter((l) => l !== "default")
-          .map((l) => (
-            <LanguageSwitcher key={"lng-" + l} lang={l}>
-              <Dropdown.Item
-                key={"lng-btn-" + l}
-                active={l === RuntimeConfig.getLanguage()}
-              >
-                {l}
-              </Dropdown.Item>
-            </LanguageSwitcher>
-          ))}
-      </DropdownButton>
-    );
-
     const copyrightFooter = (
       <div className="copyright-footer">
         &copy; Seatsurfing &#183;{" "}
         <a href="https://seatsurfing.io" target="_blank">
           https://seatsurfing.io
         </a>
-        {languageSelectDropdown}
+        <LanguageSelector />
       </div>
     );
 
