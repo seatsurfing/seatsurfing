@@ -3,6 +3,7 @@ package router
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"net/http"
@@ -312,8 +313,10 @@ func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	filename := fmt.Sprintf("seatsurfing-%s-%s.ics", calDavEvent.Start.Format("20060102"), calDavEvent.Start.Format("1504"))
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	w.Header().Set("Content-Type", "text/calendar")
-	w.Header().Set("Content-Disposition", "attachment; filename=\"seatsurfing.ics\"")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.Write(buf.Bytes())
 }
 
