@@ -27,6 +27,7 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
         c.accessTokenExpiry.getTime().toString(),
       );
       window.sessionStorage.setItem("logoutUrl", c.logoutUrl);
+      window.sessionStorage.setItem("profilePageUrl", c.profilePageUrl);
     } catch (e) {}
   }
 
@@ -37,11 +38,13 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
       let accessTokenExpiry =
         window.sessionStorage.getItem("accessTokenExpiry");
       let logoutUrl = window.sessionStorage.getItem("logoutUrl");
+      let profilePageUrl = window.sessionStorage.getItem("profilePageUrl");
       if (accessToken && accessTokenExpiry) {
         c = {
           accessToken: accessToken,
           accessTokenExpiry: new Date(window.parseInt(accessTokenExpiry)),
           logoutUrl: logoutUrl || "",
+          profilePageUrl: profilePageUrl || "",
         };
       }
     } catch (e) {}
@@ -53,6 +56,7 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
       window.sessionStorage.removeItem("accessToken");
       window.sessionStorage.removeItem("accessTokenExpiry");
       window.sessionStorage.removeItem("logoutUrl");
+      window.sessionStorage.removeItem("profilePageUrl");
       window.localStorage.removeItem("refreshToken");
     } catch (e) {}
   }

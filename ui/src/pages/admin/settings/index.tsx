@@ -316,6 +316,9 @@ class Settings extends React.Component<Props, State> {
   };
 
   onAuthProviderSelect = (e: AuthProvider) => {
+    if (e.readOnly) {
+      return;
+    }
     this.setState({ selectedAuthProvider: e.id });
   };
 

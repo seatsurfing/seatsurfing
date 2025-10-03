@@ -24,6 +24,7 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import MergeRequest from "@/types/MergeRequest";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
+import LanguageSelector from "./LanguageSelector";
 
 interface State {
   redirect: string | null;
@@ -237,6 +238,7 @@ class NavBar extends React.Component<Props, State> {
         <Nav className="ms-auto">
           {initMergeButton}
           {mergeRequestsButton}
+          <LanguageSelector inNavbar={true} />
         </Nav>
       </>
     );

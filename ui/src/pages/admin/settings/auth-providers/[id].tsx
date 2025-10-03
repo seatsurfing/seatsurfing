@@ -31,6 +31,8 @@ interface State {
   clientId: string;
   clientSecret: string;
   logoutUrl: string;
+  profilePageUrl: string;
+  readOnly: boolean;
 }
 
 interface Props {
@@ -59,6 +61,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       clientId: "",
       clientSecret: "",
       logoutUrl: "",
+      profilePageUrl: "",
+      readOnly: false,
     };
   }
 
@@ -87,6 +91,8 @@ class EditAuthProvider extends React.Component<Props, State> {
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
           logoutUrl: authProvider.logoutUrl,
+          profilePageUrl: authProvider.profilePageUrl,
+          readOnly: authProvider.readOnly,
           loading: false,
         });
       });
@@ -110,6 +116,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.clientId = this.state.clientId;
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
+    this.entity.profilePageUrl = this.state.profilePageUrl;
     this.entity.save().then(() => {
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
@@ -224,6 +231,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       <Button
         className="btn-sm"
         variant="outline-secondary"
+        disabled={this.state.submitting || this.state.readOnly}
         onClick={this.deleteItem}
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
@@ -234,6 +242,7 @@ class EditAuthProvider extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         type="submit"
+        disabled={this.state.submitting || this.state.readOnly}
         form="form"
       >
         <IconSave className="feather" /> {this.props.t("save")}
@@ -449,6 +458,21 @@ class EditAuthProvider extends React.Component<Props, State> {
                 value={this.state.logoutUrl}
                 onChange={(e: any) =>
                   this.setState({ logoutUrl: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              Profile Page URL
+            </Form.Label>
+            <Col sm="9">
+              <Form.Control
+                type="url"
+                placeholder="https://..."
+                value={this.state.profilePageUrl}
+                onChange={(e: any) =>
+                  this.setState({ profilePageUrl: e.target.value })
                 }
               />
             </Col>
