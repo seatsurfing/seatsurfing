@@ -23,9 +23,10 @@ import (
 )
 
 type JWTResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	LogoutURL    string `json:"logoutUrl"`
+	AccessToken    string `json:"accessToken"`
+	RefreshToken   string `json:"refreshToken"`
+	LogoutURL      string `json:"logoutUrl"`
+	ProfilePageURL string `json:"profilePageUrl"`
 }
 
 type Claims struct {
@@ -441,9 +442,10 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		LogoutURL:    router.getLogoutUrl(provider),
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
+		LogoutURL:      router.getLogoutUrl(provider),
+		ProfilePageURL: router.getProfilePageURL(provider),
 	}
 	SendJSON(w, res)
 }
@@ -457,6 +459,13 @@ func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
 	redirectUrl := FormatURL(primaryDomain.DomainName) + "/ui/login"
 	logoutUrl := strings.ReplaceAll(provider.LogoutURL, "{logoutRedirectUri}", redirectUrl)
 	return logoutUrl
+}
+
+func (router *AuthRouter) getProfilePageURL(provider *AuthProvider) string {
+	if provider == nil || provider.ProfilePageURL == "" {
+		return ""
+	}
+	return provider.ProfilePageURL
 }
 
 func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {

@@ -313,11 +313,15 @@ func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	filename := fmt.Sprintf("seatsurfing-%s-%s.ics", calDavEvent.Start.Format("20060102"), calDavEvent.Start.Format("1504"))
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	w.Header().Set("Content-Type", "text/calendar")
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+router.getICalFilename(calDavEvent)+"\"")
 	w.Write(buf.Bytes())
+}
+
+func (router *BookingRouter) getICalFilename(calDavEvent *CalDAVEvent) string {
+	filename := fmt.Sprintf("seatsurfing-%s-%s.ics", calDavEvent.Start.Format("20060102"), calDavEvent.Start.Format("1504"))
+	return filename
 }
 
 func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
@@ -1002,11 +1006,19 @@ func (router *BookingRouter) getCalDavEventFromBooking(e *Booking) (*CalDAVEvent
 	if err != nil {
 		return nil, err
 	}
+	enterTime, err := GetLocationRepository().AttachTimezoneInformation(e.Enter, location)
+	if err != nil {
+		return nil, err
+	}
+	leaveTime, err := GetLocationRepository().AttachTimezoneInformation(e.Leave, location)
+	if err != nil {
+		return nil, err
+	}
 	caldavEvent := &CalDAVEvent{
 		Title:    "Seat Reservation: " + space.Name + ", " + location.Name,
 		Location: space.Name + ", " + location.Name,
-		Start:    e.Enter,
-		End:      e.Leave,
+		Start:    enterTime,
+		End:      leaveTime,
 	}
 	return caldavEvent, nil
 }
@@ -1113,7 +1125,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 			return
 		}
 		attachments = append(attachments, &MailAttachment{
-			Filename: "seatsurfing.ics",
+			Filename: router.getICalFilename(calDavEvent),
 			MimeType: "text/calendar",
 			Data:     buf.Bytes(),
 		})

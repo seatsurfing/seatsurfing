@@ -39,6 +39,7 @@ class LoginSuccess extends React.Component<Props, State> {
                 new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
               ),
               logoutUrl: res.json.logoutUrl,
+              profilePageUrl: res.json.profilePageUrl,
             };
             Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
               res.json.refreshToken,
