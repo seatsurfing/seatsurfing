@@ -307,5 +307,7 @@
   "workingHours": "Munkaórák",
   "yes": "yes",
   "yesterday": "Yesterday",
-  "yourDomainPlaceholder": "seatsurfing.your-domain.com"
+  "yourDomainPlaceholder": "seatsurfing.your-domain.com",
+  "manageProfile": "Manage profile",
+  "profile": "Profile"
 }
