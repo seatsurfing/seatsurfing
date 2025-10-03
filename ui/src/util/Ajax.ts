@@ -96,7 +96,8 @@ export default class Ajax {
         };
         let options: RequestInit = Ajax.getFetchOptions("POST", null, data);
         let url = Ajax.getBackendUrl() + Ajax.REFRESH_URL;
-        const oldCredentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+        const oldCredentials =
+          Ajax.PERSISTER.readCredentialsFromSessionStorage();
         fetch(url, options)
           .then((response) => {
             if (response.status >= 200 && response.status <= 299) {
