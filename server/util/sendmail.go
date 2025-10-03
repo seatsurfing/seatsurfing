@@ -19,6 +19,84 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/config"
 )
 
+// LoginAuth implements the LOGIN authentication mechanism
+type LoginAuth struct {
+	username, password string
+}
+
+func NewLoginAuth(username, password string) smtp.Auth {
+	return &LoginAuth{username, password}
+}
+
+func (a *LoginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", []byte{}, nil
+}
+
+func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		switch strings.ToLower(string(fromServer)) {
+		case "username:":
+			return []byte(a.username), nil
+		case "password:":
+			return []byte(a.password), nil
+		default:
+			// Try base64 decoded prompts (some servers send base64 encoded prompts)
+			decoded, err := base64.StdEncoding.DecodeString(string(fromServer))
+			if err == nil {
+				switch strings.ToLower(strings.TrimSpace(string(decoded))) {
+				case "username:", "user name:":
+					return []byte(a.username), nil
+				case "password:":
+					return []byte(a.password), nil
+				}
+			}
+			return nil, fmt.Errorf("unknown server challenge: %s", string(fromServer))
+		}
+	}
+	return nil, nil
+}
+
+// isM365SMTPServer checks if the SMTP host is a Microsoft 365 server
+func isM365SMTPServer(host string) bool {
+	m365Hosts := []string{
+		"smtp.office365.com",
+		"smtp-mail.outlook.com",
+		"outlook.office365.com",
+	}
+
+	host = strings.ToLower(host)
+	for _, m365Host := range m365Hosts {
+		if host == m365Host {
+			return true
+		}
+	}
+	return false
+}
+
+// getOptimalSMTPSettings returns optimal settings for the given SMTP host
+func getOptimalSMTPSettings(config *Config) (port int, startTLS bool, authMethod string) {
+	// Default settings
+	port = config.SMTPPort
+	startTLS = config.SMTPStartTLS
+	authMethod = config.SMTPAuthMethod
+
+	// M365 optimal settings
+	if isM365SMTPServer(config.SMTPHost) {
+		// Override with M365-specific settings if not explicitly configured
+		if config.SMTPPort == 25 { // Default port, likely not configured for M365
+			port = 587
+		}
+		if !config.SMTPStartTLS { // Force STARTTLS for M365
+			startTLS = true
+		}
+		if config.SMTPAuthMethod == "PLAIN" || config.SMTPAuthMethod == "" {
+			authMethod = "LOGIN" // M365 often works better with LOGIN
+		}
+	}
+
+	return port, startTLS, authMethod
+}
+
 const EmailTemplateDefaultLanguage = "en"
 
 var SendMailMockContent = ""
@@ -288,30 +366,61 @@ func acsDialAndSend(recipient, sender *MailAddress, subject, bodyPlainText, body
 
 func smtpDialAndSend(from string, to []string, msg []byte) error {
 	config := GetConfig()
-	addr := config.SMTPHost + ":" + strconv.Itoa(config.SMTPPort)
+
+	// Get optimal settings for the SMTP server
+	port, startTLS, authMethod := getOptimalSMTPSettings(config)
+	addr := config.SMTPHost + ":" + strconv.Itoa(port)
 	c, err := smtp.Dial(addr)
 	if err != nil {
 		log.Println("Error dialing SMTP server:", err)
 		return err
 	}
 	defer c.Close()
-	if config.SMTPStartTLS {
-		if ok, _ := c.Extension("STARTTLS"); ok {
-			tlsConfig := &tls.Config{
-				ServerName:         config.SMTPHost,
-				InsecureSkipVerify: config.SMTPInsecureSkipVerify,
-			}
-			if err = c.StartTLS(tlsConfig); err != nil {
-				log.Println("Error starting TLS with SMTP server:", err)
+
+	// Always check and use STARTTLS if available, especially important for M365
+	if ok, _ := c.Extension("STARTTLS"); ok {
+		tlsConfig := &tls.Config{
+			ServerName:         config.SMTPHost,
+			InsecureSkipVerify: config.SMTPInsecureSkipVerify,
+		}
+		if err = c.StartTLS(tlsConfig); err != nil {
+			log.Println("Error starting TLS with SMTP server:", err)
+			return err
+		}
+	} else if startTLS {
+		// If STARTTLS is required but not available, fail
+		log.Println("STARTTLS required but not supported by server")
+		return fmt.Errorf("STARTTLS required but not supported by server")
+	}
+
+	if config.SMTPAuth {
+		var auth smtp.Auth
+		actualAuthMethod := strings.ToUpper(authMethod)
+
+		switch actualAuthMethod {
+		case "LOGIN":
+			auth = NewLoginAuth(config.SMTPAuthUser, config.SMTPAuthPass)
+		case "PLAIN", "":
+			auth = smtp.PlainAuth("", config.SMTPAuthUser, config.SMTPAuthPass, config.SMTPHost)
+		default:
+			log.Printf("Warning: Unknown SMTP auth method '%s', falling back to PLAIN", config.SMTPAuthMethod)
+			auth = smtp.PlainAuth("", config.SMTPAuthUser, config.SMTPAuthPass, config.SMTPHost)
+		}
+
+		if err = c.Auth(auth); err != nil {
+			log.Printf("Error authenticating with SMTP server using %s method: %v", actualAuthMethod, err)
+
+			// For M365 compatibility, try LOGIN method if PLAIN fails
+			if actualAuthMethod == "PLAIN" {
+				log.Println("Retrying with LOGIN authentication method for M365 compatibility...")
+				loginAuth := NewLoginAuth(config.SMTPAuthUser, config.SMTPAuthPass)
+				if err = c.Auth(loginAuth); err != nil {
+					log.Println("Error authenticating with SMTP server using LOGIN method:", err)
+					return err
+				}
+			} else {
 				return err
 			}
-		}
-	}
-	if config.SMTPAuth {
-		auth := smtp.PlainAuth("", config.SMTPAuthUser, config.SMTPAuthPass, config.SMTPHost)
-		if err = c.Auth(auth); err != nil {
-			log.Println("Error authenticating with SMTP server:", err)
-			return err
 		}
 	}
 	if err = c.Mail(from); err != nil {
