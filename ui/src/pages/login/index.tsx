@@ -189,6 +189,7 @@ class Login extends React.Component<Props, State> {
             new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
           ),
           logoutUrl: res.json.logoutUrl,
+          profilePageUrl: "",
         };
         Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
         Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
