@@ -307,5 +307,7 @@
   "workingHours": "שעות עבודה",
   "yes": "yes",
   "yesterday": "אתמול",
-  "yourDomainPlaceholder": "seatsurfing.your-domain.com"
+  "yourDomainPlaceholder": "seatsurfing.your-domain.com",
+  "manageProfile": "Manage profile",
+  "profile": "Profile"
 }

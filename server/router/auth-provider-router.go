@@ -28,10 +28,12 @@ type CreateAuthProviderRequest struct {
 	ClientID           string `json:"clientId" validate:"required"`
 	ClientSecret       string `json:"clientSecret" validate:"required"`
 	LogoutURL          string `json:"logoutUrl"`
+	ProfilePageURL     string `json:"profilePageUrl"`
 }
 
 type GetAuthProviderResponse struct {
 	ID             string `json:"id"`
+	ReadOnly       bool   `json:"readOnly"`
 	OrganizationID string `json:"organizationId"`
 	CreateAuthProviderRequest
 }
@@ -122,6 +124,10 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if e.ReadOnly {
+		SendForbidden(w)
+		return
+	}
 	user := GetRequestUser(r)
 	if !CanAdminOrg(user, e.OrganizationID) {
 		SendForbidden(w)
@@ -130,6 +136,7 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
+	eNew.ReadOnly = e.ReadOnly
 	if err := GetAuthProviderRepository().Update(eNew); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -151,6 +158,10 @@ func (router *AuthProviderRouter) delete(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
+	if e.ReadOnly {
+		SendForbidden(w)
+		return
+	}
 	if err := GetAuthProviderRepository().Delete(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -169,6 +180,7 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 	user := GetRequestUser(r)
 	e := router.copyFromRestModel(&m)
 	e.OrganizationID = user.OrganizationID
+	e.ReadOnly = false
 	if !CanAdminOrg(user, e.OrganizationID) {
 		SendForbidden(w)
 		return
@@ -199,6 +211,7 @@ func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest
 	e.UserInfoEmailField = m.UserInfoEmailField
 	e.ProviderType = m.ProviderType
 	e.LogoutURL = m.LogoutURL
+	e.ProfilePageURL = m.ProfilePageURL
 	return e
 }
 
@@ -217,5 +230,7 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.UserInfoEmailField = e.UserInfoEmailField
 	m.ProviderType = e.ProviderType
 	m.LogoutURL = e.LogoutURL
+	m.ProfilePageURL = e.ProfilePageURL
+	m.ReadOnly = e.ReadOnly
 	return m
 }

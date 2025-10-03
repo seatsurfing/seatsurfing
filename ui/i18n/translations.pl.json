@@ -307,5 +307,7 @@
   "workingHours": "Godziny pracy",
   "yes": "tak",
   "yesterday": "Wczoraj",
-  "yourDomainPlaceholder": "seatsurfing.twoja-domena.pl"
+  "yourDomainPlaceholder": "seatsurfing.twoja-domena.pl",
+  "manageProfile": "Manage profile",
+  "profile": "Profile"
 }

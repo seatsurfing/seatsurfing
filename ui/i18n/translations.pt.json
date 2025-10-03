@@ -307,5 +307,7 @@
   "workingHours": "Horário comercial",
   "yes": "sim",
   "yesterday": "Ontem",
-  "yourDomainPlaceholder": "seatsurfing.seu-dominio.com"
+  "yourDomainPlaceholder": "seatsurfing.seu-dominio.com",
+  "manageProfile": "Manage profile",
+  "profile": "Profile"
 }

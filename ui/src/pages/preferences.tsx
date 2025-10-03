@@ -399,6 +399,9 @@ class Preferences extends React.Component<Props, State> {
       );
     }
 
+    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    const profilePageUrl = credentials.profilePageUrl;
+
     return (
       <>
         <NavBar />
@@ -418,6 +421,13 @@ class Preferences extends React.Component<Props, State> {
               </Nav.Item>
               <Nav.Item hidden={RuntimeConfig.INFOS.idpLogin}>
                 <Nav.Link eventKey="tab-security">
+                  {this.props.t("security")}
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item
+                hidden={!RuntimeConfig.INFOS.idpLogin || !profilePageUrl}
+              >
+                <Nav.Link eventKey="tab-idp">
                   {this.props.t("security")}
                 </Nav.Link>
               </Nav.Item>
@@ -670,6 +680,16 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
+            <div hidden={this.state.activeTab !== "tab-idp"}>
+              <h5 className="margin-top-15">{this.props.t("profile")}</h5>
+              <a
+                href={profilePageUrl}
+                target="_blank"
+                className="btn btn-primary"
+              >
+                {this.props.t("manageProfile")}
+              </a>
+            </div>
             <Form
               onSubmit={this.saveCaldavSettings}
               hidden={this.state.activeTab !== "tab-integrations"}
