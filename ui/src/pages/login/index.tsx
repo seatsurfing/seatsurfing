@@ -18,6 +18,7 @@ interface State {
   invalid: boolean;
   redirect: string | null;
   requirePassword: boolean;
+  disablePasswordLogin: boolean;
   providers: AuthProvider[] | null;
   inPreflight: boolean;
   inPasswordSubmit: boolean;
@@ -46,6 +47,7 @@ class Login extends React.Component<Props, State> {
       invalid: false,
       redirect: null,
       requirePassword: false,
+      disablePasswordLogin: false,
       providers: null,
       inPreflight: false,
       inPasswordSubmit: false,
@@ -78,6 +80,7 @@ class Login extends React.Component<Props, State> {
         {
           providers: res.json.authProviders,
           noPasswords: !res.json.requirePassword,
+          disablePasswordLogin: res.json.disablePasswordLogin,
           singleOrgMode: true,
           loading: false,
         },
@@ -152,6 +155,7 @@ class Login extends React.Component<Props, State> {
         this.setState({
           providers: res.json.authProviders,
           requirePassword: res.json.requirePassword,
+          disablePasswordLogin: res.json.disablePasswordLogin,
           orgDomain: res.json.domain,
           inPreflight: false,
         });
@@ -333,7 +337,7 @@ class Login extends React.Component<Props, State> {
             <h3 hidden={this.state.legacyMode}>{this.org?.name}</h3>
             {providerSelection}
             {buttons}
-            <p className="margin-top-50">
+            <p className="margin-top-50" hidden={this.state.disablePasswordLogin}>
               <Button
                 variant="link"
                 onClick={() => this.setState({ providers: null })}

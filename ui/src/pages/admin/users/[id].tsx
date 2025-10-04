@@ -270,7 +270,7 @@ class EditUser extends React.Component<Props, State> {
       changePasswordLabel = this.props.t("passwordChange");
     }
     let changePassword = (
-      <Form.Group as={Row} hidden={this.isServiceAccount(this.state.role)}>
+      <Form.Group as={Row} hidden={this.isServiceAccount(this.state.role) || RuntimeConfig.INFOS.disablePasswordLogin}>
         <Col sm="6">
           <Form.Check
             type="checkbox"
@@ -411,7 +411,7 @@ class EditUser extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           {changePassword}
-          <Form.Group as={Row}>
+          <Form.Group as={Row} hidden={RuntimeConfig.INFOS.disablePasswordLogin && !this.isServiceAccount(this.state.role)}>
             <Form.Label column sm="2">
               {this.props.t("password")}
             </Form.Label>

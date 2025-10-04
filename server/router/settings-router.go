@@ -41,12 +41,13 @@ type SettingsRouterWelcomeScreen struct {
 }
 
 var (
-	ErrAlreadyExists              = errors.New("resource already exists")
-	SysSettingOrgSignupDelete     = "_sys_org_signup_delete"
-	SysSettingVersion             = "_sys_version"
-	SysSettingAdminMenuItems      = "_sys_admin_menu_items"
-	SysSettingAdminWelcomeScreens = "_sys_admin_welcome_screens"
-	SysSettingOrgPrimaryDomain    = "_sys_org_primary_domain"
+	ErrAlreadyExists               = errors.New("resource already exists")
+	SysSettingOrgSignupDelete      = "_sys_org_signup_delete"
+	SysSettingVersion              = "_sys_version"
+	SysSettingAdminMenuItems       = "_sys_admin_menu_items"
+	SysSettingAdminWelcomeScreens  = "_sys_admin_welcome_screens"
+	SysSettingOrgPrimaryDomain     = "_sys_org_primary_domain"
+	SysSettingDisablePasswordLogin = "_sys_disable_password_login"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -89,6 +90,11 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	if vars["name"] == SysSettingOrgPrimaryDomain {
 		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(user.OrganizationID)
 		SendJSON(w, sysSettingOrgPrimaryDomain.Value)
+		return
+	}
+	if vars["name"] == SysSettingDisablePasswordLogin {
+		sysSettingDisablePasswordLogin := router.getSysSettingDisablePasswordLogin()
+		SendJSON(w, sysSettingDisablePasswordLogin.Value)
 		return
 	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
@@ -166,6 +172,7 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	}
 	res = append(res, router.getSysSettingVersion())
 	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
+	res = append(res, router.getSysSettingDisablePasswordLogin())
 	for _, plg := range plugin.GetPlugins() {
 		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
 		for _, setting := range plgSettings {
@@ -248,7 +255,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingDisableBuddies.Name ||
 		name == SettingFeatureRecurringBookings.Name ||
 		name == SysSettingOrgPrimaryDomain ||
-		name == SysSettingVersion {
+		name == SysSettingVersion ||
+		name == SysSettingDisablePasswordLogin {
 		return true
 	}
 	return false
@@ -459,6 +467,17 @@ func (router *SettingsRouter) getSysSettingVersion() *GetSettingsResponse {
 	return &GetSettingsResponse{
 		Name:  SysSettingVersion,
 		Value: GetProductVersion(),
+	}
+}
+
+func (router *SettingsRouter) getSysSettingDisablePasswordLogin() *GetSettingsResponse {
+	boolVal := "0"
+	if GetConfig().DisablePasswordLogin {
+		boolVal = "1"
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingDisablePasswordLogin,
+		Value: boolVal,
 	}
 }
 
