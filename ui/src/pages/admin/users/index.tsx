@@ -89,7 +89,9 @@ class Users extends React.Component<Props, State> {
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
         <td>{role}</td>
-        <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>{authProvider}</td>
+        <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
+          {authProvider}
+        </td>
       </tr>
     );
   };
@@ -157,7 +159,9 @@ class Users extends React.Component<Props, State> {
             <tr>
               <th>{this.props.t("username")}</th>
               <th>{this.props.t("role")}</th>
-              <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>{this.props.t("loginMeans")}</th>
+              <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
+                {this.props.t("loginMeans")}
+              </th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

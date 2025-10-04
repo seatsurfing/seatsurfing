@@ -337,7 +337,10 @@ class Login extends React.Component<Props, State> {
             <h3 hidden={this.state.legacyMode}>{this.org?.name}</h3>
             {providerSelection}
             {buttons}
-            <p className="margin-top-50" hidden={this.state.disablePasswordLogin}>
+            <p
+              className="margin-top-50"
+              hidden={this.state.disablePasswordLogin}
+            >
               <Button
                 variant="link"
                 onClick={() => this.setState({ providers: null })}
