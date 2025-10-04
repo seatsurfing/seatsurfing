@@ -52,10 +52,11 @@ type CompletePasswordResetRequest struct {
 }
 
 type AuthPreflightResponse struct {
-	Organization    *GetOrganizationResponse         `json:"organization"`
-	AuthProviders   []*GetAuthProviderPublicResponse `json:"authProviders"`
-	RequirePassword bool                             `json:"requirePassword"`
-	Domain          string                           `json:"domain"`
+	Organization         *GetOrganizationResponse         `json:"organization"`
+	AuthProviders        []*GetAuthProviderPublicResponse `json:"authProviders"`
+	RequirePassword      bool                             `json:"requirePassword"`
+	DisablePasswordLogin bool                             `json:"disablePasswordLogin"`
+	Domain               string                           `json:"domain"`
 }
 
 type AuthPasswordRequest struct {
@@ -112,6 +113,7 @@ func (router *AuthRouter) getOrgDetails(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	res.RequirePassword = requirePassword
+	res.DisablePasswordLogin = GetConfig().DisablePasswordLogin
 	SendJSON(w, res)
 }
 
@@ -146,6 +148,7 @@ func (router *AuthRouter) singleOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res.RequirePassword = requirePassword
+	res.DisablePasswordLogin = GetConfig().DisablePasswordLogin
 	SendJSON(w, res)
 }
 
@@ -185,6 +188,10 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 }
 
 func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
 	var m InitPasswordResetRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -227,6 +234,10 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 }
 
 func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
 	var m CompletePasswordResetRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -287,6 +298,7 @@ func (router *AuthRouter) preflight(w http.ResponseWriter, r *http.Request) {
 		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
 		res := router.getPreflightResponseForOrg(org)
 		res.RequirePassword = (user.HashedPassword != "")
+		res.DisablePasswordLogin = GetConfig().DisablePasswordLogin
 		SendJSON(w, res)
 		return
 	}
@@ -304,6 +316,10 @@ func (router *AuthRouter) preflight(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
 	var m AuthPasswordRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -732,8 +748,9 @@ func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPre
 				Name: org.Name,
 			},
 		},
-		RequirePassword: false,
-		AuthProviders:   []*GetAuthProviderPublicResponse{},
+		RequirePassword:      false,
+		DisablePasswordLogin: GetConfig().DisablePasswordLogin,
+		AuthProviders:        []*GetAuthProviderPublicResponse{},
 	}
 	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
 	if domain != nil && err == nil {

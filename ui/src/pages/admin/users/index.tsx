@@ -10,6 +10,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import AuthProvider from "@/types/AuthProvider";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   selectedItem: string;
@@ -88,7 +89,9 @@ class Users extends React.Component<Props, State> {
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
         <td>{role}</td>
-        <td>{authProvider}</td>
+        <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
+          {authProvider}
+        </td>
       </tr>
     );
   };
@@ -156,7 +159,9 @@ class Users extends React.Component<Props, State> {
             <tr>
               <th>{this.props.t("username")}</th>
               <th>{this.props.t("role")}</th>
-              <th>{this.props.t("loginMeans")}</th>
+              <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
+                {this.props.t("loginMeans")}
+              </th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

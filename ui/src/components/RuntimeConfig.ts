@@ -32,6 +32,7 @@ interface RuntimeUserInfos {
   cloudHosted: boolean;
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
+  disablePasswordLogin: boolean;
 }
 
 export default class RuntimeConfig {
@@ -66,6 +67,7 @@ export default class RuntimeConfig {
     cloudHosted: false,
     subscriptionActive: false,
     orgPrimaryDomain: "",
+    disablePasswordLogin: false,
   };
 
   static verifyToken = async (resolve: Function) => {
@@ -163,6 +165,8 @@ export default class RuntimeConfig {
               : [];
           if (s.name === "_sys_org_primary_domain")
             RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
+          if (s.name === "_sys_disable_password_login")
+            RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
         });
         resolve();
       });

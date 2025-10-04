@@ -51,6 +51,7 @@ type Config struct {
 	ValkeyUsername                      string
 	ValkeyPassword                      string
 	DNSServer                           string // DNS server address for custom resolver
+	DisablePasswordLogin                bool   // Disable password login for all users (only allow OAuth2 and SSO)
 }
 
 var _configInstance *Config
@@ -137,6 +138,7 @@ func (c *Config) ReadConfig() {
 			c.DNSServer += ":53" // Default DNS port
 		}
 	}
+	c.DisablePasswordLogin = (c.getEnv("DISABLE_PASSWORD_LOGIN", "0") == "1")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
