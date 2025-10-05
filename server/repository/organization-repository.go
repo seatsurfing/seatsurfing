@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -272,10 +273,19 @@ func (r *OrganizationRepository) Update(e *Organization) error {
 		"name = $1, contact_firstname = $2, contact_lastname = $3, contact_email = $4, language = $5, signup_date = $6 "+
 		"WHERE id = $7",
 		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate, e.ID)
-	return err
+	if err != nil {
+		return err
+	}
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnOrganizationUpdated(e.ID)
+	}
+	return nil
 }
 
 func (r *OrganizationRepository) Delete(e *Organization) error {
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnBeforeOrganizationDelete(e.ID)
+	}
 	if err := GetAuthProviderRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
