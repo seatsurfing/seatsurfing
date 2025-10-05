@@ -229,14 +229,17 @@ class Login extends React.Component<Props, State> {
 
     if (this.state.domainNotFound) {
       return (
-      <div className="container-signin">
-        <Form className="form-signin">
-          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
-          <h3>Domain not found.</h3>
-          <p>Please make sure your domain name is set up correctly in Seatsurfing's settings.</p>
-          <p>If you believe this is an error, please contact support.</p>
-        </Form>
-      </div>
+        <div className="container-signin">
+          <Form className="form-signin">
+            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <h3>Domain not found.</h3>
+            <p>
+              Please make sure your domain name is set up correctly in
+              Seatsurfing's settings.
+            </p>
+            <p>If you believe this is an error, please contact support.</p>
+          </Form>
+        </div>
       );
     }
 
