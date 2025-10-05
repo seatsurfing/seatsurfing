@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -138,6 +139,9 @@ func (r *UserRepository) Create(e *User) error {
 	}
 	e.ID = id
 	GetUserPreferencesRepository().InitDefaultSettingsForUser(e.ID)
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnUserCreated(e.ID)
+	}
 	return nil
 }
 
@@ -344,10 +348,19 @@ func (r *UserRepository) Update(e *User) error {
 		"ban_expiry = $8 "+
 		"WHERE id = $9",
 		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.ID)
-	return err
+	if err != nil {
+		return err
+	}
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnUserUpdated(e.ID)
+	}
+	return nil
 }
 
 func (r *UserRepository) Delete(e *User) error {
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnBeforeUserDelete(e.ID)
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
 		"bookings.user_id = $1", e.ID); err != nil {
 		return err

@@ -9,6 +9,11 @@ type SeatsurfingPlugin interface {
 	OnInit()
 	GetAdminWelcomeScreen() *AdminWelcomeScreen
 	GetPublicSettings(organizationID string) []*PluginSetting
+	OnUserCreated(userID string)
+	OnUserUpdated(userID string)
+	OnBeforeUserDelete(userID string)
+	OnOrganizationUpdated(organizationID string)
+	OnBeforeOrganizationDelete(organizationID string)
 }
 
 type AdminUIMenuItem struct {
