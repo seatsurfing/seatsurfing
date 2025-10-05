@@ -38,10 +38,6 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-type AuthPreflightRequest struct {
-	Email string `json:"email" validate:"required,email"`
-}
-
 type InitPasswordResetRequest struct {
 	OrganizationID string `json:"organizationId" validate:"required"`
 	Email          string `json:"email" validate:"required,email"`
@@ -82,7 +78,6 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/verify/{id}", router.verify).Methods("GET")
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
-	s.HandleFunc("/preflight", router.preflight).Methods("POST")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
 	s.HandleFunc("/initpwreset", router.initPasswordReset).Methods("POST")
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
@@ -274,45 +269,6 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
 	SendUpdated(w)
-}
-
-func (router *AuthRouter) preflight(w http.ResponseWriter, r *http.Request) {
-	var m AuthPreflightRequest
-	if UnmarshalValidateBody(r, &m) != nil {
-		SendBadRequest(w)
-		return
-	}
-
-	// Check if user exists.
-	// If so, return preflight response with requirePassword set to true if user has a password set.
-	users, err := GetUserRepository().GetUsersWithEmail(m.Email)
-	if err != nil {
-		SendInternalServerError(w)
-		return
-	}
-	var user *User = nil
-	if len(users) > 0 {
-		user = users[0]
-	}
-	if user != nil {
-		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
-		res := router.getPreflightResponseForOrg(org)
-		res.RequirePassword = (user.HashedPassword != "")
-		res.DisablePasswordLogin = GetConfig().DisablePasswordLogin
-		SendJSON(w, res)
-		return
-	}
-
-	// If the user doesn't exist, check if the email domain is associated with an organization.
-	org := router.getOrgForEmail(m.Email)
-	if org != nil {
-		res := router.getPreflightResponseForOrg(org)
-		SendJSON(w, res)
-		return
-	}
-
-	// If neither user nor org for domain exists, return 404.
-	SendNotFound(w)
 }
 
 func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) {
