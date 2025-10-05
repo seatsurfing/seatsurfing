@@ -20,14 +20,13 @@ interface State {
   requirePassword: boolean;
   disablePasswordLogin: boolean;
   providers: AuthProvider[] | null;
-  inPreflight: boolean;
   inPasswordSubmit: boolean;
   inAuthProviderLogin: boolean;
   singleOrgMode: boolean;
   noPasswords: boolean;
   loading: boolean;
   orgDomain: string;
-  legacyMode: boolean;
+  domainNotFound: boolean;
 }
 
 interface Props {
@@ -49,14 +48,13 @@ class Login extends React.Component<Props, State> {
       requirePassword: false,
       disablePasswordLogin: false,
       providers: null,
-      inPreflight: false,
       inPasswordSubmit: false,
       inAuthProviderLogin: false,
       singleOrgMode: false,
       noPasswords: false,
       loading: true,
       orgDomain: "",
-      legacyMode: false,
+      domainNotFound: false,
     };
   }
 
@@ -119,51 +117,9 @@ class Login extends React.Component<Props, State> {
         this.applyOrg(res);
       })
       .catch(() => {
-        const domain = window.location.host.split(":").shift();
-        const legacyMode =
-          domain === "app.seatsurfing.io" ||
-          (domain === "localhost" &&
-            process.env.NODE_ENV.toLowerCase() === "development");
-        if (!legacyMode && domain?.endsWith(".seatsurfing.app")) {
-          this.props.router.push("/404");
-          return;
-        }
         this.setState({
+          domainNotFound: true,
           loading: false,
-          legacyMode: legacyMode,
-        });
-      });
-  };
-
-  onLegacySubmit = (e: any) => {
-    e.preventDefault();
-    const email = this.state.email.split("@");
-    if (email.length !== 2) {
-      // Error
-      return;
-    }
-    this.setState({
-      inPreflight: true,
-    });
-    const payload = {
-      email: this.state.email,
-    };
-    Ajax.postData("/auth/preflight", payload)
-      .then((res) => {
-        this.org = new Organization();
-        this.org.deserialize(res.json.organization);
-        this.setState({
-          providers: res.json.authProviders,
-          requirePassword: res.json.requirePassword,
-          disablePasswordLogin: res.json.disablePasswordLogin,
-          orgDomain: res.json.domain,
-          inPreflight: false,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          invalid: true,
-          inPreflight: false,
         });
       });
   };
@@ -271,44 +227,16 @@ class Login extends React.Component<Props, State> {
       </div>
     );
 
-    let legacyAlert = <></>;
-    if (this.state.legacyMode) {
-      legacyAlert = (
-        <Alert variant="warning">
-          <p>
-            Great news! Your organization now has its own unique Seatsurfing
-            domain 🚀
-          </p>
-          <p>Please use the new login page and update your bookmarks:</p>
-          <p>
-            <a
-              style={{ fontWeight: "bold" }}
-              href={
-                "https://" +
-                this.state.orgDomain +
-                "/ui/login?email=" +
-                encodeURIComponent(this.state.email)
-              }
-            >
-              {this.state.orgDomain}
-            </a>
-          </p>
-        </Alert>
-      );
-    }
-
-    if (
-      this.state.legacyMode &&
-      (this.state.requirePassword || this.state.providers != null)
-    ) {
+    if (this.state.domainNotFound) {
       return (
-        <div className="container-signin">
-          <Form className="form-signin">
-            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
-            {legacyAlert}
-          </Form>
-          {copyrightFooter}
-        </div>
+      <div className="container-signin">
+        <Form className="form-signin">
+          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <h3>Domain not found.</h3>
+          <p>Please make sure your domain name is set up correctly in Seatsurfing's settings.</p>
+          <p>If you believe this is an error, please contact support.</p>
+        </Form>
+      </div>
       );
     }
 
@@ -334,7 +262,7 @@ class Login extends React.Component<Props, State> {
         <div className="container-signin">
           <Form className="form-signin">
             <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
-            <h3 hidden={this.state.legacyMode}>{this.org?.name}</h3>
+            <h3>{this.org?.name}</h3>
             {providerSelection}
             {buttons}
             <p
@@ -347,45 +275,6 @@ class Login extends React.Component<Props, State> {
               >
                 {this.props.t("loginUseUsernamePassword")}
               </Button>
-            </p>
-          </Form>
-          {copyrightFooter}
-        </div>
-      );
-    }
-
-    if (this.state.legacyMode) {
-      return (
-        <div className="container-signin">
-          <Form className="form-signin" onSubmit={this.onLegacySubmit}>
-            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
-            <h3>{this.props.t("findYourPlace")}</h3>
-            <InputGroup>
-              <Form.Control
-                type="email"
-                readOnly={this.state.inPreflight}
-                placeholder={this.props.t("emailPlaceholder")}
-                value={this.state.email}
-                onChange={(e: any) =>
-                  this.setState({ email: e.target.value, invalid: false })
-                }
-                required={true}
-                isInvalid={this.state.invalid}
-                autoFocus={true}
-              />
-              <Button variant="primary" type="submit">
-                {this.state.inPreflight ? (
-                  <Loading showText={false} paddingTop={false} />
-                ) : (
-                  <div className="feather-btn">&#10148;</div>
-                )}
-              </Button>
-            </InputGroup>
-            <Form.Control.Feedback type="invalid">
-              {this.props.t("errorInvalidEmail")}
-            </Form.Control.Feedback>
-            <p className="margin-top-50" hidden={!this.org}>
-              <Link href="/resetpw">{this.props.t("forgotPassword")}</Link>
             </p>
           </Form>
           {copyrightFooter}
