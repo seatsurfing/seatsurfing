@@ -36,7 +36,7 @@ class AdminNavBar extends React.Component<Props, State> {
       return;
     }
     this.setState({
-      redirect: "/login",
+      redirect: "/login?noredirect=1",
     });
   };
 

@@ -83,7 +83,9 @@ class Login extends React.Component<Props, State> {
           loading: false,
         },
         () => {
+          const noRedirect = this.props.router.query["noredirect"];
           if (
+            noRedirect !== "1" &&
             this.state.noPasswords &&
             this.state.providers &&
             this.state.providers.length === 1
