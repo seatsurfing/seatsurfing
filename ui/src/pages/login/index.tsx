@@ -235,7 +235,7 @@ class Login extends React.Component<Props, State> {
             <h3>Domain not found.</h3>
             <p>
               Please make sure your domain name is set up correctly in
-              Seatsurfing's settings.
+              Seatsurfing&#39;s settings.
             </p>
             <p>If you believe this is an error, please contact support.</p>
           </Form>
