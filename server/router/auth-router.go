@@ -107,6 +107,9 @@ func (router *AuthRouter) getOrgDetails(w http.ResponseWriter, r *http.Request) 
 		SendInternalServerError(w)
 		return
 	}
+	if requirePassword && GetConfig().DisablePasswordLogin {
+		requirePassword = false
+	}
 	res.RequirePassword = requirePassword
 	res.DisablePasswordLogin = GetConfig().DisablePasswordLogin
 	SendJSON(w, res)
@@ -141,6 +144,9 @@ func (router *AuthRouter) singleOrg(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		SendInternalServerError(w)
 		return
+	}
+	if requirePassword && GetConfig().DisablePasswordLogin {
+		requirePassword = false
 	}
 	res.RequirePassword = requirePassword
 	res.DisablePasswordLogin = GetConfig().DisablePasswordLogin
