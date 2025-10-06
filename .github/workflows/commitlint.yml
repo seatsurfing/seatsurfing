@@ -15,4 +15,4 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install Dependencies
         run: npm install @commitlint/config-conventional@16.0.0
-      - uses: JulienKode/pull-request-name-linter-action@v19.0.0
+      - uses: JulienKode/pull-request-name-linter-action@v20.1.0
