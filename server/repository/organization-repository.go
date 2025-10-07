@@ -154,6 +154,9 @@ func (r *OrganizationRepository) Create(e *Organization) error {
 	}
 	e.ID = id
 	GetSettingsRepository().InitDefaultSettingsForOrg(e.ID)
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnOrganizationCreated(e.ID)
+	}
 	return nil
 }
 

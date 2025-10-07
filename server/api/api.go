@@ -12,6 +12,7 @@ type SeatsurfingPlugin interface {
 	OnUserCreated(userID string)
 	OnUserUpdated(userID string)
 	OnBeforeUserDelete(userID string)
+	OnOrganizationCreated(organizationID string)
 	OnOrganizationUpdated(organizationID string)
 	OnBeforeOrganizationDelete(organizationID string)
 }
