@@ -89,7 +89,7 @@ class ConfirmSignup extends React.Component<Props, State> {
       <div className="container-center">
         <div className="container-center-inner">
           <img
-            src="/admin/seatsurfing.svg"
+            src="/ui/seatsurfing.svg"
             alt="Seatsurfing"
             className="logo"
           />
