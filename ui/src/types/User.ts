@@ -14,6 +14,8 @@ export default class User extends Entity {
 
   id: string;
   email: string;
+  firstname: string;
+  lastname: string;
   atlassianId: string;
   organizationId: string;
   organization: Organization;
@@ -30,6 +32,8 @@ export default class User extends Entity {
     super();
     this.id = "";
     this.email = "";
+    this.firstname = "";
+    this.lastname = "";
     this.atlassianId = "";
     this.organizationId = "";
     this.organization = new Organization();
@@ -46,6 +50,8 @@ export default class User extends Entity {
   serialize(): Object {
     return Object.assign(super.serialize(), {
       email: this.email,
+      firstname: this.firstname,
+      lastname: this.lastname,
       role: this.role,
       password: this.password,
       organizationId: this.organizationId,
@@ -55,6 +61,8 @@ export default class User extends Entity {
   deserialize(input: any): void {
     super.deserialize(input);
     this.email = input.email;
+    this.firstname = input.firstname;
+    this.lastname = input.lastname;
     this.organizationId = input.organizationId;
     if (input.organization) {
       this.organization.deserialize(input.organization);

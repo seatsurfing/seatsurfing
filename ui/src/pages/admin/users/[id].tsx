@@ -26,6 +26,8 @@ interface State {
   error: boolean;
   goBack: boolean;
   email: string;
+  firstname: string;
+  lastname: string;
   requirePassword: boolean;
   password: string;
   changePassword: boolean;
@@ -54,6 +56,8 @@ class EditUser extends React.Component<Props, State> {
       error: false,
       goBack: false,
       email: "",
+      firstname: "",
+      lastname: "",
       requirePassword: false,
       password: "",
       changePassword: false,
@@ -99,6 +103,8 @@ class EditUser extends React.Component<Props, State> {
         this.entity = user;
         this.setState({
           email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
           requirePassword: user.requirePassword,
           role: user.role,
         });
@@ -116,6 +122,8 @@ class EditUser extends React.Component<Props, State> {
       saved: false,
     });
     this.entity.email = this.state.email;
+    this.entity.firstname = this.state.firstname;
+    this.entity.lastname = this.state.lastname;
     this.entity.role = this.state.role;
     this.entity
       .save()
@@ -385,6 +393,38 @@ class EditUser extends React.Component<Props, State> {
                 placeholder="some@domain.com"
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
+                required={true}
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("firstname")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="firstname"
+                placeholder=""
+                value={this.state.firstname}
+                onChange={(e: any) =>
+                  this.setState({ firstname: e.target.value })
+                }
+                required={true}
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("lastname")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="lastname"
+                placeholder=""
+                value={this.state.lastname}
+                onChange={(e: any) =>
+                  this.setState({ lastname: e.target.value })
+                }
                 required={true}
               />
             </Col>
