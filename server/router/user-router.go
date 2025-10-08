@@ -17,6 +17,8 @@ type UserRouter struct {
 
 type CreateUserRequest struct {
 	Email          string `json:"email" validate:"required"`
+	Firstname      string `json:"firstname" validate:"required"`
+	Lastname       string `json:"lastname" validate:"required"`
 	AtlassianID    string `json:"atlassianId"`
 	Role           int    `json:"role"`
 	AuthProviderID string `json:"authProviderId"`
@@ -390,6 +392,8 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 	e := &User{}
 	e.Email = m.Email
+	e.Firstname = m.Firstname
+	e.Lastname = m.Lastname
 	e.Role = UserRole(m.Role)
 	if m.Password != "" {
 		e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
@@ -406,6 +410,8 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
 	m.Email = e.Email
+	m.Firstname = e.Firstname
+	m.Lastname = e.Lastname
 	m.AtlassianID = string(e.AtlassianID)
 	m.Role = int(e.Role)
 	m.SpaceAdmin = GetUserRepository().IsSpaceAdmin(e)

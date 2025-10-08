@@ -23,7 +23,7 @@ func TestUserCRUD(t *testing.T) {
 
 	// 1. Create
 	username := uuid.New().String() + "@test.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -36,6 +36,8 @@ func TestUserCRUD(t *testing.T) {
 	var resBody *GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestString(t, username, resBody.Email)
+	CheckTestString(t, "John", resBody.Firstname)
+	CheckTestString(t, "Doe", resBody.Lastname)
 	CheckTestString(t, org.ID, resBody.OrganizationID)
 	CheckTestString(t, "", resBody.AuthProviderID)
 	CheckTestBool(t, true, resBody.RequirePassword)
@@ -46,7 +48,7 @@ func TestUserCRUD(t *testing.T) {
 
 	// 3. Update
 	username = uuid.New().String() + "@test.com"
-	payload = "{\"email\": \"" + username + "\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"John2\", \"lastname\": \"Doe2\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
 	req = NewHTTPRequest("PUT", "/user/"+userID, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -58,6 +60,8 @@ func TestUserCRUD(t *testing.T) {
 	var resBody2 *GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
 	CheckTestString(t, username, resBody2.Email)
+	CheckTestString(t, "John2", resBody2.Firstname)
+	CheckTestString(t, "Doe2", resBody2.Lastname)
 	CheckTestString(t, org.ID, resBody2.OrganizationID)
 	CheckTestString(t, "", resBody2.AuthProviderID)
 	CheckTestBool(t, true, resBody2.RequirePassword)
@@ -85,7 +89,7 @@ func TestUserForbidden(t *testing.T) {
 
 	// 1. Create
 	username := uuid.New().String() + "@test.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\"}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\"}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
@@ -132,7 +136,7 @@ func TestUserSubscriptionExceeded(t *testing.T) {
 
 	for i := 1; i <= DefaultUserLimit; i++ {
 		username := uuid.New().String() + "@test.com"
-		payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\"}"
+		payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"firstname\": \"John\", \"lastname\": \"Doe\"}"
 		req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 		res := ExecuteTestRequest(req)
 		if i < DefaultUserLimit {
@@ -218,7 +222,7 @@ func TestUserCreateForeignOrgSuperAdmin(t *testing.T) {
 	loginResponse := LoginTestUser(superAdmin.ID)
 
 	username := uuid.New().String() + "@test2.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"organizationId\": \"" + org2.ID + "\"}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"organizationId\": \"" + org2.ID + "\"}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -232,7 +236,7 @@ func TestUserCreateForeignOrgOrgAdmin(t *testing.T) {
 	loginResponse := LoginTestUser(admin.ID)
 
 	username := uuid.New().String() + "@test.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"organizationId\": \"" + org2.ID + "\"}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"organizationId\": \"" + org2.ID + "\"}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
@@ -245,7 +249,7 @@ func TestUserForeignEmail(t *testing.T) {
 	loginResponse := LoginTestUser(user.ID)
 
 	username := uuid.New().String() + "@gmail.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -259,12 +263,12 @@ func TestUserDuplicateSameOrg(t *testing.T) {
 
 	username := uuid.New().String() + "@gmail.com"
 
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
-	payload = "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req = NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
@@ -280,13 +284,13 @@ func TestUserDuplicateDifferentOrg(t *testing.T) {
 	username := uuid.New().String() + "@gmail.com"
 
 	loginResponse1 := LoginTestUser(user1.ID)
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse1.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	loginResponse2 := LoginTestUser(user2.ID)
-	payload = "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req = NewHTTPRequest("POST", "/user/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -301,18 +305,18 @@ func TestUserUpdateCreatesDuplicate(t *testing.T) {
 	username1 := uuid.New().String() + "@gmail.com"
 	username2 := uuid.New().String() + "@gmail.com"
 
-	payload := "{\"email\": \"" + username1 + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username1 + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
-	payload = "{\"email\": \"" + username2 + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload = "{\"email\": \"" + username2 + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req = NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	userID2 := res.Header().Get("X-Object-Id")
 
-	payload = "{\"email\": \"" + username1 + "\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
+	payload = "{\"email\": \"" + username1 + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
 	req = NewHTTPRequest("PUT", "/user/"+userID2, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
@@ -327,7 +331,7 @@ func TestUserCreateInOwnOrgsVerifiedDomain(t *testing.T) {
 
 	username := uuid.New().String() + "@gmail.com"
 
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -373,7 +377,7 @@ func TestUserCreateWithServiceAccount(t *testing.T) {
 	CreateTestUserInOrg(org)
 
 	username := uuid.New().String() + "@test.com"
-	payload := "{\"email\": \"" + username + "\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
 	req, _ := http.NewRequest("POST", "/user/", bytes.NewBufferString(payload))
 	req.SetBasicAuth(org.ID+"_sa@test.com", "12345678")
 	res := ExecuteTestRequest(req)

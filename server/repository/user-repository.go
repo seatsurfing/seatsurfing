@@ -35,6 +35,8 @@ type User struct {
 	ID             string
 	OrganizationID string
 	Email          string
+	Firstname      string
+	Lastname       string
 	AtlassianID    NullString
 	HashedPassword NullString
 	AuthProviderID NullString
@@ -125,15 +127,22 @@ func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 26 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
+			"ADD COLUMN IF NOT EXISTS firstname VARCHAR NOT NULL DEFAULT '', " +
+			"ADD COLUMN IF NOT EXISTS lastname VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *UserRepository) Create(e *User) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO users "+
-		"(organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "+
+		"(organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) "+
 		"RETURNING id",
-		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry).Scan(&id)
+		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -147,10 +156,10 @@ func (r *UserRepository) Create(e *User) error {
 
 func (r *UserRepository) GetOne(id string) (*User, error) {
 	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		id).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 	if err != nil {
 		return nil, err
 	}
@@ -159,10 +168,10 @@ func (r *UserRepository) GetOne(id string) (*User, error) {
 
 func (r *UserRepository) GetByEmail(organizationID string, email string) (*User, error) {
 	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE LOWER(email) = $1 AND organization_id = $2",
-		strings.ToLower(email), organizationID).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		strings.ToLower(email), organizationID).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +180,7 @@ func (r *UserRepository) GetByEmail(organizationID string, email string) (*User,
 
 func (r *UserRepository) GetUsersWithEmail(email string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE LOWER(email) = $1",
 		strings.ToLower(email))
@@ -181,7 +190,7 @@ func (r *UserRepository) GetUsersWithEmail(email string) ([]*User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 		if err != nil {
 			return nil, err
 		}
@@ -192,10 +201,10 @@ func (r *UserRepository) GetUsersWithEmail(email string) ([]*User, error) {
 
 func (r *UserRepository) GetByAtlassianID(atlassianID string) (*User, error) {
 	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE LOWER(atlassian_id) = $1",
-		strings.ToLower(atlassianID)).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		strings.ToLower(atlassianID)).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +213,7 @@ func (r *UserRepository) GetByAtlassianID(atlassianID string) (*User, error) {
 
 func (r *UserRepository) GetUsersWithAtlassianID(organizationID string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE organization_id = $1 AND (atlassian_id IS NOT NULL OR atlassian_id != '') "+
 		"ORDER BY email", organizationID)
@@ -214,7 +223,7 @@ func (r *UserRepository) GetUsersWithAtlassianID(organizationID string) ([]*User
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 		if err != nil {
 			return nil, err
 		}
@@ -242,7 +251,7 @@ func (r *UserRepository) UpdateAtlassianClientID(organizationID, oldClientID, ne
 
 func (r *UserRepository) GetByKeyword(organizationID string, keyword string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE organization_id = $1 AND LOWER(email) LIKE '%' || $2 || '%' "+
 		"ORDER BY email", organizationID, strings.ToLower(keyword))
@@ -252,7 +261,7 @@ func (r *UserRepository) GetByKeyword(organizationID string, keyword string) ([]
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +272,7 @@ func (r *UserRepository) GetByKeyword(organizationID string, keyword string) ([]
 
 func (r *UserRepository) GetAll(organizationID string, maxResults int, offset int) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY email "+
@@ -274,7 +283,7 @@ func (r *UserRepository) GetAll(organizationID string, maxResults int, offset in
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 		if err != nil {
 			return nil, err
 		}
@@ -285,7 +294,7 @@ func (r *UserRepository) GetAll(organizationID string, maxResults int, offset in
 
 func (r *UserRepository) GetAllByIDs(userIDs []string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname "+
 		"FROM users "+
 		"WHERE id = ANY($1) "+
 		"ORDER BY email",
@@ -296,7 +305,7 @@ func (r *UserRepository) GetAllByIDs(userIDs []string) ([]*User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.Role, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname)
 		if err != nil {
 			return nil, err
 		}
@@ -345,9 +354,11 @@ func (r *UserRepository) Update(e *User) error {
 		"auth_provider_id = $5, "+
 		"atlassian_id = $6, "+
 		"disabled = $7, "+
-		"ban_expiry = $8 "+
-		"WHERE id = $9",
-		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.ID)
+		"ban_expiry = $8, "+
+		"firstname = $9, "+
+		"lastname = $10 "+
+		"WHERE id = $11",
+		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, e.ID)
 	if err != nil {
 		return err
 	}
