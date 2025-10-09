@@ -101,7 +101,7 @@ func (r *BookingRepository) Create(e *Booking) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
 		"(user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, created_at_utc) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) "+
 		"RETURNING id",
 		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), time.Now().UTC()).Scan(&id)
 	if err != nil {
