@@ -182,6 +182,19 @@ func (r *LocationRepository) DeleteAll(organizationID string) error {
 		")", organizationID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings WHERE "+
+		"recurring_bookings.space_id IN (SELECT spaces.id FROM spaces WHERE "+
+		"spaces.location_id IN (SELECT locations.id FROM locations WHERE locations.organization_id = $1)"+
+		")", organizationID); err != nil {
+		return err
+	}
+	// Delete space attribute values for locations to be deleted
+	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE attribute_id IN (SELECT id FROM space_attributes WHERE organization_id = $1)", organizationID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attributes WHERE organization_id = $1", organizationID); err != nil {
+		return err
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces WHERE spaces.location_id IN (SELECT locations.id FROM locations WHERE locations.organization_id = $1)", organizationID); err != nil {
 		return err
 	}

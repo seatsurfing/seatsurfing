@@ -292,12 +292,17 @@ func (r *OrganizationRepository) Delete(e *Organization) error {
 	if err := GetAuthProviderRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
+	// Delete recurring_bookings, bookings, spaces, locations
 	if err := GetLocationRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
 	if err := GetSettingsRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
+	if err := GetGroupRepository().DeleteAll(e.ID); err != nil {
+		return err
+	}
+	// Delete users, buddies, users_preferences, users_groups, refresh_tokens
 	if err := GetUserRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}

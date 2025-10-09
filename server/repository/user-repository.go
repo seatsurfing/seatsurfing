@@ -376,6 +376,10 @@ func (r *UserRepository) Delete(e *User) error {
 		"bookings.user_id = $1", e.ID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings WHERE "+
+		"recurring_bookings.user_id = $1", e.ID); err != nil {
+		return err
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE "+
 		"user_id = $1", e.ID); err != nil {
 		return err
@@ -393,6 +397,24 @@ func (r *UserRepository) Delete(e *User) error {
 }
 
 func (r *UserRepository) DeleteAll(organizationID string) error {
+	if _, err := GetDatabase().DB().Exec("DELETE FROM buddies "+
+		"WHERE owner_id IN (SELECT id FROM users WHERE organization_id = $1) OR "+
+		"buddy_id IN (SELECT id FROM users WHERE organization_id = $1)", organizationID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM users_preferences WHERE "+
+		"user_id IN (SELECT id FROM users WHERE organization_id = $1)", organizationID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE "+
+		"user_id IN (SELECT id FROM users WHERE organization_id = $1)", organizationID); err != nil {
+		return err
+	}
+	// Also delete refresh tokens
+	if _, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE "+
+		"user_id IN (SELECT id FROM users WHERE organization_id = $1)", organizationID); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM users WHERE organization_id = $1", organizationID)
 	return err
 }
