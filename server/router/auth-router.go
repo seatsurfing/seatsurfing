@@ -177,6 +177,9 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		SendNotFound(w)
 		return
 	}
+	now := time.Now().UTC()
+	user.LastActivityAtUTC = &now
+	GetUserRepository().Update(user)
 	claims := router.createClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	newRefreshToken := router.createRefreshToken(claims)
@@ -310,6 +313,9 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
+	now := time.Now().UTC()
+	user.LastActivityAtUTC = &now
+	GetUserRepository().Update(user)
 	claims := router.createClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
@@ -416,6 +422,9 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	}
 	GetAuthStateRepository().Delete(authState)
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
+	now := time.Now().UTC()
+	user.LastActivityAtUTC = &now
+	GetUserRepository().Update(user)
 	claims := router.createClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)

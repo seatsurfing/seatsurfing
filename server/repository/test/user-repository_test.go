@@ -109,3 +109,35 @@ func TestDeleteObsoleteConfluenceAnonymousUsers(t *testing.T) {
 	}
 	CheckTestBool(t, false, invalid)
 }
+
+func TestUsersLastActivity(t *testing.T) {
+	ClearTestDB()
+
+	// Create
+	user := &User{
+		Email:             uuid.New().String() + "@test.com",
+		OrganizationID:    "73980078-f4d7-40ff-9211-a7bcbf8d1981",
+		LastActivityAtUTC: nil,
+	}
+	GetUserRepository().Create(user)
+	CheckStringNotEmpty(t, user.ID)
+
+	// Read
+	user2, err := GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, user2.LastActivityAtUTC == nil)
+
+	// Update
+	t1 := time.Now().Add(-10 * time.Minute).UTC()
+	user2.LastActivityAtUTC = &t1
+	err = GetUserRepository().Update(user2)
+	CheckTestBool(t, true, err == nil)
+
+	// Read
+	user3, err := GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, user3.LastActivityAtUTC != nil)
+	if user3.LastActivityAtUTC != nil {
+		CheckTestBool(t, true, user3.LastActivityAtUTC.Equal(t1))
+	}
+}
