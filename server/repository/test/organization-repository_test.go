@@ -8,6 +8,38 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
 
+func TestOrganizationsCRUD(t *testing.T) {
+	ClearTestDB()
+	org := &Organization{
+		Name:             "Test Org",
+		ContactFirstname: "Alice",
+		ContactLastname:  "Bob",
+		ContactEmail:     "alice@bob.test",
+		Language:         "en",
+		SignupDate:       time.Now(),
+	}
+	err := GetOrganizationRepository().Create(org)
+	CheckTestBool(t, true, err == nil)
+
+	org2, err := GetOrganizationRepository().GetOne(org.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, org != nil)
+	CheckTestString(t, org.ID, org2.ID)
+	CheckTestString(t, "Test Org", org2.Name)
+
+	org2.Name = "New Name"
+	err = GetOrganizationRepository().Update(org2)
+	CheckTestBool(t, true, err == nil)
+
+	org3, err := GetOrganizationRepository().GetOne(org.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, org3 != nil)
+	CheckTestString(t, "New Name", org3.Name)
+
+	err = GetOrganizationRepository().Delete(org)
+	CheckTestBool(t, true, err == nil)
+}
+
 func TestOrganizationsGetAllDaysPassedSinceSignupPositive(t *testing.T) {
 	ClearTestDB()
 	CreateTestOrg("test1.com")
