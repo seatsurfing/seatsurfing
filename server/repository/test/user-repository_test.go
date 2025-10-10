@@ -128,7 +128,7 @@ func TestUsersLastActivity(t *testing.T) {
 	CheckTestBool(t, true, user2.LastActivityAtUTC == nil)
 
 	// Update
-	t1 := time.Now().Add(-10 * time.Minute).UTC()
+	t1 := time.Now().Add(-10 * time.Minute).UTC().Truncate(time.Second)
 	user2.LastActivityAtUTC = &t1
 	err = GetUserRepository().Update(user2)
 	CheckTestBool(t, true, err == nil)
