@@ -26,7 +26,7 @@ type Booking struct {
 	Approved     bool
 	Subject      string
 	RecurringID  NullUUID
-	CreatedAtUTC time.Time
+	CreatedAtUTC *time.Time
 }
 
 type BookingDetails struct {
@@ -91,7 +91,7 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 	if curVersion < 27 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
-			"ADD COLUMN IF NOT EXISTS created_at_utc TIMESTAMP NOT NULL DEFAULT '2020-01-01 00:00:00'"); err != nil {
+			"ADD COLUMN IF NOT EXISTS created_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
 	}
