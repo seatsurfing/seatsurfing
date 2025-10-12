@@ -1,5 +1,60 @@
 # Changelog
 
+## [1.44.0](https://github.com/seatsurfing/seatsurfing/compare/v1.43.1...v1.44.0) (2025-10-12)
+
+
+### Features
+
+* add ability to disable password login ([#1352](https://github.com/seatsurfing/seatsurfing/issues/1352)) ([2c38823](https://github.com/seatsurfing/seatsurfing/commit/2c38823e30ef24d25ff26ea8e990e2eca158f166))
+* add created timestamp to bookings ([#1373](https://github.com/seatsurfing/seatsurfing/issues/1373)) ([5a1c4f6](https://github.com/seatsurfing/seatsurfing/commit/5a1c4f6b4374a3ff0159350d1979f3202f0b8e50))
+* add icon to language selectors ([#1351](https://github.com/seatsurfing/seatsurfing/issues/1351)) ([46ff1cb](https://github.com/seatsurfing/seatsurfing/commit/46ff1cbab188bfa1bfe728ca1e651e3d91028fff))
+* add user and organization plugin hooks ([#1355](https://github.com/seatsurfing/seatsurfing/issues/1355)) ([bf1251f](https://github.com/seatsurfing/seatsurfing/commit/bf1251fd07e7d11eec4cc2fa6cc07bd868d6e3ad))
+* allow auto-login with DISABLE_PASSWORD_LOGIN enabled ([#1354](https://github.com/seatsurfing/seatsurfing/issues/1354)) ([2579c40](https://github.com/seatsurfing/seatsurfing/commit/2579c40f903f68385c6de51ec2e307f867fce3e4))
+* allow language selection when logged in ([#1344](https://github.com/seatsurfing/seatsurfing/issues/1344)) ([d8f0e6e](https://github.com/seatsurfing/seatsurfing/commit/d8f0e6ee00049cd9b81caae1a28ef6a5c503b4f3))
+* allow read-only IdPs and profile page URLs ([#1345](https://github.com/seatsurfing/seatsurfing/issues/1345)) ([8f74526](https://github.com/seatsurfing/seatsurfing/commit/8f745269c329c60909e18060ea8242aa4dd88e84))
+* allow specification of first- and lastnames for users ([#1369](https://github.com/seatsurfing/seatsurfing/issues/1369)) ([f35bd54](https://github.com/seatsurfing/seatsurfing/commit/f35bd54c260d9671ce0a1a210ed9e50ce6ae5032))
+* merge admin and booking ui ([#1324](https://github.com/seatsurfing/seatsurfing/issues/1324)) ([4f6cf36](https://github.com/seatsurfing/seatsurfing/commit/4f6cf3693708bd455a9353cf9e5366a43496b5c4))
+* record timestamp of latest (login) activity for users ([#1375](https://github.com/seatsurfing/seatsurfing/issues/1375)) ([42bfd92](https://github.com/seatsurfing/seatsurfing/commit/42bfd9240f4ee80596a4767821193aba18793ae9))
+* remove deprecated legacy global login ([#1353](https://github.com/seatsurfing/seatsurfing/issues/1353)) ([cb15c62](https://github.com/seatsurfing/seatsurfing/commit/cb15c624655144a90b5c0f654e3a2952d7953498))
+
+
+### Bug Fixes
+
+* add admin navbar logo on mobile viewport again ([#1335](https://github.com/seatsurfing/seatsurfing/issues/1335)) ([1c6662c](https://github.com/seatsurfing/seatsurfing/commit/1c6662c6587788eb75502c137a21932c660a3f78))
+* add missing entities to org delete ([#1372](https://github.com/seatsurfing/seatsurfing/issues/1372)) ([26a124e](https://github.com/seatsurfing/seatsurfing/commit/26a124e2486b6625426ae7ccc4ce41a9a92607b7))
+* add missing OnOrganizationCreated hook ([#1364](https://github.com/seatsurfing/seatsurfing/issues/1364)) ([8359293](https://github.com/seatsurfing/seatsurfing/commit/8359293675b5984bcb839539f7418d9531caf741))
+* add support for LOGIN auth in smtp client (required i.e. for M365) ([#1337](https://github.com/seatsurfing/seatsurfing/issues/1337)) ([e4ce08d](https://github.com/seatsurfing/seatsurfing/commit/e4ce08dd3b5afe9f50618d2ea2bd7a13f8a64fd8))
+* allow created at timestamp for bookings to be nil ([#1376](https://github.com/seatsurfing/seatsurfing/issues/1376)) ([90639f4](https://github.com/seatsurfing/seatsurfing/commit/90639f4bec8afdc055ea38e94e361004bf8f3a4c))
+* change default dev port of ui to 3000 ([#1330](https://github.com/seatsurfing/seatsurfing/issues/1330)) ([6116bfe](https://github.com/seatsurfing/seatsurfing/commit/6116bfef61043358214a8323feb4d070bd985852))
+* **deps:** bump @playwright/test from 1.55.1 to 1.56.0 in /e2e ([#1358](https://github.com/seatsurfing/seatsurfing/issues/1358)) ([60bed75](https://github.com/seatsurfing/seatsurfing/commit/60bed757f670197d76216742d56d90a8d97a08d0))
+* **deps:** bump @types/node from 24.5.2 to 24.6.0 in /e2e ([#1332](https://github.com/seatsurfing/seatsurfing/issues/1332)) ([cd84505](https://github.com/seatsurfing/seatsurfing/commit/cd845051cf3cbee076d840d07c1bf05888be33fa))
+* **deps:** bump @types/node from 24.5.2 to 24.6.0 in /ui ([#1333](https://github.com/seatsurfing/seatsurfing/issues/1333)) ([eacd4e7](https://github.com/seatsurfing/seatsurfing/commit/eacd4e77aab1c2e12b8fd563947b083634cd52f0))
+* **deps:** bump @types/node from 24.6.0 to 24.6.2 in /e2e ([#1346](https://github.com/seatsurfing/seatsurfing/issues/1346)) ([84f24a3](https://github.com/seatsurfing/seatsurfing/commit/84f24a3f5970936dc067dc68627eb887c347d47f))
+* **deps:** bump @types/node from 24.6.0 to 24.6.2 in /ui ([#1347](https://github.com/seatsurfing/seatsurfing/issues/1347)) ([f0fcb53](https://github.com/seatsurfing/seatsurfing/commit/f0fcb53efea02d99aa80eee3368031b709c70091))
+* **deps:** bump @types/node from 24.6.2 to 24.7.1 in /e2e ([#1370](https://github.com/seatsurfing/seatsurfing/issues/1370)) ([98487dc](https://github.com/seatsurfing/seatsurfing/commit/98487dc953de8a3016035f7e3c572cb49fa7d47f))
+* **deps:** bump @types/node from 24.6.2 to 24.7.1 in /ui ([#1371](https://github.com/seatsurfing/seatsurfing/issues/1371)) ([0c891bd](https://github.com/seatsurfing/seatsurfing/commit/0c891bdf5a34cebedbe5e2f777576d8ca873e284))
+* **deps:** bump @types/react-dom from 19.2.0 to 19.2.1 in /ui ([#1362](https://github.com/seatsurfing/seatsurfing/issues/1362)) ([f914d95](https://github.com/seatsurfing/seatsurfing/commit/f914d95f2d0c672adcd954d270686954559d0f44))
+* **deps:** bump eslint from 9.36.0 to 9.37.0 in /ui ([#1360](https://github.com/seatsurfing/seatsurfing/issues/1360)) ([7481708](https://github.com/seatsurfing/seatsurfing/commit/74817080152477f96b2c3f4cac29ca5af5664f89))
+* **deps:** bump golang.org/x/crypto from 0.42.0 to 0.43.0 in /server ([#1368](https://github.com/seatsurfing/seatsurfing/issues/1368)) ([0ee7c45](https://github.com/seatsurfing/seatsurfing/commit/0ee7c45c9ea41b93a098e2d46da6ec0be82f9146))
+* **deps:** bump golang.org/x/oauth2 from 0.31.0 to 0.32.0 in /server ([#1367](https://github.com/seatsurfing/seatsurfing/issues/1367)) ([c5cfa2a](https://github.com/seatsurfing/seatsurfing/commit/c5cfa2a179005e5777a5ae98db8bc269fc548ec5))
+* **deps:** bump library/golang from 1.25-bookworm to 1.25.1-bookworm ([#1339](https://github.com/seatsurfing/seatsurfing/issues/1339)) ([8fe3385](https://github.com/seatsurfing/seatsurfing/commit/8fe3385254823d1581c4828a2e93cdb56743a5f7))
+* **deps:** bump library/golang from 1.25.1-bookworm to 1.25.2-bookworm ([#1366](https://github.com/seatsurfing/seatsurfing/issues/1366)) ([f8e3885](https://github.com/seatsurfing/seatsurfing/commit/f8e38855a31238ebd90ce654ff43b3c8549d1760))
+* **deps:** bump react from 19.1.1 to 19.2.0 in /ui ([#1349](https://github.com/seatsurfing/seatsurfing/issues/1349)) ([696a1c3](https://github.com/seatsurfing/seatsurfing/commit/696a1c3c5239c4ea34f50e9137f649807a886532))
+* **deps:** bump react to 19.2.0 ([#1350](https://github.com/seatsurfing/seatsurfing/issues/1350)) ([f84445b](https://github.com/seatsurfing/seatsurfing/commit/f84445b8f1d47a59d7453567cbf9eb2ab83cbc78))
+* **deps:** bump react-dom and @types/react-dom in /ui ([#1348](https://github.com/seatsurfing/seatsurfing/issues/1348)) ([99ae839](https://github.com/seatsurfing/seatsurfing/commit/99ae8390433f4fb3b92ef3fa35c181df6ccb6f02))
+* **deps:** bump typescript from 5.8.2 to 5.9.2 in /ui ([#1326](https://github.com/seatsurfing/seatsurfing/issues/1326)) ([ebac4fb](https://github.com/seatsurfing/seatsurfing/commit/ebac4fb2bf531959ba2094a61b2273252f5df57c))
+* **deps:** bump typescript from 5.9.2 to 5.9.3 in /ui ([#1341](https://github.com/seatsurfing/seatsurfing/issues/1341)) ([f671ab7](https://github.com/seatsurfing/seatsurfing/commit/f671ab74329a51b2dcae72eb28a458fc2f9941c2))
+* do not show custom logo in admin UI ([#1379](https://github.com/seatsurfing/seatsurfing/issues/1379)) ([33e5cf3](https://github.com/seatsurfing/seatsurfing/commit/33e5cf353b57a1ad80a57ebf945d0f6f3941c050))
+* improve file naming of ics downloads ([dd3752d](https://github.com/seatsurfing/seatsurfing/commit/dd3752de99c769b83a24d9c1e4198298f19995b3))
+* include timezone information in iCal export ([#1338](https://github.com/seatsurfing/seatsurfing/issues/1338)) ([df3c1c7](https://github.com/seatsurfing/seatsurfing/commit/df3c1c77a469de8d36b470044b5e054dea7c641f))
+* incorrect font color of admin search bar ([#1336](https://github.com/seatsurfing/seatsurfing/issues/1336)) ([2ef06d4](https://github.com/seatsurfing/seatsurfing/commit/2ef06d4a627daea664a7f263b2fcfe9194cf6476))
+* incorrect image url ([#1363](https://github.com/seatsurfing/seatsurfing/issues/1363)) ([70bb954](https://github.com/seatsurfing/seatsurfing/commit/70bb954a3dcbb57a3fe19353886ce56a1ce47e1a))
+* incorrect names ([#1334](https://github.com/seatsurfing/seatsurfing/issues/1334)) ([1b05f92](https://github.com/seatsurfing/seatsurfing/commit/1b05f92d165ac7ebf245c53a0b9ffbd5e654d552))
+* preserve query string for default login redirect ([#1380](https://github.com/seatsurfing/seatsurfing/issues/1380)) ([d2c44db](https://github.com/seatsurfing/seatsurfing/commit/d2c44db47a96c38d867d8e80b5258f049ccbada6))
+* set firstname and lastname for init org user ([#1377](https://github.com/seatsurfing/seatsurfing/issues/1377)) ([0383ecc](https://github.com/seatsurfing/seatsurfing/commit/0383ecc83498303351525e65f8f8aa413b08553b))
+* styling of admin navbar ([#1331](https://github.com/seatsurfing/seatsurfing/issues/1331)) ([cb4a8f4](https://github.com/seatsurfing/seatsurfing/commit/cb4a8f40efff68ace73dde5d7a557883957d352a))
+* **tests:** add missing test for org delete ([#1374](https://github.com/seatsurfing/seatsurfing/issues/1374)) ([f5d75d6](https://github.com/seatsurfing/seatsurfing/commit/f5d75d6241087b4264ecde7b447d615326eec9e9))
+
 ## [1.43.1](https://github.com/seatsurfing/seatsurfing/compare/v1.43.0...v1.43.1) (2025-09-27)
 
 
