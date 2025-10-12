@@ -132,6 +132,8 @@ func (a *App) InitializeDefaultOrg() {
 			Email:          config.InitOrgUser + "@seatsurfing.local",
 			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
 			Role:           UserRoleOrgAdmin,
+			Firstname:      "Organization",
+			Lastname:       "Admin",
 		}
 		GetUserRepository().Create(user)
 		GetOrganizationRepository().CreateSampleData(org)
