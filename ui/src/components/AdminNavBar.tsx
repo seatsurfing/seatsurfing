@@ -66,16 +66,17 @@ class AdminNavBar extends React.Component<Props, State> {
       return <></>;
     }
 
-    const logoUrl =
-      RuntimeConfig.INFOS.customLogoUrl || "/ui/seatsurfing_white.svg";
-
     return (
       <Nav className="admin-navbar navbar navbar-dark sticky-top bg-dark flex-nowrap p-0 shadow">
         <Link
           className="navbar-brand col-1 col-md-3 col-lg-2 me-0 px-3"
           href="/admin/dashboard"
         >
-          <img src={logoUrl} alt="Seatsurfing" className="d-none d-md-block" />
+          <img
+            src="/ui/seatsurfing_white.svg"
+            alt="Seatsurfing"
+            className="d-none d-md-block"
+          />
           <img
             src="/ui/seatsurfing_white_logo.svg"
             alt="Seatsurfing"
