@@ -14,7 +14,11 @@ class Index extends React.Component<Props, State> {
   }
 
   render() {
-    this.props.router.push("/login");
+    const { query } = this.props.router;
+    this.props.router.push({
+      pathname: "/login",
+      query: query,
+    });
     return <></>;
   }
 }
