@@ -15,7 +15,7 @@ SMTP_PORT=1025
 PUBLIC_SCHEME=http
 PUBLIC_PORT=8080
 if [ -f .env ]; then
-    echo "Reading additional environments from .env file..."
+    echo "Reading additional settings from .env file..."
     export $(grep -v '^#' .env | xargs)
 fi
 
