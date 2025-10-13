@@ -43,7 +43,7 @@
   },
   "homepage": "/ui/",
   "devDependencies": {
-    "@types/node": "24.7.1",
+    "@types/node": "24.7.2",
     "@types/react-autosuggest": "^10.1.11",
     "eslint": "^9.37.0",
     "eslint-config-next": "15.5.4"
