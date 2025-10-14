@@ -39,6 +39,7 @@ import Space from "@/types/Space";
 import Search, { SearchOptions } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface SpaceState {
   id: string;
@@ -136,7 +137,7 @@ class EditLocation extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     let promises = [this.loadData(), this.loadTimezones()];

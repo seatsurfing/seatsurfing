@@ -32,6 +32,7 @@ import AuthProvider from "@/types/AuthProvider";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   allowAnyUser: boolean;
@@ -115,7 +116,7 @@ class Settings extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     let promises = [

@@ -25,6 +25,8 @@ import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
+import RedirectUtil from "@/util/RedirectUtil";
+
 interface State {
   loading: boolean;
   saved: boolean;
@@ -127,7 +129,7 @@ class EditBooking extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     let promises = [

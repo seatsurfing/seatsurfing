@@ -26,6 +26,7 @@ import User from "@/types/User";
 import Group from "@/types/Group";
 import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -69,7 +70,7 @@ class EditUser extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     this.loadData();

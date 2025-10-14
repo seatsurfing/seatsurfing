@@ -23,6 +23,7 @@ import PremiumFeatureIcon from "./PremiumFeatureIcon";
 import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   approvalCount: number;
@@ -46,7 +47,7 @@ class SideBar extends React.Component<Props, State> {
   componentDidMount = () => {
     if (!RuntimeConfig.INFOS.spaceAdmin) {
       Ajax.PERSISTER.deleteCredentialsFromStorage();
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     Booking.getPendingApprovalsCount()

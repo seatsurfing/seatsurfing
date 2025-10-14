@@ -21,6 +21,7 @@ import Ajax from "@/util/Ajax";
 import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -50,7 +51,7 @@ class Bookings extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     this.loadData();

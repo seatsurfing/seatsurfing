@@ -20,6 +20,7 @@ import Formatting from "@/util/Formatting";
 import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   selectedItem: string;
@@ -67,7 +68,7 @@ class Bookings extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     import("excellentexport").then(

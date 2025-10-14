@@ -17,6 +17,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Location from "@/types/Location";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -90,7 +91,7 @@ class Preferences extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     let promises = [this.loadPreferences(), this.loadLocations()];

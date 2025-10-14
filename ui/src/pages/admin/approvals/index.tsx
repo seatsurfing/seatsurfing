@@ -17,6 +17,7 @@ import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Booking from "@/types/Booking";
 import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   data: Booking[];
@@ -43,7 +44,7 @@ class Approvals extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     import("excellentexport").then(
