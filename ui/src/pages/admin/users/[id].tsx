@@ -18,6 +18,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import OrgSettings from "@/types/Settings";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -69,7 +70,7 @@ class EditUser extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     this.loadData();

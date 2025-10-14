@@ -12,6 +12,7 @@ import Stats from "@/types/Stats";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -43,7 +44,7 @@ class Dashboard extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     let promises = [this.loadItems(), this.getUserInfo(), this.checkUpdates()];
@@ -52,7 +53,7 @@ class Dashboard extends React.Component<Props, State> {
         this.setState({ loading: false });
       })
       .catch((e) => {
-        this.props.router.push("/login");
+        RedirectUtil.toLogin(this.props.router);
         return;
       });
   };

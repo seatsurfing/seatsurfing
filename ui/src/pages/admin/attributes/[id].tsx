@@ -13,6 +13,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
 import Ajax from "@/util/Ajax";
+import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -51,7 +52,7 @@ class EditAttribute extends React.Component<Props, State> {
 
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
-      this.props.router.push("/login");
+      RedirectUtil.toLogin(this.props.router);
       return;
     }
     this.loadData();
