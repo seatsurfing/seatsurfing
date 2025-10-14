@@ -149,9 +149,7 @@ class Login extends React.Component<Props, State> {
         Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
         Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
         RuntimeConfig.loadUserAndSettings().then(() => {
-          const redirect =
-            (this.props.router.query["redir"] as string) || "/search";
-          this.setState({ redirect });
+          this.setState({ redirect: this.getRedirectUrl() });
         });
       })
       .catch(() => {
@@ -169,6 +167,10 @@ class Login extends React.Component<Props, State> {
       providers: null,
       invalid: false,
     });
+  };
+
+  getRedirectUrl = () => {
+    return (this.props.router.query["redir"] as string) || "/search";
   };
 
   renderAuthProviderButton = (provider: AuthProvider) => {
@@ -207,7 +209,7 @@ class Login extends React.Component<Props, State> {
       return <></>;
     }
     if (Ajax.hasAccessToken()) {
-      this.props.router.push("/search");
+      this.props.router.push(this.getRedirectUrl());
       return <></>;
     }
 
