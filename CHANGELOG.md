@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.44.1](https://github.com/seatsurfing/seatsurfing/compare/v1.44.0...v1.44.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* set redir parameter for login page if user is not logged in ([#1391](https://github.com/seatsurfing/seatsurfing/issues/1391)) ([2a028a8](https://github.com/seatsurfing/seatsurfing/commit/2a028a8d8f25a4b8e8a19fb1747c9e75500213bd))
+* support redirect URL if already logged in ([#1390](https://github.com/seatsurfing/seatsurfing/issues/1390)) ([64734f2](https://github.com/seatsurfing/seatsurfing/commit/64734f26aa66cd6a729bb58c33c745fa9e7889f1))
+
 ## [1.44.0](https://github.com/seatsurfing/seatsurfing/compare/v1.43.1...v1.44.0) (2025-10-12)
 
 
