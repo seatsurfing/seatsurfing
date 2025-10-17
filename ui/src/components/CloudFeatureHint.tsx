@@ -23,7 +23,7 @@ class CloudFeatureHint extends React.Component<Props, State> {
               {this.props.t("cloudFeatureHeadline")}
             </p>
             <p>
-              <Link href="/plugin/subscription/">
+              <Link href="/admin/plugin/subscription/">
                 {this.props.t("cloudUpgradeHintText")}
               </Link>{" "}
               🚀
