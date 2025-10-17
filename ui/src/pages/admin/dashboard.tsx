@@ -212,7 +212,7 @@ class Dashboard extends React.Component<Props, State> {
                 {this.props.t("cloudUpgradeHintHeadline")}
               </p>
               <p>
-                <Link href="/plugin/subscription/">
+                <Link href="/admin/plugin/subscription/">
                   {this.props.t("cloudUpgradeHintText")}
                 </Link>{" "}
                 🚀
