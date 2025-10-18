@@ -119,17 +119,21 @@ func (a *App) RedirectAdminPath(w http.ResponseWriter, r *http.Request) {
 func (a *App) InitializeDefaultOrg() {
 	numOrgs, err := GetOrganizationRepository().GetNumOrgs()
 	if err == nil && numOrgs == 0 {
-		log.Println("Creating first organization...")
+		log.Println("Creating default organization...")
 		config := GetConfig()
+		email := config.InitOrgUser + "@seatsurfing.local"
 		org := &Organization{
-			Name:       config.InitOrgName,
-			Language:   strings.ToLower(config.InitOrgLanguage),
-			SignupDate: time.Now().UTC(),
+			Name:             config.InitOrgName,
+			ContactEmail:     email,
+			ContactFirstname: "Organization",
+			ContactLastname:  "Admin",
+			Language:         strings.ToLower(config.InitOrgLanguage),
+			SignupDate:       time.Now().UTC(),
 		}
 		GetOrganizationRepository().Create(org)
 		user := &User{
 			OrganizationID: org.ID,
-			Email:          config.InitOrgUser + "@seatsurfing.local",
+			Email:          email,
 			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
 			Role:           UserRoleOrgAdmin,
 			Firstname:      "Organization",
