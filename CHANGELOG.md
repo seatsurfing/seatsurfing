@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.44.2](https://github.com/seatsurfing/seatsurfing/compare/v1.44.1...v1.44.2) (2025-10-18)
+
+
+### Bug Fixes
+
+* allow reading certain settings as non-org-admins ([#1405](https://github.com/seatsurfing/seatsurfing/issues/1405)) ([acb92d8](https://github.com/seatsurfing/seatsurfing/commit/acb92d8b43efc2ad009834c69a21a79b10bf0b76))
+* **deps:** bump @types/node from 24.7.1 to 24.8.1 in /ui ([#1403](https://github.com/seatsurfing/seatsurfing/issues/1403)) ([8882311](https://github.com/seatsurfing/seatsurfing/commit/88823119cc6e0bcaea30390f3f6434b06f71d9cd))
+* **deps:** bump @types/react-dom from 19.2.1 to 19.2.2 in /ui ([#1386](https://github.com/seatsurfing/seatsurfing/issues/1386)) ([46b5d8e](https://github.com/seatsurfing/seatsurfing/commit/46b5d8e3bcbf88e0be56bffb7f3099bb7c9bd172))
+* **deps:** bump eslint-config-next from 15.5.4 to 15.5.6 in /ui ([#1404](https://github.com/seatsurfing/seatsurfing/issues/1404)) ([b321600](https://github.com/seatsurfing/seatsurfing/commit/b321600da1b80de083eb8f3f3432305196a395b3))
+* **deps:** bump next from 15.5.4 to 15.5.6 in /ui ([#1402](https://github.com/seatsurfing/seatsurfing/issues/1402)) ([636cac3](https://github.com/seatsurfing/seatsurfing/commit/636cac3cea3d9801d965ad5bb942bef8c939cbac))
+* **deps:** bump react-tooltip from 5.29.1 to 5.30.0 in /ui ([#1383](https://github.com/seatsurfing/seatsurfing/issues/1383)) ([b1ffd27](https://github.com/seatsurfing/seatsurfing/commit/b1ffd271741683b60054c196a7a101ffec12a083))
+* fix cloud upgrade hint links ([#1398](https://github.com/seatsurfing/seatsurfing/issues/1398)) ([c426072](https://github.com/seatsurfing/seatsurfing/commit/c4260721eeedcbbfc09363230819a34217b37910))
+* set contact info for default organization ([#1406](https://github.com/seatsurfing/seatsurfing/issues/1406)) ([0f9bb10](https://github.com/seatsurfing/seatsurfing/commit/0f9bb10a9826995d6e60f6acce47f23e48a5cb9d))
+
 ## [1.44.1](https://github.com/seatsurfing/seatsurfing/compare/v1.44.0...v1.44.1) (2025-10-14)
 
 
