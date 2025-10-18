@@ -241,19 +241,23 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingMaxConcurrentBookingsPerUser.Name ||
 		name == SettingMaxDaysInAdvance.Name ||
 		name == SettingMaxBookingDurationHours.Name ||
-		name == SettingMaxHoursBeforeDelete.Name ||
-		name == SettingMinBookingDurationHours.Name ||
 		name == SettingShowNames.Name ||
-		name == SettingEnableMaxHourBeforeDelete.Name ||
 		name == SettingAllowBookingsNonExistingUsers.Name ||
 		name == SettingDailyBasisBooking.Name ||
 		name == SettingNoAdminRestrictions.Name ||
 		name == SettingCustomLogoUrl.Name ||
-		name == SettingMaxHoursPartiallyBooked.Name ||
-		name == SettingMaxHoursPartiallyBookedEnabled.Name ||
 		name == SettingDefaultTimezone.Name ||
 		name == SettingDisableBuddies.Name ||
 		name == SettingFeatureRecurringBookings.Name ||
+		name == SettingMaxHoursBeforeDelete.Name ||
+		name == SettingEnableMaxHourBeforeDelete.Name ||
+		name == SettingMinBookingDurationHours.Name ||
+		name == SettingMaxHoursPartiallyBooked.Name ||
+		name == SettingMaxHoursPartiallyBookedEnabled.Name ||
+		name == SettingFeatureNoUserLimit.Name ||
+		name == SettingFeatureCustomDomains.Name ||
+		name == SettingFeatureGroups.Name ||
+		name == SettingFeatureAuthProviders.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin {
@@ -265,15 +269,6 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 	if router.isValidSettingNameReadPublic(name) ||
 		name == SettingAllowAnyUser.Name ||
-		name == SettingMaxHoursBeforeDelete.Name ||
-		name == SettingEnableMaxHourBeforeDelete.Name ||
-		name == SettingMinBookingDurationHours.Name ||
-		name == SettingMaxHoursPartiallyBooked.Name ||
-		name == SettingMaxHoursPartiallyBookedEnabled.Name ||
-		name == SettingFeatureNoUserLimit.Name ||
-		name == SettingFeatureCustomDomains.Name ||
-		name == SettingFeatureGroups.Name ||
-		name == SettingFeatureAuthProviders.Name ||
 		name == SettingConfluenceServerSharedSecret.Name ||
 		name == SettingConfluenceAnonymous.Name ||
 		name == SysSettingOrgSignupDelete ||
