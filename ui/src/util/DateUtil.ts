@@ -29,8 +29,22 @@ export default class DateUtil {
     return this.getDateString(0);
   }
 
+  static convertToUTC = (date: Date): Date => {
+    return new Date(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds(),
+    );
+  };
+
+  static isInPast(date: Date): boolean {
+    return this.convertToUTC(date) < new Date();
+  }
+
   /**
-   *
    * @param offset Offset in days
    * @returns return the date in format YYYY-MM-DD
    */

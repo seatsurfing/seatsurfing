@@ -26,6 +26,7 @@ import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
 import RedirectUtil from "@/util/RedirectUtil";
+import DateUtil from "@/util/DateUtil";
 
 interface State {
   loading: boolean;
@@ -158,29 +159,16 @@ class EditBooking extends React.Component<Props, State> {
     );
   };
 
-  convertDateToUTC = (date: Date) => {
-    return new Date(
-      date.getUTCFullYear(),
-      date.getUTCMonth(),
-      date.getUTCDate(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      date.getUTCSeconds(),
-    );
-  };
-
   loadData = () => {
     const { id } = this.props.router.query;
     if (id && typeof id === "string") {
       if (id !== "add") {
         return Booking.get(id).then((booking) => {
           this.entity = booking;
-          var canSave = true;
-          if (this.convertDateToUTC(this.entity.leave) < new Date())
-            canSave = false;
+          const canSave = !DateUtil.isInPast(this.entity.leave);
           this.setState({
-            enter: this.convertDateToUTC(this.entity.enter),
-            leave: this.convertDateToUTC(this.entity.leave),
+            enter: DateUtil.convertToUTC(this.entity.enter),
+            leave: DateUtil.convertToUTC(this.entity.leave),
             selectedLocationId: this.entity.space.locationId,
             selectedSpaceId: this.entity.space.id,
             selectedUserEmail: this.entity.user.email,
