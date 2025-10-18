@@ -482,6 +482,14 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	requestUser := GetRequestUser(r)
 
+	// leave must not be in past
+	now := time.Now().UTC()
+	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	if e.Booking.Leave.Before(now) {
+		SendBadRequest(w)
+		return
+	}
+
 	// Check for the date, if the booking request is too close with SettingsMaxHoursBeforeDelete and the deletion can not be performed
 	if router.IsValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
 		go router.onBookingDeleted(&e.Booking, true)
@@ -594,11 +602,14 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 			Leave: e.Leave,
 		},
 	}
-
-	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0); !valid {
+	log.Println("111")
+	valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0)
+	log.Println("2222 + ", valid, code)
+	if !valid {
 		SendBadRequestCode(w, code)
 		return
 	}
+
 	conflicts, err := GetBookingRepository().GetConflicts(e.SpaceID, e.Enter, e.Leave, "")
 	if err != nil {
 		log.Println(err)
