@@ -67,15 +67,15 @@ func TestSettingsReadPublic(t *testing.T) {
 		SysSettingVersion,
 		SysSettingOrgPrimaryDomain,
 		SysSettingDisablePasswordLogin,
+		SettingFeatureNoUserLimit.Name,
+		SettingFeatureGroups.Name,
+		SettingFeatureCustomDomains.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
 		SettingAllowAnyUser.Name,
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
-		SettingFeatureNoUserLimit.Name,
-		SettingFeatureGroups.Name,
-		SettingFeatureCustomDomains.Name,
 	}
 
 	for _, name := range allowedSettings {
