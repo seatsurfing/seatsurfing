@@ -85,6 +85,7 @@ class NavBar extends React.Component<Props, State> {
     const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
     const logoutUrl = credentials.logoutUrl;
     Ajax.PERSISTER.deleteCredentialsFromStorage();
+    RuntimeConfig.resetInfos();
     if (logoutUrl) {
       window.location.href = logoutUrl;
       return;

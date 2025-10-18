@@ -37,37 +37,41 @@ interface RuntimeUserInfos {
 
 export default class RuntimeConfig {
   static EMBEDDED: boolean = false;
-  static INFOS: RuntimeUserInfos = {
-    username: "",
-    idpLogin: false,
-    isLoading: true,
-    maxBookingsPerUser: 0,
-    maxConcurrentBookingsPerUser: 0,
-    maxDaysInAdvance: 0,
-    maxBookingDurationHours: 0,
-    maxHoursBeforeDelete: 0,
-    minBookingDurationHours: 0,
-    dailyBasisBooking: false,
-    noAdminRestrictions: false,
-    disableBuddies: false,
-    customLogoUrl: "",
-    maxHoursPartiallyBooked: 0,
-    maxHoursPartiallyBookedEnabled: false,
-    showNames: false,
-    defaultTimezone: "",
-    featureRecurringBookings: false,
-    organizationId: "",
-    superAdmin: false,
-    spaceAdmin: false,
-    orgAdmin: false,
-    pluginMenuItems: [],
-    pluginWelcomeScreens: [],
-    featureGroups: false,
-    featureAuthProviders: false,
-    cloudHosted: false,
-    subscriptionActive: false,
-    orgPrimaryDomain: "",
-    disablePasswordLogin: false,
+  static INFOS: RuntimeUserInfos;
+
+  static resetInfos = () => {
+    RuntimeConfig.INFOS = {
+      username: "",
+      idpLogin: false,
+      isLoading: true,
+      maxBookingsPerUser: 0,
+      maxConcurrentBookingsPerUser: 0,
+      maxDaysInAdvance: 0,
+      maxBookingDurationHours: 0,
+      maxHoursBeforeDelete: 0,
+      minBookingDurationHours: 0,
+      dailyBasisBooking: false,
+      noAdminRestrictions: false,
+      disableBuddies: false,
+      customLogoUrl: "",
+      maxHoursPartiallyBooked: 0,
+      maxHoursPartiallyBookedEnabled: false,
+      showNames: false,
+      defaultTimezone: "",
+      featureRecurringBookings: false,
+      organizationId: "",
+      superAdmin: false,
+      spaceAdmin: false,
+      orgAdmin: false,
+      pluginMenuItems: [],
+      pluginWelcomeScreens: [],
+      featureGroups: false,
+      featureAuthProviders: false,
+      cloudHosted: false,
+      subscriptionActive: false,
+      orgPrimaryDomain: "",
+      disablePasswordLogin: false,
+    };
   };
 
   static verifyToken = async (resolve: Function) => {
@@ -187,6 +191,7 @@ export default class RuntimeConfig {
   }
 
   static loadUserAndSettings = async (): Promise<void> => {
+    RuntimeConfig.resetInfos();
     return User.getSelf().then((user) => {
       RuntimeConfig.INFOS.organizationId = user.organizationId;
       RuntimeConfig.INFOS.superAdmin = user.superAdmin;
@@ -225,3 +230,5 @@ export default class RuntimeConfig {
     ];
   }
 }
+
+RuntimeConfig.resetInfos();
