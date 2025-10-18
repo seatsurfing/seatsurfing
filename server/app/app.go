@@ -150,7 +150,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		log.Println("Updating settings for primary organization...")
 		orgs, err := GetOrganizationRepository().GetAll()
 		if err != nil {
-			log.Println("Error while getting first organization:", err)
+			log.Println("Error while getting primary organization:", err)
 			return
 		}
 		org := orgs[0]
