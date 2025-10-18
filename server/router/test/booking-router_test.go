@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -786,7 +787,46 @@ func TestBookingsMaxHoursRespectsLocationTimezone(t *testing.T) {
 
 }
 
-func TestBookingsDeleteToCloseBeeingAdmin(t *testing.T) {
+func TestBookingsInPastAreNotDeletable(t *testing.T) {
+
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locationID := res.Header().Get("X-Object-Id")
+
+	// Create space
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	spaceID := res.Header().Get("X-Object-Id")
+
+	// Create booking in past
+	yesterday := time.Now().Add(-72 * time.Hour)
+	booking := &Booking{
+		UserID:  user.ID,
+		SpaceID: spaceID,
+		Enter:   yesterday.Add(0 * time.Hour),
+		Leave:   yesterday.Add(8 * time.Hour),
+	}
+	log.Println(yesterday.Add(0 * time.Hour))
+	log.Println(yesterday.Add(8 * time.Hour))
+	GetBookingRepository().Create(booking)
+
+	// try to delete booking in past
+	req = NewHTTPRequest("DELETE", "/booking/"+booking.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestBookingsDeleteToCloseBeingAdmin(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user2 := CreateTestUserOrgAdmin(org)

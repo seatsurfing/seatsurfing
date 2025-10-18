@@ -149,6 +149,10 @@ class Bookings extends React.Component<Props, State> {
     this.setState({ selectedItem: booking.id });
   };
 
+  canCancel = (booking: Booking) => {
+    return !DateUtil.isInPast(booking.leave);
+  };
+
   renderItem = (booking: Booking) => {
     const btnStyle: CSS.Properties = {
       ["padding" as any]: "0.1rem 0.3rem",
@@ -170,6 +174,7 @@ class Bookings extends React.Component<Props, State> {
           <Button
             variant="danger"
             id="cancelBookingButton"
+            hidden={!this.canCancel(booking)}
             style={btnStyle}
             onClick={(e) => {
               e.stopPropagation();
