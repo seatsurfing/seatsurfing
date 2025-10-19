@@ -103,7 +103,7 @@ func (router *BuddyRouter) copyToRestModel(e *BuddyDetails) *GetBuddyResponse {
 	m.BuddyID = e.BuddyID
 	m.BuddyEmail = e.BuddyEmail
 	// Assuming GetOne returns a pointer to BookingDetails
-	bookingDetails, _ := GetBookingRepository().GetFirstUpcomingBookingByUserID(e.BuddyID)
+	bookingDetails, _ := GetBookingRepository().GetFirstUpcomingOrCurrentBookingByUserID(e.BuddyID)
 	if bookingDetails == nil {
 		m.BuddyFirstBooking = nil
 		return m
