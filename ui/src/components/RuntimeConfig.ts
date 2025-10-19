@@ -111,19 +111,19 @@ export default class RuntimeConfig {
               RuntimeConfig.INFOS.maxDaysInAdvance = window.parseInt(s.value);
             if (s.name === "max_booking_duration_hours")
               RuntimeConfig.INFOS.maxBookingDurationHours = window.parseInt(
-                s.value
+                s.value,
               );
             if (s.name === "max_hours_before_delete")
               RuntimeConfig.INFOS.maxHoursBeforeDelete = window.parseInt(
-                s.value
+                s.value,
               );
             if (s.name === "max_hours_partially_booked")
               RuntimeConfig.INFOS.maxHoursPartiallyBooked = window.parseInt(
-                s.value
+                s.value,
               );
             if (s.name === "min_booking_duration_hours")
               RuntimeConfig.INFOS.minBookingDurationHours = window.parseInt(
-                s.value
+                s.value,
               );
           }
           if (s.name === "daily_basis_booking")
