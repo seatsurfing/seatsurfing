@@ -1,5 +1,5 @@
-const en_gb = require("./translations.en-gb.json");
-const en_us = require("./translations.en-us.json");
+const en_gb = require("./translations.en-GB.json");
+const en_us = require("./translations.en-US.json");
 const de = require("./translations.de.json");
 const et = require("./translations.et.json");
 const fr = require("./translations.fr.json");
@@ -14,8 +14,8 @@ const es = require("./translations.es.json");
 
 const i18n = {
   translations: {
-    "en-gb": en_gb,
-    "en-us": en_us,
+    "en-GB": en_gb,
+    "en-US": en_us,
     de,
     et,
     fr,
@@ -28,7 +28,7 @@ const i18n = {
     ro,
     es,
   },
-  defaultLang: "en-gb",
+  defaultLang: "en-GB",
   useBrowserDefault: true,
   languageDataStore: "localStorage",
 };
