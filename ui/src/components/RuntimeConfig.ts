@@ -210,12 +210,13 @@ export default class RuntimeConfig {
         return curLang;
       }
     }
-    return "en";
+    return "en-gb";
   }
 
   static getAvailableLanguages(): string[] {
     return [
-      "en",
+      "en-gb",
+      "en-us",
       "de",
       "et",
       "fr",
