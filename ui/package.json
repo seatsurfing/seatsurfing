@@ -27,7 +27,9 @@
     "start": "PORT=3000 next start",
     "build": "next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
     "dev": "PORT=3000 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prettier:check": "prettier --check \"../**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}\"",
+    "prettier:format": "prettier --write \"../**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}\""
   },
   "browserslist": {
     "production": [
@@ -46,6 +48,7 @@
     "@types/node": "24.8.1",
     "@types/react-autosuggest": "^10.1.11",
     "eslint": "^9.37.0",
-    "eslint-config-next": "15.5.6"
+    "eslint-config-next": "15.5.6",
+    "prettier": "3.6.2"
   }
 }
