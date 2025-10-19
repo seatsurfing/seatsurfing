@@ -1043,6 +1043,21 @@ class Search extends React.Component<Props, State> {
       return <></>;
     }
 
+    const createFormRow = (
+      label: string,
+      value: string,
+      key?: string | number,
+    ) => (
+      <Form.Group as={Row} key={key}>
+        <Form.Label column sm="4">
+          {label}:
+        </Form.Label>
+        <Col sm="8">
+          <Form.Control plaintext={true} readOnly={true} defaultValue={value} />
+        </Col>
+      </Form.Group>
+    );
+
     // attributes
     const attributeRows = this.state.attributeValues.map((attributeValue) => {
       const attribute = this.availableAttributes.find(
@@ -1051,45 +1066,21 @@ class Search extends React.Component<Props, State> {
       if (!attribute) {
         return <></>;
       }
-      return (
-        <Form.Group as={Row} key={attribute.id}>
-          <Form.Label column sm="4">
-            {attribute.label}:
-          </Form.Label>
-          <Col sm="8">
-            <Form.Control
-              plaintext={true}
-              readOnly={true}
-              defaultValue={
-                attribute.type === 2
-                  ? attributeValue.value === "1"
-                    ? this.props.t("yes")
-                    : ""
-                  : attributeValue.value
-              }
-            />
-          </Col>
-        </Form.Group>
-      );
+
+      const displayValue =
+        attribute.type === 2
+          ? attributeValue.value === "1"
+            ? this.props.t("yes")
+            : ""
+          : attributeValue.value;
+
+      return createFormRow(attribute.label, displayValue, attribute.id);
     });
 
     // timezone
-    attributeRows.push(
-      <Form.Group as={Row}>
-        <Form.Label column sm="4">
-          {this.props.t("timezone")}:
-        </Form.Label>
-        <Col sm="8">
-          <Form.Control
-            plaintext={true}
-            readOnly={true}
-            defaultValue={
-              location.timezone || RuntimeConfig.INFOS.defaultTimezone
-            }
-          />
-        </Col>
-      </Form.Group>,
-    );
+    const timezoneValue =
+      location.timezone || RuntimeConfig.INFOS.defaultTimezone;
+    attributeRows.push(createFormRow(this.props.t("timezone"), timezoneValue));
 
     return attributeRows;
   };
