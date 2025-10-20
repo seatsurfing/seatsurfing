@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.45.0](https://github.com/seatsurfing/seatsurfing/compare/v1.44.2...v1.45.0) (2025-10-20)
+
+
+### Features
+
+* add dedicated localizations for en-GB and en-US ([#1413](https://github.com/seatsurfing/seatsurfing/issues/1413)) ([49e36e8](https://github.com/seatsurfing/seatsurfing/commit/49e36e86b85e8600d2a12f803c7cc6e2c875ff29))
+* add name, description and timezone to location info modal ([#1411](https://github.com/seatsurfing/seatsurfing/issues/1411)) ([9465e45](https://github.com/seatsurfing/seatsurfing/commit/9465e452f14f9e0ccb591eb1ad295c108bd282b4))
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.56.0 to 1.56.1 in /e2e ([#1401](https://github.com/seatsurfing/seatsurfing/issues/1401)) ([936ce61](https://github.com/seatsurfing/seatsurfing/commit/936ce6106c84f650c633cb67495102c5028fbb93))
+* **deps:** bump @types/node from 24.7.1 to 24.8.1 in /e2e ([#1400](https://github.com/seatsurfing/seatsurfing/issues/1400)) ([e8e15ec](https://github.com/seatsurfing/seatsurfing/commit/e8e15ece9416cb50dcecb0f5087cdc2db64a49a2))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.66 to 1.0.67 in /server ([#1388](https://github.com/seatsurfing/seatsurfing/issues/1388)) ([490a18a](https://github.com/seatsurfing/seatsurfing/commit/490a18a9a93f8d3c759a02508845d7af680b1e80))
+* **deps:** bump library/golang from 1.25.2-bookworm to 1.25.3-bookworm ([#1392](https://github.com/seatsurfing/seatsurfing/issues/1392)) ([9bd1288](https://github.com/seatsurfing/seatsurfing/commit/9bd1288b716b1c9ed8bef59fd2b510ef6bef65b8))
+* prevent past bookings from being deleted ([#1409](https://github.com/seatsurfing/seatsurfing/issues/1409)) ([7b02583](https://github.com/seatsurfing/seatsurfing/commit/7b025836979210f241ec2bdef9f716e07bae5ddb))
+* reset UI runtime config ([#1407](https://github.com/seatsurfing/seatsurfing/issues/1407)) ([2bc8ede](https://github.com/seatsurfing/seatsurfing/commit/2bc8ede4dbe66794760fca8f64ff5da4249267be))
+* show currently active bookings on buddy overview ([#1410](https://github.com/seatsurfing/seatsurfing/issues/1410)) ([a44e712](https://github.com/seatsurfing/seatsurfing/commit/a44e7120993d64b381f33bd6ba66e66b411e58a8))
+
 ## [1.44.2](https://github.com/seatsurfing/seatsurfing/compare/v1.44.1...v1.44.2) (2025-10-18)
 
 
