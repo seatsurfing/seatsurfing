@@ -16,6 +16,8 @@ jobs:
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v5
       - name: Install npm packages
+        working-directory: ./ui
         run: npm ci --ignore-scripts
       - name: Check code style
+        working-directory: ./ui
         run: npm run prettier:check
