@@ -1037,39 +1037,52 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  getLocationAttributeRows = () => {
-    let location = this.getLocation();
+  getLocationAttributeAndTimezoneRows = () => {
+    const location = this.getLocation();
     if (!location) {
       return <></>;
     }
-    return this.state.attributeValues.map((attributeValue) => {
-      let attribute = this.availableAttributes.find(
+
+    const createFormRow = (
+      label: string,
+      value: string,
+      key?: string | number,
+    ) => (
+      <Form.Group as={Row} key={key}>
+        <Form.Label column sm="4">
+          {label}:
+        </Form.Label>
+        <Col sm="8">
+          <Form.Control plaintext={true} readOnly={true} defaultValue={value} />
+        </Col>
+      </Form.Group>
+    );
+
+    // attributes
+    const attributeRows = this.state.attributeValues.map((attributeValue) => {
+      const attribute = this.availableAttributes.find(
         (attr) => attr.id === attributeValue.attributeId,
       );
       if (!attribute) {
         return <></>;
       }
-      return (
-        <Form.Group as={Row} key={attribute.id}>
-          <Form.Label column sm="4">
-            {attribute.label}:
-          </Form.Label>
-          <Col sm="8">
-            <Form.Control
-              plaintext={true}
-              readOnly={true}
-              defaultValue={
-                attribute.type === 2
-                  ? attributeValue.value === "1"
-                    ? this.props.t("yes")
-                    : ""
-                  : attributeValue.value
-              }
-            />
-          </Col>
-        </Form.Group>
-      );
+
+      const displayValue =
+        attribute.type === 2
+          ? attributeValue.value === "1"
+            ? this.props.t("yes")
+            : ""
+          : attributeValue.value;
+
+      return createFormRow(attribute.label, displayValue, attribute.id);
     });
+
+    // timezone
+    const timezoneValue =
+      location.timezone || RuntimeConfig.INFOS.defaultTimezone;
+    attributeRows.push(createFormRow(this.props.t("timezone"), timezoneValue));
+
+    return attributeRows;
   };
 
   getSearchFormComparator = (attribute: SpaceAttribute) => {
@@ -1864,10 +1877,7 @@ class Search extends React.Component<Props, State> {
                   <Button
                     variant="outline-secondary"
                     className="addon-button"
-                    disabled={
-                      !this.state.locationId ||
-                      this.state.attributeValues.length === 0
-                    }
+                    disabled={!this.state.locationId}
                     onClick={() => this.setState({ showLocationDetails: true })}
                     aria-label="Show location details"
                   >
@@ -1983,13 +1993,21 @@ class Search extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
     }
-    let locationInfoModal = (
+
+    const locationInfoModal = (
       <Modal
         show={this.state.showLocationDetails}
         onHide={() => this.setState({ showLocationDetails: false })}
       >
-        <Modal.Header closeButton></Modal.Header>
-        <Modal.Body>{this.getLocationAttributeRows()}</Modal.Body>
+        <Modal.Header closeButton>
+          <Modal.Title>{this.getLocation()?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {this.getLocation()?.description && (
+            <p>{this.getLocation()?.description}</p>
+          )}
+          {this.getLocationAttributeAndTimezoneRows()}
+        </Modal.Body>
       </Modal>
     );
     let searchModal = (

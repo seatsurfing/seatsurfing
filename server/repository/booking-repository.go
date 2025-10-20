@@ -129,8 +129,8 @@ func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
 	return e, nil
 }
 
-// Get first upcoming booking by user
-func (r *BookingRepository) GetFirstUpcomingBookingByUserID(userID string) (*BookingDetails, error) {
+// Get first current or upcoming booking by user
+func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (*BookingDetails, error) {
 	e := &BookingDetails{}
 	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
@@ -140,7 +140,7 @@ func (r *BookingRepository) GetFirstUpcomingBookingByUserID(userID string) (*Boo
 		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
 		"INNER JOIN users ON bookings.user_id = users.id "+
-		"WHERE bookings.user_id = $1 AND bookings.enter_time > $2 "+
+		"WHERE bookings.user_id = $1 AND bookings.leave_time > $2 "+
 		"ORDER BY bookings.enter_time ASC LIMIT 1",
 		userID, time.Now()).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
 	if err != nil {
