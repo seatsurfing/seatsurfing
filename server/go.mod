@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/coocood/freecache v1.2.4
 	github.com/emersion/go-ical v0.0.0-20250609112844-439c63cef608
-	github.com/emersion/go-webdav v0.6.0
+	github.com/emersion/go-webdav v0.7.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
