@@ -249,7 +249,7 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numBookings,
             this.props.t("bookings"),
-            "/admin/bookings/",
+            "/admin/bookings/?enter=2000-01-01&leave=2999-12-31",
           )}
         </Row>
         <Row className="mb-4">
