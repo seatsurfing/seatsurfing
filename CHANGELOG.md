@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.45.1](https://github.com/seatsurfing/seatsurfing/compare/v1.45.0...v1.45.1) (2025-10-22)
+
+
+### Bug Fixes
+
+* (all) booking link on admin dashboard should show all bookings ([#1424](https://github.com/seatsurfing/seatsurfing/issues/1424)) ([4c9ed35](https://github.com/seatsurfing/seatsurfing/commit/4c9ed352849b019ca0e873b27e77d757f44d37fe))
+* add number of bookings info ([#1425](https://github.com/seatsurfing/seatsurfing/issues/1425)) ([38d3fc1](https://github.com/seatsurfing/seatsurfing/commit/38d3fc1eb2c1436f1d4c7a9cf6da0ac158585d7f))
+* **deps:** bump @types/node from 24.8.1 to 24.9.1 in /e2e ([#1421](https://github.com/seatsurfing/seatsurfing/issues/1421)) ([f0f066a](https://github.com/seatsurfing/seatsurfing/commit/f0f066a700fd838d5f28820add9359a79ca4ce09))
+* **deps:** bump @types/node from 24.8.1 to 24.9.1 in /ui ([#1422](https://github.com/seatsurfing/seatsurfing/issues/1422)) ([73f1f34](https://github.com/seatsurfing/seatsurfing/commit/73f1f34a9ef99aee76388629dcd49d8735f01f1e))
+* **deps:** bump eslint from 9.37.0 to 9.38.0 in /ui ([#1415](https://github.com/seatsurfing/seatsurfing/issues/1415)) ([dee504f](https://github.com/seatsurfing/seatsurfing/commit/dee504fffe778d60ac4b60890f2047a213957e95))
+* **deps:** bump github.com/emersion/go-webdav from 0.6.0 to 0.7.0 in /server ([#1419](https://github.com/seatsurfing/seatsurfing/issues/1419)) ([fe9c282](https://github.com/seatsurfing/seatsurfing/commit/fe9c28256c6d776ae61ec18aa08832b17a75cb3a))
+* remove "Backend" string from version info log ([#1423](https://github.com/seatsurfing/seatsurfing/issues/1423)) ([60ced79](https://github.com/seatsurfing/seatsurfing/commit/60ced7970b5a485ff8a06fe444253c8439dfc6cd))
+
 ## [1.45.0](https://github.com/seatsurfing/seatsurfing/compare/v1.44.2...v1.45.0) (2025-10-20)
 
 
