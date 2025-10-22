@@ -83,9 +83,9 @@ networks:
 This starts...
 
 - a PostgreSQL database with data stored on Docker volume "db"
-- a Seatsurfing Backend instance with port 8080 exposed
-- a Seatsurfing Booking UI instance which is accessible through the Backend instance at: :8080/ui/
-- a Seatsurfing Admin UI instance which is accessible through the Backend instance at: :8080/admin/
+- a Seatsurfing instance with port 8080 exposed
+
+The Seatsurfing Booking UI is accessible at :8080/ui/search/ and the Seatsurfing Admin UI instance at :8080/ui/admin/.
 
 To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.io/docs/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
 
