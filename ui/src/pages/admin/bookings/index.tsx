@@ -294,9 +294,12 @@ class Bookings extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table"
+          className="clickable-table caption-top"
           id="datatable"
         >
+          <caption>
+            {this.props.t("numRecords")}: {rows.length}
+          </caption>
           <thead>
             <tr>
               <th></th>
