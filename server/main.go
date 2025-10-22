@@ -11,7 +11,7 @@ import (
 
 func main() {
 	log.Println("Starting...")
-	log.Println("Seatsurfing Backend Version " + GetProductVersion())
+	log.Println("Seatsurfing version " + GetProductVersion())
 	db := GetDatabase()
 	a := GetApp()
 	a.InitializeDatabases()
