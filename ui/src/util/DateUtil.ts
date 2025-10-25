@@ -1,15 +1,23 @@
 export default class DateUtil {
   /**
    * @param date Date object to format
-   * @returns formatted date string in YYYY-MM-DD format
+   * @returns formatted date string in "YYYY-MM-DD" format
    */
   private static formatToDateString(date: Date): string {
     return date.toISOString().split("T")[0];
   }
 
   /**
+   * @param date Date object to format
+   * @returns formatted date string in "YYYY-MM-DDTHH:DD" (ISO 8601) format
+   */
+  static formatToDateTimeString(date: Date): string {
+    return date.toISOString().slice(0, 16);
+  }
+
+  /**
    * @param s string to test
-   * @returns true if string is in data format YYYY-MM-DD
+   * @returns true if string is in data format "YYYY-MM-DD"
    */
   static isValidDate(s: string): boolean {
     const regex = /^\d{4}-\d{2}-\d{2}$/;
@@ -46,7 +54,7 @@ export default class DateUtil {
 
   /**
    * @param offset Offset in days
-   * @returns return the date in format YYYY-MM-DD
+   * @returns return the date in format "YYYY-MM-DD"
    */
   static getDateString(offset: number): string {
     const date = new Date();
