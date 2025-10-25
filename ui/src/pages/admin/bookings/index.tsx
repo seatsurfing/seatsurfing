@@ -106,9 +106,7 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    let end = new Date(this.state.end);
-    end.setHours(23, 59, 59);
-    Booking.listFiltered(new Date(this.state.start), end).then((list) => {
+    Booking.listFiltered(this.state.start, this.state.end).then((list) => {
       this.data = list;
       this.setState({ loading: false });
       this.updateUrlParams(
