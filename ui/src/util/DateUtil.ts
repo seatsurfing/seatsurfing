@@ -8,11 +8,20 @@ export default class DateUtil {
   }
 
   /**
+   * This methods formats a given date in the format "YYYY-MM-DDTHH:DD"
+   * and ignores the date's timezone.
+   *
    * @param date Date object to format
    * @returns formatted date string in "YYYY-MM-DDTHH:DD" (ISO 8601) format
    */
   static formatToDateTimeString(date: Date): string {
-    return date.toISOString().slice(0, 16);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   /**
