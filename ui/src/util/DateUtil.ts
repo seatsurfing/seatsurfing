@@ -8,11 +8,11 @@ export default class DateUtil {
   }
 
   /**
-   * This methods formats a given date in the format "YYYY-MM-DDTHH:DD"
+   * This methods formats a given date in the format "YYYY-MM-DDTHH:MM"
    * and ignores the date's timezone.
    *
    * @param date Date object to format
-   * @returns formatted date string in "YYYY-MM-DDTHH:DD" (ISO 8601) format
+   * @returns formatted date string in "YYYY-MM-DDTHH:MM" (ISO 8601) format
    */
   static formatToDateTimeString(date: Date): string {
     const year = date.getFullYear();
@@ -40,6 +40,20 @@ export default class DateUtil {
     }
 
     return s === this.formatToDateString(date);
+  }
+
+  /**
+   * @param s string to test
+   * @returns true if string is in data format "YYYY-MM-DDTHH:MM"
+   */
+  static isValidDateTime(s: string): boolean {
+    const regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+    if (!regex.test(s)) {
+      return false;
+    }
+
+    const date = new Date(s);
+    return !isNaN(date.getTime());
   }
 
   static getTodayDateString(): string {

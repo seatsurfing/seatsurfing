@@ -53,7 +53,7 @@ class Bookings extends React.Component<Props, State> {
       defaultOffsetDays: number,
     ): Date => {
       const queryValue = this.props.router.query[paramName] as string;
-      if (queryValue && DateUtil.isValidDate(queryValue)) {
+      if (queryValue && DateUtil.isValidDateTime(queryValue)) {
         return new Date(queryValue);
       }
 
