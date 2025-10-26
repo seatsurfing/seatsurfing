@@ -67,14 +67,11 @@ class Bookings extends React.Component<Props, State> {
       return defaultDate;
     };
 
-    const start = getDateFromQuery("enter", -7); // default: 7 days in past
-    const end = getDateFromQuery("leave", +7); // default: 7 days in future
-
     this.state = {
       selectedItem: "",
       loading: true,
-      start,
-      end,
+      start: getDateFromQuery("enter", -7), // default: 7 days in past
+      end: getDateFromQuery("leave", +7), // default: 7 days in future
     };
     this.loadSettings();
   }
