@@ -586,8 +586,8 @@ func TestOrganizationsDelete(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
 	// Verify
-	users, _ := GetUserRepository().GetAll(org.ID, 100, 0)
-	CheckTestInt(t, 0, len(users))
+	org2, _ := GetOrganizationRepository().GetOne(org.ID)
+	CheckTestBool(t, true, org2 == nil)
 }
 
 func TestOrganizationsPrimaryDomain(t *testing.T) {
