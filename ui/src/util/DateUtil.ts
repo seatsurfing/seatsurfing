@@ -110,12 +110,32 @@ export default class DateUtil {
   }
 
   /**
-   * @param date Date to set the seconds and milliseconds to a maximum
-   * @returns new Date with the seconds and milliseconds set to maximum
+   * @param date Date to modify
+   * @returns new Date with the seconds set to a maximum (59.999)
    */
   static setSecondsToMax(date: Date): Date {
     const dateMaxSeconds = new Date(date);
     dateMaxSeconds.setSeconds(59, 999);
     return dateMaxSeconds;
+  }
+
+  /**
+   * @param date Date to modify
+   * @returns new Date with the hours set to a maximum (23:59:59.999)
+   */
+  static setHoursToMax(date: Date): Date {
+    const dateMaxHours = new Date(date);
+    dateMaxHours.setHours(23, 59, 59, 999);
+    return dateMaxHours;
+  }
+
+  /**
+   * @param date Date to modify
+   * @returns new Date with the hours set to a minimum (00:00:00.000)
+   */
+  static setHoursToMin(date: Date): Date {
+    const dateMaxHours = new Date(date);
+    dateMaxHours.setHours(0, 0, 0, 0);
+    return dateMaxHours;
   }
 }
