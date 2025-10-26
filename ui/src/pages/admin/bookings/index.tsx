@@ -106,7 +106,8 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    Booking.listFiltered(this.state.start, this.state.end).then((list) => {
+    const end = DateUtil.setSecondsToMax(this.state.end);
+    Booking.listFiltered(this.state.start, end).then((list) => {
       this.data = list;
       this.setState({ loading: false });
       this.updateUrlParams(

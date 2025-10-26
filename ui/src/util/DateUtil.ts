@@ -94,4 +94,14 @@ export default class DateUtil {
     d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) + 6);
     return this.formatToDateString(d);
   }
+
+  /**
+   * @param date Date to set the seconds and milliseconds to a maximum
+   * @returns new Date with the seconds and milliseconds set to maximum
+   */
+  static setSecondsToMax(date: Date): Date {
+    const dateMaxSeconds = new Date(date);
+    dateMaxSeconds.setSeconds(59, 999);
+    return dateMaxSeconds;
+  }
 }
