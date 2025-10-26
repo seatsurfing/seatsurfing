@@ -59,13 +59,16 @@ class Bookings extends React.Component<Props, State> {
 
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + defaultOffsetDays);
+      if (defaultOffsetDays < 0) {
+        defaultDate.setHours(0, 0, 0, 0);
+      } else {
+        defaultDate.setHours(23, 59, 59, 999);
+      }
       return defaultDate;
     };
 
     const start = getDateFromQuery("enter", -7); // default: 7 days in past
-    start.setHours(0, 0, 0, 0);
     const end = getDateFromQuery("leave", +7); // default: 7 days in future
-    end.setHours(23, 59, 59, 999);
 
     this.state = {
       selectedItem: "",
