@@ -602,9 +602,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 			Leave: e.Leave,
 		},
 	}
-	log.Println("111")
 	valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0)
-	log.Println("2222 + ", valid, code)
 	if !valid {
 		SendBadRequestCode(w, code)
 		return

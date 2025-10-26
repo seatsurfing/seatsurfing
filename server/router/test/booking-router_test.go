@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -816,8 +815,6 @@ func TestBookingsInPastAreNotDeletable(t *testing.T) {
 		Enter:   yesterday.Add(0 * time.Hour),
 		Leave:   yesterday.Add(8 * time.Hour),
 	}
-	log.Println(yesterday.Add(0 * time.Hour))
-	log.Println(yesterday.Add(8 * time.Hour))
 	GetBookingRepository().Create(booking)
 
 	// try to delete booking in past
