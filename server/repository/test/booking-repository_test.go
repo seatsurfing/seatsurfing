@@ -240,3 +240,47 @@ func TestBookingRepositoryRecurringUUIDNull(t *testing.T) {
 	CheckTestBool(t, true, bookingFromDB != nil)
 	CheckTestString(t, "", string(bookingFromDB.RecurringID))
 }
+
+func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+	}
+	GetLocationRepository().Create(location)
+	space := &Space{
+		Name:       "Test 1",
+		LocationID: location.ID,
+	}
+	GetSpaceRepository().Create(space)
+
+	time8 := time.Date(2025, 1, 1, 8, 0, 0, 0, time.Local)
+	time9 := time.Date(2025, 1, 1, 9, 0, 0, 0, time.Local)
+	time10 := time.Date(2025, 1, 1, 10, 0, 0, 0, time.Local)
+	time11 := time.Date(2025, 1, 1, 11, 0, 0, 0, time.Local)
+	time12 := time.Date(2025, 1, 1, 12, 0, 0, 0, time.Local)
+
+	// create booking from 09:00 to 11:00
+	booking := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       time9,
+		Leave:       time11,
+		RecurringID: api.NullUUID(""),
+	}
+	GetBookingRepository().Create(booking)
+
+	bookings_8_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time10)
+	CheckTestInt(t, 0, len(bookings_8_10))
+
+	bookings_10_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time10, time12)
+	CheckTestInt(t, 0, len(bookings_10_12))
+
+	bookings_9_11, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time11)
+	CheckTestInt(t, 1, len(bookings_9_11))
+
+	bookings_8_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time12)
+	CheckTestInt(t, 1, len(bookings_8_12))
+}

@@ -249,29 +249,29 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numBookings,
             this.props.t("bookings"),
-            "/admin/bookings/?enter=2000-01-01&leave=2999-12-31",
+            "/admin/bookings/?enter=2000-01-01T00:00&leave=2999-12-31T23:59",
           )}
         </Row>
         <Row className="mb-4">
           {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
-            `/admin/bookings/?enter=${todayDateString}&leave=${todayDateString}`,
+            `/admin/bookings/?enter=${todayDateString}T00:00&leave=${todayDateString}T23:59`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
-            `/admin/bookings/?enter=${yesterdayDateString}&leave=${yesterdayDateString}`,
+            `/admin/bookings/?enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
-            `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}&leave=${DateUtil.getThisWeekSundayDateString()}`,
+            `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsLastWeek,
             this.props.t("lastWeek"),
-            `/admin/bookings/?enter=${DateUtil.getLastWeekMondayDateString()}&leave=${DateUtil.getLastWeekSundayDateString()}`,
+            `/admin/bookings/?enter=${DateUtil.getLastWeekMondayDateString()}T00:00&leave=${DateUtil.getLastWeekSundayDateString()}T23:59`,
           )}
         </Row>
         <Row className="mb-4">
