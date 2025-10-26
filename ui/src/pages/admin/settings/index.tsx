@@ -441,7 +441,7 @@ class Settings extends React.Component<Props, State> {
       if (window.confirm(this.props.t("confirmDeleteOrg2"))) {
         this.org?.delete().then(() => {
           Ajax.PERSISTER.deleteCredentialsFromStorage();
-          window.location.href = "/admin/";
+          window.location.href = "/ui/";
         });
       }
     }
