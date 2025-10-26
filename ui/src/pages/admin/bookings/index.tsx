@@ -21,12 +21,17 @@ import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
+import DateTimePicker from "react-datetime-picker";
+import "react-datetime-picker/dist/DateTimePicker.css";
+import "react-date-picker/dist/DatePicker.css";
+import "react-calendar/dist/Calendar.css";
+import "react-clock/dist/Clock.css";
 
 interface State {
   selectedItem: string;
   loading: boolean;
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
 }
 
 interface Props {
@@ -45,23 +50,32 @@ class Bookings extends React.Component<Props, State> {
 
     const getDateFromQuery = (
       paramName: string,
-      defaultOffset: number,
-    ): string => {
+      defaultOffsetDays: number,
+    ): Date => {
       const queryValue = this.props.router.query[paramName] as string;
-      if (queryValue && DateUtil.isValidDate(queryValue)) {
-        return queryValue;
+      if (queryValue) {
+        if (DateUtil.isValidDateTime(queryValue)) {
+          return new Date(queryValue);
+        } else if (DateUtil.isValidDate(queryValue)) {
+          const date = new Date(queryValue);
+          return defaultOffsetDays < 0
+            ? DateUtil.setHoursToMin(date)
+            : DateUtil.setHoursToMax(date);
+        }
       }
 
       const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + defaultOffset);
-      return Formatting.getISO8601(defaultDate);
+      defaultDate.setDate(defaultDate.getDate() + defaultOffsetDays);
+      return defaultOffsetDays < 0
+        ? DateUtil.setHoursToMin(defaultDate)
+        : DateUtil.setHoursToMax(defaultDate);
     };
 
     this.state = {
       selectedItem: "",
       loading: true,
-      start: getDateFromQuery("enter", -7),
-      end: getDateFromQuery("leave", +7),
+      start: getDateFromQuery("enter", -7), // default: 7 days in past
+      end: getDateFromQuery("leave", +7), // default: 7 days in future
     };
     this.loadSettings();
   }
@@ -96,12 +110,14 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    let end = new Date(this.state.end);
-    end.setHours(23, 59, 59);
-    Booking.listFiltered(new Date(this.state.start), end).then((list) => {
+    const end = DateUtil.setSecondsToMax(this.state.end);
+    Booking.listFiltered(this.state.start, end).then((list) => {
       this.data = list;
       this.setState({ loading: false });
-      this.updateUrlParams(this.state.start, this.state.end);
+      this.updateUrlParams(
+        DateUtil.formatToDateTimeString(this.state.start),
+        DateUtil.formatToDateTimeString(this.state.end),
+      );
     });
   };
 
@@ -239,18 +255,29 @@ class Bookings extends React.Component<Props, State> {
         </Link>
       </>
     );
-    let form = (
+    const form = (
       <Form onSubmit={this.onFilterSubmit} id="form">
         <Form.Group as={Row}>
           <Form.Label column sm="2">
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
-            <Form.Control
-              type="date"
+            <DateTimePicker
               value={this.state.start}
-              onChange={(e: any) => this.setState({ start: e.target.value })}
+              onChange={(value: Date | null) => {
+                if (value != null) this.setState({ start: value });
+              }}
+              clearIcon={null}
               required={true}
+              format={Formatting.getDateTimePickerFormatString()}
+              yearAriaLabel="Year"
+              monthAriaLabel="Month"
+              dayAriaLabel="Day"
+              hourAriaLabel="Start hour"
+              minuteAriaLabel="Start minute"
+              secondAriaLabel="Start second"
+              nativeInputAriaLabel="Start date"
+              calendarAriaLabel="Toggle start calendar"
             />
           </Col>
         </Form.Group>
@@ -259,11 +286,22 @@ class Bookings extends React.Component<Props, State> {
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
-            <Form.Control
-              type="date"
+            <DateTimePicker
               value={this.state.end}
-              onChange={(e: any) => this.setState({ end: e.target.value })}
+              onChange={(value: Date | null) => {
+                if (value != null) this.setState({ end: value });
+              }}
+              clearIcon={null}
               required={true}
+              format={Formatting.getDateTimePickerFormatString()}
+              yearAriaLabel="Year"
+              monthAriaLabel="Month"
+              dayAriaLabel="Day"
+              hourAriaLabel="Start hour"
+              minuteAriaLabel="Start minute"
+              secondAriaLabel="Start second"
+              nativeInputAriaLabel="Start date"
+              calendarAriaLabel="Toggle start calendar"
             />
           </Col>
         </Form.Group>
