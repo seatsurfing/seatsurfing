@@ -76,7 +76,7 @@ func SendUnauthorized(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
-func SendAleadyExists(w http.ResponseWriter) {
+func SendAlreadyExists(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusConflict)
 }
 

@@ -312,7 +312,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {
 		if existingUser.ID != e.ID {
-			SendAleadyExists(w)
+			SendAlreadyExists(w)
 			return
 		}
 	}
@@ -378,7 +378,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, e.Email)
 	if err == nil && existingUser != nil {
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	if err := GetUserRepository().Create(e); err != nil {

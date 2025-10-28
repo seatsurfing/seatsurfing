@@ -443,7 +443,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(conflicts) > 0 {
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	if err := GetBookingRepository().Update(eNew); err != nil {
@@ -615,7 +615,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(conflicts) > 0 {
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	e.Approved = !router.getSpaceRequiresApproval(location.OrganizationID, space)
