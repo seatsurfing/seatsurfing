@@ -693,20 +693,6 @@ func (router *AuthRouter) createRefreshToken(claims *Claims) string {
 	return refreshToken.ID
 }
 
-func (router *AuthRouter) getOrgForEmail(email string) *Organization {
-	mailParts := strings.Split(email, "@")
-	if len(mailParts) != 2 {
-		return nil
-	}
-	domain := strings.ToLower(mailParts[1])
-	org, err := GetOrganizationRepository().GetOneByDomain(domain)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	return org
-}
-
 func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPreflightResponse {
 	list, err := GetAuthProviderRepository().GetAll(org.ID)
 	if err != nil {
