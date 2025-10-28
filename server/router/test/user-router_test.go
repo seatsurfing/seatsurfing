@@ -81,6 +81,17 @@ func TestUserCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestPreventSelfDeletion(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	req := NewHTTPRequest("DELETE", "/user/"+user.ID, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
 func TestUserForbidden(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
