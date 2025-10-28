@@ -4,6 +4,7 @@ import Ajax from "@/util/Ajax";
 
 interface RuntimeUserInfos {
   username: string;
+  userId: string;
   idpLogin: boolean;
   isLoading: boolean;
   maxBookingsPerUser: number;
@@ -42,6 +43,7 @@ export default class RuntimeConfig {
   static resetInfos = () => {
     RuntimeConfig.INFOS = {
       username: "",
+      userId: "",
       idpLogin: false,
       isLoading: true,
       maxBookingsPerUser: 0,
@@ -177,16 +179,17 @@ export default class RuntimeConfig {
     });
   };
 
-  static setDetails = (username: string) => {
+  static setDetails = (username: string, id: string) => {
     RuntimeConfig.loadSettings().then(() => {
       RuntimeConfig.INFOS.username = username;
+      RuntimeConfig.INFOS.userId = id;
     });
   };
 
   static async setLoginDetails(): Promise<void> {
     return User.getSelf().then((user) => {
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-      RuntimeConfig.setDetails(user.email);
+      RuntimeConfig.setDetails(user.email, user.id);
     });
   }
 
@@ -198,7 +201,7 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
       RuntimeConfig.INFOS.orgAdmin = user.admin;
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-      RuntimeConfig.setDetails(user.email);
+      RuntimeConfig.setDetails(user.email, user.id);
       return RuntimeConfig.loadSettings();
     });
   };
