@@ -332,7 +332,7 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !CanAdminOrg(user, e.OrganizationID) || e.ID == user.ID {
 		SendForbidden(w)
 		return
 	}
