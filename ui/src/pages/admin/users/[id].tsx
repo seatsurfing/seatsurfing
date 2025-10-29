@@ -241,17 +241,17 @@ class EditUser extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
     }
 
-    let buttonDelete = (
+    const buttonDelete = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
         onClick={this.deleteItem}
-        disabled={false}
+        disabled={RuntimeConfig.INFOS.userId === this.entity.id}
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
     );
-    let buttonSave = (
+    const buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
