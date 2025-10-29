@@ -89,6 +89,11 @@ class Users extends React.Component<Props, State> {
     return (
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
+        <td>
+          {user.firstname}
+          {user.firstname || user.lastname ? ", " : ""}
+          {user.lastname}
+        </td>
         <td>{role}</td>
         <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
           {authProvider}
@@ -153,12 +158,18 @@ class Users extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table"
+          className="clickable-table caption-top"
           id="datatable"
         >
+          <caption>
+            {this.props.t("numRecords")}: {rows.length}
+          </caption>
           <thead>
             <tr>
               <th>{this.props.t("username")}</th>
+              <th>
+                {this.props.t("lastname")}, {this.props.t("firstname")}
+              </th>
               <th>{this.props.t("role")}</th>
               <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
                 {this.props.t("loginMeans")}
