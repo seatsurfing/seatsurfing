@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.46.0](https://github.com/seatsurfing/seatsurfing/compare/v1.45.1...v1.46.0) (2025-10-29)
+
+
+### Features
+
+* use date time picker in admin booking UI ([#1434](https://github.com/seatsurfing/seatsurfing/issues/1434)) ([4b35dec](https://github.com/seatsurfing/seatsurfing/commit/4b35dec73aa2c619284ce999544b62c16efef486))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.9.1 to 24.9.2 in /e2e ([#1441](https://github.com/seatsurfing/seatsurfing/issues/1441)) ([d663103](https://github.com/seatsurfing/seatsurfing/commit/d663103265238f953d1cd5337eb18f30e8cce5ad))
+* **deps:** bump @types/node from 24.9.1 to 24.9.2 in /ui ([#1442](https://github.com/seatsurfing/seatsurfing/issues/1442)) ([e57c00f](https://github.com/seatsurfing/seatsurfing/commit/e57c00f069ade68aea7f3018ccc389b7f0d71c42))
+* prevent user self-deletion ([#1439](https://github.com/seatsurfing/seatsurfing/issues/1439)) ([92b4e3b](https://github.com/seatsurfing/seatsurfing/commit/92b4e3b1d8972282b3fbdd7275aa3e59f9239076))
+* remove debug logs ([#1433](https://github.com/seatsurfing/seatsurfing/issues/1433)) ([e0b55ee](https://github.com/seatsurfing/seatsurfing/commit/e0b55eeb132338a8a8006d42a7fbafd640e6ae2e))
+
 ## [1.45.1](https://github.com/seatsurfing/seatsurfing/compare/v1.45.0...v1.45.1) (2025-10-22)
 
 
