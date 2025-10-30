@@ -182,16 +182,24 @@ func (r *OrganizationRepository) GetOneByDomain(domain string) (*Organization, e
 	return e, nil
 }
 
-func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
+func (r *OrganizationRepository) GetOneIncludeDeleted(id string, includeDeleted bool) (*Organization, error) {
+	appendix := " AND deleted = FALSE"
+	if includeDeleted {
+		appendix = ""
+	}
 	e := &Organization{}
 	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, deleted, deleted_at_utc "+
 		"FROM organizations "+
-		"WHERE id = $1 AND deleted = FALSE",
+		"WHERE id = $1"+appendix,
 		id).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Deleted, &e.DeletedAtUTC)
 	if err != nil {
 		return nil, err
 	}
 	return e, nil
+}
+
+func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
+	return r.GetOneIncludeDeleted(id, false)
 }
 
 func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error) {
@@ -291,6 +299,19 @@ func (r *OrganizationRepository) Update(e *Organization) error {
 	for _, plg := range plugin.GetPlugins() {
 		(*plg).OnOrganizationUpdated(e.ID)
 	}
+	return nil
+}
+
+func (r *OrganizationRepository) RestoreSoftDeleted(e *Organization) error {
+	_, err := GetDatabase().DB().Exec("UPDATE organizations SET "+
+		"deleted = FALSE, deleted_at_utc = NULL "+
+		"WHERE id = $1 AND deleted = TRUE",
+		e.ID)
+	if err != nil {
+		return err
+	}
+	e.Deleted = false
+	e.DeletedAtUTC = nil
 	return nil
 }
 
