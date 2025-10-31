@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.47.0](https://github.com/seatsurfing/seatsurfing/compare/v1.46.0...v1.47.0) (2025-10-31)
+
+
+### Features
+
+* add number of records and user's firstname and lastname in user admin UI ([#1443](https://github.com/seatsurfing/seatsurfing/issues/1443)) ([3af1dab](https://github.com/seatsurfing/seatsurfing/commit/3af1dab50bbc58c8f51dff0a3ca29bb0e5c8d51e))
+* organizations get soft-deleted when deleted via Admin UI ([#1432](https://github.com/seatsurfing/seatsurfing/issues/1432)) ([602838e](https://github.com/seatsurfing/seatsurfing/commit/602838e90bc1fcb404e767029959a7dd3183419b))
+* use date picker in admin analysis UI ([#1444](https://github.com/seatsurfing/seatsurfing/issues/1444)) ([b33fe88](https://github.com/seatsurfing/seatsurfing/commit/b33fe88be6803f7ce4f194b1029bc0b220fae144))
+
 ## [1.46.0](https://github.com/seatsurfing/seatsurfing/compare/v1.45.1...v1.46.0) (2025-10-29)
 
 
