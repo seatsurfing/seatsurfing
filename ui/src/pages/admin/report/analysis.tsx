@@ -14,11 +14,14 @@ import Formatting from "@/util/Formatting";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
+import DatePicker from "react-date-picker";
+import "react-date-picker/dist/DatePicker.css";
+import "react-calendar/dist/Calendar.css";
 
 interface State {
   loading: boolean;
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
   locationId: string;
 }
 
@@ -41,8 +44,8 @@ class ReportAnalysis extends React.Component<Props, State> {
     start.setDate(end.getDate() - 7);
     this.state = {
       loading: true,
-      start: Formatting.getISO8601(start),
-      end: Formatting.getISO8601(end),
+      start,
+      end,
       locationId: "",
     };
   }
@@ -60,14 +63,12 @@ class ReportAnalysis extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    let end = new Date(this.state.end);
+    const end = new Date(this.state.end);
     end.setHours(23, 59, 59);
     let params =
       "start=" +
       encodeURIComponent(
-        Formatting.convertToFakeUTCDate(
-          new Date(this.state.start),
-        ).toISOString(),
+        Formatting.convertToFakeUTCDate(this.state.start).toISOString(),
       );
     params +=
       "&end=" +
@@ -171,11 +172,20 @@ class ReportAnalysis extends React.Component<Props, State> {
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
-            <Form.Control
-              type="date"
+            <DatePicker
               value={this.state.start}
-              onChange={(e: any) => this.setState({ start: e.target.value })}
+              onChange={(value: Date | null | [Date | null, Date | null]) => {
+                if (value != null && value instanceof Date)
+                  this.setState({ start: value });
+              }}
+              clearIcon={null}
               required={true}
+              format={Formatting.getDateTimePickerFormatDailyString()}
+              yearAriaLabel="Year"
+              monthAriaLabel="Month"
+              dayAriaLabel="Day"
+              nativeInputAriaLabel="Start date"
+              calendarAriaLabel="Toggle start calendar"
             />
           </Col>
         </Form.Group>
@@ -184,11 +194,20 @@ class ReportAnalysis extends React.Component<Props, State> {
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
-            <Form.Control
-              type="date"
+            <DatePicker
               value={this.state.end}
-              onChange={(e: any) => this.setState({ end: e.target.value })}
+              onChange={(value: Date | null | [Date | null, Date | null]) => {
+                if (value != null && value instanceof Date)
+                  this.setState({ end: value });
+              }}
+              clearIcon={null}
               required={true}
+              format={Formatting.getDateTimePickerFormatDailyString()}
+              yearAriaLabel="Year"
+              monthAriaLabel="Month"
+              dayAriaLabel="Day"
+              nativeInputAriaLabel="End date"
+              calendarAriaLabel="Toggle end calendar"
             />
           </Col>
         </Form.Group>
