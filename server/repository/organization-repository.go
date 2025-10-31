@@ -206,7 +206,7 @@ func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error)
 	e := &Organization{}
 	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, deleted, deleted_at_utc "+
 		"FROM organizations "+
-		"WHERE LOWER(contact_email) = $1 AND deleted = FALSE",
+		"WHERE LOWER(contact_email) = $1",
 		strings.ToLower(email)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Deleted, &e.DeletedAtUTC)
 	if err != nil {
 		return nil, err
