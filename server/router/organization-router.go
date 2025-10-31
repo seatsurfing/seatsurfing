@@ -447,7 +447,7 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		SendNotFound(w)
 		return
 	}
-	if err := GetOrganizationRepository().Delete(e); err != nil {
+	if err := GetOrganizationRepository().DeleteSoft(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
