@@ -134,7 +134,7 @@ func (router *SettingsRouter) setSetting(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		log.Println(err)
 		if errors.Is(err, ErrAlreadyExists) {
-			SendAleadyExists(w)
+			SendAlreadyExists(w)
 		} else {
 			SendInternalServerError(w)
 		}
@@ -214,7 +214,7 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 			if errors.Is(err, ErrAlreadyExists) {
-				SendAleadyExists(w)
+				SendAlreadyExists(w)
 			} else {
 				SendInternalServerError(w)
 			}

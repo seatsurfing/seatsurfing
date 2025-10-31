@@ -203,20 +203,20 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 	// Check if domain exists in this org already
 	domain, _ := GetOrganizationRepository().GetDomain(e, domainName)
 	if domain != nil {
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	// Check if domain exists in activated state in ANY org already
 	someOrg, _ := GetOrganizationRepository().GetOneByDomain(domainName)
 	if someOrg != nil {
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	// Add domain
 	err = GetOrganizationRepository().AddDomain(e, domainName, GetUserRepository().IsSuperAdmin(user))
 	if err != nil {
 		log.Println(err)
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	router.ensureOrgHasPrimaryDomain(e, domainName)
@@ -295,7 +295,7 @@ func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Re
 	// Check if domain exists in activated state in ANY org already
 	someOrg, _ := GetOrganizationRepository().GetOneByDomain(vars["domain"])
 	if someOrg != nil {
-		SendAleadyExists(w)
+		SendAlreadyExists(w)
 		return
 	}
 	if !IsValidTXTRecord(domain.DomainName, domain.VerifyToken) {
