@@ -38,6 +38,12 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type IdPUserInfo struct {
+	Email     string
+	Firstname string
+	Lastname  string
+}
+
 type InitPasswordResetRequest struct {
 	OrganizationID string `json:"organizationId" validate:"required"`
 	Email          string `json:"email" validate:"required,email"`
@@ -524,7 +530,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl("ui", provider, "provider"))
 		return
 	}
-	claims, payload, err := router.getUserInfo(provider, r.FormValue("state"), r.FormValue("code"))
+	userInfo, payload, err := router.getUserInfo(provider, r.FormValue("state"), r.FormValue("code"))
 	if err != nil {
 		log.Printf("Error getting user info for provider %s: %s\n", vars["id"], err)
 
@@ -541,15 +547,44 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
+	user, err := GetUserRepository().GetByEmail(provider.OrganizationID, userInfo.Email)
 	if !allowAnyUser {
-		_, err := GetUserRepository().GetByEmail(provider.OrganizationID, claims.Email)
-		if err != nil {
+		if err != nil || user == nil {
 			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
 			return
 		}
 	}
+	if user == nil {
+		org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
+		if org == nil || err != nil || org.Deleted {
+			SendNotFound(w)
+			return
+		}
+		if !GetUserRepository().CanCreateUser(org) {
+			SendPaymentRequired(w)
+			return
+		}
+		user = &User{
+			Email:          userInfo.Email,
+			OrganizationID: org.ID,
+			Role:           UserRoleUser,
+		}
+		GetUserRepository().Create(user)
+	}
+	needUserUpdate := false
+	if user.Firstname != userInfo.Firstname {
+		user.Firstname = userInfo.Firstname
+		needUserUpdate = true
+	}
+	if user.Lastname != userInfo.Lastname {
+		user.Lastname = userInfo.Lastname
+		needUserUpdate = true
+	}
+	if needUserUpdate {
+		GetUserRepository().Update(user)
+	}
 	payloadNew := &AuthStateLoginPayload{
-		UserID:    claims.Email,
+		UserID:    userInfo.Email,
 		LoginType: payload.LoginType,
 	}
 	authState := &AuthState{
@@ -601,7 +636,7 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 	}
 }
 
-func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*Claims, *AuthStateLoginPayload, error) {
+func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*IdPUserInfo, *AuthStateLoginPayload, error) {
 	// Verify state string
 	authState, err := GetAuthStateRepository().GetOne(state)
 	if err != nil {
@@ -639,11 +674,26 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if (result[provider.UserInfoEmailField] == nil) || (strings.TrimSpace(result[provider.UserInfoEmailField].(string)) == "") {
 		return nil, nil, fmt.Errorf("could not read email address from field: %s", provider.UserInfoEmailField)
 	}
-	claims := &Claims{
-		Email: result[provider.UserInfoEmailField].(string),
+	email := strings.TrimSpace(result[provider.UserInfoEmailField].(string))
+	firstname := ""
+	lastname := ""
+	if provider.UserInfoFirstnameField != "" {
+		if result[provider.UserInfoFirstnameField] != nil {
+			firstname = strings.TrimSpace(result[provider.UserInfoFirstnameField].(string))
+		}
+	}
+	if provider.UserInfoLastnameField != "" {
+		if result[provider.UserInfoLastnameField] != nil {
+			lastname = strings.TrimSpace(result[provider.UserInfoLastnameField].(string))
+		}
+	}
+	info := &IdPUserInfo{
+		Email:     email,
+		Firstname: firstname,
+		Lastname:  lastname,
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
-	return claims, payload, nil
+	return info, payload, nil
 }
 
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {

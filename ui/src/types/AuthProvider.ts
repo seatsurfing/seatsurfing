@@ -10,6 +10,8 @@ export default class AuthProvider extends Entity {
   scopes: string;
   userInfoUrl: string;
   userInfoEmailField: string;
+  userInfoFirstnameField: string;
+  userInfoLastnameField: string;
   clientId: string;
   clientSecret: string;
   logoutUrl: string;
@@ -26,6 +28,8 @@ export default class AuthProvider extends Entity {
     this.scopes = "";
     this.userInfoUrl = "";
     this.userInfoEmailField = "";
+    this.userInfoFirstnameField = "";
+    this.userInfoLastnameField = "";
     this.clientId = "";
     this.clientSecret = "";
     this.logoutUrl = "";
@@ -43,6 +47,8 @@ export default class AuthProvider extends Entity {
       scopes: this.scopes,
       userInfoUrl: this.userInfoUrl,
       userInfoEmailField: this.userInfoEmailField,
+      userInfoFirstnameField: this.userInfoFirstnameField,
+      userInfoLastnameField: this.userInfoLastnameField,
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       logoutUrl: this.logoutUrl,
@@ -60,6 +66,8 @@ export default class AuthProvider extends Entity {
     this.scopes = input.scopes;
     this.userInfoUrl = input.userInfoUrl;
     this.userInfoEmailField = input.userInfoEmailField;
+    this.userInfoFirstnameField = input.userInfoFirstnameField;
+    this.userInfoLastnameField = input.userInfoLastnameField;
     this.clientId = input.clientId;
     this.clientSecret = input.clientSecret;
     this.logoutUrl = input.logoutUrl;
