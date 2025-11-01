@@ -284,6 +284,8 @@
   "user": "User",
   "userNotFound": "User not found",
   "userinfoEmailField": "Userinfo Email field",
+  "userinfoFirstnameField": "Userinfo Firstname field",
+  "userinfoLastnameField": "Userinfo Lastname field",
   "username": "Username",
   "users": "Users",
   "utilization": "Utilization",

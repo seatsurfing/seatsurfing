@@ -17,18 +17,20 @@ type AuthProviderRouter struct {
 }
 
 type CreateAuthProviderRequest struct {
-	Name               string `json:"name" validate:"required"`
-	ProviderType       int    `json:"providerType" validate:"required"`
-	AuthURL            string `json:"authUrl" validate:"required"`
-	TokenURL           string `json:"tokenUrl" validate:"required"`
-	AuthStyle          int    `json:"authStyle"`
-	Scopes             string `json:"scopes" validate:"required"`
-	UserInfoURL        string `json:"userInfoUrl" validate:"required"`
-	UserInfoEmailField string `json:"userInfoEmailField" validate:"required"`
-	ClientID           string `json:"clientId" validate:"required"`
-	ClientSecret       string `json:"clientSecret" validate:"required"`
-	LogoutURL          string `json:"logoutUrl"`
-	ProfilePageURL     string `json:"profilePageUrl"`
+	Name                   string `json:"name" validate:"required"`
+	ProviderType           int    `json:"providerType" validate:"required"`
+	AuthURL                string `json:"authUrl" validate:"required"`
+	TokenURL               string `json:"tokenUrl" validate:"required"`
+	AuthStyle              int    `json:"authStyle"`
+	Scopes                 string `json:"scopes" validate:"required"`
+	UserInfoURL            string `json:"userInfoUrl" validate:"required"`
+	UserInfoEmailField     string `json:"userInfoEmailField" validate:"required"`
+	UserInfoFirstnameField string `json:"userInfoFirstnameField"`
+	UserInfoLastnameField  string `json:"userInfoLastnameField"`
+	ClientID               string `json:"clientId" validate:"required"`
+	ClientSecret           string `json:"clientSecret" validate:"required"`
+	LogoutURL              string `json:"logoutUrl"`
+	ProfilePageURL         string `json:"profilePageUrl"`
 }
 
 type GetAuthProviderResponse struct {
@@ -209,6 +211,8 @@ func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest
 	e.Scopes = m.Scopes
 	e.UserInfoURL = m.UserInfoURL
 	e.UserInfoEmailField = m.UserInfoEmailField
+	e.UserInfoFirstnameField = m.UserInfoFirstnameField
+	e.UserInfoLastnameField = m.UserInfoLastnameField
 	e.ProviderType = m.ProviderType
 	e.LogoutURL = m.LogoutURL
 	e.ProfilePageURL = m.ProfilePageURL
@@ -228,6 +232,8 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.Scopes = e.Scopes
 	m.UserInfoURL = e.UserInfoURL
 	m.UserInfoEmailField = e.UserInfoEmailField
+	m.UserInfoFirstnameField = e.UserInfoFirstnameField
+	m.UserInfoLastnameField = e.UserInfoLastnameField
 	m.ProviderType = e.ProviderType
 	m.LogoutURL = e.LogoutURL
 	m.ProfilePageURL = e.ProfilePageURL

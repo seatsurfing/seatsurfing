@@ -310,5 +310,7 @@
   "yesterday": "Hier",
   "yourDomainPlaceholder": "seatsurfing.votre-domaine.com",
   "manageProfile": "Manage profile",
-  "profile": "Profile"
+  "profile": "Profile",
+  "userinfoFirstnameField": "Userinfo Firstname field",
+  "userinfoLastnameField": "Userinfo Lastname field"
 }

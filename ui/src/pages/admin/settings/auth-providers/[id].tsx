@@ -29,6 +29,8 @@ interface State {
   scopes: string;
   userInfoUrl: string;
   userInfoEmailField: string;
+  userInfoFirstnameField: string;
+  userInfoLastnameField: string;
   clientId: string;
   clientSecret: string;
   logoutUrl: string;
@@ -59,6 +61,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       scopes: "",
       userInfoUrl: "",
       userInfoEmailField: "",
+      userInfoFirstnameField: "",
+      userInfoLastnameField: "",
       clientId: "",
       clientSecret: "",
       logoutUrl: "",
@@ -89,6 +93,8 @@ class EditAuthProvider extends React.Component<Props, State> {
           scopes: authProvider.scopes,
           userInfoUrl: authProvider.userInfoUrl,
           userInfoEmailField: authProvider.userInfoEmailField,
+          userInfoFirstnameField: authProvider.userInfoFirstnameField,
+          userInfoLastnameField: authProvider.userInfoLastnameField,
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
           logoutUrl: authProvider.logoutUrl,
@@ -114,6 +120,8 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.scopes = this.state.scopes;
     this.entity.userInfoUrl = this.state.userInfoUrl;
     this.entity.userInfoEmailField = this.state.userInfoEmailField;
+    this.entity.userInfoFirstnameField = this.state.userInfoFirstnameField;
+    this.entity.userInfoLastnameField = this.state.userInfoLastnameField;
     this.entity.clientId = this.state.clientId;
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
@@ -143,9 +151,11 @@ class EditAuthProvider extends React.Component<Props, State> {
       authUrl: "https://accounts.google.com/o/oauth2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       authStyle: 1,
-      scopes: "https://www.googleapis.com/auth/userinfo.email",
+      scopes: "https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile",
       userInfoUrl: "https://www.googleapis.com/oauth2/v3/userinfo",
       userInfoEmailField: "email",
+      userInfoFirstnameField: "given_name",
+      userInfoLastnameField: "family_name",
       logoutUrl: "",
     });
   };
@@ -157,9 +167,11 @@ class EditAuthProvider extends React.Component<Props, State> {
       authUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
       tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
       authStyle: 1,
-      scopes: "openid,email",
+      scopes: "openid,email,profile",
       userInfoUrl: "https://graph.microsoft.com/oidc/userinfo",
       userInfoEmailField: "email",
+      userInfoFirstnameField: "givenname",
+      userInfoLastnameField: "familyname",
       logoutUrl:
         "https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={logoutRedirectUri}",
     });
@@ -177,7 +189,9 @@ class EditAuthProvider extends React.Component<Props, State> {
       scopes: "openid,email",
       userInfoUrl:
         "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/userinfo",
-      userInfoEmailField: "email",
+      userInfoEmailField: "email,profile",
+      userInfoFirstnameField: "given_name",
+      userInfoLastnameField: "family_name",
       logoutUrl:
         "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/logout?post_logout_redirect_uri={logoutRedirectUri}",
     });
@@ -192,7 +206,9 @@ class EditAuthProvider extends React.Component<Props, State> {
       authStyle: 1,
       scopes: "openid,email",
       userInfoUrl: "https://tenantname.okta.com/oauth2/default/v1/userinfo",
-      userInfoEmailField: "email",
+      userInfoEmailField: "email,profile",
+      userInfoFirstnameField: "given_name",
+      userInfoLastnameField: "family_name",
       logoutUrl:
         "https://tenantname.okta.com/oauth2/default/v1/logout?post_logout_redirect_uri={logoutRedirectUri}",
     });
@@ -445,6 +461,36 @@ class EditAuthProvider extends React.Component<Props, State> {
                   this.setState({ userInfoEmailField: e.target.value })
                 }
                 required={true}
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("userinfoFirstnameField")}
+            </Form.Label>
+            <Col sm="9">
+              <Form.Control
+                type="text"
+                placeholder="firstname"
+                value={this.state.userInfoFirstnameField}
+                onChange={(e: any) =>
+                  this.setState({ userInfoFirstnameField: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("userinfoLastnameField")}
+            </Form.Label>
+            <Col sm="9">
+              <Form.Control
+                type="text"
+                placeholder="email"
+                value={this.state.userInfoLastnameField}
+                onChange={(e: any) =>
+                  this.setState({ userInfoLastnameField: e.target.value })
+                }
               />
             </Col>
           </Form.Group>
