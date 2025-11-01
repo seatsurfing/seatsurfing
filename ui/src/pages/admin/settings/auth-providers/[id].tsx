@@ -151,7 +151,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       authUrl: "https://accounts.google.com/o/oauth2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       authStyle: 1,
-      scopes: "https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile",
+      scopes:
+        "https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile",
       userInfoUrl: "https://www.googleapis.com/oauth2/v3/userinfo",
       userInfoEmailField: "email",
       userInfoFirstnameField: "given_name",
