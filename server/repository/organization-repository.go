@@ -20,15 +20,16 @@ type OrganizationRepository struct {
 }
 
 type Organization struct {
-	ID               string
-	Name             string
-	ContactFirstname string
-	ContactLastname  string
-	ContactEmail     string
-	Language         string
-	SignupDate       time.Time
-	Deleted          bool
-	DeletedAtUTC     *time.Time
+	ID                    string
+	Name                  string
+	ContactFirstname      string
+	ContactLastname       string
+	ContactEmail          string
+	Language              string
+	SignupDate            time.Time
+	DeleteScheduled       bool       // true if the deletion is scheduled
+	DeleteScheduledAtUtc  *time.Time // time when the deletion was scheduled
+	DeleteScheduledForUTC *time.Time // time (in the future) the deletion is scheduled for
 }
 
 type Domain struct {
@@ -144,8 +145,9 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 	}
 	if curVersion < 29 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
-			"ADD COLUMN IF NOT EXISTS deleted boolean NOT NULL DEFAULT FALSE, " +
-			"ADD COLUMN IF NOT EXISTS deleted_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
+			"ADD COLUMN IF NOT EXISTS delete_scheduled boolean NOT NULL DEFAULT FALSE, " +
+			"ADD COLUMN IF NOT EXISTS delete_scheduled_at_utc TIMESTAMP NULL DEFAULT NULL" +
+			"ADD COLUMN IF NOT EXISTS delete_scheduled_for_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
 	}
@@ -154,10 +156,10 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 func (r *OrganizationRepository) Create(e *Organization) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO organizations "+
-		"(name, contact_firstname, contact_lastname, contact_email, language, signup_date, deleted, deleted_at_utc) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "+
+		"(name, contact_firstname, contact_lastname, contact_email, language, signup_date, delete_scheduled, delete_scheduled_at_utc, delete_scheduled_for_utc) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) "+
 		"RETURNING id",
-		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate, e.Deleted, e.DeletedAtUTC).Scan(&id)
+		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate, e.DeleteScheduled, e.DeleteScheduledAtUtc, e.DeleteScheduledForUTC).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -171,27 +173,11 @@ func (r *OrganizationRepository) Create(e *Organization) error {
 
 func (r *OrganizationRepository) GetOneByDomain(domain string) (*Organization, error) {
 	e := &Organization{}
-	err := GetDatabase().DB().QueryRow("SELECT organizations.id, organizations.name, organizations.contact_firstname, organizations.contact_lastname, organizations.contact_email, organizations.language, organizations.signup_date, organizations.deleted, organizations.deleted_at_utc "+
+	err := GetDatabase().DB().QueryRow("SELECT organizations.id, organizations.name, organizations.contact_firstname, organizations.contact_lastname, organizations.contact_email, organizations.language, organizations.signup_date, organizations.deleted, organizations.deleted_at_utc, organizations.deleted_hard_at_utc "+
 		"FROM organizations_domains "+
 		"INNER JOIN organizations ON organizations.id = organizations_domains.organization_id "+
-		"WHERE LOWER(organizations_domains.domain) = $1 AND organizations_domains.active = TRUE AND organizations.deleted = FALSE",
-		strings.ToLower(domain)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Deleted, &e.DeletedAtUTC)
-	if err != nil {
-		return nil, err
-	}
-	return e, nil
-}
-
-func (r *OrganizationRepository) GetOneIncludeDeleted(id string, includeDeleted bool) (*Organization, error) {
-	appendix := " AND deleted = FALSE"
-	if includeDeleted {
-		appendix = ""
-	}
-	e := &Organization{}
-	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, deleted, deleted_at_utc "+
-		"FROM organizations "+
-		"WHERE id = $1"+appendix,
-		id).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Deleted, &e.DeletedAtUTC)
+		"WHERE LOWER(organizations_domains.domain) = $1 AND organizations_domains.active = TRUE",
+		strings.ToLower(domain)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Deleted, &e.DeletedAtUTC, &e.DeletedHardAtUTC)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +185,15 @@ func (r *OrganizationRepository) GetOneIncludeDeleted(id string, includeDeleted 
 }
 
 func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
-	return r.GetOneIncludeDeleted(id, false)
+	e := &Organization{}
+	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, deleted, deleted_at_utc, deleted_hard_at_utc "+
+		"FROM organizations "+
+		"WHERE id = $1",
+		id).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Deleted, &e.DeletedAtUTC, &e.DeletedHardAtUTC)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
 }
 
 func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error) {
