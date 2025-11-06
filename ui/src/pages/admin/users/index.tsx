@@ -90,9 +90,9 @@ class Users extends React.Component<Props, State> {
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
         <td>
-          {user.firstname}
-          {user.firstname || user.lastname ? ", " : ""}
           {user.lastname}
+          {user.lastname && user.firstname ? ", " : ""}
+          {user.firstname}
         </td>
         <td>{role}</td>
         <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
