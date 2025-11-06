@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.47.0](https://github.com/seatsurfing/seatsurfing/compare/v1.46.0...v1.47.0) (2025-11-06)
+
+
+### Features
+
+* add number of records and user's firstname and lastname in user admin UI ([#1443](https://github.com/seatsurfing/seatsurfing/issues/1443)) ([3af1dab](https://github.com/seatsurfing/seatsurfing/commit/3af1dab50bbc58c8f51dff0a3ca29bb0e5c8d51e))
+* organizations get soft-deleted when deleted via Admin UI ([#1432](https://github.com/seatsurfing/seatsurfing/issues/1432)) ([602838e](https://github.com/seatsurfing/seatsurfing/commit/602838e90bc1fcb404e767029959a7dd3183419b))
+* set first name and last name from Auth Provider / IdP ([#1452](https://github.com/seatsurfing/seatsurfing/issues/1452)) ([52af1bb](https://github.com/seatsurfing/seatsurfing/commit/52af1bb538e051a5e298472637f03f4b408b8a71))
+* use date picker in admin analysis UI ([#1444](https://github.com/seatsurfing/seatsurfing/issues/1444)) ([b33fe88](https://github.com/seatsurfing/seatsurfing/commit/b33fe88be6803f7ce4f194b1029bc0b220fae144))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.9.2 to 24.10.0 in /e2e ([#1453](https://github.com/seatsurfing/seatsurfing/issues/1453)) ([975ac3a](https://github.com/seatsurfing/seatsurfing/commit/975ac3ad8edd7e2cf62e14a905b0b0bcdfbb3d25))
+* **deps:** bump @types/node from 24.9.2 to 24.10.0 in /ui ([#1455](https://github.com/seatsurfing/seatsurfing/issues/1455)) ([aeacb5b](https://github.com/seatsurfing/seatsurfing/commit/aeacb5b05a44892fb16b2e354a0980830c9a82c7))
+* **deps:** bump eslint from 9.38.0 to 9.39.1 in /ui ([#1456](https://github.com/seatsurfing/seatsurfing/issues/1456)) ([bb25b73](https://github.com/seatsurfing/seatsurfing/commit/bb25b73dd04f3be1e916db5f1653bec15c831f59))
+* update dutch translations ([#1458](https://github.com/seatsurfing/seatsurfing/issues/1458)) ([9399b88](https://github.com/seatsurfing/seatsurfing/commit/9399b8805ed3f506b586217114df95f4441030f8))
+
 ## [1.46.0](https://github.com/seatsurfing/seatsurfing/compare/v1.45.1...v1.46.0) (2025-10-29)
 
 
