@@ -47,7 +47,7 @@
   "devDependencies": {
     "@types/node": "24.9.2",
     "@types/react-autosuggest": "^10.1.11",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "eslint-config-next": "15.5.6",
     "prettier": "3.6.2"
   }
