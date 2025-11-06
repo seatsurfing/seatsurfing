@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.47.1](https://github.com/seatsurfing/seatsurfing/compare/v1.47.0...v1.47.1) (2025-11-06)
+
+
+### Bug Fixes
+
+* do not update user's firstname and lastname if empty in IDP ([#1461](https://github.com/seatsurfing/seatsurfing/issues/1461)) ([8aa7591](https://github.com/seatsurfing/seatsurfing/commit/8aa7591492dcd414c1f38f09299e25ea171483be))
+* fix name column in user admin UI ([#1460](https://github.com/seatsurfing/seatsurfing/issues/1460)) ([77c6d8a](https://github.com/seatsurfing/seatsurfing/commit/77c6d8aa43adc8573a3f1d1e347b7d5d140b05f1))
+
 ## [1.47.0](https://github.com/seatsurfing/seatsurfing/compare/v1.46.0...v1.47.0) (2025-11-06)
 
 
