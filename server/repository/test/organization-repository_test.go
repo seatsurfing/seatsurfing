@@ -36,10 +36,7 @@ func TestOrganizationsCRUD(t *testing.T) {
 	CheckTestBool(t, true, org3 != nil)
 	CheckTestString(t, "New Name", org3.Name)
 
-	err = GetOrganizationRepository().DeleteSoft(org)
-	CheckTestBool(t, true, err == nil)
-
-	err = GetOrganizationRepository().DeleteHard(org)
+	err = GetOrganizationRepository().Delete(org)
 	CheckTestBool(t, true, err == nil)
 }
 

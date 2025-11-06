@@ -14,8 +14,7 @@ type SeatsurfingPlugin interface {
 	OnBeforeUserDelete(userID string)
 	OnOrganizationCreated(organizationID string)
 	OnOrganizationUpdated(organizationID string)
-	OnBeforeOrganizationDeleteSoft(organizationID string)
-	OnBeforeOrganizationDeleteHard(organizationID string)
+	OnBeforeOrganizationDelete(organizationID string)
 }
 
 type AdminUIMenuItem struct {
