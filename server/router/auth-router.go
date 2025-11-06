@@ -548,11 +548,11 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 		GetUserRepository().Create(user)
 	}
 	needUserUpdate := false
-	if user.Firstname != userInfo.Firstname {
+	if userInfo.Firstname != "" && user.Firstname != userInfo.Firstname {
 		user.Firstname = userInfo.Firstname
 		needUserUpdate = true
 	}
-	if user.Lastname != userInfo.Lastname {
+	if userInfo.Lastname != "" && user.Lastname != userInfo.Lastname {
 		user.Lastname = userInfo.Lastname
 		needUserUpdate = true
 	}
