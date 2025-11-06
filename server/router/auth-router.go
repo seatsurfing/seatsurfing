@@ -99,7 +99,7 @@ func (router *AuthRouter) getOrgDetails(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	org, err := GetOrganizationRepository().GetOneByDomain(vars["domain"])
-	if err != nil || org == nil || org.Deleted {
+	if err != nil || org == nil {
 		SendNotFound(w)
 		return
 	}
@@ -141,10 +141,6 @@ func (router *AuthRouter) singleOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	org := list[0]
-	if org == nil || org.Deleted {
-		SendNotFound(w)
-		return
-	}
 	res := router.getPreflightResponseForOrg(org)
 	if res == nil {
 		SendInternalServerError(w)
@@ -184,11 +180,6 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if user.Disabled {
-		SendNotFound(w)
-		return
-	}
-	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if err != nil || org == nil || org.Deleted {
 		SendNotFound(w)
 		return
 	}
@@ -235,7 +226,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if org == nil || err != nil || org.Deleted {
+	if org == nil || err != nil {
 		SendUpdated(w)
 		return
 	}
@@ -318,11 +309,6 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
-	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if err != nil || org == nil || org.Deleted {
-		SendNotFound(w)
-		return
-	}
 	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
 		SendNotFound(w)
 		return
@@ -354,11 +340,6 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 		return
 	}
 	if user.Disabled {
-		SendNotFound(w)
-		return
-	}
-	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if err != nil || org == nil || org.Deleted {
 		SendNotFound(w)
 		return
 	}
@@ -405,8 +386,8 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		user, _ = GetUserRepository().GetByEmail(provider.OrganizationID, payload.UserID)
 		if user == nil {
 			org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
-			if org == nil || err != nil || org.Deleted {
-				SendNotFound(w)
+			if err != nil {
+				SendInternalServerError(w)
 				return
 			}
 			allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
@@ -438,11 +419,6 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user.Disabled {
-		SendNotFound(w)
-		return
-	}
-	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if err != nil || org == nil || org.Deleted {
 		SendNotFound(w)
 		return
 	}
@@ -556,7 +532,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
-		if org == nil || err != nil || org.Deleted {
+		if org == nil || err != nil {
 			SendNotFound(w)
 			return
 		}
