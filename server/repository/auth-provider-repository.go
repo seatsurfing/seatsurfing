@@ -78,7 +78,7 @@ func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 	}
-	if curVersion < 30 {
+	if curVersion < 29 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
 			"ADD COLUMN IF NOT EXISTS userinfo_firstname_field VARCHAR NOT NULL DEFAULT '', " +
 			"ADD COLUMN IF NOT EXISTS userinfo_lastname_field VARCHAR NOT NULL DEFAULT ''"); err != nil {
