@@ -87,14 +87,14 @@ This starts...
 
 The Seatsurfing Booking UI is accessible at :8080/ui/search/ and the Seatsurfing Admin UI instance at :8080/ui/admin/.
 
-To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.io/docs/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
+To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.io/docs/self-hosted/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
 
 ### Running on Kubernetes
 
-Please refer to our [Kubernetes documentation](https://seatsurfing.io/docs/kubernetes/).
+Please refer to our [Kubernetes documentation](https://seatsurfing.io/docs/self-hosted/kubernetes/).
 
 ## ⚙️ Environment variables
 
-Please check out the [documentation](https://seatsurfing.io/docs/config) for information on available environment variables and further guidance.
+Please check out the [documentation](https://seatsurfing.io/docs/self-hosted/config) for information on available environment variables and further guidance.
 
 **Hint**: When running in an IPV6-only Docker/Podman environment with multiple network interfaces bound to the Frontend containers, setting the `LISTEN_ADDR` environment variable can be necessary as NextJS binds to only one network interface by default. Set it to `::` to bind to any address.
