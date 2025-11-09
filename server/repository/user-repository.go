@@ -46,6 +46,13 @@ type User struct {
 	LastActivityAtUTC *time.Time
 }
 
+func (u *User) GetDisplayName() string {
+	if u.Firstname != "" || u.Lastname != "" {
+		return strings.TrimSpace(u.Firstname + " " + u.Lastname)
+	}
+	return u.Email
+}
+
 var userRepository *UserRepository
 var userRepositoryOnce sync.Once
 
