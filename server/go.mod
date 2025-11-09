@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/valkey-io/valkey-go v1.0.67
 	golang.org/x/crypto v0.43.0
-	golang.org/x/oauth2 v0.32.0
+	golang.org/x/oauth2 v0.33.0
 )
 
 require (
@@ -22,6 +22,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
