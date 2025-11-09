@@ -73,32 +73,28 @@ class Login extends React.Component<Props, State> {
   applyOrg = (res: any) => {
     this.org = new Organization();
     this.org.deserialize(res.json.organization);
-    if (res.json.authProviders && res.json.authProviders.length > 0) {
-      this.setState(
-        {
-          providers: res.json.authProviders,
-          noPasswords: !res.json.requirePassword,
-          disablePasswordLogin: res.json.disablePasswordLogin,
-          singleOrgMode: true,
-          loading: false,
-        },
-        () => {
-          const noRedirect = this.props.router.query["noredirect"];
-          if (
-            noRedirect !== "1" &&
-            this.state.noPasswords &&
-            this.state.providers &&
-            this.state.providers.length === 1
-          ) {
-            this.useProvider(this.state.providers[0].id);
-          } else {
-            this.setState({ loading: false });
-          }
-        },
-      );
-    } else {
-      this.setState({ loading: false });
-    }
+    this.setState(
+      {
+        providers: res.json.authProviders,
+        noPasswords: !res.json.requirePassword,
+        disablePasswordLogin: res.json.disablePasswordLogin,
+        singleOrgMode: true,
+        loading: false,
+      },
+      () => {
+        const noRedirect = this.props.router.query["noredirect"];
+        if (
+          noRedirect !== "1" &&
+          this.state.noPasswords &&
+          this.state.providers &&
+          this.state.providers.length === 1
+        ) {
+          this.useProvider(this.state.providers[0].id);
+        } else {
+          this.setState({ loading: false });
+        }
+      },
+    );
   };
 
   loadOrgDetails = () => {
@@ -247,7 +243,7 @@ class Login extends React.Component<Props, State> {
       );
     }
 
-    if (this.state.providers != null) {
+    if (this.state.providers != null && this.state.providers.length > 0) {
       const buttons = this.state.providers.map((provider) =>
         this.renderAuthProviderButton(provider),
       );
@@ -285,6 +281,21 @@ class Login extends React.Component<Props, State> {
             </p>
           </Form>
           {copyrightFooter}
+        </div>
+      );
+    }
+
+    if (this.state.disablePasswordLogin) {
+      return (
+        <div className="container-signin">
+          <Form className="form-signin">
+            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <h3>{this.org?.name}</h3>
+            <p>
+              Password Login is disabled, but no Auth Providers are configured.
+              Please contact your administrator.
+            </p>
+          </Form>
         </div>
       );
     }

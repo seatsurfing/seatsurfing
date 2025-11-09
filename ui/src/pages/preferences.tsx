@@ -10,6 +10,7 @@ import {
   Row,
 } from "react-bootstrap";
 import { NextRouter } from "next/router";
+import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
@@ -682,14 +683,21 @@ class Preferences extends React.Component<Props, State> {
               </Button>
             </Form>
             <div hidden={this.state.activeTab !== "tab-idp"}>
-              <h5 className="margin-top-15">{this.props.t("profile")}</h5>
-              <a
-                href={profilePageUrl}
-                target="_blank"
-                className="btn btn-primary"
-              >
-                {this.props.t("manageProfile")}
-              </a>
+              <div className="text-end">
+                <a
+                  href={profilePageUrl}
+                  target="_blank"
+                  className="btn btn-secondary btn-sm mb-2"
+                >
+                  <IoLinkOutline className="feather me-1" />
+                  {this.props.t("manageProfile")}
+                </a>
+              </div>
+              <iframe
+                src={profilePageUrl}
+                style={{ width: "100%", height: "100vh", borderWidth: 0 }}
+                id="idp-profilepage-iframe"
+              ></iframe>
             </div>
             <Form
               onSubmit={this.saveCaldavSettings}
