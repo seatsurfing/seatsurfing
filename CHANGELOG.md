@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.47.2](https://github.com/seatsurfing/seatsurfing/compare/v1.47.1...v1.47.2) (2025-11-09)
+
+
+### Bug Fixes
+
+* **deps:** bump library/golang from 1.25.3-bookworm to 1.25.4-bookworm ([#1463](https://github.com/seatsurfing/seatsurfing/issues/1463)) ([2c12dcd](https://github.com/seatsurfing/seatsurfing/commit/2c12dcd8fdb063029091e3bca21dc5b7d1c8c1bb))
+* **deps:** update Go dependencies ([#1466](https://github.com/seatsurfing/seatsurfing/issues/1466)) ([3e4c983](https://github.com/seatsurfing/seatsurfing/commit/3e4c983c17c081103aefac5632a699e4acbf414d))
+* improve auth provider login handling ([#1468](https://github.com/seatsurfing/seatsurfing/issues/1468)) ([f3ee08f](https://github.com/seatsurfing/seatsurfing/commit/f3ee08f85a1f850dc0fdd9523ad47b107d066adf))
+* limit max date range to 31 days for presence report ([#1467](https://github.com/seatsurfing/seatsurfing/issues/1467)) ([b4665b4](https://github.com/seatsurfing/seatsurfing/commit/b4665b42cacc91617260bc144d2ee556bd6df6ed))
+
 ## [1.47.1](https://github.com/seatsurfing/seatsurfing/compare/v1.47.0...v1.47.1) (2025-11-06)
 
 
