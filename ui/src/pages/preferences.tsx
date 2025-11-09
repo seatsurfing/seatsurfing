@@ -684,20 +684,20 @@ class Preferences extends React.Component<Props, State> {
             </Form>
             <div hidden={this.state.activeTab !== "tab-idp"}>
               <div className="text-end">
-              <a
-                href={profilePageUrl}
-                target="_blank"
-                className="btn btn-secondary btn-sm mb-2"
-              >
-                <IoLinkOutline className="feather me-1" />
-                {this.props.t("manageProfile")}
-              </a>
+                <a
+                  href={profilePageUrl}
+                  target="_blank"
+                  className="btn btn-secondary btn-sm mb-2"
+                >
+                  <IoLinkOutline className="feather me-1" />
+                  {this.props.t("manageProfile")}
+                </a>
               </div>
               <iframe
-          src={profilePageUrl}
-          style={{ width: "100%", height: "100vh", borderWidth: 0 }}
-          id="idp-profilepage-iframe"
-        ></iframe>
+                src={profilePageUrl}
+                style={{ width: "100%", height: "100vh", borderWidth: 0 }}
+                id="idp-profilepage-iframe"
+              ></iframe>
             </div>
             <Form
               onSubmit={this.saveCaldavSettings}
