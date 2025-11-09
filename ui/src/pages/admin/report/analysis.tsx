@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Form, Col, Row, Button } from "react-bootstrap";
+import { Table, Form, Col, Row, Button, Alert } from "react-bootstrap";
 import {
   Search as IconSearch,
   Download as IconDownload,
@@ -17,12 +17,16 @@ import RedirectUtil from "@/util/RedirectUtil";
 import DatePicker from "react-date-picker";
 import "react-date-picker/dist/DatePicker.css";
 import "react-calendar/dist/Calendar.css";
+import AjaxError from "@/util/AjaxError";
+import ErrorText from "@/types/ErrorText";
 
 interface State {
   loading: boolean;
   start: Date;
   end: Date;
   locationId: string;
+  error: boolean;
+  errorCode: number;
 }
 
 interface Props {
@@ -47,6 +51,8 @@ class ReportAnalysis extends React.Component<Props, State> {
       start,
       end,
       locationId: "",
+      error: false,
+      errorCode: 0,
     };
   }
 
@@ -74,10 +80,18 @@ class ReportAnalysis extends React.Component<Props, State> {
       "&end=" +
       encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
     params += "&locationId=" + encodeURIComponent(this.state.locationId);
-    Ajax.get("/booking/report/presence/?" + params).then((res) => {
-      this.data = res.json;
-      this.setState({ loading: false });
-    });
+    Ajax.get("/booking/report/presence/?" + params)
+      .then((res) => {
+        this.data = res.json;
+        this.setState({ loading: false });
+      })
+      .catch((e: any) => {
+        let errorCode: number = 0;
+        if (e instanceof AjaxError) {
+          errorCode = e.appErrorCode;
+        }
+        this.setState({ loading: false, errorCode, error: true });
+      });
   };
 
   getRows = () => {
@@ -103,12 +117,12 @@ class ReportAnalysis extends React.Component<Props, State> {
 
   onFilterSubmit = (e: any) => {
     e.preventDefault();
-    this.setState({ loading: true });
+    this.setState({ loading: true, error: false });
     this.loadItems();
   };
 
   exportTable = (e: any) => {
-    let fixFn = (value: string, row: number, col: number) => {
+    const fixFn = (value: string, row: number, col: number) => {
       if (value.startsWith("<")) {
         return "1";
       }
@@ -130,7 +144,7 @@ class ReportAnalysis extends React.Component<Props, State> {
   };
 
   render() {
-    let searchButton = (
+    const searchButton = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -141,7 +155,7 @@ class ReportAnalysis extends React.Component<Props, State> {
       </Button>
     );
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-analysis.xlsx"
         href="#"
@@ -151,7 +165,7 @@ class ReportAnalysis extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data &&
         this.data.users &&
@@ -165,7 +179,7 @@ class ReportAnalysis extends React.Component<Props, State> {
         {searchButton}
       </>
     );
-    let form = (
+    const form = (
       <Form onSubmit={this.onFilterSubmit} id="form">
         <Form.Group as={Row}>
           <Form.Label column sm="2">
@@ -251,6 +265,18 @@ class ReportAnalysis extends React.Component<Props, State> {
         </FullLayout>
       );
     }
+
+    if (this.state.error) {
+      return (
+        <FullLayout headline={this.props.t("analysis")} buttons={buttons}>
+          {form}
+          <Alert variant="danger">
+            {ErrorText.getTextForAppCode(this.state.errorCode, this.props.t)}
+          </Alert>
+        </FullLayout>
+      );
+    }
+
     return (
       <FullLayout headline={this.props.t("analysis")} buttons={buttons}>
         {form}

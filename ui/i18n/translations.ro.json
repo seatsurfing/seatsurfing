@@ -128,6 +128,7 @@
   "errorDaysAdvance": "Rezervarea ta nu trebuie să fie cu mai mult de {{num}} zile în avans.",
   "errorDeleteBooking": "An error occurred while deleting your booking.",
   "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before. Contact an admin.",
+  "errorDateRangeTooLong": "The selected date range is too large.",
   "errorDeleteDomain": "Error removing the domain.",
   "errorEnterFuture": "Data de intrare trebuie să fie în viitor.",
   "errorInvalidEmail": "Adresă de email invalidă.",

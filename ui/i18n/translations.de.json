@@ -129,6 +129,7 @@
   "errorDaysAdvance": "Die Buchung darf maximal {{num}} Tage in der Zukunft liegen.",
   "errorDeleteBooking": "An error occurred while deleting your booking.",
   "errorDeleteBookingBeforeMaxCancel": "Die Buchung kann nicht weniger als {{num}} Stunden vor Beginn storniert werden. Kontaktiere einen Administrator.",
+  "errorDateRangeTooLong": "Der gewählte Zeitraum ist zu groß.",
   "errorDeleteDomain": "Fehler beim Entfernen der Domain.",
   "errorEnterFuture": "Der Beginn muss in der Zukunft liegen.",
   "errorInvalidEmail": "Ungültige E-Mail-Adresse.",

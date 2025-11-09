@@ -128,6 +128,7 @@
   "errorDaysAdvance": "Uw boeking mag niet meer dan {{num}} dagen van tevoren plaatsvinden.",
   "errorDeleteBooking": "Er is een fout opgetreden bij het verwijderen van uw boeking.",
   "errorDeleteBookingBeforeMaxCancel": "Je kunt een boeking niet minder dan {{num}} uur van tevoren annuleren. Neem contact op met een beheerder.",
+  "errorDateRangeTooLong": "The selected date range is too large.",
   "errorDeleteDomain": "Fout bij het verwijderen van het domein.",
   "errorEnterFuture": "Kies een datum in de toekomst.",
   "errorInvalidEmail": "Ongeldig e-mailadres.",
