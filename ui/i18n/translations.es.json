@@ -128,6 +128,7 @@
   "errorDaysAdvance": "Tu reserva no debe superar {{num}} días de antelación.",
   "errorDeleteBooking": "Se produjo un error al eliminar tu reserva.",
   "errorDeleteBookingBeforeMaxCancel": "No puedes cancelar una reserva con menos de {{num}} horas de antelación. Contacta con un administrador.",
+  "errorDateRangeTooLong": "The selected date range is too large.",
   "errorDeleteDomain": "Error al eliminar el dominio.",
   "errorEnterFuture": "La fecha de entrada debe estar en el futuro.",
   "errorInvalidEmail": "Dirección de correo electrónico no válida.",

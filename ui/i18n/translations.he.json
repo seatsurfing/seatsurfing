@@ -128,6 +128,7 @@
   "errorDaysAdvance": "ההזמנה שלך לא יכולה להיות יותר מ־{{num}} ימים מראש.",
   "errorDeleteBooking": "An error occurred while deleting your booking.",
   "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before. Contact an admin.",
+  "errorDateRangeTooLong": "The selected date range is too large.",
   "errorDeleteDomain": "שגיאה בהסרת שם התחום.",
   "errorEnterFuture": "תאריך הכניסה חייב להיות בעתיד.",
   "errorInvalidEmail": "כתובת דוא״ל שגויה.",

@@ -2,13 +2,15 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc } from "@/components/withTranslation";
 
 //var ResponseCodeBookingSlotConflict: number             = 1001;
-var ResponseCodeBookingLocationMaxConcurrent: number = 1002;
-var ResponseCodeBookingTooManyUpcomingBookings: number = 1003;
-var ResponseCodeBookingTooManyDaysInAdvance: number = 1004;
-var ResponseCodeBookingInvalidMaxBookingDuration: number = 1005;
-var ResponseCodeBookingMaxConcurrentForUser: number = 1006;
-var ResponseCodeBookingInvalidMinBookingDuration: number = 1007;
-var ResponseCodeBookingMaxHoursBeforeDelete: number = 1008;
+const ResponseCodeBookingLocationMaxConcurrent: number = 1002;
+const ResponseCodeBookingTooManyUpcomingBookings: number = 1003;
+const ResponseCodeBookingTooManyDaysInAdvance: number = 1004;
+const ResponseCodeBookingInvalidMaxBookingDuration: number = 1005;
+const ResponseCodeBookingMaxConcurrentForUser: number = 1006;
+const ResponseCodeBookingInvalidMinBookingDuration: number = 1007;
+const ResponseCodeBookingMaxHoursBeforeDelete: number = 1008;
+
+const ResponseCodePresenceReportDateRangeTooLong: number = 2001;
 
 export default class ErrorText {
   static getTextForAppCode(code: number, t: TranslationFunc): string {
@@ -38,6 +40,8 @@ export default class ErrorText {
       return t("errorDeleteBookingBeforeMaxCancel", {
         num: RuntimeConfig.INFOS.maxHoursBeforeDelete,
       });
+    } else if (code === ResponseCodePresenceReportDateRangeTooLong) {
+      return t("errorDateRangeTooLong");
     } else {
       return t("errorUnknown");
     }

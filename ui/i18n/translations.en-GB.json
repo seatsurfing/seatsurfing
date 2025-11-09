@@ -128,6 +128,7 @@
   "errorDaysAdvance": "Your booking must not be more than {{num}} days in advance.",
   "errorDeleteBooking": "An error occurred while deleting your booking.",
   "errorDeleteBookingBeforeMaxCancel": "You cannot cancel a booking less than {{num}} hours before. Contact an admin.",
+  "errorDateRangeTooLong": "The selected date range is too large.",
   "errorDeleteDomain": "Error removing the domain.",
   "errorEnterFuture": "Enter date must be in the future.",
   "errorInvalidEmail": "Invalid email address.",

@@ -128,6 +128,7 @@
   "errorDaysAdvance": "Broneeringut ei saa teha rohkem kui {{num}} päeva ette.",
   "errorDeleteBooking": "Broneeringu tühistamisel tekkis viga.",
   "errorDeleteBookingBeforeMaxCancel": "Broneeringut ei saa tühistada vähem kui {{num}} tundi enne. Võta ühendust administraatoriga.",
+  "errorDateRangeTooLong": "The selected date range is too large.",
   "errorDeleteDomain": "Error removing the domain.",
   "errorEnterFuture": "Sisenemise kuupäev peab olema tulevikus.",
   "errorInvalidEmail": "Vale e-posti aadress.",

@@ -693,6 +693,15 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 		SendBadRequest(w)
 		return
 	}
+
+	// max 31 days
+	diff := end.Sub(start)
+	maxDuration := 31 * 24 * time.Hour
+	if diff > maxDuration {
+		SendBadRequestCode(w, ResponseCodePresenceReportDateRangeTooLong)
+		return
+	}
+
 	locationID := r.URL.Query().Get("locationId")
 	var location *Location = nil
 	if locationID != "" {
