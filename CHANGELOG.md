@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.47.3](https://github.com/seatsurfing/seatsurfing/compare/v1.47.2...v1.47.3) (2025-11-10)
+
+
+### Bug Fixes
+
+* **deps:** bump Next.js to v16 ([#1470](https://github.com/seatsurfing/seatsurfing/issues/1470)) ([37a271a](https://github.com/seatsurfing/seatsurfing/commit/37a271ad54d11e54a25052d49d8fb3dc2382d667))
+
 ## [1.47.2](https://github.com/seatsurfing/seatsurfing/compare/v1.47.1...v1.47.2) (2025-11-09)
 
 
