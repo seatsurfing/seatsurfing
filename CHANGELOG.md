@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.47.3](https://github.com/seatsurfing/seatsurfing/compare/v1.47.2...v1.47.3) (2025-11-19)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 24.10.0 to 24.10.1 in /e2e ([#1473](https://github.com/seatsurfing/seatsurfing/issues/1473)) ([97cc9d5](https://github.com/seatsurfing/seatsurfing/commit/97cc9d51b8e198fca4aeaa5b1de656577732367b))
+* **deps:** bump @types/node from 24.10.0 to 24.10.1 in /ui ([#1476](https://github.com/seatsurfing/seatsurfing/issues/1476)) ([5ca53de](https://github.com/seatsurfing/seatsurfing/commit/5ca53de22a33f3f1b93de493ab581c58053eb588))
+* **deps:** bump @types/react-dom from 19.2.2 to 19.2.3 in /ui ([#1475](https://github.com/seatsurfing/seatsurfing/issues/1475)) ([1a12f93](https://github.com/seatsurfing/seatsurfing/commit/1a12f933223ace16e510f710f442d81ac5e26303))
+* **deps:** bump eslint-config-next from 16.0.1 to 16.0.3 in /ui ([#1479](https://github.com/seatsurfing/seatsurfing/issues/1479)) ([4e04865](https://github.com/seatsurfing/seatsurfing/commit/4e048656c028cc8e8ea5f466ae0ac90d78cedef9))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.67 to 1.0.68 in /server ([#1472](https://github.com/seatsurfing/seatsurfing/issues/1472)) ([1eb2a1a](https://github.com/seatsurfing/seatsurfing/commit/1eb2a1accd05107f176f265586a82b4b8386fb16))
+* **deps:** bump golang.org/x/crypto from 0.43.0 to 0.44.0 in /server ([#1478](https://github.com/seatsurfing/seatsurfing/issues/1478)) ([2947eb5](https://github.com/seatsurfing/seatsurfing/commit/2947eb5043cdbf1594db6a2ad813a14580ee39fa))
+* **deps:** bump js-yaml from 4.1.0 to 4.1.1 in /ui ([#1481](https://github.com/seatsurfing/seatsurfing/issues/1481)) ([dd1f306](https://github.com/seatsurfing/seatsurfing/commit/dd1f30610661de7d27d3cd44a17606ec324bb5c8))
+* **deps:** bump next from 16.0.1 to 16.0.3 in /ui ([#1480](https://github.com/seatsurfing/seatsurfing/issues/1480)) ([f62bd5f](https://github.com/seatsurfing/seatsurfing/commit/f62bd5f7129145755f7a90378aaccc994df739ef))
+* **deps:** bump Next.js to v16 ([#1470](https://github.com/seatsurfing/seatsurfing/issues/1470)) ([37a271a](https://github.com/seatsurfing/seatsurfing/commit/37a271ad54d11e54a25052d49d8fb3dc2382d667))
+
 ## [1.47.2](https://github.com/seatsurfing/seatsurfing/compare/v1.47.1...v1.47.2) (2025-11-09)
 
 
