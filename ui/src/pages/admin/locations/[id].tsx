@@ -244,10 +244,21 @@ class EditLocation extends React.Component<Props, State> {
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
-          if (value) {
+          let attrType = null;
+          this.state.availableAttributes.find((a) => {
+            if (a.id === attributeId) {
+              attrType = a.type;
+              return true;
+            }
+            return false;
+          });
+          if (attrType === 2 && !value) {
+            value = "0";
+          }
+          if (value || attrType === 2) {
             let a = new SpaceAttributeValue();
             a.attributeId = attributeId;
-            a.value = value;
+            a.value = value!;
             space.attributes.push(a);
           }
         });
