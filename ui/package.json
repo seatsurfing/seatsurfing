@@ -48,7 +48,7 @@
     "@types/node": "24.10.1",
     "@types/react-autosuggest": "^10.1.11",
     "eslint": "^9.39.1",
-    "eslint-config-next": "16.0.3",
+    "eslint-config-next": "16.0.4",
     "prettier": "3.6.2"
   }
 }
