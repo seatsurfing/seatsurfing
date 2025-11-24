@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.47.4](https://github.com/seatsurfing/seatsurfing/compare/v1.47.3...v1.47.4) (2025-11-24)
+
+
+### Bug Fixes
+
+* **deps:** bump eslint-config-next from 16.0.3 to 16.0.4 in /ui ([#1487](https://github.com/seatsurfing/seatsurfing/issues/1487)) ([6e89d79](https://github.com/seatsurfing/seatsurfing/commit/6e89d79b553613f82a053fa37d4f31acbee8b5f8))
+* **deps:** bump golang.org/x/crypto from 0.44.0 to 0.45.0 in /server ([#1482](https://github.com/seatsurfing/seatsurfing/issues/1482)) ([f97bb64](https://github.com/seatsurfing/seatsurfing/commit/f97bb64a38a157771e14478194368fe832562592))
+* **deps:** bump next from 16.0.3 to 16.0.4 in /ui ([#1488](https://github.com/seatsurfing/seatsurfing/issues/1488)) ([d8c3e0d](https://github.com/seatsurfing/seatsurfing/commit/d8c3e0dbeb3d35dff382ddba4095710b564cc896))
+* unset bool attributed not stored correctly ([#1486](https://github.com/seatsurfing/seatsurfing/issues/1486)) ([cc08147](https://github.com/seatsurfing/seatsurfing/commit/cc0814743c0c0a860e1f8e72332cd7976d190925))
+
 ## [1.47.3](https://github.com/seatsurfing/seatsurfing/compare/v1.47.2...v1.47.3) (2025-11-19)
 
 
