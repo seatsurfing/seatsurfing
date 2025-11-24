@@ -22,12 +22,17 @@ import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
+import { Calendar, momentLocalizer, View } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useState } from "react";
 
 interface State {
   loading: boolean;
   deletingItem: boolean;
   selectedItem: Booking | null;
   cancelSeries: boolean;
+  view: View;
 }
 
 interface Props {
@@ -46,6 +51,7 @@ class Bookings extends React.Component<Props, State> {
       deletingItem: false,
       selectedItem: null,
       cancelSeries: false,
+      view: "agenda" as View,
     };
   }
 
@@ -91,13 +97,13 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData,
+          this.loadData
         );
       },
       (reason: any) => {
         if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
           window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
+            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t)
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
@@ -108,9 +114,9 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData,
+          this.loadData
         );
-      },
+      }
     );
   };
 
@@ -166,6 +172,7 @@ class Bookings extends React.Component<Props, State> {
     if (this.state.loading) {
       return <Loading />;
     }
+
     if (this.data.length === 0) {
       return (
         <>
@@ -178,6 +185,40 @@ class Bookings extends React.Component<Props, State> {
         </>
       );
     }
+
+    const localizer = momentLocalizer(moment);
+
+    const events = [
+      {
+        start: moment().toDate(),
+        end: moment().add(1, "hours").toDate(),
+        title: "Booking 1",
+      },
+      {
+        start: moment().add(1, "day").toDate(),
+        end: moment().add(1, "day").add(1, "hours").toDate(),
+        title: "Booking 2",
+      },
+    ];
+
+    return (
+      <>
+        <NavBar />
+        <div className="container-signin">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 500 }}
+            defaultView="agenda"
+            view={this.state.view}
+            onView={(view) => this.setState({ view })}
+          />
+        </div>
+      </>
+    );
+
     let formatter = Formatting.getFormatter();
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
@@ -234,7 +275,7 @@ class Bookings extends React.Component<Props, State> {
               variant="secondary"
               onClick={() =>
                 getIcal(
-                  this.state.selectedItem ? this.state.selectedItem.id : "",
+                  this.state.selectedItem ? this.state.selectedItem.id : ""
                 )
               }
             >
