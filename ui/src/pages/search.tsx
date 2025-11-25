@@ -891,27 +891,40 @@ class Search extends React.Component<Props, State> {
 
     return (
       <div key={booking.id} className="booking-name-row">
-        <h6 hidden={!booking.subject}>{booking.subject}</h6>
+        <p>
+          <strong>{this.props.t("spaceBookedInfo")}</strong>
+        </p>
+        <span hidden={!booking.subject}>
+          {this.props.t("subject")}: {booking.subject}
+          <br />
+        </span>
         {recurringIcon}
-        {booking.user.email}
-        <br />
+        <span hidden={!booking.user.email}>
+          {this.props.t("user")}: {booking.user.email}
+          <br />
+        </span>
+        {this.props.t("enter")}:{" "}
         {Formatting.getFormatterShort().format(new Date(booking.enter))}
-        &nbsp;&mdash;&nbsp;
+        <br />
+        {this.props.t("leave")}:{" "}
         {Formatting.getFormatterShort().format(new Date(booking.leave))}
         {RuntimeConfig.INFOS.showNames &&
           !RuntimeConfig.INFOS.disableBuddies &&
           booking.user.email !== RuntimeConfig.INFOS.username &&
           !buddiesEmails.includes(booking.user.email) && (
-            <Button
-              variant="primary"
-              onClick={(e) => {
-                e.preventDefault();
-                this.onAddBuddy(booking.user);
-              }}
-              style={{ marginLeft: "10px" }}
-            >
-              {this.props.t("addBuddy")}
-            </Button>
+            <>
+              <br />
+              <Button
+                variant="primary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  this.onAddBuddy(booking.user);
+                }}
+                style={{ marginLeft: "10px" }}
+              >
+                {this.props.t("addBuddy")}
+              </Button>
+            </>
           )}
       </div>
     );

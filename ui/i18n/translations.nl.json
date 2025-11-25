@@ -313,5 +313,6 @@
   "manageProfile": "Profiel beheren",
   "profile": "Profiel",
   "userinfoFirstnameField": "Gebruikersinfo Voornaam veld",
-  "userinfoLastnameField": "Gebruikersinfo Achternaam veld"
+  "userinfoLastnameField": "Gebruikersinfo Achternaam veld",
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range."
 }

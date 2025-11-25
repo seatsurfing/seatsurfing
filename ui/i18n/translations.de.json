@@ -314,5 +314,6 @@
   "profile": "Profil",
   "manageProfile": "Profil verwalten",
   "userinfoFirstnameField": "Userinfo Vorname-Feld",
-  "userinfoLastnameField": "Userinfo Nachname-Feld"
+  "userinfoLastnameField": "Userinfo Nachname-Feld",
+  "spaceBookedInfo": "Für diesen Platz gibt es bereits eine Buchung und daher ist er im gewählten Zeitraum nicht verfügbar."
 }
