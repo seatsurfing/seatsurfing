@@ -912,19 +912,20 @@ class Search extends React.Component<Props, State> {
           !RuntimeConfig.INFOS.disableBuddies &&
           booking.user.email !== RuntimeConfig.INFOS.username &&
           !buddiesEmails.includes(booking.user.email) && (
-            <>
-              <br />
-              <Button
-                variant="primary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  this.onAddBuddy(booking.user);
-                }}
-                style={{ marginLeft: "10px" }}
-              >
-                {this.props.t("addBuddy")}
-              </Button>
-            </>
+            <Button
+              variant="primary"
+              onClick={(e) => {
+                e.preventDefault();
+                this.onAddBuddy(booking.user);
+              }}
+              style={{
+                marginLeft: "10px",
+                marginTop: "10px",
+                display: "block",
+              }}
+            >
+              {this.props.t("addBuddy")}
+            </Button>
           )}
       </div>
     );
