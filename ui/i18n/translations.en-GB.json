@@ -313,5 +313,6 @@
   "yesterday": "Yesterday",
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
   "profile": "Profile",
-  "manageProfile": "Manage profile"
+  "manageProfile": "Manage profile",
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range."
 }
