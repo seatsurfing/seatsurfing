@@ -891,12 +891,22 @@ class Search extends React.Component<Props, State> {
 
     return (
       <div key={booking.id} className="booking-name-row">
-        <h6 hidden={!booking.subject}>{booking.subject}</h6>
+        <p>
+          <strong>{this.props.t("spaceBookedInfo")}</strong>
+        </p>
+        <span hidden={!booking.subject}>
+          {this.props.t("subject")}: {booking.subject}
+          <br />
+        </span>
         {recurringIcon}
-        {booking.user.email}
-        <br />
+        <span hidden={!booking.user.email}>
+          {this.props.t("user")}: {booking.user.email}
+          <br />
+        </span>
+        {this.props.t("enter")}:{" "}
         {Formatting.getFormatterShort().format(new Date(booking.enter))}
-        &nbsp;&mdash;&nbsp;
+        <br />
+        {this.props.t("leave")}:{" "}
         {Formatting.getFormatterShort().format(new Date(booking.leave))}
         {RuntimeConfig.INFOS.showNames &&
           !RuntimeConfig.INFOS.disableBuddies &&
@@ -908,7 +918,11 @@ class Search extends React.Component<Props, State> {
                 e.preventDefault();
                 this.onAddBuddy(booking.user);
               }}
-              style={{ marginLeft: "10px" }}
+              style={{
+                marginLeft: "10px",
+                marginTop: "10px",
+                display: "block",
+              }}
             >
               {this.props.t("addBuddy")}
             </Button>
