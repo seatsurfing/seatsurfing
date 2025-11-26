@@ -2187,6 +2187,13 @@ func TestBookingsPresenceReport(t *testing.T) {
 		Leave:   tomorrow.Add((24*2 + 8) * time.Hour),
 	}
 	GetBookingRepository().Create(b2_1)
+	b2_2 := &Booking{
+		UserID:  user2.ID,
+		SpaceID: s1.ID,
+		Enter:   tomorrow.Add((24 * 4) * time.Hour),
+		Leave:   tomorrow.Add((24 * 5) * time.Hour),
+	}
+	GetBookingRepository().Create(b2_2)
 
 	end := tomorrow.Add(24 * 7 * time.Hour)
 	end = time.Date(end.Year(), end.Month(), end.Day(), 8, 0, 0, 0, end.Location())
@@ -2229,8 +2236,8 @@ func TestBookingsPresenceReport(t *testing.T) {
 	CheckTestInt(t, 0, resBody.Presences[1][1])
 	CheckTestInt(t, 1, resBody.Presences[1][2])
 	CheckTestInt(t, 0, resBody.Presences[1][3])
-	CheckTestInt(t, 0, resBody.Presences[1][4])
-	CheckTestInt(t, 0, resBody.Presences[1][5])
+	CheckTestInt(t, 1, resBody.Presences[1][4])
+	CheckTestInt(t, 1, resBody.Presences[1][5])
 	CheckTestInt(t, 0, resBody.Presences[1][6])
 	CheckTestInt(t, 0, resBody.Presences[1][7])
 

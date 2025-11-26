@@ -424,7 +424,7 @@ func (r *BookingRepository) GetPresenceReport(organizationID string, location *L
 	for curTime.Before(end) {
 		times = append(times, curTime)
 		cols.WriteString(", ")
-		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND DATE(b2.enter_time) = '" + curTime.Format(DateFormat) + "'::DATE)")
+		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND '" + curTime.Format(DateFormat) + "'::DATE BETWEEN DATE(b2.enter_time) AND DATE(b2.leave_time))")
 		curTime = curTime.AddDate(0, 0, 1)
 	}
 
