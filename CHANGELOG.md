@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.48.0](https://github.com/seatsurfing/seatsurfing/compare/v1.47.4...v1.48.0) (2025-11-27)
+
+
+### Features
+
+* add more information to existing booking popup ([#1492](https://github.com/seatsurfing/seatsurfing/issues/1492)) ([98cbe1a](https://github.com/seatsurfing/seatsurfing/commit/98cbe1a6508a8a9f787a10aa47f5a2cce692ac9a))
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.56.1 to 1.57.0 in /e2e ([#1494](https://github.com/seatsurfing/seatsurfing/issues/1494)) ([18d1063](https://github.com/seatsurfing/seatsurfing/commit/18d10630aeaf5dae69ca31a5a3f6038144472c62))
+* **deps:** bump eslint-config-next from 16.0.4 to 16.0.5 in /ui ([#1497](https://github.com/seatsurfing/seatsurfing/issues/1497)) ([59ab2fd](https://github.com/seatsurfing/seatsurfing/commit/59ab2fd3030026a63ec7a8e8063a5419adbecf3d))
+* **deps:** bump next from 16.0.4 to 16.0.5 in /ui ([#1499](https://github.com/seatsurfing/seatsurfing/issues/1499)) ([f54c592](https://github.com/seatsurfing/seatsurfing/commit/f54c592477c90046e623fb41868af32939f6e6cd))
+* **deps:** bump prettier from 3.6.2 to 3.7.1 in /ui ([#1498](https://github.com/seatsurfing/seatsurfing/issues/1498)) ([8280efb](https://github.com/seatsurfing/seatsurfing/commit/8280efb1389fc2815ae887b868e3732c6e9e0348))
+* fix multi-day bookings in reporting ([#1495](https://github.com/seatsurfing/seatsurfing/issues/1495)) ([f986f4a](https://github.com/seatsurfing/seatsurfing/commit/f986f4a867b3cef42d3dd89fbc155f6ce2b81a91))
+
 ## [1.47.4](https://github.com/seatsurfing/seatsurfing/compare/v1.47.3...v1.47.4) (2025-11-24)
 
 
