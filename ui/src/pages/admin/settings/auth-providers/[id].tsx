@@ -171,8 +171,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       scopes: "openid,email,profile",
       userInfoUrl: "https://graph.microsoft.com/oidc/userinfo",
       userInfoEmailField: "email",
-      userInfoFirstnameField: "givenname",
-      userInfoLastnameField: "familyname",
+      userInfoFirstnameField: "given_name",
+      userInfoLastnameField: "family_name",
       logoutUrl:
         "https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={logoutRedirectUri}",
     });
