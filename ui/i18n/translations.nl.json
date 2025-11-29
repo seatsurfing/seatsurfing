@@ -314,5 +314,6 @@
   "profile": "Profiel",
   "userinfoFirstnameField": "Gebruikersinfo Voornaam veld",
   "userinfoLastnameField": "Gebruikersinfo Achternaam veld",
-  "spaceBookedInfo": "This space is already booked and not available in the selected date range."
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
 }
