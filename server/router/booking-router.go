@@ -1033,6 +1033,7 @@ func (router *BookingRouter) getCalDavEventFromBooking(e *Booking) (*CalDAVEvent
 		return nil, err
 	}
 	caldavEvent := &CalDAVEvent{
+		ID:       e.ID,
 		Title:    "Seat Reservation: " + space.Name + ", " + location.Name,
 		Location: space.Name + ", " + location.Name,
 		Start:    enterTime,
