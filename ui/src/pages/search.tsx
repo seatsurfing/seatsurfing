@@ -2498,7 +2498,13 @@ class Search extends React.Component<Props, State> {
           </Button>
           <Button
             variant="secondary"
-            onClick={() => getIcal(this.state.createdBookingId)}
+            onClick={() => {
+              if (this.state.recurrence.active) {
+                getIcal(this.state.createdBookingId, true);
+              } else {
+                getIcal(this.state.createdBookingId);
+              }
+            }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
             Event

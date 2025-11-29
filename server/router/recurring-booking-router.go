@@ -45,6 +45,7 @@ type GetRecurringBookingResponse struct {
 
 func (router *RecurringBookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/precheck", router.preBookingCreateCheck).Methods("POST")
+	s.HandleFunc("/{id}/ical", router.getIcal).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
@@ -254,7 +255,60 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		res = append(res, item)
 	}
 	go router.onBookingCreated(e, bookings, spaceRequiresApproval)
+	w.Header().Set("X-Object-ID", e.ID)
+	w.WriteHeader(http.StatusCreated)
 	SendJSON(w, res)
+}
+
+func (router *RecurringBookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetRecurringBookingRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	requestUser := GetRequestUser(r)
+	if !CanAccessOrg(requestUser, requestUser.OrganizationID) && e.UserID != GetRequestUserID(r) {
+		SendForbidden(w)
+		return
+	}
+	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	bookings, err := GetBookingRepository().GetAllByRecurringID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if len(bookings) == 0 {
+		SendNotFound(w)
+		return
+	}
+	calDavEvents := []*CalDAVEvent{}
+	bookingRouter := &BookingRouter{}
+	for _, b := range bookings {
+		calDavEvent, err := bookingRouter.getCalDavEventFromBooking(&b.Booking)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		calDavEvents = append(calDavEvents, calDavEvent)
+	}
+	caldavClient := &CalDAVClient{}
+	icalEvent := caldavClient.GetCaldavEvent(calDavEvents)
+	var buf bytes.Buffer
+	if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+	w.Header().Set("Content-Type", "text/calendar")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+bookingRouter.getICalFilename(calDavEvents[0])+"\"")
+	w.Write(buf.Bytes())
 }
 
 func (router *RecurringBookingRouter) onBookingCreated(e *RecurringBooking, bookings []*Booking, approvalRequired bool) {
