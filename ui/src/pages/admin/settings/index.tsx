@@ -42,7 +42,7 @@ interface State {
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
   maxDaysInAdvance: number;
-  enableBookingRetention: boolean;
+  bookingRetentionEnabled: boolean;
   bookingRetentionDays: number;
   enableMaxHoursBeforeDelete: boolean;
   maxHoursBeforeDelete: number;
@@ -93,7 +93,7 @@ class Settings extends React.Component<Props, State> {
       maxBookingDurationHours: 0,
       minBookingDurationHours: 0,
       maxDaysInAdvance: 0,
-      enableBookingRetention: false,
+      bookingRetentionEnabled: false,
       bookingRetentionDays: 0,
       enableMaxHoursBeforeDelete: false,
       maxHoursBeforeDelete: 0,
@@ -194,8 +194,8 @@ class Settings extends React.Component<Props, State> {
           state.maxConcurrentBookingsPerUser = window.parseInt(s.value);
         if (s.name === "max_days_in_advance")
           state.maxDaysInAdvance = window.parseInt(s.value);
-        if (s.name === "enable_booking_retention")
-          state.enableBookingRetention = window.parseInt(s.value);
+        if (s.name === "booking_retention_enabled")
+          state.bookingRetentionEnabled = window.parseInt(s.value);
         if (s.name === "booking_retention_days")
           state.bookingRetentionDays = window.parseInt(s.value);
         if (s.name === "enable_max_hours_before_delete")
@@ -285,11 +285,11 @@ class Settings extends React.Component<Props, State> {
         this.state.maxDaysInAdvance.toString()
       ),
       new OrgSettings(
-        "enable_booking_retention",
-        this.state.enableBookingRetention ? "1" : "0"
+        "booking_retention_enabled",
+        this.state.bookingRetentionEnabled ? "1" : "0"
       ),
       new OrgSettings(
-        "booking_retention",
+        "booking_retention_days",
         this.state.bookingRetentionDays.toString()
       ),
       new OrgSettings(
@@ -775,10 +775,10 @@ class Settings extends React.Component<Props, State> {
               <InputGroup>
                 <InputGroup.Checkbox
                   id="check-bookingRetentionDays"
-                  checked={this.state.enableBookingRetention}
+                  checked={this.state.bookingRetentionEnabled}
                   onChange={(e: any) =>
                     this.setState({
-                      enableBookingRetention: e.target.checked,
+                      bookingRetentionEnabled: e.target.checked,
                     })
                   }
                 />
@@ -789,8 +789,8 @@ class Settings extends React.Component<Props, State> {
                     this.setState({ bookingRetentionDays: e.target.value })
                   }
                   min="30"
-                  max="9999"
-                  disabled={!this.state.enableBookingRetention}
+                  max="999"
+                  disabled={!this.state.bookingRetentionEnabled}
                 />
               </InputGroup>
             </Col>
