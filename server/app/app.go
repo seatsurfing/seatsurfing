@@ -186,13 +186,13 @@ func (a *App) InitializeTimers() {
 				log.Printf("Deleted %d anonymous Confluence users", num)
 			}
 
-			// purge bookings (after retention period if enabled)
-			num, err = GetBookingRepository().PurgeOldBookings()
+			// purge bookings after retention period (if enabled)
+			num, err = GetBookingRepository().PurgeOldBookings(100)
 			if err != nil {
 				log.Println(err)
 			}
 			if num > 0 {
-				log.Printf("Deleted %d anonymous Confluence users", num)
+				log.Printf("Purged %d old bookings", num)
 			}
 
 			for _, plg := range plugin.GetPlugins() {

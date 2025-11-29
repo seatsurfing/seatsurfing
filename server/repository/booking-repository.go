@@ -97,8 +97,53 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 }
 
-func (r *BookingRepository) PurgeOldBookings() (int, error) {
-	return 0, nil
+func (r *BookingRepository) PurgeOldBookings(maxBatchSize int) (int, error) {
+
+	// delete old bookings (max 10 per call, oldest first)
+	result, err := GetDatabase().DB().Exec(`
+		DELETE FROM bookings 
+		WHERE id IN (
+			SELECT b.id
+			FROM bookings b
+			INNER JOIN spaces s ON b.space_id = s.id
+			INNER JOIN locations l ON s.location_id = l.id
+			INNER JOIN organizations o ON l.organization_id = o.id
+			INNER JOIN settings settings_enabled ON o.id = settings_enabled.organization_id
+			INNER JOIN settings settings_days ON o.id = settings_days.organization_id
+			WHERE settings_enabled.name = $1
+			  AND settings_enabled.value = '1'
+			  AND settings_days.name = $2
+			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * settings_days.value::INTEGER
+			ORDER BY b.leave_time ASC
+			LIMIT $3
+		)`,
+		SettingBookingRetentionEnabled.Name,
+		SettingBookingRetentionDays.Name,
+		maxBatchSize,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	// delete orphaned recurring bookings
+	_, err = GetDatabase().DB().Exec(`
+		DELETE FROM recurring_bookings
+		WHERE id NOT IN (
+			SELECT DISTINCT recurring_id
+			FROM bookings
+			WHERE recurring_id IS NOT NULL
+		)
+	`)
+	if err != nil {
+		return int(rowsAffected), err
+	}
+
+	return int(rowsAffected), nil
 }
 
 func (r *BookingRepository) Create(e *Booking) error {
