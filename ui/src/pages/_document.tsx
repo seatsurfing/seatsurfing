@@ -8,9 +8,7 @@ import Document, {
 import { randomBytes } from "crypto";
 import RuntimeConfig from "@/components/RuntimeConfig";
 
-type Props = DocumentProps & {
-  // add custom document props
-};
+type Props = DocumentProps & { // add custom document props };
 
 class Doc extends Document<Props> {
   render() {
