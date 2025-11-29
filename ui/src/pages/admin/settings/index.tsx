@@ -42,6 +42,8 @@ interface State {
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
   maxDaysInAdvance: number;
+  enableBookingRetention: boolean;
+  bookingRetentionDays: number;
   enableMaxHoursBeforeDelete: boolean;
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
@@ -91,6 +93,8 @@ class Settings extends React.Component<Props, State> {
       maxBookingDurationHours: 0,
       minBookingDurationHours: 0,
       maxDaysInAdvance: 0,
+      enableBookingRetention: false,
+      bookingRetentionDays: 0,
       enableMaxHoursBeforeDelete: false,
       maxHoursBeforeDelete: 0,
       maxHoursPartiallyBooked: 0,
@@ -153,7 +157,7 @@ class Settings extends React.Component<Props, State> {
             {
               latestVersion: res.json,
             },
-            () => resolve(),
+            () => resolve()
           );
         })
         .catch(() => {
@@ -163,7 +167,7 @@ class Settings extends React.Component<Props, State> {
             {
               latestVersion: res,
             },
-            () => resolve(),
+            () => resolve()
           );
         });
     });
@@ -190,6 +194,10 @@ class Settings extends React.Component<Props, State> {
           state.maxConcurrentBookingsPerUser = window.parseInt(s.value);
         if (s.name === "max_days_in_advance")
           state.maxDaysInAdvance = window.parseInt(s.value);
+        if (s.name === "enable_booking_retention")
+          state.enableBookingRetention = window.parseInt(s.value);
+        if (s.name === "booking_retention_days")
+          state.bookingRetentionDays = window.parseInt(s.value);
         if (s.name === "enable_max_hours_before_delete")
           state.enableMaxHoursBeforeDelete = window.parseInt(s.value);
         if (s.name === "max_hours_before_delete")
@@ -247,58 +255,66 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings("default_timezone", this.state.defaultTimezone),
       new OrgSettings(
         "confluence_server_shared_secret",
-        this.state.confluenceServerSharedSecret,
+        this.state.confluenceServerSharedSecret
       ),
       new OrgSettings("custom_logo_url", this.state.customLogoUrl),
       new OrgSettings(
         "daily_basis_booking",
-        this.state.dailyBasisBooking ? "1" : "0",
+        this.state.dailyBasisBooking ? "1" : "0"
       ),
       new OrgSettings(
         "no_admin_restrictions",
-        this.state.noAdminRestrictions ? "1" : "0",
+        this.state.noAdminRestrictions ? "1" : "0"
       ),
       new OrgSettings("show_names", this.state.showNames ? "1" : "0"),
       new OrgSettings(
         "allow_booking_nonexist_users",
-        this.state.allowBookingNonExistUsers ? "1" : "0",
+        this.state.allowBookingNonExistUsers ? "1" : "0"
       ),
       new OrgSettings("disable_buddies", this.state.disableBuddies ? "1" : "0"),
       new OrgSettings(
         "max_bookings_per_user",
-        this.state.maxBookingsPerUser.toString(),
+        this.state.maxBookingsPerUser.toString()
       ),
       new OrgSettings(
         "max_concurrent_bookings_per_user",
-        this.state.maxConcurrentBookingsPerUser.toString(),
+        this.state.maxConcurrentBookingsPerUser.toString()
       ),
       new OrgSettings(
         "max_days_in_advance",
-        this.state.maxDaysInAdvance.toString(),
+        this.state.maxDaysInAdvance.toString()
+      ),
+      new OrgSettings(
+        "enable_booking_retention",
+        this.state.enableBookingRetention ? "1" : "0"
+      ),
+      new OrgSettings(
+        "booking_retention",
+        this.state.bookingRetentionDays.toString()
       ),
       new OrgSettings(
         "enable_max_hours_before_delete",
-        this.state.enableMaxHoursBeforeDelete ? "1" : "0",
+        this.state.enableMaxHoursBeforeDelete ? "1" : "0"
       ),
       new OrgSettings(
         "max_hours_before_delete",
-        this.state.maxHoursBeforeDelete.toString(),
+        this.state.maxHoursBeforeDelete.toString()
       ),
       new OrgSettings(
         "max_booking_duration_hours",
-        this.state.maxBookingDurationHours.toString(),
+        this.state.maxBookingDurationHours.toString()
       ),
       new OrgSettings(
         "max_hours_partially_booked_enabled",
-        this.state.maxHoursPartiallyBookedEnabled ? "1" : "0",
+        this.state.maxHoursPartiallyBookedEnabled ? "1" : "0"
       ),
       new OrgSettings(
         "max_hours_partially_booked",
-        this.state.maxHoursPartiallyBooked.toString(),
+        this.state.maxHoursPartiallyBooked.toString()
       ),
       new OrgSettings(
         "min_booking_duration_hours",
-        this.state.minBookingDurationHours.toString(),
+        this.state.minBookingDurationHours.toString()
       ),
     ];
     OrgSettings.setAll(payload)
@@ -349,7 +365,7 @@ class Settings extends React.Component<Props, State> {
           .verify()
           .then(() => {
             Domain.list(domain.organizationId).then((domains) =>
-              this.setState({ domains: domains }),
+              this.setState({ domains: domains })
             );
           })
           .catch((e) => {
@@ -386,7 +402,7 @@ class Settings extends React.Component<Props, State> {
     Domain.add(this.org.id, this.state.newDomain)
       .then(() => {
         Domain.list(this.org ? this.org.id : "").then((domains) =>
-          this.setState({ domains: domains }),
+          this.setState({ domains: domains })
         );
         this.setState({ newDomain: "" });
       })
@@ -400,7 +416,7 @@ class Settings extends React.Component<Props, State> {
       if (domain.domain === domainName) {
         domain.setPrimary().then(() => {
           Domain.list(this.org ? this.org.id : "").then((domains) =>
-            this.setState({ domains: domains }),
+            this.setState({ domains: domains })
           );
         });
       }
@@ -410,7 +426,7 @@ class Settings extends React.Component<Props, State> {
   removeDomain = (domainName: string) => {
     if (
       !window.confirm(
-        this.props.t("confirmDeleteDomain", { domain: domainName }),
+        this.props.t("confirmDeleteDomain", { domain: domainName })
       )
     ) {
       return;
@@ -421,7 +437,7 @@ class Settings extends React.Component<Props, State> {
           .delete()
           .then(() => {
             Domain.list(this.org ? this.org.id : "").then((domains) =>
-              this.setState({ domains: domains }),
+              this.setState({ domains: domains })
             );
           })
           .catch(() => alert(this.props.t("errorDeleteDomain")));
@@ -449,7 +465,7 @@ class Settings extends React.Component<Props, State> {
 
   onDailyBasisBookingChange = (enabled: boolean) => {
     let maxBookingDurationHours: number = Number(
-      this.state.maxBookingDurationHours,
+      this.state.maxBookingDurationHours
     );
     if (enabled && maxBookingDurationHours % 24 !== 0) {
       maxBookingDurationHours += 24 - (maxBookingDurationHours % 24);
@@ -463,7 +479,7 @@ class Settings extends React.Component<Props, State> {
   render() {
     if (this.state.selectedAuthProvider) {
       this.props.router.push(
-        `/admin/settings/auth-providers/${this.state.selectedAuthProvider}`,
+        `/admin/settings/auth-providers/${this.state.selectedAuthProvider}`
       );
       return <></>;
     }
@@ -555,7 +571,7 @@ class Settings extends React.Component<Props, State> {
       );
     });
     let authProviderRows = this.authProviders.map((item) =>
-      this.renderAuthProviderItem(item),
+      this.renderAuthProviderItem(item)
     );
     let authProviderTable = <p>{this.props.t("noRecords")}</p>;
     if (
@@ -748,6 +764,34 @@ class Settings extends React.Component<Props, State> {
                   max="9999"
                 />
                 <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("bookingRetention")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  id="check-bookingRetentionDays"
+                  checked={this.state.enableBookingRetention}
+                  onChange={(e: any) =>
+                    this.setState({
+                      enableBookingRetention: e.target.checked,
+                    })
+                  }
+                />
+                <Form.Control
+                  type="number"
+                  value={this.state.bookingRetentionDays}
+                  onChange={(e: any) =>
+                    this.setState({ bookingRetentionDays: e.target.value })
+                  }
+                  min="30"
+                  max="9999"
+                  disabled={!this.state.enableBookingRetention}
+                />
               </InputGroup>
             </Col>
           </Form.Group>
