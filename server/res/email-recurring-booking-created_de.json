@@ -1,0 +1,11 @@
+{
+  "subject": "Deine Seatsurfing Buchung",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "Deine wiederkehrende Buchung wurde bestätigt.",
+    "Erster Termin: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ]
+}

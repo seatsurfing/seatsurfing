@@ -1,15 +1,18 @@
 package router
 
 import (
+	"bytes"
 	"errors"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/emersion/go-ical"
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type RecurringBookingRouter struct {
@@ -250,7 +253,88 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		}
 		res = append(res, item)
 	}
+	go router.onBookingCreated(e, bookings, spaceRequiresApproval)
 	SendJSON(w, res)
+}
+
+func (router *RecurringBookingRouter) onBookingCreated(e *RecurringBooking, bookings []*Booking, approvalRequired bool) {
+	if len(bookings) == 0 {
+		return
+	}
+	if !approvalRequired {
+		br := &BookingRouter{}
+		for _, b := range bookings {
+			br.createCalDavEvent(b)
+		}
+		router.sendMailNotification(e, bookings)
+	}
+}
+
+func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, bookings []*Booking) {
+	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
+	if err != nil || !active {
+		return
+	}
+	user, err := GetUserRepository().GetOne(e.UserID)
+	if err != nil || user == nil {
+		log.Println(err)
+		return
+	}
+	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if err != nil || org == nil {
+		log.Println(err)
+		return
+	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	attachments := []*MailAttachment{}
+	calDavEvents := []*CalDAVEvent{}
+	bookingRouter := &BookingRouter{}
+	for _, b := range bookings {
+		calDavEvent, err := bookingRouter.getCalDavEventFromBooking(b)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		calDavEvents = append(calDavEvents, calDavEvent)
+	}
+	caldavClient := &CalDAVClient{}
+	icalEvent := caldavClient.GetCaldavEvent(calDavEvents)
+	var buf bytes.Buffer
+	if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
+		log.Println(err)
+		return
+	}
+	attachments = append(attachments, &MailAttachment{
+		Filename: bookingRouter.getICalFilename(calDavEvents[0]),
+		MimeType: "text/calendar",
+		Data:     buf.Bytes(),
+	})
+
+	subject := e.Subject
+	if subject == "" {
+		subject = "—"
+	}
+	vars := map[string]string{
+		"recipientName": GetLocalPartFromEmailAddress(user.Email),
+		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
+		"areaName":      location.Name,
+		"spaceName":     space.Name,
+		"subject":       subject,
+	}
+	template := GetEmailTemplatePathRecurringBookingCreated()
+	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func (router *RecurringBookingRouter) copyFromRestModel(m *CreateRecurringBookingRequest, location *Location) (*RecurringBooking, error) {

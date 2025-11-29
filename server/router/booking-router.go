@@ -306,7 +306,7 @@ func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	caldavClient := &CalDAVClient{}
-	icalEvent := caldavClient.GetCaldavEvent(calDavEvent)
+	icalEvent := caldavClient.GetCaldavEvent([]*CalDAVEvent{calDavEvent})
 	var buf bytes.Buffer
 	if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
 		log.Println(err)
@@ -1136,7 +1136,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 			return
 		}
 		caldavClient := &CalDAVClient{}
-		icalEvent := caldavClient.GetCaldavEvent(calDavEvent)
+		icalEvent := caldavClient.GetCaldavEvent([]*CalDAVEvent{calDavEvent})
 		var buf bytes.Buffer
 		if err := ical.NewEncoder(&buf).Encode(icalEvent); err != nil {
 			log.Println(err)
