@@ -97,6 +97,10 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 }
 
+func (r *BookingRepository) PurgeOldBookings() (int, error) {
+	return 0, nil
+}
+
 func (r *BookingRepository) Create(e *Booking) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
