@@ -358,8 +358,8 @@ func TestDeleteLastBookingInSeriesAlsoDeletesRecurringBooking(t *testing.T) {
 		End: time.Date(2023, 10, 3, 0, 0, 0, 0, time.UTC),
 	}
 	err := GetRecurringBookingRepository().Create(rb)
-	CheckTestBool(t, true, len(rb.ID) > 0)
 	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, len(rb.ID) > 0)
 	bookings := GetRecurringBookingRepository().CreateBookings(rb)
 	CheckTestInt(t, 2, len(bookings))
 	for _, b := range bookings {
