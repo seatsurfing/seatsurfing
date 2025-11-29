@@ -314,5 +314,6 @@
   "profile": "Profile",
   "userinfoFirstnameField": "Userinfo Firstname field",
   "userinfoLastnameField": "Userinfo Lastname field",
-  "spaceBookedInfo": "This space is already booked and not available in the selected date range."
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
 }

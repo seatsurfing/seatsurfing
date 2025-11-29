@@ -889,25 +889,32 @@ class Search extends React.Component<Props, State> {
       );
     }
 
+    const myBooking = booking.user.email === RuntimeConfig.INFOS.username;
     return (
       <div key={booking.id} className="booking-name-row">
         <p>
-          <strong>{this.props.t("spaceBookedInfo")}</strong>
+          <strong>
+            {this.props.t(
+              myBooking ? "spaceBookedInfoMyBooking" : "spaceBookedInfo",
+            )}
+          </strong>
         </p>
-        <span hidden={!booking.subject}>
-          {this.props.t("subject")}: {booking.subject}
+        <div className="booking-name-row">
+          {recurringIcon}
+          <span hidden={!booking.subject}>
+            {this.props.t("subject")}: {booking.subject}
+            <br />
+          </span>
+          <span hidden={!booking.user.email}>
+            {this.props.t("user")}: {booking.user.email}
+            <br />
+          </span>
+          {this.props.t("enter")}:{" "}
+          {Formatting.getFormatterShort().format(new Date(booking.enter))}
           <br />
-        </span>
-        {recurringIcon}
-        <span hidden={!booking.user.email}>
-          {this.props.t("user")}: {booking.user.email}
-          <br />
-        </span>
-        {this.props.t("enter")}:{" "}
-        {Formatting.getFormatterShort().format(new Date(booking.enter))}
-        <br />
-        {this.props.t("leave")}:{" "}
-        {Formatting.getFormatterShort().format(new Date(booking.leave))}
+          {this.props.t("leave")}:{" "}
+          {Formatting.getFormatterShort().format(new Date(booking.leave))}
+        </div>
         {RuntimeConfig.INFOS.showNames &&
           !RuntimeConfig.INFOS.disableBuddies &&
           booking.user.email !== RuntimeConfig.INFOS.username &&
@@ -2439,7 +2446,10 @@ class Search extends React.Component<Props, State> {
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
-          <p hidden={!myBooking || !isRecurring}>
+          <p
+            hidden={!myBooking || !isRecurring}
+            style={{ marginTop: "15px", marginBottom: "0" }}
+          >
             <Form.Check
               type="checkbox"
               id="cancelAllUpcomingBookings"
