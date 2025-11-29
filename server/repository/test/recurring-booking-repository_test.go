@@ -336,3 +336,53 @@ func TestRecurringBookingRepositoryCreateBookingsWeeklyCadenceNoWeekdays(t *test
 
 	CheckTestInt(t, 0, len(bookings))
 }
+
+func TestDeleteLastBookingInSeriesAlsoDeletesRecurringBooking(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrgWithName(org, "u1@test.com", UserRoleUser)
+	_, space := CreateTestLocationAndSpace(org)
+
+	// create recurring booking with two bookings
+	rb := &RecurringBooking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   time.Date(2023, 10, 1, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2023, 10, 1, 17, 0, 0, 0, time.UTC),
+		Subject: "Test Daily Booking",
+		Cadence: CadenceDaily,
+		Details: &CadenceDailyDetails{
+			Cycle: 1,
+		},
+		End: time.Date(2023, 10, 3, 0, 0, 0, 0, time.UTC),
+	}
+	err := GetRecurringBookingRepository().Create(rb)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, len(rb.ID) > 0)
+	bookings := GetRecurringBookingRepository().CreateBookings(rb)
+	CheckTestInt(t, 2, len(bookings))
+	for _, b := range bookings {
+		err := GetBookingRepository().Create(b)
+		CheckTestBool(t, true, err == nil)
+	}
+
+	booking1, _ := GetBookingRepository().GetOne(bookings[0].ID)
+	CheckTestBool(t, true, booking1 != nil)
+	booking2, _ := GetBookingRepository().GetOne(bookings[1].ID)
+	CheckTestBool(t, true, booking2 != nil)
+
+	// delete first booking
+	err = GetBookingRepository().Delete(booking1)
+	CheckTestBool(t, true, err == nil)
+	recurringBooking, err := GetRecurringBookingRepository().GetOne(rb.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, recurringBooking != nil)
+
+	// delete second booking (which also deletes the recurring booking)
+	err = GetBookingRepository().Delete(booking2)
+	CheckTestBool(t, true, err == nil)
+	recurringBooking, _ = GetRecurringBookingRepository().GetOne(rb.ID)
+	CheckTestBool(t, false, recurringBooking != nil)
+
+}
