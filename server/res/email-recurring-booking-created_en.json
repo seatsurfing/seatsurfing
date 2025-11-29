@@ -1,0 +1,11 @@
+{
+  "subject": "Your Seatsurfing booking",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Your recurring booking has been confirmed.",
+    "First occurrence: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ]
+}

@@ -135,6 +135,10 @@ func GetEmailTemplatePathChangeEmailAddress() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-change-email.json")
 }
 
+func GetEmailTemplatePathRecurringBookingCreated() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-recurring-booking-created.json")
+}
+
 func GetEmailTemplatePathBookingCreated() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-booking-created.json")
 }
