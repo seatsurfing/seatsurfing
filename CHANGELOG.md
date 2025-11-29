@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.49.0](https://github.com/seatsurfing/seatsurfing/compare/v1.48.0...v1.49.0) (2025-11-29)
+
+
+### Features
+
+* add my booking info to existing booking popup ([#1504](https://github.com/seatsurfing/seatsurfing/issues/1504)) ([fa2edd1](https://github.com/seatsurfing/seatsurfing/commit/fa2edd15d4175a2c1a8b2a72443935560e63361d))
+
+
+### Bug Fixes
+
+* **deps:** bump prettier from 3.7.1 to 3.7.2 in /ui ([#1506](https://github.com/seatsurfing/seatsurfing/issues/1506)) ([f2ec898](https://github.com/seatsurfing/seatsurfing/commit/f2ec898af5f89a5ed8bf434bcbaf5ac272ed5475))
+* update user info field names for Microsoft OIDC (fix for [#1501](https://github.com/seatsurfing/seatsurfing/issues/1501)) ([#1502](https://github.com/seatsurfing/seatsurfing/issues/1502)) ([6a77488](https://github.com/seatsurfing/seatsurfing/commit/6a774887d53c01d0737a76fd7e56c6872a7ce30d))
+
 ## [1.48.0](https://github.com/seatsurfing/seatsurfing/compare/v1.47.4...v1.48.0) (2025-11-27)
 
 
