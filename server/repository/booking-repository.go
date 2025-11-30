@@ -130,6 +130,10 @@ func (r *BookingRepository) PurgeOldBookings(maxBatchSize int) (int, error) {
 		return 0, err
 	}
 
+	if rowsAffected == 0 {
+		return 0, nil
+	}
+
 	// delete orphaned recurring bookings
 	_, err = GetDatabase().DB().Exec(`
 		DELETE FROM recurring_bookings
