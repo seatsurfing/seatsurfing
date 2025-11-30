@@ -342,4 +342,28 @@ func TestPurgeOldBookings(t *testing.T) {
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
 	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+
+	// test multiple old bookings are purged and orphaned recurring bookings are also deleted
+	rb := &RecurringBooking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   time.Date(2023, 10, 1, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2023, 10, 1, 17, 0, 0, 0, time.UTC),
+		Subject: "Test Daily Booking",
+		Cadence: CadenceDaily,
+		Details: &CadenceDailyDetails{
+			Cycle: 1,
+		},
+		End: time.Date(2023, 10, 3, 0, 0, 0, 0, time.UTC),
+	}
+	err = GetRecurringBookingRepository().Create(rb)
+	CheckTestIsNil(t, err)
+	CreateTestBooking9To5(user, space, -90)
+	CreateTestBooking9To5(user, space, -91)
+	CreateTestBooking9To5(user, space, -92)
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
+	CheckTestInt(t, 3, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+	recurringBooking, _ := GetRecurringBookingRepository().GetOne(rb.ID)
+	CheckTestIsNil(t, recurringBooking)
 }

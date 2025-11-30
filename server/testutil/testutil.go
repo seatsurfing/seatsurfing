@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -260,11 +261,17 @@ func CheckTestBool(t *testing.T, expected, actual bool) {
 }
 
 func CheckTestIsNil(t *testing.T, obj any) {
-	if obj != nil {
-		t.Fatalf("Expected '%v' to be nil at:\n%s", obj, debug.Stack())
+	if obj == nil {
+		return
 	}
-}
 
+	v := reflect.ValueOf(obj)
+	if !v.IsValid() || (v.Kind() == reflect.Pointer && v.IsNil()) {
+		return
+	}
+
+	t.Fatalf("Expected '%v' to be nil at:\n%s", obj, debug.Stack())
+}
 func CheckTestUint(t *testing.T, expected, actual uint) {
 	if expected != actual {
 		t.Fatalf("Expected '%d', but got '%d' at:\n%s", expected, actual, debug.Stack())
