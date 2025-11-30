@@ -366,4 +366,13 @@ func TestPurgeOldBookings(t *testing.T) {
 	CheckTestIsNil(t, err)
 	recurringBooking, _ := GetRecurringBookingRepository().GetOne(rb.ID)
 	CheckTestIsNil(t, recurringBooking)
+
+	// test should not delete old bookings of other orgs
+	org2 := CreateTestOrg("test2.com")
+	user2 := CreateTestUserInOrg(org2)
+	_, space2 := CreateTestLocationAndSpace(org2)
+	CreateTestBooking9To5(user2, space2, -60)
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
 }
