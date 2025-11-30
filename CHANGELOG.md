@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.49.0](https://github.com/seatsurfing/seatsurfing/compare/v1.48.0...v1.49.0) (2025-11-30)
+
+
+### Features
+
+* add my booking info to existing booking popup ([#1504](https://github.com/seatsurfing/seatsurfing/issues/1504)) ([fa2edd1](https://github.com/seatsurfing/seatsurfing/commit/fa2edd15d4175a2c1a8b2a72443935560e63361d))
+* add retention settings for bookings ([#1509](https://github.com/seatsurfing/seatsurfing/issues/1509)) ([20b9194](https://github.com/seatsurfing/seatsurfing/commit/20b9194df9eb2251420afb1c647055436f65aeb3))
+* calDAV integration and iCal attachments for recurring bookings ([#1508](https://github.com/seatsurfing/seatsurfing/issues/1508)) ([7dbb55f](https://github.com/seatsurfing/seatsurfing/commit/7dbb55fdfa153b47323e20c2890540b97a6ce671))
+* make booking links clickable in admin UI ([#1510](https://github.com/seatsurfing/seatsurfing/issues/1510)) ([2772d0d](https://github.com/seatsurfing/seatsurfing/commit/2772d0d111839d1d4e3bc562bd853753c9f45765))
+
+
+### Bug Fixes
+
+* deleting last booking should delete recurring booking ([#1507](https://github.com/seatsurfing/seatsurfing/issues/1507)) ([19a0719](https://github.com/seatsurfing/seatsurfing/commit/19a0719564fc6cba36673f78a06e80fcd985b9e6))
+* **deps:** bump prettier from 3.7.1 to 3.7.2 in /ui ([#1506](https://github.com/seatsurfing/seatsurfing/issues/1506)) ([f2ec898](https://github.com/seatsurfing/seatsurfing/commit/f2ec898af5f89a5ed8bf434bcbaf5ac272ed5475))
+* update user info field names for Microsoft OIDC (fix for [#1501](https://github.com/seatsurfing/seatsurfing/issues/1501)) ([#1502](https://github.com/seatsurfing/seatsurfing/issues/1502)) ([6a77488](https://github.com/seatsurfing/seatsurfing/commit/6a774887d53c01d0737a76fd7e56c6872a7ce30d))
+
 ## [1.48.0](https://github.com/seatsurfing/seatsurfing/compare/v1.47.4...v1.48.0) (2025-11-27)
 
 
