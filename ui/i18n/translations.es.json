@@ -183,6 +183,7 @@
   "maxConcurrentBookings": "Máx. reservas",
   "maxConcurrentBookingsPerUser": "Máx. reservas simultáneas por usuario",
   "maxDaysInAdvance": "Máx. días de antelación",
+  "bookingRetention": "Delete booking data older than",
   "maxHoursBeforeDelete": "Máx. horas para cancelar una reserva antes de su hora de inicio",
   "maxHoursPartiallyBooked": "Máx. horas parcialmente reservadas",
   "members": "Miembros",

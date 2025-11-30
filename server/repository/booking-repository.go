@@ -97,6 +97,61 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 }
 
+func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
+
+	// delete old bookings (limit number of deletion by batch size and delete oldest first)
+	result, err := GetDatabase().DB().Exec(`
+		DELETE FROM bookings 
+		WHERE id IN (
+			SELECT b.id
+			FROM bookings b
+			INNER JOIN spaces s ON b.space_id = s.id
+			INNER JOIN locations l ON s.location_id = l.id
+			INNER JOIN organizations o ON l.organization_id = o.id
+			INNER JOIN settings settings_enabled ON o.id = settings_enabled.organization_id
+			INNER JOIN settings settings_days ON o.id = settings_days.organization_id
+			WHERE settings_enabled.name = $1
+			  AND settings_enabled.value = '1'
+			  AND settings_days.name = $2
+			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * settings_days.value::INTEGER
+			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * $3
+			ORDER BY b.leave_time ASC
+			LIMIT $4
+		)`,
+		SettingBookingRetentionEnabled.Name,
+		SettingBookingRetentionDays.Name,
+		30, // *never* delete bookings that are not older than 30 days
+		batchSize,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	if rowsAffected == 0 {
+		return 0, nil
+	}
+
+	// delete orphaned recurring bookings
+	_, err = GetDatabase().DB().Exec(`
+		DELETE FROM recurring_bookings
+		WHERE id NOT IN (
+			SELECT DISTINCT recurring_id
+			FROM bookings
+			WHERE recurring_id IS NOT NULL
+		)
+	`)
+	if err != nil {
+		return int(rowsAffected), err
+	}
+
+	return int(rowsAffected), nil
+}
+
 func (r *BookingRepository) Create(e *Booking) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
@@ -247,7 +302,20 @@ func (r *BookingRepository) Update(e *Booking) error {
 
 func (r *BookingRepository) Delete(e *BookingDetails) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE id = $1", e.ID)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// also delete the recurring booking if the last booking (of the series) was deleted
+	if e.RecurringID != "" {
+		_, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings "+
+			"WHERE id = $1 "+
+			"AND (SELECT COUNT(*) FROM bookings WHERE recurring_id = $1) = 0", e.RecurringID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *BookingRepository) GetCount(organizationID string) (int, error) {
