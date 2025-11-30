@@ -284,3 +284,37 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 	bookings_8_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time12)
 	CheckTestInt(t, 1, len(bookings_8_12))
 }
+
+func TestPurgeOldBookings(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	// test without any bookings
+	numDeletedOldBookings, err := GetBookingRepository().PurgeOldBookings(100)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+
+	// create past and future bookings
+	CreateTestBooking9To5(user, space, -60)
+	CreateTestBooking9To5(user, space, -61)
+	CreateTestBooking9To5(user, space, -10)
+	CreateTestBooking9To5(user, space, 1)
+	CreateTestBooking9To5(user, space, 2)
+
+	// test no bookings are purged
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+
+	// enable retention for bookings older than 100 days
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "100")
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionEnabled.Name, "1")
+
+	// test no bookings are purged
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+
+}

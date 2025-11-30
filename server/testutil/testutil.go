@@ -207,6 +207,22 @@ func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
 	return location, space
 }
 
+func CreateTestBooking9To5(user *User, space *Space, offsetDay int) *Booking {
+	now := time.Now()
+	enterTime := time.Date(now.Year(), now.Month(), now.Day()+offsetDay, 9, 0, 0, 0, time.Local)
+	leaveTime := time.Date(now.Year(), now.Month(), now.Day()+offsetDay, 17, 0, 0, 0, time.Local)
+
+	booking := &Booking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   enterTime,
+		Leave:   leaveTime,
+	}
+	GetBookingRepository().Create(booking)
+
+	return booking
+}
+
 func DropTestDB() {
 	for _, s := range DatabaseTables {
 		GetDatabase().DB().Exec("DROP TABLE IF EXISTS " + s)
@@ -240,6 +256,12 @@ func CheckTestString(t *testing.T, expected, actual string) {
 func CheckTestBool(t *testing.T, expected, actual bool) {
 	if expected != actual {
 		t.Fatalf("Expected '%t', but got '%t' at:\n%s", expected, actual, debug.Stack())
+	}
+}
+
+func CheckTestIsNil(t *testing.T, obj any) {
+	if obj != nil {
+		t.Fatalf("Expected '%v' to be nil at:\n%s", obj, debug.Stack())
 	}
 }
 
