@@ -317,4 +317,32 @@ func TestPurgeOldBookings(t *testing.T) {
 	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
 
+	// enable retention for bookings older than 100 days
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "100")
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionEnabled.Name, "1")
+
+	// test no bookings are purged
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+
+	// enable retention for bookings older than 30 days
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "30")
+
+	// test bookings are purged (one after another as batchSize is set to 1)
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
+	CheckTestInt(t, 1, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
+	CheckTestInt(t, 1, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	CheckTestIsNil(t, err)
+
+	// check 3 bookings remain
+	now := time.Now()
+	bookings, err := GetBookingRepository().GetAllByOrg(org.ID, now.Add(time.Duration(-90)*24*time.Hour), now.Add(time.Duration(90)*24*time.Hour))
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 3, len(bookings))
 }

@@ -97,7 +97,7 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 }
 
-func (r *BookingRepository) PurgeOldBookings(maxBatchSize int) (int, error) {
+func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
 
 	// delete old bookings (max 10 per call, oldest first)
 	result, err := GetDatabase().DB().Exec(`
@@ -114,12 +114,14 @@ func (r *BookingRepository) PurgeOldBookings(maxBatchSize int) (int, error) {
 			  AND settings_enabled.value = '1'
 			  AND settings_days.name = $2
 			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * settings_days.value::INTEGER
+			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * $3
 			ORDER BY b.leave_time ASC
-			LIMIT $3
+			LIMIT $4
 		)`,
 		SettingBookingRetentionEnabled.Name,
 		SettingBookingRetentionDays.Name,
-		maxBatchSize,
+		30, // min age is 30 days
+		batchSize,
 	)
 	if err != nil {
 		return 0, err
