@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -457,4 +458,22 @@ func (r *SpaceRepository) GetAllAllowedBookersForSpaceList(spaceIDs []string) ([
 		result = append(result, e)
 	}
 	return result, nil
+}
+
+func (r *SpaceRepository) GetNowInSpaceTimezone(spaceID string) (*time.Time, error) {
+	space, err := GetSpaceRepository().GetOne(spaceID)
+	if space == nil || err != nil {
+		return nil, errors.New("space not found")
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if location == nil || err != nil {
+		return nil, errors.New("location not found")
+	}
+	tz := GetLocationRepository().GetTimezone(location)
+	tzLocation, err := time.LoadLocation(tz)
+	if err != nil || tzLocation == nil {
+		return nil, errors.New("invalid timezone")
+	}
+	now := time.Now().In(tzLocation)
+	return &now, nil
 }

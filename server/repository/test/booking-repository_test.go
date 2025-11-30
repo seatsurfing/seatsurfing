@@ -388,3 +388,67 @@ func TestPurgeOldBookings(t *testing.T) {
 	CheckTestIsNil(t, err)
 	CheckTestBool(t, true, booking2.ID == booking2FromDb.ID)
 }
+
+func TestBookingRepositoryGetAllByRecurringID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	rb := &RecurringBooking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   time.Now(),
+		Leave:   time.Now().Add(8 * time.Hour),
+		Subject: "Test Recurring Booking",
+		Cadence: CadenceDaily,
+		Details: &CadenceDailyDetails{Cycle: 1},
+		End:     time.Now().Add(7 * 24 * time.Hour),
+	}
+	err := GetRecurringBookingRepository().Create(rb)
+	CheckTestIsNil(t, err)
+
+	booking1 := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       time.Now(),
+		Leave:       time.Now().Add(8 * time.Hour),
+		RecurringID: api.NullUUID(rb.ID),
+	}
+	err = GetBookingRepository().Create(booking1)
+	CheckTestIsNil(t, err)
+
+	booking2 := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       time.Now().Add(24 * time.Hour),
+		Leave:       time.Now().Add(32 * time.Hour),
+		RecurringID: api.NullUUID(rb.ID),
+	}
+	err = GetBookingRepository().Create(booking2)
+	CheckTestIsNil(t, err)
+
+	booking3 := &Booking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   time.Now().Add(48 * time.Hour),
+		Leave:   time.Now().Add(56 * time.Hour),
+	}
+	err = GetBookingRepository().Create(booking3)
+	CheckTestIsNil(t, err)
+
+	bookings, err := GetBookingRepository().GetAllByRecurringID(rb.ID)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 2, len(bookings))
+	var found1, found2 bool
+	for _, b := range bookings {
+		if b.ID == booking1.ID {
+			found1 = true
+		}
+		if b.ID == booking2.ID {
+			found2 = true
+		}
+	}
+	CheckTestBool(t, true, found1)
+	CheckTestBool(t, true, found2)
+}
