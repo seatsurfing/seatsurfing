@@ -168,6 +168,7 @@ func (router *RecurringBookingRouter) delete(w http.ResponseWriter, r *http.Requ
 		SendForbidden(w)
 		return
 	}
+	go router.onBookingDeleted(e)
 	if err := GetRecurringBookingRepository().Delete(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -321,6 +322,33 @@ func (router *RecurringBookingRouter) onBookingCreated(e *RecurringBooking, book
 			br.createCalDavEvent(b)
 		}
 		router.sendMailNotification(e, bookings)
+	}
+}
+
+func (router *RecurringBookingRouter) onBookingDeleted(e *RecurringBooking) {
+	bookings, err := GetBookingRepository().GetAllByRecurringID(e.ID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	now, err := GetSpaceRepository().GetNowInSpaceTimezone(e.SpaceID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	br := &BookingRouter{}
+	for _, b := range bookings {
+		if b.Enter.After(*now) {
+			caldavClient, caldavEvent, path, err := br.initCaldavEvent(&b.Booking)
+			if err == nil {
+				if b.CalDavID != "" {
+					caldavEvent.ID = b.CalDavID
+					if err := caldavClient.DeleteEvent(path, caldavEvent); err != nil {
+						log.Println(err)
+					}
+				}
+			}
+		}
 	}
 }
 
