@@ -175,7 +175,7 @@ func TestRecurringBookingsCreateDelete(t *testing.T) {
 	}`
 	req = NewHTTPRequest("POST", "/recurring-booking/", user3.ID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	var resBody []CreateRecurringBookingResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 6, len(resBody))
