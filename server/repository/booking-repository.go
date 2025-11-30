@@ -99,7 +99,7 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 
 func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
 
-	// delete old bookings (max 10 per call, oldest first)
+	// delete old bookings (limit number of deletion by batch size and delete oldest first)
 	result, err := GetDatabase().DB().Exec(`
 		DELETE FROM bookings 
 		WHERE id IN (
@@ -120,7 +120,7 @@ func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
 		)`,
 		SettingBookingRetentionEnabled.Name,
 		SettingBookingRetentionDays.Name,
-		30, // min age is 30 days
+		30, // *never* delete bookings that are not older than 30 days
 		batchSize,
 	)
 	if err != nil {

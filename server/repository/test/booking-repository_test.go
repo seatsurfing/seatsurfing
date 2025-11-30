@@ -337,7 +337,7 @@ func TestPurgeOldBookings(t *testing.T) {
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 3, len(bookings))
 
-	// test bookings not older than 30 days are never deleted (even is retention setting is set to 1 day)
+	// test bookings *not* older than 30 days are *never* deleted (even is retention setting is set to 1 day)
 	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "1")
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
 	CheckTestInt(t, 0, numDeletedOldBookings)
