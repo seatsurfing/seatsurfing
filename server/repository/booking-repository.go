@@ -272,7 +272,20 @@ func (r *BookingRepository) Update(e *Booking) error {
 
 func (r *BookingRepository) Delete(e *BookingDetails) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE id = $1", e.ID)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// also delete the recurring booking if the last booking (of the series) was deleted
+	if e.RecurringID != "" {
+		_, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings "+
+			"WHERE id = $1 "+
+			"AND (SELECT COUNT(*) FROM bookings WHERE recurring_id = $1) = 0", e.RecurringID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *BookingRepository) GetCount(organizationID string) (int, error) {

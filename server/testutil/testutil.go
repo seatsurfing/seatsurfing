@@ -191,6 +191,22 @@ func CreateLoginTestUserParams() *LoginResponse {
 	return LoginTestUserParams(user.ID)
 }
 
+func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
+	location := &Location{
+		OrganizationID: org.ID,
+	}
+	if err := GetLocationRepository().Create(location); err != nil {
+		panic(err)
+	}
+	space := &Space{
+		LocationID: location.ID,
+	}
+	if err := GetSpaceRepository().Create(space); err != nil {
+		panic(err)
+	}
+	return location, space
+}
+
 func DropTestDB() {
 	for _, s := range DatabaseTables {
 		GetDatabase().DB().Exec("DROP TABLE IF EXISTS " + s)

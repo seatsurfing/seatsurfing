@@ -122,11 +122,15 @@ func (r *RecurringBookingRepository) Delete(e *RecurringBooking) error {
 	if err != nil || tzLocation == nil {
 		return errors.New("invalid timezone")
 	}
+
+	// only delete future bookings
 	enter := time.Now().In(tzLocation)
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
 		"recurring_id = $1 AND enter_time > $2", e.ID, enter); err != nil {
 		return err
 	}
+
+	// remove recurring information from remaining (past) bookings
 	if _, err := GetDatabase().DB().Exec("UPDATE bookings SET "+
 		"recurring_id = NULL WHERE "+
 		"recurring_id = $1", e.ID); err != nil {
