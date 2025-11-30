@@ -183,7 +183,7 @@
   "maxConcurrentBookings": "Max. boekingen",
   "maxConcurrentBookingsPerUser": "Max. gelijktijdige boekingen per gebruiker",
   "maxDaysInAdvance": "Max. dagen van tevoren",
-  "bookingRetention": "Delete booking data older than (days)",
+  "bookingRetention": "Delete booking data older than",
   "maxHoursBeforeDelete": "Max. uren om een ​​boeking te annuleren vóór de starttijd",
   "maxHoursPartiallyBooked": "Max. uren gedeeltelijk geboekt",
   "members": "Leden",
