@@ -293,8 +293,8 @@ func TestPurgeOldBookings(t *testing.T) {
 
 	// test without any bookings
 	numDeletedOldBookings, err := GetBookingRepository().PurgeOldBookings(100)
-	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, numDeletedOldBookings)
 
 	// create past and future bookings
 	CreateTestBooking9To5(user, space, -60)
@@ -305,8 +305,8 @@ func TestPurgeOldBookings(t *testing.T) {
 
 	// test no bookings are purged
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
-	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, numDeletedOldBookings)
 
 	// enable retention for bookings older than 100 days
 	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "100")
@@ -314,22 +314,22 @@ func TestPurgeOldBookings(t *testing.T) {
 
 	// test no bookings are purged
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
-	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, numDeletedOldBookings)
 
 	// enable retention for bookings older than 30 days
 	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "30")
 
 	// test bookings are purged (one after another as batchSize is set to 1)
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
-	CheckTestInt(t, 1, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
-	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
 	CheckTestInt(t, 1, numDeletedOldBookings)
-	CheckTestIsNil(t, err)
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, numDeletedOldBookings)
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
+	CheckTestIsNil(t, err)
 	CheckTestInt(t, 0, numDeletedOldBookings)
-	CheckTestIsNil(t, err)
 
 	// check 3 bookings remain
 	now := time.Now()
@@ -340,8 +340,8 @@ func TestPurgeOldBookings(t *testing.T) {
 	// test bookings *not* older than 30 days are *never* deleted (even is retention setting is set to 1 day)
 	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "1")
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
-	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, numDeletedOldBookings)
 
 	// test multiple old bookings are purged and orphaned recurring bookings are also deleted
 	rb := &RecurringBooking{
@@ -362,8 +362,8 @@ func TestPurgeOldBookings(t *testing.T) {
 	CreateTestBooking9To5(user, space, -91)
 	CreateTestBooking9To5(user, space, -92)
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
-	CheckTestInt(t, 3, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+	CheckTestInt(t, 3, numDeletedOldBookings)
 	recurringBooking, _ := GetRecurringBookingRepository().GetOne(rb.ID)
 	CheckTestIsNil(t, recurringBooking)
 
@@ -371,8 +371,11 @@ func TestPurgeOldBookings(t *testing.T) {
 	org2 := CreateTestOrg("test2.com")
 	user2 := CreateTestUserInOrg(org2)
 	_, space2 := CreateTestLocationAndSpace(org2)
-	CreateTestBooking9To5(user2, space2, -60)
+	booking2 := CreateTestBooking9To5(user2, space2, -60)
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
-	CheckTestInt(t, 0, numDeletedOldBookings)
 	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+	booking2FromDb, err := GetBookingRepository().GetOne(booking2.ID)
+	CheckTestIsNil(t, err)
+	CheckTestBool(t, true, booking2.ID == booking2FromDb.ID)
 }
