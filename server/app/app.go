@@ -186,7 +186,7 @@ func (a *App) InitializeTimers() {
 				log.Printf("Deleted %d anonymous Confluence users", num)
 			}
 
-			// purge bookings after retention period (if enabled)
+			// purge max. 100 bookings after retention period (if enabled)
 			num, err = GetBookingRepository().PurgeOldBookings(100)
 			if err != nil {
 				log.Println(err)
