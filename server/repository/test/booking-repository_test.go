@@ -317,8 +317,17 @@ func TestPurgeOldBookings(t *testing.T) {
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 0, numDeletedOldBookings)
 
-	// enable retention for bookings older than 30 days
+	// disable retention for bookings (and set threshold to 30 days)
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionEnabled.Name, "0")
 	GetSettingsRepository().Set(org.ID, SettingBookingRetentionDays.Name, "30")
+
+	// test no bookings are purged
+	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, numDeletedOldBookings)
+
+	// (finally) enable retention for bookings
+	GetSettingsRepository().Set(org.ID, SettingBookingRetentionEnabled.Name, "1")
 
 	// test bookings are purged (one after another as batchSize is set to 1)
 	numDeletedOldBookings, err = GetBookingRepository().PurgeOldBookings(1)
