@@ -42,6 +42,8 @@ interface State {
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
   maxDaysInAdvance: number;
+  bookingRetentionEnabled: boolean;
+  bookingRetentionDays: number;
   enableMaxHoursBeforeDelete: boolean;
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
@@ -91,6 +93,8 @@ class Settings extends React.Component<Props, State> {
       maxBookingDurationHours: 0,
       minBookingDurationHours: 0,
       maxDaysInAdvance: 0,
+      bookingRetentionEnabled: false,
+      bookingRetentionDays: 0,
       enableMaxHoursBeforeDelete: false,
       maxHoursBeforeDelete: 0,
       maxHoursPartiallyBooked: 0,
@@ -190,6 +194,10 @@ class Settings extends React.Component<Props, State> {
           state.maxConcurrentBookingsPerUser = window.parseInt(s.value);
         if (s.name === "max_days_in_advance")
           state.maxDaysInAdvance = window.parseInt(s.value);
+        if (s.name === "booking_retention_enabled")
+          state.bookingRetentionEnabled = window.parseInt(s.value);
+        if (s.name === "booking_retention_days")
+          state.bookingRetentionDays = window.parseInt(s.value);
         if (s.name === "enable_max_hours_before_delete")
           state.enableMaxHoursBeforeDelete = window.parseInt(s.value);
         if (s.name === "max_hours_before_delete")
@@ -275,6 +283,14 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "max_days_in_advance",
         this.state.maxDaysInAdvance.toString(),
+      ),
+      new OrgSettings(
+        "booking_retention_enabled",
+        this.state.bookingRetentionEnabled ? "1" : "0",
+      ),
+      new OrgSettings(
+        "booking_retention_days",
+        this.state.bookingRetentionDays.toString(),
       ),
       new OrgSettings(
         "enable_max_hours_before_delete",
@@ -746,6 +762,35 @@ class Settings extends React.Component<Props, State> {
                   }
                   min="0"
                   max="9999"
+                />
+                <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("bookingRetention")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  id="check-bookingRetentionDays"
+                  checked={this.state.bookingRetentionEnabled}
+                  onChange={(e: any) =>
+                    this.setState({
+                      bookingRetentionEnabled: e.target.checked,
+                    })
+                  }
+                />
+                <Form.Control
+                  type="number"
+                  value={this.state.bookingRetentionDays}
+                  onChange={(e: any) =>
+                    this.setState({ bookingRetentionDays: e.target.value })
+                  }
+                  min="30"
+                  max="999"
+                  disabled={!this.state.bookingRetentionEnabled}
                 />
                 <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
               </InputGroup>

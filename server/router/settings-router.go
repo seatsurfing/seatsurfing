@@ -273,7 +273,9 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingConfluenceAnonymous.Name ||
 		name == SysSettingOrgSignupDelete ||
 		name == SysSettingAdminMenuItems ||
-		name == SysSettingAdminWelcomeScreens {
+		name == SysSettingAdminWelcomeScreens ||
+		name == SettingBookingRetentionEnabled.Name ||
+		name == SettingBookingRetentionDays.Name {
 		return true
 	}
 	return false
@@ -298,7 +300,9 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingAllowBookingsNonExistingUsers.Name ||
 		name == SettingMaxBookingDurationHours.Name ||
 		name == SettingDisableBuddies.Name ||
-		name == SettingDefaultTimezone.Name {
+		name == SettingDefaultTimezone.Name ||
+		name == SettingBookingRetentionDays.Name ||
+		name == SettingBookingRetentionEnabled.Name {
 		return true
 	}
 	return false
@@ -361,6 +365,12 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingMinBookingDurationHours.Name {
 		return SettingMinBookingDurationHours.Type
+	}
+	if name == SettingBookingRetentionDays.Name {
+		return SettingBookingRetentionDays.Type
+	}
+	if name == SettingBookingRetentionEnabled.Name {
+		return SettingBookingRetentionEnabled.Type
 	}
 	return 0
 }
