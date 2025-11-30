@@ -266,7 +266,9 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingMinBookingDurationHours.Name+"', '0'), "+
 		"($1, '"+SettingMaxDaysInAdvance.Name+"', '14'), "+
 		"($1, '"+SettingMaxBookingDurationHours.Name+"', '12'), "+
-		"($1, '"+SettingDefaultTimezone.Name+"', 'Europe/Berlin') "+
+		"($1, '"+SettingDefaultTimezone.Name+"', 'Europe/Berlin'), "+
+		"($1, '"+SettingBookingRetentionEnabled.Name+"', '0'), "+
+		"($1, '"+SettingBookingRetentionDays.Name+"', '365') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)
 	return err

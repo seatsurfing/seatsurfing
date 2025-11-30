@@ -273,7 +273,9 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingConfluenceAnonymous.Name ||
 		name == SysSettingOrgSignupDelete ||
 		name == SysSettingAdminMenuItems ||
-		name == SysSettingAdminWelcomeScreens {
+		name == SysSettingAdminWelcomeScreens ||
+		name == SettingBookingRetentionEnabled.Name ||
+		name == SettingBookingRetentionDays.Name {
 		return true
 	}
 	return false
