@@ -598,14 +598,22 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   renderRow = (space: SpaceState) => {
+    let bookingLink;
+    if (space.id) {
+      const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`;
+      bookingLink = (
+        <a href={bookingLinkUrl} target="_blank">
+          {bookingLinkUrl}
+        </a>
+      );
+    } else {
+      bookingLink = this.props.t("saveAreaToGetLink");
+    }
+
     return (
       <tr key={space.id}>
         <td>{space.name}</td>
-        <td>
-          {space.id
-            ? `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`
-            : this.props.t("saveAreaToGetLink")}
-        </td>
+        <td>{bookingLink}</td>
       </tr>
     );
   };
