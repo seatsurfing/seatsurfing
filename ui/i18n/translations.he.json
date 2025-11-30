@@ -183,6 +183,7 @@
   "maxConcurrentBookings": "כמות הזמנות מרבית",
   "maxConcurrentBookingsPerUser": "כמות ההזמנות המרביות במקביל למשתמש",
   "maxDaysInAdvance": "כמות הימים המרבית מראש",
+  "bookingRetention": "Delete booking data older than (days)",
   "maxHoursBeforeDelete": "Max. hours to cancel a booking before its start time",
   "maxHoursPartiallyBooked": "Max. hours partially booked",
   "members": "Members",
