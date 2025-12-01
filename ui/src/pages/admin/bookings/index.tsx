@@ -21,11 +21,8 @@ import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
-import DateTimePicker from "react-datetime-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
-import "react-date-picker/dist/DatePicker.css";
+import DateTimeButtonPicker from "@/components/DateTimeButtonPicker";
 import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
 
 interface State {
   selectedItem: string;
@@ -262,23 +259,11 @@ class Bookings extends React.Component<Props, State> {
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
-            <DateTimePicker
-              value={this.state.start}
-              onChange={(value: Date | null) => {
-                if (value != null) this.setState({ start: value });
-              }}
-              clearIcon={null}
-              required={true}
-              format={Formatting.getDateTimePickerFormatString()}
-              yearAriaLabel="Year"
-              monthAriaLabel="Month"
-              dayAriaLabel="Day"
-              hourAriaLabel="Start hour"
-              minuteAriaLabel="Start minute"
-              secondAriaLabel="Start second"
-              nativeInputAriaLabel="Start date"
-              calendarAriaLabel="Toggle start calendar"
-            />
+                <DateTimeButtonPicker
+                  value={this.state.start}
+                  onChange={(d: Date) => this.setState({ start: d })}
+                  dailyOnly={false}
+                />
           </Col>
         </Form.Group>
         <Form.Group as={Row}>
@@ -286,23 +271,12 @@ class Bookings extends React.Component<Props, State> {
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
-            <DateTimePicker
-              value={this.state.end}
-              onChange={(value: Date | null) => {
-                if (value != null) this.setState({ end: value });
-              }}
-              clearIcon={null}
-              required={true}
-              format={Formatting.getDateTimePickerFormatString()}
-              yearAriaLabel="Year"
-              monthAriaLabel="Month"
-              dayAriaLabel="Day"
-              hourAriaLabel="Start hour"
-              minuteAriaLabel="Start minute"
-              secondAriaLabel="Start second"
-              nativeInputAriaLabel="Start date"
-              calendarAriaLabel="Toggle start calendar"
-            />
+                <DateTimeButtonPicker
+                  value={this.state.end}
+                  onChange={(d: Date) => this.setState({ end: d })}
+                  dailyOnly={false}
+                  showTodayButton={false}
+                />
           </Col>
         </Form.Group>
       </Form>

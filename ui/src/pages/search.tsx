@@ -10,12 +10,8 @@ import {
   Nav,
   Alert,
 } from "react-bootstrap";
-import DateTimePicker from "react-datetime-picker";
-import DatePicker from "react-date-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
-import "react-date-picker/dist/DatePicker.css";
+import DateTimeButtonPicker from "@/components/DateTimeButtonPicker";
 import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
 import Loading from "../components/Loading";
 import {
   IoFilter as FilterIcon,
@@ -1598,86 +1594,46 @@ class Search extends React.Component<Props, State> {
     }
     let enterDatePicker = (
       <div aria-label="Reservation start date">
-        <DateTimePicker
-          disabled={!this.state.locationId}
+        <DateTimeButtonPicker
           value={this.state.enter}
-          onChange={(value: Date | null) => {
-            if (value != null) this.setEnterDate(value);
-          }}
-          clearIcon={null}
-          required={true}
-          format={Formatting.getDateTimePickerFormatString()}
-          yearAriaLabel="Year"
-          monthAriaLabel="Month"
-          dayAriaLabel="Day"
-          hourAriaLabel="Start hour"
-          minuteAriaLabel="Start minute"
-          secondAriaLabel="Start second"
-          nativeInputAriaLabel="Start date"
-          calendarAriaLabel="Toggle start calendar"
+          onChange={(d: Date) => this.setEnterDate(d)}
+          disabled={!this.state.locationId}
+          dailyOnly={RuntimeConfig.INFOS.dailyBasisBooking}
         />
       </div>
     );
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       enterDatePicker = (
         <div aria-label="Reservation start date">
-          <DatePicker
+          <DateTimeButtonPicker
             disabled={!this.state.locationId}
             value={this.state.enter}
-            onChange={(value: Date | null | [Date | null, Date | null]) => {
-              if (value != null) this.setEnterDate(value);
-            }}
-            clearIcon={null}
-            required={true}
-            format={Formatting.getDateTimePickerFormatDailyString()}
-            yearAriaLabel="Year"
-            monthAriaLabel="Month"
-            dayAriaLabel="Day"
-            nativeInputAriaLabel="Start date"
-            calendarAriaLabel="Toggle start calendar"
+            onChange={(d: Date) => this.setEnterDate(d)}
+            dailyOnly={true}
           />
         </div>
       );
     }
     let leaveDatePicker = (
       <div aria-label="Reservation end date">
-        <DateTimePicker
-          disabled={!this.state.locationId}
+        <DateTimeButtonPicker
           value={this.state.leave}
-          onChange={(value: Date | null) => {
-            if (value != null) this.setLeaveDate(value);
-          }}
-          clearIcon={null}
-          required={true}
-          format={Formatting.getDateTimePickerFormatString()}
-          yearAriaLabel="Year"
-          monthAriaLabel="Month"
-          dayAriaLabel="Day"
-          hourAriaLabel="End hour"
-          minuteAriaLabel="End minute"
-          secondAriaLabel="End second"
-          nativeInputAriaLabel="End date"
-          calendarAriaLabel="Toggle end calendar"
+          onChange={(d: Date) => this.setLeaveDate(d)}
+          disabled={!this.state.locationId}
+          dailyOnly={RuntimeConfig.INFOS.dailyBasisBooking}
+          showTodayButton={false}
         />
       </div>
     );
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       leaveDatePicker = (
         <div aria-label="Reservation end date">
-          <DatePicker
+          <DateTimeButtonPicker
             disabled={!this.state.locationId}
             value={this.state.leave}
-            onChange={(value: Date | null | [Date | null, Date | null]) => {
-              if (value != null) this.setLeaveDate(value);
-            }}
-            clearIcon={null}
-            required={true}
-            format={Formatting.getDateTimePickerFormatDailyString()}
-            yearAriaLabel="Year"
-            monthAriaLabel="Month"
-            dayAriaLabel="Day"
-            nativeInputAriaLabel="End date"
-            calendarAriaLabel="Toggle end calendar"
+            onChange={(d: Date) => this.setLeaveDate(d)}
+            dailyOnly={true}
+            showTodayButton={false}
           />
         </div>
       );
@@ -2269,21 +2225,10 @@ class Search extends React.Component<Props, State> {
                 {this.props.t("end")}:
               </Form.Label>
               <Col sm="8">
-                <DatePicker
+                <DateTimeButtonPicker
                   value={this.state.recurrence.end}
-                  onChange={(
-                    value: Date | null | [Date | null, Date | null],
-                  ) => {
-                    if (value != null) this.setRecurrenceEndDate(value);
-                  }}
-                  format={Formatting.getDateTimePickerFormatDailyString()}
-                  clearIcon={null}
-                  required={this.state.recurrence.active}
-                  yearAriaLabel="Year"
-                  monthAriaLabel="Month"
-                  dayAriaLabel="Day"
-                  nativeInputAriaLabel="Recurrence end date"
-                  calendarAriaLabel="Toggle recurrence end calendar"
+                  onChange={(d: Date) => this.setRecurrenceEndDate(d)}
+                  dailyOnly={true}
                 />
               </Col>
             </Form.Group>
