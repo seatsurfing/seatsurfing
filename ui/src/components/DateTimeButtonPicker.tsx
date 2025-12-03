@@ -112,7 +112,7 @@ const DateTimeButtonPicker: React.FC<Props> = ({
           variant="outline-secondary"
           onClick={() => showDatePopover()}
           disabled={disabled}
-          style={{ minWidth: 120, textAlign: "left", color: '#000' }}
+          style={{ minWidth: 120, textAlign: "left", color: "#000" }}
         >
           {dateLabel}
         </Button>
@@ -128,20 +128,26 @@ const DateTimeButtonPicker: React.FC<Props> = ({
               <div className="d-flex gap-2 mb-2">
                 <Button
                   size="sm"
-                  variant={dateViewMode === "calendar" ? "primary" : "outline-secondary"}
+                  variant={
+                    dateViewMode === "calendar"
+                      ? "primary"
+                      : "outline-secondary"
+                  }
                   onClick={() => setDateViewMode("calendar")}
                 >
                   Kalender
                 </Button>
                 <Button
                   size="sm"
-                  variant={dateViewMode === "select" ? "primary" : "outline-secondary"}
+                  variant={
+                    dateViewMode === "select" ? "primary" : "outline-secondary"
+                  }
                   onClick={() => setDateViewMode("select")}
                 >
                   DD.MM.YYYY
                 </Button>
               </div>
-                {dateViewMode === "calendar" ? (
+              {dateViewMode === "calendar" ? (
                 <Calendar
                   minDate={today}
                   onClickDay={(d: Date) => onDateSelect(d)}
@@ -164,12 +170,20 @@ const DateTimeButtonPicker: React.FC<Props> = ({
                           onChange(nd);
                         }}
                       >
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => {
-                          const disabled = isPastDate(value.getFullYear(), value.getMonth(), d);
-                          return (
-                            <option key={d} value={d} disabled={disabled}>{d.toString().padStart(2,'0')}</option>
-                          );
-                        })}
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                          (d) => {
+                            const disabled = isPastDate(
+                              value.getFullYear(),
+                              value.getMonth(),
+                              d,
+                            );
+                            return (
+                              <option key={d} value={d} disabled={disabled}>
+                                {d.toString().padStart(2, "0")}
+                              </option>
+                            );
+                          },
+                        )}
                       </select>
                     </Col>
                     <Col xs={4}>
@@ -183,18 +197,26 @@ const DateTimeButtonPicker: React.FC<Props> = ({
                           onChange(nd);
                         }}
                       >
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-                          const disabled = isPastDate(value.getFullYear(), m - 1, value.getDate());
-                          return (
-                            <option key={m} value={m} disabled={disabled}>{m.toString().padStart(2,'0')}</option>
-                          );
-                        })}
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                          (m) => {
+                            const disabled = isPastDate(
+                              value.getFullYear(),
+                              m - 1,
+                              value.getDate(),
+                            );
+                            return (
+                              <option key={m} value={m} disabled={disabled}>
+                                {m.toString().padStart(2, "0")}
+                              </option>
+                            );
+                          },
+                        )}
                       </select>
                     </Col>
                     <Col xs={4}>
                       <select
                         className="form-select"
-                        style={{ minWidth: '90px' }}
+                        style={{ minWidth: "90px" }}
                         value={value.getFullYear()}
                         onChange={(e) => {
                           const y = parseInt(e.target.value, 10);
@@ -203,10 +225,19 @@ const DateTimeButtonPicker: React.FC<Props> = ({
                           onChange(nd);
                         }}
                       >
-                        {Array.from({ length: 21 }, (_, i) => value.getFullYear() - 10 + i).map((y) => {
-                          const disabled = isPastDate(y, value.getMonth(), value.getDate());
+                        {Array.from(
+                          { length: 21 },
+                          (_, i) => value.getFullYear() - 10 + i,
+                        ).map((y) => {
+                          const disabled = isPastDate(
+                            y,
+                            value.getMonth(),
+                            value.getDate(),
+                          );
                           return (
-                            <option key={y} value={y} disabled={disabled}>{y}</option>
+                            <option key={y} value={y} disabled={disabled}>
+                              {y}
+                            </option>
                           );
                         })}
                       </select>
@@ -226,7 +257,7 @@ const DateTimeButtonPicker: React.FC<Props> = ({
             variant="outline-secondary"
             onClick={() => showTimePopover()}
             disabled={disabled}
-            style={{ minWidth: 80, color: '#000' }}
+            style={{ minWidth: 80, color: "#000" }}
           >
             {timeLabel}
           </Button>
@@ -240,7 +271,7 @@ const DateTimeButtonPicker: React.FC<Props> = ({
             <Popover id="popover-time">
               <Popover.Body>
                 <Row className="g-2 align-items-center">
-                    <Col xs={6}>
+                  <Col xs={6}>
                     <select
                       className="form-select"
                       value={value.getHours()}
@@ -256,7 +287,9 @@ const DateTimeButtonPicker: React.FC<Props> = ({
                         cand.setHours(h, 0, 0, 0);
                         const disabled = cand < minAllowed;
                         return (
-                          <option key={h} value={h} disabled={disabled}>{h.toString().padStart(2,'0')}</option>
+                          <option key={h} value={h} disabled={disabled}>
+                            {h.toString().padStart(2, "0")}
+                          </option>
                         );
                       })}
                     </select>
@@ -277,7 +310,9 @@ const DateTimeButtonPicker: React.FC<Props> = ({
                         cand.setHours(value.getHours(), m, 0, 0);
                         const disabled = cand < minAllowed;
                         return (
-                          <option key={m} value={m} disabled={disabled}>{m.toString().padStart(2,'0')}</option>
+                          <option key={m} value={m} disabled={disabled}>
+                            {m.toString().padStart(2, "0")}
+                          </option>
                         );
                       })}
                     </select>

@@ -259,11 +259,11 @@ class Bookings extends React.Component<Props, State> {
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
-                <DateTimeButtonPicker
-                  value={this.state.start}
-                  onChange={(d: Date) => this.setState({ start: d })}
-                  dailyOnly={false}
-                />
+            <DateTimeButtonPicker
+              value={this.state.start}
+              onChange={(d: Date) => this.setState({ start: d })}
+              dailyOnly={false}
+            />
           </Col>
         </Form.Group>
         <Form.Group as={Row}>
@@ -271,12 +271,12 @@ class Bookings extends React.Component<Props, State> {
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
-                <DateTimeButtonPicker
-                  value={this.state.end}
-                  onChange={(d: Date) => this.setState({ end: d })}
-                  dailyOnly={false}
-                  showTodayButton={false}
-                />
+            <DateTimeButtonPicker
+              value={this.state.end}
+              onChange={(d: Date) => this.setState({ end: d })}
+              dailyOnly={false}
+              showTodayButton={false}
+            />
           </Col>
         </Form.Group>
       </Form>
