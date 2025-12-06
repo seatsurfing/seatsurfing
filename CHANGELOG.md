@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.49.1](https://github.com/seatsurfing/seatsurfing/compare/v1.49.0...v1.49.1) (2025-12-06)
+
+
+### Bug Fixes
+
+* **deps:** bump eslint-config-next from 16.0.5 to 16.0.7 in /ui ([#1525](https://github.com/seatsurfing/seatsurfing/issues/1525)) ([4729c74](https://github.com/seatsurfing/seatsurfing/commit/4729c74182554b8ab95f4a21f6b0e9e857722303))
+* **deps:** bump library/golang from 1.25.4-bookworm to 1.25.5-bookworm ([#1517](https://github.com/seatsurfing/seatsurfing/issues/1517)) ([a8984b7](https://github.com/seatsurfing/seatsurfing/commit/a8984b7b4156d1c91d78a232cfe18911e6f75032))
+* **deps:** bump next from 16.0.5 to 16.0.7 in /ui ([#1524](https://github.com/seatsurfing/seatsurfing/issues/1524)) ([5fb93ce](https://github.com/seatsurfing/seatsurfing/commit/5fb93ce02ca2f4c24650de4d510a1cefe5cd0a6e))
+* **deps:** bump prettier from 3.7.2 to 3.7.4 in /ui ([#1522](https://github.com/seatsurfing/seatsurfing/issues/1522)) ([0bd8264](https://github.com/seatsurfing/seatsurfing/commit/0bd82649af65dfbf78cac765ea87f8405c101d3e))
+* **deps:** bump react from 19.2.0 to 19.2.1 in /ui ([#1523](https://github.com/seatsurfing/seatsurfing/issues/1523)) ([88b4790](https://github.com/seatsurfing/seatsurfing/commit/88b4790981fb30fe2d46705793eca6fb4c865d70))
+* **deps:** bump react-dom from 19.2.0 to 19.2.1 in /ui ([#1521](https://github.com/seatsurfing/seatsurfing/issues/1521)) ([f63f86a](https://github.com/seatsurfing/seatsurfing/commit/f63f86acae8e37f390b1c2377192bb8745f6ab7a))
+
 ## [1.49.0](https://github.com/seatsurfing/seatsurfing/compare/v1.48.0...v1.49.0) (2025-11-30)
 
 
