@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/valkey-io/valkey-go v1.0.68
 	golang.org/x/crypto v0.45.0
-	golang.org/x/oauth2 v0.33.0
+	golang.org/x/oauth2 v0.34.0
 )
 
 require (
