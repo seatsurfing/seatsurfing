@@ -119,6 +119,7 @@
   "enter": "כניסה",
   "entryCreated": "נוצרה רשומה.",
   "entryUpdated": "ההעדפות נשמרו.",
+  "errorSlotConflict": "There is already another booking in the selected date range.",
   "errorAddDomain": "שגיאה בהוספת שם התחום.",
   "errorBookingLimit": "הגעת לכמות ההזמנות המרבית {{num}}.",
   "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
