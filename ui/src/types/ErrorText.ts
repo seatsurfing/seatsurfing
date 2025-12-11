@@ -1,7 +1,7 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc } from "@/components/withTranslation";
 
-//var ResponseCodeBookingSlotConflict: number             = 1001;
+const ResponseCodeBookingSlotConflict: number = 1001;
 const ResponseCodeBookingLocationMaxConcurrent: number = 1002;
 const ResponseCodeBookingTooManyUpcomingBookings: number = 1003;
 const ResponseCodeBookingTooManyDaysInAdvance: number = 1004;
@@ -14,7 +14,9 @@ const ResponseCodePresenceReportDateRangeTooLong: number = 2001;
 
 export default class ErrorText {
   static getTextForAppCode(code: number, t: TranslationFunc): string {
-    if (code === ResponseCodeBookingLocationMaxConcurrent) {
+    if (code === ResponseCodeBookingSlotConflict) {
+      return t("errorSlotConflict");
+    } else if (code === ResponseCodeBookingLocationMaxConcurrent) {
       return t("errorTooManyConcurrent");
     } else if (code === ResponseCodeBookingInvalidMaxBookingDuration) {
       return t("errorMaxBookingDuration", {

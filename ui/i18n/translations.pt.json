@@ -119,6 +119,7 @@
   "enter": "Entrar",
   "entryCreated": "Entrada criada.",
   "entryUpdated": "Preferências salvas.",
+  "errorSlotConflict": "There is already another booking in the selected date range.",
   "errorAddDomain": "Erro ao adicionar o domínio.",
   "errorBookingLimit": "Você atingiu o limite de {{num}} reservas.",
   "errorCaldav": "Erro ao conectar ao Servidor CalDAV. Verifique a URL e credenciais.",
