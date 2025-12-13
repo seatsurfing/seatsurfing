@@ -120,6 +120,7 @@
   "enter": "Beginn",
   "entryCreated": "Eintrag wurde erstellt.",
   "entryUpdated": "Eingaben gespeichert.",
+  "errorSlotConflict": "Es gibt bereits eine Buchung im gewählten Zeitraum.",
   "errorAddDomain": "Fehler beim Hinzufügen der Domain.",
   "errorBookingLimit": "Das Limit von {{num}} Buchungen wurde erreicht.",
   "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen.",

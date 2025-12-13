@@ -615,7 +615,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(conflicts) > 0 {
-		SendAlreadyExists(w)
+		SendAlreadyExistsCode(w, ResponseCodeBookingSlotConflict)
 		return
 	}
 	e.Approved = !router.getSpaceRequiresApproval(location.OrganizationID, space)

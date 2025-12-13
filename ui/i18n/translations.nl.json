@@ -119,6 +119,7 @@
   "enter": "Aankomst",
   "entryCreated": "Invoer aangemaakt.",
   "entryUpdated": "Voorkeuren opgeslagen.",
+  "errorSlotConflict": "There is already another booking in the selected date range.",
   "errorAddDomain": "Fout bij het toevoegen van het domein.",
   "errorBookingLimit": "U heeft de limiet van {{num}} boekingen bereikt.",
   "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
