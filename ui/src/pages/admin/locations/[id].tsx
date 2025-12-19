@@ -819,7 +819,7 @@ class EditLocation extends React.Component<Props, State> {
         onHide={() => this.setState({ showEditSpaceDetailsModal: false })}
       >
         <Modal.Header closeButton={true}>
-          <Modal.Title>Edit Space</Modal.Title>
+          <Modal.Title>{this.props.t("editSpace")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form
