@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.49.2](https://github.com/seatsurfing/seatsurfing/compare/v1.49.1...v1.49.2) (2025-12-19)
+
+
+### Bug Fixes
+
+* add missing translation for edit space modal ([#1559](https://github.com/seatsurfing/seatsurfing/issues/1559)) ([a3cbdb7](https://github.com/seatsurfing/seatsurfing/commit/a3cbdb71760bdc60993410483c090b3c38b50e5d))
+* **deps:** bump @types/node from 24.10.1 to 25.0.3 in /e2e ([#1552](https://github.com/seatsurfing/seatsurfing/issues/1552)) ([8e63efd](https://github.com/seatsurfing/seatsurfing/commit/8e63efd7d313d562b35aee35c5cbb4bd816fa791))
+* **deps:** bump @types/node from 24.10.1 to 25.0.3 in /ui ([#1553](https://github.com/seatsurfing/seatsurfing/issues/1553)) ([01bf810](https://github.com/seatsurfing/seatsurfing/commit/01bf8104ac9cd3b5b3bf6823524f4bb69d088fe9))
+* **deps:** bump eslint from 9.39.1 to 9.39.2 in /ui ([#1549](https://github.com/seatsurfing/seatsurfing/issues/1549)) ([c346041](https://github.com/seatsurfing/seatsurfing/commit/c346041bfa31e7041fba034df3b0912baca60cc5))
+* **deps:** bump eslint-config-next from 16.0.10 to 16.1.0 in /ui ([#1556](https://github.com/seatsurfing/seatsurfing/issues/1556)) ([7f1245c](https://github.com/seatsurfing/seatsurfing/commit/7f1245c4054018237cff87133ee353762732cf11))
+* **deps:** bump eslint-config-next from 16.0.7 to 16.0.10 in /ui ([#1544](https://github.com/seatsurfing/seatsurfing/issues/1544)) ([9067a40](https://github.com/seatsurfing/seatsurfing/commit/9067a40c61e3dfa793f19d51c9bd76d5634c2e64))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.68 to 1.0.69 in /server ([#1529](https://github.com/seatsurfing/seatsurfing/issues/1529)) ([49ae08c](https://github.com/seatsurfing/seatsurfing/commit/49ae08cb9cc682c18af03723c9dcfe0e59c9228d))
+* **deps:** bump golang.org/x/crypto from 0.45.0 to 0.46.0 in /server ([#1536](https://github.com/seatsurfing/seatsurfing/issues/1536)) ([1097b46](https://github.com/seatsurfing/seatsurfing/commit/1097b46cfc081c4b064a68fc836b2aa8e07e981c))
+* **deps:** bump golang.org/x/oauth2 from 0.33.0 to 0.34.0 in /server ([#1530](https://github.com/seatsurfing/seatsurfing/issues/1530)) ([719543e](https://github.com/seatsurfing/seatsurfing/commit/719543ef4fc85cc765fd73c1829a49de181c2067))
+* **deps:** bump next from 16.0.10 to 16.1.0 in /ui ([#1555](https://github.com/seatsurfing/seatsurfing/issues/1555)) ([7e06508](https://github.com/seatsurfing/seatsurfing/commit/7e065080e15ec75219ee8c86c335fceb2142381d))
+* **deps:** bump next from 16.0.7 to 16.0.10 in /ui ([#1541](https://github.com/seatsurfing/seatsurfing/issues/1541)) ([3640bd5](https://github.com/seatsurfing/seatsurfing/commit/3640bd5866c1382e2e069741a9628263cedaae7e))
+* **deps:** bump next from 16.0.7 to 16.0.8 in /ui ([#1535](https://github.com/seatsurfing/seatsurfing/issues/1535)) ([4769a92](https://github.com/seatsurfing/seatsurfing/commit/4769a92b81e987763448fbbd777a09c264d34dba))
+* **deps:** bump react-dom from 19.2.1 to 19.2.3 in /ui ([#1546](https://github.com/seatsurfing/seatsurfing/issues/1546)) ([03696c2](https://github.com/seatsurfing/seatsurfing/commit/03696c291b08bed22ddc84954808339da9d25701))
+* show "slot conflict" error message in frontend ([#1528](https://github.com/seatsurfing/seatsurfing/issues/1528)) ([947fed7](https://github.com/seatsurfing/seatsurfing/commit/947fed76ed22b5e6c1a1bb167bf8178db4e2b4c8))
+
 ## [1.49.1](https://github.com/seatsurfing/seatsurfing/compare/v1.49.0...v1.49.1) (2025-12-06)
 
 
