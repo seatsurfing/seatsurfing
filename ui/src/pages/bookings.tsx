@@ -26,6 +26,7 @@ import { Calendar, momentLocalizer, View } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useState } from "react";
+import { throws } from "node:assert";
 
 interface State {
   loading: boolean;
@@ -33,6 +34,7 @@ interface State {
   selectedItem: Booking | null;
   cancelSeries: boolean;
   view: View;
+  mode: "calendar" | "item";
 }
 
 interface Props {
@@ -52,6 +54,7 @@ class Bookings extends React.Component<Props, State> {
       selectedItem: null,
       cancelSeries: false,
       view: "agenda" as View,
+      mode: "calendar",
     };
   }
 
@@ -201,23 +204,40 @@ class Bookings extends React.Component<Props, State> {
       },
     ];
 
-    return (
-      <>
-        <NavBar />
-        <div className="container-signin">
-          <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 500 }}
-            defaultView="agenda"
-            view={this.state.view}
-            onView={(view) => this.setState({ view })}
-          />
-        </div>
-      </>
+    const toggle = (
+      <Form.Check
+        type="switch"
+        checked={this.state.mode === "calendar"}
+        onChange={() => {
+          this.setState(
+            { mode: this.state.mode === "calendar" ? "item" : "calendar" },
+            () => {}
+          );
+        }}
+        label="Show Calendar"
+      />
     );
+
+    if (this.state.mode === "calendar") {
+      return (
+        <>
+          <NavBar />
+          <div className="container-signin">
+            {toggle}
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: 500 }}
+              defaultView="agenda"
+              view={this.state.view}
+              onView={(view) => this.setState({ view })}
+            />
+          </div>
+        </>
+      );
+    }
 
     let formatter = Formatting.getFormatter();
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
@@ -227,6 +247,7 @@ class Bookings extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-signin">
+          {toggle}
           <Form className="form-signin">
             <ListGroup>
               {this.data.map((item) => this.renderItem(item))}
