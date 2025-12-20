@@ -25,8 +25,6 @@ import RedirectUtil from "@/util/RedirectUtil";
 import { Calendar, momentLocalizer, View } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useState } from "react";
-import { throws } from "node:assert";
 
 interface State {
   loading: boolean;
@@ -34,7 +32,6 @@ interface State {
   selectedItem: Booking | null;
   cancelSeries: boolean;
   view: View;
-  mode: "calendar" | "item";
 }
 
 interface Props {
@@ -54,7 +51,6 @@ class Bookings extends React.Component<Props, State> {
       selectedItem: null,
       cancelSeries: false,
       view: "agenda" as View,
-      mode: "calendar",
     };
   }
 
@@ -191,69 +187,48 @@ class Bookings extends React.Component<Props, State> {
 
     const localizer = momentLocalizer(moment);
 
-    const events = [
-      {
-        start: moment().toDate(),
-        end: moment().add(1, "hours").toDate(),
-        title: "Booking 1",
-      },
-      {
-        start: moment().add(1, "day").toDate(),
-        end: moment().add(1, "day").add(1, "hours").toDate(),
-        title: "Booking 2",
-      },
-    ];
+    type Event = {
+      start: Date;
+      end: Date;
+      title: string;
+      booking: Booking;
+    };
 
-    const toggle = (
-      <Form.Check
-        type="switch"
-        checked={this.state.mode === "calendar"}
-        onChange={() => {
-          this.setState(
-            { mode: this.state.mode === "calendar" ? "item" : "calendar" },
-            () => {}
-          );
-        }}
-        label="Show Calendar"
-      />
-    );
-
-    if (this.state.mode === "calendar") {
-      return (
-        <>
-          <NavBar />
-          <div className="container-signin">
-            {toggle}
-            <Calendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: 500 }}
-              defaultView="agenda"
-              view={this.state.view}
-              onView={(view) => this.setState({ view })}
-            />
-          </div>
-        </>
-      );
+    const events: Event[] = [];
+    for (const item of this.data) {
+      events.push({
+        start: item.enter,
+        end: item.leave,
+        title: `${item.subject}\n${item.space.location.name}: ${item.space.name}`,
+        booking: item,
+      });
     }
 
     let formatter = Formatting.getFormatter();
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
     }
+
     return (
       <>
         <NavBar />
         <div className="container-signin">
-          {toggle}
-          <Form className="form-signin">
-            <ListGroup>
-              {this.data.map((item) => this.renderItem(item))}
-            </ListGroup>
-          </Form>
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 500 }}
+            defaultView="agenda"
+            view={this.state.view}
+            onView={(view) => this.setState({ view })}
+            onSelectEvent={(e) => {
+              console.log("e", e);
+              this.onItemPress(e.booking);
+            }}
+          ></Calendar>
         </div>
+
         <Modal
           show={this.state.selectedItem != null}
           onHide={() => this.setState({ selectedItem: null })}
