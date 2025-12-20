@@ -112,6 +112,7 @@
   "editGroup": "Edit group",
   "editOrg": "עריכת ארגון",
   "editUser": "עריכת משתמש",
+  "editSpace": "Edit space",
   "emailAddress": "כתובת דוא״ל",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -119,6 +120,7 @@
   "enter": "כניסה",
   "entryCreated": "נוצרה רשומה.",
   "entryUpdated": "ההעדפות נשמרו.",
+  "errorSlotConflict": "There is already another booking in the selected date range.",
   "errorAddDomain": "שגיאה בהוספת שם התחום.",
   "errorBookingLimit": "הגעת לכמות ההזמנות המרבית {{num}}.",
   "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
@@ -183,6 +185,7 @@
   "maxConcurrentBookings": "כמות הזמנות מרבית",
   "maxConcurrentBookingsPerUser": "כמות ההזמנות המרביות במקביל למשתמש",
   "maxDaysInAdvance": "כמות הימים המרבית מראש",
+  "bookingRetention": "Delete booking data older than",
   "maxHoursBeforeDelete": "Max. hours to cancel a booking before its start time",
   "maxHoursPartiallyBooked": "Max. hours partially booked",
   "members": "Members",
@@ -313,5 +316,7 @@
   "manageProfile": "Manage profile",
   "profile": "Profile",
   "userinfoFirstnameField": "Userinfo Firstname field",
-  "userinfoLastnameField": "Userinfo Lastname field"
+  "userinfoLastnameField": "Userinfo Lastname field",
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
 }

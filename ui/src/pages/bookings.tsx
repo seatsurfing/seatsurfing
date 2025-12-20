@@ -273,11 +273,15 @@ class Bookings extends React.Component<Props, State> {
             </Button>
             <Button
               variant="secondary"
-              onClick={() =>
-                getIcal(
-                  this.state.selectedItem ? this.state.selectedItem.id : ""
-                )
-              }
+              onClick={() => {
+                if (this.state.selectedItem?.isRecurring()) {
+                  getIcal(this.state.selectedItem.recurringId, true);
+                } else {
+                  getIcal(
+                    this.state.selectedItem ? this.state.selectedItem.id : ""
+                  );
+                }
+              }}
             >
               <IconCalendar
                 className="feather"

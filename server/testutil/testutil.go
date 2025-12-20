@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -191,6 +192,38 @@ func CreateLoginTestUserParams() *LoginResponse {
 	return LoginTestUserParams(user.ID)
 }
 
+func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
+	location := &Location{
+		OrganizationID: org.ID,
+	}
+	if err := GetLocationRepository().Create(location); err != nil {
+		panic(err)
+	}
+	space := &Space{
+		LocationID: location.ID,
+	}
+	if err := GetSpaceRepository().Create(space); err != nil {
+		panic(err)
+	}
+	return location, space
+}
+
+func CreateTestBooking9To5(user *User, space *Space, offsetDay int) *Booking {
+	now := time.Now()
+	enterTime := time.Date(now.Year(), now.Month(), now.Day()+offsetDay, 9, 0, 0, 0, time.Local)
+	leaveTime := time.Date(now.Year(), now.Month(), now.Day()+offsetDay, 17, 0, 0, 0, time.Local)
+
+	booking := &Booking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   enterTime,
+		Leave:   leaveTime,
+	}
+	GetBookingRepository().Create(booking)
+
+	return booking
+}
+
 func DropTestDB() {
 	for _, s := range DatabaseTables {
 		GetDatabase().DB().Exec("DROP TABLE IF EXISTS " + s)
@@ -227,6 +260,18 @@ func CheckTestBool(t *testing.T, expected, actual bool) {
 	}
 }
 
+func CheckTestIsNil(t *testing.T, obj any) {
+	if obj == nil {
+		return
+	}
+
+	v := reflect.ValueOf(obj)
+	if !v.IsValid() || (v.Kind() == reflect.Pointer && v.IsNil()) {
+		return
+	}
+
+	t.Fatalf("Expected '%v' to be nil at:\n%s", obj, debug.Stack())
+}
 func CheckTestUint(t *testing.T, expected, actual uint) {
 	if expected != actual {
 		t.Fatalf("Expected '%d', but got '%d' at:\n%s", expected, actual, debug.Stack())

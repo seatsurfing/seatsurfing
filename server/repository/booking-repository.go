@@ -97,6 +97,61 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 }
 
+func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
+
+	// delete old bookings (limit number of deletion by batch size and delete oldest first)
+	result, err := GetDatabase().DB().Exec(`
+		DELETE FROM bookings 
+		WHERE id IN (
+			SELECT b.id
+			FROM bookings b
+			INNER JOIN spaces s ON b.space_id = s.id
+			INNER JOIN locations l ON s.location_id = l.id
+			INNER JOIN organizations o ON l.organization_id = o.id
+			INNER JOIN settings settings_enabled ON o.id = settings_enabled.organization_id
+			INNER JOIN settings settings_days ON o.id = settings_days.organization_id
+			WHERE settings_enabled.name = $1
+			  AND settings_enabled.value = '1'
+			  AND settings_days.name = $2
+			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * settings_days.value::INTEGER
+			  AND b.leave_time < CURRENT_DATE - INTERVAL '1 day' * $3
+			ORDER BY b.leave_time ASC
+			LIMIT $4
+		)`,
+		SettingBookingRetentionEnabled.Name,
+		SettingBookingRetentionDays.Name,
+		30, // *never* delete bookings that are not older than 30 days
+		batchSize,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	if rowsAffected == 0 {
+		return 0, nil
+	}
+
+	// delete orphaned recurring bookings
+	_, err = GetDatabase().DB().Exec(`
+		DELETE FROM recurring_bookings
+		WHERE id NOT IN (
+			SELECT DISTINCT recurring_id
+			FROM bookings
+			WHERE recurring_id IS NOT NULL
+		)
+	`)
+	if err != nil {
+		return int(rowsAffected), err
+	}
+
+	return int(rowsAffected), nil
+}
+
 func (r *BookingRepository) Create(e *Booking) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
@@ -202,6 +257,34 @@ func (r *BookingRepository) GetAllByUser(userID string, startTime time.Time) ([]
 	}
 	return result, nil
 }
+
+func (r *BookingRepository) GetAllByRecurringID(recurringID string) ([]*BookingDetails, error) {
+	var result []*BookingDetails
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
+		"spaces.id, spaces.location_id, spaces.name, "+
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
+		"users.email "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
+		"INNER JOIN locations ON spaces.location_id = locations.id "+
+		"INNER JOIN users ON bookings.user_id = users.id "+
+		"WHERE recurring_id = $1 "+
+		"ORDER BY enter_time", recurringID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &BookingDetails{}
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *BookingRepository) Update(e *Booking) error {
 	_, err := GetDatabase().DB().Exec("UPDATE bookings SET "+
 		"user_id = $1, "+
@@ -219,7 +302,20 @@ func (r *BookingRepository) Update(e *Booking) error {
 
 func (r *BookingRepository) Delete(e *BookingDetails) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE id = $1", e.ID)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// also delete the recurring booking if the last booking (of the series) was deleted
+	if e.RecurringID != "" {
+		_, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings "+
+			"WHERE id = $1 "+
+			"AND (SELECT COUNT(*) FROM bookings WHERE recurring_id = $1) = 0", e.RecurringID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *BookingRepository) GetCount(organizationID string) (int, error) {
@@ -424,7 +520,7 @@ func (r *BookingRepository) GetPresenceReport(organizationID string, location *L
 	for curTime.Before(end) {
 		times = append(times, curTime)
 		cols.WriteString(", ")
-		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND DATE(b2.enter_time) = '" + curTime.Format(DateFormat) + "'::DATE)")
+		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND '" + curTime.Format(DateFormat) + "'::DATE BETWEEN DATE(b2.enter_time) AND DATE(b2.leave_time))")
 		curTime = curTime.AddDate(0, 0, 1)
 	}
 

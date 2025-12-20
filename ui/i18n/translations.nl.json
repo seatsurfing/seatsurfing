@@ -112,6 +112,7 @@
   "editGroup": "Bewerk groep",
   "editOrg": "Bewerk organisatie",
   "editUser": "Bewerk gebruiker",
+  "editSpace": "Edit space",
   "emailAddress": "E-mailadres",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -119,6 +120,7 @@
   "enter": "Aankomst",
   "entryCreated": "Invoer aangemaakt.",
   "entryUpdated": "Voorkeuren opgeslagen.",
+  "errorSlotConflict": "There is already another booking in the selected date range.",
   "errorAddDomain": "Fout bij het toevoegen van het domein.",
   "errorBookingLimit": "U heeft de limiet van {{num}} boekingen bereikt.",
   "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
@@ -183,6 +185,7 @@
   "maxConcurrentBookings": "Max. boekingen",
   "maxConcurrentBookingsPerUser": "Max. gelijktijdige boekingen per gebruiker",
   "maxDaysInAdvance": "Max. dagen van tevoren",
+  "bookingRetention": "Delete booking data older than",
   "maxHoursBeforeDelete": "Max. uren om een ​​boeking te annuleren vóór de starttijd",
   "maxHoursPartiallyBooked": "Max. uren gedeeltelijk geboekt",
   "members": "Leden",
@@ -313,5 +316,7 @@
   "manageProfile": "Profiel beheren",
   "profile": "Profiel",
   "userinfoFirstnameField": "Gebruikersinfo Voornaam veld",
-  "userinfoLastnameField": "Gebruikersinfo Achternaam veld"
+  "userinfoLastnameField": "Gebruikersinfo Achternaam veld",
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
 }

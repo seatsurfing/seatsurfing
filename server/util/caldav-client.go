@@ -76,14 +76,14 @@ func (c *CalDAVClient) CreateEvent(calendarPath string, e *CalDAVEvent) error {
 	if e.ID == "" {
 		e.ID = uuid.New().String()
 	}
-	cal := c.GetCaldavEvent(e)
+	cal := c.GetCaldavEvent([]*CalDAVEvent{e})
 
 	_, err := c.client.PutCalendarObject(context.Background(), path.Join(calendarPath, e.ID+".ics"), cal)
 	return err
 }
 
 func (c *CalDAVClient) DeleteEvent(calendarPath string, e *CalDAVEvent) error {
-	cal := c.GetCaldavEvent(e)
+	cal := c.GetCaldavEvent([]*CalDAVEvent{e})
 
 	var buf bytes.Buffer
 	if err := ical.NewEncoder(&buf).Encode(cal); err != nil {
@@ -116,20 +116,22 @@ func (c *CalDAVClient) DeleteEvent(calendarPath string, e *CalDAVEvent) error {
 	return nil
 }
 
-func (c *CalDAVClient) GetCaldavEvent(e *CalDAVEvent) *ical.Calendar {
+func (c *CalDAVClient) GetCaldavEvent(events []*CalDAVEvent) *ical.Calendar {
 	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropProductID, "-//seatsurfing.io//seatsurfing//EN")
 	cal.Props.SetText(ical.PropVersion, "2.0")
 
-	event := ical.NewEvent()
-	event.Props.SetText(ical.PropSummary, e.Title)
-	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now().UTC())
-	event.Props.SetDateTime(ical.PropDateTimeStart, e.Start)
-	event.Props.SetDateTime(ical.PropDateTimeEnd, e.End)
-	event.Props.SetText(ical.PropLocation, e.Location)
-	event.Props.Del(ical.PropDuration)
-	event.Props.SetText(ical.PropUID, e.ID)
-	cal.Children = append(cal.Children, event.Component)
+	for _, e := range events {
+		event := ical.NewEvent()
+		event.Props.SetText(ical.PropSummary, e.Title)
+		event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now().UTC())
+		event.Props.SetDateTime(ical.PropDateTimeStart, e.Start)
+		event.Props.SetDateTime(ical.PropDateTimeEnd, e.End)
+		event.Props.SetText(ical.PropLocation, e.Location)
+		event.Props.Del(ical.PropDuration)
+		event.Props.SetText(ical.PropUID, e.ID)
+		cal.Children = append(cal.Children, event.Component)
+	}
 
 	return cal
 }

@@ -109,24 +109,16 @@ func (r *RecurringBookingRepository) GetOne(id string) (*RecurringBooking, error
 }
 
 func (r *RecurringBookingRepository) Delete(e *RecurringBooking) error {
-	space, err := GetSpaceRepository().GetOne(e.SpaceID)
-	if space == nil || err != nil {
-		return errors.New("space not found")
+	enter, err := GetSpaceRepository().GetNowInSpaceTimezone(e.SpaceID)
+	if err != nil {
+		return err
 	}
-	location, err := GetLocationRepository().GetOne(space.LocationID)
-	if location == nil || err != nil {
-		return errors.New("location not found")
-	}
-	tz := GetLocationRepository().GetTimezone(location)
-	tzLocation, err := time.LoadLocation(tz)
-	if err != nil || tzLocation == nil {
-		return errors.New("invalid timezone")
-	}
-	enter := time.Now().In(tzLocation)
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
 		"recurring_id = $1 AND enter_time > $2", e.ID, enter); err != nil {
 		return err
 	}
+
+	// remove recurring information from remaining (past) bookings
 	if _, err := GetDatabase().DB().Exec("UPDATE bookings SET "+
 		"recurring_id = NULL WHERE "+
 		"recurring_id = $1", e.ID); err != nil {

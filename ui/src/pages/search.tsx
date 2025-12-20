@@ -889,15 +889,32 @@ class Search extends React.Component<Props, State> {
       );
     }
 
+    const myBooking = booking.user.email === RuntimeConfig.INFOS.username;
     return (
       <div key={booking.id} className="booking-name-row">
-        <h6 hidden={!booking.subject}>{booking.subject}</h6>
-        {recurringIcon}
-        {booking.user.email}
-        <br />
-        {Formatting.getFormatterShort().format(new Date(booking.enter))}
-        &nbsp;&mdash;&nbsp;
-        {Formatting.getFormatterShort().format(new Date(booking.leave))}
+        <p>
+          <strong>
+            {this.props.t(
+              myBooking ? "spaceBookedInfoMyBooking" : "spaceBookedInfo",
+            )}
+          </strong>
+        </p>
+        <div className="booking-name-row">
+          {recurringIcon}
+          <span hidden={!booking.subject}>
+            {this.props.t("subject")}: {booking.subject}
+            <br />
+          </span>
+          <span hidden={!booking.user.email}>
+            {this.props.t("user")}: {booking.user.email}
+            <br />
+          </span>
+          {this.props.t("enter")}:{" "}
+          {Formatting.getFormatterShort().format(new Date(booking.enter))}
+          <br />
+          {this.props.t("leave")}:{" "}
+          {Formatting.getFormatterShort().format(new Date(booking.leave))}
+        </div>
         {RuntimeConfig.INFOS.showNames &&
           !RuntimeConfig.INFOS.disableBuddies &&
           booking.user.email !== RuntimeConfig.INFOS.username &&
@@ -908,7 +925,11 @@ class Search extends React.Component<Props, State> {
                 e.preventDefault();
                 this.onAddBuddy(booking.user);
               }}
-              style={{ marginLeft: "10px" }}
+              style={{
+                marginLeft: "10px",
+                marginTop: "10px",
+                display: "block",
+              }}
             >
               {this.props.t("addBuddy")}
             </Button>
@@ -2387,7 +2408,16 @@ class Search extends React.Component<Props, State> {
     if (myBooking) {
       gotoBooking = (
         <>
-          <Button variant="secondary" onClick={() => getIcal(myBooking.id)}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (myBooking.isRecurring()) {
+                getIcal(myBooking.recurringId, true);
+              } else {
+                getIcal(myBooking.id);
+              }
+            }}
+          >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
             Event
           </Button>
@@ -2425,7 +2455,10 @@ class Search extends React.Component<Props, State> {
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
-          <p hidden={!myBooking || !isRecurring}>
+          <p
+            hidden={!myBooking || !isRecurring}
+            style={{ marginTop: "15px", marginBottom: "0" }}
+          >
             <Form.Check
               type="checkbox"
               id="cancelAllUpcomingBookings"
@@ -2474,7 +2507,13 @@ class Search extends React.Component<Props, State> {
           </Button>
           <Button
             variant="secondary"
-            onClick={() => getIcal(this.state.createdBookingId)}
+            onClick={() => {
+              if (this.state.recurrence.active) {
+                getIcal(this.state.createdBookingId, true);
+              } else {
+                getIcal(this.state.createdBookingId);
+              }
+            }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
             Event

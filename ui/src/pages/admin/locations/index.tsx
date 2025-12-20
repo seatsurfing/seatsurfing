@@ -60,6 +60,7 @@ class Locations extends React.Component<Props, State> {
   };
 
   renderItem = (location: Location) => {
+    const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${location.id}`;
     return (
       <tr key={location.id} onClick={() => this.onItemSelect(location)}>
         <td>{location.name}</td>
@@ -68,7 +69,9 @@ class Locations extends React.Component<Props, State> {
           {location.mapWidth}x{location.mapHeight}
         </td>
         <td>
-          {window.location.origin}/ui/search?lid={location.id}
+          <a href={bookingLinkUrl} target="_blank">
+            {bookingLinkUrl}
+          </a>
         </td>
       </tr>
     );

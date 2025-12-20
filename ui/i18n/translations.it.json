@@ -112,6 +112,7 @@
   "editGroup": "Edit group",
   "editOrg": "Modifica organizzazione",
   "editUser": "Modifica utente",
+  "editSpace": "Edit space",
   "emailAddress": "Indirizzo Email",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -119,6 +120,7 @@
   "enter": "Inizio",
   "entryCreated": "Entry created.",
   "entryUpdated": "Preferenze salvate.",
+  "errorSlotConflict": "There is already another booking in the selected date range.",
   "errorAddDomain": "Error adding the domain.",
   "errorBookingLimit": "Avete raggiunto il limite di {{num}} prenotazioni.",
   "errorCaldav": "Error connecting to CalDAV Server. Check URL and credentials.",
@@ -183,6 +185,7 @@
   "maxConcurrentBookings": "Numero massimo di prenotazioni",
   "maxConcurrentBookingsPerUser": "Numero massimo di prenotazioni simultanee per utente",
   "maxDaysInAdvance": "Numero massimo di giorni in anticipo",
+  "bookingRetention": "Delete booking data older than",
   "maxHoursBeforeDelete": "Numero massimo di ore entro le quali è possibile annullare una prenotazione prima del suo orario di inizio",
   "maxHoursPartiallyBooked": "Ore massime prenotazione parziale",
   "members": "Members",
@@ -313,5 +316,7 @@
   "manageProfile": "Manage profile",
   "profile": "Profile",
   "userinfoFirstnameField": "Userinfo Firstname field",
-  "userinfoLastnameField": "Userinfo Lastname field"
+  "userinfoLastnameField": "Userinfo Lastname field",
+  "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
 }

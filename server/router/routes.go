@@ -43,6 +43,11 @@ var (
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 )
 
+func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {
+	w.Header().Set("X-Error-Code", strconv.Itoa(code))
+	w.WriteHeader(statusCode)
+}
+
 func SendTemporaryRedirect(w http.ResponseWriter, url string) {
 	w.Header().Set("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
@@ -57,8 +62,7 @@ func SendForbidden(w http.ResponseWriter) {
 }
 
 func SendForbiddenCode(w http.ResponseWriter, code int) {
-	w.Header().Set("X-Error-Code", strconv.Itoa(code))
-	w.WriteHeader(http.StatusForbidden)
+	sendErrorCode(w, http.StatusForbidden, code)
 }
 
 func SendBadRequest(w http.ResponseWriter) {
@@ -66,8 +70,7 @@ func SendBadRequest(w http.ResponseWriter) {
 }
 
 func SendBadRequestCode(w http.ResponseWriter, code int) {
-	w.Header().Set("X-Error-Code", strconv.Itoa(code))
-	w.WriteHeader(http.StatusBadRequest)
+	sendErrorCode(w, http.StatusBadRequest, code)
 }
 
 func SendPaymentRequired(w http.ResponseWriter) {
@@ -80,6 +83,10 @@ func SendUnauthorized(w http.ResponseWriter) {
 
 func SendAlreadyExists(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusConflict)
+}
+
+func SendAlreadyExistsCode(w http.ResponseWriter, code int) {
+	sendErrorCode(w, http.StatusConflict, code)
 }
 
 func SendCreated(w http.ResponseWriter, id string) {

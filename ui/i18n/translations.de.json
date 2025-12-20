@@ -113,6 +113,7 @@
   "editGroup": "Gruppe bearbeiten",
   "editOrg": "Organisation bearbeiten",
   "editUser": "Benutzer bearbeiten",
+  "editSpace": "Platz bearbeiten",
   "emailAddress": "E-Mail Adresse",
   "emailPlaceholder": "max@mustermann.de",
   "enabled": "Aktiv",
@@ -120,6 +121,7 @@
   "enter": "Beginn",
   "entryCreated": "Eintrag wurde erstellt.",
   "entryUpdated": "Eingaben gespeichert.",
+  "errorSlotConflict": "Es gibt bereits eine Buchung im gewählten Zeitraum.",
   "errorAddDomain": "Fehler beim Hinzufügen der Domain.",
   "errorBookingLimit": "Das Limit von {{num}} Buchungen wurde erreicht.",
   "errorCaldav": "Fehler bei der Verbindung zum CalDAV Server. Bitte URL und Zugangsdaten überprüfen.",
@@ -184,6 +186,7 @@
   "maxConcurrentBookings": "Max. Buchungen",
   "maxConcurrentBookingsPerUser": "Maximale Anzahl gleichzeitiger Buchungen pro Benutzer",
   "maxDaysInAdvance": "Max. Buchungs-Vorlauf",
+  "bookingRetention": "Lösche Buchungen älter als",
   "maxHoursBeforeDelete": "Max. Stunden vor Beginn zum Löschen",
   "maxHoursPartiallyBooked": "Max. Stunden teilw. gebucht",
   "members": "Mitglieder",
@@ -314,5 +317,7 @@
   "profile": "Profil",
   "manageProfile": "Profil verwalten",
   "userinfoFirstnameField": "Userinfo Vorname-Feld",
-  "userinfoLastnameField": "Userinfo Nachname-Feld"
+  "userinfoLastnameField": "Userinfo Nachname-Feld",
+  "spaceBookedInfo": "Für diesen Platz gibt es bereits eine Buchung und daher ist er im gewählten Zeitraum nicht verfügbar.",
+  "spaceBookedInfoMyBooking": "Du hast diesen Platz im gewählten Zeitraum bereits gebucht."
 }

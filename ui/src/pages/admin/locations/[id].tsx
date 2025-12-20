@@ -244,10 +244,16 @@ class EditLocation extends React.Component<Props, State> {
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
-          if (value) {
+          const attribute = this.state.availableAttributes.find(
+            (a) => a.id === attributeId,
+          );
+          if (attribute?.type === 2 && !value) {
+            value = "0";
+          }
+          if (value || attribute?.type === 2) {
             let a = new SpaceAttributeValue();
             a.attributeId = attributeId;
-            a.value = value;
+            a.value = value!;
             space.attributes.push(a);
           }
         });
@@ -592,14 +598,22 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   renderRow = (space: SpaceState) => {
+    let bookingLink;
+    if (space.id) {
+      const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`;
+      bookingLink = (
+        <a href={bookingLinkUrl} target="_blank">
+          {bookingLinkUrl}
+        </a>
+      );
+    } else {
+      bookingLink = this.props.t("saveAreaToGetLink");
+    }
+
     return (
       <tr key={space.id}>
         <td>{space.name}</td>
-        <td>
-          {space.id
-            ? `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`
-            : this.props.t("saveAreaToGetLink")}
-        </td>
+        <td>{bookingLink}</td>
       </tr>
     );
   };
@@ -805,7 +819,7 @@ class EditLocation extends React.Component<Props, State> {
         onHide={() => this.setState({ showEditSpaceDetailsModal: false })}
       >
         <Modal.Header closeButton={true}>
-          <Modal.Title>Edit Space</Modal.Title>
+          <Modal.Title>{this.props.t("editSpace")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form
