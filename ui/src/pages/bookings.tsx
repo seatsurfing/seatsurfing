@@ -218,7 +218,7 @@ class Bookings extends React.Component<Props, State> {
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 500 }}
+            style={{ height: 500, width: "100%" }}
             defaultView="agenda"
             view={this.state.view}
             onView={(view) => this.setState({ view })}
