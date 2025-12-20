@@ -46,6 +46,15 @@ div#root {
   align-self: flex-start;
 }
 
+.container-center-top .container-center-inner-wide {
+  width: 100%;
+  max-width: 600px;
+  padding: 15px;
+  margin-left: auto;
+  margin-right: auto;
+  align-self: flex-start;
+}
+
 .container-center .container-center-inner-wide {
   width: 100%;
   max-width: 600px;
