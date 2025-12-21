@@ -318,5 +318,11 @@
   "profile": "Profile",
   "manageProfile": "Manage profile",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "next": "Next",
+  "previous": "Previous",
+  "agenda": "List",
+  "date": "Date",
+  "time": "Time",
+  "noEventsInRange": "There are no bookings in the selected date range."
 }

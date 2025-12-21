@@ -319,5 +319,11 @@
   "userinfoFirstnameField": "Userinfo Vorname-Feld",
   "userinfoLastnameField": "Userinfo Nachname-Feld",
   "spaceBookedInfo": "Für diesen Platz gibt es bereits eine Buchung und daher ist er im gewählten Zeitraum nicht verfügbar.",
-  "spaceBookedInfoMyBooking": "Du hast diesen Platz im gewählten Zeitraum bereits gebucht."
+  "spaceBookedInfoMyBooking": "Du hast diesen Platz im gewählten Zeitraum bereits gebucht.",
+  "next": "Nächste",
+  "previous": "Vorherige",
+  "agenda": "Liste",
+  "date": "Datum",
+  "time": "Uhrzeit",
+  "noEventsInRange": "Im gewählten Zeitraum gibt es keine Buchungen."
 }

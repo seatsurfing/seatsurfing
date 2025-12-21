@@ -225,13 +225,14 @@ class Bookings extends React.Component<Props, State> {
 
     const calendarMessages = {
       today: this.props.t("today"),
-      previous: this.props.t("back"),
+      previous: this.props.t("previous"),
       next: this.props.t("next"),
       agenda: this.props.t("agenda"),
       week: this.props.t("week"),
       date: this.props.t("date"),
       time: this.props.t("time"),
       event: this.props.t("bookings"),
+      noEventsInRange: this.props.t("noEventsInRange"),
     };
 
     return (
