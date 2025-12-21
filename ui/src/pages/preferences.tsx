@@ -429,8 +429,8 @@ class Preferences extends React.Component<Props, State> {
                 </Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link eventKey="tab-bookingColors">
-                  {this.props.t("bookingcolors")}
+                <Nav.Link eventKey="tab-style">
+                  {this.props.t("style")}
                 </Nav.Link>
               </Nav.Item>
               <Nav.Item hidden={RuntimeConfig.INFOS.idpLogin}>
@@ -569,15 +569,16 @@ class Preferences extends React.Component<Props, State> {
               </Button>
             </Form>
 
-            {/* -------------- */}
-            {/* BOOKING COLORS */}
-            {/* -------------- */}
+            {/* ----- */}
+            {/* STYLE */}
+            {/* ----- */}
 
             <Form
               onSubmit={this.onSubmitColors}
-              hidden={this.state.activeTab !== "tab-bookingColors"}
+              hidden={this.state.activeTab !== "tab-style"}
               className="form-colors"
             >
+              <h5 className="margin-top-15">{this.props.t("bookingcolors")}</h5>
               <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
