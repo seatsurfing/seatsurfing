@@ -578,7 +578,7 @@ class Preferences extends React.Component<Props, State> {
               hidden={this.state.activeTab !== "tab-bookingColors"}
               className="form-colors"
             >
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorBooked"}
@@ -590,7 +590,7 @@ class Preferences extends React.Component<Props, State> {
                 />
                 <Form.Label>{this.props.t("colorAlreadyBooked")}</Form.Label>
               </Form.Group>
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorNotBooked"}
@@ -602,7 +602,7 @@ class Preferences extends React.Component<Props, State> {
                 />
                 <Form.Label>{this.props.t("colorNotBooked")}</Form.Label>
               </Form.Group>
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorSelfBooked"}
@@ -615,7 +615,7 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label>{this.props.t("colorSelfBooked")}</Form.Label>
               </Form.Group>
               {RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled && (
-                <Form.Group className="margin-top-15">
+                <Form.Group className="margin-top-15 d-flex">
                   <Form.Control
                     type="color"
                     key={"colorPartiallyBooked"}
@@ -631,7 +631,7 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Group>
               )}
               {!RuntimeConfig.INFOS.disableBuddies && (
-                <Form.Group className="margin-top-15">
+                <Form.Group className="margin-top-15 d-flex">
                   <Form.Control
                     type="color"
                     key={"colorBuddyBooked"}
@@ -644,7 +644,7 @@ class Preferences extends React.Component<Props, State> {
                   <Form.Label>{this.props.t("colorBuddyBooked")}</Form.Label>
                 </Form.Group>
               )}
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorDisallowed"}
