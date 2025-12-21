@@ -23,7 +23,7 @@ import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
 import { Calendar, momentLocalizer, View } from "react-big-calendar";
-import moment from "moment";
+import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 interface State {
@@ -187,8 +187,6 @@ class Bookings extends React.Component<Props, State> {
       );
     }
 
-    const localizer = momentLocalizer(moment);
-
     type Event = {
       start: Date;
       end: Date;
@@ -196,18 +194,17 @@ class Bookings extends React.Component<Props, State> {
       booking: Booking;
     };
 
-    const events: Event[] = [];
+    const calenderEvents: Event[] = [];
     for (const item of this.data) {
-      events.push({
+      calenderEvents.push({
         start: item.enter,
         end: item.leave,
-        title: `${item.subject}\n${item.space.location.name}: ${item.space.name}`, // used in tooltip
+        title: `${item.space.location.name}: ${item.space.name}${item.subject ? `\n${item.subject}` : ""}`, // used in tooltip
         booking: item,
       });
     }
 
     let formatter = Formatting.getFormatter();
-
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
     }
@@ -235,13 +232,17 @@ class Bookings extends React.Component<Props, State> {
       noEventsInRange: this.props.t("noEventsInRange"),
     };
 
+    moment.tz.setDefault("UTC");
+    moment.locale("de-DE");
+    const calenderLocalizer = momentLocalizer(moment);
+
     return (
       <>
         <NavBar />
         <div className="container-signin">
           <Calendar
-            localizer={localizer}
-            events={events}
+            localizer={calenderLocalizer}
+            events={calenderEvents}
             startAccessor="start"
             endAccessor="end"
             style={{ height: 500, width: "90%", margin: "auto" }}
@@ -263,7 +264,7 @@ class Bookings extends React.Component<Props, State> {
             components={{
               event: CustomEvent,
             }}
-            scrollToTime={new Date(1970, 1, 1, 8, 0, 0)}
+            scrollToTime={new Date(Date.UTC(1970, 1, 1, 8, 0, 0))}
           ></Calendar>
         </div>
 
