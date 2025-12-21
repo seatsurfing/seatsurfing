@@ -31,7 +31,8 @@ interface State {
   deletingItem: boolean;
   selectedItem: Booking | null;
   cancelSeries: boolean;
-  view: View;
+  calenderView: View;
+  calenderDate: Date;
 }
 
 interface Props {
@@ -50,7 +51,8 @@ class Bookings extends React.Component<Props, State> {
       deletingItem: false,
       selectedItem: null,
       cancelSeries: false,
-      view: "agenda" as View,
+      calenderView: "agenda" as View,
+      calenderDate: new Date(),
     };
   }
 
@@ -218,10 +220,12 @@ class Bookings extends React.Component<Props, State> {
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 500, width: "100%" }}
+            style={{ height: 500, maxWidth: "900px", margin: "auto" }}
             defaultView="agenda"
-            view={this.state.view}
-            onView={(view) => this.setState({ view })}
+            view={this.state.calenderView}
+            onView={(view) => this.setState({ calenderView: view })}
+            date={this.state.calenderDate}
+            onNavigate={(date) => this.setState({ calenderDate: date })}
             onSelectEvent={(e) => {
               console.log("e", e);
               this.onItemPress(e.booking);
