@@ -51,7 +51,7 @@ class Bookings extends React.Component<Props, State> {
       deletingItem: false,
       selectedItem: null,
       cancelSeries: false,
-      calenderView: "agenda" as View,
+      calenderView: "week" as View,
       calenderDate: new Date(),
     };
   }
@@ -220,16 +220,22 @@ class Bookings extends React.Component<Props, State> {
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 500, maxWidth: "900px", margin: "auto" }}
-            defaultView="agenda"
+            style={{ height: 500, width: "90%", margin: "auto" }}
+            defaultView="week"
             view={this.state.calenderView}
             onView={(view) => this.setState({ calenderView: view })}
             date={this.state.calenderDate}
             onNavigate={(date) => this.setState({ calenderDate: date })}
             onSelectEvent={(e) => {
-              console.log("e", e);
               this.onItemPress(e.booking);
             }}
+            culture="de-DE"
+            length={7}
+            views={{
+              agenda: true,
+              week: true,
+            }}
+            scrollToTime={new Date(1970, 1, 1, 8, 0, 0)}
           ></Calendar>
         </div>
 
