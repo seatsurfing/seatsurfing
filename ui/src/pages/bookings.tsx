@@ -211,6 +211,17 @@ class Bookings extends React.Component<Props, State> {
       formatter = Formatting.getFormatterNoTime();
     }
 
+    const CustomEvent = ({ event }: { event: Event }) => {
+      return (
+        <div>
+          <IconLocation className="feather" />{" "}
+          {event.booking.space.location.name}, {event.booking.space.name}
+          <br />
+          {event.booking.subject}
+        </div>
+      );
+    };
+
     return (
       <>
         <NavBar />
@@ -234,6 +245,9 @@ class Bookings extends React.Component<Props, State> {
             views={{
               agenda: true,
               week: true,
+            }}
+            components={{
+              event: CustomEvent,
             }}
             scrollToTime={new Date(1970, 1, 1, 8, 0, 0)}
           ></Calendar>
