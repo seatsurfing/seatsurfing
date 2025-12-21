@@ -201,12 +201,13 @@ class Bookings extends React.Component<Props, State> {
       events.push({
         start: item.enter,
         end: item.leave,
-        title: `${item.subject}\n${item.space.location.name}: ${item.space.name}`,
+        title: `${item.subject}\n${item.space.location.name}: ${item.space.name}`, // used in tooltip
         booking: item,
       });
     }
 
     let formatter = Formatting.getFormatter();
+
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       formatter = Formatting.getFormatterNoTime();
     }
@@ -220,6 +221,17 @@ class Bookings extends React.Component<Props, State> {
           {event.booking.subject}
         </div>
       );
+    };
+
+    const calendarMessages = {
+      today: this.props.t("today"),
+      previous: this.props.t("back"),
+      next: this.props.t("next"),
+      agenda: this.props.t("agenda"),
+      week: this.props.t("week"),
+      date: this.props.t("date"),
+      time: this.props.t("time"),
+      event: this.props.t("bookings"),
     };
 
     return (
@@ -240,7 +252,8 @@ class Bookings extends React.Component<Props, State> {
             onSelectEvent={(e) => {
               this.onItemPress(e.booking);
             }}
-            culture="de-DE"
+            culture={Formatting.Language}
+            messages={calendarMessages}
             length={7}
             views={{
               agenda: true,
