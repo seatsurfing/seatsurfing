@@ -320,10 +320,7 @@ class Settings extends React.Component<Props, State> {
         "min_booking_duration_hours",
         this.state.minBookingDurationHours.toString(),
       ),
-      new OrgSettings(
-        "subject_default",
-        this.state.subjectDefault.toString(),
-      ),
+      new OrgSettings("subject_default", this.state.subjectDefault.toString()),
     ];
     OrgSettings.setAll(payload)
       .then(() => {
