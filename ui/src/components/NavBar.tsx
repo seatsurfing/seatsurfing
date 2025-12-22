@@ -261,7 +261,7 @@ class NavBar extends React.Component<Props, State> {
           bg="light"
           variant="light"
           fixed="top"
-          expand={RuntimeConfig.EMBEDDED ? true : "xl"}
+          expand={RuntimeConfig.EMBEDDED ? true : "lg"}
         >
           <Container fluid={true}>
             <Navbar.Brand as={NavLink} to="/search">
