@@ -144,6 +144,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SysSettingDisablePasswordLogin,
 		SettingBookingRetentionEnabled.Name,
 		SettingBookingRetentionDays.Name,
+		SettingSubjectDefault.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

@@ -21,6 +21,12 @@ type SettingName struct {
 	Type SettingType
 }
 
+const (
+	SettingSubjectDefaultDisabled = 1
+	SettingSubjectDefaultOptional = 2
+	SettingSubjectDefaultRequired = 3
+)
+
 var (
 	SettingInstallID                      SettingName = SettingName{Name: "install_id", Type: SettingTypeString}
 	SettingDatabaseVersion                SettingName = SettingName{Name: "db_version", Type: SettingTypeInt}
@@ -45,6 +51,7 @@ var (
 	SettingAllowBookingsNonExistingUsers  SettingName = SettingName{Name: "allow_booking_nonexist_users", Type: SettingTypeBool}
 	SettingDisableBuddies                 SettingName = SettingName{Name: "disable_buddies", Type: SettingTypeBool}
 	SettingDefaultTimezone                SettingName = SettingName{Name: "default_timezone", Type: SettingTypeString}
+	SettingSubjectDefault                 SettingName = SettingName{Name: "subject_default", Type: SettingTypeInt}
 	SettingFeatureNoUserLimit             SettingName = SettingName{Name: "feature_no_user_limit", Type: SettingTypeBool}
 	SettingFeatureCustomDomains           SettingName = SettingName{Name: "feature_custom_domains", Type: SettingTypeBool}
 	SettingFeatureGroups                  SettingName = SettingName{Name: "feature_groups", Type: SettingTypeBool}
@@ -268,7 +275,8 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingMaxBookingDurationHours.Name+"', '12'), "+
 		"($1, '"+SettingDefaultTimezone.Name+"', 'Europe/Berlin'), "+
 		"($1, '"+SettingBookingRetentionEnabled.Name+"', '0'), "+
-		"($1, '"+SettingBookingRetentionDays.Name+"', '365') "+
+		"($1, '"+SettingBookingRetentionDays.Name+"', '365'), "+
+		"($1, '"+SettingSubjectDefault.Name+"', '"+strconv.Itoa(SettingSubjectDefaultOptional)+"') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)
 	return err
