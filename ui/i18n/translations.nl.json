@@ -149,6 +149,7 @@
   "errorTryAgain": "Er is iets fout gegaan. Probeer het later opnieuw.",
   "errorUnknown": "Onbekende fout, probeer het later opnieuw.",
   "errorValidateDomain": "Fout bij het verifiëren van domein {{domain}}: Zorg ervoor dat u de DNS TXT-record correct heeft ingesteld.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "Deze functie is momenteel niet beschikbaar.",
   "filter": "Filter",

@@ -149,6 +149,7 @@
   "errorTryAgain": "משהו השתבש. נא לנסות שוב.",
   "errorUnknown": "שגיאה לא ידועה, נא לנסות שוב מאוחר יותר.",
   "errorValidateDomain": "שגיאה באימות שם התחום {{domain}}: נא לוודא שהגדרת את רשומת ה־TXT ב־DNS כראוי.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "היכולת הזאת לא זמינה כרגע.",
   "filter": "Filter",

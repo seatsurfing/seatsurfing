@@ -149,6 +149,7 @@
   "errorTryAgain": "Coś poszło nie tak. Spróbuj ponownie później.",
   "errorUnknown": "Nieznany błąd, spróbuj ponownie później.",
   "errorValidateDomain": "Błąd weryfikacji domeny {{domain}}: upewnij się, że poprawnie dodałeś rekord DNS TXT.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Co",
   "featureCurrentlyUnavailable": "Ta funkcja jest obecnie niedostępna.",
   "filter": "Filtr",

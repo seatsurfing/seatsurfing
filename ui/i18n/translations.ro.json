@@ -149,6 +149,7 @@
   "errorTryAgain": "Something went wrong. Please try again later.",
   "errorUnknown": "Eroare necunoscută, te rog să încerci din nou mai târziu.",
   "errorValidateDomain": "Error verifying domain {{domain}}: Please ensure that you've set up the DNS TXT record correctly.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "This feature is currently unavailable.",
   "filter": "Filter",
