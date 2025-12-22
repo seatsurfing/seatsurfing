@@ -286,7 +286,7 @@ class Bookings extends React.Component<Props, State> {
                 }),
               }}
             ></p>
-            <p hidden={!this.state.selectedItem?.isRecurring()}>
+            <div hidden={!this.state.selectedItem?.isRecurring()}>
               <Form.Check
                 type="checkbox"
                 id="cancelAllUpcomingBookings"
@@ -296,7 +296,7 @@ class Bookings extends React.Component<Props, State> {
                 checked={this.state.cancelSeries}
                 label={this.props.t("cancelAllUpcomingBookings")}
               />
-            </p>
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <Button

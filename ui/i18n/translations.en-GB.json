@@ -319,6 +319,7 @@
   "manageProfile": "Manage profile",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style",
   "next": "Next",
   "previous": "Previous",
   "agenda": "List",
