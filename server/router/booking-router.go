@@ -789,7 +789,7 @@ func (router *BookingRouter) getHoursOnDate(t *time.Time) int {
 	return durationNotRounded
 }
 
-func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID string, user *User) bool {
+func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID string, user *User) (bool, *int) {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
 	maxAdvanceDays, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
 	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
@@ -800,16 +800,16 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 		now = now.Add(-12 * time.Hour)
 	}
 	if m.Leave.Before(now) { // Leave must not be in past
-		return false
+		return false, &ResponseCodeBookingInPast
 	}
 	advanceDays := math.Floor(m.Enter.Sub(now).Hours() / 24)
 	if advanceDays >= 0 && noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
-		return true
+		return true, nil
 	}
 	if advanceDays < 0 || advanceDays > float64(maxAdvanceDays) {
-		return false
+		return false, &ResponseCodeBookingTooManyDaysInAdvance
 	}
-	return true
+	return true, nil
 }
 
 func (router *BookingRouter) IsValidMaxUpcomingBookings(orgID string, user *User, upcomingBookingsMarkup int) bool {
@@ -841,8 +841,9 @@ func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user
 	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration
 	}
-	if !router.IsValidBookingAdvance(&m.BookingRequest, orgID, user) {
-		return false, ResponseCodeBookingTooManyDaysInAdvance
+	valid, errorCode := router.IsValidBookingAdvance(&m.BookingRequest, orgID, user)
+	if !valid {
+		return false, *errorCode
 	}
 	if !router.isValidMaxConcurrentBookingsForUser(orgID, user, &m.BookingRequest, bookingID) {
 		return false, ResponseCodeBookingMaxConcurrentForUser

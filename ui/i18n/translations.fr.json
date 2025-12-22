@@ -149,6 +149,7 @@
   "errorTryAgain": "Quelque chose s’est mal passé. Veuillez réessayer plus tard.",
   "errorUnknown": "Erreur inconnue, veuillez réessayer plus tard.",
   "errorValidateDomain": "Erreur lors de la vérification du domaine {{domain}} : Assurez-vous d’avoir correctement configuré l’enregistrement TXT DNS.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "Cette fonctionnalité n’est actuellement pas disponible.",
   "filter": "Filter",

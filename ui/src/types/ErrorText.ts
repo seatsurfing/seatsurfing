@@ -9,6 +9,7 @@ const ResponseCodeBookingInvalidMaxBookingDuration: number = 1005;
 const ResponseCodeBookingMaxConcurrentForUser: number = 1006;
 const ResponseCodeBookingInvalidMinBookingDuration: number = 1007;
 const ResponseCodeBookingMaxHoursBeforeDelete: number = 1008;
+const ResponseCodeBookingInPast: number = 1011;
 
 const ResponseCodePresenceReportDateRangeTooLong: number = 2001;
 
@@ -42,6 +43,8 @@ export default class ErrorText {
       return t("errorDeleteBookingBeforeMaxCancel", {
         num: RuntimeConfig.INFOS.maxHoursBeforeDelete,
       });
+    } else if (code === ResponseCodeBookingInPast) {
+      return t("errorInPast");
     } else if (code === ResponseCodePresenceReportDateRangeTooLong) {
       return t("errorDateRangeTooLong");
     } else {

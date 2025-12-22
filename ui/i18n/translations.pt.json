@@ -149,6 +149,7 @@
   "errorTryAgain": "Algo deu errado. Tente novamente mais tarde.",
   "errorUnknown": "Erro desconhecido, tente novamente mais tarde.",
   "errorValidateDomain": "Erro ao verificar domínio {{domain}}: Certifique-se de que configurou corretamente o registro DNS TXT.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "A cada",
   "featureCurrentlyUnavailable": "Este recurso está indisponível no momento.",
   "filter": "Filtrar",

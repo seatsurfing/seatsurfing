@@ -149,6 +149,7 @@
   "errorTryAgain": "Something went wrong. Please try again later.",
   "errorUnknown": "Ismeretlen hiba, kérjük próbáld meg újra.",
   "errorValidateDomain": "Error verifying domain {{domain}}: Please ensure that you've set up the DNS TXT record correctly.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "This feature is currently unavailable.",
   "filter": "Filter",
