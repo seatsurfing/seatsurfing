@@ -322,7 +322,6 @@
   "style": "Style",
   "next": "Next",
   "previous": "Previous",
-  "agenda": "List",
   "date": "Date",
   "time": "Time",
   "noEventsInRange": "There are no bookings in the selected date range."

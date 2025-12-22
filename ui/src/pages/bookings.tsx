@@ -31,7 +31,6 @@ interface State {
   deletingItem: boolean;
   selectedItem: Booking | null;
   cancelSeries: boolean;
-  calenderView: View;
   calenderDate: Date;
 }
 
@@ -51,7 +50,6 @@ class Bookings extends React.Component<Props, State> {
       deletingItem: false,
       selectedItem: null,
       cancelSeries: false,
-      calenderView: "week" as View,
       calenderDate: new Date(),
     };
   }
@@ -224,7 +222,6 @@ class Bookings extends React.Component<Props, State> {
       today: this.props.t("today"),
       previous: this.props.t("previous"),
       next: this.props.t("next"),
-      agenda: this.props.t("agenda"),
       week: this.props.t("week"),
       date: this.props.t("date"),
       time: this.props.t("time"),
@@ -240,32 +237,37 @@ class Bookings extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-signin">
-          <Calendar
-            localizer={calenderLocalizer}
-            events={calenderEvents}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 500, width: "90%", margin: "auto" }}
-            defaultView="week"
-            view={this.state.calenderView}
-            onView={(view) => this.setState({ calenderView: view })}
-            date={this.state.calenderDate}
-            onNavigate={(date) => this.setState({ calenderDate: date })}
-            onSelectEvent={(e) => {
-              this.onItemPress(e.booking);
-            }}
-            culture={Formatting.Language}
-            messages={calendarMessages}
-            length={7}
-            views={{
-              agenda: true,
-              week: true,
-            }}
-            components={{
-              event: CustomEvent,
-            }}
-            scrollToTime={new Date(Date.UTC(1970, 1, 1, 8, 0, 0))}
-          ></Calendar>
+          {/* classic view */}
+          <Form className="form-signin d-xl-none">
+            <ListGroup>
+              {this.data.map((item) => this.renderItem(item))}
+            </ListGroup>
+          </Form>
+
+          {/* calender view */}
+          <div className="d-none d-xl-block" style={{ width: "100%" }}>
+            <Calendar
+              localizer={calenderLocalizer}
+              events={calenderEvents}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: 500, width: "90%", margin: "auto" }}
+              defaultView="week"
+              date={this.state.calenderDate}
+              onNavigate={(date) => this.setState({ calenderDate: date })}
+              onSelectEvent={(e) => {
+                this.onItemPress(e.booking);
+              }}
+              culture={Formatting.Language}
+              messages={calendarMessages}
+              length={7}
+              views={["week"]}
+              components={{
+                event: CustomEvent,
+              }}
+              scrollToTime={new Date(Date.UTC(1970, 1, 1, 8, 0, 0))}
+            ></Calendar>
+          </div>
         </div>
 
         <Modal
