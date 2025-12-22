@@ -32,6 +32,7 @@ interface State {
   selectedItem: Booking | null;
   cancelSeries: boolean;
   calenderDate: Date;
+  calenderShow: boolean;
 }
 
 interface Props {
@@ -51,6 +52,7 @@ class Bookings extends React.Component<Props, State> {
       selectedItem: null,
       cancelSeries: false,
       calenderDate: new Date(),
+      calenderShow: true,
     };
   }
 
@@ -237,15 +239,35 @@ class Bookings extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-signin">
+          <div className="d-xl-block d-none container-search-config">
+            <Form.Check
+              type="switch"
+              checked={this.state.calenderShow}
+              onChange={() => {
+                this.setState({ calenderShow: !this.state.calenderShow });
+              }}
+              label={"Calender"}
+              aria-label={"Calender"}
+              id="switch-control"
+            />
+          </div>
+
           {/* classic view */}
-          <Form className="form-signin d-xl-none">
+          <Form
+            className={
+              !this.state.calenderShow ? "form-signin" : "form-signin d-xl-none"
+            }
+          >
             <ListGroup>
               {this.data.map((item) => this.renderItem(item))}
             </ListGroup>
           </Form>
 
           {/* calender view */}
-          <div className="d-none d-xl-block" style={{ width: "100%" }}>
+          <div
+            className={this.state.calenderShow ? "d-none d-xl-block" : "d-none"}
+            style={{ width: "100%" }}
+          >
             <Calendar
               localizer={calenderLocalizer}
               events={calenderEvents}
