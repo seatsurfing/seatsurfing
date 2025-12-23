@@ -494,12 +494,13 @@ class Search extends React.Component<Props, State> {
       res = false;
       hint = this.props.t("errorPickArea");
     }
-    let now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     let enterTime = new Date(this.state.enter);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       enterTime.setHours(23, 59, 59);
     }
-    if (enterTime.getTime() <= now.getTime()) {
+    if (enterTime.getTime() <= today.getTime()) {
       res = false;
       hint = this.props.t("errorEnterFuture");
     }
