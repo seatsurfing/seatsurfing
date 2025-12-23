@@ -11,11 +11,8 @@ import Loading from "@/components/Loading";
 import OrgSettings from "@/types/Settings";
 import withReadyRouter from "@/components/withReadyRouter";
 import Autosuggest from "react-autosuggest";
-import DateTimePicker from "react-datetime-picker";
-import DatePicker from "react-date-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
-import "react-date-picker/dist/DatePicker.css";
-import "react-clock/dist/Clock.css";
+import DateTimeButtonPicker from "@/components/DateTimeButtonPicker";
+import "react-calendar/dist/Calendar.css";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Space from "@/types/Space";
 import User from "@/types/User";
@@ -701,57 +698,22 @@ class EditBooking extends React.Component<Props, State> {
     }
 
     let enterDatePicker = (
-      <DateTimePicker
+      <DateTimeButtonPicker
         value={this.state.enter}
-        onChange={(value: Date | null) => {
-          if (value != null) this.setEnterDate(value);
-        }}
-        clearIcon={null}
-        required={true}
-        format={Formatting.getDateTimePickerFormatString()}
+        onChange={(d: Date) => this.setEnterDate(d)}
         disabled={!this.state.canEdit}
+        dailyOnly={this.dailyBasisBooking}
       />
     );
-    if (this.dailyBasisBooking) {
-      enterDatePicker = (
-        <DatePicker
-          value={this.state.enter}
-          onChange={(value: Date | null | [Date | null, Date | null]) => {
-            if (value != null) this.setEnterDate(value);
-          }}
-          clearIcon={null}
-          required={true}
-          format={Formatting.getDateTimePickerFormatDailyString()}
-          disabled={!this.state.canEdit}
-        />
-      );
-    }
     let leaveDatePicker = (
-      <DateTimePicker
+      <DateTimeButtonPicker
         value={this.state.leave}
-        onChange={(value: Date | null) => {
-          if (value != null) this.setLeaveDate(value);
-        }}
-        clearIcon={null}
-        required={true}
-        format={Formatting.getDateTimePickerFormatString()}
+        onChange={(d: Date) => this.setLeaveDate(d)}
         disabled={!this.state.canEdit}
+        dailyOnly={this.dailyBasisBooking}
+        showTodayButton={false}
       />
     );
-    if (this.dailyBasisBooking) {
-      leaveDatePicker = (
-        <DatePicker
-          value={this.state.leave}
-          onChange={(value: Date | null | [Date | null, Date | null]) => {
-            if (value != null) this.setLeaveDate(value);
-          }}
-          clearIcon={null}
-          required={true}
-          format={Formatting.getDateTimePickerFormatDailyString()}
-          disabled={!this.state.canEdit}
-        />
-      );
-    }
 
     let backButton = (
       <Link href="/admin/bookings" className="btn btn-sm btn-outline-secondary">
