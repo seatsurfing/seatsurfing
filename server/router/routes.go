@@ -39,6 +39,7 @@ var (
 	ResponseCodeBookingMaxHoursBeforeDelete      = 1008
 	ResponseCodeBookingNotAllowedBooker          = 1009
 	ResponseCodeBookingSubjectRequired           = 1010
+	ResponseCodeBookingInPast                    = 1011
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 )

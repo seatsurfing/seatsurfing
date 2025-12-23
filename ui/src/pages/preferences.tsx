@@ -54,6 +54,13 @@ interface Props {
   t: TranslationFunc;
 }
 
+const COLOR_BOOKED: string = "#ff453a";
+const COLOR_NOT_BOOKED: string = "#30d158";
+const COLOR_SELF_BOOKED: string = "#b825de";
+const COLOR_PARTIALLY_BOOKED: string = "#ff9100";
+const COLOR_BUDDY_BOOKED: string = "#2415c5";
+const COLOR_DISALLOWED: string = "#eeeeee";
+
 class Preferences extends React.Component<Props, State> {
   locations: Location[];
 
@@ -69,12 +76,12 @@ class Preferences extends React.Component<Props, State> {
       workdayStart: 0,
       workdayEnd: 0,
       workdays: [],
-      booked: "#ff453a",
-      notBooked: "#30d158",
-      selfBooked: "#b825de",
-      partiallyBooked: "#ff9100",
-      buddyBooked: "#2415c5",
-      disallowedColor: "#eeeeee",
+      booked: COLOR_BOOKED,
+      notBooked: COLOR_NOT_BOOKED,
+      selfBooked: COLOR_SELF_BOOKED,
+      partiallyBooked: COLOR_PARTIALLY_BOOKED,
+      buddyBooked: COLOR_BUDDY_BOOKED,
+      disallowedColor: COLOR_DISALLOWED,
       locationId: "",
       changePassword: false,
       password: "",
@@ -263,12 +270,12 @@ class Preferences extends React.Component<Props, State> {
 
   resetColors = () => {
     this.setState({
-      booked: "#ff453a",
-      notBooked: "#30d158",
-      selfBooked: "#b825de",
-      partiallyBooked: "#ff9100",
-      buddyBooked: "#2415c5",
-      disallowedColor: "#eeeeee",
+      booked: COLOR_BOOKED,
+      notBooked: COLOR_NOT_BOOKED,
+      selfBooked: COLOR_SELF_BOOKED,
+      partiallyBooked: COLOR_PARTIALLY_BOOKED,
+      buddyBooked: COLOR_BUDDY_BOOKED,
+      disallowedColor: COLOR_DISALLOWED,
     });
   };
 
@@ -408,7 +415,7 @@ class Preferences extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-center-top">
-          <div className="container-center-inner">
+          <div className="container-center-inner-wide">
             <Nav
               variant="underline"
               activeKey={this.state.activeTab}
@@ -419,6 +426,11 @@ class Preferences extends React.Component<Props, State> {
               <Nav.Item>
                 <Nav.Link eventKey="tab-bookings">
                   {this.props.t("bookings")}
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="tab-style">
+                  {this.props.t("style")}
                 </Nav.Link>
               </Nav.Item>
               <Nav.Item hidden={RuntimeConfig.INFOS.idpLogin}>
@@ -440,11 +452,15 @@ class Preferences extends React.Component<Props, State> {
               </Nav.Item>
             </Nav>
             {hint}
+
+            {/* -------- */}
+            {/* BOOKINGS */}
+            {/* -------- */}
+
             <Form
               onSubmit={this.onSubmit}
               hidden={this.state.activeTab !== "tab-bookings"}
             >
-              <h5 className="margin-top-15">{this.props.t("preferences")}</h5>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("notice")}</Form.Label>
                 <Form.Select
@@ -460,42 +476,42 @@ class Preferences extends React.Component<Props, State> {
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workingHours")}</Form.Label>
-                <Row>
-                  <Col>
-                    <Form.Control
-                      type="number"
-                      value={this.state.workdayStart}
-                      onChange={(e: any) =>
-                        this.setState({
-                          workdayStart:
-                            typeof window !== "undefined"
-                              ? window.parseInt(e.target.value)
-                              : 0,
-                        })
-                      }
-                      min="0"
-                      max="23"
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Control
-                      plaintext={true}
-                      readOnly={true}
-                      defaultValue={this.props.t("to").toString()}
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Control
-                      type="number"
-                      value={this.state.workdayEnd}
-                      onChange={(e: any) =>
-                        this.setState({ workdayEnd: e.target.value })
-                      }
-                      min={this.state.workdayStart + 1}
-                      max="23"
-                    />
-                  </Col>
-                </Row>
+                <div>
+                  <Form.Control
+                    type="number"
+                    value={this.state.workdayStart}
+                    onChange={(e: any) =>
+                      this.setState({
+                        workdayStart:
+                          typeof window !== "undefined"
+                            ? window.parseInt(e.target.value)
+                            : 0,
+                      })
+                    }
+                    min="0"
+                    max="23"
+                    style={{ display: "inline", width: "40%" }}
+                  />
+                  <span
+                    style={{
+                      width: "20%",
+                      display: "inline-block",
+                      textAlign: "center",
+                    }}
+                  >
+                    {this.props.t("to").toString()}
+                  </span>
+                  <Form.Control
+                    type="number"
+                    value={this.state.workdayEnd}
+                    onChange={(e: any) =>
+                      this.setState({ workdayEnd: e.target.value })
+                    }
+                    min={this.state.workdayStart + 1}
+                    max="23"
+                    style={{ display: "inline", width: "40%" }}
+                  />
+                </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
@@ -552,13 +568,18 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
+
+            {/* ----- */}
+            {/* STYLE */}
+            {/* ----- */}
+
             <Form
               onSubmit={this.onSubmitColors}
-              hidden={this.state.activeTab !== "tab-bookings"}
+              hidden={this.state.activeTab !== "tab-style"}
               className="form-colors"
             >
-              <h5 className="margin-top-50">{this.props.t("bookingcolors")}</h5>
-              <Form.Group className="margin-top-15">
+              <h5 className="margin-top-15">{this.props.t("bookingcolors")}</h5>
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorBooked"}
@@ -570,7 +591,7 @@ class Preferences extends React.Component<Props, State> {
                 />
                 <Form.Label>{this.props.t("colorAlreadyBooked")}</Form.Label>
               </Form.Group>
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorNotBooked"}
@@ -582,7 +603,7 @@ class Preferences extends React.Component<Props, State> {
                 />
                 <Form.Label>{this.props.t("colorNotBooked")}</Form.Label>
               </Form.Group>
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorSelfBooked"}
@@ -595,7 +616,7 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label>{this.props.t("colorSelfBooked")}</Form.Label>
               </Form.Group>
               {RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled && (
-                <Form.Group className="margin-top-15">
+                <Form.Group className="margin-top-15 d-flex">
                   <Form.Control
                     type="color"
                     key={"colorPartiallyBooked"}
@@ -611,7 +632,7 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Group>
               )}
               {!RuntimeConfig.INFOS.disableBuddies && (
-                <Form.Group className="margin-top-15">
+                <Form.Group className="margin-top-15 d-flex">
                   <Form.Control
                     type="color"
                     key={"colorBuddyBooked"}
@@ -624,7 +645,7 @@ class Preferences extends React.Component<Props, State> {
                   <Form.Label>{this.props.t("colorBuddyBooked")}</Form.Label>
                 </Form.Group>
               )}
-              <Form.Group className="margin-top-15">
+              <Form.Group className="margin-top-15 d-flex">
                 <Form.Control
                   type="color"
                   key={"colorDisallowed"}
@@ -647,6 +668,11 @@ class Preferences extends React.Component<Props, State> {
                 <Button type="submit">{this.props.t("save")}</Button>
               </ButtonGroup>
             </Form>
+
+            {/* -------- */}
+            {/* SECURITY */}
+            {/* -------- */}
+
             <Form
               onSubmit={this.onSubmitSecurity}
               hidden={this.state.activeTab !== "tab-security"}
@@ -682,6 +708,11 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
+
+            {/* --- */}
+            {/* IDP */}
+            {/* --- */}
+
             <div hidden={this.state.activeTab !== "tab-idp"}>
               <div className="text-end">
                 <a
@@ -699,6 +730,11 @@ class Preferences extends React.Component<Props, State> {
                 id="idp-profilepage-iframe"
               ></iframe>
             </div>
+
+            {/* ------------ */}
+            {/* INTEGRATIONS */}
+            {/* ------------ */}
+
             <Form
               onSubmit={this.saveCaldavSettings}
               hidden={this.state.activeTab !== "tab-integrations"}

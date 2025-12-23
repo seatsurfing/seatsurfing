@@ -112,6 +112,7 @@
   "editGroup": "Bewerk groep",
   "editOrg": "Bewerk organisatie",
   "editUser": "Bewerk gebruiker",
+  "editSpace": "Edit space",
   "emailAddress": "E-mailadres",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -148,6 +149,7 @@
   "errorTryAgain": "Er is iets fout gegaan. Probeer het later opnieuw.",
   "errorUnknown": "Onbekende fout, probeer het later opnieuw.",
   "errorValidateDomain": "Fout bij het verifiëren van domein {{domain}}: Zorg ervoor dat u de DNS TXT-record correct heeft ingesteld.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "Deze functie is momenteel niet beschikbaar.",
   "filter": "Filter",
@@ -317,5 +319,6 @@
   "userinfoFirstnameField": "Gebruikersinfo Voornaam veld",
   "userinfoLastnameField": "Gebruikersinfo Achternaam veld",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style"
 }

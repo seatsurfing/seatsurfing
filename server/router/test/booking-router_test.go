@@ -1371,7 +1371,7 @@ func TestBookingsDailyBasisBookingSameDayValid(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1484,12 +1484,14 @@ func TestBookingsPastEnterDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, false, res)
+	CheckTestInt(t, ResponseCodeBookingInPast, errorCode)
 
 	// also admins cannot book in past
-	res = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, errorCode = router.IsValidBookingAdvance(m, org.ID, adminUser)
 	CheckTestBool(t, false, res)
+	CheckTestInt(t, ResponseCodeBookingInPast, errorCode)
 }
 
 func TestBookingsEarlyMorningEnterDate(t *testing.T) {
@@ -1506,7 +1508,7 @@ func TestBookingsEarlyMorningEnterDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1522,7 +1524,7 @@ func TestBookingsValidFutureAdvanceDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1538,7 +1540,7 @@ func TestBookingsValidBorderAdvanceDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1556,16 +1558,17 @@ func TestBookingsInvalidBorderAdvanceDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, false, res)
+	CheckTestInt(t, ResponseCodeBookingTooManyDaysInAdvance, errorCode)
 
-	res = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, _ = router.IsValidBookingAdvance(m, org.ID, adminUser)
 	CheckTestBool(t, true, res)
 
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
-	res = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, errorCode = router.IsValidBookingAdvance(m, org.ID, adminUser)
 	CheckTestBool(t, false, res)
-
+	CheckTestInt(t, ResponseCodeBookingTooManyDaysInAdvance, errorCode)
 }
 
 func TestBookingsInvalidFutureAdvanceDate(t *testing.T) {
@@ -1583,14 +1586,14 @@ func TestBookingsInvalidFutureAdvanceDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res := router.IsValidBookingAdvance(m, org.ID, user)
+	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
 	CheckTestBool(t, false, res)
 
-	res = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, _ = router.IsValidBookingAdvance(m, org.ID, adminUser)
 	CheckTestBool(t, true, res)
 
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
-	res = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, _ = router.IsValidBookingAdvance(m, org.ID, adminUser)
 	CheckTestBool(t, false, res)
 }
 

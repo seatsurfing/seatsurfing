@@ -112,6 +112,7 @@
   "editGroup": "Edit group",
   "editOrg": "Modifier l’organisation",
   "editUser": "Modifier l’utilisateur",
+  "editSpace": "Edit space",
   "emailAddress": "Adresse e-mail",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -148,6 +149,7 @@
   "errorTryAgain": "Quelque chose s’est mal passé. Veuillez réessayer plus tard.",
   "errorUnknown": "Erreur inconnue, veuillez réessayer plus tard.",
   "errorValidateDomain": "Erreur lors de la vérification du domaine {{domain}} : Assurez-vous d’avoir correctement configuré l’enregistrement TXT DNS.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "Cette fonctionnalité n’est actuellement pas disponible.",
   "filter": "Filter",
@@ -317,5 +319,6 @@
   "userinfoFirstnameField": "Userinfo Firstname field",
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style"
 }

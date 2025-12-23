@@ -111,6 +111,7 @@
   "editBooking": "Edit Booking",
   "editGroup": "Edit group",
   "editOrg": "Edit organization",
+  "editSpace": "Edit space",
   "editUser": "Edit user",
   "emailAddress": "Email address",
   "emailPlaceholder": "tu@companie.com",
@@ -148,6 +149,7 @@
   "errorTryAgain": "Something went wrong. Please try again later.",
   "errorUnknown": "Eroare necunoscută, te rog să încerci din nou mai târziu.",
   "errorValidateDomain": "Error verifying domain {{domain}}: Please ensure that you've set up the DNS TXT record correctly.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "This feature is currently unavailable.",
   "filter": "Filter",
@@ -317,5 +319,6 @@
   "userinfoFirstnameField": "Userinfo Firstname field",
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style"
 }

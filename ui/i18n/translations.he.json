@@ -112,6 +112,7 @@
   "editGroup": "Edit group",
   "editOrg": "עריכת ארגון",
   "editUser": "עריכת משתמש",
+  "editSpace": "Edit space",
   "emailAddress": "כתובת דוא״ל",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -148,6 +149,7 @@
   "errorTryAgain": "משהו השתבש. נא לנסות שוב.",
   "errorUnknown": "שגיאה לא ידועה, נא לנסות שוב מאוחר יותר.",
   "errorValidateDomain": "שגיאה באימות שם התחום {{domain}}: נא לוודא שהגדרת את רשומת ה־TXT ב־DNS כראוי.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "היכולת הזאת לא זמינה כרגע.",
   "filter": "Filter",
@@ -317,5 +319,6 @@
   "userinfoFirstnameField": "Userinfo Firstname field",
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style"
 }

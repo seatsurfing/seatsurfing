@@ -112,6 +112,7 @@
   "editGroup": "Edytuj grupę",
   "editOrg": "Edytuj organizację",
   "editUser": "Edytuj użytkownika",
+  "editSpace": "Edit space",
   "emailAddress": "Adres e-mail",
   "emailPlaceholder": "ty@firma.com",
   "enabled": "Włączone",
@@ -148,6 +149,7 @@
   "errorTryAgain": "Coś poszło nie tak. Spróbuj ponownie później.",
   "errorUnknown": "Nieznany błąd, spróbuj ponownie później.",
   "errorValidateDomain": "Błąd weryfikacji domeny {{domain}}: upewnij się, że poprawnie dodałeś rekord DNS TXT.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Co",
   "featureCurrentlyUnavailable": "Ta funkcja jest obecnie niedostępna.",
   "filter": "Filtr",
@@ -317,5 +319,6 @@
   "userinfoFirstnameField": "Userinfo Firstname field",
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style"
 }

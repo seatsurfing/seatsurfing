@@ -112,6 +112,7 @@
   "editGroup": "Edit group",
   "editOrg": "Edit organization",
   "editUser": "Edit user",
+  "editSpace": "Edit space",
   "emailAddress": "Email address",
   "emailPlaceholder": "you@company.com",
   "enabled": "Enabled",
@@ -148,6 +149,7 @@
   "errorTryAgain": "Something went wrong. Please try again later.",
   "errorUnknown": "Tundmatu viga, palun proovi hiljem uuesti.",
   "errorValidateDomain": "Error verifying domain {{domain}}: Please ensure that you've set up the DNS TXT record correctly.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "This feature is currently unavailable.",
   "filter": "Filtreeri",
@@ -317,5 +319,6 @@
   "userinfoFirstnameField": "Userinfo Firstname field",
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
-  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range."
+  "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
+  "style": "Style"
 }
