@@ -34,6 +34,7 @@ interface RuntimeUserInfos {
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
   disablePasswordLogin: boolean;
+  allowRecurringBookings: boolean;
 }
 
 export default class RuntimeConfig {
@@ -73,6 +74,7 @@ export default class RuntimeConfig {
       subscriptionActive: false,
       orgPrimaryDomain: "",
       disablePasswordLogin: false,
+      allowRecurringBookings: true,
     };
   };
 
@@ -145,6 +147,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.defaultTimezone = s.value;
           if (s.name === "feature_recurring_bookings")
             RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
+          if (s.name === "allow_recurring_bookings")
+            RuntimeConfig.INFOS.allowRecurringBookings = s.value === "1";
           if (s.name === "_sys_admin_menu_items")
             RuntimeConfig.INFOS.pluginMenuItems = s.value
               ? JSON.parse(s.value)

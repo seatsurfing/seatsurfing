@@ -197,6 +197,11 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
+	recurringBookingsAllowed, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingAllowRecurringBookings.Name)
+	if !recurringBookingsAllowed {
+		SendBadRequest(w)
+		return
+	}
 	requestUser := GetRequestUser(r)
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
 		SendForbidden(w)
