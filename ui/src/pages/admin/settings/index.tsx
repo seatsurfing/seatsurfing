@@ -324,10 +324,19 @@ class Settings extends React.Component<Props, State> {
     ];
     OrgSettings.setAll(payload)
       .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-        });
+        RuntimeConfig.loadSettings()
+          .then(() => {
+            this.setState({
+              submitting: false,
+              saved: true,
+            });
+          })
+          .catch(() => {
+            this.setState({
+              submitting: false,
+              error: true,
+            });
+          });
       })
       .catch(() => {
         this.setState({
