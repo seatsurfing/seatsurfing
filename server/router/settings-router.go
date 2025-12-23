@@ -258,6 +258,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
 		name == SettingFeatureAuthProviders.Name ||
+		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin {
@@ -303,7 +304,6 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingDisableBuddies.Name ||
 		name == SettingDefaultTimezone.Name ||
 		name == SettingBookingRetentionDays.Name ||
-		name == SettingSubjectDefault.Name ||
 		name == SettingBookingRetentionEnabled.Name {
 		return true
 	}

@@ -70,6 +70,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingFeatureNoUserLimit.Name,
 		SettingFeatureGroups.Name,
 		SettingFeatureCustomDomains.Name,
+		SettingSubjectDefault.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
