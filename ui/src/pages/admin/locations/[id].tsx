@@ -373,7 +373,7 @@ class EditLocation extends React.Component<Props, State> {
       width: e ? e.width + "px" : "100px",
       height: e ? e.height + "px" : "100px",
       rotation: 0,
-      requireSubject: e ? e.requireSubject : false,
+      requireSubject: e ? e.requireSubject : (RuntimeConfig.INFOS.subjectDefault === 3),
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -842,7 +842,7 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row}>
+            <Form.Group as={Row} hidden={RuntimeConfig.INFOS.subjectDefault === 1}>
               <Form.Label column sm="4">
                 {this.props.t("requireSubject")}
               </Form.Label>

@@ -304,7 +304,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingDisableBuddies.Name ||
 		name == SettingDefaultTimezone.Name ||
 		name == SettingBookingRetentionDays.Name ||
-		name == SettingBookingRetentionEnabled.Name {
+		name == SettingBookingRetentionEnabled.Name ||
+		name == SettingSubjectDefault.Name {
 		return true
 	}
 	return false
