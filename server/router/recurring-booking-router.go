@@ -413,7 +413,7 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 		"subject":       subject,
 	}
 	template := GetEmailTemplatePathRecurringBookingCreated()
-	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
 	}

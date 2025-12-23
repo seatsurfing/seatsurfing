@@ -49,6 +49,7 @@ var DatabaseTables = [...]string{
 	"users",
 	"users_groups",
 	"users_preferences",
+	"mail_logs",
 }
 
 func GetTestJWT(userID string) string {
