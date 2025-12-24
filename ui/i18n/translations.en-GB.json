@@ -323,8 +323,8 @@
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
   "style": "Style",
   "allowRecurringBookings": "Allow recurring bookings",
-  "subjectDefault": "Default subject requirement",
   "disabled": "Disabled",
-  "optional": "Optional",
-  "required": "Required"
+  "optional": "Enabled (default optional)",
+  "required": "Aktiviert (default required)",
+  "subjectDefault": "Subject for bookings"
 }

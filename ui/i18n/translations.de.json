@@ -325,7 +325,7 @@
   "style": "Stil",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "disabled": "Deaktiviert",
-  "optional": "Optional",
-  "required": "Erforderlich",
-  "subjectDefault": "Standardmäßige Betreff-Anforderung"
+  "optional": "Aktiviert (standardmäßig optional)",
+  "required": "Aktiviert (standardmäßig erforderlich)",
+  "subjectDefault": "Betreff für Buchungen"
 }
