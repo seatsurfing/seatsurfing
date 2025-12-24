@@ -70,6 +70,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingFeatureNoUserLimit.Name,
 		SettingFeatureGroups.Name,
 		SettingFeatureCustomDomains.Name,
+		SettingSubjectDefault.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -144,6 +145,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SysSettingDisablePasswordLogin,
 		SettingBookingRetentionEnabled.Name,
 		SettingBookingRetentionDays.Name,
+		SettingSubjectDefault.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

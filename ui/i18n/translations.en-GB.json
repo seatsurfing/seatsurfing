@@ -320,5 +320,9 @@
   "manageProfile": "Manage profile",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
-  "style": "Style"
+  "style": "Style",
+  "subjectDefault": "Default subject requirement",
+  "disabled": "Disabled",
+  "optional": "Optional",
+  "required": "Required"
 }

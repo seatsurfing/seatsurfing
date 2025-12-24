@@ -321,5 +321,9 @@
   "userinfoLastnameField": "Userinfo Nachname-Feld",
   "spaceBookedInfo": "Für diesen Platz gibt es bereits eine Buchung und daher ist er im gewählten Zeitraum nicht verfügbar.",
   "spaceBookedInfoMyBooking": "Du hast diesen Platz im gewählten Zeitraum bereits gebucht.",
-  "style": "Stil"
+  "style": "Stil",
+  "disabled": "Deaktiviert",
+  "optional": "Optional",
+  "required": "Erforderlich",
+  "subjectDefault": "Standardmäßige Betreff-Anforderung"
 }

@@ -44,6 +44,7 @@ interface State {
   maxDaysInAdvance: number;
   bookingRetentionEnabled: boolean;
   bookingRetentionDays: number;
+  subjectDefault: number;
   enableMaxHoursBeforeDelete: boolean;
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
@@ -95,6 +96,7 @@ class Settings extends React.Component<Props, State> {
       maxDaysInAdvance: 0,
       bookingRetentionEnabled: false,
       bookingRetentionDays: 0,
+      subjectDefault: 0,
       enableMaxHoursBeforeDelete: false,
       maxHoursBeforeDelete: 0,
       maxHoursPartiallyBooked: 0,
@@ -206,6 +208,8 @@ class Settings extends React.Component<Props, State> {
           state.maxBookingDurationHours = window.parseInt(s.value);
         if (s.name === "min_booking_duration_hours")
           state.minBookingDurationHours = window.parseInt(s.value);
+        if (s.name === "subject_default")
+          state.subjectDefault = window.parseInt(s.value);
         if (s.name === "daily_basis_booking")
           state.dailyBasisBooking = s.value === "1";
         if (s.name === "no_admin_restrictions")
@@ -316,13 +320,23 @@ class Settings extends React.Component<Props, State> {
         "min_booking_duration_hours",
         this.state.minBookingDurationHours.toString(),
       ),
+      new OrgSettings("subject_default", this.state.subjectDefault.toString()),
     ];
     OrgSettings.setAll(payload)
       .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-        });
+        RuntimeConfig.loadSettings()
+          .then(() => {
+            this.setState({
+              submitting: false,
+              saved: true,
+            });
+          })
+          .catch(() => {
+            this.setState({
+              submitting: false,
+              error: true,
+            });
+          });
       })
       .catch(() => {
         this.setState({
@@ -969,6 +983,23 @@ class Settings extends React.Component<Props, State> {
                 {this.timezones.map((tz) => (
                   <option key={tz}>{tz}</option>
                 ))}
+              </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("subjectDefault")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                value={this.state.subjectDefault}
+                onChange={(e: any) =>
+                  this.setState({ subjectDefault: e.target.value })
+                }
+              >
+                <option value="1">{this.props.t("disabled")}</option>
+                <option value="2">{this.props.t("optional")}</option>
+                <option value="3">{this.props.t("required")}</option>
               </Form.Select>
             </Col>
           </Form.Group>

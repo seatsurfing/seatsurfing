@@ -34,6 +34,7 @@ interface RuntimeUserInfos {
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
   disablePasswordLogin: boolean;
+  subjectDefault: number;
 }
 
 export default class RuntimeConfig {
@@ -73,6 +74,7 @@ export default class RuntimeConfig {
       subscriptionActive: false,
       orgPrimaryDomain: "",
       disablePasswordLogin: false,
+      subjectDefault: 2,
     };
   };
 
@@ -173,6 +175,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
           if (s.name === "_sys_disable_password_login")
             RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
+          if (s.name === "subject_default")
+            RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
         });
         resolve();
       });

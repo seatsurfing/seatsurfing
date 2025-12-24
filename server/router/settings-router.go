@@ -258,6 +258,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
 		name == SettingFeatureAuthProviders.Name ||
+		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin {
@@ -275,6 +276,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SysSettingAdminMenuItems ||
 		name == SysSettingAdminWelcomeScreens ||
 		name == SettingBookingRetentionEnabled.Name ||
+		name == SettingSubjectDefault.Name ||
 		name == SettingBookingRetentionDays.Name {
 		return true
 	}
@@ -302,7 +304,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingDisableBuddies.Name ||
 		name == SettingDefaultTimezone.Name ||
 		name == SettingBookingRetentionDays.Name ||
-		name == SettingBookingRetentionEnabled.Name {
+		name == SettingBookingRetentionEnabled.Name ||
+		name == SettingSubjectDefault.Name {
 		return true
 	}
 	return false
@@ -372,6 +375,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingBookingRetentionEnabled.Name {
 		return SettingBookingRetentionEnabled.Type
 	}
+	if name == SettingSubjectDefault.Name {
+		return SettingSubjectDefault.Type
+	}
 	return 0
 }
 
@@ -397,6 +403,14 @@ func (router *SettingsRouter) isValidSettingType(name string, value string) bool
 func (router *SettingsRouter) isValidSettingValue(name string, value string) bool {
 	if name == SettingDefaultTimezone.Name && !IsValidTimeZone(value) {
 		return false
+	}
+	if name == SettingSubjectDefault.Name {
+		intVal, _ := strconv.Atoi(value)
+		if intVal != SettingSubjectDefaultDisabled &&
+			intVal != SettingSubjectDefaultOptional &&
+			intVal != SettingSubjectDefaultRequired {
+			return false
+		}
 	}
 	return true
 }

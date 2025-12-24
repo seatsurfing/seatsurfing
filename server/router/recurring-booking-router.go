@@ -188,14 +188,17 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
-	if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
-		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
-		return
-	}
 	location, err := GetLocationRepository().GetOne(space.LocationID)
 	if err != nil {
 		SendBadRequest(w)
 		return
+	}
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
+		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+			SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
+			return
+		}
 	}
 	requestUser := GetRequestUser(r)
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
