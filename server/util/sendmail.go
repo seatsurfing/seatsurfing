@@ -260,6 +260,10 @@ func SendEmailWithBody(recipient *MailAddress, subject, body, language string) e
 	return SendEmailWithBodyAndAttachment(recipient, subject, body, language, nil)
 }
 
+func SendEmailWithBodyAndOrg(recipient *MailAddress, subject, body, language string, organizationID string) error {
+	return SendEmailWithBodyAndAttachmentAndOrg(recipient, subject, body, language, nil, organizationID)
+}
+
 func SendEmailWithBodyAndAttachment(recipient *MailAddress, subject, body, language string, attachments []*MailAttachment) error {
 	return SendEmailWithBodyAndAttachmentAndOrg(recipient, subject, body, language, attachments, "")
 }
