@@ -2153,7 +2153,11 @@ class Search extends React.Component<Props, State> {
                 </Row>
               );
             })}
-            <Form.Group as={Row} style={{ marginTop: "25px" }}>
+            <Form.Group
+              as={Row}
+              style={{ marginTop: "25px" }}
+              hidden={RuntimeConfig.INFOS.subjectDefault === 1}
+            >
               <Form.Label column sm="4">
                 {this.props.t("subject")}:
               </Form.Label>
@@ -2171,7 +2175,10 @@ class Search extends React.Component<Props, State> {
                     this.setState({ subject: e.target.value })
                   }
                   minLength={this.state.selectedSpace?.requireSubject ? 3 : 0}
-                  required={this.state.selectedSpace?.requireSubject}
+                  required={
+                    RuntimeConfig.INFOS.subjectDefault !== 1 &&
+                    this.state.selectedSpace?.requireSubject
+                  }
                 />
               </Col>
             </Form.Group>

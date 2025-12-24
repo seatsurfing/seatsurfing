@@ -427,7 +427,7 @@ func (router *OrganizationRouter) sendVerifyEmailAddressEmail(org *Organization,
 		"recipientEmail": newEmail,
 		"code":           code,
 	}
-	return SendEmail(&MailAddress{Address: newEmail}, GetEmailTemplatePathChangeEmailAddress(), org.Language, vars)
+	return SendEmailWithOrg(&MailAddress{Address: newEmail}, GetEmailTemplatePathChangeEmailAddress(), org.Language, vars, org.ID)
 }
 
 func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request) {

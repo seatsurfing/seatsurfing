@@ -99,6 +99,16 @@ func getOptimalSMTPSettings(config *Config) (port int, startTLS bool, authMethod
 
 const EmailTemplateDefaultLanguage = "en"
 
+// EmailLogCallback is a function that logs sent emails
+type EmailLogCallback func(subject, recipient, organizationID string) error
+
+var emailLogCallback EmailLogCallback
+
+// SetEmailLogCallback sets the callback function for logging emails
+func SetEmailLogCallback(callback EmailLogCallback) {
+	emailLogCallback = callback
+}
+
 var SendMailMockContent = ""
 
 type MailButton struct {
@@ -191,10 +201,18 @@ func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
 }
 
 func SendEmail(recipient *MailAddress, templateFile, language string, vars map[string]string) error {
-	return SendEmailWithAttachments(recipient, templateFile, language, vars, nil)
+	return SendEmailWithOrg(recipient, templateFile, language, vars, "")
+}
+
+func SendEmailWithOrg(recipient *MailAddress, templateFile, language string, vars map[string]string, organizationID string) error {
+	return SendEmailWithAttachmentsAndOrg(recipient, templateFile, language, vars, nil, organizationID)
 }
 
 func SendEmailWithAttachments(recipient *MailAddress, templateFile, language string, vars map[string]string, attachments []*MailAttachment) error {
+	return SendEmailWithAttachmentsAndOrg(recipient, templateFile, language, vars, attachments, "")
+}
+
+func SendEmailWithAttachmentsAndOrg(recipient *MailAddress, templateFile, language string, vars map[string]string, attachments []*MailAttachment, organizationID string) error {
 	actualTemplateFile, err := GetEmailTemplatePath(templateFile, language)
 	if err != nil {
 		return err
@@ -208,7 +226,7 @@ func SendEmailWithAttachments(recipient *MailAddress, templateFile, language str
 		return err
 	}
 	body = ReplaceVarsInTemplate(body, vars)
-	return SendEmailWithBodyAndAttachment(recipient, mailTemplate.Subject, body, language, attachments)
+	return SendEmailWithBodyAndAttachmentAndOrg(recipient, mailTemplate.Subject, body, language, attachments, organizationID)
 }
 
 func ReplaceVarsInTemplate(body string, vars map[string]string) string {
@@ -239,6 +257,10 @@ func SendEmailWithBody(recipient *MailAddress, subject, body, language string) e
 }
 
 func SendEmailWithBodyAndAttachment(recipient *MailAddress, subject, body, language string, attachments []*MailAttachment) error {
+	return SendEmailWithBodyAndAttachmentAndOrg(recipient, subject, body, language, attachments, "")
+}
+
+func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body, language string, attachments []*MailAttachment, organizationID string) error {
 	logoData, err := os.ReadFile(filepath.Join(GetConfig().FilesystemBasePath, "./res/seatsurfing.png"))
 	if err != nil {
 		return fmt.Errorf("error reading logo file: %v", err)
@@ -307,8 +329,17 @@ func SendEmailWithBodyAndAttachment(recipient *MailAddress, subject, body, langu
 		buf.WriteString(fmt.Sprintf("--%s--\n", boundary))
 
 		to := []string{recipient.Address}
-		return smtpDialAndSend(sender.Address, to, buf.Bytes())
+		err = smtpDialAndSend(sender.Address, to, buf.Bytes())
 	}
+
+	// Log email to database if sending was successful
+	if err == nil && emailLogCallback != nil {
+		if logErr := emailLogCallback(subject, recipient.Address, organizationID); logErr != nil {
+			log.Printf("Failed to log email to database: %v\n", logErr)
+		}
+	}
+
+	return err
 }
 
 func GetEmailTemplatePath(templateFile, language string) (string, error) {

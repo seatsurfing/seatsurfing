@@ -564,14 +564,17 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
-		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
-		return
-	}
 	location, err := GetLocationRepository().GetOne(space.LocationID)
 	if err != nil {
 		SendBadRequest(w)
 		return
+	}
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
+		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+			SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
+			return
+		}
 	}
 	requestUser := GetRequestUser(r)
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
@@ -1176,7 +1179,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	} else if notification == BookingMailNotificationDeleted {
 		template = GetEmailTemplatePathBookingDeleted()
 	}
-	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
 	}
