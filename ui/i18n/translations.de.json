@@ -179,6 +179,7 @@
   "loginUseUsernamePassword": "Login mit Benutzername und Passwort",
   "logout": "Abmelden",
   "mailNotifications": "E-Mail-Benachrichtigungen",
+  "approvalNotifications": "Per E-Mail benachrichtigen",
   "mangageOrgHeadline": "Organisation verwalten.",
   "map": "Karte",
   "mapFileTypes": "PNG, JPEG oder GIF",

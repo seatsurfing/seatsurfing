@@ -178,6 +178,7 @@
   "loginUseUsernamePassword": "Entrar com nome de usuário e senha",
   "logout": "Sair",
   "mailNotifications": "Notificações por email",
+  "approvalNotifications": "Notificar-me por email",
   "mangageOrgHeadline": "Gerenciar organização.",
   "map": "Mapa",
   "mapFileTypes": "PNG, JPEG ou GIF",

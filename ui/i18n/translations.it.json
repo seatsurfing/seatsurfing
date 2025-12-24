@@ -178,6 +178,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "Esci",
   "mailNotifications": "Mail notifications",
+  "approvalNotifications": "Notificami via email",
   "mangageOrgHeadline": "Gestisci organizzazione.",
   "map": "Map",
   "mapFileTypes": "PNG, JPEG or GIF",

@@ -178,6 +178,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "Log out",
   "mailNotifications": "Mail notifications",
+  "approvalNotifications": "Notify me via email",
   "mangageOrgHeadline": "Manage organization.",
   "map": "Map",
   "mapFileTypes": "PNG, JPEG or GIF",
