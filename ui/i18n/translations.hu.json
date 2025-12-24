@@ -323,7 +323,7 @@
   "style": "Style",
   "allowRecurringBookings": "Allow recurring bookings",
   "disabled": "Disabled",
-  "optional": "Optional",
-  "required": "Required",
-  "subjectDefault": "Default subject requirement"
+  "optional": "Enabled (default optional)",
+  "required": "Aktiviert (default required)",
+  "subjectDefault": "Subject for bookings"
 }
