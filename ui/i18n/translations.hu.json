@@ -178,6 +178,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "Log out",
   "mailNotifications": "Mail notifications",
+  "approvalNotifications": "Értesítsen e-mailben",
   "mangageOrgHeadline": "Manage organization.",
   "map": "Map",
   "mapFileTypes": "PNG, JPEG or GIF",

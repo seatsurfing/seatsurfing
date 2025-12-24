@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Button } from "react-bootstrap";
+import { Table, Button, Form } from "react-bootstrap";
 import {
   Download as IconDownload,
   X as IconX,
@@ -15,6 +15,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Booking from "@/types/Booking";
+import UserPreference from "@/types/UserPreference";
 import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
 import RedirectUtil from "@/util/RedirectUtil";
@@ -23,6 +24,8 @@ interface State {
   data: Booking[];
   loading: boolean;
   updating: boolean;
+  approvalNotifications: boolean;
+  loadingPreference: boolean;
 }
 
 interface Props {
@@ -39,6 +42,8 @@ class Approvals extends React.Component<Props, State> {
       data: [],
       updating: false,
       loading: true,
+      approvalNotifications: false,
+      loadingPreference: true,
     };
   }
 
@@ -51,6 +56,7 @@ class Approvals extends React.Component<Props, State> {
       (imp) => (this.ExcellentExport = imp.default),
     );
     this.loadItems();
+    this.loadApprovalNotificationPreference();
   };
 
   loadItems = () => {
@@ -60,6 +66,29 @@ class Approvals extends React.Component<Props, State> {
         loading: false,
       });
     });
+  };
+
+  loadApprovalNotificationPreference = () => {
+    UserPreference.getOne("approval_notifications")
+      .then((value) => {
+        this.setState({
+          approvalNotifications: value === "1",
+          loadingPreference: false,
+        });
+      })
+      .catch(() => {
+        this.setState({ loadingPreference: false });
+      });
+  };
+
+  toggleApprovalNotifications = (checked: boolean) => {
+    this.setState({ approvalNotifications: checked });
+    UserPreference.setOne("approval_notifications", checked ? "1" : "0").catch(
+      () => {
+        // Revert on error
+        this.setState({ approvalNotifications: !checked });
+      },
+    );
   };
 
   approveBooking = (booking: Booking, approve: boolean) => {
@@ -182,12 +211,36 @@ class Approvals extends React.Component<Props, State> {
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("approvals")} buttons={buttons}>
+          <div className="mb-3">
+            <Form.Check
+              type="switch"
+              id="approvalNotificationsSwitch"
+              label={this.props.t("approvalNotifications")}
+              checked={this.state.approvalNotifications}
+              disabled={this.state.loadingPreference}
+              onChange={(e: any) =>
+                this.toggleApprovalNotifications(e.target.checked)
+              }
+            />
+          </div>
           <p>{this.props.t("noRecords")}</p>
         </FullLayout>
       );
     }
     return (
       <FullLayout headline={this.props.t("approvals")} buttons={buttons}>
+        <div className="margin-bottom-15">
+          <Form.Check
+            type="switch"
+            id="approvalNotificationsSwitch"
+            label={this.props.t("approvalNotifications")}
+            checked={this.state.approvalNotifications}
+            disabled={this.state.loadingPreference}
+            onChange={(e: any) =>
+              this.toggleApprovalNotifications(e.target.checked)
+            }
+          />
+        </div>
         <Table
           striped={true}
           hover={true}

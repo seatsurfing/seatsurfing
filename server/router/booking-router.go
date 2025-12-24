@@ -1204,6 +1204,98 @@ func (router *BookingRouter) onBookingCreated(e *Booking) {
 	if e.Approved {
 		router.createCalDavEvent(e)
 		router.sendMailNotification(e, BookingMailNotificationCreated)
+	} else {
+		// Booking requires approval - notify approvers
+		router.sendApprovalRequestNotifications(e)
+	}
+}
+
+func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
+	// Get the space to find approver groups
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		log.Println("Error getting space:", err)
+		return
+	}
+
+	// Get approver group IDs for this space
+	approverGroupIDs, err := GetSpaceRepository().GetApproverGroupIDs(e.SpaceID)
+	if err != nil || len(approverGroupIDs) == 0 {
+		log.Println("Error getting approver groups or no approvers:", err)
+		return
+	}
+
+	// Get location for timezone information
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		log.Println("Error getting location:", err)
+		return
+	}
+
+	// Get organization for language settings
+	org, err := GetOrganizationRepository().GetOne(location.OrganizationID)
+	if err != nil {
+		log.Println("Error getting organization:", err)
+		return
+	}
+
+	// Get booking user info
+	bookingUser, err := GetUserRepository().GetOne(e.UserID)
+	if err != nil {
+		log.Println("Error getting booking user:", err)
+		return
+	}
+
+	// Collect all unique approver user IDs who have the preference enabled
+	approverUserIDs := make(map[string]bool)
+	for _, groupID := range approverGroupIDs {
+		group, err := GetGroupRepository().GetOne(groupID)
+		if err != nil {
+			log.Println("Error getting group:", err)
+			continue
+		}
+
+		memberIDs, err := GetGroupRepository().GetMemberUserIDs(group)
+		if err != nil {
+			log.Println("Error getting group members:", err)
+			continue
+		}
+
+		for _, userID := range memberIDs {
+			// Check if user has approval notifications enabled
+			notificationsEnabled, err := GetUserPreferencesRepository().GetBool(userID, PreferenceApprovalNotifications.Name)
+			if err == nil && notificationsEnabled {
+				approverUserIDs[userID] = true
+			}
+		}
+	}
+
+	// Send email to each approver
+	subject := e.Subject
+	if subject == "" {
+		subject = "—"
+	}
+
+	for userID := range approverUserIDs {
+		approver, err := GetUserRepository().GetOne(userID)
+		if err != nil {
+			log.Println("Error getting approver user:", err)
+			continue
+		}
+
+		vars := map[string]string{
+			"recipientName": GetLocalPartFromEmailAddress(approver.Email),
+			"userEmail":     bookingUser.Email,
+			"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
+			"areaName":      location.Name,
+			"spaceName":     space.Name,
+			"subject":       subject,
+		}
+
+		template := GetEmailTemplatePathBookingApprovalRequest()
+		if err := SendEmailWithOrg(&MailAddress{Address: approver.Email}, template, org.Language, vars, org.ID); err != nil {
+			log.Println("Error sending approval notification email:", err)
+		}
 	}
 }
 

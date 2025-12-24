@@ -22,22 +22,23 @@ type PreferenceName struct {
 }
 
 var (
-	PreferenceEnterTime            PreferenceName = PreferenceName{Name: "enter_time", Type: SettingTypeInt}
-	PreferenceWorkdayStart         PreferenceName = PreferenceName{Name: "workday_start", Type: SettingTypeInt}
-	PreferenceWorkdayEnd           PreferenceName = PreferenceName{Name: "workday_end", Type: SettingTypeInt}
-	PreferenceWorkdays             PreferenceName = PreferenceName{Name: "workdays", Type: SettingTypeIntArray}
-	PreferenceLocation             PreferenceName = PreferenceName{Name: "location_id", Type: SettingTypeString}
-	PreferenceBookedColor          PreferenceName = PreferenceName{Name: "booked_color", Type: SettingTypeString}
-	PreferenceNotBookedColor       PreferenceName = PreferenceName{Name: "not_booked_color", Type: SettingTypeString}
-	PreferenceSelfBookedColor      PreferenceName = PreferenceName{Name: "self_booked_color", Type: SettingTypeString}
-	PreferencePartiallyBookedColor PreferenceName = PreferenceName{Name: "partially_booked_color", Type: SettingTypeString}
-	PreferenceBuddyBookedColor     PreferenceName = PreferenceName{Name: "buddy_booked_color", Type: SettingTypeString}
-	PreferenceDisallowedColor      PreferenceName = PreferenceName{Name: "disallowed_color", Type: SettingTypeString}
-	PreferenceCalDAVURL            PreferenceName = PreferenceName{Name: "caldav_url", Type: SettingTypeString}
-	PreferenceCalDAVUser           PreferenceName = PreferenceName{Name: "caldav_user", Type: SettingTypeString}
-	PreferenceCalDAVPass           PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
-	PreferenceCalDAVPath           PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
-	PreferenceMailNotifications    PreferenceName = PreferenceName{Name: "mail_notifications", Type: SettingTypeBool}
+	PreferenceEnterTime             PreferenceName = PreferenceName{Name: "enter_time", Type: SettingTypeInt}
+	PreferenceWorkdayStart          PreferenceName = PreferenceName{Name: "workday_start", Type: SettingTypeInt}
+	PreferenceWorkdayEnd            PreferenceName = PreferenceName{Name: "workday_end", Type: SettingTypeInt}
+	PreferenceWorkdays              PreferenceName = PreferenceName{Name: "workdays", Type: SettingTypeIntArray}
+	PreferenceLocation              PreferenceName = PreferenceName{Name: "location_id", Type: SettingTypeString}
+	PreferenceBookedColor           PreferenceName = PreferenceName{Name: "booked_color", Type: SettingTypeString}
+	PreferenceNotBookedColor        PreferenceName = PreferenceName{Name: "not_booked_color", Type: SettingTypeString}
+	PreferenceSelfBookedColor       PreferenceName = PreferenceName{Name: "self_booked_color", Type: SettingTypeString}
+	PreferencePartiallyBookedColor  PreferenceName = PreferenceName{Name: "partially_booked_color", Type: SettingTypeString}
+	PreferenceBuddyBookedColor      PreferenceName = PreferenceName{Name: "buddy_booked_color", Type: SettingTypeString}
+	PreferenceDisallowedColor       PreferenceName = PreferenceName{Name: "disallowed_color", Type: SettingTypeString}
+	PreferenceCalDAVURL             PreferenceName = PreferenceName{Name: "caldav_url", Type: SettingTypeString}
+	PreferenceCalDAVUser            PreferenceName = PreferenceName{Name: "caldav_user", Type: SettingTypeString}
+	PreferenceCalDAVPass            PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
+	PreferenceCalDAVPath            PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
+	PreferenceMailNotifications     PreferenceName = PreferenceName{Name: "mail_notifications", Type: SettingTypeBool}
+	PreferenceApprovalNotifications PreferenceName = PreferenceName{Name: "approval_notifications", Type: SettingTypeBool}
 )
 
 var (
@@ -148,7 +149,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 		"($1, '"+PreferenceSelfBookedColor.Name+"', '#b825de'), "+
 		"($1, '"+PreferencePartiallyBookedColor.Name+"', '#ff9100'), "+
 		"($1, '"+PreferenceBuddyBookedColor.Name+"', '#2415c5'), "+
-		"($1, '"+PreferenceDisallowedColor.Name+"', '#eeeeee') "+
+		"($1, '"+PreferenceDisallowedColor.Name+"', '#eeeeee'), "+
+		"($1, '"+PreferenceApprovalNotifications.Name+"', '0') "+
 		"ON CONFLICT (user_id, name) DO NOTHING",
 		userID)
 	return err
