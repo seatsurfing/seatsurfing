@@ -2325,7 +2325,10 @@ class Search extends React.Component<Props, State> {
             <Button
               variant={this.state.recurrence.active ? "primary" : "secondary"}
               onClick={() => this.setState({ showRecurringOptions: true })}
-              hidden={!RuntimeConfig.INFOS.featureRecurringBookings}
+              hidden={
+                !RuntimeConfig.INFOS.featureRecurringBookings ||
+                !RuntimeConfig.INFOS.allowRecurringBookings
+              }
               disabled={this.state.confirmingBooking}
             >
               <IconRefresh className="feather" />

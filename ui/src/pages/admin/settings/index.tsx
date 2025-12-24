@@ -67,6 +67,7 @@ interface State {
   latestVersion: any;
   featureNoUserLimit: boolean;
   featureCustomDomains: boolean;
+  allowRecurringBookings: boolean;
 }
 
 interface Props {
@@ -117,6 +118,7 @@ class Settings extends React.Component<Props, State> {
       latestVersion: null,
       featureNoUserLimit: false,
       featureCustomDomains: false,
+      allowRecurringBookings: true,
     };
   }
 
@@ -227,6 +229,8 @@ class Settings extends React.Component<Props, State> {
           state.featureNoUserLimit = s.value === "1";
         if (s.name === "feature_custom_domains")
           state.featureCustomDomains = s.value === "1";
+        if (s.name === "allow_recurring_bookings")
+          state.allowRecurringBookings = s.value === "1";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
       });
@@ -319,6 +323,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "min_booking_duration_hours",
         this.state.minBookingDurationHours.toString(),
+      ),
+      new OrgSettings(
+        "allow_recurring_bookings",
+        this.state.allowRecurringBookings ? "1" : "0",
       ),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
     ];
@@ -965,6 +973,19 @@ class Settings extends React.Component<Props, State> {
                 checked={this.state.allowBookingNonExistUsers}
                 onChange={(e: any) =>
                   this.setState({ allowBookingNonExistUsers: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-allowRecurringBookings"
+                label={this.props.t("allowRecurringBookings")}
+                checked={this.state.allowRecurringBookings}
+                onChange={(e: any) =>
+                  this.setState({ allowRecurringBookings: e.target.checked })
                 }
               />
             </Col>

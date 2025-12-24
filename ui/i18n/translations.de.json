@@ -322,6 +322,7 @@
   "spaceBookedInfo": "Für diesen Platz gibt es bereits eine Buchung und daher ist er im gewählten Zeitraum nicht verfügbar.",
   "spaceBookedInfoMyBooking": "Du hast diesen Platz im gewählten Zeitraum bereits gebucht.",
   "style": "Stil",
+  "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "disabled": "Deaktiviert",
   "optional": "Optional",
   "required": "Erforderlich",

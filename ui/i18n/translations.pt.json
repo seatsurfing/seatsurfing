@@ -321,6 +321,7 @@
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
   "style": "Style",
+  "allowRecurringBookings": "Allow recurring bookings",
   "disabled": "Disabled",
   "optional": "Optional",
   "required": "Required",

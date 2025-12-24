@@ -193,6 +193,11 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
+	recurringBookingsAllowed, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingAllowRecurringBookings.Name)
+	if !recurringBookingsAllowed {
+		SendBadRequest(w)
+		return
+  }
 	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
 	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
 		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {

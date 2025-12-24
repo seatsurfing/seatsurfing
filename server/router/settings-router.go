@@ -261,7 +261,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
-		name == SysSettingDisablePasswordLogin {
+		name == SysSettingDisablePasswordLogin ||
+		name == SettingAllowRecurringBookings.Name {
 		return true
 	}
 	return false
@@ -305,6 +306,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingDefaultTimezone.Name ||
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingBookingRetentionEnabled.Name ||
+		name == SettingAllowRecurringBookings.Name ||
 		name == SettingSubjectDefault.Name {
 		return true
 	}
@@ -375,6 +377,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingBookingRetentionEnabled.Name {
 		return SettingBookingRetentionEnabled.Type
 	}
+	if name == SettingAllowRecurringBookings.Name {
+		return SettingAllowRecurringBookings.Type
+  }
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type
 	}

@@ -51,6 +51,7 @@ var (
 	SettingAllowBookingsNonExistingUsers  SettingName = SettingName{Name: "allow_booking_nonexist_users", Type: SettingTypeBool}
 	SettingDisableBuddies                 SettingName = SettingName{Name: "disable_buddies", Type: SettingTypeBool}
 	SettingDefaultTimezone                SettingName = SettingName{Name: "default_timezone", Type: SettingTypeString}
+	SettingAllowRecurringBookings         SettingName = SettingName{Name: "allow_recurring_bookings", Type: SettingTypeBool}
 	SettingSubjectDefault                 SettingName = SettingName{Name: "subject_default", Type: SettingTypeInt}
 	SettingFeatureNoUserLimit             SettingName = SettingName{Name: "feature_no_user_limit", Type: SettingTypeBool}
 	SettingFeatureCustomDomains           SettingName = SettingName{Name: "feature_custom_domains", Type: SettingTypeBool}
@@ -274,6 +275,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingMaxDaysInAdvance.Name+"', '14'), "+
 		"($1, '"+SettingMaxBookingDurationHours.Name+"', '12'), "+
 		"($1, '"+SettingDefaultTimezone.Name+"', 'Europe/Berlin'), "+
+		"($1, '"+SettingAllowRecurringBookings.Name+"', '1'), "+
 		"($1, '"+SettingBookingRetentionEnabled.Name+"', '0'), "+
 		"($1, '"+SettingBookingRetentionDays.Name+"', '365'), "+
 		"($1, '"+SettingSubjectDefault.Name+"', '"+strconv.Itoa(SettingSubjectDefaultOptional)+"') "+
