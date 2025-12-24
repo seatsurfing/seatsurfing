@@ -155,3 +155,11 @@ func (r *MailLogRepository) GetCountByOrganizationAndDate(date time.Time) ([]*Ma
 	}
 	return result, nil
 }
+
+func (r *MailLogRepository) AnonymizeAll(organizationID string) error {
+	if _, err := GetDatabase().DB().Exec("UPDATE mail_logs SET recipient = '' "+
+		"WHERE organization_id = $1", organizationID); err != nil {
+		return err
+	}
+	return nil
+}

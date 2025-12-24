@@ -306,6 +306,10 @@ func (r *OrganizationRepository) Delete(e *Organization) error {
 	if err := GetUserRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
+	// Delete maillogs
+	if err := GetMailLogRepository().AnonymizeAll(e.ID); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM organizations_domains WHERE organization_id = $1", e.ID)
 	if err != nil {
 		return err
