@@ -564,14 +564,17 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
-		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
-		return
-	}
 	location, err := GetLocationRepository().GetOne(space.LocationID)
 	if err != nil {
 		SendBadRequest(w)
 		return
+	}
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
+		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+			SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
+			return
+		}
 	}
 	requestUser := GetRequestUser(r)
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
@@ -789,7 +792,7 @@ func (router *BookingRouter) getHoursOnDate(t *time.Time) int {
 	return durationNotRounded
 }
 
-func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID string, user *User) bool {
+func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID string, user *User) (bool, int) {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
 	maxAdvanceDays, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
 	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
@@ -800,16 +803,20 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 		now = now.Add(-12 * time.Hour)
 	}
 	if m.Leave.Before(now) { // Leave must not be in past
-		return false
+		return false, ResponseCodeBookingInPast
 	}
 	advanceDays := math.Floor(m.Enter.Sub(now).Hours() / 24)
 	if advanceDays >= 0 && noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
-		return true
+		return true, 0
 	}
-	if advanceDays < 0 || advanceDays > float64(maxAdvanceDays) {
-		return false
+
+	if advanceDays < 0 {
+		return false, ResponseCodeBookingInPast
 	}
-	return true
+	if advanceDays > float64(maxAdvanceDays) {
+		return false, ResponseCodeBookingTooManyDaysInAdvance
+	}
+	return true, 0
 }
 
 func (router *BookingRouter) IsValidMaxUpcomingBookings(orgID string, user *User, upcomingBookingsMarkup int) bool {
@@ -841,8 +848,9 @@ func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user
 	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration
 	}
-	if !router.IsValidBookingAdvance(&m.BookingRequest, orgID, user) {
-		return false, ResponseCodeBookingTooManyDaysInAdvance
+	valid, errorCode := router.IsValidBookingAdvance(&m.BookingRequest, orgID, user)
+	if !valid {
+		return false, errorCode
 	}
 	if !router.isValidMaxConcurrentBookingsForUser(orgID, user, &m.BookingRequest, bookingID) {
 		return false, ResponseCodeBookingMaxConcurrentForUser
@@ -1171,7 +1179,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	} else if notification == BookingMailNotificationDeleted {
 		template = GetEmailTemplatePathBookingDeleted()
 	}
-	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
 	}
@@ -1196,6 +1204,98 @@ func (router *BookingRouter) onBookingCreated(e *Booking) {
 	if e.Approved {
 		router.createCalDavEvent(e)
 		router.sendMailNotification(e, BookingMailNotificationCreated)
+	} else {
+		// Booking requires approval - notify approvers
+		router.sendApprovalRequestNotifications(e)
+	}
+}
+
+func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
+	// Get the space to find approver groups
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		log.Println("Error getting space:", err)
+		return
+	}
+
+	// Get approver group IDs for this space
+	approverGroupIDs, err := GetSpaceRepository().GetApproverGroupIDs(e.SpaceID)
+	if err != nil || len(approverGroupIDs) == 0 {
+		log.Println("Error getting approver groups or no approvers:", err)
+		return
+	}
+
+	// Get location for timezone information
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		log.Println("Error getting location:", err)
+		return
+	}
+
+	// Get organization for language settings
+	org, err := GetOrganizationRepository().GetOne(location.OrganizationID)
+	if err != nil {
+		log.Println("Error getting organization:", err)
+		return
+	}
+
+	// Get booking user info
+	bookingUser, err := GetUserRepository().GetOne(e.UserID)
+	if err != nil {
+		log.Println("Error getting booking user:", err)
+		return
+	}
+
+	// Collect all unique approver user IDs who have the preference enabled
+	approverUserIDs := make(map[string]bool)
+	for _, groupID := range approverGroupIDs {
+		group, err := GetGroupRepository().GetOne(groupID)
+		if err != nil {
+			log.Println("Error getting group:", err)
+			continue
+		}
+
+		memberIDs, err := GetGroupRepository().GetMemberUserIDs(group)
+		if err != nil {
+			log.Println("Error getting group members:", err)
+			continue
+		}
+
+		for _, userID := range memberIDs {
+			// Check if user has approval notifications enabled
+			notificationsEnabled, err := GetUserPreferencesRepository().GetBool(userID, PreferenceApprovalNotifications.Name)
+			if err == nil && notificationsEnabled {
+				approverUserIDs[userID] = true
+			}
+		}
+	}
+
+	// Send email to each approver
+	subject := e.Subject
+	if subject == "" {
+		subject = "—"
+	}
+
+	for userID := range approverUserIDs {
+		approver, err := GetUserRepository().GetOne(userID)
+		if err != nil {
+			log.Println("Error getting approver user:", err)
+			continue
+		}
+
+		vars := map[string]string{
+			"recipientName": GetLocalPartFromEmailAddress(approver.Email),
+			"userEmail":     bookingUser.Email,
+			"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
+			"areaName":      location.Name,
+			"spaceName":     space.Name,
+			"subject":       subject,
+		}
+
+		template := GetEmailTemplatePathBookingApprovalRequest()
+		if err := SendEmailWithOrg(&MailAddress{Address: approver.Email}, template, org.Language, vars, org.ID); err != nil {
+			log.Println("Error sending approval notification email:", err)
+		}
 	}
 }
 

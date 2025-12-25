@@ -494,12 +494,13 @@ class Search extends React.Component<Props, State> {
       res = false;
       hint = this.props.t("errorPickArea");
     }
-    let now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     let enterTime = new Date(this.state.enter);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       enterTime.setHours(23, 59, 59);
     }
-    if (enterTime.getTime() <= now.getTime()) {
+    if (enterTime.getTime() <= today.getTime()) {
       res = false;
       hint = this.props.t("errorEnterFuture");
     }
@@ -2152,7 +2153,11 @@ class Search extends React.Component<Props, State> {
                 </Row>
               );
             })}
-            <Form.Group as={Row} style={{ marginTop: "25px" }}>
+            <Form.Group
+              as={Row}
+              style={{ marginTop: "25px" }}
+              hidden={RuntimeConfig.INFOS.subjectDefault === 1}
+            >
               <Form.Label column sm="4">
                 {this.props.t("subject")}:
               </Form.Label>
@@ -2170,7 +2175,10 @@ class Search extends React.Component<Props, State> {
                     this.setState({ subject: e.target.value })
                   }
                   minLength={this.state.selectedSpace?.requireSubject ? 3 : 0}
-                  required={this.state.selectedSpace?.requireSubject}
+                  required={
+                    RuntimeConfig.INFOS.subjectDefault !== 1 &&
+                    this.state.selectedSpace?.requireSubject
+                  }
                 />
               </Col>
             </Form.Group>
@@ -2317,7 +2325,10 @@ class Search extends React.Component<Props, State> {
             <Button
               variant={this.state.recurrence.active ? "primary" : "secondary"}
               onClick={() => this.setState({ showRecurringOptions: true })}
-              hidden={!RuntimeConfig.INFOS.featureRecurringBookings}
+              hidden={
+                !RuntimeConfig.INFOS.featureRecurringBookings ||
+                !RuntimeConfig.INFOS.allowRecurringBookings
+              }
               disabled={this.state.confirmingBooking}
             >
               <IconRefresh className="feather" />

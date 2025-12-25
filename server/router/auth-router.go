@@ -683,7 +683,7 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"confirmID":      ID,
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 	}
-	return SendEmail(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars)
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars, org.ID)
 }
 
 func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {

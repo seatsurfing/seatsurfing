@@ -179,7 +179,8 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVUser.Name ||
 		name == PreferenceCalDAVPass.Name ||
 		name == PreferenceCalDAVPath.Name ||
-		name == PreferenceMailNotifications.Name {
+		name == PreferenceMailNotifications.Name ||
+		name == PreferenceApprovalNotifications.Name {
 		return true
 	}
 	return false
@@ -233,6 +234,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceMailNotifications.Name {
 		return PreferenceMailNotifications.Type
+	}
+	if name == PreferenceApprovalNotifications.Name {
+		return PreferenceApprovalNotifications.Type
 	}
 	return 0
 }

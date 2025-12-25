@@ -1,0 +1,13 @@
+{
+  "subject": "New booking approval request",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "A new booking requires your approval.",
+    "User: {{userEmail}}",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}",
+    "Please review and approve or decline this booking in the admin panel."
+  ]
+}

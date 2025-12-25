@@ -149,6 +149,7 @@
   "errorTryAgain": "משהו השתבש. נא לנסות שוב.",
   "errorUnknown": "שגיאה לא ידועה, נא לנסות שוב מאוחר יותר.",
   "errorValidateDomain": "שגיאה באימות שם התחום {{domain}}: נא לוודא שהגדרת את רשומת ה־TXT ב־DNS כראוי.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "היכולת הזאת לא זמינה כרגע.",
   "filter": "Filter",
@@ -177,6 +178,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "יציאה",
   "mailNotifications": "Mail notifications",
+  "approvalNotifications": "הודע לי בדוא״ל",
   "mangageOrgHeadline": "ניהול ארגון.",
   "map": "Map",
   "mapFileTypes": "PNG,‏ JPEG או GIF",
@@ -319,5 +321,10 @@
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
-  "style": "Style"
+  "style": "Style",
+  "allowRecurringBookings": "Allow recurring bookings",
+  "disabled": "Disabled",
+  "optional": "Enabled (default optional)",
+  "required": "Aktiviert (default required)",
+  "subjectDefault": "Subject for bookings"
 }

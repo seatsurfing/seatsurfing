@@ -149,6 +149,7 @@
   "errorTryAgain": "Algo salió mal. Por favor, inténtalo de nuevo más tarde.",
   "errorUnknown": "Error desconocido, por favor inténtalo más tarde.",
   "errorValidateDomain": "Error verificando el dominio {{domain}}: Por favor, asegúrate de haber configurado correctamente el registro TXT de DNS.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Cada",
   "featureCurrentlyUnavailable": "Esta función no está disponible actualmente.",
   "filter": "Filtro",
@@ -177,6 +178,7 @@
   "loginUseUsernamePassword": "Iniciar sesión con usuario y contraseña",
   "logout": "Cerrar sesión",
   "mailNotifications": "Notificaciones por correo",
+  "approvalNotifications": "Notificarme por correo electrónico",
   "mangageOrgHeadline": "Gestionar organización.",
   "map": "Mapa",
   "mapFileTypes": "PNG, JPEG o GIF",
@@ -319,5 +321,10 @@
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
-  "style": "Style"
+  "style": "Style",
+  "allowRecurringBookings": "Allow recurring bookings",
+  "disabled": "Disabled",
+  "optional": "Enabled (default optional)",
+  "required": "Aktiviert (default required)",
+  "subjectDefault": "Subject for bookings"
 }

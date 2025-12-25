@@ -149,6 +149,7 @@
   "errorTryAgain": "Er is iets fout gegaan. Probeer het later opnieuw.",
   "errorUnknown": "Onbekende fout, probeer het later opnieuw.",
   "errorValidateDomain": "Fout bij het verifiëren van domein {{domain}}: Zorg ervoor dat u de DNS TXT-record correct heeft ingesteld.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "Deze functie is momenteel niet beschikbaar.",
   "filter": "Filter",
@@ -177,6 +178,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "Uitloggen",
   "mailNotifications": "Mail notificaties",
+  "approvalNotifications": "Informeer mij via e-mail",
   "mangageOrgHeadline": "Beheer organisatie.",
   "map": "Kaart",
   "mapFileTypes": "PNG, JPEG of GIF",
@@ -319,5 +321,10 @@
   "userinfoLastnameField": "Gebruikersinfo Achternaam veld",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
-  "style": "Style"
+  "style": "Style",
+  "allowRecurringBookings": "Allow recurring bookings",
+  "disabled": "Disabled",
+  "optional": "Enabled (default optional)",
+  "required": "Aktiviert (default required)",
+  "subjectDefault": "Subject for bookings"
 }

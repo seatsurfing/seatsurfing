@@ -81,3 +81,46 @@ func TestUserPreferencesCRUDMany(t *testing.T) {
 	CheckTestString(t, "2", resBody2[0].Value)
 	CheckTestString(t, "3", resBody2[1].Value)
 }
+
+func TestUserPreferencesApprovalNotifications(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Test default value (should be "0" = false)
+	req := NewHTTPRequest("GET", "/preference/"+PreferenceApprovalNotifications.Name, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody string
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "0", resBody)
+
+	// Test setting to true
+	payload := `{"value": "1"}`
+	req = NewHTTPRequest("PUT", "/preference/"+PreferenceApprovalNotifications.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify it was set to true
+	req = NewHTTPRequest("GET", "/preference/"+PreferenceApprovalNotifications.Name, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 string
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestString(t, "1", resBody2)
+
+	// Test setting to false
+	payload = `{"value": "0"}`
+	req = NewHTTPRequest("PUT", "/preference/"+PreferenceApprovalNotifications.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify it was set to false
+	req = NewHTTPRequest("GET", "/preference/"+PreferenceApprovalNotifications.Name, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody3 string
+	json.Unmarshal(res.Body.Bytes(), &resBody3)
+	CheckTestString(t, "0", resBody3)
+}

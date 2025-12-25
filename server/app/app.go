@@ -44,6 +44,10 @@ func (a *App) InitializeDatabases() {
 	RunDBSchemaUpdates()
 	InitDefaultOrgSettings()
 	InitDefaultUserPreferences()
+	// Set up email logging callback
+	SetEmailLogCallback(func(subject, recipient, organizationID string) error {
+		return GetMailLogRepository().LogEmail(subject, recipient, organizationID)
+	})
 }
 
 func (a *App) InitializePlugins() {

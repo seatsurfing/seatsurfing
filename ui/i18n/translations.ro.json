@@ -149,6 +149,7 @@
   "errorTryAgain": "Something went wrong. Please try again later.",
   "errorUnknown": "Eroare necunoscută, te rog să încerci din nou mai târziu.",
   "errorValidateDomain": "Error verifying domain {{domain}}: Please ensure that you've set up the DNS TXT record correctly.",
+  "errorInPast": "Your booking cannot be in the past.",
   "every": "Every",
   "featureCurrentlyUnavailable": "This feature is currently unavailable.",
   "filter": "Filter",
@@ -177,6 +178,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "Log out",
   "mailNotifications": "Mail notifications",
+  "approvalNotifications": "Anunță-mă prin e-mail",
   "mangageOrgHeadline": "Manage organization.",
   "map": "Map",
   "mapFileTypes": "PNG, JPEG or GIF",
@@ -319,5 +321,10 @@
   "userinfoLastnameField": "Userinfo Lastname field",
   "spaceBookedInfo": "This space is already booked and not available in the selected date range.",
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
-  "style": "Style"
+  "style": "Style",
+  "allowRecurringBookings": "Allow recurring bookings",
+  "disabled": "Disabled",
+  "optional": "Enabled (default optional)",
+  "required": "Aktiviert (default required)",
+  "subjectDefault": "Subject for bookings"
 }

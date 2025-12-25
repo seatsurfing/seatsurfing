@@ -188,14 +188,22 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
-	if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
-		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
-		return
-	}
 	location, err := GetLocationRepository().GetOne(space.LocationID)
 	if err != nil {
 		SendBadRequest(w)
 		return
+	}
+	recurringBookingsAllowed, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingAllowRecurringBookings.Name)
+	if !recurringBookingsAllowed {
+		SendBadRequest(w)
+		return
+  }
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
+		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+			SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
+			return
+		}
 	}
 	requestUser := GetRequestUser(r)
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
@@ -413,7 +421,7 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 		"subject":       subject,
 	}
 	template := GetEmailTemplatePathRecurringBookingCreated()
-	if err := SendEmailWithAttachments(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments); err != nil {
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
 	}
