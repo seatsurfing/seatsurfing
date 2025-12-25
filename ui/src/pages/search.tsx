@@ -65,6 +65,8 @@ import RecurringBooking, {
 import AjaxError from "@/util/AjaxError";
 import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
+import "flatpickr/dist/themes/airbnb.css";
+import Flatpickr from "react-flatpickr";
 interface State {
   earliestEnterDate: Date;
   enter: Date;
@@ -1599,90 +1601,30 @@ class Search extends React.Component<Props, State> {
     }
     let enterDatePicker = (
       <div aria-label="Reservation start date">
-        <DateTimePicker
+        <Flatpickr
+          data-enable-time={!RuntimeConfig.INFOS.dailyBasisBooking}
           disabled={!this.state.locationId}
           value={this.state.enter}
-          onChange={(value: Date | null) => {
-            if (value != null) this.setEnterDate(value);
-          }}
-          clearIcon={null}
           required={true}
-          format={Formatting.getDateTimePickerFormatString()}
-          yearAriaLabel="Year"
-          monthAriaLabel="Month"
-          dayAriaLabel="Day"
-          hourAriaLabel="Start hour"
-          minuteAriaLabel="Start minute"
-          secondAriaLabel="Start second"
-          nativeInputAriaLabel="Start date"
-          calendarAriaLabel="Toggle start calendar"
+          onChange={([value]: Date[]) => {
+            if (value != null && value instanceof Date) this.setEnterDate(value);
+          }}
         />
       </div>
     );
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterDatePicker = (
-        <div aria-label="Reservation start date">
-          <DatePicker
-            disabled={!this.state.locationId}
-            value={this.state.enter}
-            onChange={(value: Date | null | [Date | null, Date | null]) => {
-              if (value != null) this.setEnterDate(value);
-            }}
-            clearIcon={null}
-            required={true}
-            format={Formatting.getDateTimePickerFormatDailyString()}
-            yearAriaLabel="Year"
-            monthAriaLabel="Month"
-            dayAriaLabel="Day"
-            nativeInputAriaLabel="Start date"
-            calendarAriaLabel="Toggle start calendar"
-          />
-        </div>
-      );
-    }
     let leaveDatePicker = (
       <div aria-label="Reservation end date">
-        <DateTimePicker
+        <Flatpickr
+          data-enable-time={!RuntimeConfig.INFOS.dailyBasisBooking}
           disabled={!this.state.locationId}
           value={this.state.leave}
-          onChange={(value: Date | null) => {
-            if (value != null) this.setLeaveDate(value);
-          }}
-          clearIcon={null}
           required={true}
-          format={Formatting.getDateTimePickerFormatString()}
-          yearAriaLabel="Year"
-          monthAriaLabel="Month"
-          dayAriaLabel="Day"
-          hourAriaLabel="End hour"
-          minuteAriaLabel="End minute"
-          secondAriaLabel="End second"
-          nativeInputAriaLabel="End date"
-          calendarAriaLabel="Toggle end calendar"
+          onChange={([value]: Date[]) => {
+            if (value != null && value instanceof Date) this.setLeaveDate(value);
+          }}
         />
       </div>
     );
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      leaveDatePicker = (
-        <div aria-label="Reservation end date">
-          <DatePicker
-            disabled={!this.state.locationId}
-            value={this.state.leave}
-            onChange={(value: Date | null | [Date | null, Date | null]) => {
-              if (value != null) this.setLeaveDate(value);
-            }}
-            clearIcon={null}
-            required={true}
-            format={Formatting.getDateTimePickerFormatDailyString()}
-            yearAriaLabel="Year"
-            monthAriaLabel="Month"
-            dayAriaLabel="Day"
-            nativeInputAriaLabel="End date"
-            calendarAriaLabel="Toggle end calendar"
-          />
-        </div>
-      );
-    }
 
     let listOrMap: React.JSX.Element;
     if (this.locations.length === 0 || !this.state.locationId) {
