@@ -24,7 +24,7 @@ import {
   IoExit as ExitIcon,
   IoLocation as LocationIcon,
   IoChevronUp as CollapseIcon,
-  IoChevronDown as CollapseIcon2,
+  IoChevronDown as CollapseIcon2,f
   IoSettings as SettingsIcon,
   IoMap as MapIcon,
   IoCalendar as WeekIcon,

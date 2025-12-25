@@ -22,9 +22,10 @@ import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
-import { Calendar, momentLocalizer, View } from "react-big-calendar";
+import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { IoCalendarNumber as CalenderIcon } from "react-icons/io5";
 
 interface State {
   loading: boolean;
@@ -239,23 +240,42 @@ class Bookings extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-signin">
-          <div className="d-xl-block d-none container-search-config">
-            <Form.Check
-              type="switch"
-              checked={this.state.calenderShow}
-              onChange={() => {
-                this.setState({ calenderShow: !this.state.calenderShow });
-              }}
-              label={"Calender"}
-              aria-label={"Calender"}
-              id="switch-control"
-            />
+          <div className="d-lg-block d-none container-search-config">
+            <div className="content" style={{ paddingTop: "5px" }}>
+              <Form>
+                <Form.Group className="d-flex margin-top-10">
+                  <div className="me-2">
+                    <CalenderIcon
+                      title={this.props.t("map")}
+                      color={"#555"}
+                      height="20px"
+                      width="20px"
+                    />
+                  </div>
+                  <div className="ms-2 w-100">
+                    <Form.Check
+                      style={{ textAlign: "start" }}
+                      type="switch"
+                      checked={this.state.calenderShow}
+                      onChange={() => {
+                        this.setState({
+                          calenderShow: !this.state.calenderShow,
+                        });
+                      }}
+                      label={"Calender"}
+                      aria-label={"Calender"}
+                      id="switch-control"
+                    />
+                  </div>
+                </Form.Group>
+              </Form>
+            </div>
           </div>
 
           {/* classic view */}
           <Form
             className={
-              !this.state.calenderShow ? "form-signin" : "form-signin d-xl-none"
+              !this.state.calenderShow ? "form-signin" : "form-signin d-lg-none"
             }
           >
             <ListGroup>
@@ -265,7 +285,7 @@ class Bookings extends React.Component<Props, State> {
 
           {/* calender view */}
           <div
-            className={this.state.calenderShow ? "d-none d-xl-block" : "d-none"}
+            className={this.state.calenderShow ? "d-none d-lg-block" : "d-none"}
             style={{ width: "100%" }}
           >
             <Calendar
