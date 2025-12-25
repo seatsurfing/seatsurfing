@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.50.0](https://github.com/seatsurfing/seatsurfing/compare/v1.49.2...v1.50.0) (2025-12-25)
+
+
+### Features
+
+* add mail log ([#1571](https://github.com/seatsurfing/seatsurfing/issues/1571)) ([a32bf23](https://github.com/seatsurfing/seatsurfing/commit/a32bf23de2c18c85a0d8222b9ed0ad9191395d41))
+* add setting to enable/disable recurring bookings ([#1570](https://github.com/seatsurfing/seatsurfing/issues/1570)) ([698e345](https://github.com/seatsurfing/seatsurfing/commit/698e345be2eba90c53976201c7ce3235f66cadf3))
+* configurable subject behaviour ([#1567](https://github.com/seatsurfing/seatsurfing/issues/1567)) ([6d0da2f](https://github.com/seatsurfing/seatsurfing/commit/6d0da2ffb00dfdcfb754016afa3161472290c5a3))
+* optional booking approver notifications ([#1573](https://github.com/seatsurfing/seatsurfing/issues/1573)) ([e1a8f59](https://github.com/seatsurfing/seatsurfing/commit/e1a8f591ab704f3df1f64b78752a50f6de66d702))
+
+
+### Bug Fixes
+
+* add error code if booking is in the past ([#1566](https://github.com/seatsurfing/seatsurfing/issues/1566)) ([a6ccdf2](https://github.com/seatsurfing/seatsurfing/commit/a6ccdf2ed34e60f087610db01c78fbf0bae50fa4))
+* anonymize mail log on org delete ([#1575](https://github.com/seatsurfing/seatsurfing/issues/1575)) ([0585f45](https://github.com/seatsurfing/seatsurfing/commit/0585f4527d691db346ecd5ff8d01635f9361bea0))
+* **deps:** bump eslint-config-next from 16.1.0 to 16.1.1 in /ui ([#1565](https://github.com/seatsurfing/seatsurfing/issues/1565)) ([976020c](https://github.com/seatsurfing/seatsurfing/commit/976020ccdd985c6f343db263f690510e9f33bebf))
+* **deps:** bump next from 16.1.0 to 16.1.1 in /ui ([#1564](https://github.com/seatsurfing/seatsurfing/issues/1564)) ([4eb0bfb](https://github.com/seatsurfing/seatsurfing/commit/4eb0bfbd06cc10e1b1dfa2558c993affbf57e1bb))
+* do not show "enter in future" error in booking interface for today ([#1568](https://github.com/seatsurfing/seatsurfing/issues/1568)) ([a048640](https://github.com/seatsurfing/seatsurfing/commit/a048640f4ead4791ea4b71799898255f3d9d77c0))
+* expand navigation on viewport "large" ([#1563](https://github.com/seatsurfing/seatsurfing/issues/1563)) ([441ca04](https://github.com/seatsurfing/seatsurfing/commit/441ca04503d214dcaf9806c3a9806b09d0c3969e))
+* fix element for "cancel all upcoming events" container ([#1561](https://github.com/seatsurfing/seatsurfing/issues/1561)) ([97b3d00](https://github.com/seatsurfing/seatsurfing/commit/97b3d00b5ba1b306cc79a9202016deb5fe145c63))
+* move "booking colors" to separate preference tab ([#1560](https://github.com/seatsurfing/seatsurfing/issues/1560)) ([9383a24](https://github.com/seatsurfing/seatsurfing/commit/9383a24cc6bbef429e2014a1ebc5375d7144f00b))
+* unify "Du", "Deine" ... in german translation ([#1574](https://github.com/seatsurfing/seatsurfing/issues/1574)) ([7eddc7f](https://github.com/seatsurfing/seatsurfing/commit/7eddc7f5797190a118e52ef84b0009509459922c))
+* update translations for bookings subject setting ([#1572](https://github.com/seatsurfing/seatsurfing/issues/1572)) ([1f4d52b](https://github.com/seatsurfing/seatsurfing/commit/1f4d52be7d24fd38d3de728c9a88752c14d1068b))
+
 ## [1.49.2](https://github.com/seatsurfing/seatsurfing/compare/v1.49.1...v1.49.2) (2025-12-19)
 
 
