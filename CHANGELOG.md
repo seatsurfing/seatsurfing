@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.50.1](https://github.com/seatsurfing/seatsurfing/compare/v1.50.0...v1.50.1) (2025-12-25)
+
+
+### Bug Fixes
+
+* mail log callback not invoked when using ACS ([#1577](https://github.com/seatsurfing/seatsurfing/issues/1577)) ([0092313](https://github.com/seatsurfing/seatsurfing/commit/0092313e5fc32728088f58ae82e172a1cba4880f))
+
 ## [1.50.0](https://github.com/seatsurfing/seatsurfing/compare/v1.49.2...v1.50.0) (2025-12-25)
 
 
