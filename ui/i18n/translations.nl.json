@@ -325,6 +325,6 @@
   "allowRecurringBookings": "Allow recurring bookings",
   "disabled": "Disabled",
   "optional": "Enabled (default optional)",
-  "required": "Aktiviert (default required)",
+  "required": "Enabled (default required)",
   "subjectDefault": "Subject for bookings"
 }
