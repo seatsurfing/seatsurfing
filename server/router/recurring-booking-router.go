@@ -197,7 +197,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 	if !recurringBookingsAllowed {
 		SendBadRequest(w)
 		return
-  }
+	}
 	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
 	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
 		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
@@ -414,7 +414,7 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 		subject = "—"
 	}
 	vars := map[string]string{
-		"recipientName": GetLocalPartFromEmailAddress(user.Email),
+		"recipientName": user.GetSafeRecipientName(),
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
 		"spaceName":     space.Name,
