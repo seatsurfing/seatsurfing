@@ -152,7 +152,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	req := NewHTTPRequest("POST", "/auth/initpwreset", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "Hallo "+user.Email+","))
+	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "Hallo "+user.GetSafeRecipientName()+","))
 
 	// Extract Confirm ID from email
 	rx := regexp.MustCompile(`/resetpw/([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})?/"`)
