@@ -10,11 +10,6 @@ import {
   Nav,
   Alert,
 } from "react-bootstrap";
-import DatePicker from "react-date-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
-import "react-date-picker/dist/DatePicker.css";
-import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
 import Loading from "../components/Loading";
 import {
   IoFilter as FilterIcon,
@@ -1606,7 +1601,8 @@ class Search extends React.Component<Props, State> {
           value={this.state.enter}
           required={true}
           onChange={(value: Date) => {
-            if (value != null && value instanceof Date) this.setEnterDate(value);
+            if (value != null && value instanceof Date)
+              this.setEnterDate(value);
           }}
         />
       </div>
@@ -1619,7 +1615,8 @@ class Search extends React.Component<Props, State> {
           value={this.state.leave}
           required={true}
           onChange={(value: Date) => {
-            if (value != null && value instanceof Date) this.setLeaveDate(value);
+            if (value != null && value instanceof Date)
+              this.setLeaveDate(value);
           }}
         />
       </div>
@@ -2218,7 +2215,7 @@ class Search extends React.Component<Props, State> {
                 {this.props.t("end")}:
               </Form.Label>
               <Col sm="8">
-                <DatePicker
+                <DateTimePicker
                   value={this.state.recurrence.end}
                   onChange={(
                     value: Date | null | [Date | null, Date | null],
@@ -2226,13 +2223,8 @@ class Search extends React.Component<Props, State> {
                     if (value != null) this.setRecurrenceEndDate(value);
                   }}
                   format={Formatting.getDateTimePickerFormatDailyString()}
-                  clearIcon={null}
+                  enableTime={false}
                   required={this.state.recurrence.active}
-                  yearAriaLabel="Year"
-                  monthAriaLabel="Month"
-                  dayAriaLabel="Day"
-                  nativeInputAriaLabel="Recurrence end date"
-                  calendarAriaLabel="Toggle recurrence end calendar"
                 />
               </Col>
             </Form.Group>

@@ -19,17 +19,18 @@ class DateTimePicker extends React.Component<Props, State> {
   render() {
     return (
       <Flatpickr
-          data-enable-time={this.props.enableTime}
-          disabled={this.props.disabled}
-          value={this.props.value}
-          required={this.props.required}
-          onChange={([value]: Date[]) => {
-            if (value != null && value instanceof Date) this.props.onChange(value);
-          }}
-          options={{
-            time_24hr: true,
-          }}
-        />
+        data-enable-time={this.props.enableTime}
+        disabled={this.props.disabled}
+        value={this.props.value}
+        required={this.props.required}
+        onChange={([value]: Date[]) => {
+          if (value != null && value instanceof Date)
+            this.props.onChange(value);
+        }}
+        options={{
+          time_24hr: true,
+        }}
+      />
     );
   }
 }
