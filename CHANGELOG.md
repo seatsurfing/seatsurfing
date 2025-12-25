@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.50.2](https://github.com/seatsurfing/seatsurfing/compare/v1.50.1...v1.50.2) (2025-12-25)
+
+
+### Bug Fixes
+
+* fix non German translation for required booking subject setting ([#1579](https://github.com/seatsurfing/seatsurfing/issues/1579)) ([0f2b641](https://github.com/seatsurfing/seatsurfing/commit/0f2b64149ed01aabae7cdeca90a3e2ff2f73edc5))
+* improve recipient name in emails ([#1581](https://github.com/seatsurfing/seatsurfing/issues/1581)) ([a6495ad](https://github.com/seatsurfing/seatsurfing/commit/a6495ad6fff03711a7d0d2eb55b993bb9ac6b3be))
+
 ## [1.50.1](https://github.com/seatsurfing/seatsurfing/compare/v1.50.0...v1.50.1) (2025-12-25)
 
 
