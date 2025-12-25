@@ -10,7 +10,6 @@ import {
   Nav,
   Alert,
 } from "react-bootstrap";
-import DateTimePicker from "react-datetime-picker";
 import DatePicker from "react-date-picker";
 import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-date-picker/dist/DatePicker.css";
@@ -65,8 +64,8 @@ import RecurringBooking, {
 import AjaxError from "@/util/AjaxError";
 import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
-import "flatpickr/dist/themes/airbnb.css";
-import Flatpickr from "react-flatpickr";
+import DateTimePicker from "@/components/DateTimePicker";
+
 interface State {
   earliestEnterDate: Date;
   enter: Date;
@@ -1601,12 +1600,12 @@ class Search extends React.Component<Props, State> {
     }
     let enterDatePicker = (
       <div aria-label="Reservation start date">
-        <Flatpickr
-          data-enable-time={!RuntimeConfig.INFOS.dailyBasisBooking}
+        <DateTimePicker
+          enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
-          onChange={([value]: Date[]) => {
+          onChange={(value: Date) => {
             if (value != null && value instanceof Date) this.setEnterDate(value);
           }}
         />
@@ -1614,12 +1613,12 @@ class Search extends React.Component<Props, State> {
     );
     let leaveDatePicker = (
       <div aria-label="Reservation end date">
-        <Flatpickr
-          data-enable-time={!RuntimeConfig.INFOS.dailyBasisBooking}
+        <DateTimePicker
+          enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
-          onChange={([value]: Date[]) => {
+          onChange={(value: Date) => {
             if (value != null && value instanceof Date) this.setLeaveDate(value);
           }}
         />
