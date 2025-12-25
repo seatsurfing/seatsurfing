@@ -305,7 +305,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		DisplayName: "Seatsurfing",
 	}
 	if GetConfig().MailService == "acs" {
-		return acsDialAndSend(recipient, sender, subject, "", body, attachments)
+		err = acsDialAndSend(recipient, sender, subject, "", body, attachments)
 	} else {
 		buf := bytes.NewBuffer(nil)
 		buf.WriteString(fmt.Sprintf("From: %s\n", sender.DisplayName+" <"+sender.Address+">"))
