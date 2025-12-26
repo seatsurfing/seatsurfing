@@ -211,12 +211,42 @@ class Bookings extends React.Component<Props, State> {
     }
 
     const CustomEvent = ({ event }: { event: Event }) => {
+      let pending = <></>;
+      if (event.booking.approved === false) {
+        pending = (
+          <>
+            <IconPending
+              className="feather"
+              style={{ width: "14px", height: "14px" }}
+            />
+            &nbsp;{this.props.t("approval")}: {this.props.t("pending")}
+            <br />
+          </>
+        );
+      }
+      let recurringIcon = <></>;
+      if (event.booking.isRecurring()) {
+        recurringIcon = (
+          <IconRecurring
+            className="feather recurring-booking-icon"
+            style={{ width: "14px", height: "14px" }}
+          />
+        );
+      }
+
       return (
-        <div>
-          <IconLocation className="feather" />{" "}
+        <div style={{ fontSize: "12px" }}>
+          {recurringIcon}
+          <p>
+            <strong>{event.booking.subject}</strong>
+          </p>
+          {pending}
+          <IconLocation
+            className="feather"
+            style={{ width: "14px", height: "14px" }}
+          />{" "}
           {event.booking.space.location.name}, {event.booking.space.name}
           <br />
-          {event.booking.subject}
         </div>
       );
     };
@@ -296,7 +326,15 @@ class Bookings extends React.Component<Props, State> {
               style={{ height: 500, width: "90%", margin: "auto" }}
               defaultView="week"
               date={this.state.calenderDate}
-              onNavigate={(date) => this.setState({ calenderDate: date })}
+              onNavigate={(newDate: Date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const navigateDate = new Date(newDate);
+                navigateDate.setHours(0, 0, 0, 0);
+                if (navigateDate >= today) {
+                  this.setState({ calenderDate: newDate });
+                }
+              }}
               onSelectEvent={(e) => {
                 this.onItemPress(e.booking);
               }}
