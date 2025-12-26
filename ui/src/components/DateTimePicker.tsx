@@ -35,6 +35,4 @@ class DateTimePicker extends React.Component<Props, State> {
   }
 }
 
-//export default Loading;
 export default withTranslation(DateTimePicker as any);
-//export default withTranslation(Loading as any) as unknown as React.Component<Props, State>;

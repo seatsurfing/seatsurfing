@@ -191,15 +191,17 @@ export default class RuntimeConfig {
   };
 
   static loadUserPreferences = async (): Promise<void> => {
-    UserPreference.list().then(list => {
-      list.forEach(pref => {
-        if (pref.name === "use_24_hour_time") {
-          RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
-        }
+    UserPreference.list()
+      .then((list) => {
+        list.forEach((pref) => {
+          if (pref.name === "use_24_hour_time") {
+            RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+          }
+        });
+      })
+      .catch(() => {
+        // Nothing to do
       });
-    }).catch(() => {
-      // Nothing to do
-    });
   };
 
   static setDetails = (username: string, id: string) => {
