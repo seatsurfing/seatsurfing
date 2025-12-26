@@ -152,7 +152,7 @@ class Search extends React.Component<Props, State> {
     this.leaveChangeTimer = undefined;
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
-        RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000
+        RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
     );
     this.recurrenceMaxEndDate.setHours(23, 59, 59, 0);
     this.state = {
@@ -232,7 +232,7 @@ class Search extends React.Component<Props, State> {
       this.initDates();
       if (this.state.locationId === "" && this.locations.length > 0) {
         let defaultLocationId = this.getPreferredLocationId(
-          (this.props.router.query["lid"] as string) || ""
+          (this.props.router.query["lid"] as string) || "",
         );
         let sidParam = (this.props.router.query["sid"] as string) || "";
         this.setState({ locationId: defaultLocationId }, () => {
@@ -305,7 +305,7 @@ class Search extends React.Component<Props, State> {
             {
               ...state,
             },
-            () => resolve()
+            () => resolve(),
           );
         })
         .catch((e) => reject(e));
@@ -331,7 +331,7 @@ class Search extends React.Component<Props, State> {
     if (
       this.state.prefLocationId &&
       this.locations.find(
-        (e) => e.id === this.state.prefLocationId && e.enabled
+        (e) => e.id === this.state.prefLocationId && e.enabled,
       ) !== undefined
     ) {
       return this.state.prefLocationId;
@@ -408,7 +408,7 @@ class Search extends React.Component<Props, State> {
         let buddyOptions = new Map<string, string>();
         buddyOptions.set("*", this.props.t("any"));
         this.buddies.forEach((buddy) =>
-          buddyOptions.set(buddy.id, buddy.buddy.email)
+          buddyOptions.set(buddy.id, buddy.buddy.email),
         );
         availableAttributes.unshift(
           new SpaceAttribute(
@@ -417,8 +417,8 @@ class Search extends React.Component<Props, State> {
             4,
             false,
             true,
-            buddyOptions
-          )
+            buddyOptions,
+          ),
         );
       }
       availableAttributes.unshift(
@@ -427,8 +427,8 @@ class Search extends React.Component<Props, State> {
           this.props.t("numFreeSpaces"),
           1,
           false,
-          true
-        )
+          true,
+        ),
       );
       availableAttributes.unshift(
         new SpaceAttribute(
@@ -436,8 +436,8 @@ class Search extends React.Component<Props, State> {
           this.props.t("numSpaces"),
           1,
           false,
-          true
-        )
+          true,
+        ),
       );
       this.availableAttributes = availableAttributes;
     });
@@ -470,7 +470,7 @@ class Search extends React.Component<Props, State> {
       locationId,
       this.state.enter,
       leave,
-      this.state.searchAttributesSpace
+      this.state.searchAttributesSpace,
     ).then((list) => {
       this.data = list;
     });
@@ -512,7 +512,7 @@ class Search extends React.Component<Props, State> {
     const MS_PER_HOUR = MS_PER_MINUTE * 60;
     const MS_PER_DAY = MS_PER_HOUR * 24;
     let bookingAdvanceDays = Math.floor(
-      (this.state.enter.getTime() - new Date().getTime()) / MS_PER_DAY
+      (this.state.enter.getTime() - new Date().getTime()) / MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
       res = false;
@@ -523,7 +523,7 @@ class Search extends React.Component<Props, State> {
     let bookingDurationHours =
       Math.floor(
         (this.state.leave.getTime() - this.state.enter.getTime()) /
-          MS_PER_MINUTE
+          MS_PER_MINUTE,
       ) / 60;
     if (
       bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours &&
@@ -550,7 +550,7 @@ class Search extends React.Component<Props, State> {
           canSearch: res,
           canSearchHint: hint,
         },
-        () => resolve()
+        () => resolve(),
       );
     });
   };
@@ -598,7 +598,7 @@ class Search extends React.Component<Props, State> {
           end: date,
         },
       },
-      () => this.onRecurrenceOptionsChanged()
+      () => this.onRecurrenceOptionsChanged(),
     );
   };
 
@@ -631,7 +631,7 @@ class Search extends React.Component<Props, State> {
       leave.setTime(date.getTime() + diff);
       const daySlider = Formatting.getDayDiff(
         date,
-        this.state.earliestEnterDate
+        this.state.earliestEnterDate,
       );
       const daySliderDisabled =
         daySlider > RuntimeConfig.INFOS.maxDaysInAdvance || daySlider < 0;
@@ -642,7 +642,7 @@ class Search extends React.Component<Props, State> {
           daySlider: daySlider,
           daySliderDisabled: daySliderDisabled,
         },
-        () => dateChangedCb()
+        () => dateChangedCb(),
       );
     };
     if (typeof window !== "undefined") {
@@ -679,7 +679,7 @@ class Search extends React.Component<Props, State> {
         {
           leave: date,
         },
-        () => dateChangedCb()
+        () => dateChangedCb(),
       );
     };
     if (typeof window !== "undefined") {
@@ -705,7 +705,7 @@ class Search extends React.Component<Props, State> {
               });
             });
           });
-      }
+      },
     );
   };
 
@@ -720,7 +720,7 @@ class Search extends React.Component<Props, State> {
           selectedSpace: item,
           cancelSeries: false,
         },
-        () => this.resetRecurrence()
+        () => this.resetRecurrence(),
       );
     } else {
       let bookings = Booking.createFromRawArray(item.rawBookings);
@@ -735,11 +735,11 @@ class Search extends React.Component<Props, State> {
 
   getAvailibilityStyle = (item: Space, bookings: Booking[]) => {
     const mydesk = bookings.find(
-      (b) => b.user.email === RuntimeConfig.INFOS.username
+      (b) => b.user.email === RuntimeConfig.INFOS.username,
     );
     const buddiesEmails = this.buddies.map((i) => i.buddy.email);
     const myBuddyDesk = bookings.find((b) =>
-      buddiesEmails.includes(b.user.email)
+      buddiesEmails.includes(b.user.email),
     );
 
     if (mydesk) {
@@ -767,14 +767,14 @@ class Search extends React.Component<Props, State> {
       prefWorkdayEndDate = Formatting.convertToFakeUTCDate(prefWorkdayEndDate);
 
       let leastEnter = bookings.reduce((a, b) =>
-        a.enter < b.enter ? a : b
+        a.enter < b.enter ? a : b,
       ).enter;
       if (leastEnter < prefWorkdayStartDate) {
         leastEnter = prefWorkdayStartDate;
       }
 
       let maxLeave = bookings.reduce((a, b) =>
-        a.leave > b.leave ? a : b
+        a.leave > b.leave ? a : b,
       ).leave;
       if (maxLeave > prefWorkdayEndDate) {
         maxLeave = prefWorkdayEndDate;
@@ -896,7 +896,7 @@ class Search extends React.Component<Props, State> {
         <p>
           <strong>
             {this.props.t(
-              myBooking ? "spaceBookedInfoMyBooking" : "spaceBookedInfo"
+              myBooking ? "spaceBookedInfoMyBooking" : "spaceBookedInfo",
             )}
           </strong>
         </p>
@@ -1068,7 +1068,7 @@ class Search extends React.Component<Props, State> {
     const createFormRow = (
       label: string,
       value: string,
-      key?: string | number
+      key?: string | number,
     ) => (
       <Form.Group as={Row} key={key}>
         <Form.Label column sm="4">
@@ -1083,7 +1083,7 @@ class Search extends React.Component<Props, State> {
     // attributes
     const attributeRows = this.state.attributeValues.map((attributeValue) => {
       const attribute = this.availableAttributes.find(
-        (attr) => attr.id === attributeValue.attributeId
+        (attr) => attr.id === attributeValue.attributeId,
       );
       if (!attribute) {
         return <></>;
@@ -1127,7 +1127,7 @@ class Search extends React.Component<Props, State> {
 
   getSearchFormInput = (
     type: "space" | "location",
-    attribute: SpaceAttribute
+    attribute: SpaceAttribute,
   ) => {
     const searchAttributes =
       type === "location"
@@ -1147,7 +1147,7 @@ class Search extends React.Component<Props, State> {
           }
           disabled={
             searchAttributes.find(
-              (attr) => attr.attributeId === attribute.id
+              (attr) => attr.attributeId === attribute.id,
             ) === undefined
           }
         />
@@ -1166,12 +1166,12 @@ class Search extends React.Component<Props, State> {
             this.setSearchAttributeValue(
               type,
               attribute.id,
-              e.target.checked ? "1" : "0"
+              e.target.checked ? "1" : "0",
             )
           }
           disabled={
             searchAttributes.find(
-              (attr) => attr.attributeId === attribute.id
+              (attr) => attr.attributeId === attribute.id,
             ) === undefined
           }
         />
@@ -1189,7 +1189,7 @@ class Search extends React.Component<Props, State> {
           }
           disabled={
             searchAttributes.find(
-              (attr) => attr.attributeId === attribute.id
+              (attr) => attr.attributeId === attribute.id,
             ) === undefined
           }
         />
@@ -1200,7 +1200,7 @@ class Search extends React.Component<Props, State> {
         options.push(
           <option value={k} key={k}>
             {v}
-          </option>
+          </option>,
         );
       });
       return (
@@ -1226,7 +1226,7 @@ class Search extends React.Component<Props, State> {
   setSearchAttributeComparator = (
     type: "space" | "location",
     attributeId: string,
-    comparator: string
+    comparator: string,
   ) => {
     let searchAttributes =
       type === "location"
@@ -1234,7 +1234,7 @@ class Search extends React.Component<Props, State> {
         : this.state.searchAttributesSpace;
     if (comparator === "") {
       searchAttributes = searchAttributes.filter(
-        (attr) => attr.attributeId !== attributeId
+        (attr) => attr.attributeId !== attributeId,
       );
       if (type === "space") {
         this.setState({ searchAttributesSpace: searchAttributes });
@@ -1244,7 +1244,7 @@ class Search extends React.Component<Props, State> {
       return;
     }
     let searchAttribute = searchAttributes.find(
-      (attr) => attr.attributeId === attributeId
+      (attr) => attr.attributeId === attributeId,
     );
     if (!searchAttribute) {
       searchAttribute = new SearchAttribute();
@@ -1268,7 +1268,7 @@ class Search extends React.Component<Props, State> {
   setSearchAttributeValue = (
     type: "space" | "location",
     attributeId: string,
-    value: string
+    value: string,
   ) => {
     let searchAttributes: SearchAttribute[];
     if (type === "space") {
@@ -1277,7 +1277,7 @@ class Search extends React.Component<Props, State> {
       searchAttributes = this.state.searchAttributesLocation;
     }
     let searchAttribute = searchAttributes.find(
-      (attr) => attr.attributeId === attributeId
+      (attr) => attr.attributeId === attributeId,
     );
     if (!searchAttribute) {
       searchAttribute = new SearchAttribute();
@@ -1317,14 +1317,14 @@ class Search extends React.Component<Props, State> {
             <Form.Select
               value={
                 searchAttributes.find(
-                  (attr) => attr.attributeId === attribute.id
+                  (attr) => attr.attributeId === attribute.id,
                 )?.comparator || ""
               }
               onChange={(e: any) =>
                 this.setSearchAttributeComparator(
                   type,
                   attribute.id,
-                  e.target.value
+                  e.target.value,
                 )
               }
             >
@@ -1367,7 +1367,7 @@ class Search extends React.Component<Props, State> {
       },
       () => {
         this.applySearch();
-      }
+      },
     );
   };
 
@@ -1383,7 +1383,7 @@ class Search extends React.Component<Props, State> {
     SearchAttribute.search(
       this.state.enter,
       leave,
-      this.state.searchAttributesLocation
+      this.state.searchAttributesLocation,
     ).then((locations) => {
       this.locations = locations;
       if (
@@ -1409,7 +1409,7 @@ class Search extends React.Component<Props, State> {
                 this.setState({ loading: false });
               });
           });
-        }
+        },
       );
     });
   };
@@ -1434,13 +1434,13 @@ class Search extends React.Component<Props, State> {
             confirmingBooking: false,
             showBookingNames: false,
           },
-          this.refreshPage
+          this.refreshPage,
         );
       },
       (reason: any) => {
         if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
           window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t)
+            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
@@ -1451,9 +1451,9 @@ class Search extends React.Component<Props, State> {
             confirmingBooking: false,
             showBookingNames: false,
           },
-          this.refreshPage
+          this.refreshPage,
         );
-      }
+      },
     );
   };
 
@@ -1572,7 +1572,7 @@ class Search extends React.Component<Props, State> {
               {
                 recurrence: { ...this.state.recurrence, weekdays: newWorkdays },
               },
-              () => this.onRecurrenceOptionsChanged()
+              () => this.onRecurrenceOptionsChanged(),
             );
           }}
           style={{ marginRight: "5px" }}
@@ -1854,7 +1854,7 @@ class Search extends React.Component<Props, State> {
             </div>
             <div className="ms-2 w-100">
               {Formatting.getFormatterShort().format(
-                Formatting.convertToFakeUTCDate(new Date(this.state.enter))
+                Formatting.convertToFakeUTCDate(new Date(this.state.enter)),
               )}
             </div>
           </div>
@@ -1869,7 +1869,7 @@ class Search extends React.Component<Props, State> {
             </div>
             <div className="ms-2 w-100">
               {Formatting.getFormatterShort().format(
-                Formatting.convertToFakeUTCDate(new Date(this.state.leave))
+                Formatting.convertToFakeUTCDate(new Date(this.state.leave)),
               )}
             </div>
           </div>
@@ -2094,13 +2094,13 @@ class Search extends React.Component<Props, State> {
     confirmModalRows.push({
       label: this.props.t("enter"),
       value: formatter.format(
-        Formatting.convertToFakeUTCDate(new Date(this.state.enter))
+        Formatting.convertToFakeUTCDate(new Date(this.state.enter)),
       ),
     });
     confirmModalRows.push({
       label: this.props.t("leave"),
       value: formatter.format(
-        Formatting.convertToFakeUTCDate(new Date(this.state.leave))
+        Formatting.convertToFakeUTCDate(new Date(this.state.leave)),
       ),
     });
     confirmModalRows.push({
@@ -2111,10 +2111,10 @@ class Search extends React.Component<Props, State> {
     });
     this.state.selectedSpace?.attributes.forEach((attribute) => {
       const attributeName = this.availableAttributes.find(
-        (attr) => attr.id === attribute.attributeId
+        (attr) => attr.id === attribute.attributeId,
       )?.label;
       const attributeType = this.availableAttributes.find(
-        (attr) => attr.id === attribute.attributeId
+        (attr) => attr.id === attribute.attributeId,
       )?.type;
       if (attributeType === 2) {
         confirmModalRows.push({
@@ -2168,7 +2168,7 @@ class Search extends React.Component<Props, State> {
                   placeholder={this.props.t(
                     this.state.selectedSpace?.requireSubject
                       ? "subject"
-                      : "subjectOptional"
+                      : "subjectOptional",
                   )}
                   value={this.state.subject}
                   onChange={(e: any) =>
@@ -2205,7 +2205,7 @@ class Search extends React.Component<Props, State> {
                           active: window.parseInt(e.target.value) !== 0,
                         },
                       },
-                      () => this.onRecurrenceOptionsChanged()
+                      () => this.onRecurrenceOptionsChanged(),
                     );
                   }}
                 >
@@ -2240,7 +2240,7 @@ class Search extends React.Component<Props, State> {
                             cycle: window.parseInt(e.target.value),
                           },
                         },
-                        () => this.onRecurrenceOptionsChanged()
+                        () => this.onRecurrenceOptionsChanged(),
                       );
                     }}
                   />
@@ -2280,7 +2280,7 @@ class Search extends React.Component<Props, State> {
                 <DatePicker
                   value={this.state.recurrence.end}
                   onChange={(
-                    value: Date | null | [Date | null, Date | null]
+                    value: Date | null | [Date | null, Date | null],
                   ) => {
                     if (value != null) this.setRecurrenceEndDate(value);
                   }}
@@ -2409,11 +2409,11 @@ class Search extends React.Component<Props, State> {
     let bookings: Booking[] = [];
     if (this.state.selectedSpace) {
       bookings = Booking.createFromRawArray(
-        this.state.selectedSpace.rawBookings
+        this.state.selectedSpace.rawBookings,
       );
     }
     const myBooking = bookings.find(
-      (b) => b.user.email === RuntimeConfig.INFOS.username
+      (b) => b.user.email === RuntimeConfig.INFOS.username,
     );
     let gotoBooking;
     if (myBooking) {

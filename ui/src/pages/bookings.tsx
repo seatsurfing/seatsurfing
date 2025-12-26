@@ -99,13 +99,13 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData
+          this.loadData,
         );
       },
       (reason: any) => {
         if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
           window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t)
+            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
@@ -116,9 +116,9 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData
+          this.loadData,
         );
-      }
+      },
     );
   };
 
@@ -411,7 +411,7 @@ class Bookings extends React.Component<Props, State> {
                   getIcal(this.state.selectedItem.recurringId, true);
                 } else {
                   getIcal(
-                    this.state.selectedItem ? this.state.selectedItem.id : ""
+                    this.state.selectedItem ? this.state.selectedItem.id : "",
                   );
                 }
               }}
