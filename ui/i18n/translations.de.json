@@ -180,6 +180,8 @@
   "logout": "Abmelden",
   "mailNotifications": "E-Mail-Benachrichtigungen",
   "approvalNotifications": "Per E-Mail benachrichtigen",
+  "timeFormat": "Zeitformat",
+  "use24HourTime": "24-Stunden-Format verwenden",
   "mangageOrgHeadline": "Organisation verwalten.",
   "map": "Karte",
   "mapFileTypes": "PNG, JPEG oder GIF",

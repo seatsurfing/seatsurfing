@@ -326,5 +326,7 @@
   "disabled": "Disabled",
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
-  "subjectDefault": "Subject for bookings"
+  "subjectDefault": "Subject for bookings",
+  "timeFormat": "Time format",
+  "use24HourTime": "Use 24-hour time format"
 }

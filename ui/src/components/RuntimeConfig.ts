@@ -36,6 +36,7 @@ interface RuntimeUserInfos {
   disablePasswordLogin: boolean;
   allowRecurringBookings: boolean;
   subjectDefault: number;
+  use24HourTime: boolean;
 }
 
 export default class RuntimeConfig {
@@ -77,6 +78,7 @@ export default class RuntimeConfig {
       disablePasswordLogin: false,
       allowRecurringBookings: true,
       subjectDefault: 2,
+      use24HourTime: true,
     };
   };
 
@@ -187,6 +189,17 @@ export default class RuntimeConfig {
     });
   };
 
+  static loadUserPreferences = async (): Promise<void> => {
+    return Ajax.get("/preference/use_24_hour_time")
+      .then((res) => {
+        RuntimeConfig.INFOS.use24HourTime = res.json === "1";
+      })
+      .catch(() => {
+        // If preference doesn't exist, use default (true)
+        RuntimeConfig.INFOS.use24HourTime = true;
+      });
+  };
+
   static setDetails = (username: string, id: string) => {
     RuntimeConfig.loadSettings().then(() => {
       RuntimeConfig.INFOS.username = username;
@@ -210,7 +223,9 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.orgAdmin = user.admin;
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
       RuntimeConfig.setDetails(user.email, user.id);
-      return RuntimeConfig.loadSettings();
+      return RuntimeConfig.loadSettings().then(() => {
+        return RuntimeConfig.loadUserPreferences();
+      });
     });
   };
 

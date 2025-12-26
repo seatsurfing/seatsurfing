@@ -47,6 +47,7 @@ interface State {
   caldavCalendarsLoaded: boolean;
   caldavError: boolean;
   mailNotifications: boolean;
+  use24HourTime: boolean;
 }
 
 interface Props {
@@ -94,6 +95,7 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
       caldavError: false,
       mailNotifications: false,
+      use24HourTime: true,
     };
   }
 
@@ -144,6 +146,8 @@ class Preferences extends React.Component<Props, State> {
             if (s.name === "caldav_path") state.caldavCalendar = s.value;
             if (s.name === "mail_notifications")
               state.mailNotifications = s.value === "1";
+            if (s.name === "use_24_hour_time")
+              state.use24HourTime = s.value === "1";
           });
           self.setState(
             {
@@ -191,6 +195,10 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference(
         "mail_notifications",
         this.state.mailNotifications ? "1" : "0",
+      ),
+      new UserPreference(
+        "use_24_hour_time",
+        this.state.use24HourTime ? "1" : "0",
       ),
       new UserPreference("location_id", this.state.locationId),
     ];
@@ -540,6 +548,20 @@ class Preferences extends React.Component<Props, State> {
                     checked={this.state.mailNotifications}
                     onChange={(e: any) =>
                       this.setState({ mailNotifications: e.target.checked })
+                    }
+                  />
+                </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label>{this.props.t("timeFormat")}</Form.Label>
+                <div className="text-left">
+                  <Form.Check
+                    type="checkbox"
+                    id="use24HourTime"
+                    label={this.props.t("use24HourTime")}
+                    checked={this.state.use24HourTime}
+                    onChange={(e: any) =>
+                      this.setState({ use24HourTime: e.target.checked })
                     }
                   />
                 </div>
