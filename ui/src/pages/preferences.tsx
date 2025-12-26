@@ -204,9 +204,11 @@ class Preferences extends React.Component<Props, State> {
     ];
     UserPreference.setAll(payload)
       .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
+        RuntimeConfig.loadUserPreferences().then(() => {
+          this.setState({
+            submitting: false,
+            saved: true,
+          });
         });
       })
       .catch(() => {

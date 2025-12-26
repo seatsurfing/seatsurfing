@@ -1,6 +1,7 @@
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
+import UserPreference from "@/types/UserPreference";
 
 interface RuntimeUserInfos {
   username: string;
@@ -190,14 +191,15 @@ export default class RuntimeConfig {
   };
 
   static loadUserPreferences = async (): Promise<void> => {
-    return Ajax.get("/preference/use_24_hour_time")
-      .then((res) => {
-        RuntimeConfig.INFOS.use24HourTime = res.json === "1";
-      })
-      .catch(() => {
-        // If preference doesn't exist, use default (true)
-        RuntimeConfig.INFOS.use24HourTime = true;
+    UserPreference.list().then(list => {
+      list.forEach(pref => {
+        if (pref.name === "use_24_hour_time") {
+          RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+        }
       });
+    }).catch(() => {
+      // Nothing to do
+    });
   };
 
   static setDetails = (username: string, id: string) => {

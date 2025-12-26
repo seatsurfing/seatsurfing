@@ -28,7 +28,7 @@ class DateTimePicker extends React.Component<Props, State> {
             this.props.onChange(value);
         }}
         options={{
-          time_24hr: true,
+          time_24hr: RuntimeConfig.INFOS.use24HourTime,
         }}
       />
     );
