@@ -332,5 +332,6 @@
   "previous": "Vorherige",
   "date": "Datum",
   "time": "Uhrzeit",
-  "noEventsInRange": "Im gewählten Zeitraum gibt es keine Buchungen."
+  "noEventsInRange": "Im gewählten Zeitraum gibt es keine Buchungen.",
+  "recurring": "wiederkehrend"
 }

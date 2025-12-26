@@ -197,10 +197,18 @@ class Bookings extends React.Component<Props, State> {
 
     const calenderEvents: Event[] = [];
     for (const item of this.data) {
+      let title = `${item.space.location.name} (${item.space.name})`;
+      if (item.subject) {
+        title += `, ${item.subject}`;
+      }
+      if (item.isRecurring()) {
+        title += ` (${this.props.t("recurring")})`;
+      }
+
       calenderEvents.push({
         start: item.enter,
         end: item.leave,
-        title: `${item.space.location.name}: ${item.space.name}${item.subject ? `\n${item.subject}` : ""}`, // used in tooltip
+        title, // used in tooltip
         booking: item,
       });
     }
@@ -211,13 +219,21 @@ class Bookings extends React.Component<Props, State> {
     }
 
     const CustomEvent = ({ event }: { event: Event }) => {
+      // show no information for events < 1 hr
+      if (
+        event.booking.leave.getTime() - event.booking.enter.getTime() <=
+        60 * 60 * 1000
+      ) {
+        return null;
+      }
+
       let pending = <></>;
       if (event.booking.approved === false) {
         pending = (
           <>
             <IconPending
               className="feather"
-              style={{ width: "14px", height: "14px" }}
+              style={{ width: "12px", height: "12px" }}
             />
             &nbsp;{this.props.t("approval")}: {this.props.t("pending")}
             <br />
@@ -229,7 +245,7 @@ class Bookings extends React.Component<Props, State> {
         recurringIcon = (
           <IconRecurring
             className="feather recurring-booking-icon"
-            style={{ width: "14px", height: "14px" }}
+            style={{ width: "12px", height: "12px", top: "4px", right: "4px" }}
           />
         );
       }
@@ -237,13 +253,13 @@ class Bookings extends React.Component<Props, State> {
       return (
         <div style={{ fontSize: "12px" }}>
           {recurringIcon}
-          <p>
+          <p hidden={!event.booking.subject}>
             <strong>{event.booking.subject}</strong>
           </p>
           {pending}
           <IconLocation
             className="feather"
-            style={{ width: "14px", height: "14px" }}
+            style={{ width: "12px", height: "12px" }}
           />{" "}
           {event.booking.space.location.name}, {event.booking.space.name}
           <br />
@@ -263,7 +279,7 @@ class Bookings extends React.Component<Props, State> {
     };
 
     moment.tz.setDefault("UTC");
-    moment.locale("de-DE");
+    moment.locale(Formatting.Language);
     const calenderLocalizer = momentLocalizer(moment);
 
     return (
