@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.50.3](https://github.com/seatsurfing/seatsurfing/compare/v1.50.2...v1.50.3) (2025-12-27)
+
+
+### Bug Fixes
+
+* **deps:** bump excellentexport from 3.9.10 to 3.9.11 in /ui ([#1584](https://github.com/seatsurfing/seatsurfing/issues/1584)) ([436f236](https://github.com/seatsurfing/seatsurfing/commit/436f236cc19fc51acc772ed25482834830e88d33))
+
 ## [1.50.2](https://github.com/seatsurfing/seatsurfing/compare/v1.50.1...v1.50.2) (2025-12-25)
 
 
