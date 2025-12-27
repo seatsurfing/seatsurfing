@@ -308,8 +308,8 @@ class Bookings extends React.Component<Props, State> {
                           calendarShow: !this.state.calendarShow,
                         });
                       }}
-                      label={"Calendar"}
-                      aria-label={"Calendar"}
+                      label={this.props.t("calendar")}
+                      aria-label={this.props.t("calendar")}
                       id="switch-control"
                     />
                   </div>
