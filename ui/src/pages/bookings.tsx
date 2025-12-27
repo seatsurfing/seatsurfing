@@ -1,19 +1,24 @@
 import React from "react";
 import Loading from "../components/Loading";
 import { Button, Form, ListGroup, Modal } from "react-bootstrap";
+import Link from "next/link";
 import {
+  Loader as IconLoad,
+  Calendar as IconCalendar,
   LogIn as IconEnter,
   LogOut as IconLeave,
   MapPin as IconLocation,
   Clock as IconPending,
   RefreshCw as IconRecurring,
+  Trello as IconTrello,
+  ArrowLeft as IconArrowLeft,
+  ArrowRight as IconArrowRight,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import ErrorText from "@/types/ErrorText";
-import { Loader as IconLoad, Calendar as IconCalendar } from "react-feather";
 import { getIcal } from "@/components/Ical";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Booking from "@/types/Booking";
@@ -22,7 +27,7 @@ import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import { Calendar, momentLocalizer, ToolbarProps } from "react-big-calendar";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
@@ -99,13 +104,13 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData,
+          this.loadData
         );
       },
       (reason: any) => {
         if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
           window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
+            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t)
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
@@ -116,9 +121,9 @@ class Bookings extends React.Component<Props, State> {
             deletingItem: false,
             loading: true,
           },
-          this.loadData,
+          this.loadData
         );
-      },
+      }
     );
   };
 
@@ -267,6 +272,65 @@ class Bookings extends React.Component<Props, State> {
       );
     };
 
+    const CustomToolbar = (toolbar: ToolbarProps) => {
+      const goToBack = () => {
+        toolbar.onNavigate("PREV");
+      };
+
+      const goToNext = () => {
+        toolbar.onNavigate("NEXT");
+      };
+
+      const goToToday = () => {
+        toolbar.onNavigate("TODAY");
+      };
+
+      const weekStart = moment(toolbar.date).clone().startOf("week");
+      const weekEnd = moment(toolbar.date).clone().endOf("week");
+      const formatter = Formatting.getFormatterDate();
+
+      return (
+        <div
+          className="custom-toolbar"
+          style={{ marginBottom: "5px", textAlign: "left" }}
+        >
+          <Link
+            href="#"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={goToToday}
+          >
+            <IconTrello className="feather" /> {this.props.t("today")}
+          </Link>{" "}
+          <Link
+            href="#"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={goToBack}
+          >
+            <IconArrowLeft className="feather" />
+          </Link>{" "}
+          <Link
+            href="#"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={goToNext}
+          >
+            <IconArrowRight className="feather" />
+          </Link>{" "}
+          <span
+            className="toolbar-label"
+            style={{
+              display: "flex",
+              float: "right",
+              height: "100%",
+              alignItems: "center",
+            }}
+          >
+            {formatter.format(weekStart.toDate())} -{" "}
+            {formatter.format(weekEnd.toDate())}
+          </span>
+        </div>
+      );
+    };
+
     const calendarMessages = {
       today: this.props.t("today"),
       previous: this.props.t("previous"),
@@ -359,6 +423,7 @@ class Bookings extends React.Component<Props, State> {
               length={7}
               views={["week"]}
               components={{
+                toolbar: CustomToolbar,
                 event: CustomEvent,
               }}
               scrollToTime={new Date(Date.UTC(1970, 1, 1, 8, 0, 0))}
@@ -411,7 +476,7 @@ class Bookings extends React.Component<Props, State> {
                   getIcal(this.state.selectedItem.recurringId, true);
                 } else {
                   getIcal(
-                    this.state.selectedItem ? this.state.selectedItem.id : "",
+                    this.state.selectedItem ? this.state.selectedItem.id : ""
                   );
                 }
               }}
