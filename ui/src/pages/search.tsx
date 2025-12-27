@@ -151,8 +151,10 @@ class Search extends React.Component<Props, State> {
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
     );
     this.recurrenceMaxEndDate.setHours(23, 59, 59, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     this.state = {
-      earliestEnterDate: new Date(),
+      earliestEnterDate: today,
       enter: new Date(),
       leave: new Date(),
       locationId: "",
@@ -1600,6 +1602,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
+          minDate={this.state.earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date)
               this.setEnterDate(value);
@@ -1614,6 +1617,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
+          minDate={this.state.earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date)
               this.setLeaveDate(value);
