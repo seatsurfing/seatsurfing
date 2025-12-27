@@ -39,6 +39,7 @@ var (
 	PreferenceCalDAVPath            PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
 	PreferenceMailNotifications     PreferenceName = PreferenceName{Name: "mail_notifications", Type: SettingTypeBool}
 	PreferenceApprovalNotifications PreferenceName = PreferenceName{Name: "approval_notifications", Type: SettingTypeBool}
+	Preference24HourTime            PreferenceName = PreferenceName{Name: "use_24_hour_time", Type: SettingTypeBool}
 )
 
 var (
@@ -150,7 +151,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 		"($1, '"+PreferencePartiallyBookedColor.Name+"', '#ff9100'), "+
 		"($1, '"+PreferenceBuddyBookedColor.Name+"', '#2415c5'), "+
 		"($1, '"+PreferenceDisallowedColor.Name+"', '#eeeeee'), "+
-		"($1, '"+PreferenceApprovalNotifications.Name+"', '0') "+
+		"($1, '"+PreferenceApprovalNotifications.Name+"', '0'), "+
+		"($1, '"+Preference24HourTime.Name+"', '1') "+
 		"ON CONFLICT (user_id, name) DO NOTHING",
 		userID)
 	return err
