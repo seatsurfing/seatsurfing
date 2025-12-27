@@ -25,15 +25,15 @@ import RedirectUtil from "@/util/RedirectUtil";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { IoCalendarNumber as CalenderIcon } from "react-icons/io5";
+import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
 
 interface State {
   loading: boolean;
   deletingItem: boolean;
   selectedItem: Booking | null;
   cancelSeries: boolean;
-  calenderDate: Date;
-  calenderShow: boolean;
+  calendarDate: Date;
+  calendarShow: boolean;
 }
 
 interface Props {
@@ -52,8 +52,8 @@ class Bookings extends React.Component<Props, State> {
       deletingItem: false,
       selectedItem: null,
       cancelSeries: false,
-      calenderDate: new Date(),
-      calenderShow: true,
+      calendarDate: new Date(),
+      calendarShow: true,
     };
   }
 
@@ -195,7 +195,7 @@ class Bookings extends React.Component<Props, State> {
       booking: Booking;
     };
 
-    const calenderEvents: Event[] = [];
+    const calendarEvents: Event[] = [];
     for (const item of this.data) {
       let title = `${item.space.location.name} (${item.space.name})`;
       if (item.subject) {
@@ -205,7 +205,7 @@ class Bookings extends React.Component<Props, State> {
         title += ` (${this.props.t("recurring")})`;
       }
 
-      calenderEvents.push({
+      calendarEvents.push({
         start: item.enter,
         end: item.leave,
         title, // used in tooltip
@@ -280,7 +280,7 @@ class Bookings extends React.Component<Props, State> {
 
     moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
-    const calenderLocalizer = momentLocalizer(moment);
+    const calendarLocalizer = momentLocalizer(moment);
 
     return (
       <>
@@ -291,7 +291,7 @@ class Bookings extends React.Component<Props, State> {
               <Form>
                 <Form.Group className="d-flex margin-top-10">
                   <div className="me-2">
-                    <CalenderIcon
+                    <CalendarIcon
                       title={this.props.t("map")}
                       color={"#555"}
                       height="20px"
@@ -302,14 +302,14 @@ class Bookings extends React.Component<Props, State> {
                     <Form.Check
                       style={{ textAlign: "start" }}
                       type="switch"
-                      checked={this.state.calenderShow}
+                      checked={this.state.calendarShow}
                       onChange={() => {
                         this.setState({
-                          calenderShow: !this.state.calenderShow,
+                          calendarShow: !this.state.calendarShow,
                         });
                       }}
-                      label={"Calender"}
-                      aria-label={"Calender"}
+                      label={"Calendar"}
+                      aria-label={"Calendar"}
                       id="switch-control"
                     />
                   </div>
@@ -321,7 +321,7 @@ class Bookings extends React.Component<Props, State> {
           {/* classic view */}
           <Form
             className={
-              !this.state.calenderShow ? "form-signin" : "form-signin d-lg-none"
+              !this.state.calendarShow ? "form-signin" : "form-signin d-lg-none"
             }
           >
             <ListGroup>
@@ -329,26 +329,26 @@ class Bookings extends React.Component<Props, State> {
             </ListGroup>
           </Form>
 
-          {/* calender view */}
+          {/* calendar view */}
           <div
-            className={this.state.calenderShow ? "d-none d-lg-block" : "d-none"}
+            className={this.state.calendarShow ? "d-none d-lg-block" : "d-none"}
             style={{ width: "100%" }}
           >
             <Calendar
-              localizer={calenderLocalizer}
-              events={calenderEvents}
+              localizer={calendarLocalizer}
+              events={calendarEvents}
               startAccessor="start"
               endAccessor="end"
               style={{ height: 500, width: "90%", margin: "auto" }}
               defaultView="week"
-              date={this.state.calenderDate}
+              date={this.state.calendarDate}
               onNavigate={(newDate: Date) => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const navigateDate = new Date(newDate);
                 navigateDate.setHours(0, 0, 0, 0);
                 if (navigateDate >= today) {
-                  this.setState({ calenderDate: newDate });
+                  this.setState({ calendarDate: newDate });
                 }
               }}
               onSelectEvent={(e) => {
