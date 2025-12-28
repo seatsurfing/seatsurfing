@@ -694,7 +694,7 @@ class Settings extends React.Component<Props, State> {
             </Form.Label>
             <Col sm="4">
               <p className="form-control-plaintext">
-                {this.org?.name}
+                {this.org?.name} ({this.org?.language})
                 <br />
                 {this.org?.contactFirstname} {this.org?.contactLastname} (
                 {this.org?.contactEmail})
