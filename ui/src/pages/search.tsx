@@ -1595,6 +1595,8 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     }
+    let minDate = new Date(this.state.earliestEnterDate);
+    minDate.setHours(0, 0, 0, 0);
     let enterDatePicker = (
       <div aria-label="Reservation start date">
         <DateTimePicker
@@ -1602,7 +1604,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
-          minDate={this.state.earliestEnterDate}
+          minDate={minDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date)
               this.setEnterDate(value);
@@ -1617,7 +1619,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
-          minDate={this.state.earliestEnterDate}
+          minDate={minDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date)
               this.setLeaveDate(value);

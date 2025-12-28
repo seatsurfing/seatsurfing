@@ -43,7 +43,6 @@ class DateTimePicker extends React.Component<Props, State> {
       return;
     }
       try {
-        console.log("Loading locale:", lang);
         const localeModule = await import(`flatpickr/dist/l10n/${lang}.js`);
         const name = Object.keys(localeModule)[0];
         this.setState({ locale: localeModule[name] });
@@ -70,7 +69,6 @@ class DateTimePicker extends React.Component<Props, State> {
         options={{
           time_24hr: RuntimeConfig.INFOS.use24HourTime,
           minDate: this.props.minDate,
-          minTime: "00:00:00",
           maxDate: this.props.maxDate,
           locale: this.state.locale,
         }}
