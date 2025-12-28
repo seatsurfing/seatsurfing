@@ -9,7 +9,7 @@ interface State {
   loading: boolean;
   complete: boolean;
   success: boolean;
-  orgContactEmail: string;
+  code: string;
 }
 
 interface Props {
@@ -24,19 +24,19 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
       loading: false,
       complete: false,
       success: false,
-      orgContactEmail: "",
+      code: "",
     };
   }
 
   onDeleteOrgSubmit = (e: any) => {
     e.preventDefault();
     const { id } = this.props.router.query;
-    if (!id || this.state.orgContactEmail.length < 3) {
+    if (!id || this.state.code?.length < 6) {
       return;
     }
     this.setState({ loading: true, complete: false, success: false });
     let payload = {
-      orgContactEmail: this.state.orgContactEmail,
+      code: this.state.code,
     };
 
     Ajax.postData("/organization/deleteorg/" + id, payload)
@@ -73,18 +73,18 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <Form.Group>
             <Form.Control
-              type="email"
-              placeholder={this.props.t("emailPlaceholder")}
-              value={this.state.orgContactEmail}
+              type="text"
+              placeholder="XXXXXX"
+              value={this.state.code}
               onChange={(e: any) =>
                 this.setState({
-                  orgContactEmail: e.target.value,
+                  code: e.target.value,
                   complete: false,
                 })
               }
               required={true}
               autoFocus={true}
-              minLength={3}
+              minLength={6}
               disabled={this.state.loading}
               isInvalid={this.state.complete && !this.state.success}
             />

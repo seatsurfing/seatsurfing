@@ -55,7 +55,16 @@ type ChangeEmailAddressVerifyRequest struct {
 }
 
 type CompleteOrgDeletionRequest struct {
-	OrgContactEmail string `json:"orgContactEmail" validate:"required,min=3"`
+	Code string `json:"code" validate:"required,numeric"`
+}
+
+type DeleteOrgResponse struct {
+	Code string `json:"code"`
+}
+
+type AuthStateOrgDeletionRequestPayload struct {
+	OrganizationID string `json:"organizationId" validate:"required,min=3"`
+	Code           string `json:"code" validate:"required,numeric"`
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
@@ -459,18 +468,37 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 	}
 
 	// send confirmation mail
+	code := strconv.Itoa(GetRandomNumber(100000, 999999)) // Random 6-digit code
+	payload := &AuthStateOrgDeletionRequestPayload{
+		OrganizationID: e.ID,
+		Code:           code,
+	}
 	authState := &AuthState{
 		AuthProviderID: GetSettingsRepository().GetNullUUID(),
 		Expiry:         time.Now().Add(time.Hour * 1),
 		AuthStateType:  AuthDeleteOrg,
-		Payload:        e.ID,
+		Payload:        marshalAuthStateOrgDeletionRequestPayload(payload),
 	}
 	GetAuthStateRepository().Create(authState)
 	if err := router.SendOrgConfirmDeleteOrgEmail(user, authState.ID, e); err != nil {
 		log.Printf("Confirm org delete email failed: %s\n", err)
 	}
 
-	SendUpdated(w)
+	res := DeleteOrgResponse{
+		Code: code,
+	}
+	SendJSON(w, res)
+}
+
+func marshalAuthStateOrgDeletionRequestPayload(payload *AuthStateOrgDeletionRequestPayload) string {
+	json, _ := json.Marshal(payload)
+	return string(json)
+}
+
+func unmarshalAuthStateOrgDeletionRequestPayload(payload string) *AuthStateOrgDeletionRequestPayload {
+	var o *AuthStateOrgDeletionRequestPayload
+	json.Unmarshal([]byte(payload), &o)
+	return o
 }
 
 func (router *OrganizationRouter) completeOrgDeletion(w http.ResponseWriter, r *http.Request) {
@@ -483,6 +511,8 @@ func (router *OrganizationRouter) completeOrgDeletion(w http.ResponseWriter, r *
 		SendBadRequest(w)
 		return
 	}
+
+	// test auth state
 	vars := mux.Vars(r)
 	authState, err := GetAuthStateRepository().GetOne(vars["id"])
 	if err != nil {
@@ -493,16 +523,20 @@ func (router *OrganizationRouter) completeOrgDeletion(w http.ResponseWriter, r *
 		SendNotFound(w)
 		return
 	}
-	organization, err := GetOrganizationRepository().GetOne(authState.Payload)
+	payload := unmarshalAuthStateOrgDeletionRequestPayload(authState.Payload)
+	if payload.Code != m.Code {
+		SendNotFound(w)
+		return
+	}
+
+	// (finally) delete organization
+	organization, err := GetOrganizationRepository().GetOne(payload.OrganizationID)
 	if organization == nil || err != nil {
 		SendNotFound(w)
 		return
 	}
-	if organization.ContactEmail != m.OrgContactEmail {
-		SendNotFound(w)
-		return
-	}
 	GetOrganizationRepository().Delete(organization)
+
 	SendUpdated(w)
 }
 

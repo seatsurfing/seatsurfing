@@ -44,8 +44,10 @@ export default class Organization extends Entity {
     return Ajax.saveEntity(this, this.getBackendUrl()).then(() => this);
   }
 
-  async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+  async delete(): Promise<number> {
+    return Ajax.delete(this.getBackendUrl() + this.id).then(
+      (result) => result.json.code as number,
+    );
   }
 
   static async get(id: string): Promise<Organization> {
