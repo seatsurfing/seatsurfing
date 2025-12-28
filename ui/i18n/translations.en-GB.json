@@ -68,7 +68,7 @@
   "confirmDeleteOrgConfirmMailSent": "An email with a link to finally confirm the deletion was sent to your organization's primary email address.",
   "confirmDeleteOrgError": "Your organization was not deleted. Please enter your organization's primary email address and make sure the confirmation link you used is not older than one hour.",
   "confirmDeleteOrgSuccess": "Your organization was deleted successfully.",
-  "confirmDeleteQuestion1": "Deletion organization",
+  "confirmDeleteOrg": "Deletion organization",
   "confirmDeleteUser": "Delete user?",
   "confirmDiscard": "Discard unsaved changed?",
   "confirmMultipleBookings": "Confirm {{num}} bookings",
