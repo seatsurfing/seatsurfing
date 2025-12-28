@@ -392,7 +392,12 @@ class Bookings extends React.Component<Props, State> {
               events={calendarEvents}
               startAccessor="start"
               endAccessor="end"
-              style={{ height: 500, width: "90%", margin: "auto" }}
+              style={{
+                height: "calc(100vh - 160px)",
+                width: "100%",
+                padding: "10px",
+                margin: "auto",
+              }}
               defaultView="week"
               date={this.state.calendarDate}
               onNavigate={(newDate: Date) => {
