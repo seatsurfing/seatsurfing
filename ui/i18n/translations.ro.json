@@ -326,5 +326,6 @@
   "disabled": "Disabled",
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
-  "subjectDefault": "Subject for bookings"
+  "subjectDefault": "Subject for bookings",
+  "recurring": "recurring"
 }

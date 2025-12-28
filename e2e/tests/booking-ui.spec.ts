@@ -33,6 +33,7 @@ test("crud booking", async ({ page }) => {
   await page.getByRole("button", { name: "My bookings" }).click();
   await expect(page).toHaveURL(/bookings\/$/);
   await expect(page.getByText("Loading...")).not.toBeVisible();
+  await page.getByLabel("Calendar", { exact: true }).click(); // switch to list view
   await page
     .getByText(/Sample Floor/)
     .first()
