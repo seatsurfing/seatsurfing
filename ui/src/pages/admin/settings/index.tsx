@@ -692,11 +692,12 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("org")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
-                plaintext={true}
-                readOnly={true}
-                defaultValue={this.org?.name}
-              />
+              <p className="form-control-plaintext">
+                {this.org?.name} ({this.org?.language})
+                <br />
+                {this.org?.contactFirstname} {this.org?.contactLastname} (
+                {this.org?.contactEmail})
+              </p>
               <Link href={`/admin/settings/org`}>{this.props.t("edit")}</Link>
             </Col>
           </Form.Group>
