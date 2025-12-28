@@ -328,5 +328,6 @@
   "required": "Enabled (default required)",
   "subjectDefault": "Subject for bookings",
   "timeFormat": "Time format",
-  "use24HourTime": "Use 24-hour time format"
+  "use24HourTime": "Use 24-hour time format",
+  "recurring": "recurring"
 }

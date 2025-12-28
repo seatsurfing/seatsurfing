@@ -329,5 +329,6 @@
   "disabled": "Deaktiviert",
   "optional": "Aktiviert (standardmäßig optional)",
   "required": "Aktiviert (standardmäßig erforderlich)",
-  "subjectDefault": "Betreff für Buchungen"
+  "subjectDefault": "Betreff für Buchungen",
+  "recurring": "wiederkehrend"
 }
