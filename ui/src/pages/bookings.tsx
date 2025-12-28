@@ -331,17 +331,6 @@ class Bookings extends React.Component<Props, State> {
       );
     };
 
-    const calendarMessages = {
-      today: this.props.t("today"),
-      previous: this.props.t("previous"),
-      next: this.props.t("next"),
-      week: this.props.t("week"),
-      date: this.props.t("date"),
-      time: this.props.t("time"),
-      event: this.props.t("bookings"),
-      noEventsInRange: this.props.t("noEventsInRange"),
-    };
-
     moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
     const calendarLocalizer = momentLocalizer(moment);
@@ -419,7 +408,6 @@ class Bookings extends React.Component<Props, State> {
                 this.onItemPress(e.booking);
               }}
               culture={Formatting.Language}
-              messages={calendarMessages}
               length={7}
               views={["week"]}
               components={{

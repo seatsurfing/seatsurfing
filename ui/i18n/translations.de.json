@@ -328,10 +328,5 @@
   "optional": "Aktiviert (standardmäßig optional)",
   "required": "Aktiviert (standardmäßig erforderlich)",
   "subjectDefault": "Betreff für Buchungen",
-  "next": "Nächste",
-  "previous": "Vorherige",
-  "date": "Datum",
-  "time": "Uhrzeit",
-  "noEventsInRange": "Im gewählten Zeitraum gibt es keine Buchungen.",
   "recurring": "wiederkehrend"
 }

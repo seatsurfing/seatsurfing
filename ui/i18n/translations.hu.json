@@ -327,10 +327,5 @@
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
   "subjectDefault": "Subject for bookings",
-  "next": "Next",
-  "previous": "Previous",
-  "date": "Date",
-  "time": "Time",
-  "noEventsInRange": "There are no bookings in the selected date range.",
   "recurring": "recurring"
 }
