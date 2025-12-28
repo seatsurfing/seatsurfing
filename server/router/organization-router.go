@@ -458,6 +458,7 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// send confirmation mail
 	authState := &AuthState{
 		AuthProviderID: GetSettingsRepository().GetNullUUID(),
 		Expiry:         time.Now().Add(time.Hour * 1),
