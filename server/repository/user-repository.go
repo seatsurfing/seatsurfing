@@ -539,3 +539,10 @@ func (r *UserRepository) HasAnyUserInOrgPasswordSet(organizationID string) (bool
 	}
 	return result > 0, nil
 }
+
+func (u *User) GetSafeRecipientName() string {
+	if u.Firstname != "" {
+		return u.Firstname
+	}
+	return strings.Title(GetLocalPartFromEmailAddress(u.Email))
+}

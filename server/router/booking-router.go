@@ -1163,7 +1163,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		subject = "—"
 	}
 	vars := map[string]string{
-		"recipientName": GetLocalPartFromEmailAddress(user.Email),
+		"recipientName": user.GetSafeRecipientName(),
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
 		"spaceName":     space.Name,

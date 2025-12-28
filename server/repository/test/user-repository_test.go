@@ -141,3 +141,30 @@ func TestUsersLastActivity(t *testing.T) {
 		CheckTestBool(t, true, user3.LastActivityAtUTC.Equal(t1))
 	}
 }
+
+func TestUsersGetSafeRecipientName(t *testing.T) {
+	u1 := &User{
+		Email:     "foo@bar.com",
+		Firstname: "",
+		Lastname:  "",
+	}
+	u2 := &User{
+		Email:     "fb@bar.com",
+		Firstname: "",
+		Lastname:  "",
+	}
+	u3 := &User{
+		Email:     "f.bar@bar.com",
+		Firstname: "",
+		Lastname:  "",
+	}
+	u4 := &User{
+		Email:     "f.bar@bar.com",
+		Firstname: "Mr. Foo",
+		Lastname:  "Bar",
+	}
+	CheckTestString(t, "Foo", u1.GetSafeRecipientName())
+	CheckTestString(t, "Fb", u2.GetSafeRecipientName())
+	CheckTestString(t, "F.Bar", u3.GetSafeRecipientName())
+	CheckTestString(t, "Mr. Foo", u4.GetSafeRecipientName())
+}

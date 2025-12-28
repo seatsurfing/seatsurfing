@@ -678,7 +678,7 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		return err
 	}
 	vars := map[string]string{
-		"recipientName":  user.Email,
+		"recipientName":  user.GetSafeRecipientName(),
 		"recipientEmail": user.Email,
 		"confirmID":      ID,
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
