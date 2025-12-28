@@ -21,11 +21,7 @@ import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
-import DateTimePicker from "react-datetime-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
-import "react-date-picker/dist/DatePicker.css";
-import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
+import DateTimePicker from "@/components/DateTimePicker";
 
 interface State {
   selectedItem: string;
@@ -267,17 +263,8 @@ class Bookings extends React.Component<Props, State> {
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ start: value });
               }}
-              clearIcon={null}
               required={true}
-              format={Formatting.getDateTimePickerFormatString()}
-              yearAriaLabel="Year"
-              monthAriaLabel="Month"
-              dayAriaLabel="Day"
-              hourAriaLabel="Start hour"
-              minuteAriaLabel="Start minute"
-              secondAriaLabel="Start second"
-              nativeInputAriaLabel="Start date"
-              calendarAriaLabel="Toggle start calendar"
+              enableTime={true}
             />
           </Col>
         </Form.Group>
@@ -291,17 +278,8 @@ class Bookings extends React.Component<Props, State> {
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ end: value });
               }}
-              clearIcon={null}
               required={true}
-              format={Formatting.getDateTimePickerFormatString()}
-              yearAriaLabel="Year"
-              monthAriaLabel="Month"
-              dayAriaLabel="Day"
-              hourAriaLabel="Start hour"
-              minuteAriaLabel="Start minute"
-              secondAriaLabel="Start second"
-              nativeInputAriaLabel="Start date"
-              calendarAriaLabel="Toggle start calendar"
+              enableTime={true}
             />
           </Col>
         </Form.Group>

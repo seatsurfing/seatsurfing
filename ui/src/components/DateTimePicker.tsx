@@ -58,6 +58,7 @@ class DateTimePicker extends React.Component<Props, State> {
     }
     return (
       <Flatpickr
+        className="form-control"
         data-enable-time={this.props.enableTime}
         disabled={this.props.disabled}
         value={this.props.value}

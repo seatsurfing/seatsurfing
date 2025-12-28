@@ -14,11 +14,9 @@ import Formatting from "@/util/Formatting";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
-import DatePicker from "react-date-picker";
-import "react-date-picker/dist/DatePicker.css";
-import "react-calendar/dist/Calendar.css";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
+import DateTimePicker from "@/components/DateTimePicker";
 
 interface State {
   loading: boolean;
@@ -186,20 +184,13 @@ class ReportAnalysis extends React.Component<Props, State> {
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
-            <DatePicker
+            <DateTimePicker
               value={this.state.start}
               onChange={(value: Date | null | [Date | null, Date | null]) => {
                 if (value != null && value instanceof Date)
                   this.setState({ start: value });
               }}
-              clearIcon={null}
               required={true}
-              format={Formatting.getDateTimePickerFormatDailyString()}
-              yearAriaLabel="Year"
-              monthAriaLabel="Month"
-              dayAriaLabel="Day"
-              nativeInputAriaLabel="Start date"
-              calendarAriaLabel="Toggle start calendar"
             />
           </Col>
         </Form.Group>
@@ -208,20 +199,13 @@ class ReportAnalysis extends React.Component<Props, State> {
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
-            <DatePicker
+            <DateTimePicker
               value={this.state.end}
               onChange={(value: Date | null | [Date | null, Date | null]) => {
                 if (value != null && value instanceof Date)
                   this.setState({ end: value });
               }}
-              clearIcon={null}
               required={true}
-              format={Formatting.getDateTimePickerFormatDailyString()}
-              yearAriaLabel="Year"
-              monthAriaLabel="Month"
-              dayAriaLabel="Day"
-              nativeInputAriaLabel="End date"
-              calendarAriaLabel="Toggle end calendar"
             />
           </Col>
         </Form.Group>

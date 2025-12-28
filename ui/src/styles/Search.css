@@ -15,33 +15,6 @@
   width: 100%;
 }
 
-.react-date-picker,
-.react-datetime-picker {
-  padding: 5px 10px 4px;
-  display: block;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
-  width: 100%;
-}
-
-.react-date-picker__wrapper,
-.react-datetime-picker__wrapper {
-  border: 0 !important;
-}
-
-.react-datetime-picker__inputGroup {
-  white-space: nowrap;
-}
-
 .container-map {
   margin-left: auto;
   margin-right: auto;
