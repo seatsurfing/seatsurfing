@@ -65,6 +65,7 @@
   "confirmDeleteGroup": "Delete group?",
   "confirmDeleteOrg": "Really delete this organization permanently?",
   "confirmDeleteOrg2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible.",
+  "confirmDeleteOrgConfirmMailSent": "An e-mail with a link to finally confirm the deletion was sent to your organization's primary domain.",
   "confirmDeleteUser": "Delete user?",
   "confirmDiscard": "Discard unsaved changed?",
   "confirmMultipleBookings": "Confirm {{num}} bookings",

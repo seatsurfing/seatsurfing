@@ -1,0 +1,17 @@
+{
+  "subject": "Confirm delete your Seatsurfing instance",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "We've received a request to permanently delete your Seatsurfing instance."
+  ],
+  "buttons": [
+    {
+      "paragraph": "PLEASE NOTE: Deleting the Seatsurfing instance includes irretrievably deleting all bookings, areas, spaces and users. No recovery will be possible!",
+      "label": "Delete Seatsurfing instance",
+      "url": "{{orgDomain}}ui/deleteorg/{{confirmID}}/"
+    }
+  ],
+  "finalParagraphs": [
+    "If you did not initiate the deletion of the Seatsurfing instance, you can safely ignore this email. We won't delete the instance if you don't click the link above."
+  ]
+}

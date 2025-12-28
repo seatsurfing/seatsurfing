@@ -432,27 +432,58 @@ func (router *OrganizationRouter) sendVerifyEmailAddressEmail(org *Organization,
 
 func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
+
+	// user needs to be org admin or super user
 	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, user.OrganizationID)) {
 		SendForbidden(w)
 		return
 	}
+
+	// if no super user: check global "org delete" setting
 	if !GetUserRepository().IsSuperAdmin(user) && CanAdminOrg(user, user.OrganizationID) {
 		if !GetConfig().AllowOrgDelete {
 			SendForbidden(w)
 		}
 	}
+
 	vars := mux.Vars(r)
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
 	}
-	if err := GetOrganizationRepository().Delete(e); err != nil {
+
+	authState := &AuthState{
+		AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		Expiry:         time.Now().Add(time.Hour * 1),
+		AuthStateType:  AuthDeleteOrg,
+		Payload:        e.ID,
+	}
+	GetAuthStateRepository().Create(authState)
+	if err := router.SendOrgConfirmDeleteOrgEmail(user, authState.ID, e); err != nil {
+		log.Printf("Confirm org delete email failed: %s\n", err)
+	}
+
+	/*if err := GetOrganizationRepository().Delete(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
-	}
+	}*/
 	SendUpdated(w)
+}
+
+func (router *OrganizationRouter) SendOrgConfirmDeleteOrgEmail(user *User, ID string, org *Organization) error {
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		return err
+	}
+	vars := map[string]string{
+		"recipientName":  user.GetSafeRecipientName(),
+		"recipientEmail": user.Email,
+		"confirmID":      ID,
+		"orgDomain":      FormatURL(domain.DomainName) + "/",
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), org.Language, vars, org.ID)
 }
 
 func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request) {
