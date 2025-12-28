@@ -34,7 +34,7 @@ class DateTimePicker extends React.Component<Props, State> {
   }
 
   async loadLocale() {
-    let lang = RuntimeConfig.getLanguage();  
+    let lang = RuntimeConfig.getLanguage();
     if (lang.indexOf("-") !== -1) {
       lang = lang.split("-")[0];
     }
@@ -42,15 +42,15 @@ class DateTimePicker extends React.Component<Props, State> {
       this.setState({ locale: DefaultLocale });
       return;
     }
-      try {
-        const localeModule = await import(`flatpickr/dist/l10n/${lang}.js`);
-        const name = Object.keys(localeModule)[0];
-        this.setState({ locale: localeModule[name] });
-      } catch (error) {
-        console.error(`Failed to load locale ${lang}:`, error);
-        this.setState({ locale: DefaultLocale });
-      }
+    try {
+      const localeModule = await import(`flatpickr/dist/l10n/${lang}.js`);
+      const name = Object.keys(localeModule)[0];
+      this.setState({ locale: localeModule[name] });
+    } catch (error) {
+      console.error(`Failed to load locale ${lang}:`, error);
+      this.setState({ locale: DefaultLocale });
     }
+  }
 
   render() {
     if (!this.state.locale) {
