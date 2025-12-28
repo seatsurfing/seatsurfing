@@ -54,6 +54,10 @@ type ChangeEmailAddressVerifyRequest struct {
 	Code string `json:"code" validate:"required,numeric"`
 }
 
+type CompleteOrgDeletionRequest struct {
+	OrgContactEmail string `json:"orgContactEmail" validate:"required,min=3"`
+}
+
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
@@ -68,6 +72,7 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+	s.HandleFunc("/deleteorg/{id}", router.completeOrgDeletion).Methods("POST")
 }
 
 func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWriter, r *http.Request) {
@@ -464,11 +469,39 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		log.Printf("Confirm org delete email failed: %s\n", err)
 	}
 
-	/*if err := GetOrganizationRepository().Delete(e); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
+	SendUpdated(w)
+}
+
+func (router *OrganizationRouter) completeOrgDeletion(w http.ResponseWriter, r *http.Request) {
+	if !GetConfig().AllowOrgDelete {
+		SendNotFound(w)
 		return
-	}*/
+	}
+	var m CompleteOrgDeletionRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	vars := mux.Vars(r)
+	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	if authState.AuthStateType != AuthDeleteOrg {
+		SendNotFound(w)
+		return
+	}
+	organization, err := GetOrganizationRepository().GetOne(authState.Payload)
+	if organization == nil || err != nil {
+		SendNotFound(w)
+		return
+	}
+	if organization.ContactEmail != m.OrgContactEmail {
+		SendNotFound(w)
+		return
+	}
+	GetOrganizationRepository().Delete(organization)
 	SendUpdated(w)
 }
 
@@ -482,6 +515,7 @@ func (router *OrganizationRouter) SendOrgConfirmDeleteOrgEmail(user *User, ID st
 		"recipientEmail": user.Email,
 		"confirmID":      ID,
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
+		"orgName":        org.Name,
 	}
 	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), org.Language, vars, org.ID)
 }

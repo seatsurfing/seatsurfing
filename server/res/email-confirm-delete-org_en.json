@@ -2,13 +2,13 @@
   "subject": "Confirm delete your Seatsurfing instance",
   "headline": "Hello {{recipientName}},",
   "paragraphs": [
-    "We've received a request to permanently delete your Seatsurfing instance."
+    "We've received a request to permanently delete your Seatsurfing instance “{{orgName}}”."
   ],
   "buttons": [
     {
-      "paragraph": "PLEASE NOTE: Deleting the Seatsurfing instance includes irretrievably deleting all bookings, areas, spaces and users. No recovery will be possible!",
+      "paragraph": "PLEASE NOTE: Deleting the Seatsurfing instance includes irretrievably deleting all bookings, areas, spaces and users. No recovery will be possible! You need to confirm the deletion with this email address.",
       "label": "Delete Seatsurfing instance",
-      "url": "{{orgDomain}}ui/deleteorg/{{confirmID}}/"
+      "url": "{{orgDomain}}ui/admin/organizations/delete/{{confirmID}}/"
     }
   ],
   "finalParagraphs": [
