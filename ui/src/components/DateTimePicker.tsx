@@ -3,9 +3,12 @@ import "flatpickr/dist/themes/airbnb.css";
 import Flatpickr from "react-flatpickr";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import RuntimeConfig from "./RuntimeConfig";
-import Formatting from "@/util/Formatting";
+import { CustomLocale } from "flatpickr/dist/types/locale";
+import { english as DefaultLocale } from "flatpickr/dist/l10n/default.js";
 
-interface State {}
+interface State {
+  locale: CustomLocale | undefined;
+}
 
 interface Props {
   t: TranslationFunc;
@@ -19,8 +22,41 @@ interface Props {
 }
 
 class DateTimePicker extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      locale: undefined,
+    };
+  }
+
+  componentDidMount() {
+    this.loadLocale();
+  }
+
+  async loadLocale() {
+    let lang = RuntimeConfig.getLanguage();  
+    if (lang.indexOf("-") !== -1) {
+      lang = lang.split("-")[0];
+    }
+    if (lang === "en") {
+      this.setState({ locale: DefaultLocale });
+      return;
+    }
+      try {
+        console.log("Loading locale:", lang);
+        const localeModule = await import(`flatpickr/dist/l10n/${lang}.js`);
+        const name = Object.keys(localeModule)[0];
+        this.setState({ locale: localeModule[name] });
+      } catch (error) {
+        console.error(`Failed to load locale ${lang}:`, error);
+        this.setState({ locale: DefaultLocale });
+      }
+    }
+
   render() {
-    const formatter = Formatting.getFormatterShort();
+    if (!this.state.locale) {
+      return <></>;
+    }
     return (
       <Flatpickr
         data-enable-time={this.props.enableTime}
@@ -36,10 +72,7 @@ class DateTimePicker extends React.Component<Props, State> {
           minDate: this.props.minDate,
           minTime: "00:00:00",
           maxDate: this.props.maxDate,
-          formatDate: (date: Date) => {
-            console.log("Formatting date:", date, "->", Formatting.convertToFakeUTCDate(date));
-            return formatter.format(Formatting.convertToFakeUTCDate(date));
-          }
+          locale: this.state.locale,
         }}
       />
     );
