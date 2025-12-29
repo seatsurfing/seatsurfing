@@ -475,11 +475,12 @@ class Settings extends React.Component<Props, State> {
   };
 
   deleteOrg = () => {
-    if (window.confirm(this.props.t("confirmDeleteOrg"))) {
-      if (window.confirm(this.props.t("confirmDeleteOrg2"))) {
-        this.org?.delete().then(() => {
-          Ajax.PERSISTER.deleteCredentialsFromStorage();
-          window.location.href = "/ui/";
+    if (window.confirm(this.props.t("confirmDeleteOrgQuestion1"))) {
+      if (window.confirm(this.props.t("confirmDeleteOrgQuestion2"))) {
+        this.org?.delete().then((code) => {
+          window.alert(
+            this.props.t("confirmDeleteOrgConfirmMailSent", { code }),
+          );
         });
       }
     }

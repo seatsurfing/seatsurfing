@@ -54,6 +54,19 @@ type ChangeEmailAddressVerifyRequest struct {
 	Code string `json:"code" validate:"required,numeric"`
 }
 
+type CompleteOrgDeletionRequest struct {
+	Code string `json:"code" validate:"required,numeric"`
+}
+
+type DeleteOrgResponse struct {
+	Code string `json:"code"`
+}
+
+type AuthStateOrgDeletionRequestPayload struct {
+	OrganizationID string `json:"organizationId" validate:"required,min=3"`
+	Code           string `json:"code" validate:"required,numeric"`
+}
+
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
@@ -68,6 +81,7 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+	s.HandleFunc("/deleteorg/{id}", router.completeOrgDeletion).Methods("POST")
 }
 
 func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWriter, r *http.Request) {
@@ -432,27 +446,115 @@ func (router *OrganizationRouter) sendVerifyEmailAddressEmail(org *Organization,
 
 func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
+
+	// user needs to be org admin or super user
 	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, user.OrganizationID)) {
 		SendForbidden(w)
 		return
 	}
+
+	// if no super user: check global "org delete" setting
 	if !GetUserRepository().IsSuperAdmin(user) && CanAdminOrg(user, user.OrganizationID) {
 		if !GetConfig().AllowOrgDelete {
 			SendForbidden(w)
 		}
 	}
+
 	vars := mux.Vars(r)
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
 	}
-	if err := GetOrganizationRepository().Delete(e); err != nil {
-		log.Println(err)
+
+	// send confirmation mail
+	code := strconv.Itoa(GetRandomNumber(100000, 999999)) // Random 6-digit code
+	payload := &AuthStateOrgDeletionRequestPayload{
+		OrganizationID: e.ID,
+		Code:           code,
+	}
+	authState := &AuthState{
+		AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		Expiry:         time.Now().Add(time.Hour * 1),
+		AuthStateType:  AuthDeleteOrg,
+		Payload:        marshalAuthStateOrgDeletionRequestPayload(payload),
+	}
+	GetAuthStateRepository().Create(authState)
+	if err := router.SendOrgConfirmDeleteOrgEmail(user, authState.ID, e); err != nil {
+		log.Printf("Sending confirm org delete email failed: %s\n", err)
 		SendInternalServerError(w)
 		return
 	}
+
+	res := DeleteOrgResponse{
+		Code: code,
+	}
+	SendJSON(w, res)
+}
+
+func marshalAuthStateOrgDeletionRequestPayload(payload *AuthStateOrgDeletionRequestPayload) string {
+	json, _ := json.Marshal(payload)
+	return string(json)
+}
+
+func unmarshalAuthStateOrgDeletionRequestPayload(payload string) *AuthStateOrgDeletionRequestPayload {
+	var o *AuthStateOrgDeletionRequestPayload
+	json.Unmarshal([]byte(payload), &o)
+	return o
+}
+
+func (router *OrganizationRouter) completeOrgDeletion(w http.ResponseWriter, r *http.Request) {
+	if !GetConfig().AllowOrgDelete {
+		SendNotFound(w)
+		return
+	}
+	var m CompleteOrgDeletionRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+
+	// test auth state
+	vars := mux.Vars(r)
+	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	if authState.AuthStateType != AuthDeleteOrg {
+		SendNotFound(w)
+		return
+	}
+	payload := unmarshalAuthStateOrgDeletionRequestPayload(authState.Payload)
+	if payload.Code != m.Code {
+		SendNotFound(w)
+		return
+	}
+
+	// (finally) delete organization
+	organization, err := GetOrganizationRepository().GetOne(payload.OrganizationID)
+	if organization == nil || err != nil {
+		SendNotFound(w)
+		return
+	}
+	GetOrganizationRepository().Delete(organization)
+
 	SendUpdated(w)
+}
+
+func (router *OrganizationRouter) SendOrgConfirmDeleteOrgEmail(user *User, ID string, org *Organization) error {
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		return err
+	}
+	vars := map[string]string{
+		"recipientName":  user.GetSafeRecipientName(),
+		"recipientEmail": user.Email,
+		"confirmID":      ID,
+		"orgDomain":      FormatURL(domain.DomainName) + "/",
+		"orgName":        org.Name,
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), org.Language, vars, org.ID)
 }
 
 func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request) {
