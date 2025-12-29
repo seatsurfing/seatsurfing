@@ -481,7 +481,9 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 	}
 	GetAuthStateRepository().Create(authState)
 	if err := router.SendOrgConfirmDeleteOrgEmail(user, authState.ID, e); err != nil {
-		log.Printf("Confirm org delete email failed: %s\n", err)
+		log.Printf("Sending confirm org delete email failed: %s\n", err)
+		SendInternalServerError(w)
+		return
 	}
 
 	res := DeleteOrgResponse{

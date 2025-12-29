@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"testing"
+	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
@@ -176,6 +177,12 @@ func TestOrganizationsCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
 
+	domain := "test.com"
+	organization, _ := GetOrganizationRepository().GetOne(id)
+	GetOrganizationRepository().AddDomain(organization, domain, true)
+	GetOrganizationRepository().SetPrimaryDomain(organization, domain)
+	GetOrganizationRepository().SetDomainAccessibility(id, domain, true, time.Now().UTC())
+
 	// 2. Read
 	req = NewHTTPRequest("GET", "/organization/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
@@ -214,6 +221,22 @@ func TestOrganizationsCRUD(t *testing.T) {
 
 	// 4. Delete
 	req = NewHTTPRequest("DELETE", "/organization/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody3 *DeleteOrgResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody3)
+	CheckTestBool(t, true, len(resBody3.Code) == 6)
+
+	// 5. Confirm deletion
+	var authId string
+	GetDatabase().DB().QueryRow(
+		"SELECT id FROM auth_states WHERE auth_state_type=$1 ORDER BY expiry DESC LIMIT 1",
+		7,
+	).Scan(&authId)
+	payload = `{
+		"code": "` + resBody3.Code + `"
+	}`
+	req = NewHTTPRequest("POST", "/organization/deleteorg/"+authId, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
