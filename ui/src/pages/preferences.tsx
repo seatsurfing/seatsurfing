@@ -47,6 +47,8 @@ interface State {
   caldavCalendarsLoaded: boolean;
   caldavError: boolean;
   mailNotifications: boolean;
+  use24HourTime: boolean;
+  dateFormat: string;
 }
 
 interface Props {
@@ -94,6 +96,8 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
       caldavError: false,
       mailNotifications: false,
+      use24HourTime: true,
+      dateFormat: "Y-m-d",
     };
   }
 
@@ -144,6 +148,9 @@ class Preferences extends React.Component<Props, State> {
             if (s.name === "caldav_path") state.caldavCalendar = s.value;
             if (s.name === "mail_notifications")
               state.mailNotifications = s.value === "1";
+            if (s.name === "use_24_hour_time")
+              state.use24HourTime = s.value === "1";
+            if (s.name === "date_format") state.dateFormat = s.value;
           });
           self.setState(
             {
@@ -192,13 +199,20 @@ class Preferences extends React.Component<Props, State> {
         "mail_notifications",
         this.state.mailNotifications ? "1" : "0",
       ),
+      new UserPreference(
+        "use_24_hour_time",
+        this.state.use24HourTime ? "1" : "0",
+      ),
       new UserPreference("location_id", this.state.locationId),
+      new UserPreference("date_format", this.state.dateFormat),
     ];
     UserPreference.setAll(payload)
       .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
+        RuntimeConfig.loadUserPreferences().then(() => {
+          this.setState({
+            submitting: false,
+            saved: true,
+          });
         });
       })
       .catch(() => {
@@ -543,6 +557,34 @@ class Preferences extends React.Component<Props, State> {
                     }
                   />
                 </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label>{this.props.t("timeFormat")}</Form.Label>
+                <div className="text-left">
+                  <Form.Check
+                    type="checkbox"
+                    id="use24HourTime"
+                    label={this.props.t("use24HourTime")}
+                    checked={this.state.use24HourTime}
+                    onChange={(e: any) =>
+                      this.setState({ use24HourTime: e.target.checked })
+                    }
+                  />
+                </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label>{this.props.t("dateFormat")}</Form.Label>
+                <Form.Select
+                  value={this.state.dateFormat}
+                  onChange={(e: any) =>
+                    this.setState({ dateFormat: e.target.value })
+                  }
+                >
+                  <option value="Y-m-d">Y-m-d</option>
+                  <option value="d.m.Y">d.m.Y</option>
+                  <option value="m/d/Y">m/d/Y</option>
+                  <option value="d/m/Y">d/m/Y</option>
+                </Form.Select>
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("preferredLocation")}</Form.Label>

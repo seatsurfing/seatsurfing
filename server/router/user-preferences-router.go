@@ -180,7 +180,9 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVPass.Name ||
 		name == PreferenceCalDAVPath.Name ||
 		name == PreferenceMailNotifications.Name ||
-		name == PreferenceApprovalNotifications.Name {
+		name == PreferenceApprovalNotifications.Name ||
+		name == Preference24HourTime.Name ||
+		name == PreferenceDateFormat.Name {
 		return true
 	}
 	return false
@@ -237,6 +239,12 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceApprovalNotifications.Name {
 		return PreferenceApprovalNotifications.Type
+	}
+	if name == Preference24HourTime.Name {
+		return Preference24HourTime.Type
+	}
+	if name == PreferenceDateFormat.Name {
+		return PreferenceDateFormat.Type
 	}
 	return 0
 }
@@ -298,6 +306,14 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			}
 		}
 		return ok
+	}
+	if name == PreferenceDateFormat.Name {
+		switch value {
+		case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
+			return true
+		default:
+			return false
+		}
 	}
 	return true
 }
