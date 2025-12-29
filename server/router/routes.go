@@ -241,6 +241,13 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			return false
 		}
+		user, err := GetUserRepository().GetOne(claims.UserID)
+		if err != nil || user == nil {
+			return false
+		}
+		if user.Disabled {
+			return false
+		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
