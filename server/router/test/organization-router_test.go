@@ -604,7 +604,25 @@ func TestOrganizationsDelete(t *testing.T) {
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
-	req := NewHTTPRequest("DELETE", "/organization/"+org.ID, loginResponse.UserID, nil)
+	// create auth state for deletion
+	code := "123456"
+	payload := &AuthStateOrgDeletionRequestPayload{
+		OrganizationID: user.OrganizationID,
+		Code:           code,
+	}
+	payloadJson, _ := json.Marshal(payload)
+	authState := &AuthState{
+		AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		Expiry:         time.Now().Add(time.Hour * 1),
+		AuthStateType:  AuthDeleteOrg,
+		Payload:        string(payloadJson),
+	}
+	GetAuthStateRepository().Create(authState)
+
+	payloadRequest := `{
+		"code": "123456"
+	}`
+	req := NewHTTPRequest("POST", "/organization/deleteorg/"+authState.ID, loginResponse.UserID, bytes.NewBufferString(payloadRequest))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
