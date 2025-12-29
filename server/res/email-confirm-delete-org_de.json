@@ -1,0 +1,17 @@
+{
+  "subject": "[ACTION REQUIRED] Seatsurfing: Löschung deiner Seatsurfing-Instanz bestätigen",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "wir haben eine Anfrage zur dauerhaften Löschung deiner Seatsurfing-Instanz „{{orgName}}“ erhalten."
+  ],
+  "buttons": [
+    {
+      "paragraph": "BITTE BEACHTEN: Das Löschen der Seatsurfing-Instanz umfasst die endgültige Löschung aller Buchungen, Bereiche, Arbeitsplätze und Benutzer. Eine Wiederherstellung ist nicht möglich! Klicke auf die Schaltfläche unten, um diese Aktion zu bestätigen.",
+      "label": "Instanz endgültig löschen",
+      "url": "{{orgDomain}}ui/admin/organizations/delete/{{confirmID}}/"
+    }
+  ],
+  "finalParagraphs": [
+    "Falls du die Löschung der Seatsurfing-Instanz nicht angefordert haben, kannst du diese E-Mail ignorieren. Wir werden die Instanz nicht löschen, wenn du nicht auf den obigen Link klicken."
+  ]
+}

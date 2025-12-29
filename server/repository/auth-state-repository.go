@@ -17,6 +17,7 @@ const (
 	AuthMergeRequest         AuthStateType = 4
 	AuthResetPasswordRequest AuthStateType = 5
 	AuthChangeOrgEmail       AuthStateType = 6
+	AuthDeleteOrg            AuthStateType = 7 // used for delete org email confirmation link
 )
 
 type AuthState struct {

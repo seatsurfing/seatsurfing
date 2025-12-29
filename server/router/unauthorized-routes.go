@@ -9,6 +9,7 @@ import (
 var unauthorizedRoutes = []string{
 	"/auth/",
 	"/organization/domain/",
+	"/organization/deleteorg/",
 	"/auth-provider/org/",
 	"/admin/",
 	"/ui/",
