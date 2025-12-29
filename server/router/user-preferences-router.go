@@ -307,6 +307,14 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 		}
 		return ok
 	}
+	if name == PreferenceDateFormat.Name {
+		switch value {
+		case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
+			return true
+		default:
+			return false
+		}
+	}
 	return true
 }
 
