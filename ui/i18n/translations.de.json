@@ -332,5 +332,7 @@
   "optional": "Aktiviert (standardmäßig optional)",
   "required": "Aktiviert (standardmäßig erforderlich)",
   "subjectDefault": "Betreff für Buchungen",
-  "recurring": "wiederkehrend"
+  "recurring": "wiederkehrend",
+  "filterBookingCurrent": "Aktuelle Buchungen",
+  "filterBookingEnterLeave": "Beginn und Ende"
 }

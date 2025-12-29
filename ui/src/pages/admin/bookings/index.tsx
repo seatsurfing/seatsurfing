@@ -51,7 +51,7 @@ class Bookings extends React.Component<Props, State> {
 
     const getDateFromQuery = (
       paramName: string,
-      defaultOffsetDays: number
+      defaultOffsetDays: number,
     ): Date => {
       const queryValue = this.props.router.query[paramName] as string;
       if (queryValue) {
@@ -88,7 +88,7 @@ class Bookings extends React.Component<Props, State> {
       return;
     }
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default)
+      (imp) => (this.ExcellentExport = imp.default),
     );
     this.loadItems();
   };
@@ -107,7 +107,7 @@ class Bookings extends React.Component<Props, State> {
         query: currentQuery,
       },
       undefined,
-      { shallow: true }
+      { shallow: true },
     );
   };
 
@@ -124,7 +124,7 @@ class Bookings extends React.Component<Props, State> {
       this.setState({ loading: false });
       this.updateUrlParams(
         DateUtil.formatToDateTimeString(this.state.start),
-        DateUtil.formatToDateTimeString(this.state.end)
+        DateUtil.formatToDateTimeString(this.state.end),
       );
     });
   };
@@ -149,13 +149,13 @@ class Bookings extends React.Component<Props, State> {
           window.alert(
             this.props.t("errorDeleteBookingBeforeMaxCancel", {
               num: this.maxHoursBeforeDelete,
-            })
+            }),
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
         }
         this.loadItems();
-      }
+      },
     );
   };
 
@@ -221,7 +221,7 @@ class Bookings extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
-      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }]
+      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
     );
   };
 
@@ -272,7 +272,7 @@ class Bookings extends React.Component<Props, State> {
           <Col sm="4">
             <Form.Check
               type="radio"
-              label={this.props.t("filterEnterLeave")}
+              label={this.props.t("filterBookingEnterLeave")}
               name="radioGroup"
               id="radio1"
               value="option1"
@@ -281,7 +281,7 @@ class Bookings extends React.Component<Props, State> {
             />
             <Form.Check
               type="radio"
-              label={this.props.t("filterCurrent")}
+              label={this.props.t("filterBookingCurrent")}
               name="radioGroup"
               id="radio2"
               value="option2"

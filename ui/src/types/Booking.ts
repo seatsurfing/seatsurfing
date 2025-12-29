@@ -99,7 +99,7 @@ export default class Booking extends Entity {
     };
     return Ajax.postData(
       this.getBackendUrl() + this.id + "/approve",
-      payload
+      payload,
     ).then(() => undefined);
   }
 
