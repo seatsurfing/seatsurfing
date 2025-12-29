@@ -204,7 +204,7 @@ class Preferences extends React.Component<Props, State> {
         this.state.use24HourTime ? "1" : "0",
       ),
       new UserPreference("location_id", this.state.locationId),
-          new UserPreference("date_format", this.state.dateFormat),
+      new UserPreference("date_format", this.state.dateFormat),
     ];
     UserPreference.setAll(payload)
       .then(() => {
