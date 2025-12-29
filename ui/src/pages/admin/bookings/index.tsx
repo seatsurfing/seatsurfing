@@ -32,6 +32,7 @@ interface State {
   loading: boolean;
   start: Date;
   end: Date;
+  filterOption: "enter_leave" | "current";
 }
 
 interface Props {
@@ -50,7 +51,7 @@ class Bookings extends React.Component<Props, State> {
 
     const getDateFromQuery = (
       paramName: string,
-      defaultOffsetDays: number,
+      defaultOffsetDays: number
     ): Date => {
       const queryValue = this.props.router.query[paramName] as string;
       if (queryValue) {
@@ -76,6 +77,7 @@ class Bookings extends React.Component<Props, State> {
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
+      filterOption: "enter_leave",
     };
     this.loadSettings();
   }
@@ -86,7 +88,7 @@ class Bookings extends React.Component<Props, State> {
       return;
     }
     import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
+      (imp) => (this.ExcellentExport = imp.default)
     );
     this.loadItems();
   };
@@ -105,18 +107,24 @@ class Bookings extends React.Component<Props, State> {
         query: currentQuery,
       },
       undefined,
-      { shallow: true },
+      { shallow: true }
     );
   };
 
   loadItems = () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
-    Booking.listFiltered(this.state.start, end).then((list) => {
+
+    const bookings =
+      this.state.filterOption === "enter_leave"
+        ? Booking.listFiltered(this.state.start, end)
+        : Booking.listCurrent();
+
+    bookings.then((list) => {
       this.data = list;
       this.setState({ loading: false });
       this.updateUrlParams(
         DateUtil.formatToDateTimeString(this.state.start),
-        DateUtil.formatToDateTimeString(this.state.end),
+        DateUtil.formatToDateTimeString(this.state.end)
       );
     });
   };
@@ -141,13 +149,13 @@ class Bookings extends React.Component<Props, State> {
           window.alert(
             this.props.t("errorDeleteBookingBeforeMaxCancel", {
               num: this.maxHoursBeforeDelete,
-            }),
+            })
           );
         } else {
           window.alert(this.props.t("errorDeleteBooking"));
         }
         this.loadItems();
-      },
+      }
     );
   };
 
@@ -213,7 +221,7 @@ class Bookings extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
-      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }]
     );
   };
 
@@ -259,6 +267,32 @@ class Bookings extends React.Component<Props, State> {
       <Form onSubmit={this.onFilterSubmit} id="form">
         <Form.Group as={Row}>
           <Form.Label column sm="2">
+            {this.props.t("filter")}
+          </Form.Label>
+          <Col sm="4">
+            <Form.Check
+              type="radio"
+              label={this.props.t("filterEnterLeave")}
+              name="radioGroup"
+              id="radio1"
+              value="option1"
+              checked={this.state.filterOption === "enter_leave"}
+              onChange={(e) => this.setState({ filterOption: "enter_leave" })}
+            />
+            <Form.Check
+              type="radio"
+              label={this.props.t("filterCurrent")}
+              name="radioGroup"
+              id="radio2"
+              value="option2"
+              checked={this.state.filterOption === "current"}
+              onChange={(e) => this.setState({ filterOption: "current" })}
+            />
+          </Col>
+        </Form.Group>
+
+        <Form.Group as={Row}>
+          <Form.Label column sm="2">
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
@@ -267,6 +301,7 @@ class Bookings extends React.Component<Props, State> {
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ start: value });
               }}
+              disabled={this.state.filterOption !== "enter_leave"}
               clearIcon={null}
               required={true}
               format={Formatting.getDateTimePickerFormatString()}
@@ -291,6 +326,7 @@ class Bookings extends React.Component<Props, State> {
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ end: value });
               }}
+              disabled={this.state.filterOption !== "enter_leave"}
               clearIcon={null}
               required={true}
               format={Formatting.getDateTimePickerFormatString()}

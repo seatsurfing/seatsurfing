@@ -106,6 +106,7 @@ func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/debugtimeissues/", router.debugTimeIssues).Methods("POST")
 	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("GET")
 	s.HandleFunc("/filter/", router.getFiltered).Methods("GET")
+	s.HandleFunc("/current/", router.getCurrent).Methods("GET")
 	s.HandleFunc("/precheck/", router.preBookingCreateCheck).Methods("POST")
 	s.HandleFunc("/{id}/approve", router.approveBooking).Methods("POST")
 	s.HandleFunc("/{id}/ical", router.getIcal).Methods("GET")
@@ -269,6 +270,27 @@ func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := []*GetBookingResponse{}
+	for _, e := range list {
+		m := router.copyToRestModel(e)
+		res = append(res, m)
+	}
+	SendJSON(w, res)
+}
+
+func (router *BookingRouter) getCurrent(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+
+	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)

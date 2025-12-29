@@ -99,7 +99,7 @@ export default class Booking extends Entity {
     };
     return Ajax.postData(
       this.getBackendUrl() + this.id + "/approve",
-      payload,
+      payload
     ).then(() => undefined);
   }
 
@@ -149,6 +149,18 @@ export default class Booking extends Entity {
       "&end=" +
       encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
     return Ajax.get("/booking/filter/?" + params).then((result) => {
+      let list: Booking[] = [];
+      (result.json as []).forEach((item) => {
+        let e: Booking = new Booking();
+        e.deserialize(item);
+        list.push(e);
+      });
+      return list;
+    });
+  }
+
+  static async listCurrent(): Promise<Booking[]> {
+    return Ajax.get("/booking/current/").then((result) => {
       let list: Booking[] = [];
       (result.json as []).forEach((item) => {
         let e: Booking = new Booking();

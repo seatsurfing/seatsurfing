@@ -331,5 +331,7 @@
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
   "subjectDefault": "Subject for bookings",
-  "recurring": "recurring"
+  "recurring": "recurring",
+  "filterCurrent": "Current",
+  "filterEnterLeave": "Enter and leave time"
 }
