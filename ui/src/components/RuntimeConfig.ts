@@ -38,6 +38,7 @@ interface RuntimeUserInfos {
   allowRecurringBookings: boolean;
   subjectDefault: number;
   use24HourTime: boolean;
+  dateFormat: string;
 }
 
 export default class RuntimeConfig {
@@ -80,6 +81,7 @@ export default class RuntimeConfig {
       allowRecurringBookings: true,
       subjectDefault: 2,
       use24HourTime: true,
+      dateFormat: "Y-m-d",
     };
   };
 
@@ -196,6 +198,9 @@ export default class RuntimeConfig {
         list.forEach((pref) => {
           if (pref.name === "use_24_hour_time") {
             RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+          }
+          if (pref.name === "date_format") {
+            RuntimeConfig.INFOS.dateFormat = pref.value;
           }
         });
       })

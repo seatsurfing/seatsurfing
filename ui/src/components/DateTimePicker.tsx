@@ -56,6 +56,14 @@ class DateTimePicker extends React.Component<Props, State> {
     if (!this.state.locale) {
       return <></>;
     }
+    let formatting = RuntimeConfig.INFOS.dateFormat;
+    if (this.props.enableTime) {
+      if (RuntimeConfig.INFOS.use24HourTime) {
+        formatting += " H:i";
+      } else {
+        formatting += " h:i K";
+      }
+    }
     return (
       <Flatpickr
         className="form-control"
@@ -68,6 +76,7 @@ class DateTimePicker extends React.Component<Props, State> {
             this.props.onChange(value);
         }}
         options={{
+          dateFormat: formatting,
           time_24hr: RuntimeConfig.INFOS.use24HourTime,
           minDate: this.props.minDate,
           maxDate: this.props.maxDate,

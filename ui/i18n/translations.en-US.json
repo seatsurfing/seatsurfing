@@ -1,4 +1,5 @@
 {
+  "dateFormat": "Date format",
   "accept": "Accept",
   "add": "Add",
   "addBuddy": "Add buddy",
@@ -333,5 +334,7 @@
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
   "subjectDefault": "Subject for bookings",
-  "recurring": "recurring"
+  "recurring": "recurring",
+  "confirmDeleteOrgQuestion1": "Really delete this organization permanently?",
+  "confirmDeleteOrgQuestion2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible."
 }

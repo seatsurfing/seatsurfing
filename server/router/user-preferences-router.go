@@ -181,7 +181,8 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVPath.Name ||
 		name == PreferenceMailNotifications.Name ||
 		name == PreferenceApprovalNotifications.Name ||
-		name == Preference24HourTime.Name {
+		name == Preference24HourTime.Name ||
+		name == PreferenceDateFormat.Name {
 		return true
 	}
 	return false
@@ -241,6 +242,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == Preference24HourTime.Name {
 		return Preference24HourTime.Type
+	}
+	if name == PreferenceDateFormat.Name {
+		return PreferenceDateFormat.Type
 	}
 	return 0
 }
