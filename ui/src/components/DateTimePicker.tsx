@@ -63,7 +63,7 @@ class DateTimePicker extends React.Component<Props, State> {
         disabled={this.props.disabled}
         value={this.props.value}
         required={this.props.required}
-        onChange={([value]: Date[]) => {
+        onClose={([value]: Date[]) => {
           if (value != null && value instanceof Date)
             this.props.onChange(value);
         }}
