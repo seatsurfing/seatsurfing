@@ -274,7 +274,7 @@ class Bookings extends React.Component<Props, State> {
               type="radio"
               label={this.props.t("filterBookingEnterLeave")}
               name="radioGroup"
-              id="radio1"
+              id="radioEnterLeave"
               value="option1"
               checked={this.state.filterOption === "enter_leave"}
               onChange={(e) => this.setState({ filterOption: "enter_leave" })}
@@ -283,7 +283,7 @@ class Bookings extends React.Component<Props, State> {
               type="radio"
               label={this.props.t("filterBookingCurrent")}
               name="radioGroup"
-              id="radio2"
+              id="radioCurrent"
               value="option2"
               checked={this.state.filterOption === "current"}
               onChange={(e) => this.setState({ filterOption: "current" })}
