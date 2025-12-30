@@ -28,6 +28,7 @@ interface State {
   loading: boolean;
   start: Date;
   end: Date;
+  filterOption: "enter_leave" | "current";
 }
 
 interface Props {
@@ -72,6 +73,7 @@ class Bookings extends React.Component<Props, State> {
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
+      filterOption: "enter_leave",
     };
     this.loadSettings();
   }
@@ -107,7 +109,13 @@ class Bookings extends React.Component<Props, State> {
 
   loadItems = () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
-    Booking.listFiltered(this.state.start, end).then((list) => {
+
+    const bookings =
+      this.state.filterOption === "enter_leave"
+        ? Booking.listFiltered(this.state.start, end)
+        : Booking.listCurrent();
+
+    bookings.then((list) => {
       this.data = list;
       this.setState({ loading: false });
       this.updateUrlParams(
@@ -255,6 +263,32 @@ class Bookings extends React.Component<Props, State> {
       <Form onSubmit={this.onFilterSubmit} id="form">
         <Form.Group as={Row}>
           <Form.Label column sm="2">
+            {this.props.t("filter")}
+          </Form.Label>
+          <Col sm="4">
+            <Form.Check
+              type="radio"
+              label={this.props.t("filterBookingEnterLeave")}
+              name="radioGroup"
+              id="radioEnterLeave"
+              value="option1"
+              checked={this.state.filterOption === "enter_leave"}
+              onChange={(e) => this.setState({ filterOption: "enter_leave" })}
+            />
+            <Form.Check
+              type="radio"
+              label={this.props.t("filterBookingCurrent")}
+              name="radioGroup"
+              id="radioCurrent"
+              value="option2"
+              checked={this.state.filterOption === "current"}
+              onChange={(e) => this.setState({ filterOption: "current" })}
+            />
+          </Col>
+        </Form.Group>
+
+        <Form.Group as={Row}>
+          <Form.Label column sm="2">
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
@@ -263,6 +297,8 @@ class Bookings extends React.Component<Props, State> {
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ start: value });
               }}
+              disabled={this.state.filterOption !== "enter_leave"}
+              clearIcon={null}
               required={true}
               enableTime={true}
             />
@@ -278,6 +314,8 @@ class Bookings extends React.Component<Props, State> {
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ end: value });
               }}
+              disabled={this.state.filterOption !== "enter_leave"}
+              clearIcon={null}
               required={true}
               enableTime={true}
             />

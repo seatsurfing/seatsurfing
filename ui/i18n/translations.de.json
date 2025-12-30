@@ -336,6 +336,8 @@
   "required": "Aktiviert (standardmäßig erforderlich)",
   "subjectDefault": "Betreff für Buchungen",
   "recurring": "wiederkehrend",
+  "filterBookingCurrent": "Aktuelle Buchungen",
+  "filterBookingEnterLeave": "Beginn und Ende",
   "confirmDeleteOrgQuestion1": "Really delete this organization permanently?",
   "confirmDeleteOrgQuestion2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible."
 }

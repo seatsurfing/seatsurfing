@@ -231,6 +231,33 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 	return result, nil
 }
 
+func (r *BookingRepository) GetAllCurrentByOrg(organizationID string) ([]*BookingDetails, error) {
+	var result []*BookingDetails
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
+		"spaces.id, spaces.location_id, spaces.name, "+
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
+		"users.email "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
+		"INNER JOIN locations ON spaces.location_id = locations.id "+
+		"INNER JOIN users ON bookings.user_id = users.id "+
+		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW() "+
+		"ORDER BY enter_time", organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &BookingDetails{}
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *BookingRepository) GetAllByUser(userID string, startTime time.Time) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
