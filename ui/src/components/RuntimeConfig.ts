@@ -1,6 +1,7 @@
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
+import UserPreference from "@/types/UserPreference";
 
 interface RuntimeUserInfos {
   username: string;
@@ -36,6 +37,8 @@ interface RuntimeUserInfos {
   disablePasswordLogin: boolean;
   allowRecurringBookings: boolean;
   subjectDefault: number;
+  use24HourTime: boolean;
+  dateFormat: string;
 }
 
 export default class RuntimeConfig {
@@ -77,6 +80,8 @@ export default class RuntimeConfig {
       disablePasswordLogin: false,
       allowRecurringBookings: true,
       subjectDefault: 2,
+      use24HourTime: true,
+      dateFormat: "Y-m-d",
     };
   };
 
@@ -187,6 +192,23 @@ export default class RuntimeConfig {
     });
   };
 
+  static loadUserPreferences = async (): Promise<void> => {
+    UserPreference.list()
+      .then((list) => {
+        list.forEach((pref) => {
+          if (pref.name === "use_24_hour_time") {
+            RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+          }
+          if (pref.name === "date_format") {
+            RuntimeConfig.INFOS.dateFormat = pref.value;
+          }
+        });
+      })
+      .catch(() => {
+        // Nothing to do
+      });
+  };
+
   static setDetails = (username: string, id: string) => {
     RuntimeConfig.loadSettings().then(() => {
       RuntimeConfig.INFOS.username = username;
@@ -210,7 +232,9 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.orgAdmin = user.admin;
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
       RuntimeConfig.setDetails(user.email, user.id);
-      return RuntimeConfig.loadSettings();
+      return RuntimeConfig.loadSettings().then(() => {
+        return RuntimeConfig.loadUserPreferences();
+      });
     });
   };
 

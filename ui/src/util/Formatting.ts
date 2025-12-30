@@ -1,3 +1,5 @@
+import RuntimeConfig from "@/components/RuntimeConfig";
+
 export default class Formatting {
   static Language: string = "en";
   static t: (key: string, view?: object) => any;
@@ -15,7 +17,7 @@ export default class Formatting {
       day: "2-digit",
       hour: "numeric",
       minute: "numeric",
-      hour12: this.tbool("hour12"),
+      hour12: !RuntimeConfig.INFOS.use24HourTime,
     });
     return formatter;
   }
@@ -39,7 +41,7 @@ export default class Formatting {
       day: "2-digit",
       hour: "numeric",
       minute: "numeric",
-      hour12: false,
+      hour12: !RuntimeConfig.INFOS.use24HourTime,
     });
     return formatter;
   }

@@ -1,4 +1,5 @@
 {
+  "dateFormat": "Date format",
   "accept": "Accept",
   "add": "Add",
   "addBuddy": "Add buddy",
@@ -183,6 +184,8 @@
   "logout": "Log out",
   "mailNotifications": "Mail notifications",
   "approvalNotifications": "Notify me via email",
+  "timeFormat": "Time format",
+  "use24HourTime": "Use 24-hour time format",
   "mangageOrgHeadline": "Manage organization.",
   "map": "Map",
   "mapFileTypes": "PNG, JPEG or GIF",

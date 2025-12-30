@@ -11,7 +11,6 @@ import "@/styles/Search.css";
 import "@/styles/Settings.css";
 import "@/styles/SideBar.css";
 import "@/styles/FullLayout.css";
-import "react-calendar/dist/Calendar.css";
 import "@/styles/Booking.css";
 import type { AppProps } from "next/app";
 import RuntimeConfig from "@/components/RuntimeConfig";

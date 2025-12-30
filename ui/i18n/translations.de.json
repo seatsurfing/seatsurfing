@@ -1,4 +1,5 @@
 {
+  "dateFormat": "Datumsformat",
   "accept": "Annehmen",
   "add": "Hinzufügen",
   "addBuddy": "KollegIn hinzufügen",
@@ -184,6 +185,8 @@
   "logout": "Abmelden",
   "mailNotifications": "E-Mail-Benachrichtigungen",
   "approvalNotifications": "Per E-Mail benachrichtigen",
+  "timeFormat": "Zeitformat",
+  "use24HourTime": "24-Stunden-Format verwenden",
   "mangageOrgHeadline": "Organisation verwalten.",
   "map": "Karte",
   "mapFileTypes": "PNG, JPEG oder GIF",
@@ -334,5 +337,7 @@
   "subjectDefault": "Betreff für Buchungen",
   "recurring": "wiederkehrend",
   "filterBookingCurrent": "Aktuelle Buchungen",
-  "filterBookingEnterLeave": "Beginn und Ende"
+  "filterBookingEnterLeave": "Beginn und Ende",
+  "confirmDeleteOrgQuestion1": "Really delete this organization permanently?",
+  "confirmDeleteOrgQuestion2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible."
 }
