@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.51.0](https://github.com/seatsurfing/seatsurfing/compare/v1.50.2...v1.51.0) (2025-12-30)
+
+
+### Features
+
+* add calender view to "my bookings" ([#1583](https://github.com/seatsurfing/seatsurfing/issues/1583)) ([2544ae5](https://github.com/seatsurfing/seatsurfing/commit/2544ae54220b0a7a0746fa6a7b9d376f512b5a4d))
+* add confirmation mail for org deletion ([#1587](https://github.com/seatsurfing/seatsurfing/issues/1587)) ([9fcaab9](https://github.com/seatsurfing/seatsurfing/commit/9fcaab98db416f04077c8d9f7c3581d19c42e34c))
+* add current filter to admin booking UI ([#1589](https://github.com/seatsurfing/seatsurfing/issues/1589)) ([5b1bcc4](https://github.com/seatsurfing/seatsurfing/commit/5b1bcc4f159a3e689b4071e0bff8e7f683d07fd7))
+* improved date/time picker based on Flatpickr ([#1582](https://github.com/seatsurfing/seatsurfing/issues/1582)) ([3ef3722](https://github.com/seatsurfing/seatsurfing/commit/3ef3722694d52e5a883658b6179f558dabc87d9a))
+
+
+### Bug Fixes
+
+* **deps:** bump excellentexport from 3.9.10 to 3.9.11 in /ui ([#1584](https://github.com/seatsurfing/seatsurfing/issues/1584)) ([436f236](https://github.com/seatsurfing/seatsurfing/commit/436f236cc19fc51acc772ed25482834830e88d33))
+* fix panic if user or org is deleted but bearer token is still valid ([#1588](https://github.com/seatsurfing/seatsurfing/issues/1588)) ([70bbbe5](https://github.com/seatsurfing/seatsurfing/commit/70bbbe59d15667412e7d23098e0879395dd198f1))
+* show org language and primary contact infos on admin settings page ([#1586](https://github.com/seatsurfing/seatsurfing/issues/1586)) ([14a758d](https://github.com/seatsurfing/seatsurfing/commit/14a758da63d20c0e5975dbc7e7321a1aed74a2e7))
+
 ## [1.50.2](https://github.com/seatsurfing/seatsurfing/compare/v1.50.1...v1.50.2) (2025-12-25)
 
 
