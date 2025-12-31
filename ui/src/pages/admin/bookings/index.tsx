@@ -73,7 +73,10 @@ class Bookings extends React.Component<Props, State> {
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
-      filterOption: "enter_leave",
+      filterOption:
+        this.props.router.query["filter"] === "current"
+          ? "current"
+          : "enter_leave",
     };
     this.loadSettings();
   }
@@ -89,12 +92,14 @@ class Bookings extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  updateUrlParams = (start: string, end: string) => {
+  updateUrlParams = (enter: string, leave: string, filter: string | null) => {
     const currentPath = this.props.router.pathname;
+    const { filter: _, ...queryWithoutFilter } = this.props.router.query;
     const currentQuery = {
-      ...this.props.router.query,
-      enter: start,
-      leave: end,
+      ...queryWithoutFilter,
+      enter,
+      leave,
+      ...(filter !== null && { filter }),
     };
 
     this.props.router.replace(
@@ -121,6 +126,7 @@ class Bookings extends React.Component<Props, State> {
       this.updateUrlParams(
         DateUtil.formatToDateTimeString(this.state.start),
         DateUtil.formatToDateTimeString(this.state.end),
+        this.state.filterOption === "current" ? this.state.filterOption : null,
       );
     });
   };
