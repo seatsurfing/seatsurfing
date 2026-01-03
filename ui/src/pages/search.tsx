@@ -1658,7 +1658,7 @@ class Search extends React.Component<Props, State> {
         height: (this.mapData ? this.mapData.height : 0) + "px",
         backgroundImage: this.mapData
           ? "url(data:image/" +
-            this.mapData.mapMimeType +
+            this.mapData.mimeType +
             ";base64," +
             this.mapData.data +
             ")"

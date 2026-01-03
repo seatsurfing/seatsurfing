@@ -1141,7 +1141,7 @@ class EditLocation extends React.Component<Props, State> {
         position: "relative" as "relative",
         backgroundImage: this.mapData
           ? "url(data:image/" +
-            this.mapData.mapMimeType +
+            this.mapData.mimeType +
             ";base64," +
             this.mapData.data +
             ")"
@@ -1380,7 +1380,7 @@ class EditLocation extends React.Component<Props, State> {
             <Col sm="4">
               <Form.Control
                 type="file"
-                accept="image/png, image/jpeg, image/gif"
+                accept="image/png, image/jpeg, image/gif, image/svg+xml"
                 onChange={(e: any) =>
                   this.setState({
                     files: e.target.files,

@@ -6,10 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
-
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 

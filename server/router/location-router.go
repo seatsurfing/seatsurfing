@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rustyoz/svg"
 
 	_ "image/gif"
 	_ "image/jpeg"
@@ -456,15 +457,37 @@ func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	image, format, err := image.DecodeConfig(bytes.NewReader(data))
+	// Check if image is PNG, GIF of JPEG
+	img, format, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
-		log.Println(err)
-		SendBadRequest(w)
-		return
+		// On error, check is image is SVG
+		parsedSvg, err := svg.ParseSvg(string(data), "", 1.0)
+		if err != nil {
+			log.Println(err)
+			SendBadRequest(w)
+			return
+		}
+		heightPx, err := CSSDimensionsToPixels(parsedSvg.Height)
+		if err != nil {
+			log.Println(err)
+			SendBadRequest(w)
+			return
+		}
+		widthPx, err := CSSDimensionsToPixels(parsedSvg.Width)
+		if err != nil {
+			log.Println(err)
+			SendBadRequest(w)
+			return
+		}
+		img = image.Config{
+			Width:  int(widthPx),
+			Height: int(heightPx),
+		}
+		format = "svg+xml"
 	}
 	locationMap := &LocationMap{
-		Width:    uint(image.Width),
-		Height:   uint(image.Height),
+		Width:    uint(img.Width),
+		Height:   uint(img.Height),
 		MimeType: format,
 		Data:     data,
 	}
