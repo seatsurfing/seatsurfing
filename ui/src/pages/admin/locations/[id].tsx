@@ -48,6 +48,10 @@ interface SpaceState {
   y: number;
   width: string;
   height: string;
+  orgWidth: number;
+  orgHeight: number;
+  orgX: number;
+  orgY: number;
   rotation: number;
   requireSubject: boolean;
   changed: boolean;
@@ -69,6 +73,8 @@ interface State {
   maxConcurrentBookings: number;
   timezone: string;
   enabled: boolean;
+  mapScale: number;
+  mapScaleOnLoad: number;
   fileLabel: string;
   files: FileList | null;
   spaces: SpaceState[];
@@ -116,6 +122,8 @@ class EditLocation extends React.Component<Props, State> {
       maxConcurrentBookings: 0,
       timezone: "",
       enabled: true,
+      mapScale: 1.0,
+      mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
       files: null,
       spaces: [],
@@ -188,6 +196,8 @@ class EditLocation extends React.Component<Props, State> {
                     maxConcurrentBookings: location.maxConcurrentBookings,
                     timezone: location.timezone,
                     enabled: location.enabled,
+                    mapScale: location.mapScale,
+                    mapScaleOnLoad: location.mapScale,
                     attributeValues: attributeValues,
                     availableAttributes: attributes,
                     loading: false,
@@ -319,6 +329,7 @@ class EditLocation extends React.Component<Props, State> {
       : 0;
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
+    this.entity.mapScale = this.state.mapScale;
     this.entity
       .save()
       .then(() => {
@@ -335,17 +346,33 @@ class EditLocation extends React.Component<Props, State> {
                         "/admin/locations/" + this.entity.id,
                       );
                       this.setState({
+                        spaces: this.state.spaces.map((s) => {
+                          s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                          s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                          s.orgX = s.x;
+                          s.orgY = s.y;
+                          return s;
+                        }),
                         files: null,
                         saved: true,
                         changed: false,
                         submitting: false,
+                        mapScaleOnLoad: this.state.mapScale,
                       });
                     });
                 } else {
                   this.setState({
+                    spaces: this.state.spaces.map((s) => {
+                      s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                      s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                      s.orgX = s.x;
+                      s.orgY = s.y;
+                      return s;
+                    }),
                     saved: true,
                     changed: false,
                     submitting: false,
+                    mapScaleOnLoad: this.state.mapScale,
                   });
                 }
               })
@@ -354,6 +381,24 @@ class EditLocation extends React.Component<Props, State> {
           .catch(() => onError());
       })
       .catch(() => onError());
+  };
+
+  setMapScale = (scale: number) => {
+    let spaces = this.state.spaces;
+    spaces.forEach((space) => {
+      space.x = Math.round((space.orgX / this.state.mapScaleOnLoad) * scale);
+      space.y = Math.round((space.orgY / this.state.mapScaleOnLoad) * scale);
+      space.width =
+        Math.round((space.orgWidth / this.state.mapScaleOnLoad) * scale) + "";
+      space.height =
+        Math.round((space.orgHeight / this.state.mapScaleOnLoad) * scale) + "";
+      space.changed = true;
+    });
+    this.setState({
+      spaces: spaces,
+      changed: true,
+      mapScale: scale,
+    });
   };
 
   deleteItem = () => {
@@ -372,6 +417,10 @@ class EditLocation extends React.Component<Props, State> {
       y: e ? e.y : 10,
       width: e ? e.width + "px" : "100px",
       height: e ? e.height + "px" : "100px",
+      orgWidth: e ? e.width : 100,
+      orgHeight: e ? e.height : 100,
+      orgX: e ? e.x : 10,
+      orgY: e ? e.y : 10,
       rotation: 0,
       requireSubject: e
         ? e.requireSubject
@@ -1136,9 +1185,12 @@ class EditLocation extends React.Component<Props, State> {
         </>
       );
       const floorPlanStyle = {
-        width: (this.mapData ? this.mapData.width : 0) + "px",
-        height: (this.mapData ? this.mapData.height : 0) + "px",
+        width:
+          (this.mapData ? this.mapData.width * this.state.mapScale : 0) + "px",
+        height:
+          (this.mapData ? this.mapData.height * this.state.mapScale : 0) + "px",
         position: "relative" as "relative",
+        backgroundSize: "contain",
         backgroundImage: this.mapData
           ? "url(data:image/" +
             this.mapData.mimeType +
@@ -1195,6 +1247,7 @@ class EditLocation extends React.Component<Props, State> {
                 <Button
                   className="btn-sm"
                   variant="outline-secondary"
+                  disabled={this.state.mapScale != this.state.mapScaleOnLoad}
                   onClick={() => this.addRect()}
                 >
                   <IconMap className="feather" /> {this.props.t("addSpace")}
@@ -1385,10 +1438,32 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({
                     files: e.target.files,
                     fileLabel: e.target.files.item(0).name,
+                    mapScale: 1.0,
                   })
                 }
                 required={!this.entity.id}
               />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("scale")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <Form.Control
+                  type="number"
+                  disabled={!this.entity.id || this.state.files !== null}
+                  placeholder={this.props.t("scale")}
+                  min={1}
+                  max={1000}
+                  value={Math.round(this.state.mapScale * 100)}
+                  onChange={(e: any) =>
+                    this.setMapScale(parseFloat(e.target.value) / 100.0)
+                  }
+                />
+                <InputGroup.Text>%</InputGroup.Text>
+              </InputGroup>
             </Col>
           </Form.Group>
         </Form>

@@ -1654,8 +1654,11 @@ class Search extends React.Component<Props, State> {
       );
     } else {
       const floorPlanStyle = {
-        width: (this.mapData ? this.mapData.width : 0) + "px",
-        height: (this.mapData ? this.mapData.height : 0) + "px",
+        width:
+          (this.mapData ? this.mapData.width * this.mapData.scale : 0) + "px",
+        height:
+          (this.mapData ? this.mapData.height * this.mapData.scale : 0) + "px",
+        backgroundSize: "contain",
         backgroundImage: this.mapData
           ? "url(data:image/" +
             this.mapData.mimeType +
