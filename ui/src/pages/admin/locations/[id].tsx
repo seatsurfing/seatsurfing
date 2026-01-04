@@ -346,17 +346,33 @@ class EditLocation extends React.Component<Props, State> {
                         "/admin/locations/" + this.entity.id,
                       );
                       this.setState({
+                        spaces: this.state.spaces.map((s) => {
+                          s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                          s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                          s.orgX = s.x;
+                          s.orgY = s.y;
+                          return s;
+                        }),
                         files: null,
                         saved: true,
                         changed: false,
                         submitting: false,
+                        mapScaleOnLoad: this.state.mapScale,
                       });
                     });
                 } else {
                   this.setState({
+                    spaces: this.state.spaces.map((s) => {
+                      s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                      s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                      s.orgX = s.x;
+                      s.orgY = s.y;
+                      return s;
+                    }),
                     saved: true,
                     changed: false,
                     submitting: false,
+                    mapScaleOnLoad: this.state.mapScale,
                   });
                 }
               })
@@ -1231,6 +1247,7 @@ class EditLocation extends React.Component<Props, State> {
                 <Button
                   className="btn-sm"
                   variant="outline-secondary"
+                  disabled={this.state.mapScale != this.state.mapScaleOnLoad}
                   onClick={() => this.addRect()}
                 >
                   <IconMap className="feather" /> {this.props.t("addSpace")}
