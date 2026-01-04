@@ -350,7 +350,6 @@ class EditLocation extends React.Component<Props, State> {
                         saved: true,
                         changed: false,
                         submitting: false,
-                        mapScaleOnLoad: this.state.mapScale,
                       });
                     });
                 } else {
@@ -358,7 +357,6 @@ class EditLocation extends React.Component<Props, State> {
                     saved: true,
                     changed: false,
                     submitting: false,
-                    mapScaleOnLoad: this.state.mapScale,
                   });
                 }
               })
@@ -372,10 +370,12 @@ class EditLocation extends React.Component<Props, State> {
   setMapScale = (scale: number) => {
     let spaces = this.state.spaces;
     spaces.forEach((space) => {
-      space.x = Math.round(space.orgX / this.state.mapScaleOnLoad * scale);
-      space.y = Math.round(space.orgY / this.state.mapScaleOnLoad * scale);
-      space.width = Math.round(space.orgWidth / this.state.mapScaleOnLoad * scale) + "";
-      space.height = Math.round(space.orgHeight / this.state.mapScaleOnLoad * scale) + "";
+      space.x = Math.round((space.orgX / this.state.mapScaleOnLoad) * scale);
+      space.y = Math.round((space.orgY / this.state.mapScaleOnLoad) * scale);
+      space.width =
+        Math.round((space.orgWidth / this.state.mapScaleOnLoad) * scale) + "";
+      space.height =
+        Math.round((space.orgHeight / this.state.mapScaleOnLoad) * scale) + "";
       space.changed = true;
     });
     this.setState({
