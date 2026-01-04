@@ -370,10 +370,10 @@ class EditLocation extends React.Component<Props, State> {
     spaces.forEach((space) => {
       const w = parseInt(space.width.replace(/^\D+/g, ""));
       const h = parseInt(space.height.replace(/^\D+/g, ""));
-      space.x = Math.round(space.x / this.state.mapScaleOnLoad * scale);
-      space.y = Math.round(space.y / this.state.mapScaleOnLoad * scale);
-      space.width =  Math.round(w / this.state.mapScaleOnLoad * scale)+"";
-      space.height = Math.round(h / this.state.mapScaleOnLoad * scale)+"";
+      space.x = Math.round((space.x / this.state.mapScaleOnLoad) * scale);
+      space.y = Math.round((space.y / this.state.mapScaleOnLoad) * scale);
+      space.width = Math.round((w / this.state.mapScaleOnLoad) * scale) + "";
+      space.height = Math.round((h / this.state.mapScaleOnLoad) * scale) + "";
     });
     this.setState({
       spaces: spaces,
@@ -1163,8 +1163,10 @@ class EditLocation extends React.Component<Props, State> {
         </>
       );
       const floorPlanStyle = {
-        width: (this.mapData ? this.mapData.width * this.state.mapScale : 0) + "px",
-        height: (this.mapData ? this.mapData.height * this.state.mapScale : 0) + "px",
+        width:
+          (this.mapData ? this.mapData.width * this.state.mapScale : 0) + "px",
+        height:
+          (this.mapData ? this.mapData.height * this.state.mapScale : 0) + "px",
         position: "relative" as "relative",
         backgroundSize: "contain",
         backgroundImage: this.mapData
@@ -1425,17 +1427,17 @@ class EditLocation extends React.Component<Props, State> {
             </Form.Label>
             <Col sm="4">
               <InputGroup>
-              <Form.Control
-                type="number"
-                placeholder={this.props.t("scale")}
-                min={1}
-                max={1000}
-                value={Math.round(this.state.mapScale*100)}
-                onChange={(e: any) =>
-                  this.setMapScale(parseFloat(e.target.value) / 100.0)
-                }
-              />
-              <InputGroup.Text>%</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  placeholder={this.props.t("scale")}
+                  min={1}
+                  max={1000}
+                  value={Math.round(this.state.mapScale * 100)}
+                  onChange={(e: any) =>
+                    this.setMapScale(parseFloat(e.target.value) / 100.0)
+                  }
+                />
+                <InputGroup.Text>%</InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>
