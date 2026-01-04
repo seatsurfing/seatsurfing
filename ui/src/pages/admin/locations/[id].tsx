@@ -48,6 +48,10 @@ interface SpaceState {
   y: number;
   width: string;
   height: string;
+  orgWidth: number;
+  orgHeight: number;
+  orgX: number;
+  orgY: number;
   rotation: number;
   requireSubject: boolean;
   changed: boolean;
@@ -368,18 +372,16 @@ class EditLocation extends React.Component<Props, State> {
   setMapScale = (scale: number) => {
     let spaces = this.state.spaces;
     spaces.forEach((space) => {
-      const w = parseInt(space.width.replace(/^\D+/g, ""));
-      const h = parseInt(space.height.replace(/^\D+/g, ""));
-      space.x = Math.round((space.x / this.state.mapScaleOnLoad) * scale);
-      space.y = Math.round((space.y / this.state.mapScaleOnLoad) * scale);
-      space.width = Math.round((w / this.state.mapScaleOnLoad) * scale) + "";
-      space.height = Math.round((h / this.state.mapScaleOnLoad) * scale) + "";
+      space.x = Math.round(space.orgX / this.state.mapScaleOnLoad * scale);
+      space.y = Math.round(space.orgY / this.state.mapScaleOnLoad * scale);
+      space.width = Math.round(space.orgWidth / this.state.mapScaleOnLoad * scale) + "";
+      space.height = Math.round(space.orgHeight / this.state.mapScaleOnLoad * scale) + "";
+      space.changed = true;
     });
     this.setState({
       spaces: spaces,
       changed: true,
       mapScale: scale,
-      mapScaleOnLoad: scale,
     });
   };
 
@@ -399,6 +401,10 @@ class EditLocation extends React.Component<Props, State> {
       y: e ? e.y : 10,
       width: e ? e.width + "px" : "100px",
       height: e ? e.height + "px" : "100px",
+      orgWidth: e ? e.width : 100,
+      orgHeight: e ? e.height : 100,
+      orgX: e ? e.x : 10,
+      orgY: e ? e.y : 10,
       rotation: 0,
       requireSubject: e
         ? e.requireSubject
