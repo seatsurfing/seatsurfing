@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.52.0](https://github.com/seatsurfing/seatsurfing/compare/v1.51.0...v1.52.0) (2026-01-04)
+
+
+### Features
+
+* add ability to scale floor plans ([#1594](https://github.com/seatsurfing/seatsurfing/issues/1594)) ([e49a0d6](https://github.com/seatsurfing/seatsurfing/commit/e49a0d67a209344c660097b01269103411d2b636))
+* support SVG floor plans ([#1593](https://github.com/seatsurfing/seatsurfing/issues/1593)) ([01ebf46](https://github.com/seatsurfing/seatsurfing/commit/01ebf462c671a54aabe5e3cf01af5902ec8f02ba))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.69 to 1.0.70 in /server ([#1590](https://github.com/seatsurfing/seatsurfing/issues/1590)) ([5d84e69](https://github.com/seatsurfing/seatsurfing/commit/5d84e69255ebcc00037e0017c5411655ae980a8c))
+* persist current booking filter in URL ([#1591](https://github.com/seatsurfing/seatsurfing/issues/1591)) ([1d822b8](https://github.com/seatsurfing/seatsurfing/commit/1d822b84c0470adce1b1472929a85f3b5025b197))
+
 ## [1.51.0](https://github.com/seatsurfing/seatsurfing/compare/v1.50.2...v1.51.0) (2025-12-30)
 
 
