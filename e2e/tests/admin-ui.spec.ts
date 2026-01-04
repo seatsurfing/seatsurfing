@@ -37,7 +37,7 @@ test("crud location", async ({ page }) => {
   await page.getByPlaceholder("Name").fill(name);
   await page.getByPlaceholder("Description").fill(name);
   await page.locator("#check-limitConcurrentBookings").check();
-  await page.getByRole("spinbutton").fill("5");
+  await page.getByRole("spinbutton").first().fill("5");
   await page
     .locator('input[type="file"]')
     .setInputFiles("../server/res/floorplan.jpg");
