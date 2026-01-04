@@ -469,6 +469,7 @@ func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
 		Width:    uint(image.Width),
 		Height:   uint(image.Height),
 		MimeType: format,
+		Scale:    1.0,
 		Data:     data,
 	}
 	if err := GetLocationRepository().SetMap(e, locationMap); err != nil {

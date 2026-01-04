@@ -1421,6 +1421,7 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({
                     files: e.target.files,
                     fileLabel: e.target.files.item(0).name,
+                    mapScale: 1.0,
                   })
                 }
                 required={!this.entity.id}
@@ -1435,6 +1436,7 @@ class EditLocation extends React.Component<Props, State> {
               <InputGroup>
                 <Form.Control
                   type="number"
+                  disabled={!this.entity.id || this.state.files !== null}
                   placeholder={this.props.t("scale")}
                   min={1}
                   max={1000}
