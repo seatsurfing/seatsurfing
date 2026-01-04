@@ -11,6 +11,7 @@ export default class Location extends Entity {
   mapWidth: number;
   mapHeight: number;
   mapMimeType: string;
+  mapScale: number;
 
   constructor() {
     super();
@@ -22,6 +23,7 @@ export default class Location extends Entity {
     this.mapWidth = 0;
     this.mapHeight = 0;
     this.mapMimeType = "";
+    this.mapScale = 1.0;
   }
 
   serialize(): Object {
@@ -31,6 +33,7 @@ export default class Location extends Entity {
       maxConcurrentBookings: this.maxConcurrentBookings,
       timezone: this.timezone,
       enabled: this.enabled,
+      mapScale: this.mapScale,
     });
   }
 
@@ -44,6 +47,7 @@ export default class Location extends Entity {
     this.mapWidth = input.mapWidth;
     this.mapHeight = input.mapHeight;
     this.mapMimeType = input.mapMimeType;
+    this.mapScale = input.mapScale;
   }
 
   getBackendUrl(): string {
@@ -68,6 +72,7 @@ export default class Location extends Entity {
         width: result.json.width,
         height: result.json.height,
         mimeType: result.json.mimeType,
+        scale: result.json.scale,
         data: result.json.data,
       } as LocationMap;
     });
@@ -133,6 +138,7 @@ export default class Location extends Entity {
 export interface LocationMap {
   width: number;
   height: number;
+  scale: number;
   mimeType: string;
   data: string;
 }

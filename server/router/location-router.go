@@ -26,11 +26,12 @@ type LocationRouter struct {
 }
 
 type CreateLocationRequest struct {
-	Name                  string `json:"name" validate:"required"`
-	Description           string `json:"description"`
-	MaxConcurrentBookings uint   `json:"maxConcurrentBookings"`
-	Timezone              string `json:"timezone"`
-	Enabled               bool   `json:"enabled"`
+	Name                  string  `json:"name" validate:"required"`
+	Description           string  `json:"description"`
+	MaxConcurrentBookings uint    `json:"maxConcurrentBookings"`
+	Timezone              string  `json:"timezone"`
+	Enabled               bool    `json:"enabled"`
+	MapScale              float64 `json:"mapScale"`
 }
 
 type GetLocationResponse struct {
@@ -43,10 +44,11 @@ type GetLocationResponse struct {
 }
 
 type GetMapResponse struct {
-	Width    uint   `json:"width"`
-	Height   uint   `json:"height"`
-	MimeType string `json:"mimeType"`
-	Data     string `json:"data"`
+	Width    uint    `json:"width"`
+	Height   uint    `json:"height"`
+	Scale    float64 `json:"scale"`
+	MimeType string  `json:"mimeType"`
+	Data     string  `json:"data"`
 }
 
 type SetSpaceAttributeValueRequest struct {
@@ -432,6 +434,7 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		Width:    locationMap.Width,
 		Height:   locationMap.Height,
 		MimeType: locationMap.MimeType,
+		Scale:    locationMap.Scale,
 		Data:     base64.StdEncoding.EncodeToString(locationMap.Data),
 	}
 	SendJSON(w, res)
@@ -497,6 +500,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.MaxConcurrentBookings = m.MaxConcurrentBookings
 	e.Timezone = m.Timezone
 	e.Enabled = m.Enabled
+	e.MapScale = m.MapScale
 	return e
 }
 
@@ -508,6 +512,7 @@ func (router *LocationRouter) copyToRestModel(e *Location) *GetLocationResponse 
 	m.MapMimeType = e.MapMimeType
 	m.MapWidth = e.MapWidth
 	m.MapHeight = e.MapHeight
+	m.MapScale = e.MapScale
 	m.Description = e.Description
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone

@@ -69,6 +69,8 @@ interface State {
   maxConcurrentBookings: number;
   timezone: string;
   enabled: boolean;
+  mapScale: number;
+  mapScaleOnLoad: number;
   fileLabel: string;
   files: FileList | null;
   spaces: SpaceState[];
@@ -116,6 +118,8 @@ class EditLocation extends React.Component<Props, State> {
       maxConcurrentBookings: 0,
       timezone: "",
       enabled: true,
+      mapScale: 1.0,
+      mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
       files: null,
       spaces: [],
@@ -188,6 +192,8 @@ class EditLocation extends React.Component<Props, State> {
                     maxConcurrentBookings: location.maxConcurrentBookings,
                     timezone: location.timezone,
                     enabled: location.enabled,
+                    mapScale: location.mapScale,
+                    mapScaleOnLoad: location.mapScale,
                     attributeValues: attributeValues,
                     availableAttributes: attributes,
                     loading: false,
@@ -319,6 +325,7 @@ class EditLocation extends React.Component<Props, State> {
       : 0;
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
+    this.entity.mapScale = this.state.mapScale;
     this.entity
       .save()
       .then(() => {
@@ -339,6 +346,7 @@ class EditLocation extends React.Component<Props, State> {
                         saved: true,
                         changed: false,
                         submitting: false,
+                        mapScaleOnLoad: this.state.mapScale,
                       });
                     });
                 } else {
@@ -346,6 +354,7 @@ class EditLocation extends React.Component<Props, State> {
                     saved: true,
                     changed: false,
                     submitting: false,
+                    mapScaleOnLoad: this.state.mapScale,
                   });
                 }
               })
@@ -354,6 +363,24 @@ class EditLocation extends React.Component<Props, State> {
           .catch(() => onError());
       })
       .catch(() => onError());
+  };
+
+  setMapScale = (scale: number) => {
+    let spaces = this.state.spaces;
+    spaces.forEach((space) => {
+      const w = parseInt(space.width.replace(/^\D+/g, ""));
+      const h = parseInt(space.height.replace(/^\D+/g, ""));
+      space.x = Math.round(space.x / this.state.mapScaleOnLoad * scale);
+      space.y = Math.round(space.y / this.state.mapScaleOnLoad * scale);
+      space.width =  Math.round(w / this.state.mapScaleOnLoad * scale)+"";
+      space.height = Math.round(h / this.state.mapScaleOnLoad * scale)+"";
+    });
+    this.setState({
+      spaces: spaces,
+      changed: true,
+      mapScale: scale,
+      mapScaleOnLoad: scale,
+    });
   };
 
   deleteItem = () => {
@@ -1136,9 +1163,10 @@ class EditLocation extends React.Component<Props, State> {
         </>
       );
       const floorPlanStyle = {
-        width: (this.mapData ? this.mapData.width : 0) + "px",
-        height: (this.mapData ? this.mapData.height : 0) + "px",
+        width: (this.mapData ? this.mapData.width * this.state.mapScale : 0) + "px",
+        height: (this.mapData ? this.mapData.height * this.state.mapScale : 0) + "px",
         position: "relative" as "relative",
+        backgroundSize: "contain",
         backgroundImage: this.mapData
           ? "url(data:image/" +
             this.mapData.mapMimeType +
@@ -1389,6 +1417,26 @@ class EditLocation extends React.Component<Props, State> {
                 }
                 required={!this.entity.id}
               />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("scale")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+              <Form.Control
+                type="number"
+                placeholder={this.props.t("scale")}
+                min={1}
+                max={1000}
+                value={Math.round(this.state.mapScale*100)}
+                onChange={(e: any) =>
+                  this.setMapScale(parseFloat(e.target.value) / 100.0)
+                }
+              />
+              <InputGroup.Text>%</InputGroup.Text>
+              </InputGroup>
             </Col>
           </Form.Group>
         </Form>
