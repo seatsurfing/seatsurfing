@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -76,6 +77,16 @@ type AuthStateLoginPayload struct {
 	LoginType string `json:"type"`
 	Redirect  string `json:"redirect,omitempty"`
 }
+
+type CreateAccessTokenOptions int
+
+const (
+	WithoutIssuer CreateAccessTokenOptions = iota
+	WithoutAudience
+	WithoutExpiry
+	WithoutIssuedAt
+	WithoutNotBefore
+)
 
 type AuthRouter struct {
 }
@@ -186,7 +197,7 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.createClaims(user)
+	claims := router.CreateClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	newRefreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -322,7 +333,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.createClaims(user)
+	claims := router.CreateClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -349,7 +360,7 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 	}
 	GetAuthStateRepository().Delete(authState)
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	claims := router.createClaims(user)
+	claims := router.CreateClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -431,7 +442,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.createClaims(user)
+	claims := router.CreateClaims(user)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -707,7 +718,7 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 	return config
 }
 
-func (router *AuthRouter) createClaims(user *User) *Claims {
+func (router *AuthRouter) CreateClaims(user *User) *Claims {
 	claims := &Claims{
 		UserID:     user.ID,
 		Email:      user.Email,
@@ -718,9 +729,26 @@ func (router *AuthRouter) createClaims(user *User) *Claims {
 	return claims
 }
 
-func (router *AuthRouter) CreateAccessToken(claims *Claims) string {
+func (router *AuthRouter) CreateAccessToken(claims *Claims, options ...CreateAccessTokenOptions) string {
+	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	jti := uuid.New().String()
 	claims.RegisteredClaims = jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+		ID: jti,
+	}
+	if !slices.Contains(options, WithoutIssuer) {
+		claims.RegisteredClaims.Issuer = installID
+	}
+	if !slices.Contains(options, WithoutAudience) {
+		claims.RegisteredClaims.Audience = jwt.ClaimStrings{installID}
+	}
+	if !slices.Contains(options, WithoutIssuedAt) {
+		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
+	}
+	if !slices.Contains(options, WithoutExpiry) {
+		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(15 * time.Minute))
+	}
+	if !slices.Contains(options, WithoutNotBefore) {
+		claims.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now())
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 	jwtString, err := accessToken.SignedString(GetConfig().JwtPrivateKey)

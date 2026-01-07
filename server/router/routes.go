@@ -162,8 +162,16 @@ func ExtractClaimsFromRequest(r *http.Request) (*Claims, string, error) {
 		return nil, "", errors.New("JWT header verification failed: invalid auth header")
 	}
 	authHeader = strings.TrimPrefix(authHeader, "Bearer ")
+	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS512"}),
+		jwt.WithIssuer(installID),
+		jwt.WithAudience(installID),
+		jwt.WithExpirationRequired(),
+		jwt.WithIssuedAt(),
+	)
 	claims := &Claims{}
-	token, err := jwt.ParseWithClaims(authHeader, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := parser.ParseWithClaims(authHeader, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
