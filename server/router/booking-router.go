@@ -312,12 +312,22 @@ func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
 	requestUser := GetRequestUser(r)
-	if !CanAccessOrg(requestUser, requestUser.OrganizationID) && e.UserID != GetRequestUserID(r) {
+	if !CanAccessOrg(requestUser, location.OrganizationID) && e.UserID != GetRequestUserID(r) {
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
@@ -354,12 +364,22 @@ func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
 	requestUser := GetRequestUser(r)
-	if !CanAccessOrg(requestUser, requestUser.OrganizationID) && e.UserID != GetRequestUserID(r) {
+	if !CanAccessOrg(requestUser, location.OrganizationID) && e.UserID != GetRequestUserID(r) {
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
 		SendForbidden(w)
 		return
 	}

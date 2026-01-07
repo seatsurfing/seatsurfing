@@ -120,15 +120,6 @@ func (router *RecurringBookingRouter) getOne(w http.ResponseWriter, r *http.Requ
 		SendNotFound(w)
 		return
 	}
-	requestUser := GetRequestUser(r)
-	if !CanAccessOrg(requestUser, requestUser.OrganizationID) && e.UserID != GetRequestUserID(r) {
-		SendForbidden(w)
-		return
-	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
-		SendForbidden(w)
-		return
-	}
 	space, err := GetSpaceRepository().GetOne(e.SpaceID)
 	if err != nil || space == nil {
 		SendNotFound(w)
@@ -137,6 +128,15 @@ func (router *RecurringBookingRouter) getOne(w http.ResponseWriter, r *http.Requ
 	location, err := GetLocationRepository().GetOne(space.LocationID)
 	if err != nil || location == nil {
 		SendNotFound(w)
+		return
+	}
+	requestUser := GetRequestUser(r)
+	if !CanAccessOrg(requestUser, location.OrganizationID) && e.UserID != GetRequestUserID(r) {
+		SendForbidden(w)
+		return
+	}
+	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+		SendForbidden(w)
 		return
 	}
 	res := router.copyToRestModel(e, location)
