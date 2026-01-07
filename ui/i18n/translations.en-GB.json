@@ -337,5 +337,6 @@
   "recurring": "recurring",
   "filterBookingCurrent": "Current bookings",
   "filterBookingEnterLeave": "Enter and leave time",
-  "scale": "Scale"
+  "scale": "Scale",
+  "confirmSaveScaledMap": "Save the scaled floor plan as a resized version of the original? This will overwrite the original floor plan image and can't be undone."
 }

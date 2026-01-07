@@ -40,6 +40,7 @@ import Search, { SearchOptions } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import RedirectUtil from "@/util/RedirectUtil";
+import Compressor from "compressorjs";
 
 interface SpaceState {
   id: string;
@@ -312,6 +313,71 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ deleteIds: [] });
   };
 
+  base64toBlob = async (base64: string, contentType: string) => {
+    const base64Response = await fetch(`data:${contentType};base64,${base64}`);
+    const blob = await base64Response.blob();
+    return blob;
+  };
+
+  getFileUploadImageWidth = async (file: File): Promise<number> => {
+    return new Promise<number>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const img = new Image();
+        img.onload = () => {
+          resolve(img.width);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  checkCompressMapImage = async () => {
+    let mimeType = "";
+    let width = 0;
+    let compressorInput: File | Blob;
+    if (this.state.mapScale !== this.state.mapScaleOnLoad) {
+      mimeType = this.mapData.mimeType.toLowerCase();
+      width = this.mapData.width;
+      compressorInput = await this.base64toBlob(
+        this.mapData.data,
+        "image/" + mimeType,
+      );
+    } else if (this.state.files && this.state.files.length > 0) {
+      mimeType =
+        this.state.files.item(0)?.type.toLowerCase().replace("image/", "") ||
+        "";
+      width = await this.getFileUploadImageWidth(
+        this.state.files.item(0) as File,
+      );
+      compressorInput = this.state.files.item(0) as File;
+    }
+    return new Promise<File | Blob | null>((resolve) => {
+      if (mimeType === "png" || mimeType === "jpeg") {
+        if (window.confirm(this.props.t("confirmSaveScaledMap"))) {
+          new Compressor(compressorInput, {
+            quality: 0.8,
+            width: Math.round(width * this.state.mapScale),
+            success: (result) => {
+              let file = new File([result], "map." + mimeType, {
+                type: "image/" + mimeType,
+              });
+              resolve(file);
+            },
+            error: (err) => {
+              resolve(compressorInput);
+            },
+          });
+        } else {
+          resolve(null);
+        }
+      } else {
+        resolve(null);
+      }
+    });
+  };
+
   onSubmit = (e: any) => {
     const onError = () => {
       this.setState({
@@ -321,66 +387,70 @@ class EditLocation extends React.Component<Props, State> {
       });
     };
     e.preventDefault();
-    this.setState({ submitting: true, errorSaving: false });
-    this.entity.name = this.state.name;
-    this.entity.description = this.state.description;
-    this.entity.maxConcurrentBookings = this.state.limitConcurrentBookings
-      ? this.state.maxConcurrentBookings
-      : 0;
-    this.entity.timezone = this.state.timezone;
-    this.entity.enabled = this.state.enabled;
-    this.entity.mapScale = this.state.mapScale;
-    this.entity
-      .save()
-      .then(() => {
-        this.saveAttributes()
-          .then(() => {
-            this.saveSpaces()
-              .then(() => {
-                if (this.state.files && this.state.files.length > 0) {
-                  this.entity
-                    .setMap(this.state.files.item(0) as File)
-                    .then(() => {
-                      this.loadData(this.entity.id);
-                      this.props.router.push(
-                        "/admin/locations/" + this.entity.id,
-                      );
-                      this.setState({
-                        spaces: this.state.spaces.map((s) => {
-                          s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
-                          s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
-                          s.orgX = s.x;
-                          s.orgY = s.y;
-                          return s;
-                        }),
-                        files: null,
-                        saved: true,
-                        changed: false,
-                        submitting: false,
-                        mapScaleOnLoad: this.state.mapScale,
+    this.checkCompressMapImage().then((compressedFile) => {
+      this.setState({ submitting: true, errorSaving: false });
+      this.entity.name = this.state.name;
+      this.entity.description = this.state.description;
+      this.entity.maxConcurrentBookings = this.state.limitConcurrentBookings
+        ? this.state.maxConcurrentBookings
+        : 0;
+      this.entity.timezone = this.state.timezone;
+      this.entity.enabled = this.state.enabled;
+      this.entity.mapScale = this.state.mapScale;
+      this.entity
+        .save()
+        .then(() => {
+          this.saveAttributes()
+            .then(() => {
+              this.saveSpaces()
+                .then(() => {
+                  if (this.state.files && this.state.files.length > 0) {
+                    this.entity
+                      .setMap(this.state.files.item(0) as File)
+                      .then(() => {
+                        this.loadData(this.entity.id);
+                        this.props.router.push(
+                          "/admin/locations/" + this.entity.id,
+                        );
+                        this.setState({
+                          spaces: this.state.spaces.map((s) => {
+                            s.orgHeight = parseInt(
+                              s.height.replace(/^\D+/g, ""),
+                            );
+                            s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                            s.orgX = s.x;
+                            s.orgY = s.y;
+                            return s;
+                          }),
+                          files: null,
+                          saved: true,
+                          changed: false,
+                          submitting: false,
+                          mapScaleOnLoad: this.state.mapScale,
+                        });
                       });
+                  } else {
+                    this.setState({
+                      spaces: this.state.spaces.map((s) => {
+                        s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                        s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                        s.orgX = s.x;
+                        s.orgY = s.y;
+                        return s;
+                      }),
+                      saved: true,
+                      changed: false,
+                      submitting: false,
+                      mapScaleOnLoad: this.state.mapScale,
                     });
-                } else {
-                  this.setState({
-                    spaces: this.state.spaces.map((s) => {
-                      s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
-                      s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
-                      s.orgX = s.x;
-                      s.orgY = s.y;
-                      return s;
-                    }),
-                    saved: true,
-                    changed: false,
-                    submitting: false,
-                    mapScaleOnLoad: this.state.mapScale,
-                  });
-                }
-              })
-              .catch(() => onError());
-          })
-          .catch(() => onError());
-      })
-      .catch(() => onError());
+                  }
+                })
+                .catch(() => onError());
+            })
+            .catch(() => onError());
+        })
+        .catch(() => onError());
+    });
   };
 
   setMapScale = (scale: number) => {

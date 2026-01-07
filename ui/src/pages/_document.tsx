@@ -17,7 +17,7 @@ class Doc extends Document<Props> {
     const nonce = randomBytes(128).toString("base64");
     let csp = new Map<string, string[]>();
     csp.set("default-src", ["'self'"]);
-    csp.set("img-src", ["'self'", "data:", "https:", "'unsafe-eval'"]);
+    csp.set("img-src", ["'self'", "data:", "https:", "'unsafe-eval'", "blob:"]);
     csp.set("style-src", ["'self'", "data:", "'unsafe-inline'"]);
     csp.set("object-src", ["data:", "'unsafe-eval'"]);
     csp.set("base-uri", ["'none'"]);
@@ -26,8 +26,9 @@ class Doc extends Document<Props> {
       "'nonce-" + nonce + "'",
       "'strict-dynamic'",
     ]);
+    csp.set("connect-src", ["'self'", "data:"]);
     if (process.env.NODE_ENV.toLowerCase() === "development") {
-      csp.set("connect-src", ["'self'", "http://localhost:8080"]);
+      csp.set("connect-src", ["'self'", "http://localhost:8080", "data:"]);
       csp.set(
         "script-src",
         Object.assign(
