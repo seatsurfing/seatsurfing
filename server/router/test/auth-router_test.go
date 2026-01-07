@@ -9,9 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -292,4 +294,124 @@ func TestAuthServiceAccountNoLogin(t *testing.T) {
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestTokenValid(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	router := &AuthRouter{}
+	claims := router.CreateClaims(user)
+	token := router.CreateAccessToken(claims)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestTokenNoAudience(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	router := &AuthRouter{}
+	claims := router.CreateClaims(user)
+	token := router.CreateAccessToken(claims, WithoutAudience)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestTokenNoExpiry(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	router := &AuthRouter{}
+	claims := router.CreateClaims(user)
+	token := router.CreateAccessToken(claims, WithoutExpiry)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestTokenNoIssuer(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	router := &AuthRouter{}
+	claims := router.CreateClaims(user)
+	token := router.CreateAccessToken(claims, WithoutIssuer)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestTokenExpired(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	router := &AuthRouter{}
+	claims := router.CreateClaims(user)
+	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	jti := uuid.New().String()
+	claims.RegisteredClaims = jwt.RegisteredClaims{
+		ID: jti,
+	}
+	claims.RegisteredClaims.Issuer = installID
+	claims.RegisteredClaims.Audience = jwt.ClaimStrings{installID}
+	claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
+	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-1 * time.Minute))
+	claims.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now())
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	token, err := accessToken.SignedString(GetConfig().JwtPrivateKey)
+	CheckTestBool(t, true, err == nil)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestTokenNotValidYet(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	router := &AuthRouter{}
+	claims := router.CreateClaims(user)
+	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	jti := uuid.New().String()
+	claims.RegisteredClaims = jwt.RegisteredClaims{
+		ID: jti,
+	}
+	claims.RegisteredClaims.Issuer = installID
+	claims.RegisteredClaims.Audience = jwt.ClaimStrings{installID}
+	claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
+	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(15 * time.Minute))
+	claims.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now().Add(5 * time.Minute))
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	token, err := accessToken.SignedString(GetConfig().JwtPrivateKey)
+	CheckTestBool(t, true, err == nil)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
