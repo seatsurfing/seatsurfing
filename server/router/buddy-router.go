@@ -86,6 +86,12 @@ func (router *BuddyRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	requestUser := GetRequestUser(r)
+	if buddyUser.OrganizationID != requestUser.OrganizationID {
+		SendForbidden(w)
+		return
+	}
+
 	e := &Buddy{}
 	e.BuddyID = buddyUser.ID
 	e.OwnerID = GetRequestUserID(r)
