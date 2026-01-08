@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -148,7 +149,7 @@ func UnmarshalValidateBody(r *http.Request, o interface{}) error {
 
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		SetCorsHeaders(w)
+		SetCorsHeaders(w, r)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -278,15 +279,25 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func SetCorsHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Expose-Headers", "X-Object-Id, X-Error-Code, Content-Length, Content-Type")
+func SetCorsHeaders(w http.ResponseWriter, r *http.Request) {
+	allowedOrigins := config.GetConfig().CORSOrigins
+	origin := r.Header.Get("Origin")
+	setOrigin := ""
+	if slices.Contains(allowedOrigins, origin) {
+		setOrigin = origin
+	} else if slices.Contains(allowedOrigins, "*") {
+		setOrigin = "*"
+	}
+	if setOrigin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", setOrigin)
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Object-Id, X-Error-Code, Content-Length, Content-Type")
+	}
 }
 
 func CorsHandler(w http.ResponseWriter, r *http.Request) {
-	SetCorsHeaders(w)
+	SetCorsHeaders(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
