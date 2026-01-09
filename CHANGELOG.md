@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.52.1](https://github.com/seatsurfing/seatsurfing/compare/v1.52.0...v1.52.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* improve access control checks ([#1597](https://github.com/seatsurfing/seatsurfing/issues/1597)) ([f5dd021](https://github.com/seatsurfing/seatsurfing/commit/f5dd021361db3556d4620e5368f417990e7d2aee))
+* improve JWT handling ([#1595](https://github.com/seatsurfing/seatsurfing/issues/1595)) ([b7b04ac](https://github.com/seatsurfing/seatsurfing/commit/b7b04aca0e6e04816a08369cd83780984f31ea88))
+
 ## [1.52.0](https://github.com/seatsurfing/seatsurfing/compare/v1.51.0...v1.52.0) (2026-01-04)
 
 
