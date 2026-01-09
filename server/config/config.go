@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -52,6 +53,7 @@ type Config struct {
 	ValkeyPassword                      string
 	DNSServer                           string // DNS server address for custom resolver
 	DisablePasswordLogin                bool   // Disable password login for all users (only allow OAuth2 and SSO)
+	CORSOrigins                         []string
 }
 
 var _configInstance *Config
@@ -139,6 +141,13 @@ func (c *Config) ReadConfig() {
 		}
 	}
 	c.DisablePasswordLogin = (c.getEnv("DISABLE_PASSWORD_LOGIN", "0") == "1")
+	c.CORSOrigins = strings.Split(c.getEnv("CORS_ORIGINS", ""), ",")
+	if len(c.CORSOrigins) == 1 && c.CORSOrigins[0] == "" {
+		c.CORSOrigins = []string{}
+	}
+	if c.Development && !slices.Contains(c.CORSOrigins, "http://localhost:3000") {
+		c.CORSOrigins = append(c.CORSOrigins, "http://localhost:3000")
+	}
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
