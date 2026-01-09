@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.52.2](https://github.com/seatsurfing/seatsurfing/compare/v1.52.1...v1.52.2) (2026-01-09)
+
+
+### Bug Fixes
+
+* made CORS header configurable ([#1599](https://github.com/seatsurfing/seatsurfing/issues/1599)) ([393d557](https://github.com/seatsurfing/seatsurfing/commit/393d55761f38f284016f124616a81a415f3dc880))
+
 ## [1.52.1](https://github.com/seatsurfing/seatsurfing/compare/v1.52.0...v1.52.1) (2026-01-07)
 
 
