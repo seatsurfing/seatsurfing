@@ -145,7 +145,7 @@ func (c *Config) ReadConfig() {
 	if len(c.CORSOrigins) == 1 && c.CORSOrigins[0] == "" {
 		c.CORSOrigins = []string{}
 	}
-	if c.Development && slices.Contains(c.CORSOrigins, "http://localhost:3000") {
+	if c.Development && !slices.Contains(c.CORSOrigins, "http://localhost:3000") {
 		c.CORSOrigins = append(c.CORSOrigins, "http://localhost:3000")
 	}
 
