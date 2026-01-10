@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -54,6 +55,8 @@ type Config struct {
 	DNSServer                           string // DNS server address for custom resolver
 	DisablePasswordLogin                bool   // Disable password login for all users (only allow OAuth2 and SSO)
 	CORSOrigins                         []string
+	RateLimit                           int
+	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
 }
 
 var _configInstance *Config
@@ -147,6 +150,13 @@ func (c *Config) ReadConfig() {
 	}
 	if c.Development && !slices.Contains(c.CORSOrigins, "http://localhost:3000") {
 		c.CORSOrigins = append(c.CORSOrigins, "http://localhost:3000")
+	}
+	c.RateLimit = c.getEnvInt("RATE_LIMIT", 250)
+	c.RateLimitPeriod = c.getEnv("RATE_LIMIT_PERIOD", "1-M")
+	rxRateLimitPeriod := regexp.MustCompile(`^[0-9]+\-[SMHD]$`)
+	if !rxRateLimitPeriod.MatchString(c.RateLimitPeriod) {
+		log.Println("Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
+		c.RateLimitPeriod = "1-M"
 	}
 
 	// Check deprecated environment variables
