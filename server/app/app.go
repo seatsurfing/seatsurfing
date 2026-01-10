@@ -22,6 +22,9 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/util"
+	"github.com/ulule/limiter/v3"
+	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
 var _appInstance *App
@@ -94,6 +97,15 @@ func (a *App) InitializeRouter() {
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
+
+	rate := limiter.Rate{
+		Period: 1 * time.Hour,
+		Limit:  1000,
+	}
+	store := memory.NewStore()
+	instance := limiter.New(store, rate, limiter.WithTrustForwardHeader(true))
+	limiterMiddleware := stdlib.NewMiddleware(instance)
+	a.Router.Use(limiterMiddleware.Handler)
 }
 
 func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {

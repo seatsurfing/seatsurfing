@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -54,6 +55,9 @@ type Config struct {
 	DNSServer                           string // DNS server address for custom resolver
 	DisablePasswordLogin                bool   // Disable password login for all users (only allow OAuth2 and SSO)
 	CORSOrigins                         []string
+	RateLimite                          int
+	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
+	RateLimitTrustForwardHeader         bool   // Whether to trust the X-Forwarded-For header for rate limiting
 }
 
 var _configInstance *Config
@@ -148,6 +152,14 @@ func (c *Config) ReadConfig() {
 	if c.Development && !slices.Contains(c.CORSOrigins, "http://localhost:3000") {
 		c.CORSOrigins = append(c.CORSOrigins, "http://localhost:3000")
 	}
+	c.RateLimite = c.getEnvInt("RATE_LIMIT", 100)
+	c.RateLimitPeriod = c.getEnv("RATE_LIMIT_PERIOD", "1-M")
+	rxRateLimitPeriod := regexp.MustCompile(`^[0-9]+\-[SMHD]$"`)
+	if !rxRateLimitPeriod.MatchString(c.RateLimitPeriod) {
+		log.Println("Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
+		c.RateLimitPeriod = "1-M"
+	}
+	c.RateLimitTrustForwardHeader = (c.getEnv("RATE_LIMIT_TRUST_FORWARD_HEADER", "0") == "1")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
