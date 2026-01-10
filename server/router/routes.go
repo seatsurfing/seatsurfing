@@ -11,12 +11,17 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/mux"
 	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
+	"github.com/ulule/limiter/v3"
+	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
 type contextKey string
@@ -185,6 +190,60 @@ func ExtractClaimsFromRequest(r *http.Request) (*Claims, string, error) {
 		return nil, "", errors.New("JWT header verification failed: invalid JWT")
 	}
 	return claims, authHeader, nil
+}
+
+func GetRateLimiterMiddleware() mux.MiddlewareFunc {
+	const anonymousUserID = "anonymous"
+	periodSplit := strings.Split(config.GetConfig().RateLimitPeriod, "-")
+	periodValue, _ := strconv.Atoi(periodSplit[0])
+	var period time.Duration
+	switch periodSplit[1] {
+	case "S":
+		period = time.Duration(periodValue) * time.Second
+	case "M":
+		period = time.Duration(periodValue) * time.Minute
+	case "H":
+		period = time.Duration(periodValue) * time.Hour
+	case "D":
+		period = time.Duration(periodValue*24) * time.Hour
+	default:
+		period = time.Duration(1) * time.Hour
+	}
+	rate := limiter.Rate{
+		Period: period,
+		Limit:  int64(config.GetConfig().RateLimit),
+	}
+	store := memory.NewStore()
+	instance := limiter.New(store, rate, limiter.WithTrustForwardHeader(true))
+	limiterMiddleware := &stdlib.Middleware{
+		Limiter:        instance,
+		OnError:        stdlib.DefaultErrorHandler,
+		OnLimitReached: stdlib.DefaultLimitReachedHandler,
+		KeyGetter: func(r *http.Request) string {
+			userID := GetRequestUserID(r)
+			if userID == "" {
+				userID = anonymousUserID
+			}
+			return userID
+		},
+		ExcludedKey: func(key string) bool {
+			if key == anonymousUserID {
+				return true
+			}
+			return false
+		},
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			url := r.URL.Path
+			if strings.HasPrefix(url, "/ui/") {
+				next.ServeHTTP(w, r)
+				return
+			}
+			limiterHandler := limiterMiddleware.Handler(next)
+			limiterHandler.ServeHTTP(w, r)
+		})
+	}
 }
 
 func VerifyAuthMiddleware(next http.Handler) http.Handler {
