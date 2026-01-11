@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/text/language"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -18,12 +20,32 @@ import (
 type OrganizationRouter struct {
 }
 
+func isValidISOCountryCode(code string) bool {
+	if len(code) != 2 {
+		return false
+	}
+	// Parse the country code using the language package
+	tag, err := language.Parse(code)
+	if err != nil {
+		return false
+	}
+	// Extract the region (country) part
+	region, _ := tag.Region()
+	return region.String() != "ZZ" // ZZ means unknown region
+}
+
 type CreateOrganizationRequest struct {
-	Name      string `json:"name" validate:"required"`
-	Firstname string `json:"firstname" validate:"required"`
-	Lastname  string `json:"lastname" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Language  string `json:"language" validate:"required,len=2"`
+	Name         string `json:"name" validate:"required"`
+	Firstname    string `json:"firstname" validate:"required"`
+	Lastname     string `json:"lastname" validate:"required"`
+	Email        string `json:"email" validate:"required,email"`
+	Language     string `json:"language" validate:"required,len=2"`
+	Country      string `json:"country" validate:"omitempty,len=2,alpha"`
+	AddressLine1 string `json:"addressLine1"`
+	AddressLine2 string `json:"addressLine2"`
+	PostalCode   string `json:"postalCode"`
+	City         string `json:"city"`
+	VATID        string `json:"vatId"`
 }
 
 type GetOrganizationResponse struct {
@@ -387,6 +409,10 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if m.Country != "" && !isValidISOCountryCode(m.Country) {
+		SendBadRequest(w)
+		return
+	}
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		SendNotFound(w)
@@ -397,6 +423,20 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	e.Language = eIncoming.Language
 	e.ContactFirstname = eIncoming.ContactFirstname
 	e.ContactLastname = eIncoming.ContactLastname
+	e.Country = eIncoming.Country
+	e.AddressLine1 = eIncoming.AddressLine1
+	e.AddressLine2 = eIncoming.AddressLine2
+	e.PostalCode = eIncoming.PostalCode
+	e.City = eIncoming.City
+	e.VATID = eIncoming.VATID
+
+	for _, plg := range plugin.GetPlugins() {
+		if !(*plg).IsValidOrganizationUpdate(e) {
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	res := &ChangeOrgEmailResponse{
 		VerifyUUID: "",
 	}
@@ -568,6 +608,10 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if m.Country != "" && !isValidISOCountryCode(m.Country) {
+		SendBadRequest(w)
+		return
+	}
 	e := router.copyFromRestModel(&m)
 	e.SignupDate = time.Now()
 	if err := GetOrganizationRepository().Create(e); err != nil {
@@ -606,6 +650,12 @@ func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest
 	e.ContactLastname = m.Lastname
 	e.ContactEmail = m.Email
 	e.Language = m.Language
+	e.Country = m.Country
+	e.AddressLine1 = m.AddressLine1
+	e.AddressLine2 = m.AddressLine2
+	e.PostalCode = m.PostalCode
+	e.City = m.City
+	e.VATID = m.VATID
 	return e
 }
 
@@ -617,5 +667,11 @@ func (router *OrganizationRouter) copyToRestModel(e *Organization) *GetOrganizat
 	m.Lastname = e.ContactLastname
 	m.Email = e.ContactEmail
 	m.Language = e.Language
+	m.Country = e.Country
+	m.AddressLine1 = e.AddressLine1
+	m.AddressLine2 = e.AddressLine2
+	m.PostalCode = e.PostalCode
+	m.City = e.City
+	m.VATID = e.VATID
 	return m
 }
