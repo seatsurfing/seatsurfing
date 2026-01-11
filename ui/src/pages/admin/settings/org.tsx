@@ -330,7 +330,9 @@ class EditOrg extends React.Component<Props, State> {
             <Col sm="4">
               <Form.Select
                 value={this.state.country}
-                onChange={(e: any) => this.setState({ country: e.target.value })}
+                onChange={(e: any) =>
+                  this.setState({ country: e.target.value })
+                }
               >
                 {euCountries.map((country) => (
                   <option key={country.code} value={country.code}>
@@ -348,7 +350,9 @@ class EditOrg extends React.Component<Props, State> {
               <Form.Control
                 type="text"
                 value={this.state.addressLine1}
-                onChange={(e: any) => this.setState({ addressLine1: e.target.value })}
+                onChange={(e: any) =>
+                  this.setState({ addressLine1: e.target.value })
+                }
               />
             </Col>
           </Form.Group>
@@ -360,7 +364,9 @@ class EditOrg extends React.Component<Props, State> {
               <Form.Control
                 type="text"
                 value={this.state.addressLine2}
-                onChange={(e: any) => this.setState({ addressLine2: e.target.value })}
+                onChange={(e: any) =>
+                  this.setState({ addressLine2: e.target.value })
+                }
               />
             </Col>
           </Form.Group>
@@ -372,7 +378,9 @@ class EditOrg extends React.Component<Props, State> {
               <Form.Control
                 type="text"
                 value={this.state.postalCode}
-                onChange={(e: any) => this.setState({ postalCode: e.target.value })}
+                onChange={(e: any) =>
+                  this.setState({ postalCode: e.target.value })
+                }
               />
             </Col>
           </Form.Group>
