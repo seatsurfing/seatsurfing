@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.53.0](https://github.com/seatsurfing/seatsurfing/compare/v1.52.2...v1.53.0) (2026-01-11)
+
+
+### Features
+
+* add optional organization address ([#1603](https://github.com/seatsurfing/seatsurfing/issues/1603)) ([8a5d1ca](https://github.com/seatsurfing/seatsurfing/commit/8a5d1caa8a1cc522c351bf3d3fa9a31f160d5453))
+
 ## [1.52.2](https://github.com/seatsurfing/seatsurfing/compare/v1.52.1...v1.52.2) (2026-01-09)
 
 
