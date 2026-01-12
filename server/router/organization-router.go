@@ -416,7 +416,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		// Revalidate only if VAT ID and/or country changed
 		if !strings.EqualFold(e.VATID, eIncoming.VATID) || !strings.EqualFold(e.Country, eIncoming.Country) {
 			// Make sure country is set
-			if eIncoming.Country != "" {
+			if eIncoming.Country == "" {
 				SendBadRequest(w)
 				return
 			}
