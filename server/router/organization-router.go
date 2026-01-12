@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -412,29 +413,10 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	}
 	eIncoming := router.copyFromRestModel(&m)
 
-	if strings.TrimSpace(eIncoming.VATID) != "" {
-		// Revalidate only if VAT ID and/or country changed
-		if !strings.EqualFold(e.VATID, eIncoming.VATID) || !strings.EqualFold(e.Country, eIncoming.Country) {
-			// Make sure country is set
-			if eIncoming.Country == "" {
-				SendBadRequest(w)
-				return
-			}
-			// Validate only for EU countries
-			if IsValidCountryInRegion(eIncoming.Country, "EU") {
-				if eIncoming.Country != "" && !strings.HasPrefix(strings.ToUpper(eIncoming.VATID), eIncoming.Country) {
-					SendBadRequest(w)
-					return
-				}
-				vatValidity, err := vat.ValidateNumber(eIncoming.VATID)
-				if err != nil || !vatValidity {
-					log.Println("Invalid VAT ID \""+eIncoming.VATID+"\" for organization ", e.ID)
-					log.Println(err)
-					SendBadRequest(w)
-					return
-				}
-			}
-		}
+	if err := router.IsValidVATChange(e, eIncoming, true); err != nil {
+		log.Println(err)
+		SendBadRequest(w)
+		return
 	}
 
 	e.Name = eIncoming.Name
@@ -659,6 +641,37 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 			}
 		}
 	}
+}
+
+func (router *OrganizationRouter) IsValidVATChange(eOld, eNew *Organization, validateVIES bool) error {
+	if strings.TrimSpace(eNew.VATID) != "" {
+		// Revalidate only if VAT ID and/or country changed
+		if !strings.EqualFold(eOld.VATID, eNew.VATID) || !strings.EqualFold(eOld.Country, eNew.Country) {
+			// Make sure country is set
+			if eNew.Country == "" {
+				return errors.New("setting the Countrc is required when setting a VAT ID")
+			}
+			// Validate only for EU countries
+			if IsValidCountryInRegion(eNew.Country, "EU") {
+				if eNew.Country != "" && !strings.HasPrefix(strings.ToUpper(eNew.VATID), eNew.Country) {
+					return errors.New("the VAT ID does not match the selected country")
+				}
+				var vatValidity bool
+				var err error
+				if validateVIES {
+					vatValidity, err = vat.ValidateNumber(eNew.VATID)
+				} else {
+					vatValidity, err = vat.ValidateNumberFormat(eNew.VATID)
+				}
+				if err != nil || !vatValidity {
+					log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID)
+					log.Println(err)
+					return errors.New("the VAT ID is not valid")
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {

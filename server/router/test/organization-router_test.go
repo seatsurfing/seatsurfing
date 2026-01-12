@@ -704,3 +704,66 @@ func TestOrganizationsPrimaryDomain(t *testing.T) {
 	CheckTestBool(t, true, resBody[0].Primary)
 	CheckTestBool(t, false, resBody[1].Primary)
 }
+
+func TestIsValidVATChange(t *testing.T) {
+	testCases := []struct {
+		eOld      *Organization
+		eNew      *Organization
+		expectErr bool
+	}{
+		{
+			eOld: &Organization{
+				VATID:   "DE123456789",
+				Country: "DE",
+			},
+			eNew: &Organization{
+				VATID:   "FR987654321",
+				Country: "FR",
+			},
+			expectErr: false,
+		},
+		{
+			eOld: &Organization{
+				VATID:   "DE123456789",
+				Country: "DE",
+			},
+			eNew: &Organization{
+				VATID:   "FR987654321",
+				Country: "",
+			},
+			expectErr: true,
+		},
+		{
+			eOld: &Organization{
+				VATID:   "DE123456789",
+				Country: "DE",
+			},
+			eNew: &Organization{
+				VATID:   "gjwlkgkwgejlg",
+				Country: "US",
+			},
+			expectErr: false,
+		},
+		{
+			eOld: &Organization{
+				VATID:   "DE123456789",
+				Country: "DE",
+			},
+			eNew: &Organization{
+				VATID:   "",
+				Country: "FR",
+			},
+			expectErr: false,
+		},
+	}
+	router := &OrganizationRouter{}
+	for i, tc := range testCases {
+		err := router.IsValidVATChange(tc.eOld, tc.eNew, false)
+		if tc.expectErr && err == nil {
+			t.Fatalf("Test case %d: Expected error but got none", i)
+		}
+		if !tc.expectErr && err != nil {
+			t.Fatalf("Test case %d: Expected no error but got: %v", i, err)
+		}
+	}
+}
