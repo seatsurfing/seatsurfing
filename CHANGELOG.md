@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.53.1](https://github.com/seatsurfing/seatsurfing/compare/v1.53.0...v1.53.1) (2026-01-12)
+
+
+### Bug Fixes
+
+* improve country selection, add VAT ID validation and add company name ([#1606](https://github.com/seatsurfing/seatsurfing/issues/1606)) ([dcffd5f](https://github.com/seatsurfing/seatsurfing/commit/dcffd5f6a85245912868ad2a485d3a9c54b8c390))
+
 ## [1.53.0](https://github.com/seatsurfing/seatsurfing/compare/v1.52.2...v1.53.0) (2026-01-11)
 
 
