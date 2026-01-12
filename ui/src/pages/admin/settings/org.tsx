@@ -309,7 +309,9 @@ class EditOrg extends React.Component<Props, State> {
               <Form.Control
                 type="text"
                 value={this.state.company}
-                onChange={(e: any) => this.setState({ company: e.target.value })}
+                onChange={(e: any) =>
+                  this.setState({ company: e.target.value })
+                }
               />
             </Col>
           </Form.Group>
