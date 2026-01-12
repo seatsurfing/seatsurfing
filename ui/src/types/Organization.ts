@@ -7,12 +7,13 @@ export default class Organization extends Entity {
   contactLastname: string;
   contactEmail: string;
   language: string;
-  country?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  postalCode?: string;
-  city?: string;
-  vatId?: string;
+  country: string;
+  addressLine1: string;
+  addressLine2: string;
+  postalCode: string;
+  city: string;
+  vatId: string;
+  company: string;
 
   constructor() {
     super();
@@ -27,6 +28,7 @@ export default class Organization extends Entity {
     this.postalCode = "";
     this.city = "";
     this.vatId = "";
+    this.company = "";
   }
 
   serialize(): Object {
@@ -43,6 +45,7 @@ export default class Organization extends Entity {
     if (this.postalCode !== undefined) obj.postalCode = this.postalCode;
     if (this.city !== undefined) obj.city = this.city;
     if (this.vatId !== undefined) obj.vatId = this.vatId;
+    if (this.company !== undefined) obj.company = this.company;
     return Object.assign(super.serialize(), obj);
   }
 
@@ -59,6 +62,7 @@ export default class Organization extends Entity {
     this.postalCode = input.postalCode;
     this.city = input.city;
     this.vatId = input.vatId;
+    this.company = input.company;
   }
 
   getBackendUrl(): string {

@@ -1,15 +1,18 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/creativefabrica/tinval"
+	"github.com/creativefabrica/tinval/euvat"
 	"github.com/gorilla/mux"
-	"golang.org/x/text/language"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	"github.com/seatsurfing/seatsurfing/server/plugin"
@@ -18,20 +21,6 @@ import (
 )
 
 type OrganizationRouter struct {
-}
-
-func isValidISOCountryCode(code string) bool {
-	if len(code) != 2 {
-		return false
-	}
-	// Parse the country code using the language package
-	tag, err := language.Parse(code)
-	if err != nil {
-		return false
-	}
-	// Extract the region (country) part
-	region, _ := tag.Region()
-	return region.String() != "ZZ" // ZZ means unknown region
 }
 
 type CreateOrganizationRequest struct {
@@ -46,6 +35,7 @@ type CreateOrganizationRequest struct {
 	PostalCode   string `json:"postalCode"`
 	City         string `json:"city"`
 	VATID        string `json:"vatId"`
+	Company      string `json:"company"`
 }
 
 type GetOrganizationResponse struct {
@@ -90,6 +80,7 @@ type AuthStateOrgDeletionRequestPayload struct {
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/country", router.getAvailableCountries).Methods("GET")
 	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
 	s.HandleFunc("/{id}/domain/", router.getDomains).Methods("GET")
@@ -104,6 +95,11 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
 	s.HandleFunc("/deleteorg/{id}", router.completeOrgDeletion).Methods("POST")
+}
+
+func (router *OrganizationRouter) getAvailableCountries(w http.ResponseWriter, r *http.Request) {
+	res := CountriesByRegion
+	SendJSON(w, res)
 }
 
 func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWriter, r *http.Request) {
@@ -409,7 +405,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	if m.Country != "" && !isValidISOCountryCode(m.Country) {
+	if m.Country != "" && !IsValidCountry(m.Country) {
 		SendBadRequest(w)
 		return
 	}
@@ -419,6 +415,13 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	eIncoming := router.copyFromRestModel(&m)
+
+	if err := router.IsValidVATChange(e, eIncoming, true); err != nil {
+		log.Println(err)
+		SendBadRequest(w)
+		return
+	}
+
 	e.Name = eIncoming.Name
 	e.Language = eIncoming.Language
 	e.ContactFirstname = eIncoming.ContactFirstname
@@ -429,6 +432,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	e.PostalCode = eIncoming.PostalCode
 	e.City = eIncoming.City
 	e.VATID = eIncoming.VATID
+	e.Company = eIncoming.Company
 
 	for _, plg := range plugin.GetPlugins() {
 		if !(*plg).IsValidOrganizationUpdate(e) {
@@ -608,7 +612,7 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	if m.Country != "" && !isValidISOCountryCode(m.Country) {
+	if m.Country != "" && !IsValidCountry(m.Country) {
 		SendBadRequest(w)
 		return
 	}
@@ -643,6 +647,57 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 	}
 }
 
+func (router *OrganizationRouter) IsValidVATChange(eOld, eNew *Organization, validateVIES bool) error {
+	if strings.TrimSpace(eNew.VATID) != "" {
+		// Revalidate only if VAT ID and/or country changed
+		if !strings.EqualFold(eOld.VATID, eNew.VATID) || !strings.EqualFold(eOld.Country, eNew.Country) {
+			// Make sure country is set
+			if eNew.Country == "" {
+				return errors.New("setting the Countrc is required when setting a VAT ID")
+			}
+			// Validate only for EU countries
+			if IsValidCountryInRegion("EU", eNew.Country) {
+				if eNew.Country != "" && !strings.HasPrefix(strings.ToUpper(eNew.VATID), eNew.Country) {
+					return errors.New("the VAT ID does not match the selected country")
+				}
+				//var err error
+				if _, err := tinval.ParseVAT(eNew.VATID); err != nil {
+					log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID, " according to format rules")
+					log.Println(err)
+					return errors.New("the VAT ID is not valid according to format rules")
+				}
+
+				if validateVIES {
+					validator := tinval.NewValidator(
+						tinval.WithEUVATClient(euvat.NewClient()),
+					)
+					if err := validator.Validate(context.Background(), eNew.VATID, eNew.Country); err != nil {
+						log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID, " according to VIES")
+						log.Println(err)
+						return errors.New("the VAT ID is not valid according to VIES")
+					}
+				}
+
+				/*
+					if validateVIES {
+						//vat.Validate("")
+						//err = vat.Validate(eNew.VATID)
+					} else {
+						_, err = tinval.ParseVAT(eNew.VATID)
+						//err = vat.ValidateNumberFormat(eNew.VATID)
+					}
+					if err != nil || !vatValidity {
+						log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID)
+						log.Println(err)
+						return errors.New("the VAT ID is not valid")
+					}
+				*/
+			}
+		}
+	}
+	return nil
+}
+
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {
 	e := &Organization{}
 	e.Name = m.Name
@@ -656,6 +711,7 @@ func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest
 	e.PostalCode = m.PostalCode
 	e.City = m.City
 	e.VATID = m.VATID
+	e.Company = m.Company
 	return e
 }
 
@@ -673,5 +729,6 @@ func (router *OrganizationRouter) copyToRestModel(e *Organization) *GetOrganizat
 	m.PostalCode = e.PostalCode
 	m.City = e.City
 	m.VATID = e.VATID
+	m.Company = e.Company
 	return m
 }
