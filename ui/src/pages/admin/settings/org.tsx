@@ -1,6 +1,10 @@
 import React from "react";
 import { Form, Col, Row, Button, Alert } from "react-bootstrap";
-import { ChevronLeft as IconBack, Save as IconSave } from "react-feather";
+import {
+  ChevronLeft as IconBack,
+  Save as IconSave,
+  Loader as IconLoad,
+} from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -132,6 +136,7 @@ class EditOrg extends React.Component<Props, State> {
     this.setState({
       error: false,
       saved: false,
+      submitting: true,
     });
     this.entity.name = this.state.name;
     this.entity.language = this.state.language;
@@ -150,10 +155,11 @@ class EditOrg extends React.Component<Props, State> {
         this.setState({
           saved: res.json.verifyUuid ? false : true,
           verifyUuid: res.json.verifyUuid ? res.json.verifyUuid : "",
+          submitting: false,
         });
       })
       .catch(() => {
-        this.setState({ error: true });
+        this.setState({ error: true, submitting: false });
       });
   };
 
@@ -180,17 +186,25 @@ class EditOrg extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
+      hint = (
+        <Alert variant="danger">
+          {this.props.t("errorSave")}<br />
+          {this.props.t("hintErrorSaveOrg")}
+        </Alert>
+      );
     }
 
     let buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
+        disabled={this.state.submitting}
         type="submit"
         form={this.state.verifyUuid ? "formVerify" : "form"}
       >
-        <IconSave className="feather" /> {this.props.t("save")}
+        {this.state.submitting && <IconLoad className="feather loader" />}
+        {!this.state.submitting && <IconSave className="feather" />}{" "}
+        {this.props.t("save")}
       </Button>
     );
     if (this.entity.id) {
@@ -408,7 +422,9 @@ class EditOrg extends React.Component<Props, State> {
               <Form.Control
                 type="text"
                 value={this.state.vatId}
-                onChange={(e: any) => this.setState({ vatId: e.target.value })}
+                onChange={(e: any) =>
+                  this.setState({ vatId: e.target.value.replace(/\s+/g, "") })
+                }
               />
             </Col>
           </Form.Group>

@@ -717,7 +717,18 @@ func TestIsValidVATChange(t *testing.T) {
 				Country: "DE",
 			},
 			eNew: &Organization{
-				VATID:   "FR987654321",
+				VATID:   "FR987654321", // Invalid format
+				Country: "FR",
+			},
+			expectErr: true,
+		},
+		{
+			eOld: &Organization{
+				VATID:   "DE123456789",
+				Country: "DE",
+			},
+			eNew: &Organization{
+				VATID:   "FR89128370925",
 				Country: "FR",
 			},
 			expectErr: false,
@@ -754,6 +765,17 @@ func TestIsValidVATChange(t *testing.T) {
 				Country: "FR",
 			},
 			expectErr: false,
+		},
+		{
+			eOld: &Organization{
+				VATID:   "",
+				Country: "IT",
+			},
+			eNew: &Organization{
+				VATID:   "nothing",
+				Country: "IT",
+			},
+			expectErr: true,
 		},
 	}
 	router := &OrganizationRouter{}

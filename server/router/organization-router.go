@@ -654,7 +654,7 @@ func (router *OrganizationRouter) IsValidVATChange(eOld, eNew *Organization, val
 				return errors.New("setting the Countrc is required when setting a VAT ID")
 			}
 			// Validate only for EU countries
-			if IsValidCountryInRegion(eNew.Country, "EU") {
+			if IsValidCountryInRegion("EU", eNew.Country) {
 				if eNew.Country != "" && !strings.HasPrefix(strings.ToUpper(eNew.VATID), eNew.Country) {
 					return errors.New("the VAT ID does not match the selected country")
 				}
