@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -9,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dannyvankooten/vat"
+	"github.com/creativefabrica/tinval"
+	"github.com/creativefabrica/tinval/euvat"
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
@@ -658,18 +660,38 @@ func (router *OrganizationRouter) IsValidVATChange(eOld, eNew *Organization, val
 				if eNew.Country != "" && !strings.HasPrefix(strings.ToUpper(eNew.VATID), eNew.Country) {
 					return errors.New("the VAT ID does not match the selected country")
 				}
-				var vatValidity bool
-				var err error
-				if validateVIES {
-					vatValidity, err = vat.ValidateNumber(eNew.VATID)
-				} else {
-					vatValidity, err = vat.ValidateNumberFormat(eNew.VATID)
-				}
-				if err != nil || !vatValidity {
-					log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID)
+				//var err error
+				if _, err := tinval.ParseVAT(eNew.VATID); err != nil {
+					log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID, " according to format rules")
 					log.Println(err)
-					return errors.New("the VAT ID is not valid")
+					return errors.New("the VAT ID is not valid according to format rules")
 				}
+
+				if validateVIES {
+					validator := tinval.NewValidator(
+						tinval.WithEUVATClient(euvat.NewClient()),
+					)
+					if err := validator.Validate(context.Background(), eNew.VATID, eNew.Country); err != nil {
+						log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID, " according to VIES")
+						log.Println(err)
+						return errors.New("the VAT ID is not valid according to VIES")
+					}
+				}
+
+				/*
+					if validateVIES {
+						//vat.Validate("")
+						//err = vat.Validate(eNew.VATID)
+					} else {
+						_, err = tinval.ParseVAT(eNew.VATID)
+						//err = vat.ValidateNumberFormat(eNew.VATID)
+					}
+					if err != nil || !vatValidity {
+						log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID)
+						log.Println(err)
+						return errors.New("the VAT ID is not valid")
+					}
+				*/
 			}
 		}
 	}

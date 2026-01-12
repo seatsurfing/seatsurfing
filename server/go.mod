@@ -4,7 +4,7 @@ go 1.24.9
 
 require (
 	github.com/coocood/freecache v1.2.4
-	github.com/dannyvankooten/vat v0.0.0-20231107192932-2a35151b7968
+	github.com/creativefabrica/tinval v0.0.3
 	github.com/emersion/go-ical v0.0.0-20250609112844-439c63cef608
 	github.com/emersion/go-webdav v0.7.0
 	github.com/go-playground/validator v9.31.0+incompatible
