@@ -188,7 +188,8 @@ class EditOrg extends React.Component<Props, State> {
     } else if (this.state.error) {
       hint = (
         <Alert variant="danger">
-          {this.props.t("errorSave")}<br />
+          {this.props.t("errorSave")}
+          <br />
           {this.props.t("hintErrorSaveOrg")}
         </Alert>
       );
