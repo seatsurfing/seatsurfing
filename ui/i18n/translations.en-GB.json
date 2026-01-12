@@ -94,6 +94,7 @@
   "postalCode": "Postal Code",
   "city": "City",
   "vatId": "VAT ID",
+  "company": "Company",
   "createAccount": "Create free account",
   "customLogoUrl": "Custom logo URL",
   "customLogoUrlHint": "Leave empty to use the default logo",

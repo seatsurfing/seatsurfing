@@ -33,6 +33,7 @@ type CreateOrganizationRequest struct {
 	PostalCode   string `json:"postalCode"`
 	City         string `json:"city"`
 	VATID        string `json:"vatId"`
+	Company      string `json:"company"`
 }
 
 type GetOrganizationResponse struct {
@@ -429,6 +430,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	e.PostalCode = eIncoming.PostalCode
 	e.City = eIncoming.City
 	e.VATID = eIncoming.VATID
+	e.Company = eIncoming.Company
 
 	for _, plg := range plugin.GetPlugins() {
 		if !(*plg).IsValidOrganizationUpdate(e) {
@@ -687,6 +689,7 @@ func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest
 	e.PostalCode = m.PostalCode
 	e.City = m.City
 	e.VATID = m.VATID
+	e.Company = m.Company
 	return e
 }
 
@@ -704,5 +707,6 @@ func (router *OrganizationRouter) copyToRestModel(e *Organization) *GetOrganizat
 	m.PostalCode = e.PostalCode
 	m.City = e.City
 	m.VATID = e.VATID
+	m.Company = e.Company
 	return m
 }

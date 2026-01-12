@@ -30,6 +30,7 @@ interface State {
   postalCode: string;
   city: string;
   vatId: string;
+  company: string;
 }
 
 interface Props {
@@ -61,6 +62,7 @@ class EditOrg extends React.Component<Props, State> {
       postalCode: "",
       city: "",
       vatId: "",
+      company: "",
     };
   }
 
@@ -91,6 +93,7 @@ class EditOrg extends React.Component<Props, State> {
         postalCode: org.postalCode || "",
         city: org.city || "",
         vatId: org.vatId || "",
+        company: org.company || "",
         loading: false,
       });
     });
@@ -135,12 +138,13 @@ class EditOrg extends React.Component<Props, State> {
     this.entity.contactFirstname = this.state.firstname;
     this.entity.contactLastname = this.state.lastname;
     this.entity.contactEmail = this.state.email;
-    this.entity.country = this.state.country || undefined;
-    this.entity.addressLine1 = this.state.addressLine1 || undefined;
-    this.entity.addressLine2 = this.state.addressLine2 || undefined;
-    this.entity.postalCode = this.state.postalCode || undefined;
-    this.entity.city = this.state.city || undefined;
-    this.entity.vatId = this.state.vatId || undefined;
+    this.entity.country = this.state.country || "";
+    this.entity.addressLine1 = this.state.addressLine1 || "";
+    this.entity.addressLine2 = this.state.addressLine2 || "";
+    this.entity.postalCode = this.state.postalCode || "";
+    this.entity.city = this.state.city || "";
+    this.entity.vatId = this.state.vatId || "";
+    this.entity.company = this.state.company || "";
     Ajax.saveEntity(this.entity, this.entity.getBackendUrl())
       .then((res) => {
         this.setState({
@@ -299,31 +303,14 @@ class EditOrg extends React.Component<Props, State> {
           </Form.Group>
           <Form.Group as={Row}>
             <Form.Label column sm="2">
-              {this.props.t("country")}
+              {this.props.t("company")}
             </Form.Label>
             <Col sm="4">
-              <Form.Select
-                value={this.state.country}
-                onChange={(e: any) =>
-                  this.setState({ country: e.target.value })
-                }
-              >
-                <option value=""></option>
-                {this.availableCountries.keys().map((countryGroup) => (
-                  <optgroup
-                    key={countryGroup}
-                    label={countryGroup.replace(/([a-z])([A-Z])/g, "$1 $2")}
-                  >
-                    {Object.entries(
-                      this.availableCountries.get(countryGroup) || {},
-                    ).map(([code, name]) => (
-                      <option key={code} value={code}>
-                        {name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </Form.Select>
+              <Form.Control
+                type="text"
+                value={this.state.company}
+                onChange={(e: any) => this.setState({ company: e.target.value })}
+              />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -378,6 +365,37 @@ class EditOrg extends React.Component<Props, State> {
                 value={this.state.city}
                 onChange={(e: any) => this.setState({ city: e.target.value })}
               />
+            </Col>
+          </Form.Group>
+
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("country")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                value={this.state.country}
+                required={this.state.vatId ? true : false}
+                onChange={(e: any) =>
+                  this.setState({ country: e.target.value })
+                }
+              >
+                <option value=""></option>
+                {this.availableCountries.keys().map((countryGroup) => (
+                  <optgroup
+                    key={countryGroup}
+                    label={countryGroup.replace(/([a-z])([A-Z])/g, "$1 $2")}
+                  >
+                    {Object.entries(
+                      this.availableCountries.get(countryGroup) || {},
+                    ).map(([code, name]) => (
+                      <option key={code} value={code}>
+                        {name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </Form.Select>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
