@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dannyvankooten/vat"
 	"github.com/gorilla/mux"
-	"golang.org/x/text/language"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	"github.com/seatsurfing/seatsurfing/server/plugin"
@@ -18,20 +18,6 @@ import (
 )
 
 type OrganizationRouter struct {
-}
-
-func isValidISOCountryCode(code string) bool {
-	if len(code) != 2 {
-		return false
-	}
-	// Parse the country code using the language package
-	tag, err := language.Parse(code)
-	if err != nil {
-		return false
-	}
-	// Extract the region (country) part
-	region, _ := tag.Region()
-	return region.String() != "ZZ" // ZZ means unknown region
 }
 
 type CreateOrganizationRequest struct {
@@ -90,6 +76,7 @@ type AuthStateOrgDeletionRequestPayload struct {
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/country", router.getAvailableCountries).Methods("GET")
 	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
 	s.HandleFunc("/{id}/domain/", router.getDomains).Methods("GET")
@@ -104,6 +91,11 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
 	s.HandleFunc("/deleteorg/{id}", router.completeOrgDeletion).Methods("POST")
+}
+
+func (router *OrganizationRouter) getAvailableCountries(w http.ResponseWriter, r *http.Request) {
+	res := CountriesByRegion
+	SendJSON(w, res)
 }
 
 func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWriter, r *http.Request) {
@@ -409,7 +401,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	if m.Country != "" && !isValidISOCountryCode(m.Country) {
+	if m.Country != "" && !IsValidCountry(m.Country) {
 		SendBadRequest(w)
 		return
 	}
@@ -419,6 +411,32 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	eIncoming := router.copyFromRestModel(&m)
+
+	if strings.TrimSpace(eIncoming.VATID) != "" {
+		// Revalidate only if VAT ID and/or country changed
+		if !strings.EqualFold(e.VATID, eIncoming.VATID) || !strings.EqualFold(e.Country, eIncoming.Country) {
+			// Make sure country is set
+			if eIncoming.Country != "" {
+				SendBadRequest(w)
+				return
+			}
+			// Validate only for EU countries
+			if IsValidCountryInRegion(eIncoming.Country, "EU") {
+				if eIncoming.Country != "" && !strings.HasPrefix(strings.ToUpper(eIncoming.VATID), eIncoming.Country) {
+					SendBadRequest(w)
+					return
+				}
+				vatValidity, err := vat.ValidateNumber(eIncoming.VATID)
+				if err != nil || !vatValidity {
+					log.Println("Invalid VAT ID \""+eIncoming.VATID+"\" for organization ", e.ID)
+					log.Println(err)
+					SendBadRequest(w)
+					return
+				}
+			}
+		}
+	}
+
 	e.Name = eIncoming.Name
 	e.Language = eIncoming.Language
 	e.ContactFirstname = eIncoming.ContactFirstname
@@ -608,7 +626,7 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	if m.Country != "" && !isValidISOCountryCode(m.Country) {
+	if m.Country != "" && !IsValidCountry(m.Country) {
 		SendBadRequest(w)
 		return
 	}

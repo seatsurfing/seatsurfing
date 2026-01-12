@@ -39,6 +39,7 @@ interface Props {
 
 class EditOrg extends React.Component<Props, State> {
   entity: Organization = new Organization();
+  availableCountries: Map<string, Map<string, string>> = new Map();
 
   constructor(props: any) {
     super(props);
@@ -72,6 +73,9 @@ class EditOrg extends React.Component<Props, State> {
   };
 
   loadData = () => {
+    Ajax.get("/organization/country").then((res) => {
+      this.availableCountries = new Map(Object.entries(res.json));
+    });
     const id = RuntimeConfig.INFOS.organizationId;
     Organization.get(id).then((org) => {
       this.entity = org;
@@ -200,36 +204,6 @@ class EditOrg extends React.Component<Props, State> {
     }
 
     let languages = ["de", "en"];
-    let euCountries = [
-      { code: "", label: "" },
-      { code: "AT", label: "Austria" },
-      { code: "BE", label: "Belgium" },
-      { code: "BG", label: "Bulgaria" },
-      { code: "HR", label: "Croatia" },
-      { code: "CY", label: "Cyprus" },
-      { code: "CZ", label: "Czech Republic" },
-      { code: "DK", label: "Denmark" },
-      { code: "EE", label: "Estonia" },
-      { code: "FI", label: "Finland" },
-      { code: "FR", label: "France" },
-      { code: "DE", label: "Germany" },
-      { code: "GR", label: "Greece" },
-      { code: "HU", label: "Hungary" },
-      { code: "IE", label: "Ireland" },
-      { code: "IT", label: "Italy" },
-      { code: "LV", label: "Latvia" },
-      { code: "LT", label: "Lithuania" },
-      { code: "LU", label: "Luxembourg" },
-      { code: "MT", label: "Malta" },
-      { code: "NL", label: "Netherlands" },
-      { code: "PL", label: "Poland" },
-      { code: "PT", label: "Portugal" },
-      { code: "RO", label: "Romania" },
-      { code: "SK", label: "Slovakia" },
-      { code: "SI", label: "Slovenia" },
-      { code: "ES", label: "Spain" },
-      { code: "SE", label: "Sweden" },
-    ];
     return (
       <FullLayout headline={this.props.t("editOrg")} buttons={buttons}>
         <Form
@@ -334,10 +308,20 @@ class EditOrg extends React.Component<Props, State> {
                   this.setState({ country: e.target.value })
                 }
               >
-                {euCountries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.code ? `${country.code} - ${country.label}` : ""}
-                  </option>
+                <option value=""></option>
+                {this.availableCountries.keys().map((countryGroup) => (
+                  <optgroup
+                    key={countryGroup}
+                    label={countryGroup.replace(/([a-z])([A-Z])/g, "$1 $2")}
+                  >
+                    {Object.entries(
+                      this.availableCountries.get(countryGroup) || {},
+                    ).map(([code, name]) => (
+                      <option key={code} value={code}>
+                        {name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </Form.Select>
             </Col>
