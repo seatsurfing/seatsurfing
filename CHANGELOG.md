@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.53.2](https://github.com/seatsurfing/seatsurfing/compare/v1.53.1...v1.53.2) (2026-01-13)
+
+
+### Bug Fixes
+
+* **deps:** bump golang.org/x/crypto from 0.46.0 to 0.47.0 in /server ([#1610](https://github.com/seatsurfing/seatsurfing/issues/1610)) ([e3858dd](https://github.com/seatsurfing/seatsurfing/commit/e3858ddbec73d4ba9f1fd7f817255695716641bf))
+* disable VAT VIES check due to unreliable servers ([#1613](https://github.com/seatsurfing/seatsurfing/issues/1613)) ([05d49ef](https://github.com/seatsurfing/seatsurfing/commit/05d49efab70a9511b2d38d47b7e9ac3c8e23dadc))
+
 ## [1.53.1](https://github.com/seatsurfing/seatsurfing/compare/v1.53.0...v1.53.1) (2026-01-12)
 
 
