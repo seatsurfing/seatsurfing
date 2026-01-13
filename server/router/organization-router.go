@@ -416,7 +416,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	}
 	eIncoming := router.copyFromRestModel(&m)
 
-	if err := router.IsValidVATChange(e, eIncoming, true); err != nil {
+	if err := router.IsValidVATChange(e, eIncoming, false); err != nil {
 		log.Println(err)
 		SendBadRequest(w)
 		return
