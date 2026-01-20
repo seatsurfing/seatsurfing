@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.53.3](https://github.com/seatsurfing/seatsurfing/compare/v1.53.2...v1.53.3) (2026-01-20)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 25.0.3 to 25.0.9 in /e2e ([#1616](https://github.com/seatsurfing/seatsurfing/issues/1616)) ([8904ce8](https://github.com/seatsurfing/seatsurfing/commit/8904ce838e2b8534ca71eb84288a98d794c3465a))
+* **deps:** bump @types/node from 25.0.3 to 25.0.9 in /ui ([#1619](https://github.com/seatsurfing/seatsurfing/issues/1619)) ([2e2638a](https://github.com/seatsurfing/seatsurfing/commit/2e2638a8a801c947e89f71603d3096e060b38e67))
+* **deps:** bump eslint-config-next from 16.1.1 to 16.1.4 in /ui ([#1626](https://github.com/seatsurfing/seatsurfing/issues/1626)) ([1df47d6](https://github.com/seatsurfing/seatsurfing/commit/1df47d6998751625bc48b2dce368765c0e349f08))
+* **deps:** bump library/golang from 1.25.5-bookworm to 1.25.6-bookworm ([#1625](https://github.com/seatsurfing/seatsurfing/issues/1625)) ([283635c](https://github.com/seatsurfing/seatsurfing/commit/283635c7ce3750c0a2b92f27a3cdcdaf3da6a05b))
+* **deps:** bump next to 16.1.4 and react to 19.2.3 ([#1629](https://github.com/seatsurfing/seatsurfing/issues/1629)) ([a081d7b](https://github.com/seatsurfing/seatsurfing/commit/a081d7ba28b7abc1b2ebafe6c719530a51a87079))
+* **deps:** bump prettier from 3.7.4 to 3.8.0 in /ui ([#1617](https://github.com/seatsurfing/seatsurfing/issues/1617)) ([e2a76e9](https://github.com/seatsurfing/seatsurfing/commit/e2a76e9f521748299b16783c4c7e61ad00189512))
+
 ## [1.53.2](https://github.com/seatsurfing/seatsurfing/compare/v1.53.1...v1.53.2) (2026-01-13)
 
 
