@@ -1,6 +1,10 @@
 import React from "react";
 import { Form, Col, Row, Button, Alert } from "react-bootstrap";
-import { ChevronLeft as IconBack, Save as IconSave } from "react-feather";
+import {
+  ChevronLeft as IconBack,
+  Save as IconSave,
+  Loader as IconLoad,
+} from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -24,6 +28,13 @@ interface State {
   language: string;
   verifyUuid: string;
   code: string;
+  country: string;
+  addressLine1: string;
+  addressLine2: string;
+  postalCode: string;
+  city: string;
+  vatId: string;
+  company: string;
 }
 
 interface Props {
@@ -33,6 +44,7 @@ interface Props {
 
 class EditOrg extends React.Component<Props, State> {
   entity: Organization = new Organization();
+  availableCountries: Map<string, Map<string, string>> = new Map();
 
   constructor(props: any) {
     super(props);
@@ -48,6 +60,13 @@ class EditOrg extends React.Component<Props, State> {
       language: "de",
       verifyUuid: "",
       code: "",
+      country: "",
+      addressLine1: "",
+      addressLine2: "",
+      postalCode: "",
+      city: "",
+      vatId: "",
+      company: "",
     };
   }
 
@@ -60,6 +79,9 @@ class EditOrg extends React.Component<Props, State> {
   };
 
   loadData = () => {
+    Ajax.get("/organization/country").then((res) => {
+      this.availableCountries = new Map(Object.entries(res.json));
+    });
     const id = RuntimeConfig.INFOS.organizationId;
     Organization.get(id).then((org) => {
       this.entity = org;
@@ -69,6 +91,13 @@ class EditOrg extends React.Component<Props, State> {
         lastname: org.contactLastname,
         email: org.contactEmail,
         language: org.language,
+        country: org.country || "",
+        addressLine1: org.addressLine1 || "",
+        addressLine2: org.addressLine2 || "",
+        postalCode: org.postalCode || "",
+        city: org.city || "",
+        vatId: org.vatId || "",
+        company: org.company || "",
         loading: false,
       });
     });
@@ -107,21 +136,30 @@ class EditOrg extends React.Component<Props, State> {
     this.setState({
       error: false,
       saved: false,
+      submitting: true,
     });
     this.entity.name = this.state.name;
     this.entity.language = this.state.language;
     this.entity.contactFirstname = this.state.firstname;
     this.entity.contactLastname = this.state.lastname;
     this.entity.contactEmail = this.state.email;
+    this.entity.country = this.state.country || "";
+    this.entity.addressLine1 = this.state.addressLine1 || "";
+    this.entity.addressLine2 = this.state.addressLine2 || "";
+    this.entity.postalCode = this.state.postalCode || "";
+    this.entity.city = this.state.city || "";
+    this.entity.vatId = this.state.vatId || "";
+    this.entity.company = this.state.company || "";
     Ajax.saveEntity(this.entity, this.entity.getBackendUrl())
       .then((res) => {
         this.setState({
           saved: res.json.verifyUuid ? false : true,
           verifyUuid: res.json.verifyUuid ? res.json.verifyUuid : "",
+          submitting: false,
         });
       })
       .catch(() => {
-        this.setState({ error: true });
+        this.setState({ error: true, submitting: false });
       });
   };
 
@@ -148,17 +186,26 @@ class EditOrg extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
+      hint = (
+        <Alert variant="danger">
+          {this.props.t("errorSave")}
+          <br />
+          {this.props.t("hintErrorSaveOrg")}
+        </Alert>
+      );
     }
 
     let buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
+        disabled={this.state.submitting}
         type="submit"
         form={this.state.verifyUuid ? "formVerify" : "form"}
       >
-        <IconSave className="feather" /> {this.props.t("save")}
+        {this.state.submitting && <IconLoad className="feather loader" />}
+        {!this.state.submitting && <IconSave className="feather" />}{" "}
+        {this.props.t("save")}
       </Button>
     );
     if (this.entity.id) {
@@ -261,6 +308,124 @@ class EditOrg extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="6" className="lead text-uppercase">
+              {this.props.t("address")}
+            </Form.Label>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("company")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={this.state.company}
+                onChange={(e: any) =>
+                  this.setState({ company: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("addressLine1")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={this.state.addressLine1}
+                onChange={(e: any) =>
+                  this.setState({ addressLine1: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("addressLine2")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={this.state.addressLine2}
+                onChange={(e: any) =>
+                  this.setState({ addressLine2: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("postalCode")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={this.state.postalCode}
+                onChange={(e: any) =>
+                  this.setState({ postalCode: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("city")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={this.state.city}
+                onChange={(e: any) => this.setState({ city: e.target.value })}
+              />
+            </Col>
+          </Form.Group>
+
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("country")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                value={this.state.country}
+                required={this.state.vatId ? true : false}
+                onChange={(e: any) =>
+                  this.setState({ country: e.target.value })
+                }
+              >
+                <option value=""></option>
+                {this.availableCountries.keys().map((countryGroup) => (
+                  <optgroup
+                    key={countryGroup}
+                    label={countryGroup.replace(/([a-z])([A-Z])/g, "$1 $2")}
+                  >
+                    {Object.entries(
+                      this.availableCountries.get(countryGroup) || {},
+                    ).map(([code, name]) => (
+                      <option key={code} value={code}>
+                        {name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("vatId")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={this.state.vatId}
+                onChange={(e: any) =>
+                  this.setState({ vatId: e.target.value.replace(/\s+/g, "") })
+                }
               />
             </Col>
           </Form.Group>

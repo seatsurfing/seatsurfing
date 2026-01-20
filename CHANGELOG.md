@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.53.2](https://github.com/seatsurfing/seatsurfing/compare/v1.53.1...v1.53.2) (2026-01-13)
+
+
+### Bug Fixes
+
+* **deps:** bump golang.org/x/crypto from 0.46.0 to 0.47.0 in /server ([#1610](https://github.com/seatsurfing/seatsurfing/issues/1610)) ([e3858dd](https://github.com/seatsurfing/seatsurfing/commit/e3858ddbec73d4ba9f1fd7f817255695716641bf))
+* disable VAT VIES check due to unreliable servers ([#1613](https://github.com/seatsurfing/seatsurfing/issues/1613)) ([05d49ef](https://github.com/seatsurfing/seatsurfing/commit/05d49efab70a9511b2d38d47b7e9ac3c8e23dadc))
+
+## [1.53.1](https://github.com/seatsurfing/seatsurfing/compare/v1.53.0...v1.53.1) (2026-01-12)
+
+
+### Bug Fixes
+
+* improve country selection, add VAT ID validation and add company name ([#1606](https://github.com/seatsurfing/seatsurfing/issues/1606)) ([dcffd5f](https://github.com/seatsurfing/seatsurfing/commit/dcffd5f6a85245912868ad2a485d3a9c54b8c390))
+
+## [1.53.0](https://github.com/seatsurfing/seatsurfing/compare/v1.52.2...v1.53.0) (2026-01-11)
+
+
+### Features
+
+* add optional organization address ([#1603](https://github.com/seatsurfing/seatsurfing/issues/1603)) ([8a5d1ca](https://github.com/seatsurfing/seatsurfing/commit/8a5d1caa8a1cc522c351bf3d3fa9a31f160d5453))
+
 ## [1.52.2](https://github.com/seatsurfing/seatsurfing/compare/v1.52.1...v1.52.2) (2026-01-09)
 
 

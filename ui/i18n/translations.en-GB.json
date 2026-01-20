@@ -88,6 +88,13 @@
   "confluenceServerSharedSecret": "Confluence Shared Secret",
   "connect": "Connect",
   "country": "Country",
+  "address": "Address",
+  "addressLine1": "Address Line 1",
+  "addressLine2": "Address Line 2",
+  "postalCode": "Postal Code",
+  "city": "City",
+  "vatId": "VAT ID",
+  "company": "Company",
   "createAccount": "Create free account",
   "customLogoUrl": "Custom logo URL",
   "customLogoUrlHint": "Leave empty to use the default logo",
@@ -337,5 +344,6 @@
   "recurring": "recurring",
   "filterBookingCurrent": "Current bookings",
   "filterBookingEnterLeave": "Enter and leave time",
-  "scale": "Scale"
+  "scale": "Scale",
+  "hintErrorSaveOrg": "If you have an active subscription, all fields must be filled out correctly. Setting a valid VAT ID is required to comply with tax regulations."
 }

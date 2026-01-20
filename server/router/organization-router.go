@@ -1,16 +1,21 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/creativefabrica/tinval"
+	"github.com/creativefabrica/tinval/euvat"
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -19,11 +24,18 @@ type OrganizationRouter struct {
 }
 
 type CreateOrganizationRequest struct {
-	Name      string `json:"name" validate:"required"`
-	Firstname string `json:"firstname" validate:"required"`
-	Lastname  string `json:"lastname" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Language  string `json:"language" validate:"required,len=2"`
+	Name         string `json:"name" validate:"required"`
+	Firstname    string `json:"firstname" validate:"required"`
+	Lastname     string `json:"lastname" validate:"required"`
+	Email        string `json:"email" validate:"required,email"`
+	Language     string `json:"language" validate:"required,len=2"`
+	Country      string `json:"country" validate:"omitempty,len=2,alpha"`
+	AddressLine1 string `json:"addressLine1"`
+	AddressLine2 string `json:"addressLine2"`
+	PostalCode   string `json:"postalCode"`
+	City         string `json:"city"`
+	VATID        string `json:"vatId"`
+	Company      string `json:"company"`
 }
 
 type GetOrganizationResponse struct {
@@ -68,6 +80,7 @@ type AuthStateOrgDeletionRequestPayload struct {
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/country", router.getAvailableCountries).Methods("GET")
 	s.HandleFunc("/domain/verify/{domain}", router.getDomainAccessibilityToken).Methods("GET")
 	s.HandleFunc("/domain/{domain}", router.getOrgForDomain).Methods("GET")
 	s.HandleFunc("/{id}/domain/", router.getDomains).Methods("GET")
@@ -82,6 +95,11 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
 	s.HandleFunc("/deleteorg/{id}", router.completeOrgDeletion).Methods("POST")
+}
+
+func (router *OrganizationRouter) getAvailableCountries(w http.ResponseWriter, r *http.Request) {
+	res := CountriesByRegion
+	SendJSON(w, res)
 }
 
 func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWriter, r *http.Request) {
@@ -387,16 +405,42 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if m.Country != "" && !IsValidCountry(m.Country) {
+		SendBadRequest(w)
+		return
+	}
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
 	}
 	eIncoming := router.copyFromRestModel(&m)
+
+	if err := router.IsValidVATChange(e, eIncoming, false); err != nil {
+		log.Println(err)
+		SendBadRequest(w)
+		return
+	}
+
 	e.Name = eIncoming.Name
 	e.Language = eIncoming.Language
 	e.ContactFirstname = eIncoming.ContactFirstname
 	e.ContactLastname = eIncoming.ContactLastname
+	e.Country = eIncoming.Country
+	e.AddressLine1 = eIncoming.AddressLine1
+	e.AddressLine2 = eIncoming.AddressLine2
+	e.PostalCode = eIncoming.PostalCode
+	e.City = eIncoming.City
+	e.VATID = eIncoming.VATID
+	e.Company = eIncoming.Company
+
+	for _, plg := range plugin.GetPlugins() {
+		if !(*plg).IsValidOrganizationUpdate(e) {
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	res := &ChangeOrgEmailResponse{
 		VerifyUUID: "",
 	}
@@ -568,6 +612,10 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if m.Country != "" && !IsValidCountry(m.Country) {
+		SendBadRequest(w)
+		return
+	}
 	e := router.copyFromRestModel(&m)
 	e.SignupDate = time.Now()
 	if err := GetOrganizationRepository().Create(e); err != nil {
@@ -599,6 +647,57 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 	}
 }
 
+func (router *OrganizationRouter) IsValidVATChange(eOld, eNew *Organization, validateVIES bool) error {
+	if strings.TrimSpace(eNew.VATID) != "" {
+		// Revalidate only if VAT ID and/or country changed
+		if !strings.EqualFold(eOld.VATID, eNew.VATID) || !strings.EqualFold(eOld.Country, eNew.Country) {
+			// Make sure country is set
+			if eNew.Country == "" {
+				return errors.New("setting the Countrc is required when setting a VAT ID")
+			}
+			// Validate only for EU countries
+			if IsValidCountryInRegion("EU", eNew.Country) {
+				if eNew.Country != "" && !strings.HasPrefix(strings.ToUpper(eNew.VATID), eNew.Country) {
+					return errors.New("the VAT ID does not match the selected country")
+				}
+				//var err error
+				if _, err := tinval.ParseVAT(eNew.VATID); err != nil {
+					log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID, " according to format rules")
+					log.Println(err)
+					return errors.New("the VAT ID is not valid according to format rules")
+				}
+
+				if validateVIES {
+					validator := tinval.NewValidator(
+						tinval.WithEUVATClient(euvat.NewClient()),
+					)
+					if err := validator.Validate(context.Background(), eNew.VATID, eNew.Country); err != nil {
+						log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID, " according to VIES")
+						log.Println(err)
+						return errors.New("the VAT ID is not valid according to VIES")
+					}
+				}
+
+				/*
+					if validateVIES {
+						//vat.Validate("")
+						//err = vat.Validate(eNew.VATID)
+					} else {
+						_, err = tinval.ParseVAT(eNew.VATID)
+						//err = vat.ValidateNumberFormat(eNew.VATID)
+					}
+					if err != nil || !vatValidity {
+						log.Println("Invalid VAT ID \""+eNew.VATID+"\" for organization ", eOld.ID)
+						log.Println(err)
+						return errors.New("the VAT ID is not valid")
+					}
+				*/
+			}
+		}
+	}
+	return nil
+}
+
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {
 	e := &Organization{}
 	e.Name = m.Name
@@ -606,6 +705,13 @@ func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest
 	e.ContactLastname = m.Lastname
 	e.ContactEmail = m.Email
 	e.Language = m.Language
+	e.Country = m.Country
+	e.AddressLine1 = m.AddressLine1
+	e.AddressLine2 = m.AddressLine2
+	e.PostalCode = m.PostalCode
+	e.City = m.City
+	e.VATID = m.VATID
+	e.Company = m.Company
 	return e
 }
 
@@ -617,5 +723,12 @@ func (router *OrganizationRouter) copyToRestModel(e *Organization) *GetOrganizat
 	m.Lastname = e.ContactLastname
 	m.Email = e.ContactEmail
 	m.Language = e.Language
+	m.Country = e.Country
+	m.AddressLine1 = e.AddressLine1
+	m.AddressLine2 = e.AddressLine2
+	m.PostalCode = e.PostalCode
+	m.City = e.City
+	m.VATID = e.VATID
+	m.Company = e.Company
 	return m
 }
