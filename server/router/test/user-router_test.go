@@ -417,3 +417,29 @@ func TestUserCreateWithROServiceAccount(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
+
+func TestUserCreateEscapeName(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Create
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"<John>\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleOrgAdmin)) + "}"
+	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	userID := res.Header().Get("X-Object-Id")
+
+	// 2. Read
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, username, resBody.Email)
+	CheckTestString(t, "&lt;John&gt;", resBody.Firstname)
+	CheckTestString(t, "Doe", resBody.Lastname)
+
+}
