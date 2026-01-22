@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.53.4](https://github.com/seatsurfing/seatsurfing/compare/v1.53.3...v1.53.4) (2026-01-22)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 25.0.9 to 25.0.10 in /e2e ([#1635](https://github.com/seatsurfing/seatsurfing/issues/1635)) ([e730632](https://github.com/seatsurfing/seatsurfing/commit/e7306329f5a429b6d8e5d2b7b87c6d946b2ee6df))
+* **deps:** bump @types/node from 25.0.9 to 25.0.10 in /ui ([#1636](https://github.com/seatsurfing/seatsurfing/issues/1636)) ([e35cd6a](https://github.com/seatsurfing/seatsurfing/commit/e35cd6a3a40a63baafd6ef3649c9580505768ff7))
+* **deps:** bump lodash from 4.17.21 to 4.17.23 in /ui ([#1632](https://github.com/seatsurfing/seatsurfing/issues/1632)) ([7ba0e72](https://github.com/seatsurfing/seatsurfing/commit/7ba0e720bd7a97807c2d2c079fd1ec57f01ff096))
+* **deps:** bump lodash-es from 4.17.22 to 4.17.23 in /ui ([#1631](https://github.com/seatsurfing/seatsurfing/issues/1631)) ([a732e13](https://github.com/seatsurfing/seatsurfing/commit/a732e13cefc4d005992dd861b8dcbb2a5ea0d6af))
+* **deps:** bump prettier from 3.8.0 to 3.8.1 in /ui ([#1630](https://github.com/seatsurfing/seatsurfing/issues/1630)) ([05fffdd](https://github.com/seatsurfing/seatsurfing/commit/05fffdd5a629372d276662aa2ded245995541f80))
+* escape incoming strings ([#1637](https://github.com/seatsurfing/seatsurfing/issues/1637)) ([a22e973](https://github.com/seatsurfing/seatsurfing/commit/a22e97380c17b777b65072eb5915a3e5503f6fb6))
+* focus escaping on mail variables ([#1640](https://github.com/seatsurfing/seatsurfing/issues/1640)) ([096c89d](https://github.com/seatsurfing/seatsurfing/commit/096c89dcd2cf40e8679559ec857cdf6613fdf42d))
+* remove obsolete fields ([#1639](https://github.com/seatsurfing/seatsurfing/issues/1639)) ([1bd2ea3](https://github.com/seatsurfing/seatsurfing/commit/1bd2ea35095dce5ead3e137aa48f09a00c2d0548))
+
 ## [1.53.3](https://github.com/seatsurfing/seatsurfing/compare/v1.53.2...v1.53.3) (2026-01-20)
 
 
