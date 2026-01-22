@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	. "github.com/seatsurfing/seatsurfing/server/router"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 func TestEscapeStringsInStruct(t *testing.T) {

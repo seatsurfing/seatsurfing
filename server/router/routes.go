@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
 	"io"
 	"log"
 	"net/http"
-	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -142,27 +140,9 @@ func UnmarshalValidateBody(r *http.Request, o interface{}) error {
 	if err != nil {
 		return err
 	}
-	EscapeStringsInStruct(o)
 	err = GetValidator().Struct(o)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func EscapeStringsInStruct(m interface{}) error {
-	msValuePtr := reflect.ValueOf(m)
-	msValue := msValuePtr.Elem()
-	for i := 0; i < msValue.NumField(); i++ {
-		field := msValue.Field(i)
-		// Ignore fields that don't have the same type as a string
-		if field.Type() != reflect.TypeOf("") {
-			continue
-		}
-		str := field.Interface().(string)
-		str = strings.TrimSpace(str)
-		str = html.EscapeString(str)
-		field.SetString(str)
 	}
 	return nil
 }
