@@ -27,13 +27,6 @@ type Organization struct {
 	ContactEmail     string
 	Language         string
 	SignupDate       time.Time
-	Country          string
-	AddressLine1     string
-	AddressLine2     string
-	PostalCode       string
-	City             string
-	VATID            string
-	Company          string
 }
 
 type Domain struct {
@@ -164,15 +157,27 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 	}
+	if curVersion < 33 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
+			"DROP COLUMN IF EXISTS country, " +
+			"DROP COLUMN IF EXISTS address_line1, " +
+			"DROP COLUMN IF EXISTS address_line2, " +
+			"DROP COLUMN IF EXISTS postal_code, " +
+			"DROP COLUMN IF EXISTS city, " +
+			"DROP COLUMN IF EXISTS vat_id, " +
+			"DROP COLUMN IF EXISTS company"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *OrganizationRepository) Create(e *Organization) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO organizations "+
-		"(name, contact_firstname, contact_lastname, contact_email, language, signup_date, country, address_line1, address_line2, postal_code, city, vat_id, company) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) "+
+		"(name, contact_firstname, contact_lastname, contact_email, language, signup_date) "+
+		"VALUES ($1, $2, $3, $4, $5, $6) "+
 		"RETURNING id",
-		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate, e.Country, e.AddressLine1, e.AddressLine2, e.PostalCode, e.City, e.VATID, e.Company).Scan(&id)
+		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -186,11 +191,11 @@ func (r *OrganizationRepository) Create(e *Organization) error {
 
 func (r *OrganizationRepository) GetOneByDomain(domain string) (*Organization, error) {
 	e := &Organization{}
-	err := GetDatabase().DB().QueryRow("SELECT organizations.id, organizations.name, organizations.contact_firstname, organizations.contact_lastname, organizations.contact_email, organizations.language, organizations.signup_date, organizations.country, organizations.address_line1, organizations.address_line2, organizations.postal_code, organizations.city, organizations.vat_id, organizations.company "+
+	err := GetDatabase().DB().QueryRow("SELECT organizations.id, organizations.name, organizations.contact_firstname, organizations.contact_lastname, organizations.contact_email, organizations.language, organizations.signup_date "+
 		"FROM organizations_domains "+
 		"INNER JOIN organizations ON organizations.id = organizations_domains.organization_id "+
 		"WHERE LOWER(organizations_domains.domain) = $1 AND organizations_domains.active = TRUE",
-		strings.ToLower(domain)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Country, &e.AddressLine1, &e.AddressLine2, &e.PostalCode, &e.City, &e.VATID, &e.Company)
+		strings.ToLower(domain)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate)
 	if err != nil {
 		return nil, err
 	}
@@ -199,10 +204,10 @@ func (r *OrganizationRepository) GetOneByDomain(domain string) (*Organization, e
 
 func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
 	e := &Organization{}
-	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, country, address_line1, address_line2, postal_code, city, vat_id, company "+
+	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
 		"FROM organizations "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Country, &e.AddressLine1, &e.AddressLine2, &e.PostalCode, &e.City, &e.VATID, &e.Company)
+		id).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate)
 	if err != nil {
 		return nil, err
 	}
@@ -211,10 +216,10 @@ func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
 
 func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error) {
 	e := &Organization{}
-	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, country, address_line1, address_line2, postal_code, city, vat_id, company "+
+	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
 		"FROM organizations "+
 		"WHERE LOWER(contact_email) = $1",
-		strings.ToLower(email)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Country, &e.AddressLine1, &e.AddressLine2, &e.PostalCode, &e.City, &e.VATID, &e.Company)
+		strings.ToLower(email)).Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +228,7 @@ func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error)
 
 func (r *OrganizationRepository) GetAll() ([]*Organization, error) {
 	var result []*Organization
-	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, country, address_line1, address_line2, postal_code, city, vat_id, company " +
+	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date " +
 		"FROM organizations ORDER BY name")
 	if err != nil {
 		return nil, err
@@ -231,7 +236,7 @@ func (r *OrganizationRepository) GetAll() ([]*Organization, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &Organization{}
-		err = rows.Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Country, &e.AddressLine1, &e.AddressLine2, &e.PostalCode, &e.City, &e.VATID, &e.Company)
+		err = rows.Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate)
 		if err != nil {
 			return nil, err
 		}
@@ -247,7 +252,7 @@ func (r *OrganizationRepository) GetAllDaysPassedSinceSignup(daysPassed int, set
 	if settingExists != "" {
 		settingExistsQuery += "AND NOT EXISTS (SELECT 1 FROM settings WHERE settings.organization_id = organizations.id AND settings.name = $2)"
 	}
-	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date, country, address_line1, address_line2, postal_code, city, vat_id, company "+
+	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
 		"FROM organizations "+
 		"WHERE (CURRENT_DATE::date - signup_date::date) = $1 "+
 		settingExistsQuery+" "+
@@ -258,7 +263,7 @@ func (r *OrganizationRepository) GetAllDaysPassedSinceSignup(daysPassed int, set
 	defer rows.Close()
 	for rows.Next() {
 		e := &Organization{}
-		err = rows.Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate, &e.Country, &e.AddressLine1, &e.AddressLine2, &e.PostalCode, &e.City, &e.VATID, &e.Company)
+		err = rows.Scan(&e.ID, &e.Name, &e.ContactFirstname, &e.ContactLastname, &e.ContactEmail, &e.Language, &e.SignupDate)
 		if err != nil {
 			return nil, err
 		}
@@ -297,9 +302,9 @@ func (r *OrganizationRepository) GetAllIDs() ([]string, error) {
 
 func (r *OrganizationRepository) Update(e *Organization) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations SET "+
-		"name = $1, contact_firstname = $2, contact_lastname = $3, contact_email = $4, language = $5, signup_date = $6, country = $7, address_line1 = $8, address_line2 = $9, postal_code = $10, city = $11, vat_id = $12, company = $13 "+
-		"WHERE id = $14",
-		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate, e.Country, e.AddressLine1, e.AddressLine2, e.PostalCode, e.City, e.VATID, e.Company, e.ID)
+		"name = $1, contact_firstname = $2, contact_lastname = $3, contact_email = $4, language = $5, signup_date = $6 "+
+		"WHERE id = $7",
+		e.Name, e.ContactFirstname, e.ContactLastname, e.ContactEmail, e.Language, e.SignupDate, e.ID)
 	if err != nil {
 		return err
 	}
