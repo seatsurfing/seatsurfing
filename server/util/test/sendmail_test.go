@@ -37,16 +37,16 @@ func TestGetLocalPartFromEmailAddress(t *testing.T) {
 func TestReplaceVarsInTemplate(t *testing.T) {
 	template := "Hello {{name}}, your code is {{code}}."
 	vars := map[string]string{
-		"name": "John",
+		"name": "John <Test>",
 		"code": "123456",
 	}
 	result := ReplaceVarsInTemplate(template, vars)
-	expected := "Hello John, your code is 123456."
+	expected := "Hello John &lt;Test&gt;, your code is 123456."
 	CheckTestString(t, expected, result)
 
 	vars["code"] = ""
 	result = ReplaceVarsInTemplate(template, vars)
-	expected = "Hello John, your code is ."
+	expected = "Hello John &lt;Test&gt;, your code is ."
 	CheckTestString(t, expected, result)
 
 	vars["name"] = ""
@@ -59,12 +59,12 @@ func TestReplaceVarsInTemplateConditions(t *testing.T) {
 	template := "Hello {{name}}, {{if showCode}}your code is {{code}}{{end}}{{if !showCode}}you don't have a code{{end}}."
 	vars := map[string]string{
 		"name": "John",
-		"code": "123456",
+		"code": "123<456>",
 	}
 
 	vars["showCode"] = "1"
 	result := ReplaceVarsInTemplate(template, vars)
-	expected := "Hello John, your code is 123456."
+	expected := "Hello John, your code is 123&lt;456&gt;."
 	CheckTestString(t, expected, result)
 
 	vars["showCode"] = "0"

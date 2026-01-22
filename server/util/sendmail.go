@@ -255,7 +255,7 @@ func ReplaceVarsInTemplate(body string, vars map[string]string) string {
 		}
 	}
 	for key, val := range vars {
-		body = strings.ReplaceAll(body, "{{"+key+"}}", val)
+		body = strings.ReplaceAll(body, "{{"+key+"}}", html.EscapeString(val))
 	}
 	return body
 }
