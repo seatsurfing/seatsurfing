@@ -187,14 +187,14 @@ class EditAuthProvider extends React.Component<Props, State> {
       tokenUrl:
         "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/token",
       authStyle: 1,
-      scopes: "openid,email",
+      scopes: "openid email",
       userInfoUrl:
         "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/userinfo",
-      userInfoEmailField: "email,profile",
+      userInfoEmailField: "email",
       userInfoFirstnameField: "given_name",
       userInfoLastnameField: "family_name",
       logoutUrl:
-        "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/logout?post_logout_redirect_uri={logoutRedirectUri}",
+        "https://keycloakhost.sample/auth/realms/master/protocol/openid-connect/logout?client_id=CLIENT_ID&post_logout_redirect_uri={logoutRedirectUri}",
     });
   };
 
