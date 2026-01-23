@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.53.5](https://github.com/seatsurfing/seatsurfing/compare/v1.53.4...v1.53.5) (2026-01-23)
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.57.0 to 1.58.0 in /e2e ([#1644](https://github.com/seatsurfing/seatsurfing/issues/1644)) ([7d9eadc](https://github.com/seatsurfing/seatsurfing/commit/7d9eadcc5843ac97513241ef3d2f53444b342cda))
+* keycloak OIDC template defaults ([#1641](https://github.com/seatsurfing/seatsurfing/issues/1641)) ([a9738c7](https://github.com/seatsurfing/seatsurfing/commit/a9738c7b56e7c5b8c3fc06289e04be6ba4f108de))
+* sample map is created with scale 0.0 instead of 1.0 ([#1645](https://github.com/seatsurfing/seatsurfing/issues/1645)) ([7206283](https://github.com/seatsurfing/seatsurfing/commit/7206283972ebec062460f0e5d7ae3690657a75cd))
+
 ## [1.53.4](https://github.com/seatsurfing/seatsurfing/compare/v1.53.3...v1.53.4) (2026-01-22)
 
 
