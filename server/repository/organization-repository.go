@@ -503,6 +503,7 @@ func (r *OrganizationRepository) CreateSampleData(org *Organization) error {
 		MimeType: "jpeg",
 		Width:    2047,
 		Height:   802,
+		Scale:    1.0,
 		Data:     mapData,
 	}
 	if err := GetLocationRepository().SetMap(location, locationMap); err != nil {
