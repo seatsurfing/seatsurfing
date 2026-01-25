@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.53.6](https://github.com/seatsurfing/seatsurfing/compare/v1.53.5...v1.53.6) (2026-01-25)
+
+
+### Bug Fixes
+
+* remove update check in cloud hosting ([#1648](https://github.com/seatsurfing/seatsurfing/issues/1648)) ([9df158e](https://github.com/seatsurfing/seatsurfing/commit/9df158ed3ad7197e79fbadf2922c0d1f0a2d2a30))
+* update mobile-web-app-capable meta tag ([#1647](https://github.com/seatsurfing/seatsurfing/issues/1647)) ([ef406d6](https://github.com/seatsurfing/seatsurfing/commit/ef406d6b6815f4949f783a804237fb179db56a81))
+
 ## [1.53.5](https://github.com/seatsurfing/seatsurfing/compare/v1.53.4...v1.53.5) (2026-01-23)
 
 
