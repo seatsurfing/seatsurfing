@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -398,13 +397,6 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	e.Language = eIncoming.Language
 	e.ContactFirstname = eIncoming.ContactFirstname
 	e.ContactLastname = eIncoming.ContactLastname
-
-	for _, plg := range plugin.GetPlugins() {
-		if !(*plg).IsValidOrganizationUpdate(e) {
-			SendBadRequest(w)
-			return
-		}
-	}
 
 	res := &ChangeOrgEmailResponse{
 		VerifyUUID: "",

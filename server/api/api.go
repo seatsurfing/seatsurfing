@@ -15,7 +15,6 @@ type SeatsurfingPlugin interface {
 	OnOrganizationCreated(organizationID string)
 	OnOrganizationUpdated(organizationID string)
 	OnBeforeOrganizationDelete(organizationID string)
-	IsValidOrganizationUpdate(org any) bool
 }
 
 type AdminUIMenuItem struct {
