@@ -155,6 +155,10 @@ class Settings extends React.Component<Props, State> {
   checkUpdates = async (): Promise<void> => {
     let self = this;
     return new Promise<void>(function (resolve, reject) {
+      if (RuntimeConfig.INFOS.cloudHosted) {
+        resolve();
+        return;
+      }
       Ajax.get("/uc/")
         .then((res) => {
           self.setState(
@@ -715,7 +719,7 @@ class Settings extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
-          <Form.Group as={Row}>
+          <Form.Group as={Row} hidden={RuntimeConfig.INFOS.cloudHosted}>
             <Form.Label column sm="2">
               Version
             </Form.Label>
