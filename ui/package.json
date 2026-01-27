@@ -8,7 +8,7 @@
     "bootstrap": "^5.3.8",
     "moment-timezone": "0.6.0",
     "excellentexport": "^3.9.11",
-    "next": "^16.1.4",
+    "next": "^16.1.6",
     "next-export-i18n": "^2.4.3",
     "react": "^19.2.3",
     "react-autosuggest": "^10.1.0",
