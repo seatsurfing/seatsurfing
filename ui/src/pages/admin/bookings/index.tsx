@@ -28,7 +28,7 @@ interface State {
   loading: boolean;
   start: Date;
   end: Date;
-  filterOption: "enter_leave" | "current";
+  filterOption: "enter_leave" | "current" | "today";
 }
 
 interface Props {
@@ -76,7 +76,9 @@ class Bookings extends React.Component<Props, State> {
       filterOption:
         this.props.router.query["filter"] === "current"
           ? "current"
-          : "enter_leave",
+          : this.props.router.query["filter"] === "today"
+            ? "today"
+            : "enter_leave",
     };
     this.loadSettings();
   }
@@ -115,10 +117,17 @@ class Bookings extends React.Component<Props, State> {
   loadItems = () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
 
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
     const bookings =
       this.state.filterOption === "enter_leave"
         ? Booking.listFiltered(this.state.start, end)
-        : Booking.listCurrent();
+        : this.state.filterOption === "today"
+          ? Booking.listFiltered(startOfToday, endOfToday)
+          : Booking.listCurrent();
 
     bookings.then((list) => {
       this.data = list;
@@ -126,7 +135,10 @@ class Bookings extends React.Component<Props, State> {
       this.updateUrlParams(
         DateUtil.formatToDateTimeString(this.state.start),
         DateUtil.formatToDateTimeString(this.state.end),
-        this.state.filterOption === "current" ? this.state.filterOption : null,
+        this.state.filterOption === "current" ||
+          this.state.filterOption === "today"
+          ? this.state.filterOption
+          : null,
       );
     });
   };
@@ -274,21 +286,30 @@ class Bookings extends React.Component<Props, State> {
           <Col sm="4">
             <Form.Check
               type="radio"
-              label={this.props.t("filterBookingEnterLeave")}
-              name="radioGroup"
-              id="radioEnterLeave"
-              value="option1"
-              checked={this.state.filterOption === "enter_leave"}
-              onChange={(e) => this.setState({ filterOption: "enter_leave" })}
-            />
-            <Form.Check
-              type="radio"
               label={this.props.t("filterBookingCurrent")}
               name="radioGroup"
               id="radioCurrent"
               value="option2"
               checked={this.state.filterOption === "current"}
               onChange={(e) => this.setState({ filterOption: "current" })}
+            />
+            <Form.Check
+              type="radio"
+              label={this.props.t("today")}
+              name="radioGroup"
+              id="radioToday"
+              value="option2"
+              checked={this.state.filterOption === "today"}
+              onChange={(e) => this.setState({ filterOption: "today" })}
+            />
+            <Form.Check
+              type="radio"
+              label={this.props.t("filterBookingEnterLeave")}
+              name="radioGroup"
+              id="radioEnterLeave"
+              value="option1"
+              checked={this.state.filterOption === "enter_leave"}
+              onChange={(e) => this.setState({ filterOption: "enter_leave" })}
             />
           </Col>
         </Form.Group>

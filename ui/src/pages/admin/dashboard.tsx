@@ -260,7 +260,7 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
-            `/admin/bookings/?enter=${todayDateString}T00:00&leave=${todayDateString}T23:59`,
+            `/admin/bookings/?filter=today`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
