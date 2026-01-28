@@ -7,13 +7,6 @@ export default class Organization extends Entity {
   contactLastname: string;
   contactEmail: string;
   language: string;
-  country: string;
-  addressLine1: string;
-  addressLine2: string;
-  postalCode: string;
-  city: string;
-  vatId: string;
-  company: string;
 
   constructor() {
     super();
@@ -22,13 +15,6 @@ export default class Organization extends Entity {
     this.contactLastname = "";
     this.contactEmail = "";
     this.language = "";
-    this.country = "";
-    this.addressLine1 = "";
-    this.addressLine2 = "";
-    this.postalCode = "";
-    this.city = "";
-    this.vatId = "";
-    this.company = "";
   }
 
   serialize(): Object {
@@ -39,13 +25,6 @@ export default class Organization extends Entity {
       email: this.contactEmail,
       language: this.language,
     };
-    if (this.country !== undefined) obj.country = this.country;
-    if (this.addressLine1 !== undefined) obj.addressLine1 = this.addressLine1;
-    if (this.addressLine2 !== undefined) obj.addressLine2 = this.addressLine2;
-    if (this.postalCode !== undefined) obj.postalCode = this.postalCode;
-    if (this.city !== undefined) obj.city = this.city;
-    if (this.vatId !== undefined) obj.vatId = this.vatId;
-    if (this.company !== undefined) obj.company = this.company;
     return Object.assign(super.serialize(), obj);
   }
 
@@ -56,13 +35,6 @@ export default class Organization extends Entity {
     this.contactLastname = input.lastname;
     this.contactEmail = input.email;
     this.language = input.language;
-    this.country = input.country;
-    this.addressLine1 = input.addressLine1;
-    this.addressLine2 = input.addressLine2;
-    this.postalCode = input.postalCode;
-    this.city = input.city;
-    this.vatId = input.vatId;
-    this.company = input.company;
   }
 
   getBackendUrl(): string {

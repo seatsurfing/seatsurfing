@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.53.6](https://github.com/seatsurfing/seatsurfing/compare/v1.53.5...v1.53.6) (2026-01-25)
+
+
+### Bug Fixes
+
+* remove update check in cloud hosting ([#1648](https://github.com/seatsurfing/seatsurfing/issues/1648)) ([9df158e](https://github.com/seatsurfing/seatsurfing/commit/9df158ed3ad7197e79fbadf2922c0d1f0a2d2a30))
+* update mobile-web-app-capable meta tag ([#1647](https://github.com/seatsurfing/seatsurfing/issues/1647)) ([ef406d6](https://github.com/seatsurfing/seatsurfing/commit/ef406d6b6815f4949f783a804237fb179db56a81))
+
+## [1.53.5](https://github.com/seatsurfing/seatsurfing/compare/v1.53.4...v1.53.5) (2026-01-23)
+
+
+### Bug Fixes
+
+* **deps:** bump @playwright/test from 1.57.0 to 1.58.0 in /e2e ([#1644](https://github.com/seatsurfing/seatsurfing/issues/1644)) ([7d9eadc](https://github.com/seatsurfing/seatsurfing/commit/7d9eadcc5843ac97513241ef3d2f53444b342cda))
+* keycloak OIDC template defaults ([#1641](https://github.com/seatsurfing/seatsurfing/issues/1641)) ([a9738c7](https://github.com/seatsurfing/seatsurfing/commit/a9738c7b56e7c5b8c3fc06289e04be6ba4f108de))
+* sample map is created with scale 0.0 instead of 1.0 ([#1645](https://github.com/seatsurfing/seatsurfing/issues/1645)) ([7206283](https://github.com/seatsurfing/seatsurfing/commit/7206283972ebec062460f0e5d7ae3690657a75cd))
+
+## [1.53.4](https://github.com/seatsurfing/seatsurfing/compare/v1.53.3...v1.53.4) (2026-01-22)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 25.0.9 to 25.0.10 in /e2e ([#1635](https://github.com/seatsurfing/seatsurfing/issues/1635)) ([e730632](https://github.com/seatsurfing/seatsurfing/commit/e7306329f5a429b6d8e5d2b7b87c6d946b2ee6df))
+* **deps:** bump @types/node from 25.0.9 to 25.0.10 in /ui ([#1636](https://github.com/seatsurfing/seatsurfing/issues/1636)) ([e35cd6a](https://github.com/seatsurfing/seatsurfing/commit/e35cd6a3a40a63baafd6ef3649c9580505768ff7))
+* **deps:** bump lodash from 4.17.21 to 4.17.23 in /ui ([#1632](https://github.com/seatsurfing/seatsurfing/issues/1632)) ([7ba0e72](https://github.com/seatsurfing/seatsurfing/commit/7ba0e720bd7a97807c2d2c079fd1ec57f01ff096))
+* **deps:** bump lodash-es from 4.17.22 to 4.17.23 in /ui ([#1631](https://github.com/seatsurfing/seatsurfing/issues/1631)) ([a732e13](https://github.com/seatsurfing/seatsurfing/commit/a732e13cefc4d005992dd861b8dcbb2a5ea0d6af))
+* **deps:** bump prettier from 3.8.0 to 3.8.1 in /ui ([#1630](https://github.com/seatsurfing/seatsurfing/issues/1630)) ([05fffdd](https://github.com/seatsurfing/seatsurfing/commit/05fffdd5a629372d276662aa2ded245995541f80))
+* escape incoming strings ([#1637](https://github.com/seatsurfing/seatsurfing/issues/1637)) ([a22e973](https://github.com/seatsurfing/seatsurfing/commit/a22e97380c17b777b65072eb5915a3e5503f6fb6))
+* focus escaping on mail variables ([#1640](https://github.com/seatsurfing/seatsurfing/issues/1640)) ([096c89d](https://github.com/seatsurfing/seatsurfing/commit/096c89dcd2cf40e8679559ec857cdf6613fdf42d))
+* remove obsolete fields ([#1639](https://github.com/seatsurfing/seatsurfing/issues/1639)) ([1bd2ea3](https://github.com/seatsurfing/seatsurfing/commit/1bd2ea35095dce5ead3e137aa48f09a00c2d0548))
+
+## [1.53.3](https://github.com/seatsurfing/seatsurfing/compare/v1.53.2...v1.53.3) (2026-01-20)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/node from 25.0.3 to 25.0.9 in /e2e ([#1616](https://github.com/seatsurfing/seatsurfing/issues/1616)) ([8904ce8](https://github.com/seatsurfing/seatsurfing/commit/8904ce838e2b8534ca71eb84288a98d794c3465a))
+* **deps:** bump @types/node from 25.0.3 to 25.0.9 in /ui ([#1619](https://github.com/seatsurfing/seatsurfing/issues/1619)) ([2e2638a](https://github.com/seatsurfing/seatsurfing/commit/2e2638a8a801c947e89f71603d3096e060b38e67))
+* **deps:** bump eslint-config-next from 16.1.1 to 16.1.4 in /ui ([#1626](https://github.com/seatsurfing/seatsurfing/issues/1626)) ([1df47d6](https://github.com/seatsurfing/seatsurfing/commit/1df47d6998751625bc48b2dce368765c0e349f08))
+* **deps:** bump library/golang from 1.25.5-bookworm to 1.25.6-bookworm ([#1625](https://github.com/seatsurfing/seatsurfing/issues/1625)) ([283635c](https://github.com/seatsurfing/seatsurfing/commit/283635c7ce3750c0a2b92f27a3cdcdaf3da6a05b))
+* **deps:** bump next to 16.1.4 and react to 19.2.3 ([#1629](https://github.com/seatsurfing/seatsurfing/issues/1629)) ([a081d7b](https://github.com/seatsurfing/seatsurfing/commit/a081d7ba28b7abc1b2ebafe6c719530a51a87079))
+* **deps:** bump prettier from 3.7.4 to 3.8.0 in /ui ([#1617](https://github.com/seatsurfing/seatsurfing/issues/1617)) ([e2a76e9](https://github.com/seatsurfing/seatsurfing/commit/e2a76e9f521748299b16783c4c7e61ad00189512))
+
 ## [1.53.2](https://github.com/seatsurfing/seatsurfing/compare/v1.53.1...v1.53.2) (2026-01-13)
 
 

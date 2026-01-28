@@ -1,4 +1,5 @@
 version: 2
+
 updates:
   - package-ecosystem: gomod
     directory: "/server/"
@@ -7,6 +8,7 @@ updates:
     commit-message:
       prefix: "fix(deps)"
     open-pull-requests-limit: 50
+
   - package-ecosystem: npm
     directories:
       - "/ui/"
@@ -14,8 +16,22 @@ updates:
     schedule:
       interval: daily
     commit-message:
-      prefix: "fix(deps)"
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
     open-pull-requests-limit: 50
+
   - package-ecosystem: docker
     directory: "/"
     schedule:
@@ -23,8 +39,9 @@ updates:
     commit-message:
       prefix: "fix(deps)"
     open-pull-requests-limit: 50
+
   - package-ecosystem: github-actions
-    directory: "/.github/workflows/"
+    directory: "/" # see https://docs.github.com/de/code-security/reference/supply-chain-security/dependabot-options-reference#directories-or-directory--
     schedule:
       interval: weekly
     commit-message:

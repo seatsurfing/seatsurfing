@@ -2,7 +2,9 @@ package util
 
 import (
 	"errors"
+	"html"
 	"math/rand/v2"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -76,4 +78,21 @@ func CSSDimensionsToPixels(value string) (float64, error) {
 	default:
 		return 0, errors.New("unsupported unit")
 	}
+}
+
+func EscapeStringsInStruct(m interface{}) error {
+	msValuePtr := reflect.ValueOf(m)
+	msValue := msValuePtr.Elem()
+	for i := 0; i < msValue.NumField(); i++ {
+		field := msValue.Field(i)
+		// Ignore fields that don't have the same type as a string
+		if field.Type() != reflect.TypeOf("") {
+			continue
+		}
+		str := field.Interface().(string)
+		str = strings.TrimSpace(str)
+		str = html.EscapeString(str)
+		field.SetString(str)
+	}
+	return nil
 }
