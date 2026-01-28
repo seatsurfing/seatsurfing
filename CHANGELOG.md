@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.54.0](https://github.com/seatsurfing/seatsurfing/compare/v1.53.6...v1.54.0) (2026-01-28)
+
+
+### Features
+
+* add filter "Today" in admin booking UI ([#1664](https://github.com/seatsurfing/seatsurfing/issues/1664)) ([29e7bcc](https://github.com/seatsurfing/seatsurfing/commit/29e7bcc029f5ff3523aa6b28c14c655b4895b6bb))
+* per-user rate limits ([#1602](https://github.com/seatsurfing/seatsurfing/issues/1602)) ([f16421a](https://github.com/seatsurfing/seatsurfing/commit/f16421a2c6a9e4ffb4feb01753f600417737e731))
+
+
+### Bug Fixes
+
+* add username in booking UI navigation ([#1655](https://github.com/seatsurfing/seatsurfing/issues/1655)) ([9eed4c4](https://github.com/seatsurfing/seatsurfing/commit/9eed4c4a149fc5749ed5c28bbdb3400bc9b58401))
+* **deps:** bump eslint-config-next from 16.1.4 to 16.1.5 in /ui ([#1653](https://github.com/seatsurfing/seatsurfing/issues/1653)) ([b02f69e](https://github.com/seatsurfing/seatsurfing/commit/b02f69e8f44d4eb0ae9838ecc9e56ccaa586bccf))
+* **deps:** bump eslint-config-next from 16.1.5 to 16.1.6 in /ui ([#1657](https://github.com/seatsurfing/seatsurfing/issues/1657)) ([f85d1fc](https://github.com/seatsurfing/seatsurfing/commit/f85d1fcbbf0657054384c344f31266108ebafb6d))
+* **deps:** bump next from 16.1.4 to 16.1.5 in /ui ([#1652](https://github.com/seatsurfing/seatsurfing/issues/1652)) ([b7b2cb6](https://github.com/seatsurfing/seatsurfing/commit/b7b2cb63b03ef75aa0ad3af1f715979b2f7c11f8))
+* **deps:** bump next from 16.1.5 to 16.1.6 in /ui in the production-dependencies group across 1 directory ([#1661](https://github.com/seatsurfing/seatsurfing/issues/1661)) ([50cdaab](https://github.com/seatsurfing/seatsurfing/commit/50cdaaba4af96342d8a087de984e3290e1ca2a85))
+* **deps:** bump react-dom from 19.2.3 to 19.2.4 in /ui ([#1651](https://github.com/seatsurfing/seatsurfing/issues/1651)) ([87a6931](https://github.com/seatsurfing/seatsurfing/commit/87a6931ac7f73abacdf528b32833377aa55b76ae))
+* update react to 19.2.4 and pin versions of all NPM packages ([#1658](https://github.com/seatsurfing/seatsurfing/issues/1658)) ([201e671](https://github.com/seatsurfing/seatsurfing/commit/201e67101daeedf2c7ab47643ac888c773e16102))
+
 ## [1.53.6](https://github.com/seatsurfing/seatsurfing/compare/v1.53.5...v1.53.6) (2026-01-25)
 
 
