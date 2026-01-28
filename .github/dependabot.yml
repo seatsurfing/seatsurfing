@@ -10,7 +10,9 @@ updates:
     open-pull-requests-limit: 50
 
   - package-ecosystem: npm
-    directory: "/"
+    directories:
+      - "/ui/"
+      - "/e2e/"
     schedule:
       interval: daily
     commit-message:
