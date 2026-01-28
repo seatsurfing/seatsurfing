@@ -16,6 +16,7 @@ import {
   Settings as IconSettings,
   Calendar as IconCalendar,
   PlusSquare as IconPlus,
+  User as IconUser,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
@@ -239,6 +240,10 @@ class NavBar extends React.Component<Props, State> {
         <Nav className="ms-auto">
           {initMergeButton}
           {mergeRequestsButton}
+          <Nav.Link as="span" className="icon-link d-none d-xl-flex pe-none">
+            <IconUser className="feather feather-lg" />
+            {RuntimeConfig.INFOS.username}
+          </Nav.Link>
           <LanguageSelector inNavbar={true} />
         </Nav>
       </>
