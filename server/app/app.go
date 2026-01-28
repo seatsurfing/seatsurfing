@@ -94,6 +94,7 @@ func (a *App) InitializeRouter() {
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
 	a.Router.Use(CorsMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
+	a.Router.Use(GetRateLimiterMiddleware())
 }
 
 func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {
