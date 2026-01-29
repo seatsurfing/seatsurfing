@@ -272,17 +272,41 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 	}
 	GetBookingRepository().Create(booking)
 
-	bookings_8_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time10)
+	bookings_8_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time10, "")
 	CheckTestInt(t, 0, len(bookings_8_10))
 
-	bookings_10_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time10, time12)
+	bookings_10_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time10, time12, "")
 	CheckTestInt(t, 0, len(bookings_10_12))
 
-	bookings_9_11, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time11)
+	bookings_9_11, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time11, user.Email)
 	CheckTestInt(t, 1, len(bookings_9_11))
 
-	bookings_8_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time12)
+	bookings_8_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time12, "")
 	CheckTestInt(t, 1, len(bookings_8_12))
+}
+
+func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	now := time.Now()
+	twoHoursAgo := now.Add(-2 * time.Hour)
+	twoHoursLater := now.Add(2 * time.Hour)
+
+	// create current booking
+	booking := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       twoHoursAgo,
+		Leave:       twoHoursLater,
+		RecurringID: api.NullUUID(""),
+	}
+	GetBookingRepository().Create(booking)
+
+	currentBookings, _ := GetBookingRepository().GetAllCurrentByOrg(org.ID, "")
+	CheckTestInt(t, 1, len(currentBookings))
 }
 
 func TestPurgeOldBookings(t *testing.T) {
@@ -342,7 +366,7 @@ func TestPurgeOldBookings(t *testing.T) {
 
 	// check 3 bookings remain
 	now := time.Now()
-	bookings, err := GetBookingRepository().GetAllByOrg(org.ID, now.Add(time.Duration(-90)*24*time.Hour), now.Add(time.Duration(90)*24*time.Hour))
+	bookings, err := GetBookingRepository().GetAllByOrg(org.ID, now.Add(time.Duration(-90)*24*time.Hour), now.Add(time.Duration(90)*24*time.Hour), "")
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 3, len(bookings))
 

@@ -204,7 +204,7 @@ func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID stri
 	return e, nil
 }
 
-func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time, user string) ([]*BookingDetails, error) {
+func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -216,9 +216,9 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 		"INNER JOIN users ON bookings.user_id = users.id " +
 		"WHERE locations.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3"
 	args := []any{organizationID, startTime, endTime}
-	if user != "" {
+	if userEmail != "" {
 		query += " AND users.email = $4"
-		args = append(args, user)
+		args = append(args, userEmail)
 	}
 	query += " ORDER BY enter_time"
 	rows, err := GetDatabase().DB().Query(query, args...)
@@ -236,7 +236,7 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 	}
 	return result, nil
 }
-func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, user string) ([]*BookingDetails, error) {
+func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -248,9 +248,9 @@ func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, user strin
 		"INNER JOIN users ON bookings.user_id = users.id " +
 		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()"
 	args := []interface{}{organizationID}
-	if user != "" {
+	if userEmail != "" {
 		query += " AND users.email = $2"
-		args = append(args, user)
+		args = append(args, userEmail)
 	}
 	query += " ORDER BY enter_time"
 
