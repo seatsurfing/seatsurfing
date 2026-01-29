@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.55.0](https://github.com/seatsurfing/seatsurfing/compare/v1.54.0...v1.55.0) (2026-01-29)
+
+
+### Features
+
+* add user filter to admin booking UI ([#1665](https://github.com/seatsurfing/seatsurfing/issues/1665)) ([959e195](https://github.com/seatsurfing/seatsurfing/commit/959e19536e2bed6ef80b9665da5285ee906085dc))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/golang-jwt/jwt/v5 from 5.3.0 to 5.3.1 in /server ([#1667](https://github.com/seatsurfing/seatsurfing/issues/1667)) ([42f1d08](https://github.com/seatsurfing/seatsurfing/commit/42f1d0884891c902cb3feca5aed7da947fa2a1ae))
+* **deps:** bump github.com/lib/pq from 1.10.9 to 1.11.1 in /server ([#1666](https://github.com/seatsurfing/seatsurfing/issues/1666)) ([78885b9](https://github.com/seatsurfing/seatsurfing/commit/78885b9db433f1a051562aa955d25d4ee0d7e3db))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.70 to 1.0.71 in /server ([#1668](https://github.com/seatsurfing/seatsurfing/issues/1668)) ([9b97ee1](https://github.com/seatsurfing/seatsurfing/commit/9b97ee14ce39d42c40bfa11ff0a3de397457056c))
+
 ## [1.54.0](https://github.com/seatsurfing/seatsurfing/compare/v1.53.6...v1.54.0) (2026-01-28)
 
 
