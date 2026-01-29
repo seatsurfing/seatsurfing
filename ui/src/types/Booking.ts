@@ -94,8 +94,8 @@ export default class Booking extends Entity {
   }
 
   async approve(approved: boolean): Promise<void> {
-    let payload = {
-      approved: approved,
+    const payload = {
+      approved,
     };
     return Ajax.postData(
       this.getBackendUrl() + this.id + "/approve",
@@ -105,7 +105,7 @@ export default class Booking extends Entity {
 
   static async get(id: string): Promise<Booking> {
     return Ajax.get("/booking/" + id).then((result) => {
-      let e: Booking = new Booking();
+      const e: Booking = new Booking();
       e.deserialize(result.json);
       return e;
     });
@@ -113,9 +113,9 @@ export default class Booking extends Entity {
 
   static async list(): Promise<Booking[]> {
     return Ajax.get("/booking/").then((result) => {
-      let list: Booking[] = [];
+      const list: Booking[] = [];
       (result.json as []).forEach((item) => {
-        let e: Booking = new Booking();
+        const e: Booking = new Booking();
         e.deserialize(item);
         list.push(e);
       });
@@ -125,9 +125,9 @@ export default class Booking extends Entity {
 
   static async listPendingApprovals(): Promise<Booking[]> {
     return Ajax.get("/booking/pendingapprovals/").then((result) => {
-      let list: Booking[] = [];
+      const list: Booking[] = [];
       (result.json as []).forEach((item) => {
-        let e: Booking = new Booking();
+        const e: Booking = new Booking();
         e.deserialize(item);
         list.push(e);
       });
@@ -141,17 +141,19 @@ export default class Booking extends Entity {
     });
   }
 
-  static async listFiltered(start: Date, end: Date): Promise<Booking[]> {
-    let params =
-      "start=" +
-      encodeURIComponent(Formatting.convertToFakeUTCDate(start).toISOString());
-    params +=
-      "&end=" +
-      encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
-    return Ajax.get("/booking/filter/?" + params).then((result) => {
-      let list: Booking[] = [];
+  static async listFiltered(
+    start: Date,
+    end: Date,
+    user: string,
+  ): Promise<Booking[]> {
+    let params = `start=${encodeURIComponent(Formatting.convertToFakeUTCDate(start).toISOString())}&end=${encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString())}`;
+    if (user) {
+      params += `&user=${encodeURIComponent(user)}`;
+    }
+    return Ajax.get(`/booking/filter/?${params}`).then((result) => {
+      const list: Booking[] = [];
       (result.json as []).forEach((item) => {
-        let e: Booking = new Booking();
+        const e: Booking = new Booking();
         e.deserialize(item);
         list.push(e);
       });
@@ -159,11 +161,12 @@ export default class Booking extends Entity {
     });
   }
 
-  static async listCurrent(): Promise<Booking[]> {
-    return Ajax.get("/booking/current/").then((result) => {
-      let list: Booking[] = [];
+  static async listCurrent(user: string): Promise<Booking[]> {
+    const params = user ? `?user=${encodeURIComponent(user)}` : "";
+    return Ajax.get(`/booking/current/${params}`).then((result) => {
+      const list: Booking[] = [];
       (result.json as []).forEach((item) => {
-        let e: Booking = new Booking();
+        const e: Booking = new Booking();
         e.deserialize(item);
         list.push(e);
       });
@@ -173,7 +176,7 @@ export default class Booking extends Entity {
 
   static createFromRawArray(arr: any[]): Booking[] {
     return arr.map((booking) => {
-      let res = new Booking();
+      const res = new Booking();
       res.deserialize(booking);
       return res;
     });

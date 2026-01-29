@@ -204,18 +204,24 @@ func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID stri
 	return e, nil
 }
 
-func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time) ([]*BookingDetails, error) {
+func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
-		"spaces.id, spaces.location_id, spaces.name, "+
-		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"users.email "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
-		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"INNER JOIN users ON bookings.user_id = users.id "+
-		"WHERE locations.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3 "+
-		"ORDER BY enter_time", organizationID, startTime, endTime)
+	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
+		"spaces.id, spaces.location_id, spaces.name, " +
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
+		"users.email " +
+		"FROM bookings " +
+		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
+		"INNER JOIN locations ON spaces.location_id = locations.id " +
+		"INNER JOIN users ON bookings.user_id = users.id " +
+		"WHERE locations.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3"
+	args := []any{organizationID, startTime, endTime}
+	if userEmail != "" {
+		query += " AND users.email = $4"
+		args = append(args, userEmail)
+	}
+	query += " ORDER BY enter_time"
+	rows, err := GetDatabase().DB().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -230,19 +236,25 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 	}
 	return result, nil
 }
-
-func (r *BookingRepository) GetAllCurrentByOrg(organizationID string) ([]*BookingDetails, error) {
+func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
-		"spaces.id, spaces.location_id, spaces.name, "+
-		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"users.email "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
-		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"INNER JOIN users ON bookings.user_id = users.id "+
-		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW() "+
-		"ORDER BY enter_time", organizationID)
+	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
+		"spaces.id, spaces.location_id, spaces.name, " +
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
+		"users.email " +
+		"FROM bookings " +
+		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
+		"INNER JOIN locations ON spaces.location_id = locations.id " +
+		"INNER JOIN users ON bookings.user_id = users.id " +
+		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()"
+	args := []interface{}{organizationID}
+	if userEmail != "" {
+		query += " AND users.email = $2"
+		args = append(args, userEmail)
+	}
+	query += " ORDER BY enter_time"
+
+	rows, err := GetDatabase().DB().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

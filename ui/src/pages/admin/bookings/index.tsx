@@ -1,3 +1,4 @@
+import ProfilePicture from "@/components/ProfilePicture";
 import React from "react";
 import { Table, Form, Col, Row, Button } from "react-bootstrap";
 import {
@@ -7,6 +8,7 @@ import {
   X as IconX,
   RefreshCw as IconRecurring,
 } from "react-feather";
+import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -22,13 +24,17 @@ import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
 import DateTimePicker from "@/components/DateTimePicker";
+import Search, { SearchOptions } from "@/types/Search";
 
 interface State {
   selectedItem: string;
   loading: boolean;
   start: Date;
   end: Date;
+  filterUser: string;
   filterOption: "enter_leave" | "current" | "today";
+  typeaheadOptions: any[];
+  typeaheadLoading: boolean;
 }
 
 interface Props {
@@ -40,6 +46,7 @@ class Bookings extends React.Component<Props, State> {
   data: Booking[];
   ExcellentExport: any;
   maxHoursBeforeDelete: number = 0;
+  typeahead: any = null;
 
   constructor(props: any) {
     super(props);
@@ -73,12 +80,15 @@ class Bookings extends React.Component<Props, State> {
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
+      filterUser: this.props.router.query["user"] as string,
       filterOption:
         this.props.router.query["filter"] === "current"
           ? "current"
           : this.props.router.query["filter"] === "today"
             ? "today"
             : "enter_leave",
+      typeaheadOptions: [],
+      typeaheadLoading: false,
     };
     this.loadSettings();
   }
@@ -94,14 +104,24 @@ class Bookings extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  updateUrlParams = (enter: string, leave: string, filter: string | null) => {
+  updateUrlParams = (
+    enter: string,
+    leave: string,
+    filter: string | null,
+    filterUser: string | null,
+  ) => {
     const currentPath = this.props.router.pathname;
-    const { filter: _, ...queryWithoutFilter } = this.props.router.query;
+    const {
+      filter: _,
+      user: __,
+      ...queryWithoutFilter
+    } = this.props.router.query;
     const currentQuery = {
       ...queryWithoutFilter,
       enter,
       leave,
       ...(filter !== null && { filter }),
+      ...(filterUser && { user: filterUser }),
     };
 
     this.props.router.replace(
@@ -124,10 +144,14 @@ class Bookings extends React.Component<Props, State> {
 
     const bookings =
       this.state.filterOption === "enter_leave"
-        ? Booking.listFiltered(this.state.start, end)
+        ? Booking.listFiltered(this.state.start, end, this.state.filterUser)
         : this.state.filterOption === "today"
-          ? Booking.listFiltered(startOfToday, endOfToday)
-          : Booking.listCurrent();
+          ? Booking.listFiltered(
+              startOfToday,
+              endOfToday,
+              this.state.filterUser,
+            )
+          : Booking.listCurrent(this.state.filterUser);
 
     bookings.then((list) => {
       this.data = list;
@@ -139,6 +163,7 @@ class Bookings extends React.Component<Props, State> {
           this.state.filterOption === "today"
           ? this.state.filterOption
           : null,
+        this.state.filterUser,
       );
     });
   };
@@ -237,6 +262,28 @@ class Bookings extends React.Component<Props, State> {
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
       [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
     );
+  };
+
+  filterSearch = () => {
+    return true;
+  };
+
+  onSearchSelected = (selected: any) => {
+    this.setState({
+      filterUser: selected[0]?.email,
+    });
+  };
+
+  handleSearch = (query: string) => {
+    this.setState({ typeaheadLoading: true });
+    let options = new SearchOptions();
+    options.includeUsers = true;
+    Search.search(query ? query : "", options).then((res) => {
+      this.setState({
+        typeaheadOptions: res.users,
+        typeaheadLoading: false,
+      });
+    });
   };
 
   render() {
@@ -345,6 +392,34 @@ class Bookings extends React.Component<Props, State> {
               clearIcon={null}
               required={true}
               enableTime={true}
+            />
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row}>
+          <Form.Label column sm="2">
+            {this.props.t("user")}
+          </Form.Label>
+          <Col sm="4">
+            <AsyncTypeahead
+              defaultSelected={[{ email: this.state.filterUser ?? "" }]}
+              filterBy={this.filterSearch}
+              isLoading={this.state.typeaheadLoading}
+              labelKey="email"
+              multiple={false}
+              minLength={3}
+              onChange={this.onSearchSelected}
+              onSearch={this.handleSearch}
+              options={this.state.typeaheadOptions}
+              placeholder={this.props.t("searchForUser")}
+              ref={(ref: any) => {
+                this.typeahead = ref;
+              }}
+              renderMenuItemChildren={(option: any) => (
+                <div className="d-flex">
+                  <ProfilePicture width={24} height={24} />
+                  <span style={{ marginLeft: "10px" }}>{option.email}</span>
+                </div>
+              )}
             />
           </Col>
         </Form.Group>
