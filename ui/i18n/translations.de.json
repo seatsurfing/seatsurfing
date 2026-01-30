@@ -337,6 +337,7 @@
   "spaceBookedInfoMyBooking": "Du hast diesen Platz im gewählten Zeitraum bereits gebucht.",
   "style": "Stil",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
+  "newUserDefaultMailNotification": "E-Mail-Benachrichtigungen bei neuen Users standardmäßig aktivieren",
   "disabled": "Deaktiviert",
   "optional": "Aktiviert (standardmäßig optional)",
   "required": "Aktiviert (standardmäßig erforderlich)",

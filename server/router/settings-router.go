@@ -278,7 +278,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SysSettingAdminWelcomeScreens ||
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingSubjectDefault.Name ||
-		name == SettingBookingRetentionDays.Name {
+		name == SettingBookingRetentionDays.Name ||
+		name == SettingNewUserDefaultMailNotification.Name {
 		return true
 	}
 	return false
@@ -307,6 +308,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingAllowRecurringBookings.Name ||
+		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingSubjectDefault.Name {
 		return true
 	}
@@ -379,7 +381,10 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingAllowRecurringBookings.Name {
 		return SettingAllowRecurringBookings.Type
-  }
+	}
+	if name == SettingNewUserDefaultMailNotification.Name {
+		return SettingNewUserDefaultMailNotification.Type
+	}
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type
 	}

@@ -147,6 +147,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingBookingRetentionEnabled.Name,
 		SettingBookingRetentionDays.Name,
 		SettingAllowRecurringBookings.Name,
+		SettingNewUserDefaultMailNotification.Name,
 		SettingSubjectDefault.Name,
 	}
 	forbiddenSettings := []string{

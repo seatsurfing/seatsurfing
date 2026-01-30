@@ -327,6 +327,7 @@
   "spaceBookedInfoMyBooking": "You already booked this space in the selected date range.",
   "style": "Style",
   "allowRecurringBookings": "Allow recurring bookings",
+  "newUserDefaultMailNotification": "Enable mail notification for new users by default",
   "disabled": "Disabled",
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
