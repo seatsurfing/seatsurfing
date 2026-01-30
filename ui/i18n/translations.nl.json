@@ -345,5 +345,6 @@
   "addressLine2": "Address Line 2",
   "city": "City",
   "postalCode": "Postal Code",
-  "company": "Company"
+  "company": "Company",
+  "current": "Current"
 }

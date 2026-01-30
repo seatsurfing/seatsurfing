@@ -343,5 +343,6 @@
   "recurring": "recurring",
   "filterBookingCurrent": "Current bookings",
   "filterBookingEnterLeave": "Enter and leave time",
-  "scale": "Scale"
+  "scale": "Scale",
+  "current": "Current"
 }

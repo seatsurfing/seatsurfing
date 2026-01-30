@@ -17,10 +17,10 @@ type GetStatsResponse struct {
 	NumBookings          int `json:"numBookings"`
 	NumLocations         int `json:"numLocations"`
 	NumSpaces            int `json:"numSpaces"`
+	NumBookingsCurrent   int `json:"numBookingsCurrent"`
 	NumBookingsToday     int `json:"numBookingsToday"`
 	NumBookingsYesterday int `json:"numBookingsYesterday"`
 	NumBookingsThisWeek  int `json:"numBookingsThisWeek"`
-	NumBookingsLastWeek  int `json:"numBookingsLastWeek"`
 	SpaceLoadToday       int `json:"spaceLoadToday"`
 	SpaceLoadYesterday   int `json:"spaceLoadYesterday"`
 	SpaceLoadThisWeek    int `json:"spaceLoadThisWeek"`
@@ -57,10 +57,10 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	lastWeekEnter := time.Date(now.Year(), now.Month(), now.Day()-int(weekday-1)-7, 0, 0, 0, 0, now.Location())
 	lastWeekLeave := time.Date(now.Year(), now.Month(), now.Day()+int(7-weekday)-7, 23, 59, 59, 0, now.Location())
 
+	m.NumBookingsCurrent, _ = GetBookingRepository().GetCountCurrent(user.OrganizationID)
 	m.NumBookingsToday, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, todayEnter, todayLeave)
 	m.NumBookingsYesterday, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, yesterdayEnter, yesterdayLeave)
 	m.NumBookingsThisWeek, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, thisWeekEnter, thisWeekLeave)
-	m.NumBookingsLastWeek, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, lastWeekEnter, lastWeekLeave)
 
 	m.SpaceLoadToday, _ = GetBookingRepository().GetLoad(user.OrganizationID, todayEnter, todayLeave)
 	m.SpaceLoadYesterday, _ = GetBookingRepository().GetLoad(user.OrganizationID, yesterdayEnter, yesterdayLeave)
