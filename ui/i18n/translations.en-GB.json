@@ -345,5 +345,6 @@
   "filterBookingCurrent": "Current bookings",
   "filterBookingEnterLeave": "Enter and leave time",
   "scale": "Scale",
-  "hintErrorSaveOrg": "If you have an active subscription, all fields must be filled out correctly. Setting a valid VAT ID is required to comply with tax regulations."
+  "hintErrorSaveOrg": "If you have an active subscription, all fields must be filled out correctly. Setting a valid VAT ID is required to comply with tax regulations.",
+  "current": "Current"
 }

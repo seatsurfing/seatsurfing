@@ -5,10 +5,10 @@ export default class Stats {
   numBookings: number;
   numLocations: number;
   numSpaces: number;
+  numBookingsCurrent: number;
   numBookingsToday: number;
   numBookingsYesterday: number;
   numBookingsThisWeek: number;
-  numBookingsLastWeek: number;
   spaceLoadToday: number;
   spaceLoadYesterday: number;
   spaceLoadThisWeek: number;
@@ -19,10 +19,10 @@ export default class Stats {
     this.numBookings = 0;
     this.numLocations = 0;
     this.numSpaces = 0;
+    this.numBookingsCurrent = 0;
     this.numBookingsToday = 0;
     this.numBookingsYesterday = 0;
     this.numBookingsThisWeek = 0;
-    this.numBookingsLastWeek = 0;
     this.spaceLoadToday = 0;
     this.spaceLoadYesterday = 0;
     this.spaceLoadThisWeek = 0;
@@ -34,10 +34,10 @@ export default class Stats {
     this.numBookings = input.numBookings;
     this.numLocations = input.numLocations;
     this.numSpaces = input.numSpaces;
+    this.numBookingsCurrent = input.numBookingsCurrent;
     this.numBookingsToday = input.numBookingsToday;
     this.numBookingsYesterday = input.numBookingsYesterday;
     this.numBookingsThisWeek = input.numBookingsThisWeek;
-    this.numBookingsLastWeek = input.numBookingsLastWeek;
     this.spaceLoadToday = input.spaceLoadToday;
     this.spaceLoadYesterday = input.spaceLoadYesterday;
     this.spaceLoadThisWeek = input.spaceLoadThisWeek;
