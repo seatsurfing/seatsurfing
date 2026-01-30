@@ -125,7 +125,6 @@
   "addressLine2": "Address Line 2",
   "postalCode": "Postal Code",
   "city": "City",
-  "vatId": "VAT ID",
   "enabled": "Enabled",
   "end": "Until",
   "enter": "Enter",
@@ -346,6 +345,5 @@
   "confirmDeleteOrgQuestion1": "Really delete this organization permanently?",
   "confirmDeleteOrgQuestion2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible.",
   "scale": "Scale",
-  "company": "Company",
-  "hintErrorSaveOrg": "If you have an active subscription, all fields must be filled out correctly. Setting a valid VAT ID is required to comply with tax regulations."
+  "company": "Company"
 }

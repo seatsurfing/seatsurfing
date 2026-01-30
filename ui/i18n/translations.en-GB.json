@@ -93,7 +93,6 @@
   "addressLine2": "Address Line 2",
   "postalCode": "Postal Code",
   "city": "City",
-  "vatId": "VAT ID",
   "company": "Company",
   "createAccount": "Create free account",
   "customLogoUrl": "Custom logo URL",
@@ -344,6 +343,5 @@
   "recurring": "recurring",
   "filterBookingCurrent": "Current bookings",
   "filterBookingEnterLeave": "Enter and leave time",
-  "scale": "Scale",
-  "hintErrorSaveOrg": "If you have an active subscription, all fields must be filled out correctly. Setting a valid VAT ID is required to comply with tax regulations."
+  "scale": "Scale"
 }
