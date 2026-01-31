@@ -168,3 +168,19 @@ func TestUsersGetSafeRecipientName(t *testing.T) {
 	CheckTestString(t, "F.Bar", u3.GetSafeRecipientName())
 	CheckTestString(t, "Mr. Foo", u4.GetSafeRecipientName())
 }
+
+func TestSetUserPreferenceMailNotification(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// test mail notification is enabled by default
+	mailNotification, _ := GetUserPreferencesRepository().GetBool(user.ID, PreferenceMailNotifications.Name)
+	CheckTestBool(t, true, mailNotification)
+
+	// test mail notification is *not* by default if org setting was changed
+	GetSettingsRepository().Set(org.ID, SettingNewUserDefaultMailNotification.Name, "0")
+	user = CreateTestUserInOrg(org)
+	mailNotification, _ = GetUserPreferencesRepository().GetBool(user.ID, PreferenceMailNotifications.Name)
+	CheckTestBool(t, false, mailNotification)
+}
