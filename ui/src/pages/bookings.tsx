@@ -331,7 +331,6 @@ class Bookings extends React.Component<Props, State> {
       );
     };
 
-    moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
     const calendarLocalizer = momentLocalizer(moment);
 
@@ -419,7 +418,7 @@ class Bookings extends React.Component<Props, State> {
                 toolbar: CustomToolbar,
                 event: CustomEvent,
               }}
-              scrollToTime={new Date(Date.UTC(1970, 1, 1, 8, 0, 0))}
+              scrollToTime={new Date(1970, 0, 1, 8, 0, 0)}
             ></Calendar>
           </div>
         </div>
