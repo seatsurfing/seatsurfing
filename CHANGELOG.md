@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.56.0](https://github.com/seatsurfing/seatsurfing/compare/v1.55.0...v1.56.0) (2026-01-30)
+
+
+### Features
+
+* replace last week by current booking stats in admin dashboard ([#1670](https://github.com/seatsurfing/seatsurfing/issues/1670)) ([e5b7b96](https://github.com/seatsurfing/seatsurfing/commit/e5b7b968cc2f8612c05fd69f90befe2ce68f04aa))
+
+
+### Bug Fixes
+
+* remove unused translations ([#1671](https://github.com/seatsurfing/seatsurfing/issues/1671)) ([f078dfb](https://github.com/seatsurfing/seatsurfing/commit/f078dfbfb2ba80706ccf934d231c908662ad213e))
+
 ## [1.55.0](https://github.com/seatsurfing/seatsurfing/compare/v1.54.0...v1.55.0) (2026-01-29)
 
 

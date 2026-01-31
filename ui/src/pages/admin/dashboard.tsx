@@ -76,7 +76,7 @@ class Dashboard extends React.Component<Props, State> {
         })
         .catch(() => {
           console.warn("Could not check for updates.");
-          let res = { version: "", updateAvailable: false };
+          const res = { version: "", updateAvailable: false };
           self.setState(
             {
               latestVersion: res,
@@ -105,7 +105,7 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   loadItems = async (): Promise<void> => {
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       Stats.get()
         .then((stats) => {
@@ -117,10 +117,7 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
-    let redirect = "";
-    if (link) {
-      redirect = link;
-    }
+    let redirect = link ? link : "";
     return (
       <Col sm="2">
         <Card
@@ -144,7 +141,7 @@ class Dashboard extends React.Component<Props, State> {
     if (!num) {
       num = 0;
     }
-    let label = title + ": " + num + " %";
+    const label = title + ": " + num + " %";
     let variant = "success";
     if (num >= 80) {
       variant = "danger";
@@ -174,7 +171,6 @@ class Dashboard extends React.Component<Props, State> {
     }
 
     let updateHint = <></>;
-    const domain = window.location.host.split(":").shift();
     if (
       this.state.latestVersion &&
       this.state.latestVersion.updateAvailable &&
@@ -227,7 +223,6 @@ class Dashboard extends React.Component<Props, State> {
       );
     }
 
-    const todayDateString = DateUtil.getTodayDateString();
     const yesterdayDateString = DateUtil.getDateString(-1);
 
     return (
@@ -258,6 +253,11 @@ class Dashboard extends React.Component<Props, State> {
         </Row>
         <Row className="mb-4">
           {this.renderStatsCard(
+            this.stats?.numBookingsCurrent,
+            this.props.t("current"),
+            `/admin/bookings/?filter=current`,
+          )}
+          {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
             `/admin/bookings/?filter=today`,
@@ -271,11 +271,6 @@ class Dashboard extends React.Component<Props, State> {
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
             `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59`,
-          )}
-          {this.renderStatsCard(
-            this.stats?.numBookingsLastWeek,
-            this.props.t("lastWeek"),
-            `/admin/bookings/?enter=${DateUtil.getLastWeekMondayDateString()}T00:00&leave=${DateUtil.getLastWeekSundayDateString()}T23:59`,
           )}
         </Row>
         <Row className="mb-4">

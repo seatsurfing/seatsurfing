@@ -346,7 +346,6 @@
   "addressLine2": "Address Line 2",
   "city": "City",
   "postalCode": "Postal Code",
-  "vatId": "VAT ID",
   "company": "Company",
-  "hintErrorSaveOrg": "If you have an active subscription, all fields must be filled out correctly. Setting a valid VAT ID is required to comply with tax regulations."
+  "current": "Current"
 }

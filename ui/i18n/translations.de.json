@@ -126,7 +126,6 @@
   "addressLine2": "Adresszeile 2",
   "postalCode": "Postleitzahl",
   "city": "Stadt",
-  "vatId": "USt-IdNr.",
   "enabled": "Aktiv",
   "end": "Bis zum",
   "enter": "Beginn",
@@ -349,5 +348,5 @@
   "confirmDeleteOrgQuestion2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible.",
   "scale": "Skalierung",
   "company": "Firma",
-  "hintErrorSaveOrg": "Wenn du ein aktives Abonnement hast, müssen alle Felder korrekt ausgefüllt sein. Die Angabe einer gültigen USt-IdNr. ist erforderlich, um den steuerlichen Vorschriften zu entsprechen."
+  "current": "Aktuell"
 }
