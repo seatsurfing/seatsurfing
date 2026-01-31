@@ -277,7 +277,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingMaxBookingDurationHours.Name+"', '12'), "+
 		"($1, '"+SettingDefaultTimezone.Name+"', 'Europe/Berlin'), "+
 		"($1, '"+SettingAllowRecurringBookings.Name+"', '1'), "+
-		"($1, '"+SettingNewUserDefaultMailNotification.Name+"', '0'), "+
+		"($1, '"+SettingNewUserDefaultMailNotification.Name+"', '1'), "+
 		"($1, '"+SettingBookingRetentionEnabled.Name+"', '0'), "+
 		"($1, '"+SettingBookingRetentionDays.Name+"', '365'), "+
 		"($1, '"+SettingSubjectDefault.Name+"', '"+strconv.Itoa(SettingSubjectDefaultOptional)+"') "+
