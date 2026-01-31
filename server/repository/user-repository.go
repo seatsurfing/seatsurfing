@@ -162,6 +162,12 @@ func (r *UserRepository) Create(e *User) error {
 	}
 	e.ID = id
 	GetUserPreferencesRepository().InitDefaultSettingsForUser(e.ID)
+
+	mailNotification, _ := GetSettingsRepository().GetBool(e.OrganizationID, SettingNewUserDefaultMailNotification.Name)
+	if mailNotification {
+		GetUserPreferencesRepository().Set(e.ID, PreferenceMailNotifications.Name, "1")
+	}
+
 	for _, plg := range plugin.GetPlugins() {
 		(*plg).OnUserCreated(e.ID)
 	}

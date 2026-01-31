@@ -68,6 +68,7 @@ interface State {
   featureNoUserLimit: boolean;
   featureCustomDomains: boolean;
   allowRecurringBookings: boolean;
+  newUserDefaultMailNotification: boolean;
 }
 
 interface Props {
@@ -119,6 +120,7 @@ class Settings extends React.Component<Props, State> {
       featureNoUserLimit: false,
       featureCustomDomains: false,
       allowRecurringBookings: true,
+      newUserDefaultMailNotification: false,
     };
   }
 
@@ -235,6 +237,8 @@ class Settings extends React.Component<Props, State> {
           state.featureCustomDomains = s.value === "1";
         if (s.name === "allow_recurring_bookings")
           state.allowRecurringBookings = s.value === "1";
+        if (s.name === "new_user_default_mail_notification")
+          state.newUserDefaultMailNotification = s.value === "1";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
       });
@@ -331,6 +335,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "allow_recurring_bookings",
         this.state.allowRecurringBookings ? "1" : "0",
+      ),
+      new OrgSettings(
+        "new_user_default_mail_notification",
+        this.state.newUserDefaultMailNotification ? "1" : "0",
       ),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
     ];
@@ -992,6 +1000,21 @@ class Settings extends React.Component<Props, State> {
                 checked={this.state.allowRecurringBookings}
                 onChange={(e: any) =>
                   this.setState({ allowRecurringBookings: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-newUserDefaultMailNotification"
+                label={this.props.t("newUserDefaultMailNotification")}
+                checked={this.state.newUserDefaultMailNotification}
+                onChange={(e: any) =>
+                  this.setState({
+                    newUserDefaultMailNotification: e.target.checked,
+                  })
                 }
               />
             </Col>
