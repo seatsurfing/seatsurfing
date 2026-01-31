@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"log"
@@ -17,6 +18,15 @@ import (
 	"strings"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
+)
+
+var (
+	// ErrInvalidEmailAddress indicates an invalid email address
+	ErrInvalidEmailAddress = errors.New("invalid email address")
+	// ErrInvalidDisplayName indicates an invalid display name
+	ErrInvalidDisplayName = errors.New("invalid display name")
+	// ErrInvalidSubject indicates an invalid email subject
+	ErrInvalidSubject = errors.New("invalid email subject")
 )
 
 // LoginAuth implements the LOGIN authentication mechanism
@@ -273,6 +283,24 @@ func SendEmailWithBodyAndAttachment(recipient *MailAddress, subject, body, langu
 }
 
 func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body, language string, attachments []*MailAttachment, organizationID string) error {
+	// Validate and sanitize recipient address
+	recipient.Address = SanitizeEmailAddress(recipient.Address)
+	if err := ValidateEmailAddress(recipient.Address); err != nil {
+		return fmt.Errorf("invalid recipient email address: %w", err)
+	}
+
+	// Validate and sanitize display name
+	recipient.DisplayName = SanitizeDisplayName(recipient.DisplayName)
+	if err := ValidateDisplayName(recipient.DisplayName); err != nil {
+		return fmt.Errorf("invalid recipient display name: %w", err)
+	}
+
+	// Validate and sanitize subject
+	subject = SanitizeEmailSubject(subject)
+	if err := ValidateEmailSubject(subject); err != nil {
+		return fmt.Errorf("invalid email subject: %w", err)
+	}
+
 	logoData, err := os.ReadFile(filepath.Join(GetConfig().FilesystemBasePath, "./res/seatsurfing.png"))
 	if err != nil {
 		return fmt.Errorf("error reading logo file: %v", err)
@@ -312,33 +340,33 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		err = acsDialAndSend(recipient, sender, subject, "", body, attachments)
 	} else {
 		buf := bytes.NewBuffer(nil)
-		buf.WriteString(fmt.Sprintf("From: %s\n", sender.DisplayName+" <"+sender.Address+">"))
-		buf.WriteString(fmt.Sprintf("To: %s\n", recipient.Address))
-		buf.WriteString(fmt.Sprintf("Subject: %s\n", subject))
+		fmt.Fprintf(buf, "From: %s\n", sender.DisplayName+" <"+sender.Address+">")
+		fmt.Fprintf(buf, "To: %s\n", recipient.Address)
+		fmt.Fprintf(buf, "Subject: %s\n", subject)
 		buf.WriteString("MIME-Version: 1.0\n")
 
 		writer := multipart.NewWriter(buf)
 		boundary := writer.Boundary()
-		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"\n", boundary))
+		fmt.Fprintf(buf, "Content-Type: multipart/mixed; boundary=\"%s\"\n", boundary)
 
 		// Write body
-		buf.WriteString(fmt.Sprintf("\n--%s\n", boundary))
+		fmt.Fprintf(buf, "\n--%s\n", boundary)
 		buf.WriteString("Content-Type: text/html; charset=utf-8\n")
 		buf.WriteString("Content-Transfer-Encoding: base64\n")
-		buf.WriteString(fmt.Sprintf("\n%s\n", base64.StdEncoding.EncodeToString([]byte(body))))
+		fmt.Fprintf(buf, "\n%s\n", base64.StdEncoding.EncodeToString([]byte(body)))
 
 		// Write attachments
 		for _, attachment := range attachments {
-			buf.WriteString(fmt.Sprintf("--%s\n", boundary))
-			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\n", attachment.Filename))
-			buf.WriteString(fmt.Sprintf("Content-Type: %s\n", attachment.MimeType))
+			fmt.Fprintf(buf, "--%s\n", boundary)
+			fmt.Fprintf(buf, "Content-Disposition: attachment; filename=\"%s\"\n", attachment.Filename)
+			fmt.Fprintf(buf, "Content-Type: %s\n", attachment.MimeType)
 			if attachment.ContentID != "" {
-				buf.WriteString(fmt.Sprintf("Content-ID: <%s>\n", attachment.ContentID))
+				fmt.Fprintf(buf, "Content-ID: <%s>\n", attachment.ContentID)
 			}
 			buf.WriteString("Content-Transfer-Encoding: base64\n")
-			buf.WriteString(fmt.Sprintf("\n%s\n", base64.StdEncoding.EncodeToString(attachment.Data)))
+			fmt.Fprintf(buf, "\n%s\n", base64.StdEncoding.EncodeToString(attachment.Data))
 		}
-		buf.WriteString(fmt.Sprintf("--%s--\n", boundary))
+		fmt.Fprintf(buf, "--%s--\n", boundary)
 
 		to := []string{recipient.Address}
 		err = smtpDialAndSend(sender.Address, to, buf.Bytes())
@@ -352,6 +380,105 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 	}
 
 	return err
+}
+
+// ValidateEmailAddress checks if an email address is valid and safe from header injection
+func ValidateEmailAddress(email string) error {
+	if email == "" {
+		return ErrInvalidEmailAddress
+	}
+
+	// Check for newline characters that could be used for header injection
+	if strings.ContainsAny(email, "\r\n") {
+		return ErrInvalidEmailAddress
+	}
+
+	// Basic email format validation
+	if !strings.Contains(email, "@") {
+		return ErrInvalidEmailAddress
+	}
+
+	// Check for potentially dangerous characters
+	dangerousChars := []string{"\x00", "\x1f", "<script", "javascript:", "data:"}
+	emailLower := strings.ToLower(email)
+	for _, char := range dangerousChars {
+		if strings.Contains(emailLower, char) {
+			return ErrInvalidEmailAddress
+		}
+	}
+
+	return nil
+}
+
+// ValidateDisplayName checks if a display name is safe from header injection
+func ValidateDisplayName(displayName string) error {
+	// Check for newline characters that could be used for header injection
+	if strings.ContainsAny(displayName, "\r\n") {
+		return ErrInvalidDisplayName
+	}
+
+	// Check for null bytes and control characters
+	if strings.ContainsAny(displayName, "\x00\x1f") {
+		return ErrInvalidDisplayName
+	}
+
+	// Check for potentially dangerous patterns
+	dangerousPatterns := []string{"<script", "javascript:", "data:", "vbscript:"}
+	displayNameLower := strings.ToLower(displayName)
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(displayNameLower, pattern) {
+			return ErrInvalidDisplayName
+		}
+	}
+
+	return nil
+}
+
+// ValidateEmailSubject checks if an email subject is safe from header injection
+func ValidateEmailSubject(subject string) error {
+	// Check for newline characters that could be used for header injection
+	if strings.ContainsAny(subject, "\r\n") {
+		return ErrInvalidSubject
+	}
+
+	// Check for null bytes and certain control characters
+	if strings.ContainsAny(subject, "\x00\x1f") {
+		return ErrInvalidSubject
+	}
+
+	// Check for MIME boundary markers that could break email structure
+	if strings.Contains(subject, "boundary=") || strings.Contains(subject, "--") {
+		return ErrInvalidSubject
+	}
+
+	return nil
+}
+
+// SanitizeEmailAddress removes dangerous characters from email address
+func SanitizeEmailAddress(email string) string {
+	// Remove newlines and null bytes
+	email = strings.ReplaceAll(email, "\r", "")
+	email = strings.ReplaceAll(email, "\n", "")
+	email = strings.ReplaceAll(email, "\x00", "")
+	return strings.TrimSpace(email)
+}
+
+// SanitizeDisplayName removes dangerous characters from display name
+func SanitizeDisplayName(displayName string) string {
+	// Remove newlines and null bytes
+	displayName = strings.ReplaceAll(displayName, "\r", "")
+	displayName = strings.ReplaceAll(displayName, "\n", "")
+	displayName = strings.ReplaceAll(displayName, "\x00", "")
+	return strings.TrimSpace(displayName)
+}
+
+// SanitizeEmailSubject removes dangerous characters from email subject
+func SanitizeEmailSubject(subject string) string {
+	// Remove newlines and null bytes
+	subject = strings.ReplaceAll(subject, "\r", "")
+	subject = strings.ReplaceAll(subject, "\n", "")
+	subject = strings.ReplaceAll(subject, "\x00", "")
+	return strings.TrimSpace(subject)
 }
 
 func GetEmailTemplatePath(templateFile, language string) (string, error) {
