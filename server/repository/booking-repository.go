@@ -368,6 +368,17 @@ func (r *BookingRepository) GetCount(organizationID string) (int, error) {
 	return res, err
 }
 
+func (r *BookingRepository) GetCountCurrent(organizationID string) (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
+		"INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()",
+		organizationID).Scan(&res)
+	return res, err
+}
+
 func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leave time.Time) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
