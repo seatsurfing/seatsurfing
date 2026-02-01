@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.1](https://github.com/seatsurfing/seatsurfing/compare/v1.57.0...v1.57.1) (2026-02-01)
+
+
+### Bug Fixes
+
+* add payload validations ([#1678](https://github.com/seatsurfing/seatsurfing/issues/1678)) ([665a3eb](https://github.com/seatsurfing/seatsurfing/commit/665a3ebcae421111c570a7916561480ba60e391a))
+
 ## [1.57.0](https://github.com/seatsurfing/seatsurfing/compare/v1.56.0...v1.57.0) (2026-02-01)
 
 
