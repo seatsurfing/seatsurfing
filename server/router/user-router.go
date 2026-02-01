@@ -23,7 +23,7 @@ type CreateUserRequest struct {
 	Role           int    `json:"role"`
 	AuthProviderID string `json:"authProviderId"`
 	Password       string `json:"password"`
-	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+	OrganizationID string `json:"organizationId"`
 }
 
 type GetUserResponse struct {
