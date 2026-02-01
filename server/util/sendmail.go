@@ -388,6 +388,10 @@ func ValidateEmailAddress(email string) error {
 		return ErrInvalidEmailAddress
 	}
 
+	if len(email) > 254 {
+		return ErrInvalidEmailAddress
+	}
+
 	// Check for newline characters that could be used for header injection
 	if strings.ContainsAny(email, "\r\n") {
 		return ErrInvalidEmailAddress
@@ -412,6 +416,10 @@ func ValidateEmailAddress(email string) error {
 
 // ValidateDisplayName checks if a display name is safe from header injection
 func ValidateDisplayName(displayName string) error {
+	if len(displayName) > 78 {
+		return ErrInvalidDisplayName
+	}
+
 	// Check for newline characters that could be used for header injection
 	if strings.ContainsAny(displayName, "\r\n") {
 		return ErrInvalidDisplayName
@@ -436,6 +444,10 @@ func ValidateDisplayName(displayName string) error {
 
 // ValidateEmailSubject checks if an email subject is safe from header injection
 func ValidateEmailSubject(subject string) error {
+	if len(subject) > 256 {
+		return ErrInvalidSubject
+	}
+
 	// Check for newline characters that could be used for header injection
 	if strings.ContainsAny(subject, "\r\n") {
 		return ErrInvalidSubject
