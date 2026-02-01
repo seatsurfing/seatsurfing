@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.57.0](https://github.com/seatsurfing/seatsurfing/compare/v1.56.0...v1.57.0) (2026-02-01)
+
+
+### Features
+
+* add org setting for user's default mail notification setting ([#1673](https://github.com/seatsurfing/seatsurfing/issues/1673)) ([76a4c49](https://github.com/seatsurfing/seatsurfing/commit/76a4c49fbfc18763e88d75560da8fe4021f90f10))
+
+
+### Bug Fixes
+
+* add param length validation to sendmail ([#1677](https://github.com/seatsurfing/seatsurfing/issues/1677)) ([a573f5a](https://github.com/seatsurfing/seatsurfing/commit/a573f5a6ab655aa551ddb53abdb6bfec068f9f72))
+* fix current time in booking calendar ([#1676](https://github.com/seatsurfing/seatsurfing/issues/1676)) ([339d2ed](https://github.com/seatsurfing/seatsurfing/commit/339d2ed99c8e10b19d6c1904ca1528f7df7f2916))
+* validate and sanitize parameters when sending emails ([#1675](https://github.com/seatsurfing/seatsurfing/issues/1675)) ([a1ac095](https://github.com/seatsurfing/seatsurfing/commit/a1ac095bd8e48190244ed670f4abc50835e52487))
+
 ## [1.56.0](https://github.com/seatsurfing/seatsurfing/compare/v1.55.0...v1.56.0) (2026-01-30)
 
 
