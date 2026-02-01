@@ -19,7 +19,7 @@ type RecurringBookingRouter struct {
 }
 
 type CreateRecurringBookingRequest struct {
-	SpaceID  string         `json:"spaceId" validate:"required"`
+	SpaceID  string         `json:"spaceId" validate:"required,uuid"`
 	Subject  string         `json:"subject"`
 	Enter    time.Time      `json:"enter" validate:"required"`
 	Leave    time.Time      `json:"leave" validate:"required"`

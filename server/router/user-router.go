@@ -16,9 +16,9 @@ type UserRouter struct {
 }
 
 type CreateUserRequest struct {
-	Email          string `json:"email" validate:"required"`
-	Firstname      string `json:"firstname" validate:"required"`
-	Lastname       string `json:"lastname" validate:"required"`
+	Email          string `json:"email" validate:"required,email,max=254"`
+	Firstname      string `json:"firstname" validate:"required,max=128"`
+	Lastname       string `json:"lastname" validate:"required,max=128"`
 	AtlassianID    string `json:"atlassianId"`
 	Role           int    `json:"role"`
 	AuthProviderID string `json:"authProviderId"`
@@ -52,11 +52,11 @@ type GetUserCountResponse struct {
 }
 
 type SetPasswordRequest struct {
-	Password string `json:"password"`
+	Password string `json:"password" validate:"required,min=8,max=64"`
 }
 
 type InitMergeUsersRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" validate:"required,email,max=254"`
 }
 
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
