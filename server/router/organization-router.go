@@ -42,8 +42,8 @@ type GetDomainResponse struct {
 
 type ChangeOrgEmailPayload struct {
 	OrgID string `json:"orgId" validate:"required,uuid"`
-	Email string `json:"email" validate:"required,email"`
-	Code  int    `json:"code" validate:"required,numeric"`
+	Email string `json:"email" validate:"required,email,max=254"`
+	Code  int    `json:"code" validate:"required,numeric,len=6"`
 }
 
 type ChangeOrgEmailResponse struct {
@@ -51,11 +51,11 @@ type ChangeOrgEmailResponse struct {
 }
 
 type ChangeEmailAddressVerifyRequest struct {
-	Code string `json:"code" validate:"required,numeric"`
+	Code string `json:"code" validate:"required,numeric,len=6"`
 }
 
 type CompleteOrgDeletionRequest struct {
-	Code string `json:"code" validate:"required,numeric"`
+	Code string `json:"code" validate:"required,numeric,len=6"`
 }
 
 type DeleteOrgResponse struct {
@@ -63,8 +63,8 @@ type DeleteOrgResponse struct {
 }
 
 type AuthStateOrgDeletionRequestPayload struct {
-	OrganizationID string `json:"organizationId" validate:"required,min=3"`
-	Code           string `json:"code" validate:"required,numeric"`
+	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+	Code           string `json:"code" validate:"required,numeric,len=6"`
 }
 
 func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {

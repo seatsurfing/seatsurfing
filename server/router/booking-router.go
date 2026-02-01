@@ -46,7 +46,7 @@ type CreateBookingRequest struct {
 }
 
 type PreCreateBookingRequest struct {
-	LocationID string `json:"locationID" validate:"required"`
+	LocationID string `json:"locationId" validate:"required,uuid"`
 	BookingRequest
 }
 

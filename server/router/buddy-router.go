@@ -21,8 +21,8 @@ type BuddyBooking struct {
 }
 
 type BuddyRequest struct {
-	BuddyID           string        `json:"buddyId" validate:"required"`
-	BuddyEmail        string        `json:"buddyEmail"`
+	BuddyID           string        `json:"buddyId" validate:"required,uuid"`
+	BuddyEmail        string        `json:"buddyEmail" validate:"required,email,max=254"`
 	BuddyFirstBooking *BuddyBooking `json:"buddyFirstBooking"`
 }
 

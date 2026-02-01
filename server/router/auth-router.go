@@ -46,12 +46,12 @@ type IdPUserInfo struct {
 }
 
 type InitPasswordResetRequest struct {
-	OrganizationID string `json:"organizationId" validate:"required"`
-	Email          string `json:"email" validate:"required,email"`
+	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+	Email          string `json:"email" validate:"required,email,max=254"`
 }
 
 type CompletePasswordResetRequest struct {
-	Password string `json:"password" validate:"required,min=8"`
+	Password string `json:"password" validate:"required,min=8,max=64"`
 }
 
 type AuthPreflightResponse struct {
@@ -63,9 +63,9 @@ type AuthPreflightResponse struct {
 }
 
 type AuthPasswordRequest struct {
-	Email          string `json:"email" validate:"required,email"`
-	Password       string `json:"password" validate:"required,min=8"`
-	OrganizationID string `json:"organizationId" validate:"required"`
+	Email          string `json:"email" validate:"required,email,max=254"`
+	Password       string `json:"password" validate:"required,min=8,max=64"`
+	OrganizationID string `json:"organizationId" validate:"required,uuid"`
 }
 
 type RefreshRequest struct {
