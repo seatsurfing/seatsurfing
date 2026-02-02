@@ -11,6 +11,7 @@ import AjaxCredentials from "@/util/AjaxCredentials";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
+import * as Validation from "@/util/Validation";
 
 interface State {
   email: string;
@@ -166,7 +167,11 @@ class Login extends React.Component<Props, State> {
   };
 
   getRedirectUrl = () => {
-    return (this.props.router.query["redir"] as string) || "/search";
+    const redirectUrl = this.props.router.query["redir"] as string;
+    if (!redirectUrl || Validation.isAbsoluteUrl(redirectUrl)) {
+      return "/search";
+    }
+    return redirectUrl;
   };
 
   renderAuthProviderButton = (provider: AuthProvider) => {
