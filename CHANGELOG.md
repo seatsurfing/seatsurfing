@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.57.2](https://github.com/seatsurfing/seatsurfing/compare/v1.57.1...v1.57.2) (2026-02-03)
+
+
+### Bug Fixes
+
+* do not redirect non-admin users to admin pages after login ([#1683](https://github.com/seatsurfing/seatsurfing/issues/1683)) ([0b037f5](https://github.com/seatsurfing/seatsurfing/commit/0b037f5ed650a0a85ff8cfa378e3eba0827a9a0d))
+* prevent open redirect after login ([#1681](https://github.com/seatsurfing/seatsurfing/issues/1681)) ([0b88f2f](https://github.com/seatsurfing/seatsurfing/commit/0b88f2f9c78b29febeee09e3c53d83b1df2903d0))
+
 ## [1.57.1](https://github.com/seatsurfing/seatsurfing/compare/v1.57.0...v1.57.1) (2026-02-01)
 
 

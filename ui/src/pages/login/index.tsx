@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Button, InputGroup, Alert } from "react-bootstrap";
+import { Form, Button, InputGroup } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -11,6 +11,8 @@ import AjaxCredentials from "@/util/AjaxCredentials";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
+import * as Validation from "@/util/Validation";
+import * as Navigation from "@/util/Navigation";
 
 interface State {
   email: string;
@@ -166,7 +168,21 @@ class Login extends React.Component<Props, State> {
   };
 
   getRedirectUrl = () => {
-    return (this.props.router.query["redir"] as string) || "/search";
+    // prevent (open) redirect to absolute URLs
+    const redirectUrl = this.props.router.query["redir"] as string;
+    if (!redirectUrl || Validation.isAbsoluteUrl(redirectUrl)) {
+      return Navigation.PATH_SEARCH;
+    }
+
+    // do not redirect to admin pages for non-admin users (to prevent "auto logout")
+    if (
+      Navigation.isAdminPath(redirectUrl) &&
+      !RuntimeConfig.INFOS?.spaceAdmin
+    ) {
+      return Navigation.PATH_SEARCH;
+    }
+
+    return redirectUrl;
   };
 
   renderAuthProviderButton = (provider: AuthProvider) => {
