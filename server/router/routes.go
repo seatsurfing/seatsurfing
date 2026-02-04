@@ -152,9 +152,10 @@ func UnmarshalValidateBody(r *http.Request, o interface{}) error {
 	return nil
 }
 
-func CorsMiddleware(next http.Handler) http.Handler {
+func SecurityHeaderMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		SetCorsHeaders(w, r)
+		SetSecurityHeaders(w, r)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -353,6 +354,15 @@ func SetCorsHeaders(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Expose-Headers", "X-Object-Id, X-Error-Code, Content-Length, Content-Type")
 	}
+}
+
+func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
+	if strings.ToLower(config.GetConfig().PublicScheme) == "https" {
+		w.Header().Set("Content-Security-Policy", "upgrade-insecure-requests")
+	}
+	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
+	w.Header().Set("X-Content-Type-Options", "nosiff")
+	w.Header().Set("Referrer-Policy", "no-referrer")
 }
 
 func CorsHandler(w http.ResponseWriter, r *http.Request) {
