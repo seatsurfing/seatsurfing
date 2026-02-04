@@ -128,10 +128,10 @@ class Bookings extends React.Component<Props, State> {
   };
 
   renderItem = (item: Booking) => {
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
+    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
+      ? Formatting.getFormatterNoTime()
+      : Formatting.getFormatter();
+
     let pending = <></>;
     if (item.approved === false) {
       pending = (
@@ -331,6 +331,7 @@ class Bookings extends React.Component<Props, State> {
       );
     };
 
+    moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
     const calendarLocalizer = momentLocalizer(moment);
 
@@ -387,6 +388,7 @@ class Bookings extends React.Component<Props, State> {
             style={{ width: "100%" }}
           >
             <Calendar
+              getNow={() => Formatting.getNowUTCDate()}
               localizer={calendarLocalizer}
               events={calendarEvents}
               startAccessor="start"
