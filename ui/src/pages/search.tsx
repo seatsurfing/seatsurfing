@@ -259,6 +259,13 @@ class Search extends React.Component<Props, State> {
     });
   };
 
+  getEarliestSelectableEnterDate = (): Date => {
+    let date = new Date();
+    date.setHours(0, 0, 0, 0);
+
+    return date;
+  }
+
   loadPreferences = async (): Promise<void> => {
     let self = this;
     return new Promise<void>(function (resolve, reject) {
@@ -386,10 +393,16 @@ class Search extends React.Component<Props, State> {
       leave.setHours(23, 59, 59, 0);
     }
 
+    const daySlider = Formatting.getDayDiff(
+        enter,
+        this.getEarliestSelectableEnterDate(),
+      );
+
     this.setState({
       earliestEnterDate: enter,
       enter: enter,
       leave: leave,
+      daySlider: daySlider,
     });
   };
 
@@ -568,14 +581,9 @@ class Search extends React.Component<Props, State> {
   };
 
   changeEnterDay = (value: number) => {
-    let enter = new Date(this.state.earliestEnterDate.valueOf());
+    let enter = new Date(this.getEarliestSelectableEnterDate().valueOf());
     enter.setDate(enter.getDate() + value);
-    if (
-      Formatting.getDayValue(enter) >
-      Formatting.getDayValue(this.state.earliestEnterDate)
-    ) {
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
+    enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
     let leave = new Date(enter.valueOf());
     leave.setHours(this.state.prefWorkdayEnd, 0, 0, 0);
     this.setEnterDate(enter);
@@ -629,7 +637,7 @@ class Search extends React.Component<Props, State> {
       leave.setTime(date.getTime() + diff);
       const daySlider = Formatting.getDayDiff(
         date,
-        this.state.earliestEnterDate,
+        this.getEarliestSelectableEnterDate(),
       );
       const daySliderDisabled =
         daySlider > RuntimeConfig.INFOS.maxDaysInAdvance || daySlider < 0;
@@ -1595,8 +1603,6 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     }
-    let minDate = new Date(this.state.earliestEnterDate);
-    minDate.setHours(0, 0, 0, 0);
     let enterDatePicker = (
       <div aria-label="Reservation start date">
         <DateTimePicker
@@ -1604,7 +1610,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
-          minDate={minDate}
+          minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date)
               this.setEnterDate(value);
@@ -1619,7 +1625,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
-          minDate={minDate}
+          minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date)
               this.setLeaveDate(value);
