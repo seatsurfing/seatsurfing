@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.4](https://github.com/seatsurfing/seatsurfing/compare/v1.57.3...v1.57.4) (2026-02-04)
+
+
+### Bug Fixes
+
+* fix header "X-Content-Type-Options" ([#1689](https://github.com/seatsurfing/seatsurfing/issues/1689)) ([8fcf784](https://github.com/seatsurfing/seatsurfing/commit/8fcf784108bf9222f8a488a7bfe89f982d729915))
+
 ## [1.57.3](https://github.com/seatsurfing/seatsurfing/compare/v1.57.2...v1.57.3) (2026-02-04)
 
 
