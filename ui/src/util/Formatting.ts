@@ -132,10 +132,6 @@ export default class Formatting {
     );
   }
 
-  static getNowUTCDate(): Date {
-    return this.convertToFakeUTCDate(new Date());
-  }
-
   static stripTimezoneDetails(s: string): string {
     if (s.length > 6 && (s[s.length - 6] === "+" || s[s.length - 6] === "-")) {
       return s.substring(0, s.length - 6) + ".000Z";
