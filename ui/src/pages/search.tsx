@@ -264,7 +264,7 @@ class Search extends React.Component<Props, State> {
     date.setHours(0, 0, 0, 0);
 
     return date;
-  }
+  };
 
   loadPreferences = async (): Promise<void> => {
     let self = this;
@@ -394,9 +394,9 @@ class Search extends React.Component<Props, State> {
     }
 
     const daySlider = Formatting.getDayDiff(
-        enter,
-        this.getEarliestSelectableEnterDate(),
-      );
+      enter,
+      this.getEarliestSelectableEnterDate(),
+    );
 
     this.setState({
       earliestEnterDate: enter,
