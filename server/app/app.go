@@ -92,7 +92,7 @@ func (a *App) InitializeRouter() {
 	a.Router.Path("/admin").Methods("GET").HandlerFunc(a.RedirectAdminPath)
 	a.Router.Path("/").Methods("GET").HandlerFunc(a.RedirectRootPath)
 	a.Router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(CorsHandler)
-	a.Router.Use(CorsMiddleware)
+	a.Router.Use(SecurityHeaderMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
 	a.Router.Use(GetRateLimiterMiddleware())
 }
