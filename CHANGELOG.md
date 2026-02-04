@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.57.3](https://github.com/seatsurfing/seatsurfing/compare/v1.57.2...v1.57.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* add some security related HTTP headers ([#1680](https://github.com/seatsurfing/seatsurfing/issues/1680)) ([2046d4a](https://github.com/seatsurfing/seatsurfing/commit/2046d4a08c6276fca9c543ce68ed0d685736fe79))
+* fix timezone issues in calender view ([#1686](https://github.com/seatsurfing/seatsurfing/issues/1686)) ([77510c2](https://github.com/seatsurfing/seatsurfing/commit/77510c228f4874aa279dcb2995d3d58b672fde36))
+
 ## [1.57.2](https://github.com/seatsurfing/seatsurfing/compare/v1.57.1...v1.57.2) (2026-02-03)
 
 
