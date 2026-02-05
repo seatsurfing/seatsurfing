@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.5](https://github.com/seatsurfing/seatsurfing/compare/v1.57.4...v1.57.5) (2026-02-05)
+
+
+### Bug Fixes
+
+* current day now selectable in search box ([#1692](https://github.com/seatsurfing/seatsurfing/issues/1692)) ([73544b0](https://github.com/seatsurfing/seatsurfing/commit/73544b00fc28af9cdaa6262bfd9d84a85ceafb1a))
+
 ## [1.57.4](https://github.com/seatsurfing/seatsurfing/compare/v1.57.3...v1.57.4) (2026-02-04)
 
 
