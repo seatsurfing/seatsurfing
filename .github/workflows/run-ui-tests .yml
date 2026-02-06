@@ -1,0 +1,20 @@
+name: Run UI Tests
+
+on: [pull_request, workflow_dispatch]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Install dependencies
+        working-directory: ./ui
+        run: npm ci
+      - name: Run tests
+        working-directory: ./ui
+        run: npm run test
