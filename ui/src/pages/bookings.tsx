@@ -218,10 +218,9 @@ class Bookings extends React.Component<Props, State> {
       });
     }
 
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
+    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
+      ? Formatting.getFormatterNoTime()
+      : Formatting.getFormatter();
 
     const CustomEvent = ({ event }: { event: Event }) => {
       // show no information for events < 1 hr
@@ -436,13 +435,11 @@ class Bookings extends React.Component<Props, State> {
             <h6 hidden={!this.state.selectedItem?.subject}>
               {this.state.selectedItem?.subject}
             </h6>
-            <p
-              dangerouslySetInnerHTML={{
-                __html: this.props.t("confirmCancelBooking", {
-                  enter: formatter.format(this.state.selectedItem?.enter),
-                }),
-              }}
-            ></p>
+            <p>
+              {this.props.t("confirmCancelYourBooking", {
+                enter: formatter.format(this.state.selectedItem?.enter),
+              })}
+            </p>
             <div hidden={!this.state.selectedItem?.isRecurring()}>
               <Form.Check
                 type="checkbox"
