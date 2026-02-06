@@ -25,6 +25,7 @@ import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   selectedItem: string;
@@ -169,7 +170,14 @@ class Bookings extends React.Component<Props, State> {
   };
 
   cancelBooking = (booking: Booking) => {
-    if (!window.confirm(this.props.t("confirmCancelBooking"))) {
+    let formatter = Formatting.getFormatter();
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      formatter = Formatting.getFormatterNoTime();
+    }
+    const confirmMessage = this.props.t("confirmCancelBooking", {
+      enter: formatter.format(booking.enter),
+    });
+    if (!window.confirm(Formatting.decodeHtmlEntities(confirmMessage))) {
       return;
     }
     this.setState({

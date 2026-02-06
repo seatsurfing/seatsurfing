@@ -23,6 +23,7 @@ import FullLayout from "@/components/FullLayout";
 import RedirectUtil from "@/util/RedirectUtil";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   loading: boolean;
@@ -448,11 +449,19 @@ class EditBooking extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmCancelBooking"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
+    let formatter = Formatting.getFormatter();
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      formatter = Formatting.getFormatterNoTime();
     }
+    const confirmMessage = this.props.t("confirmCancelBooking", {
+      enter: formatter.format(this.entity.enter),
+    });
+    if (!window.confirm(Formatting.decodeHtmlEntities(confirmMessage))) {
+      return;
+    }
+    this.entity.delete().then(() => {
+      this.setState({ goBack: true });
+    });
   };
 
   updateCanSearch = async () => {
