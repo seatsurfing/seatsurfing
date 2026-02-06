@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.57.6](https://github.com/seatsurfing/seatsurfing/compare/v1.57.5...v1.57.6) (2026-02-06)
+
+
+### Bug Fixes
+
+* add translation for confirm delete _your_ booking ([#1700](https://github.com/seatsurfing/seatsurfing/issues/1700)) ([7c82eb3](https://github.com/seatsurfing/seatsurfing/commit/7c82eb32f97b4d56d1a4853973c856445038027e))
+* missing placeholder in delete booking confirm window ([#1698](https://github.com/seatsurfing/seatsurfing/issues/1698)) ([599002d](https://github.com/seatsurfing/seatsurfing/commit/599002dfdb32a63830a8040430939af02befbf6b))
+
 ## [1.57.5](https://github.com/seatsurfing/seatsurfing/compare/v1.57.4...v1.57.5) (2026-02-05)
 
 
