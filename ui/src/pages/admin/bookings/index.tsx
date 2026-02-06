@@ -170,10 +170,10 @@ class Bookings extends React.Component<Props, State> {
   };
 
   cancelBooking = (booking: Booking) => {
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
+    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
+      ? Formatting.getFormatterNoTime()
+      : Formatting.getFormatter();
+
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(booking.enter),
     });

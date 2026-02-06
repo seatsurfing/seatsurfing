@@ -60,6 +60,7 @@
   "colorSelfBooked": "Von mir gebucht",
   "confirmBooking": "Buchung bestätigen",
   "confirmCancelBooking": "Buchung für {{enter}} stornieren?",
+  "confirmCancelYourBooking": "Deine Buchung für {{enter}} stornieren?",
   "confirmDeleteArea": "Bereich löschen? Alle Plätze und Buchungen gehen verloren!",
   "confirmDeleteAttribute": "Attribut und alle seine Werte löschen?",
   "confirmDeleteAuthProvider": "Provider löschen? Logins über diesen Provider sind dann nicht mehr möglich!",
