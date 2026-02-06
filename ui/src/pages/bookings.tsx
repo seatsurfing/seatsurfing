@@ -436,9 +436,11 @@ class Bookings extends React.Component<Props, State> {
               {this.state.selectedItem?.subject}
             </h6>
             <p>
-              {this.props.t("confirmCancelYourBooking", {
-                enter: formatter.format(this.state.selectedItem?.enter),
-              })}
+              {Formatting.decodeHtmlEntities(
+                this.props.t("confirmCancelYourBooking", {
+                  enter: formatter.format(this.state.selectedItem?.enter),
+                }),
+              )}
             </p>
             <div hidden={!this.state.selectedItem?.isRecurring()}>
               <Form.Check
