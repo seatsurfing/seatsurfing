@@ -31,7 +31,8 @@ func (c contextKey) String() string {
 }
 
 var (
-	contextKeyUserID = contextKey("UserID")
+	contextKeyUserID    = contextKey("UserID")
+	contextKeySessionID = contextKey("SessionID")
 )
 
 var (
@@ -301,6 +302,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+		//ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}
@@ -308,6 +310,13 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 	var handleTokenAuth = func(w http.ResponseWriter, r *http.Request) bool {
 		claims, _, err := ExtractClaimsFromRequest(r)
 		if err != nil {
+			return false
+		}
+		session, err := GetSessionRepository().GetOne(claims.SessionID)
+		if err != nil || session == nil {
+			return false
+		}
+		if session.UserID != claims.UserID {
 			return false
 		}
 		user, err := GetUserRepository().GetOne(claims.UserID)
@@ -318,6 +327,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
+		ctx = context.WithValue(ctx, contextKeySessionID, session.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}

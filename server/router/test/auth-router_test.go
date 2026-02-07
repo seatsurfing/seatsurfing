@@ -303,7 +303,8 @@ func TestTokenValid(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -319,7 +320,8 @@ func TestTokenNoAudience(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutAudience)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -335,7 +337,8 @@ func TestTokenNoExpiry(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutExpiry)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -351,7 +354,8 @@ func TestTokenNoIssuer(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutIssuer)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -367,7 +371,8 @@ func TestTokenExpired(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	jti := uuid.New().String()
 	claims.RegisteredClaims = jwt.RegisteredClaims{
@@ -395,7 +400,8 @@ func TestTokenNotValidYet(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	jti := uuid.New().String()
 	claims.RegisteredClaims = jwt.RegisteredClaims{
