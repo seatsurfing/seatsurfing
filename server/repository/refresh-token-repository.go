@@ -9,10 +9,11 @@ type RefreshTokenRepository struct {
 }
 
 type RefreshToken struct {
-	ID      string
-	UserID  string
-	Created time.Time
-	Expiry  time.Time
+	ID        string
+	UserID    string
+	SessionID string
+	Created   time.Time
+	Expiry    time.Time
 }
 
 var refreshTokenRepository *RefreshTokenRepository
@@ -35,16 +36,21 @@ func GetRefreshTokenRepository() *RefreshTokenRepository {
 }
 
 func (r *RefreshTokenRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// No updates yet
+	if curVersion < 34 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE refresh_tokens " +
+			"ADD COLUMN IF NOT EXISTS session_id VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *RefreshTokenRepository) Create(e *RefreshToken) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO refresh_tokens "+
-		"(user_id, created, expiry) "+
-		"VALUES ($1, $2, $3) "+
+		"(user_id, session_id, created, expiry) "+
+		"VALUES ($1, $2, $3, $4) "+
 		"RETURNING id",
-		e.UserID, e.Created, e.Expiry).Scan(&id)
+		e.UserID, e.SessionID, e.Created, e.Expiry).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -54,10 +60,10 @@ func (r *RefreshTokenRepository) Create(e *RefreshToken) error {
 
 func (r *RefreshTokenRepository) GetOne(id string) (*RefreshToken, error) {
 	e := &RefreshToken{}
-	err := GetDatabase().DB().QueryRow("SELECT id, user_id, created, expiry "+
+	err := GetDatabase().DB().QueryRow("SELECT id, user_id, session_id, created, expiry "+
 		"FROM refresh_tokens "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.UserID, &e.Created, &e.Expiry)
+		id).Scan(&e.ID, &e.UserID, &e.SessionID, &e.Created, &e.Expiry)
 	if err != nil {
 		return nil, err
 	}
@@ -65,17 +71,27 @@ func (r *RefreshTokenRepository) GetOne(id string) (*RefreshToken, error) {
 }
 
 func (r *RefreshTokenRepository) Delete(e *RefreshToken) error {
+	if e.SessionID != "" {
+		_, err := GetDatabase().DB().Exec("DELETE FROM sessions WHERE id = $1", e.SessionID)
+		if err != nil {
+			return err
+		}
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE id = $1", e.ID)
 	return err
 }
 
 func (r *RefreshTokenRepository) DeleteExpired() error {
 	now := time.Now()
-	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE expiry < $1", now)
+	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
+		"DELETE FROM refresh_tokens WHERE expiry < $1 RETURNING id) "+
+		"DELETE FROM sessions WHERE id IN (SELECT session_id FROM deleted_rows)", now)
 	return err
 }
 
 func (r *RefreshTokenRepository) DeleteOfUser(u *User) error {
-	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE user_id = $1", u.ID)
+	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
+		"DELETE FROM refresh_tokens WHERE user_id = $1 RETURNING id) "+
+		"DELETE FROM sessions WHERE id IN (SELECT session_id FROM deleted_rows)", u.ID)
 	return err
 }

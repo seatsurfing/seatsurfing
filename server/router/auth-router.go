@@ -33,6 +33,7 @@ type JWTResponse struct {
 type Claims struct {
 	Email      string `json:"email"`
 	UserID     string `json:"userID"`
+	SessionID  string `json:"sid"`
 	SpaceAdmin bool   `json:"spaceAdmin"`
 	OrgAdmin   bool   `json:"admin"`
 	Role       int    `json:"role"`
@@ -194,10 +195,15 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		SendNotFound(w)
 		return
 	}
+	session, err := GetSessionRepository().GetOne(refreshToken.SessionID)
+	if session == nil || err != nil {
+		SendNotFound(w)
+		return
+	}
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.CreateClaims(user)
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	newRefreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -294,6 +300,7 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
+	GetSessionRepository().DeleteOfUser(user)
 	SendUpdated(w)
 }
 
@@ -333,7 +340,8 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -341,6 +349,16 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		RefreshToken: refreshToken,
 	}
 	SendJSON(w, res)
+}
+
+func (router *AuthRouter) CreateSession(user *User) *Session {
+	session := &Session{
+		UserID:  user.ID,
+		Device:  "",
+		Created: time.Now(),
+	}
+	GetSessionRepository().Create(session)
+	return session
 }
 
 func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.ResponseWriter) {
@@ -360,7 +378,8 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 	}
 	GetAuthStateRepository().Delete(authState)
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -442,7 +461,8 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(user)
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -718,10 +738,11 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 	return config
 }
 
-func (router *AuthRouter) CreateClaims(user *User) *Claims {
+func (router *AuthRouter) CreateClaims(user *User, session *Session) *Claims {
 	claims := &Claims{
 		UserID:     user.ID,
 		Email:      user.Email,
+		SessionID:  session.ID,
 		SpaceAdmin: GetUserRepository().IsSpaceAdmin(user),
 		OrgAdmin:   GetUserRepository().IsOrgAdmin(user),
 		Role:       int(user.Role),
@@ -763,9 +784,10 @@ func (router *AuthRouter) createRefreshToken(claims *Claims) string {
 	var expiry time.Time
 	expiry = time.Now().Add(60 * 24 * 28 * time.Minute)
 	refreshToken := &RefreshToken{
-		UserID:  claims.UserID,
-		Expiry:  expiry,
-		Created: time.Now(),
+		UserID:    claims.UserID,
+		SessionID: claims.SessionID,
+		Expiry:    expiry,
+		Created:   time.Now(),
 	}
 	GetRefreshTokenRepository().Create(refreshToken)
 	return refreshToken.ID

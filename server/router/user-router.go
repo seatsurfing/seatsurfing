@@ -183,6 +183,7 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	GetSessionRepository().DeleteOfUser(e)
 	SendUpdated(w)
 }
 
