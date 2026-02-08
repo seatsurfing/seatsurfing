@@ -39,6 +39,7 @@ var DatabaseTables = [...]string{
 	"organizations_domains",
 	"recurring_bookings",
 	"refresh_tokens",
+	"sessions",
 	"settings",
 	"spaces_attributes",
 	"spaces_attributes_values",
@@ -52,15 +53,6 @@ var DatabaseTables = [...]string{
 }
 
 func GetTestJWT(userID string) string {
-	/*
-		claims := &Claims{
-			Email:  userID,
-			UserID: userID,
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(60 * 24 * 14 * time.Minute)),
-			},
-		}
-	*/
 	user := &User{
 		ID:    userID,
 		Email: userID,
