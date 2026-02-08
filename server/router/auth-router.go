@@ -308,7 +308,8 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 func (router *AuthRouter) logout(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	where := vars["where"]
-	if where != "all" && where != "current" {
+	_, uuidErr := uuid.Parse(where)
+	if uuidErr != nil && where != "all" && where != "current" {
 		SendBadRequest(w)
 		return
 	}
@@ -325,6 +326,20 @@ func (router *AuthRouter) logout(w http.ResponseWriter, r *http.Request) {
 	user, err := GetUserRepository().GetOne(session.UserID)
 	if err != nil || user == nil {
 		SendBadRequest(w)
+		return
+	}
+	if uuidErr == nil {
+		requestedSession, err := GetSessionRepository().GetOne(where)
+		if err != nil || requestedSession == nil || requestedSession.UserID != user.ID {
+			SendNotFound(w)
+			return
+		}
+		if err := GetSessionRepository().Delete(requestedSession); err != nil {
+			log.Println("Error deleting requested session during logout: " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
+		SendUpdated(w)
 		return
 	}
 	if where == "all" {

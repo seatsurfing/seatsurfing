@@ -483,3 +483,46 @@ func TestLogoutAll(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
+
+func TestLogoutSpecific(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user.ID)
+	token2 := GetTestJWT(user.ID)
+
+	claims := &Claims{}
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS512"}),
+	)
+	_, _, err := parser.ParseUnverified(token1, claims)
+	CheckTestBool(t, true, err == nil)
+
+	// Logout of token1
+	req := NewHTTPRequestWithAccessToken("GET", "/auth/logout/"+claims.SessionID, token2, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestLogoutSpecificForeign(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user1.ID)
+	user2 := CreateTestUserInOrg(org)
+	token2 := GetTestJWT(user2.ID)
+
+	claims := &Claims{}
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS512"}),
+	)
+	_, _, err := parser.ParseUnverified(token1, claims)
+	CheckTestBool(t, true, err == nil)
+
+	// Logout of token1
+	req := NewHTTPRequestWithAccessToken("GET", "/auth/logout/"+claims.SessionID, token2, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
