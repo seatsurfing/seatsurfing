@@ -787,7 +787,7 @@ class Preferences extends React.Component<Props, State> {
                       {this.state.activeSessions.map((session) => (
                         <tr key={"session-" + session.id}>
                           <td>{session.device}</td>
-                          <td>{new Date(session.created).toLocaleString()}</td>
+                          <td>{new Date(session.created).toUTCString()}</td>
                           <td>
                             <a
                               href="#"

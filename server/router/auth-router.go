@@ -410,7 +410,7 @@ func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
 	session := &Session{
 		UserID:  user.ID,
 		Device:  router.GetDeviceInfo(r),
-		Created: time.Now(),
+		Created: time.Now().UTC(),
 	}
 	GetSessionRepository().Create(session)
 	return session
