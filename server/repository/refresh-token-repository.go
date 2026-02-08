@@ -71,12 +71,8 @@ func (r *RefreshTokenRepository) GetOne(id string) (*RefreshToken, error) {
 }
 
 func (r *RefreshTokenRepository) Delete(e *RefreshToken) error {
-	if e.SessionID != "" {
-		_, err := GetDatabase().DB().Exec("DELETE FROM sessions WHERE id = $1", e.SessionID)
-		if err != nil {
-			return err
-		}
-	}
+	// Hint: Do not delete session here, because it might be used by other refresh tokens.
+	// Instead, delete the session when deleting expired tokens or when deleting all tokens of a user.
 	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE id = $1", e.ID)
 	return err
 }
@@ -84,14 +80,14 @@ func (r *RefreshTokenRepository) Delete(e *RefreshToken) error {
 func (r *RefreshTokenRepository) DeleteExpired() error {
 	now := time.Now()
 	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
-		"DELETE FROM refresh_tokens WHERE expiry < $1 RETURNING id) "+
+		"DELETE FROM refresh_tokens WHERE expiry < $1 RETURNING session_id) "+
 		"DELETE FROM sessions WHERE id IN (SELECT session_id FROM deleted_rows)", now)
 	return err
 }
 
 func (r *RefreshTokenRepository) DeleteOfUser(u *User) error {
 	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
-		"DELETE FROM refresh_tokens WHERE user_id = $1 RETURNING id) "+
+		"DELETE FROM refresh_tokens WHERE user_id = $1 RETURNING session_id) "+
 		"DELETE FROM sessions WHERE id IN (SELECT session_id FROM deleted_rows)", u.ID)
 	return err
 }
