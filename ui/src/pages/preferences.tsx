@@ -109,7 +109,11 @@ class Preferences extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    let promises = [this.loadPreferences(), this.loadLocations(), this.loadActiveSessions()];
+    let promises = [
+      this.loadPreferences(),
+      this.loadLocations(),
+      this.loadActiveSessions(),
+    ];
     Promise.all(promises).then(() => {
       this.setState({ loading: false });
     });
@@ -118,12 +122,14 @@ class Preferences extends React.Component<Props, State> {
   loadActiveSessions = async (): Promise<void> => {
     let self = this;
     return new Promise<void>(function (resolve, reject) {
-      Session.list().then((sessions) => {
-        self.setState({ activeSessions: sessions });
-        resolve();
-      }).catch((e) => reject(e));
+      Session.list()
+        .then((sessions) => {
+          self.setState({ activeSessions: sessions });
+          resolve();
+        })
+        .catch((e) => reject(e));
     });
-  }
+  };
 
   loadPreferences = async (): Promise<void> => {
     let self = this;
@@ -763,6 +769,46 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
+            <div hidden={this.state.activeTab !== "tab-security"}>
+              <h5 className="mt-5">{this.props.t("activeSessions")}</h5>
+              {this.state.activeSessions.length === 0 ? (
+                <p>{this.props.t("noActiveSessions")}</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>{this.props.t("device")}</th>
+                        <th>{this.props.t("created")} (UTC)</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.activeSessions.map((session) => (
+                        <tr key={"session-" + session.id}>
+                          <td>{session.device}</td>
+                          <td>{new Date(session.created).toLocaleString()}</td>
+                          <td>
+                            <a
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                session
+                                  .delete()
+                                  .then(() => this.loadActiveSessions())
+                                  .catch(() => RuntimeConfig.logOut());
+                              }}
+                            >
+                              {this.props.t("logout")}
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
 
             {/* --- */}
             {/* IDP */}

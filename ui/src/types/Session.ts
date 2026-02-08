@@ -23,6 +23,10 @@ export default class Session {
     }
   }
 
+  delete(): Promise<void> {
+    return Ajax.get("/auth/logout/" + this.id).then(() => undefined);
+  }
+
   static async list(): Promise<Session[]> {
     return Ajax.get("/user/session").then((result) => {
       let list: Session[] = [];
