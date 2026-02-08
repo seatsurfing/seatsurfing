@@ -68,6 +68,28 @@ func (r *SessionRepository) GetOne(id string) (*Session, error) {
 	return e, nil
 }
 
+func (r *SessionRepository) GetOfUser(u *User) ([]*Session, error) {
+	rows, err := GetDatabase().DB().Query("SELECT id, user_id, device, created "+
+		"FROM sessions "+
+		"WHERE user_id = $1",
+		u.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessions []*Session
+	for rows.Next() {
+		e := &Session{}
+		err := rows.Scan(&e.ID, &e.UserID, &e.Device, &e.Created)
+		if err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, e)
+	}
+	return sessions, nil
+}
+
 func (r *SessionRepository) Delete(e *Session) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM sessions WHERE id = $1", e.ID)
 	return err

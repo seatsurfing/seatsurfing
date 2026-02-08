@@ -15,6 +15,13 @@ import (
 type UserRouter struct {
 }
 
+type GetSessionResponse struct {
+	ID      string    `json:"id"`
+	UserID  string    `json:"userId"`
+	Device  string    `json:"device"`
+	Created time.Time `json:"created"`
+}
+
 type CreateUserRequest struct {
 	Email          string `json:"email" validate:"required,email,max=254"`
 	Firstname      string `json:"firstname" validate:"required,max=128"`
@@ -64,6 +71,7 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
 	s.HandleFunc("/count", router.getCount).Methods("GET")
+	s.HandleFunc("/session", router.getActiveSessions).Methods("GET")
 	s.HandleFunc("/me", router.getSelf).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/byEmail/{email}", router.getOneByEmail).Methods("GET")
@@ -185,6 +193,31 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	GetSessionRepository().DeleteOfUser(e)
 	SendUpdated(w)
+}
+
+func (router *UserRouter) getActiveSessions(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendNotFound(w)
+		return
+	}
+	sessions, err := GetSessionRepository().GetOfUser(user)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := []*GetSessionResponse{}
+	for _, e := range sessions {
+		m := &GetSessionResponse{
+			ID:      e.ID,
+			UserID:  e.UserID,
+			Device:  e.Device,
+			Created: e.Created,
+		}
+		res = append(res, m)
+	}
+	SendJSON(w, res)
 }
 
 func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {

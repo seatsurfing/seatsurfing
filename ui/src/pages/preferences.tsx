@@ -19,6 +19,7 @@ import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
+import Session from "@/types/Session";
 
 interface State {
   loading: boolean;
@@ -49,6 +50,7 @@ interface State {
   mailNotifications: boolean;
   use24HourTime: boolean;
   dateFormat: string;
+  activeSessions: Session[];
 }
 
 interface Props {
@@ -98,6 +100,7 @@ class Preferences extends React.Component<Props, State> {
       mailNotifications: false,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      activeSessions: [],
     };
   }
 
@@ -106,11 +109,21 @@ class Preferences extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    let promises = [this.loadPreferences(), this.loadLocations()];
+    let promises = [this.loadPreferences(), this.loadLocations(), this.loadActiveSessions()];
     Promise.all(promises).then(() => {
       this.setState({ loading: false });
     });
   };
+
+  loadActiveSessions = async (): Promise<void> => {
+    let self = this;
+    return new Promise<void>(function (resolve, reject) {
+      Session.list().then((sessions) => {
+        self.setState({ activeSessions: sessions });
+        resolve();
+      }).catch((e) => reject(e));
+    });
+  }
 
   loadPreferences = async (): Promise<void> => {
     let self = this;
