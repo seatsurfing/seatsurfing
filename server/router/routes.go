@@ -339,13 +339,14 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		}
 		if IsWhitelisted(r) {
 			// even for whitelisted routes, we check if there is an auth header and if it is valid, so that we can have the user context available in whitelisted routes if the client provides a valid token
+			processedWithAuth := false
 			authHeader := r.Header.Get("Authorization")
 			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-				if !handleTokenAuth(w, r) {
-					handleServiceAccountAuth(w, r)
-				}
+				processedWithAuth = handleTokenAuth(w, r) || handleServiceAccountAuth(w, r)
 			}
-			next.ServeHTTP(w, r)
+			if !processedWithAuth {
+				next.ServeHTTP(w, r)
+			}
 			return
 		}
 		success := handleTokenAuth(w, r) || handleServiceAccountAuth(w, r)
