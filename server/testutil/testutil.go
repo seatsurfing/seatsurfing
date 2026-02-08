@@ -58,7 +58,7 @@ func GetTestJWT(userID string) string {
 		Email: userID,
 	}
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	return accessToken

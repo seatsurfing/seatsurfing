@@ -303,7 +303,7 @@ func TestTokenValid(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims)
 
@@ -320,7 +320,7 @@ func TestTokenNoAudience(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutAudience)
 
@@ -337,7 +337,7 @@ func TestTokenNoExpiry(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutExpiry)
 
@@ -354,7 +354,7 @@ func TestTokenNoIssuer(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutIssuer)
 
@@ -371,7 +371,7 @@ func TestTokenExpired(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	jti := uuid.New().String()
@@ -400,7 +400,7 @@ func TestTokenNotValidYet(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	session := router.CreateSession(user)
+	session := router.CreateSession(nil, user)
 	claims := router.CreateClaims(user, session)
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	jti := uuid.New().String()

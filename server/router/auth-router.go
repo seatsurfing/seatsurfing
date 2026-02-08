@@ -380,7 +380,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	session := router.CreateSession(user)
+	session := router.CreateSession(r, user)
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
@@ -391,17 +391,104 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	SendJSON(w, res)
 }
 
-func (router *AuthRouter) CreateSession(user *User) *Session {
+func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
 	session := &Session{
 		UserID:  user.ID,
-		Device:  "",
+		Device:  router.GetDeviceInfo(r),
 		Created: time.Now(),
 	}
 	GetSessionRepository().Create(session)
 	return session
 }
 
-func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.ResponseWriter) {
+func (router *AuthRouter) GetDeviceInfo(r *http.Request) string {
+	if r == nil {
+		return "Unknown Device"
+	}
+
+	ua := r.UserAgent()
+	if ua == "" {
+		return "Unknown Device"
+	}
+
+	browser := router.parseBrowser(ua)
+	os := router.parseOS(ua)
+
+	return fmt.Sprintf("%s on %s", browser, os)
+}
+
+func (router *AuthRouter) parseBrowser(ua string) string {
+	// Check for Edge before Chrome as Edge contains "Chrome" in UA
+	if strings.Contains(ua, "Edg/") || strings.Contains(ua, "Edge/") {
+		return "Edge"
+	}
+	// Check for Chrome before Safari as Chrome contains "Safari" in UA
+	if strings.Contains(ua, "Chrome/") {
+		if strings.Contains(ua, "OPR/") || strings.Contains(ua, "Opera/") {
+			return "Opera"
+		}
+		return "Chrome"
+	}
+	if strings.Contains(ua, "Firefox/") {
+		return "Firefox"
+	}
+	if strings.Contains(ua, "Safari/") {
+		return "Safari"
+	}
+	if strings.Contains(ua, "MSIE") || strings.Contains(ua, "Trident/") {
+		return "Internet Explorer"
+	}
+	return "Unknown Browser"
+}
+
+func (router *AuthRouter) parseOS(ua string) string {
+	// Windows
+	if strings.Contains(ua, "Windows NT 10.0") {
+		return "Windows 10/11"
+	}
+	if strings.Contains(ua, "Windows NT 6.3") {
+		return "Windows 8.1"
+	}
+	if strings.Contains(ua, "Windows NT 6.2") {
+		return "Windows 8"
+	}
+	if strings.Contains(ua, "Windows NT 6.1") {
+		return "Windows 7"
+	}
+	if strings.Contains(ua, "Windows NT") || strings.Contains(ua, "Windows") {
+		return "Windows"
+	}
+
+	// macOS/iOS
+	if strings.Contains(ua, "iPhone") {
+		return "iOS (iPhone)"
+	}
+	if strings.Contains(ua, "iPad") {
+		return "iOS (iPad)"
+	}
+	if strings.Contains(ua, "Macintosh") || strings.Contains(ua, "Mac OS X") {
+		return "macOS"
+	}
+
+	// Android
+	if strings.Contains(ua, "Android") {
+		return "Android"
+	}
+
+	// Linux
+	if strings.Contains(ua, "Linux") {
+		return "Linux"
+	}
+
+	// Other Unix-like
+	if strings.Contains(ua, "X11") {
+		return "Unix"
+	}
+
+	return "Unknown OS"
+}
+
+func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *AuthState, w http.ResponseWriter) {
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	user, err := GetUserRepository().GetByAtlassianID(payload.UserID)
 	if err != nil {
@@ -418,7 +505,7 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 	}
 	GetAuthStateRepository().Delete(authState)
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	session := router.CreateSession(user)
+	session := router.CreateSession(r, user)
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
@@ -437,7 +524,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if authState.AuthStateType == AuthAtlassian {
-		router.handleAtlassianVerify(authState, w)
+		router.handleAtlassianVerify(r, authState, w)
 		return
 	}
 	if authState.AuthStateType != AuthResponseCache {
@@ -501,7 +588,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	session := router.CreateSession(user)
+	session := router.CreateSession(r, user)
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
