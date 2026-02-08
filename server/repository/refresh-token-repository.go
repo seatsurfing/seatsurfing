@@ -81,13 +81,13 @@ func (r *RefreshTokenRepository) DeleteExpired() error {
 	now := time.Now()
 	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
 		"DELETE FROM refresh_tokens WHERE expiry < $1 RETURNING session_id) "+
-		"DELETE FROM sessions WHERE id IN (SELECT session_id FROM deleted_rows)", now)
+		"DELETE FROM sessions WHERE id IN (SELECT session_id::uuid FROM deleted_rows)", now)
 	return err
 }
 
 func (r *RefreshTokenRepository) DeleteOfUser(u *User) error {
 	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
 		"DELETE FROM refresh_tokens WHERE user_id = $1 RETURNING session_id) "+
-		"DELETE FROM sessions WHERE id IN (SELECT session_id FROM deleted_rows)", u.ID)
+		"DELETE FROM sessions WHERE id IN (SELECT session_id::uuid FROM deleted_rows)", u.ID)
 	return err
 }

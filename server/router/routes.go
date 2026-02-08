@@ -338,6 +338,13 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		if IsWhitelisted(r) {
+			// even for whitelisted routes, we check if there is an auth header and if it is valid, so that we can have the user context available in whitelisted routes if the client provides a valid token
+			authHeader := r.Header.Get("Authorization")
+			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+				if !handleTokenAuth(w, r) {
+					handleServiceAccountAuth(w, r)
+				}
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -378,6 +385,14 @@ func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
 func CorsHandler(w http.ResponseWriter, r *http.Request) {
 	SetCorsHeaders(w, r)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func GetRequestSessionID(r *http.Request) string {
+	sessionID := r.Context().Value(contextKeySessionID)
+	if sessionID == nil {
+		return ""
+	}
+	return sessionID.(string)
 }
 
 func GetRequestUserID(r *http.Request) string {

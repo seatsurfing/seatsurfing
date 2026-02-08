@@ -421,3 +421,65 @@ func TestTokenNotValidYet(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
+
+func TestLogoutCurrent(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user.ID)
+	token2 := GetTestJWT(user.ID)
+
+	// Test both tokens are valid
+	req := NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Logout of first token
+	req = NewHTTPRequestWithAccessToken("GET", "/auth/logout/current", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Test first token is invalid
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+
+	// Test second token is still valid
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestLogoutAll(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user.ID)
+	token2 := GetTestJWT(user.ID)
+
+	// Test both tokens are valid
+	req := NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Logout of all tokens
+	req = NewHTTPRequestWithAccessToken("GET", "/auth/logout/all", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Test both tokens are invalid
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}

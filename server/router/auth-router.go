@@ -97,6 +97,7 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
+	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
 	s.HandleFunc("/initpwreset", router.initPasswordReset).Methods("POST")
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
 	s.HandleFunc("/refresh", router.refreshAccessToken).Methods("POST")
@@ -301,6 +302,45 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
 	GetSessionRepository().DeleteOfUser(user)
+	SendUpdated(w)
+}
+
+func (router *AuthRouter) logout(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	where := vars["where"]
+	if where != "all" && where != "current" {
+		SendBadRequest(w)
+		return
+	}
+	sessionID := GetRequestSessionID(r)
+	if sessionID == "" {
+		SendBadRequest(w)
+		return
+	}
+	session, err := GetSessionRepository().GetOne(sessionID)
+	if err != nil || session == nil {
+		SendBadRequest(w)
+		return
+	}
+	user, err := GetUserRepository().GetOne(session.UserID)
+	if err != nil || user == nil {
+		SendBadRequest(w)
+		return
+	}
+	if where == "all" {
+		if err := GetSessionRepository().DeleteOfUser(user); err != nil {
+			log.Println("Error deleting sessions of user during logout: " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
+		SendUpdated(w)
+		return
+	}
+	if err := GetSessionRepository().Delete(session); err != nil {
+		log.Println("Error deleting session during logout: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	SendUpdated(w)
 }
 
