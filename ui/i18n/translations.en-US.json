@@ -348,5 +348,10 @@
   "confirmDeleteOrgQuestion2": "Are you REALLY sure? If you delete this organization, all bookings, areas, spaces and users will be deleted irretrievably. No recovery will be possible.",
   "scale": "Scale",
   "company": "Company",
-  "current": "Current"
+  "current": "Current",
+  "activeSessions": "Active sessions",
+  "created": "Created",
+  "device": "Device",
+  "noActiveSessions": "No active sessions",
+  "thisSession": "This session"
 }

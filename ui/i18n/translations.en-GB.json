@@ -350,5 +350,6 @@
   "activeSessions": "Active sessions",
   "noActiveSessions": "No active sessions",
   "device": "Device",
-  "created": "Created"
+  "created": "Created",
+  "thisSession": "This session"
 }

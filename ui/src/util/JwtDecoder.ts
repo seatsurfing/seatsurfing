@@ -6,7 +6,7 @@ export default class JwtDecoder {
     }
     let payload = "{}";
     if (typeof window !== "undefined") {
-      window.atob(tokens[1]);
+      payload = window.atob(tokens[1]);
     }
     let json = JSON.parse(payload);
     return json;

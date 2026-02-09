@@ -20,6 +20,7 @@ import UserPreference from "@/types/UserPreference";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
 import Session from "@/types/Session";
+import JwtDecoder from "@/util/JwtDecoder";
 
 interface State {
   loading: boolean;
@@ -51,6 +52,7 @@ interface State {
   use24HourTime: boolean;
   dateFormat: string;
   activeSessions: Session[];
+  currentSessionId: string;
 }
 
 interface Props {
@@ -101,6 +103,7 @@ class Preferences extends React.Component<Props, State> {
       use24HourTime: true,
       dateFormat: "Y-m-d",
       activeSessions: [],
+      currentSessionId: "",
     };
   }
 
@@ -120,11 +123,17 @@ class Preferences extends React.Component<Props, State> {
   };
 
   loadActiveSessions = async (): Promise<void> => {
+    const accessTokenPayload = JwtDecoder.getPayload(
+      Ajax.PERSISTER.readCredentialsFromSessionStorage().accessToken,
+    );
     let self = this;
     return new Promise<void>(function (resolve, reject) {
       Session.list()
         .then((sessions) => {
-          self.setState({ activeSessions: sessions });
+          self.setState({
+            activeSessions: sessions,
+            currentSessionId: accessTokenPayload.sid,
+          });
           resolve();
         })
         .catch((e) => reject(e));
@@ -786,7 +795,11 @@ class Preferences extends React.Component<Props, State> {
                     <tbody>
                       {this.state.activeSessions.map((session) => (
                         <tr key={"session-" + session.id}>
-                          <td>{session.device}</td>
+                          <td>
+                            {session.id === this.state.currentSessionId
+                              ? this.props.t("thisSession")
+                              : session.device}
+                          </td>
                           <td>{new Date(session.created).toUTCString()}</td>
                           <td>
                             <a
