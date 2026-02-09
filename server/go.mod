@@ -15,7 +15,7 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/valkey-io/valkey-go v1.0.71
 	golang.org/x/crypto v0.47.0
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 )
 
 require (
