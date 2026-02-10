@@ -14,7 +14,7 @@ require (
 	github.com/rustyoz/svg v0.0.0-20250705135709-8b1786137cb3
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/valkey-io/valkey-go v1.0.71
-	golang.org/x/crypto v0.47.0
+	golang.org/x/crypto v0.48.0
 	golang.org/x/oauth2 v0.35.0
 )
 
@@ -30,6 +30,6 @@ require (
 	github.com/rustyoz/genericlexer v0.0.0-20250522144106-d3cfee480384 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
