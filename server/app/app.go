@@ -167,46 +167,51 @@ func (a *App) InitializeSingleOrgSettings() {
 	}
 }
 
+func (a *App) onTimerTick() {
+	if err := GetAuthStateRepository().DeleteExpired(); err != nil {
+		log.Println(err)
+	}
+	if err := GetRefreshTokenRepository().DeleteExpired(); err != nil {
+		log.Println(err)
+	}
+	if err := GetUserRepository().EnableUsersWithExpiredBan(); err != nil {
+		log.Println(err)
+	}
+	num, err := GetUserRepository().DeleteObsoleteConfluenceAnonymousUsers()
+	if err != nil {
+		log.Println(err)
+	}
+	if num > 0 {
+		log.Printf("Deleted %d anonymous Confluence users", num)
+	}
+
+	// purge max. 100 bookings after retention period (if enabled)
+	num, err = GetBookingRepository().PurgeOldBookings(100)
+	if err != nil {
+		log.Println(err)
+	}
+	if num > 0 {
+		log.Printf("Purged %d old bookings", num)
+	}
+
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnTimer()
+	}
+	// Check domain accessibility once per hour
+	if time.Now().Minute() == 0 {
+		go a.CheckDomainAccessibilityTimer()
+	}
+}
+
 func (a *App) InitializeTimers() {
+	a.onTimerTick()
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	GetUpdateChecker().InitializeVersionUpdateTimer(installID)
 	a.CleanupTicker = time.NewTicker(time.Minute * 1)
 	go func() {
 		for {
 			<-a.CleanupTicker.C
-			if err := GetAuthStateRepository().DeleteExpired(); err != nil {
-				log.Println(err)
-			}
-			if err := GetRefreshTokenRepository().DeleteExpired(); err != nil {
-				log.Println(err)
-			}
-			if err := GetUserRepository().EnableUsersWithExpiredBan(); err != nil {
-				log.Println(err)
-			}
-			num, err := GetUserRepository().DeleteObsoleteConfluenceAnonymousUsers()
-			if err != nil {
-				log.Println(err)
-			}
-			if num > 0 {
-				log.Printf("Deleted %d anonymous Confluence users", num)
-			}
-
-			// purge max. 100 bookings after retention period (if enabled)
-			num, err = GetBookingRepository().PurgeOldBookings(100)
-			if err != nil {
-				log.Println(err)
-			}
-			if num > 0 {
-				log.Printf("Purged %d old bookings", num)
-			}
-
-			for _, plg := range plugin.GetPlugins() {
-				(*plg).OnTimer()
-			}
-			// Check domain accessibility once per hour
-			if time.Now().Minute() == 0 {
-				go a.CheckDomainAccessibilityTimer()
-			}
+			a.onTimerTick()
 		}
 	}()
 }
