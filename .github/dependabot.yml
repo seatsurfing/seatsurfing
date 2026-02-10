@@ -8,6 +8,11 @@ updates:
     commit-message:
       prefix: "fix(deps)"
     open-pull-requests-limit: 50
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: npm
     directories:
