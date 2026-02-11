@@ -38,7 +38,7 @@ func GetRefreshTokenRepository() *RefreshTokenRepository {
 func (r *RefreshTokenRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 34 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE refresh_tokens " +
-			"ADD COLUMN IF NOT EXISTS session_id VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			"ADD COLUMN IF NOT EXISTS session_id uuid NOT NULL DEFAULT '" + GetSettingsRepository().GetNullUUID() + "'"); err != nil {
 			panic(err)
 		}
 	}
@@ -73,6 +73,7 @@ func (r *RefreshTokenRepository) GetOne(id string) (*RefreshToken, error) {
 func (r *RefreshTokenRepository) Delete(e *RefreshToken) error {
 	// Hint: Do not delete session here, because it might be used by other refresh tokens.
 	// Instead, delete the session when deleting expired tokens or when deleting all tokens of a user.
+	// This function is only used when refreshing a token, so the session should not be deleted here.
 	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE id = $1", e.ID)
 	return err
 }

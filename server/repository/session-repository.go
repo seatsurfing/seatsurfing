@@ -91,14 +91,15 @@ func (r *SessionRepository) GetOfUser(u *User) ([]*Session, error) {
 }
 
 func (r *SessionRepository) Delete(e *Session) error {
-	_, err := GetDatabase().DB().Exec("DELETE FROM sessions WHERE id = $1", e.ID)
+	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
+		"DELETE FROM sessions WHERE id = $1 RETURNING id) "+
+		"DELETE FROM refresh_tokens WHERE session_id IN (SELECT id::uuid FROM deleted_rows)", e.ID)
 	return err
 }
 
 func (r *SessionRepository) DeleteOfUser(u *User) error {
-	_, err := GetDatabase().DB().Exec("DELETE FROM sessions WHERE user_id = $1", u.ID)
-	if err != nil {
-		return err
-	}
-	return GetRefreshTokenRepository().DeleteOfUser(u)
+	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
+		"DELETE FROM sessions WHERE user_id = $1 RETURNING id) "+
+		"DELETE FROM refresh_tokens WHERE session_id IN (SELECT id::uuid FROM deleted_rows)", u.ID)
+	return err
 }

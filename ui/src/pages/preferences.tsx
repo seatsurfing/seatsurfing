@@ -21,6 +21,7 @@ import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
@@ -796,11 +797,16 @@ class Preferences extends React.Component<Props, State> {
                       {this.state.activeSessions.map((session) => (
                         <tr key={"session-" + session.id}>
                           <td>
+                            {session.device}
                             {session.id === this.state.currentSessionId
-                              ? this.props.t("thisSession")
-                              : session.device}
+                              ? " *"
+                              : ""}
                           </td>
-                          <td>{new Date(session.created).toUTCString()}</td>
+                          <td>
+                            {Formatting.getFormatterShort(false).format(
+                              new Date(session.created),
+                            )}
+                          </td>
                           <td>
                             <a
                               href="#"
@@ -819,6 +825,7 @@ class Preferences extends React.Component<Props, State> {
                       ))}
                     </tbody>
                   </table>
+                  * {this.props.t("thisSession")}
                 </div>
               )}
             </div>

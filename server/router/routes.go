@@ -302,7 +302,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
-		//ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+		// Note: service accounts do not have sessions, so we do not set session ID in context
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}
