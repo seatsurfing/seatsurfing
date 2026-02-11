@@ -326,6 +326,8 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		if user.Disabled {
 			return false
 		}
+		// Update session activity on each authenticated request
+		go GetSessionRepository().UpdateActivity(session.ID)
 		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
 		ctx = context.WithValue(ctx, contextKeySessionID, session.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))

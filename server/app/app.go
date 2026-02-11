@@ -174,6 +174,9 @@ func (a *App) onTimerTick() {
 	if err := GetRefreshTokenRepository().DeleteExpired(); err != nil {
 		log.Println(err)
 	}
+	if err := GetSessionRepository().DeleteExpired(); err != nil {
+		log.Println(err)
+	}
 	if err := GetUserRepository().EnableUsersWithExpiredBan(); err != nil {
 		log.Println(err)
 	}

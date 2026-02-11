@@ -204,6 +204,10 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
+	// Update session activity timestamp
+	if err := GetSessionRepository().UpdateActivity(session.ID); err != nil {
+		log.Println("Error updating session activity: " + err.Error())
+	}
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	newRefreshToken := router.createRefreshToken(claims)
@@ -211,7 +215,9 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
 	}
-	GetRefreshTokenRepository().Delete(refreshToken)
+	if err := GetRefreshTokenRepository().Delete(refreshToken); err != nil {
+		log.Println("Error deleting old refresh token: " + err.Error())
+	}
 	SendJSON(w, res)
 }
 
@@ -396,6 +402,11 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
 	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during password login")
+		SendInternalServerError(w)
+		return
+	}
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
@@ -407,12 +418,33 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 }
 
 func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
+	// Check concurrent session limit (default: 10 sessions per user)
+	maxSessions := 10
+	if maxSessionsConfig := GetConfig().MaxSessionsPerUser; maxSessionsConfig > 0 {
+		maxSessions = maxSessionsConfig
+	}
+
+	count, err := GetSessionRepository().GetActiveSessionCount(user)
+	if err != nil {
+		log.Println("Error getting session count: " + err.Error())
+	}
+
+	// If user has too many sessions, delete the oldest one
+	if count >= maxSessions {
+		if err := GetSessionRepository().DeleteOldestSession(user); err != nil {
+			log.Println("Error deleting oldest session: " + err.Error())
+		}
+	}
+
 	session := &Session{
 		UserID:  user.ID,
 		Device:  router.GetDeviceInfo(r),
 		Created: time.Now().UTC(),
 	}
-	GetSessionRepository().Create(session)
+	if err := GetSessionRepository().Create(session); err != nil {
+		log.Println("Error creating session: " + err.Error())
+		return nil
+	}
 	return session
 }
 
@@ -521,6 +553,11 @@ func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *Auth
 	GetAuthStateRepository().Delete(authState)
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
 	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during Atlassian verify")
+		SendInternalServerError(w)
+		return
+	}
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
@@ -604,6 +641,11 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
 	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during OAuth verify")
+		SendInternalServerError(w)
+		return
+	}
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)

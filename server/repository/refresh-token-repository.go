@@ -80,15 +80,20 @@ func (r *RefreshTokenRepository) Delete(e *RefreshToken) error {
 
 func (r *RefreshTokenRepository) DeleteExpired() error {
 	now := time.Now()
-	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
-		"DELETE FROM refresh_tokens WHERE expiry < $1 RETURNING session_id) "+
-		"DELETE FROM sessions WHERE id IN (SELECT session_id::uuid FROM deleted_rows)", now)
+	// Only delete refresh tokens that are expired
+	// Do NOT delete the sessions here - sessions are managed separately and may have other valid refresh tokens
+	// Orphaned sessions (with no valid refresh tokens) will be cleaned up by session expiry
+	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE expiry < $1", now)
 	return err
 }
 
 func (r *RefreshTokenRepository) DeleteOfUser(u *User) error {
-	_, err := GetDatabase().DB().Exec("WITH deleted_rows as ("+
-		"DELETE FROM refresh_tokens WHERE user_id = $1 RETURNING session_id) "+
-		"DELETE FROM sessions WHERE id IN (SELECT session_id::uuid FROM deleted_rows)", u.ID)
+	_, err := GetDatabase().DB().Exec("DELETE FROM refresh_tokens WHERE user_id = $1", u.ID)
 	return err
+}
+
+func (r *RefreshTokenRepository) GetCountBySession(sessionID string) (int, error) {
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM refresh_tokens WHERE session_id = $1 AND expiry > NOW()", sessionID).Scan(&count)
+	return count, err
 }
