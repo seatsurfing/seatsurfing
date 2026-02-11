@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.57.7](https://github.com/seatsurfing/seatsurfing/compare/v1.57.6...v1.57.7) (2026-02-11)
+
+
+### Bug Fixes
+
+* **deps:** bump golang.org/x/oauth2 from 0.34.0 to 0.35.0 in /server ([#1707](https://github.com/seatsurfing/seatsurfing/issues/1707)) ([0453fec](https://github.com/seatsurfing/seatsurfing/commit/0453fec85ed2a61d24cafe75d163913e3541aad0))
+* **deps:** bump library/golang from 1.25.6-bookworm to 1.25.7-bookworm ([#1704](https://github.com/seatsurfing/seatsurfing/issues/1704)) ([3c7ca70](https://github.com/seatsurfing/seatsurfing/commit/3c7ca7064fd7f17b5efe18ab9d020fb2941b62fe))
+* **deps:** bump library/golang from 1.25.7-bookworm to 1.26.0-bookworm ([#1714](https://github.com/seatsurfing/seatsurfing/issues/1714)) ([e23bcb3](https://github.com/seatsurfing/seatsurfing/commit/e23bcb3af6dfc31ef60970f1698de62f7acba273))
+* **deps:** bump the minor-and-patch group in /server with 3 updates ([#1710](https://github.com/seatsurfing/seatsurfing/issues/1710)) ([3406453](https://github.com/seatsurfing/seatsurfing/commit/34064534ee3a03f438d20dd6642e552c4b872d39))
+* trigger timer on server startup ([#1713](https://github.com/seatsurfing/seatsurfing/issues/1713)) ([e656d9c](https://github.com/seatsurfing/seatsurfing/commit/e656d9c93087c98334ca453321754d6ef2492a60))
+
 ## [1.57.6](https://github.com/seatsurfing/seatsurfing/compare/v1.57.5...v1.57.6) (2026-02-06)
 
 
