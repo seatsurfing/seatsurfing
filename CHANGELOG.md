@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.58.0](https://github.com/seatsurfing/seatsurfing/compare/v1.57.7...v1.58.0) (2026-02-11)
+
+
+### Features
+
+* introduce session id to improve security ([#1703](https://github.com/seatsurfing/seatsurfing/issues/1703)) ([02035bb](https://github.com/seatsurfing/seatsurfing/commit/02035bb4f53c80ad5bdff40d87d1c1b371d12747))
+
 ## [1.57.7](https://github.com/seatsurfing/seatsurfing/compare/v1.57.6...v1.57.7) (2026-02-11)
 
 
