@@ -57,6 +57,7 @@ type Config struct {
 	CORSOrigins                         []string
 	RateLimit                           int
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
+	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 }
 
 var _configInstance *Config
@@ -157,6 +158,11 @@ func (c *Config) ReadConfig() {
 	if !rxRateLimitPeriod.MatchString(c.RateLimitPeriod) {
 		log.Println("Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
 		c.RateLimitPeriod = "1-M"
+	}
+	c.MaxSessionsPerUser = c.getEnvInt("MAX_SESSIONS_PER_USER", 10)
+	if c.MaxSessionsPerUser < 1 {
+		log.Println("Warning: MAX_SESSIONS_PER_USER must be at least 1. Defaulting to 10.")
+		c.MaxSessionsPerUser = 10
 	}
 
 	// Check deprecated environment variables

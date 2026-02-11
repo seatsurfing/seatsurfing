@@ -31,7 +31,8 @@ func (c contextKey) String() string {
 }
 
 var (
-	contextKeyUserID = contextKey("UserID")
+	contextKeyUserID    = contextKey("UserID")
+	contextKeySessionID = contextKey("SessionID")
 )
 
 var (
@@ -301,6 +302,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+		// Note: service accounts do not have sessions, so we do not set session ID in context
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}
@@ -310,6 +312,13 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			return false
 		}
+		session, err := GetSessionRepository().GetOne(claims.SessionID)
+		if err != nil || session == nil {
+			return false
+		}
+		if session.UserID != claims.UserID {
+			return false
+		}
 		user, err := GetUserRepository().GetOne(claims.UserID)
 		if err != nil || user == nil {
 			return false
@@ -317,7 +326,10 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		if user.Disabled {
 			return false
 		}
+		// Update session activity on each authenticated request
+		go GetSessionRepository().UpdateActivity(session.ID)
 		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
+		ctx = context.WithValue(ctx, contextKeySessionID, session.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}
@@ -328,7 +340,15 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		if IsWhitelisted(r) {
-			next.ServeHTTP(w, r)
+			// even for whitelisted routes, we check if there is an auth header and if it is valid, so that we can have the user context available in whitelisted routes if the client provides a valid token
+			processedWithAuth := false
+			authHeader := r.Header.Get("Authorization")
+			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+				processedWithAuth = handleTokenAuth(w, r) || handleServiceAccountAuth(w, r)
+			}
+			if !processedWithAuth {
+				next.ServeHTTP(w, r)
+			}
 			return
 		}
 		success := handleTokenAuth(w, r) || handleServiceAccountAuth(w, r)
@@ -368,6 +388,14 @@ func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
 func CorsHandler(w http.ResponseWriter, r *http.Request) {
 	SetCorsHeaders(w, r)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func GetRequestSessionID(r *http.Request) string {
+	sessionID := r.Context().Value(contextKeySessionID)
+	if sessionID == nil {
+		return ""
+	}
+	return sessionID.(string)
 }
 
 func GetRequestUserID(r *http.Request) string {

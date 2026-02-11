@@ -19,6 +19,9 @@ import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
+import Session from "@/types/Session";
+import JwtDecoder from "@/util/JwtDecoder";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
@@ -49,6 +52,8 @@ interface State {
   mailNotifications: boolean;
   use24HourTime: boolean;
   dateFormat: string;
+  activeSessions: Session[];
+  currentSessionId: string;
 }
 
 interface Props {
@@ -98,6 +103,8 @@ class Preferences extends React.Component<Props, State> {
       mailNotifications: false,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      activeSessions: [],
+      currentSessionId: "",
     };
   }
 
@@ -106,9 +113,31 @@ class Preferences extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    let promises = [this.loadPreferences(), this.loadLocations()];
+    let promises = [
+      this.loadPreferences(),
+      this.loadLocations(),
+      this.loadActiveSessions(),
+    ];
     Promise.all(promises).then(() => {
       this.setState({ loading: false });
+    });
+  };
+
+  loadActiveSessions = async (): Promise<void> => {
+    const accessTokenPayload = JwtDecoder.getPayload(
+      Ajax.PERSISTER.readCredentialsFromSessionStorage().accessToken,
+    );
+    let self = this;
+    return new Promise<void>(function (resolve, reject) {
+      Session.list()
+        .then((sessions) => {
+          self.setState({
+            activeSessions: sessions,
+            currentSessionId: accessTokenPayload.sid,
+          });
+          resolve();
+        })
+        .catch((e) => reject(e));
     });
   };
 
@@ -750,6 +779,56 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
+            <div hidden={this.state.activeTab !== "tab-security"}>
+              <h5 className="mt-5">{this.props.t("activeSessions")}</h5>
+              {this.state.activeSessions.length === 0 ? (
+                <p>{this.props.t("noActiveSessions")}</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>{this.props.t("device")}</th>
+                        <th>{this.props.t("created")} (UTC)</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.activeSessions.map((session) => (
+                        <tr key={"session-" + session.id}>
+                          <td>
+                            {session.device}
+                            {session.id === this.state.currentSessionId
+                              ? " *"
+                              : ""}
+                          </td>
+                          <td>
+                            {Formatting.getFormatterShort(false).format(
+                              new Date(session.created),
+                            )}
+                          </td>
+                          <td>
+                            <a
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                session
+                                  .delete()
+                                  .then(() => this.loadActiveSessions())
+                                  .catch(() => RuntimeConfig.logOut());
+                              }}
+                            >
+                              {this.props.t("logout")}
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  * {this.props.t("thisSession")}
+                </div>
+              )}
+            </div>
 
             {/* --- */}
             {/* IDP */}

@@ -348,5 +348,10 @@
   "city": "City",
   "postalCode": "Postal Code",
   "company": "Company",
-  "current": "Current"
+  "current": "Current",
+  "activeSessions": "Active sessions",
+  "created": "Created",
+  "device": "Device",
+  "noActiveSessions": "No active sessions",
+  "thisSession": "This session"
 }

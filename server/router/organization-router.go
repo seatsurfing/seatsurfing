@@ -108,7 +108,7 @@ func (router *OrganizationRouter) getDomainAccessibilityToken(w http.ResponseWri
 func (router *OrganizationRouter) getOrgForDomain(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	e, err := GetOrganizationRepository().GetOneByDomain(vars["domain"])
-	if err != nil {
+	if e == nil || err != nil {
 		log.Println(err)
 		SendNotFound(w)
 		return

@@ -33,6 +33,7 @@ type JWTResponse struct {
 type Claims struct {
 	Email      string `json:"email"`
 	UserID     string `json:"userID"`
+	SessionID  string `json:"sid"`
 	SpaceAdmin bool   `json:"spaceAdmin"`
 	OrgAdmin   bool   `json:"admin"`
 	Role       int    `json:"role"`
@@ -96,6 +97,7 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
+	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
 	s.HandleFunc("/initpwreset", router.initPasswordReset).Methods("POST")
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
 	s.HandleFunc("/refresh", router.refreshAccessToken).Methods("POST")
@@ -194,17 +196,28 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		SendNotFound(w)
 		return
 	}
+	session, err := GetSessionRepository().GetOne(refreshToken.SessionID)
+	if session == nil || err != nil {
+		SendNotFound(w)
+		return
+	}
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.CreateClaims(user)
+	// Update session activity timestamp
+	if err := GetSessionRepository().UpdateActivity(session.ID); err != nil {
+		log.Println("Error updating session activity: " + err.Error())
+	}
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	newRefreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
 	}
-	GetRefreshTokenRepository().Delete(refreshToken)
+	if err := GetRefreshTokenRepository().Delete(refreshToken); err != nil {
+		log.Println("Error deleting old refresh token: " + err.Error())
+	}
 	SendJSON(w, res)
 }
 
@@ -294,6 +307,61 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
+	GetSessionRepository().DeleteOfUser(user)
+	SendUpdated(w)
+}
+
+func (router *AuthRouter) logout(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	where := vars["where"]
+	_, uuidErr := uuid.Parse(where)
+	if uuidErr != nil && where != "all" && where != "current" {
+		SendBadRequest(w)
+		return
+	}
+	sessionID := GetRequestSessionID(r)
+	if sessionID == "" {
+		SendBadRequest(w)
+		return
+	}
+	session, err := GetSessionRepository().GetOne(sessionID)
+	if err != nil || session == nil {
+		SendBadRequest(w)
+		return
+	}
+	user, err := GetUserRepository().GetOne(session.UserID)
+	if err != nil || user == nil {
+		SendBadRequest(w)
+		return
+	}
+	if uuidErr == nil {
+		requestedSession, err := GetSessionRepository().GetOne(where)
+		if err != nil || requestedSession == nil || requestedSession.UserID != user.ID {
+			SendNotFound(w)
+			return
+		}
+		if err := GetSessionRepository().Delete(requestedSession); err != nil {
+			log.Println("Error deleting requested session during logout: " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
+		SendUpdated(w)
+		return
+	}
+	if where == "all" {
+		if err := GetSessionRepository().DeleteOfUser(user); err != nil {
+			log.Println("Error deleting sessions of user during logout: " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
+		SendUpdated(w)
+		return
+	}
+	if err := GetSessionRepository().Delete(session); err != nil {
+		log.Println("Error deleting session during logout: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	SendUpdated(w)
 }
 
@@ -333,7 +401,13 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during password login")
+		SendInternalServerError(w)
+		return
+	}
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -343,7 +417,125 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	SendJSON(w, res)
 }
 
-func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.ResponseWriter) {
+func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
+	// Check concurrent session limit (default: 10 sessions per user)
+	maxSessions := 10
+	if maxSessionsConfig := GetConfig().MaxSessionsPerUser; maxSessionsConfig > 0 {
+		maxSessions = maxSessionsConfig
+	}
+
+	count, err := GetSessionRepository().GetActiveSessionCount(user)
+	if err != nil {
+		log.Println("Error getting session count: " + err.Error())
+	}
+
+	// If user has too many sessions, delete the oldest one
+	if count >= maxSessions {
+		if err := GetSessionRepository().DeleteOldestSession(user); err != nil {
+			log.Println("Error deleting oldest session: " + err.Error())
+		}
+	}
+
+	session := &Session{
+		UserID:  user.ID,
+		Device:  router.GetDeviceInfo(r),
+		Created: time.Now().UTC(),
+	}
+	if err := GetSessionRepository().Create(session); err != nil {
+		log.Println("Error creating session: " + err.Error())
+		return nil
+	}
+	return session
+}
+
+func (router *AuthRouter) GetDeviceInfo(r *http.Request) string {
+	if r == nil {
+		return "Unknown Device"
+	}
+
+	ua := r.UserAgent()
+	if ua == "" {
+		return "Unknown Device"
+	}
+
+	browser := router.parseBrowser(ua)
+	os := router.parseOS(ua)
+
+	return fmt.Sprintf("%s on %s", browser, os)
+}
+
+func (router *AuthRouter) parseBrowser(ua string) string {
+	// Check for Edge before Chrome as Edge contains "Chrome" in UA
+	if strings.Contains(ua, "Edg/") || strings.Contains(ua, "Edge/") {
+		return "Edge"
+	}
+	// Check for Chrome before Safari as Chrome contains "Safari" in UA
+	if strings.Contains(ua, "Chrome/") {
+		if strings.Contains(ua, "OPR/") || strings.Contains(ua, "Opera/") {
+			return "Opera"
+		}
+		return "Chrome"
+	}
+	if strings.Contains(ua, "Firefox/") {
+		return "Firefox"
+	}
+	if strings.Contains(ua, "Safari/") {
+		return "Safari"
+	}
+	if strings.Contains(ua, "MSIE") || strings.Contains(ua, "Trident/") {
+		return "Internet Explorer"
+	}
+	return "Unknown Browser"
+}
+
+func (router *AuthRouter) parseOS(ua string) string {
+	// Windows
+	if strings.Contains(ua, "Windows NT 10.0") {
+		return "Windows 10/11"
+	}
+	if strings.Contains(ua, "Windows NT 6.3") {
+		return "Windows 8.1"
+	}
+	if strings.Contains(ua, "Windows NT 6.2") {
+		return "Windows 8"
+	}
+	if strings.Contains(ua, "Windows NT 6.1") {
+		return "Windows 7"
+	}
+	if strings.Contains(ua, "Windows NT") || strings.Contains(ua, "Windows") {
+		return "Windows"
+	}
+
+	// macOS/iOS
+	if strings.Contains(ua, "iPhone") {
+		return "iOS (iPhone)"
+	}
+	if strings.Contains(ua, "iPad") {
+		return "iOS (iPad)"
+	}
+	if strings.Contains(ua, "Macintosh") || strings.Contains(ua, "Mac OS X") {
+		return "macOS"
+	}
+
+	// Android
+	if strings.Contains(ua, "Android") {
+		return "Android"
+	}
+
+	// Linux
+	if strings.Contains(ua, "Linux") {
+		return "Linux"
+	}
+
+	// Other Unix-like
+	if strings.Contains(ua, "X11") {
+		return "Unix"
+	}
+
+	return "Unknown OS"
+}
+
+func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *AuthState, w http.ResponseWriter) {
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	user, err := GetUserRepository().GetByAtlassianID(payload.UserID)
 	if err != nil {
@@ -360,7 +552,13 @@ func (router *AuthRouter) handleAtlassianVerify(authState *AuthState, w http.Res
 	}
 	GetAuthStateRepository().Delete(authState)
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during Atlassian verify")
+		SendInternalServerError(w)
+		return
+	}
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -378,7 +576,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if authState.AuthStateType == AuthAtlassian {
-		router.handleAtlassianVerify(authState, w)
+		router.handleAtlassianVerify(r, authState, w)
 		return
 	}
 	if authState.AuthStateType != AuthResponseCache {
@@ -442,7 +640,13 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during OAuth verify")
+		SendInternalServerError(w)
+		return
+	}
+	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken := router.createRefreshToken(claims)
 	res := &JWTResponse{
@@ -718,10 +922,11 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 	return config
 }
 
-func (router *AuthRouter) CreateClaims(user *User) *Claims {
+func (router *AuthRouter) CreateClaims(user *User, session *Session) *Claims {
 	claims := &Claims{
 		UserID:     user.ID,
 		Email:      user.Email,
+		SessionID:  session.ID,
 		SpaceAdmin: GetUserRepository().IsSpaceAdmin(user),
 		OrgAdmin:   GetUserRepository().IsOrgAdmin(user),
 		Role:       int(user.Role),
@@ -763,9 +968,10 @@ func (router *AuthRouter) createRefreshToken(claims *Claims) string {
 	var expiry time.Time
 	expiry = time.Now().Add(60 * 24 * 28 * time.Minute)
 	refreshToken := &RefreshToken{
-		UserID:  claims.UserID,
-		Expiry:  expiry,
-		Created: time.Now(),
+		UserID:    claims.UserID,
+		SessionID: claims.SessionID,
+		Expiry:    expiry,
+		Created:   time.Now(),
 	}
 	GetRefreshTokenRepository().Create(refreshToken)
 	return refreshToken.ID

@@ -303,7 +303,8 @@ func TestTokenValid(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -319,7 +320,8 @@ func TestTokenNoAudience(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutAudience)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -335,7 +337,8 @@ func TestTokenNoExpiry(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutExpiry)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -351,7 +354,8 @@ func TestTokenNoIssuer(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
 	token := router.CreateAccessToken(claims, WithoutIssuer)
 
 	req, _ := http.NewRequest("GET", "/user/me", nil)
@@ -367,7 +371,8 @@ func TestTokenExpired(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	jti := uuid.New().String()
 	claims.RegisteredClaims = jwt.RegisteredClaims{
@@ -395,7 +400,8 @@ func TestTokenNotValidYet(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	router := &AuthRouter{}
-	claims := router.CreateClaims(user)
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	jti := uuid.New().String()
 	claims.RegisteredClaims = jwt.RegisteredClaims{
@@ -414,4 +420,109 @@ func TestTokenNotValidYet(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+token)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestLogoutCurrent(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user.ID)
+	token2 := GetTestJWT(user.ID)
+
+	// Test both tokens are valid
+	req := NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Logout of first token
+	req = NewHTTPRequestWithAccessToken("GET", "/auth/logout/current", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Test first token is invalid
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+
+	// Test second token is still valid
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestLogoutAll(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user.ID)
+	token2 := GetTestJWT(user.ID)
+
+	// Test both tokens are valid
+	req := NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Logout of all tokens
+	req = NewHTTPRequestWithAccessToken("GET", "/auth/logout/all", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Test both tokens are invalid
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token1, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+	req = NewHTTPRequestWithAccessToken("GET", "/user/me", token2, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestLogoutSpecific(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user.ID)
+	token2 := GetTestJWT(user.ID)
+
+	claims := &Claims{}
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS512"}),
+	)
+	_, _, err := parser.ParseUnverified(token1, claims)
+	CheckTestBool(t, true, err == nil)
+
+	// Logout of token1
+	req := NewHTTPRequestWithAccessToken("GET", "/auth/logout/"+claims.SessionID, token2, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestLogoutSpecificForeign(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	token1 := GetTestJWT(user1.ID)
+	user2 := CreateTestUserInOrg(org)
+	token2 := GetTestJWT(user2.ID)
+
+	claims := &Claims{}
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS512"}),
+	)
+	_, _, err := parser.ParseUnverified(token1, claims)
+	CheckTestBool(t, true, err == nil)
+
+	// Logout of token1
+	req := NewHTTPRequestWithAccessToken("GET", "/auth/logout/"+claims.SessionID, token2, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }

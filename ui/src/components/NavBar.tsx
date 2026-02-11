@@ -28,7 +28,6 @@ import Ajax from "@/util/Ajax";
 import LanguageSelector from "./LanguageSelector";
 
 interface State {
-  redirect: string | null;
   showMergeInit: boolean;
   showMergeNextStep: boolean;
   showMergeRequests: boolean;
@@ -48,7 +47,6 @@ class NavBar extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      redirect: null,
       showMergeInit: false,
       showMergeNextStep: false,
       showMergeRequests: false,
@@ -83,17 +81,7 @@ class NavBar extends React.Component<Props, State> {
 
   logOut = (e: any) => {
     e.preventDefault();
-    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
-    const logoutUrl = credentials.logoutUrl;
-    Ajax.PERSISTER.deleteCredentialsFromStorage();
-    RuntimeConfig.resetInfos();
-    if (logoutUrl) {
-      window.location.href = logoutUrl;
-      return;
-    }
-    this.setState({
-      redirect: "/login?noredirect=1",
-    });
+    RuntimeConfig.logOut();
   };
 
   showMergeModal = (e: any) => {
@@ -148,13 +136,6 @@ class NavBar extends React.Component<Props, State> {
   };
 
   render() {
-    if (this.state.redirect != null) {
-      let target = this.state.redirect;
-      this.setState({ redirect: null });
-      this.props.router.push(target);
-      return <></>;
-    }
-
     let signOffButton = <></>;
     let adminButton = <></>;
     let initMergeButton = <></>;

@@ -265,6 +265,23 @@ export default class RuntimeConfig {
       "es",
     ];
   }
+
+  static logOut(): void {
+    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    const logoutUrl = credentials.logoutUrl;
+    const proceed = () => {
+      Ajax.PERSISTER.deleteCredentialsFromStorage();
+      RuntimeConfig.resetInfos();
+      if (logoutUrl) {
+        window.location.href = logoutUrl;
+        return;
+      }
+      window.location.href = "/ui/login?noredirect=1";
+    };
+    Ajax.get("/auth/logout/current")
+      .then(() => proceed())
+      .catch(() => proceed());
+  }
 }
 
 RuntimeConfig.resetInfos();

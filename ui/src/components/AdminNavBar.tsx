@@ -28,17 +28,7 @@ class AdminNavBar extends React.Component<Props, State> {
 
   logout = (e: any) => {
     e.preventDefault();
-    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
-    const logoutUrl = credentials.logoutUrl;
-    Ajax.PERSISTER.deleteCredentialsFromStorage();
-    RuntimeConfig.resetInfos();
-    if (logoutUrl) {
-      window.location.href = logoutUrl;
-      return;
-    }
-    this.setState({
-      redirect: "/login?noredirect=1",
-    });
+    RuntimeConfig.logOut();
   };
 
   submitSearchForm = (e: any) => {

@@ -346,5 +346,10 @@
   "filterBookingCurrent": "Current bookings",
   "filterBookingEnterLeave": "Enter and leave time",
   "scale": "Scale",
-  "current": "Current"
+  "current": "Current",
+  "activeSessions": "Active sessions",
+  "noActiveSessions": "No active sessions",
+  "device": "Device",
+  "created": "Created",
+  "thisSession": "This session"
 }
