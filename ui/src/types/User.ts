@@ -174,4 +174,33 @@ export default class User extends Entity {
       return e;
     });
   }
+
+  static async generateTotp(): Promise<TotpGenerateResponse> {
+    return Ajax.get("/user/totp/generate").then((result) => {
+      let e: TotpGenerateResponse = new TotpGenerateResponse();
+      e.secret = result.json.secret;
+      e.qrCode = result.json.image;
+      return e;
+    });
+  }
+
+  static async validateTotp(stateId: string, code: string): Promise<void> {
+    let payload = {
+      code: code,
+      stateId: stateId,
+    };
+    return Ajax.postData("/user/totp/validate", payload).then(() => undefined);
+  }
+}
+
+export class TotpGenerateResponse {
+  secret: string;
+  qrCode: string;
+  stateId: string;
+
+  constructor() {
+    this.secret = "";
+    this.qrCode = "";
+    this.stateId = "";
+  }
 }

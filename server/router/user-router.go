@@ -1,12 +1,16 @@
 package router
 
 import (
+	"bytes"
+	"encoding/base64"
+	"image/png"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/pquerna/otp/totp"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -66,7 +70,21 @@ type InitMergeUsersRequest struct {
 	Email string `json:"email" validate:"required,email,max=254"`
 }
 
+type GenerateTotpResponse struct {
+	Secret  string `json:"secret"`
+	Image   string `json:"image"`
+	StateID string `json:"stateId"`
+}
+
+type ValidateTotpRequest struct {
+	Code    string `json:"code" validate:"required,len=6,numeric"`
+	StateID string `json:"stateId" validate:"required,uuid4"`
+}
+
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/totp/generate", router.generateTotp).Methods("GET")
+	s.HandleFunc("/totp/verify", router.validateTotp).Methods("POST")
+	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -80,6 +98,111 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+}
+
+func (router *UserRouter) disableTotp(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+	user.TotpSecret = NullString("")
+	if err := GetUserRepository().Update(user); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
+	var m ValidateTotpRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+	authState, err := GetAuthStateRepository().GetOne(m.StateID)
+	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.AuthProviderID != user.ID {
+		SendNotFound(w)
+		return
+	}
+	if time.Now().After(authState.Expiry) {
+		GetAuthStateRepository().Delete(authState)
+		SendNotFound(w)
+		return
+	}
+	valid := totp.Validate(m.Code, authState.Payload)
+	GetAuthStateRepository().Delete(authState)
+	if !valid {
+		SendBadRequest(w)
+		return
+	}
+	user.TotpSecret = NullString(authState.Payload)
+	if err := GetUserRepository().Update(user); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if org == nil || err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	opts := totp.GenerateOpts{
+		Issuer:      "Seatsurfing for " + org.Name,
+		AccountName: GetRequestUser(r).Email,
+	}
+	key, err := totp.Generate(opts)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	img, err := key.Image(256, 256)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	authState := &AuthState{
+		AuthProviderID: user.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthTotpSetup,
+		Payload:        key.Secret(),
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	imageBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+	res := &GenerateTotpResponse{
+		Secret:  key.Secret(),
+		Image:   imageBase64,
+		StateID: authState.ID,
+	}
+	SendJSON(w, res)
 }
 
 func (router *UserRouter) getMergeRequests(w http.ResponseWriter, r *http.Request) {
