@@ -13,10 +13,13 @@ import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
 import * as Validation from "@/util/Validation";
 import * as Navigation from "@/util/Navigation";
+import AjaxError from "@/util/AjaxError";
 
 interface State {
   email: string;
   password: string;
+  code: string;
+  requireTotp: boolean;
   invalid: boolean;
   redirect: string | null;
   requirePassword: boolean;
@@ -45,6 +48,8 @@ class Login extends React.Component<Props, State> {
     this.state = {
       email: "",
       password: "",
+      code: "",
+      requireTotp: false,
       invalid: false,
       redirect: null,
       requirePassword: false,
@@ -133,6 +138,7 @@ class Login extends React.Component<Props, State> {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
+      code: this.state.code,
     };
     Ajax.postData("/auth/login", payload)
       .then((res) => {
@@ -150,7 +156,11 @@ class Login extends React.Component<Props, State> {
           this.setState({ redirect: this.getRedirectUrl() });
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        if (err instanceof AjaxError && (err as AjaxError).httpStatusCode === 401) {
+          this.setState({ requireTotp: true, invalid: false, inPasswordSubmit: false });
+          return;
+        }
         this.setState({
           invalid: true,
           inPasswordSubmit: false,
@@ -318,7 +328,36 @@ class Login extends React.Component<Props, State> {
 
     return (
       <div className="container-signin">
-        <Form className="form-signin" onSubmit={this.onPasswordSubmit}>
+        <Form className="form-signin" onSubmit={this.onPasswordSubmit} name="totp-login"  hidden={!this.state.requireTotp}>
+          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <h3>{this.org?.name}</h3>
+          <Form.Group>
+            <InputGroup>
+              <Form.Control
+                type="text"
+                readOnly={this.state.inPasswordSubmit}
+                placeholder={this.props.t("totp")}
+                value={this.state.code}
+                onChange={(e: any) =>
+                  this.setState({ code: e.target.value, invalid: false })
+                }
+                required={true}
+                isInvalid={this.state.invalid}
+                minLength={6}
+                maxLength={6}
+                autoFocus={true}
+              />
+              <Button variant="primary" type="submit">
+                {this.state.inPasswordSubmit ? (
+                  <Loading showText={false} paddingTop={false} />
+                ) : (
+                  <div className="feather-btn">&#10148;</div>
+                )}
+              </Button>
+            </InputGroup>
+          </Form.Group>
+        </Form>
+        <Form className="form-signin" onSubmit={this.onPasswordSubmit} name="password-login" hidden={this.state.requireTotp}>
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
           <Form.Group style={{ marginBottom: "5px" }}>

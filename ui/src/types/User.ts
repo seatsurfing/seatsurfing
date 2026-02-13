@@ -180,6 +180,7 @@ export default class User extends Entity {
       let e: TotpGenerateResponse = new TotpGenerateResponse();
       e.secret = result.json.secret;
       e.qrCode = result.json.image;
+      e.stateId = result.json.stateId;
       return e;
     });
   }

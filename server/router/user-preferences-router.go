@@ -157,7 +157,11 @@ func (router *UserPreferencesRouter) setAll(w http.ResponseWriter, r *http.Reque
 
 func (router *UserPreferencesRouter) doSetOne(userID, name, value string) error {
 	if router.getPreferenceType(name) == SettingTypeEncryptedString {
-		value = EncryptString(value)
+		var err error
+		value, err = EncryptString(value)
+		if err != nil {
+			return err
+		}
 	}
 	err := GetUserPreferencesRepository().Set(userID, name, value)
 	return err
@@ -322,7 +326,11 @@ func (router *UserPreferencesRouter) copyToRestModel(e *UserPreference) *GetSett
 	m := &GetSettingsResponse{}
 	m.Name = e.Name
 	if router.getPreferenceType(e.Name) == SettingTypeEncryptedString {
-		m.Value = DecryptString(e.Value)
+		var err error
+		m.Value, err = DecryptString(e.Value)
+		if err != nil {
+			m.Value = ""
+		}
 	} else {
 		m.Value = e.Value
 	}

@@ -14,6 +14,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type UserRouter struct {
@@ -83,7 +84,7 @@ type ValidateTotpRequest struct {
 
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/totp/generate", router.generateTotp).Methods("GET")
-	s.HandleFunc("/totp/verify", router.validateTotp).Methods("POST")
+	s.HandleFunc("/totp/validate", router.validateTotp).Methods("POST")
 	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
@@ -142,7 +143,13 @@ func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	user.TotpSecret = NullString(authState.Payload)
+	encryptedTotpSecret, err := EncryptString(authState.Payload)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	user.TotpSecret = NullString(encryptedTotpSecret)
 	if err := GetUserRepository().Update(user); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)

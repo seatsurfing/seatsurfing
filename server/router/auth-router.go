@@ -15,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/pquerna/otp/totp"
 	"golang.org/x/oauth2"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -67,6 +68,7 @@ type AuthPasswordRequest struct {
 	Email          string `json:"email" validate:"required,email,max=254"`
 	Password       string `json:"password" validate:"required,min=8,max=64"`
 	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+	Code           string `json:"code,omitempty"`
 }
 
 type RefreshRequest struct {
@@ -396,6 +398,23 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
 		SendNotFound(w)
 		return
+	}
+	if user.TotpSecret != "" {
+		if m.Code == "" {
+			SendUnauthorized(w)
+			return
+		}
+		totpSecret, err := DecryptString(string(user.TotpSecret))
+		if err != nil {
+			log.Println("Error decrypting TOTP secret for user " + user.ID + ": " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
+		if !totp.Validate(m.Code, totpSecret) {
+			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			SendNotFound(w)
+			return
+		}
 	}
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
 	now := time.Now().UTC()
