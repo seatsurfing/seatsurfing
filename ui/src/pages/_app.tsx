@@ -28,6 +28,9 @@ interface State {
   showTotpEnforcement: boolean;
   totpQrCode: string;
   totpStateId: string;
+  enforceTOTP: boolean;
+  totpEnabled: boolean;
+  idpLogin: boolean;
 }
 
 interface Props extends AppProps {
@@ -42,6 +45,9 @@ class App extends React.Component<Props, State> {
       showTotpEnforcement: false,
       totpQrCode: "",
       totpStateId: "",
+      enforceTOTP: false,
+      totpEnabled: false,
+      idpLogin: false,
     };
     if (typeof window !== "undefined") {
       if (process.env.NODE_ENV.toLowerCase() === "development") {
@@ -51,23 +57,57 @@ class App extends React.Component<Props, State> {
     }
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
-        this.setState({ isLoading: false }, () => {
-          this.checkTotpEnforcement();
-        });
+        this.setState(
+          {
+            isLoading: false,
+            enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
+            totpEnabled: RuntimeConfig.INFOS.totpEnabled,
+            idpLogin: RuntimeConfig.INFOS.idpLogin,
+          },
+          () => {
+            this.checkTotpEnforcement();
+          },
+        );
       });
     }, 10);
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
-    // Check enforcement again when loading completes or when showTotpEnforcement changes from true to false
+    // Sync state with RuntimeConfig.INFOS to detect changes
+    const configChanged =
+      RuntimeConfig.INFOS.enforceTOTP !== this.state.enforceTOTP ||
+      RuntimeConfig.INFOS.totpEnabled !== this.state.totpEnabled ||
+      RuntimeConfig.INFOS.idpLogin !== this.state.idpLogin;
+
+    if (configChanged) {
+      this.setState({
+        enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
+        totpEnabled: RuntimeConfig.INFOS.totpEnabled,
+        idpLogin: RuntimeConfig.INFOS.idpLogin,
+      });
+    }
+
+    // Check enforcement when loading completes
     if (prevState.isLoading && !this.state.isLoading) {
       this.checkTotpEnforcement();
+      return;
     }
+
+    // Check when any of the enforcement-related config values change
+    if (
+      prevState.enforceTOTP !== this.state.enforceTOTP ||
+      prevState.totpEnabled !== this.state.totpEnabled ||
+      prevState.idpLogin !== this.state.idpLogin
+    ) {
+      this.checkTotpEnforcement();
+      return;
+    }
+
     // Also check when enforcement modal is dismissed (in case user refreshed or navigated away)
     if (
       prevState.showTotpEnforcement &&
       !this.state.showTotpEnforcement &&
-      !RuntimeConfig.INFOS.totpEnabled
+      !this.state.totpEnabled
     ) {
       // User dismissed modal somehow without completing setup, check again
       this.checkTotpEnforcement();
@@ -125,6 +165,7 @@ class App extends React.Component<Props, State> {
     RuntimeConfig.INFOS.totpEnabled = true;
     this.setState({
       showTotpEnforcement: false,
+      totpEnabled: true,
     });
   };
 

@@ -3,6 +3,7 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Button, Form, Modal } from "react-bootstrap";
 import User from "@/types/User";
 import TotpInput from "./TotpInput";
+import RuntimeConfig from "./RuntimeConfig";
 
 interface State {
   code: string;
@@ -167,6 +168,11 @@ class TotpSetupModal extends React.Component<Props, State> {
             </Form.Group>
           </Form>
         </Modal.Body>
+        <Modal.Footer hidden={canClose} style={{justifyContent: "flex-start"}}>
+          <Button variant="secondary" onClick={() => RuntimeConfig.logOut()}>
+            {this.props.t("logout")}
+          </Button>
+        </Modal.Footer>
       </Modal>
     );
   }
