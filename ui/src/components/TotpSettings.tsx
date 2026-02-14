@@ -46,7 +46,7 @@ class TotpSettings extends React.Component<Props, State> {
     User.validateTotp(this.state.stateId, this.state.code).then(() => {
       this.setState({ showTotpSetup: false, code: "", submitting: false });
     });
-  }
+  };
 
   render() {
     return (
@@ -67,22 +67,22 @@ class TotpSettings extends React.Component<Props, State> {
             <Form onSubmit={this.onSubmit}>
               <Form.Group>
                 <Form.Label>{this.props.t("totp")}</Form.Label>
-            <Form.Control
-              type="text"
-              value={this.state.code}
-              required={true}
-              minLength={6}
-              maxLength={6}
-              onChange={(e) => this.setState({ code: e.target.value })}
-            />
-            </Form.Group>
-            <Button
-                            className="margin-top-15"
-                            type="submit"
-                            disabled={this.state.submitting}
-                          >
-                            {this.props.t("save")}
-                          </Button>
+                <Form.Control
+                  type="text"
+                  value={this.state.code}
+                  required={true}
+                  minLength={6}
+                  maxLength={6}
+                  onChange={(e) => this.setState({ code: e.target.value })}
+                />
+              </Form.Group>
+              <Button
+                className="margin-top-15"
+                type="submit"
+                disabled={this.state.submitting}
+              >
+                {this.props.t("save")}
+              </Button>
             </Form>
           </Modal.Body>
         </Modal>

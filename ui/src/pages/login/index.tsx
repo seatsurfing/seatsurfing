@@ -158,8 +158,15 @@ class Login extends React.Component<Props, State> {
         });
       })
       .catch((err) => {
-        if (err instanceof AjaxError && (err as AjaxError).httpStatusCode === 401) {
-          this.setState({ requireTotp: true, invalid: false, inPasswordSubmit: false });
+        if (
+          err instanceof AjaxError &&
+          (err as AjaxError).httpStatusCode === 401
+        ) {
+          this.setState({
+            requireTotp: true,
+            invalid: false,
+            inPasswordSubmit: false,
+          });
           return;
         }
         this.setState({
@@ -329,7 +336,12 @@ class Login extends React.Component<Props, State> {
 
     return (
       <div className="container-signin">
-        <Form className="form-signin" onSubmit={this.onPasswordSubmit} name="totp-login"  hidden={!this.state.requireTotp}>
+        <Form
+          className="form-signin"
+          onSubmit={this.onPasswordSubmit}
+          name="totp-login"
+          hidden={!this.state.requireTotp}
+        >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
           <p>{this.props.t("enterTotpCode")}</p>
@@ -337,7 +349,9 @@ class Login extends React.Component<Props, State> {
             <InputGroup>
               <TotpInput
                 value={this.state.code}
-                onChange={(value: string) => this.setState({ code: value, invalid: false })}
+                onChange={(value: string) =>
+                  this.setState({ code: value, invalid: false })
+                }
                 onComplete={(value: string) => {
                   this.setState({ code: value, invalid: false }, () => {
                     this.onPasswordSubmit(new Event("submit") as any);
@@ -351,7 +365,12 @@ class Login extends React.Component<Props, State> {
             </InputGroup>
           </Form.Group>
         </Form>
-        <Form className="form-signin" onSubmit={this.onPasswordSubmit} name="password-login" hidden={this.state.requireTotp}>
+        <Form
+          className="form-signin"
+          onSubmit={this.onPasswordSubmit}
+          name="password-login"
+          hidden={this.state.requireTotp}
+        >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
           <Form.Group style={{ marginBottom: "5px" }}>

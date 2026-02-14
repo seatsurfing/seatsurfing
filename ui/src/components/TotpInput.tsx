@@ -2,8 +2,7 @@ import React from "react";
 import { Form } from "react-bootstrap";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 
-interface State {
-}
+interface State {}
 
 interface Props {
   t: TranslationFunc;
@@ -21,10 +20,11 @@ class TotpInput extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    this.state = {
-    };
+    this.state = {};
     // Create refs for all 6 input fields
-    this.inputRefs = [...Array(6)].map(() => React.createRef<HTMLInputElement>());
+    this.inputRefs = [...Array(6)].map(() =>
+      React.createRef<HTMLInputElement>(),
+    );
   }
 
   componentDidMount() {
@@ -44,17 +44,17 @@ class TotpInput extends React.Component<Props, State> {
     setTimeout(() => {
       this.inputRefs[0].current?.focus();
     }, 0);
-  }
+  };
 
   getDigits = (): string[] => {
     const value = this.props.value || "";
     const digits = value.padEnd(6, " ").slice(0, 6).split("");
     return digits;
-  }
+  };
 
   handleInputChange = (index: number, e: React.ChangeEvent<any>) => {
     const newValue = e.target.value;
-    
+
     // Only allow numeric input
     if (newValue && !/^\d$/.test(newValue)) {
       return;
@@ -62,7 +62,7 @@ class TotpInput extends React.Component<Props, State> {
 
     const digits = this.getDigits();
     digits[index] = newValue || " ";
-    
+
     const updatedValue = digits.join("").trimEnd();
     this.props.onChange(updatedValue);
 
@@ -75,15 +75,15 @@ class TotpInput extends React.Component<Props, State> {
     if (updatedValue.length === 6 && this.props.onComplete) {
       this.props.onComplete(updatedValue);
     }
-  }
+  };
 
   handleKeyDown = (index: number, e: React.KeyboardEvent<any>) => {
     const input = e.currentTarget;
-    
+
     // Handle backspace
     if (e.key === "Backspace") {
       const digits = this.getDigits();
-      
+
       if (!input.value || input.value === " ") {
         // If current field is empty, move to previous and clear it
         if (index > 0) {
@@ -100,29 +100,29 @@ class TotpInput extends React.Component<Props, State> {
         this.props.onChange(updatedValue);
       }
     }
-    
+
     // Handle arrow keys
     if (e.key === "ArrowLeft" && index > 0) {
       e.preventDefault();
       this.inputRefs[index - 1].current?.focus();
     }
-    
+
     if (e.key === "ArrowRight" && index < 5) {
       e.preventDefault();
       this.inputRefs[index + 1].current?.focus();
     }
-  }
+  };
 
   handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text");
-    
+
     // Extract only digits from pasted content
     const digits = pastedData.replace(/\D/g, "").slice(0, 6);
-    
+
     if (digits) {
       this.props.onChange(digits);
-      
+
       // Focus the next empty field or the last field
       const nextIndex = Math.min(digits.length, 5);
       this.inputRefs[nextIndex].current?.focus();
@@ -132,11 +132,11 @@ class TotpInput extends React.Component<Props, State> {
         this.props.onComplete(digits);
       }
     }
-  }
+  };
 
   handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
-  }
+  };
 
   render() {
     const digits = this.getDigits();
@@ -167,7 +167,7 @@ class TotpInput extends React.Component<Props, State> {
               fontSize: "1.5rem",
               fontWeight: "bold",
               padding: "0.5rem",
-              backgroundImage: "none"
+              backgroundImage: "none",
             }}
             className="totp-input"
           />
