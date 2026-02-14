@@ -338,6 +338,7 @@
   "style": "Stil",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "newUserDefaultMailNotification": "E-Mail-Benachrichtigungen bei neuen Users standardmäßig aktivieren",
+  "enforceTOTP": "Zwei-Faktor-Authentifizierung (TOTP) für alle Benutzer erzwingen",
   "disabled": "Deaktiviert",
   "optional": "Aktiviert (standardmäßig optional)",
   "required": "Aktiviert (standardmäßig erforderlich)",

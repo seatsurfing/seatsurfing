@@ -366,5 +366,6 @@
   "copyToClipboard": "Copy to Clipboard",
   "loading": "Loading...",
   "securityWarning": "Security Warning",
-  "totpSecretWarning": "Keep this secret key secure! Anyone with access to it can generate codes for your account. Only enter it into your authenticator app."
+  "totpSecretWarning": "Keep this secret key secure! Anyone with access to it can generate codes for your account. Only enter it into your authenticator app.",
+  "enforceTOTP": "Enforce Two-Factor Authentication (TOTP) for all users"
 }
