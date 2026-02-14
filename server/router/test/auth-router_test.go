@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/pquerna/otp/totp"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
@@ -524,5 +525,308 @@ func TestLogoutSpecificForeign(t *testing.T) {
 	// Logout of token1
 	req := NewHTTPRequestWithAccessToken("GET", "/auth/logout/"+claims.SessionID, token2, nil)
 	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestTotpSetup(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Generate TOTP secret
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+	CheckTestBool(t, true, len(generateRes.StateID) > 0)
+	CheckTestBool(t, true, len(generateRes.Image) > 0)
+
+	// 2. Get TOTP secret
+	req = NewHTTPRequest("GET", "/user/totp/"+generateRes.StateID+"/secret", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var secretRes *GetTotpSecretResponse
+	json.Unmarshal(res.Body.Bytes(), &secretRes)
+	CheckTestBool(t, true, len(secretRes.Secret) > 0)
+
+	// 3. Generate a valid TOTP code
+	code, err := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0, // SHA1
+	})
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, len(code) == 6)
+
+	// 4. Validate TOTP code
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "` + code + `"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// 5. Verify user now has TOTP enabled
+	updatedUser, err := GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, updatedUser.TotpSecret != "")
+}
+
+func TestTotpSetupInvalidCode(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Generate TOTP secret
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+
+	// 2. Try to validate with invalid code
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "000000"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// 3. Verify user does not have TOTP enabled
+	updatedUser, err := GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, updatedUser.TotpSecret == "")
+}
+
+func TestTotpLoginWithCode(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Setup TOTP
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+
+	// 2. Get secret
+	req = NewHTTPRequest("GET", "/user/totp/"+generateRes.StateID+"/secret", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var secretRes *GetTotpSecretResponse
+	json.Unmarshal(res.Body.Bytes(), &secretRes)
+
+	// 3. Generate and validate code to enable TOTP
+	code, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "` + code + `"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// 4. Generate a new code for login
+	time.Sleep(time.Second * 1) // Ensure we get a fresh code
+	newCode, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+
+	// 5. Login with password and TOTP code
+	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "code": "` + newCode + `"}`
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var loginRes *JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &loginRes)
+	CheckTestBool(t, true, len(loginRes.AccessToken) > 32)
+	CheckTestBool(t, true, len(loginRes.RefreshToken) == 36)
+}
+
+func TestTotpLoginWithoutCode(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Setup TOTP
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+
+	req = NewHTTPRequest("GET", "/user/totp/"+generateRes.StateID+"/secret", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	var secretRes *GetTotpSecretResponse
+	json.Unmarshal(res.Body.Bytes(), &secretRes)
+
+	code, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "` + code + `"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+
+	// 2. Try to login without TOTP code (should fail with 401)
+	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `"}`
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestTotpLoginWithInvalidCode(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Setup TOTP
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+
+	req = NewHTTPRequest("GET", "/user/totp/"+generateRes.StateID+"/secret", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	var secretRes *GetTotpSecretResponse
+	json.Unmarshal(res.Body.Bytes(), &secretRes)
+
+	code, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "` + code + `"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+
+	// 2. Try to login with invalid TOTP code
+	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "code": "000000"}`
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestTotpDisable(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Setup TOTP
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+
+	req = NewHTTPRequest("GET", "/user/totp/"+generateRes.StateID+"/secret", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	var secretRes *GetTotpSecretResponse
+	json.Unmarshal(res.Body.Bytes(), &secretRes)
+
+	code, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "` + code + `"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// 2. Verify TOTP is enabled
+	updatedUser, _ := GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, updatedUser.TotpSecret != "")
+
+	// 3. Disable TOTP
+	req = NewHTTPRequest("POST", "/user/totp/disable", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// 4. Verify TOTP is disabled
+	updatedUser, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, updatedUser.TotpSecret == "")
+
+	// 5. Login without TOTP code should now work
+	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `"}`
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestTotpReplayAttack(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Setup TOTP
+	req := NewHTTPRequest("GET", "/user/totp/generate", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	var generateRes *GenerateTotpResponse
+	json.Unmarshal(res.Body.Bytes(), &generateRes)
+
+	req = NewHTTPRequest("GET", "/user/totp/"+generateRes.StateID+"/secret", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	var secretRes *GetTotpSecretResponse
+	json.Unmarshal(res.Body.Bytes(), &secretRes)
+
+	code, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+	payload := `{"stateId": "` + generateRes.StateID + `", "code": "` + code + `"}`
+	req = NewHTTPRequest("POST", "/user/totp/validate", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+
+	// 2. Generate a code for login
+	time.Sleep(time.Second * 1)
+	loginCode, _ := totp.GenerateCodeCustom(secretRes.Secret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0,
+	})
+
+	// 3. First login should succeed
+	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "code": "` + loginCode + `"}`
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// 4. Second login with same code should fail (replay attack prevention)
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
