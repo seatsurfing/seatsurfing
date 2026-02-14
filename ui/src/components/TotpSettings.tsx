@@ -2,6 +2,8 @@ import React from "react";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Button, Form, Modal } from "react-bootstrap";
 import User from "@/types/User";
+import TotpInput from "./TotpInput";
+import { invalid } from "moment-timezone";
 
 interface State {
   secet: string;
@@ -10,10 +12,12 @@ interface State {
   showTotpSetup: boolean;
   code: string;
   submitting: boolean;
+  invalid?: boolean;
 }
 
 interface Props {
   t: TranslationFunc;
+  hidden?: boolean | undefined;
 }
 
 class TotpSettings extends React.Component<Props, State> {
@@ -26,6 +30,7 @@ class TotpSettings extends React.Component<Props, State> {
       showTotpSetup: false,
       code: "",
       submitting: false,
+      invalid: false,
     };
   }
 
@@ -50,7 +55,7 @@ class TotpSettings extends React.Component<Props, State> {
 
   render() {
     return (
-      <div>
+      <div hidden={this.props.hidden}>
         <Modal
           show={this.state.showTotpSetup}
           onHide={() => this.setState({ showTotpSetup: false })}
@@ -63,30 +68,29 @@ class TotpSettings extends React.Component<Props, State> {
             <p>
               <img src={"data:image/png;base64," + this.state.qrCode} alt="" />
             </p>
+            <p>{this.props.t("noQrCodeTotpHint")}</p>
             <p>{this.state.secet}</p>
             <Form onSubmit={this.onSubmit}>
               <Form.Group>
-                <Form.Label>{this.props.t("totp")}</Form.Label>
-                <Form.Control
-                  type="text"
+                <TotpInput
                   value={this.state.code}
-                  required={true}
-                  minLength={6}
-                  maxLength={6}
-                  onChange={(e) => this.setState({ code: e.target.value })}
+                  onChange={(value: string) =>
+                    this.setState({ code: value, invalid: false })
+                  }
+                  onComplete={(value: string) => {
+                    this.setState({ code: value, invalid: false }, () => {
+                      this.onSubmit(new Event("submit") as any);
+                    });
+                  }}
+                  required
+                  disabled={this.state.submitting}
                 />
               </Form.Group>
-              <Button
-                className="margin-top-15"
-                type="submit"
-                disabled={this.state.submitting}
-              >
-                {this.props.t("save")}
-              </Button>
             </Form>
           </Modal.Body>
         </Modal>
         <h5 className="mt-5">{this.props.t("totp")}</h5>
+        <p>{this.props.t("totpHint")}</p>
         <Button variant="primary" onClick={() => this.setupTotp()}>
           {this.props.t("enableTotp")}
         </Button>
