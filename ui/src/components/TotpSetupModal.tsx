@@ -168,7 +168,10 @@ class TotpSetupModal extends React.Component<Props, State> {
             </Form.Group>
           </Form>
         </Modal.Body>
-        <Modal.Footer hidden={canClose} style={{justifyContent: "flex-start"}}>
+        <Modal.Footer
+          hidden={canClose}
+          style={{ justifyContent: "flex-start" }}
+        >
           <Button variant="secondary" onClick={() => RuntimeConfig.logOut()}>
             {this.props.t("logout")}
           </Button>
