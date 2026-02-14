@@ -362,5 +362,10 @@
   "enterTotpCode": "Bitte geben Sie den 6-stelligen Code ein, der von Ihrer Authentifikator-App generiert wurde.",
   "noQrCodeTotpHint": "Wenn Sie den QR-Code nicht scannen können, können Sie auch den folgenden geheimen Schlüssel in Ihrer Authentifikator-App eingeben:",
   "totp": "Zwei-Faktor-Authentifizierung",
-  "totpHint": "Die Zwei-Faktor-Authentifizierung fügt Ihrem Konto eine zusätzliche Sicherheitsebene hinzu. Sobald sie aktiviert ist, müssen Sie beim Anmelden neben Ihrem Passwort auch einen 6-stelligen Code aus Ihrer Authentifikator-App eingeben."
+  "totpHint": "Die Zwei-Faktor-Authentifizierung fügt Ihrem Konto eine zusätzliche Sicherheitsebene hinzu. Sobald sie aktiviert ist, müssen Sie beim Anmelden neben Ihrem Passwort auch einen 6-stelligen Code aus Ihrer Authentifikator-App eingeben.",
+  "cantScanQrCode": "QR-Code kann nicht gescannt werden? Klicken Sie hier, um den geheimen Schlüssel anzuzeigen",
+  "securityWarning": "Sicherheitshinweis",
+  "totpSecretWarning": "Halten Sie diesen geheimen Schlüssel sicher! Jeder, der Zugriff darauf hat, kann Codes für Ihr Konto generieren. Geben Sie ihn nur in Ihre Authentifikator-App ein.",
+  "copyToClipboard": "In Zwischenablage kopieren",
+  "loading": "Lädt..."
 }

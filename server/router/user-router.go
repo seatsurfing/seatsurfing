@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -16,6 +17,36 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+
+// TOTP validation rate limiter
+type totpAttemptTracker struct {
+	mu       sync.Mutex
+	attempts map[string]int
+}
+
+var totpAttemptsTracker = &totpAttemptTracker{
+	attempts: make(map[string]int),
+}
+
+const maxTotpAttempts = 5
+
+func (t *totpAttemptTracker) recordAttempt(stateID string) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	count := t.attempts[stateID]
+	if count >= maxTotpAttempts {
+		return false
+	}
+	t.attempts[stateID] = count + 1
+	return true
+}
+
+func (t *totpAttemptTracker) clearAttempts(stateID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	delete(t.attempts, stateID)
+}
 
 type UserRouter struct {
 }
@@ -73,9 +104,12 @@ type InitMergeUsersRequest struct {
 }
 
 type GenerateTotpResponse struct {
-	Secret  string `json:"secret"`
 	Image   string `json:"image"`
 	StateID string `json:"stateId"`
+}
+
+type GetTotpSecretResponse struct {
+	Secret string `json:"secret"`
 }
 
 type ValidateTotpRequest struct {
@@ -85,6 +119,7 @@ type ValidateTotpRequest struct {
 
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/totp/generate", router.generateTotp).Methods("GET")
+	s.HandleFunc("/totp/{stateId}/secret", router.getTotpSecret).Methods("GET")
 	s.HandleFunc("/totp/validate", router.validateTotp).Methods("POST")
 	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
@@ -117,6 +152,41 @@ func (router *UserRouter) disableTotp(w http.ResponseWriter, r *http.Request) {
 	SendUpdated(w)
 }
 
+func (router *UserRouter) getTotpSecret(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+
+	vars := mux.Vars(r)
+	stateID := vars["stateId"]
+
+	authState, err := GetAuthStateRepository().GetOne(stateID)
+	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.AuthProviderID != user.ID {
+		SendNotFound(w)
+		return
+	}
+
+	if time.Now().After(authState.Expiry) {
+		GetAuthStateRepository().Delete(authState)
+		totpAttemptsTracker.clearAttempts(stateID)
+		SendNotFound(w)
+		return
+	}
+
+	// Rate limiting to prevent abuse
+	if !totpAttemptsTracker.recordAttempt(stateID + ":secret") {
+		SendTooManyRequests(w)
+		return
+	}
+
+	res := &GetTotpSecretResponse{
+		Secret: authState.Payload,
+	}
+	SendJSON(w, res)
+}
+
 func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
 	var m ValidateTotpRequest
 	if UnmarshalValidateBody(r, &m) != nil {
@@ -135,15 +205,34 @@ func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
 	}
 	if time.Now().After(authState.Expiry) {
 		GetAuthStateRepository().Delete(authState)
+		totpAttemptsTracker.clearAttempts(m.StateID)
 		SendNotFound(w)
 		return
 	}
-	valid := totp.Validate(m.Code, authState.Payload)
-	GetAuthStateRepository().Delete(authState)
-	if !valid {
+
+	// Check rate limiting before validation
+	if !totpAttemptsTracker.recordAttempt(m.StateID) {
+		GetAuthStateRepository().Delete(authState)
+		totpAttemptsTracker.clearAttempts(m.StateID)
+		SendTooManyRequests(w)
+		return
+	}
+
+	valid, err := totp.ValidateCustom(m.Code, authState.Payload, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0, // SHA1
+	})
+	if err != nil || !valid {
 		SendBadRequest(w)
 		return
 	}
+
+	// Clear attempts on success
+	GetAuthStateRepository().Delete(authState)
+	totpAttemptsTracker.clearAttempts(m.StateID)
+
 	encryptedTotpSecret, err := EncryptString(authState.Payload)
 	if err != nil {
 		log.Println(err)
@@ -206,7 +295,6 @@ func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
 	}
 	imageBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
 	res := &GenerateTotpResponse{
-		Secret:  key.Secret(),
 		Image:   imageBase64,
 		StateID: authState.ID,
 	}

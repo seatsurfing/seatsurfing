@@ -181,7 +181,6 @@ export default class User extends Entity {
   static async generateTotp(): Promise<TotpGenerateResponse> {
     return Ajax.get("/user/totp/generate").then((result) => {
       let e: TotpGenerateResponse = new TotpGenerateResponse();
-      e.secret = result.json.secret;
       e.qrCode = result.json.image;
       e.stateId = result.json.stateId;
       return e;
@@ -196,18 +195,22 @@ export default class User extends Entity {
     return Ajax.postData("/user/totp/validate", payload).then(() => undefined);
   }
 
+  static async getTotpSecret(stateId: string): Promise<string> {
+    return Ajax.get("/user/totp/" + stateId + "/secret").then(
+      (result) => result.json.secret,
+    );
+  }
+
   static async disableTotp(): Promise<void> {
     return Ajax.postData("/user/totp/disable", null).then(() => undefined);
   }
 }
 
 export class TotpGenerateResponse {
-  secret: string;
   qrCode: string;
   stateId: string;
 
   constructor() {
-    this.secret = "";
     this.qrCode = "";
     this.stateId = "";
   }
