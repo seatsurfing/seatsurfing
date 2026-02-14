@@ -17,40 +17,40 @@ func CanCrypt() bool {
 	return true
 }
 
-func EncryptString(s string) string {
+func EncryptString(s string) (string, error) {
 	aes, err := aes.NewCipher([]byte(GetConfig().CryptKey))
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	gcm, err := cipher.NewGCM(aes)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		panic(err)
+		return "", err
 	}
 	ciphertext := gcm.Seal(nonce, nonce, []byte(s), nil)
 	res := base64.StdEncoding.EncodeToString(ciphertext)
-	return res
+	return res, nil
 }
 
-func DecryptString(s string) string {
+func DecryptString(s string) (string, error) {
 	ciphertext, _ := base64.StdEncoding.Strict().DecodeString(s)
 	aes, err := aes.NewCipher([]byte(GetConfig().CryptKey))
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	gcm, err := cipher.NewGCM(aes)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	nonceSize := gcm.NonceSize()
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	plaintext, err := gcm.Open(nil, []byte(nonce), []byte(ciphertext), nil)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return string(plaintext)
+	return string(plaintext), nil
 }

@@ -1053,7 +1053,11 @@ func (router *BookingRouter) getCalDavConfig(userID string) (*CaldavConfig, erro
 		} else if pref.Name == PreferenceCalDAVUser.Name && len(pref.Value) > 0 {
 			res.Username = pref.Value
 		} else if pref.Name == PreferenceCalDAVPass.Name && len(pref.Value) > 0 {
-			decryptedPassword := DecryptString(pref.Value)
+			decryptedPassword, err := DecryptString(pref.Value)
+			if err != nil {
+				log.Println("Error decrypting CalDAV password for user " + userID + ": " + err.Error())
+				continue
+			}
 			if decryptedPassword != "" {
 				res.Password = decryptedPassword
 			}

@@ -11,6 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.11.2
+	github.com/pquerna/otp v1.5.0
 	github.com/rustyoz/svg v0.0.0-20250705135709-8b1786137cb3
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/valkey-io/valkey-go v1.0.71
@@ -19,6 +20,7 @@ require (
 )
 
 require (
+	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-playground/locales v0.14.1 // indirect

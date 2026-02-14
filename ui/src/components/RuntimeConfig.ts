@@ -39,6 +39,8 @@ interface RuntimeUserInfos {
   subjectDefault: number;
   use24HourTime: boolean;
   dateFormat: string;
+  totpEnabled: boolean;
+  enforceTOTP: boolean;
 }
 
 export default class RuntimeConfig {
@@ -82,6 +84,8 @@ export default class RuntimeConfig {
       subjectDefault: 2,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      totpEnabled: false,
+      enforceTOTP: false,
     };
   };
 
@@ -186,6 +190,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
           if (s.name === "subject_default")
             RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
+          if (s.name === "enforce_totp")
+            RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
         });
         resolve();
       });
@@ -231,6 +237,7 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
       RuntimeConfig.INFOS.orgAdmin = user.admin;
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
+      RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
       RuntimeConfig.setDetails(user.email, user.id);
       return RuntimeConfig.loadSettings().then(() => {
         return RuntimeConfig.loadUserPreferences();

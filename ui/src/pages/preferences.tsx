@@ -22,6 +22,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
+import TotpSettings from "@/components/TotpSettings";
 
 interface State {
   loading: boolean;
@@ -779,6 +780,13 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("save")}
               </Button>
             </Form>
+            <TotpSettings
+              hidden={
+                this.state.activeTab !== "tab-security" ||
+                RuntimeConfig.INFOS.idpLogin
+              }
+              t={this.props.t}
+            />
             <div hidden={this.state.activeTab !== "tab-security"}>
               <h5 className="mt-5">{this.props.t("activeSessions")}</h5>
               {this.state.activeSessions.length === 0 ? (
