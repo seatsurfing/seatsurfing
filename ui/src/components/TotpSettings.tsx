@@ -3,7 +3,7 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Button, Form, Modal } from "react-bootstrap";
 import User from "@/types/User";
 import TotpInput from "./TotpInput";
-import { invalid } from "moment-timezone";
+import RuntimeConfig from "./RuntimeConfig";
 
 interface State {
   secet: string;
@@ -13,6 +13,7 @@ interface State {
   code: string;
   submitting: boolean;
   invalid?: boolean;
+  totpEnabled?: boolean;
 }
 
 interface Props {
@@ -31,6 +32,7 @@ class TotpSettings extends React.Component<Props, State> {
       code: "",
       submitting: false,
       invalid: false,
+      totpEnabled: RuntimeConfig.INFOS.totpEnabled,
     };
   }
 
@@ -48,9 +50,28 @@ class TotpSettings extends React.Component<Props, State> {
   onSubmit = (e: any) => {
     e.preventDefault();
     this.setState({ submitting: true });
-    User.validateTotp(this.state.stateId, this.state.code).then(() => {
-      this.setState({ showTotpSetup: false, code: "", submitting: false });
-    });
+    User.validateTotp(this.state.stateId, this.state.code)
+      .then(() => {
+        RuntimeConfig.INFOS.totpEnabled = true;
+        this.setState({
+          showTotpSetup: false,
+          code: "",
+          submitting: false,
+          totpEnabled: true,
+        });
+      })
+      .catch(() => {
+        this.setState({ invalid: true, submitting: false });
+      });
+  };
+
+  disableTotp = () => {
+    if (window.confirm(this.props.t("disableTotpConfirm"))) {
+      User.disableTotp().then(() => {
+        RuntimeConfig.INFOS.totpEnabled = false;
+        this.setState({ totpEnabled: false });
+      });
+    }
   };
 
   render() {
@@ -82,7 +103,8 @@ class TotpSettings extends React.Component<Props, State> {
                       this.onSubmit(new Event("submit") as any);
                     });
                   }}
-                  required
+                  required={true}
+                  invalid={this.state.invalid}
                   disabled={this.state.submitting}
                 />
               </Form.Group>
@@ -91,8 +113,19 @@ class TotpSettings extends React.Component<Props, State> {
         </Modal>
         <h5 className="mt-5">{this.props.t("totp")}</h5>
         <p>{this.props.t("totpHint")}</p>
-        <Button variant="primary" onClick={() => this.setupTotp()}>
+        <Button
+          variant="primary"
+          onClick={() => this.setupTotp()}
+          hidden={this.state.totpEnabled}
+        >
           {this.props.t("enableTotp")}
+        </Button>
+        <Button
+          variant="danger"
+          onClick={() => this.disableTotp()}
+          hidden={!this.state.totpEnabled}
+        >
+          {this.props.t("disableTotp")}
         </Button>
       </div>
     );

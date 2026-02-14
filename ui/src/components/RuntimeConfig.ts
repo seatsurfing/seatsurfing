@@ -39,6 +39,7 @@ interface RuntimeUserInfos {
   subjectDefault: number;
   use24HourTime: boolean;
   dateFormat: string;
+  totpEnabled: boolean;
 }
 
 export default class RuntimeConfig {
@@ -82,6 +83,7 @@ export default class RuntimeConfig {
       subjectDefault: 2,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      totpEnabled: false,
     };
   };
 
@@ -231,6 +233,7 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
       RuntimeConfig.INFOS.orgAdmin = user.admin;
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
+      RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
       RuntimeConfig.setDetails(user.email, user.id);
       return RuntimeConfig.loadSettings().then(() => {
         return RuntimeConfig.loadUserPreferences();

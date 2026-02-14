@@ -45,6 +45,7 @@ type GetUserResponse struct {
 	SpaceAdmin      bool                    `json:"spaceAdmin"`
 	OrgAdmin        bool                    `json:"admin"`
 	SuperAdmin      bool                    `json:"superAdmin"`
+	TotpEnabled     bool                    `json:"totpEnabled"`
 	CreateUserRequest
 }
 
@@ -582,6 +583,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.OrgAdmin = GetUserRepository().IsOrgAdmin(e)
 	m.SuperAdmin = GetUserRepository().IsSuperAdmin(e)
 	m.RequirePassword = (e.HashedPassword != "")
+	m.TotpEnabled = (e.TotpSecret != "")
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
 	}

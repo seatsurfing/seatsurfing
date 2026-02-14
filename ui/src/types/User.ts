@@ -27,6 +27,7 @@ export default class User extends Entity {
   superAdmin: boolean;
   password: string;
   firstBooking: BuddyBooking | null;
+  totpEnabled: boolean;
 
   constructor() {
     super();
@@ -45,6 +46,7 @@ export default class User extends Entity {
     this.superAdmin = false;
     this.password = "";
     this.firstBooking = null;
+    this.totpEnabled = false;
   }
 
   serialize(): Object {
@@ -80,6 +82,7 @@ export default class User extends Entity {
     this.spaceAdmin = input.spaceAdmin;
     this.admin = input.admin;
     this.superAdmin = input.superAdmin;
+    this.totpEnabled = input.totpEnabled;
   }
 
   getBackendUrl(): string {
@@ -191,6 +194,10 @@ export default class User extends Entity {
       stateId: stateId,
     };
     return Ajax.postData("/user/totp/validate", payload).then(() => undefined);
+  }
+
+  static async disableTotp(): Promise<void> {
+    return Ajax.postData("/user/totp/disable", null).then(() => undefined);
   }
 }
 
