@@ -781,7 +781,7 @@ class Preferences extends React.Component<Props, State> {
               </Button>
             </Form>
             <TotpSettings
-              hidden={this.state.activeTab !== "tab-security"}
+              hidden={this.state.activeTab !== "tab-security" || RuntimeConfig.INFOS.idpLogin}
               t={this.props.t}
             />
             <div hidden={this.state.activeTab !== "tab-security"}>
