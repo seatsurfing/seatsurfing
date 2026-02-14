@@ -14,6 +14,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import * as Validation from "@/util/Validation";
 import * as Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
+import TotpInput from "@/components/TotpInput";
 
 interface State {
   email: string;
@@ -331,29 +332,22 @@ class Login extends React.Component<Props, State> {
         <Form className="form-signin" onSubmit={this.onPasswordSubmit} name="totp-login"  hidden={!this.state.requireTotp}>
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
+          <p>{this.props.t("enterTotpCode")}</p>
           <Form.Group>
             <InputGroup>
-              <Form.Control
-                type="text"
-                readOnly={this.state.inPasswordSubmit}
-                placeholder={this.props.t("totp")}
+              <TotpInput
                 value={this.state.code}
-                onChange={(e: any) =>
-                  this.setState({ code: e.target.value, invalid: false })
-                }
+                onChange={(value: string) => this.setState({ code: value, invalid: false })}
+                onComplete={(value: string) => {
+                  this.setState({ code: value, invalid: false }, () => {
+                    this.onPasswordSubmit(new Event("submit") as any);
+                  });
+                }}
+                disabled={this.state.inPasswordSubmit}
+                invalid={this.state.invalid}
+                hidden={!this.state.requireTotp}
                 required={true}
-                isInvalid={this.state.invalid}
-                minLength={6}
-                maxLength={6}
-                autoFocus={true}
               />
-              <Button variant="primary" type="submit">
-                {this.state.inPasswordSubmit ? (
-                  <Loading showText={false} paddingTop={false} />
-                ) : (
-                  <div className="feather-btn">&#10148;</div>
-                )}
-              </Button>
             </InputGroup>
           </Form.Group>
         </Form>
