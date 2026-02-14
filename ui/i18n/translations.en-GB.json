@@ -365,5 +365,6 @@
   "securityWarning": "Security Warning",
   "totpSecretWarning": "Keep this secret key secure! Anyone with access to it can generate codes for your account. Only enter it into your authenticator app.",
   "copyToClipboard": "Copy to Clipboard",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "totpEnforcementMessage": "Your administrator has enforced two-factor authentication for all users. You need to set up two-factor authentication to continue using your account."
 }

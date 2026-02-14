@@ -368,5 +368,6 @@
   "securityWarning": "Sicherheitshinweis",
   "totpSecretWarning": "Halten Sie diesen geheimen Schlüssel sicher! Jeder, der Zugriff darauf hat, kann Codes für Ihr Konto generieren. Geben Sie ihn nur in Ihre Authentifikator-App ein.",
   "copyToClipboard": "In Zwischenablage kopieren",
-  "loading": "Lädt..."
+  "loading": "Lädt...",
+  "totpEnforcementMessage": "Ihr Administrator hat die Zwei-Faktor-Authentifizierung für alle Benutzer erzwungen. Sie müssen die Zwei-Faktor-Authentifizierung einrichten, um Ihr Konto weiterhin nutzen zu können."
 }

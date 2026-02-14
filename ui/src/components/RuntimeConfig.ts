@@ -40,6 +40,7 @@ interface RuntimeUserInfos {
   use24HourTime: boolean;
   dateFormat: string;
   totpEnabled: boolean;
+  enforceTOTP: boolean;
 }
 
 export default class RuntimeConfig {
@@ -84,6 +85,7 @@ export default class RuntimeConfig {
       use24HourTime: true,
       dateFormat: "Y-m-d",
       totpEnabled: false,
+      enforceTOTP: false,
     };
   };
 
@@ -188,6 +190,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
           if (s.name === "subject_default")
             RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
+          if (s.name === "enforce_totp")
+            RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
         });
         resolve();
       });
