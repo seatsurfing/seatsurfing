@@ -64,7 +64,11 @@ class App extends React.Component<Props, State> {
       this.checkTotpEnforcement();
     }
     // Also check when enforcement modal is dismissed (in case user refreshed or navigated away)
-    if (prevState.showTotpEnforcement && !this.state.showTotpEnforcement && !RuntimeConfig.INFOS.totpEnabled) {
+    if (
+      prevState.showTotpEnforcement &&
+      !this.state.showTotpEnforcement &&
+      !RuntimeConfig.INFOS.totpEnabled
+    ) {
       // User dismissed modal somehow without completing setup, check again
       this.checkTotpEnforcement();
     }
@@ -80,7 +84,7 @@ class App extends React.Component<Props, State> {
     if (!Ajax.hasAccessToken()) {
       return;
     }
-    
+
     const currentPath = window.location.pathname;
     // Don't show on login/auth pages
     if (currentPath.includes("/login") || currentPath.includes("/resetpw")) {
@@ -93,7 +97,7 @@ class App extends React.Component<Props, State> {
       enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
       totpEnabled: RuntimeConfig.INFOS.totpEnabled,
       idpLogin: RuntimeConfig.INFOS.idpLogin,
-      currentPath: currentPath
+      currentPath: currentPath,
     });
 
     if (
@@ -103,15 +107,17 @@ class App extends React.Component<Props, State> {
     ) {
       // Generate TOTP setup for the user
       console.log("Generating TOTP enforcement modal...");
-      User.generateTotp().then((result) => {
-        this.setState({
-          showTotpEnforcement: true,
-          totpQrCode: result.qrCode,
-          totpStateId: result.stateId,
+      User.generateTotp()
+        .then((result) => {
+          this.setState({
+            showTotpEnforcement: true,
+            totpQrCode: result.qrCode,
+            totpStateId: result.stateId,
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to generate TOTP:", err);
         });
-      }).catch((err) => {
-        console.error("Failed to generate TOTP:", err);
-      });
     }
   };
 

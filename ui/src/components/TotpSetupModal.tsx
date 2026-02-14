@@ -93,7 +93,9 @@ class TotpSetupModal extends React.Component<Props, State> {
           <Modal.Title>{this.props.t("enableTotp")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p hidden={this.props.canClose}>{this.props.t("totpEnforcementMessage")}</p>
+          <p hidden={this.props.canClose}>
+            {this.props.t("totpEnforcementMessage")}
+          </p>
           <p>{this.props.t("enableTotpHint")}</p>
           <p>
             <img src={"data:image/png;base64," + this.props.qrCode} alt="" />
