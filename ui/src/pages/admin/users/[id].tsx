@@ -584,7 +584,8 @@ class EditUser extends React.Component<Props, State> {
                   required={
                     !!(
                       this.isServiceAccount(this.state.role) ||
-                      (!this.entity.id && this.state.authMethod === "password") ||
+                      (!this.entity.id &&
+                        this.state.authMethod === "password") ||
                       (this.entity.id &&
                         this.state.changePassword &&
                         this.state.authMethod === "password")
