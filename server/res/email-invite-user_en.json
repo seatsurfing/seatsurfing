@@ -1,7 +1,9 @@
 {
   "subject": "Welcome to Seatsurfing - Set your password",
   "headline": "Hello {{recipientName}},",
-  "paragraphs": ["You've been invited to join Seatsurfing. To get started, please set your password."],
+  "paragraphs": [
+    "You've been invited to join Seatsurfing. To get started, please set your password."
+  ],
   "buttons": [
     {
       "paragraph": "Click the button below to set your password:",
