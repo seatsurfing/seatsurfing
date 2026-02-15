@@ -353,5 +353,15 @@
   "created": "Created",
   "device": "Device",
   "noActiveSessions": "No active sessions",
-  "thisSession": "This session"
+  "thisSession": "This session",
+  "authMethod": "Authentication method",
+  "authMethodInvitation": "Send invitation email",
+  "authMethodPassword": "Password authentication",
+  "authMethodProvider": "Identity provider",
+  "chooseAuthProvider": "Choose identity provider",
+  "inviteUser": "Invite user",
+  "passwordPending": "Pending invitation",
+  "setPassword": "Set password",
+  "userInvited": "User has been invited. They will receive an email to set their password.",
+  "welcomeSetPassword": "Welcome! Please set your password to get started."
 }

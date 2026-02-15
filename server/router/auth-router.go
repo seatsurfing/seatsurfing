@@ -100,6 +100,7 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
 	s.HandleFunc("/initpwreset", router.initPasswordReset).Methods("POST")
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
+	s.HandleFunc("/setpw/{id}", router.completeUserInvitation).Methods("POST")
 	s.HandleFunc("/refresh", router.refreshAccessToken).Methods("POST")
 	s.HandleFunc("/singleorg", router.singleOrg).Methods("GET")
 	s.HandleFunc("/org/{domain}", router.getOrgDetails).Methods("GET")
@@ -311,6 +312,51 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	SendUpdated(w)
 }
 
+func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
+	var m CompletePasswordResetRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	vars := mux.Vars(r)
+	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	if authState.AuthStateType != AuthInviteUser {
+		SendNotFound(w)
+		return
+	}
+	user, err := GetUserRepository().GetOne(authState.Payload)
+	if user == nil || err != nil {
+		SendNotFound(w)
+		return
+	}
+	if !user.PasswordPending {
+		SendNotFound(w)
+		return
+	}
+	if user.Disabled {
+		SendNotFound(w)
+		return
+	}
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+		SendNotFound(w)
+		return
+	}
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
+	user.PasswordPending = false
+	user.AuthProviderID = NullUUID("")
+	GetUserRepository().Update(user)
+	GetAuthStateRepository().Delete(authState)
+	SendUpdated(w)
+}
+
 func (router *AuthRouter) logout(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	where := vars["where"]
@@ -381,6 +427,10 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if user.HashedPassword == "" {
+		SendNotFound(w)
+		return
+	}
+	if user.PasswordPending {
 		SendNotFound(w)
 		return
 	}
@@ -612,6 +662,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 				Email:          payload.UserID,
 				OrganizationID: org.ID,
 				Role:           UserRoleUser,
+				AuthProviderID: NullUUID(provider.ID),
 			}
 			GetUserRepository().Create(user)
 		} else {
@@ -619,6 +670,27 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 				SendBadRequest(w)
 				return
 			}
+		}
+
+		needUserUpdate := false
+
+		// Backwards compatibility: Set AuthProviderID if not yet set
+		authProviderIDStr := string(user.AuthProviderID)
+		nullUUID := GetSettingsRepository().GetNullUUID()
+		if authProviderIDStr == "" || authProviderIDStr == nullUUID {
+			user.AuthProviderID = NullUUID(provider.ID)
+			needUserUpdate = true
+		}
+
+		// Check if user is trying to log in with a different auth provider than bound to
+		if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
+			log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.Email, provider.ID, authProviderIDStr)
+			SendForbidden(w)
+			return
+		}
+
+		if needUserUpdate {
+			GetUserRepository().Update(user)
 		}
 	} else if err := uuid.Validate(payload.UserID); err == nil {
 		user, _ = GetUserRepository().GetOne(payload.UserID)
@@ -759,10 +831,27 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 			Email:          userInfo.Email,
 			OrganizationID: org.ID,
 			Role:           UserRoleUser,
+			AuthProviderID: NullUUID(provider.ID),
 		}
 		GetUserRepository().Create(user)
 	}
 	needUserUpdate := false
+
+	// Backwards compatibility: Set AuthProviderID if not yet set
+	authProviderIDStr := string(user.AuthProviderID)
+	nullUUID := GetSettingsRepository().GetNullUUID()
+	if authProviderIDStr == "" || authProviderIDStr == nullUUID {
+		user.AuthProviderID = NullUUID(provider.ID)
+		needUserUpdate = true
+	}
+
+	// Check if user is trying to log in with a different auth provider than bound to
+	if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
+		log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.Email, provider.ID, authProviderIDStr)
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
+		return
+	}
+
 	if userInfo.Firstname != "" && user.Firstname != userInfo.Firstname {
 		user.Firstname = userInfo.Firstname
 		needUserUpdate = true
@@ -899,6 +988,20 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 	}
 	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars, org.ID)
+}
+
+func (router *AuthRouter) SendUserInvitationEmail(user *User, ID string, org *Organization) error {
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		return err
+	}
+	vars := map[string]string{
+		"recipientName":  user.GetSafeRecipientName(),
+		"recipientEmail": user.Email,
+		"confirmID":      ID,
+		"orgDomain":      FormatURL(domain.DomainName) + "/",
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathInviteUser(), org.Language, vars, org.ID)
 }
 
 func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {

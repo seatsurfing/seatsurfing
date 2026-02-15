@@ -30,6 +30,7 @@ type CreateUserRequest struct {
 	Role           int    `json:"role"`
 	AuthProviderID string `json:"authProviderId"`
 	Password       string `json:"password"`
+	SendInvitation bool   `json:"sendInvitation"`
 	OrganizationID string `json:"organizationId"`
 }
 
@@ -37,6 +38,8 @@ type GetUserResponse struct {
 	ID              string                  `json:"id"`
 	Organization    GetOrganizationResponse `json:"organization"`
 	RequirePassword bool                    `json:"requirePassword"`
+	PasswordPending bool                    `json:"passwordPending"`
+	AuthProviderID  string                  `json:"authProviderId"`
 	SpaceAdmin      bool                    `json:"spaceAdmin"`
 	OrgAdmin        bool                    `json:"admin"`
 	SuperAdmin      bool                    `json:"superAdmin"`
@@ -342,7 +345,30 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.Role = e.Role
 	}
 	eNew.OrganizationID = e.OrganizationID
-	eNew.HashedPassword = e.HashedPassword
+
+	// Handle auth method updates
+	if m.SendInvitation {
+		// Admin wants to send invitation - reset auth to pending state
+		eNew.HashedPassword = NullString("")
+		eNew.AuthProviderID = NullUUID("")
+		eNew.PasswordPending = true
+	} else if m.Password != "" {
+		// Admin provided a new password - update it
+		eNew.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
+		eNew.AuthProviderID = NullUUID("")
+		eNew.PasswordPending = false
+	} else if m.AuthProviderID != "" {
+		// Admin set an auth provider - update it
+		eNew.HashedPassword = NullString("")
+		eNew.AuthProviderID = NullUUID(m.AuthProviderID)
+		eNew.PasswordPending = false
+	} else {
+		// No auth method change - preserve existing values
+		eNew.HashedPassword = e.HashedPassword
+		eNew.AuthProviderID = e.AuthProviderID
+		eNew.PasswordPending = e.PasswordPending
+	}
+
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {
 		if existingUser.ID != e.ID {
@@ -355,6 +381,34 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+
+	// Send invitation email if requested
+	if m.SendInvitation {
+		org, err := GetOrganizationRepository().GetOne(e.OrganizationID)
+		if err != nil {
+			log.Println("Failed to get organization for user invitation:", err)
+			SendInternalServerError(w)
+			return
+		}
+		authState := &AuthState{
+			AuthProviderID: GetSettingsRepository().GetNullUUID(),
+			Expiry:         time.Now().Add(time.Hour * 72), // 3 days
+			AuthStateType:  AuthInviteUser,
+			Payload:        eNew.ID,
+		}
+		if err := GetAuthStateRepository().Create(authState); err != nil {
+			log.Println("Failed to create auth state for user invitation:", err)
+			SendInternalServerError(w)
+			return
+		}
+		authRouter := &AuthRouter{}
+		if err := authRouter.SendUserInvitationEmail(eNew, authState.ID, org); err != nil {
+			log.Printf("User invitation email failed: %s\n", err)
+			SendInternalServerError(w)
+			return
+		}
+	}
+
 	SendUpdated(w)
 }
 
@@ -420,6 +474,28 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+
+	// Send invitation email if requested
+	if m.SendInvitation {
+		authState := &AuthState{
+			AuthProviderID: GetSettingsRepository().GetNullUUID(),
+			Expiry:         time.Now().Add(time.Hour * 72), // 3 days
+			AuthStateType:  AuthInviteUser,
+			Payload:        e.ID,
+		}
+		if err := GetAuthStateRepository().Create(authState); err != nil {
+			log.Println("Failed to create auth state for user invitation:", err)
+			SendInternalServerError(w)
+			return
+		}
+		authRouter := &AuthRouter{}
+		if err := authRouter.SendUserInvitationEmail(e, authState.ID, org); err != nil {
+			log.Printf("User invitation email failed: %s\n", err)
+			SendInternalServerError(w)
+			return
+		}
+	}
+
 	SendCreated(w, e.ID)
 }
 
@@ -429,12 +505,24 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 	e.Firstname = m.Firstname
 	e.Lastname = m.Lastname
 	e.Role = UserRole(m.Role)
-	if m.Password != "" {
+
+	if m.SendInvitation {
+		// Invitation mode: user needs to set password via email link
+		e.HashedPassword = NullString("")
+		e.AuthProviderID = NullUUID("")
+		e.PasswordPending = true
+	} else if m.Password != "" {
+		// Password mode: password provided by admin
 		e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
-		e.AuthProviderID = NullString("")
+		e.AuthProviderID = NullUUID("")
+		e.PasswordPending = false
 	} else {
-		e.AuthProviderID = NullString(m.AuthProviderID)
+		// IdP mode: user logs in via external auth provider
+		e.HashedPassword = NullString("")
+		e.AuthProviderID = NullUUID(m.AuthProviderID)
+		e.PasswordPending = false
 	}
+
 	e.OrganizationID = m.OrganizationID
 	return e
 }
@@ -452,6 +540,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.OrgAdmin = GetUserRepository().IsOrgAdmin(e)
 	m.SuperAdmin = GetUserRepository().IsSuperAdmin(e)
 	m.RequirePassword = (e.HashedPassword != "")
+	m.PasswordPending = e.PasswordPending
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
 	}

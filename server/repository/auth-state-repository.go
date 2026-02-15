@@ -18,6 +18,7 @@ const (
 	AuthResetPasswordRequest AuthStateType = 5
 	AuthChangeOrgEmail       AuthStateType = 6
 	AuthDeleteOrg            AuthStateType = 7 // used for delete org email confirmation link
+	AuthInviteUser           AuthStateType = 8 // used for user invitation to set initial password
 )
 
 type AuthState struct {

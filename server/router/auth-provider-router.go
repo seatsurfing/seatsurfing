@@ -160,6 +160,19 @@ func (router *AuthProviderRouter) delete(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
+
+	// Check if any users are bound to this auth provider
+	hasUsers, err := GetUserRepository().HasAnyUserWithAuthProvider(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if hasUsers {
+		SendBadRequest(w)
+		return
+	}
+
 	if err := GetAuthProviderRepository().Delete(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)

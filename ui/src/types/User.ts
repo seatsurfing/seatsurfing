@@ -21,11 +21,13 @@ export default class User extends Entity {
   organization: Organization;
   authProviderId: string;
   requirePassword: boolean;
+  passwordPending: boolean;
   role: number;
   spaceAdmin: boolean;
   admin: boolean;
   superAdmin: boolean;
   password: string;
+  sendInvitation: boolean;
   firstBooking: BuddyBooking | null;
 
   constructor() {
@@ -39,11 +41,13 @@ export default class User extends Entity {
     this.organization = new Organization();
     this.authProviderId = "";
     this.requirePassword = false;
+    this.passwordPending = false;
     this.role = User.UserRoleUser;
     this.spaceAdmin = false;
     this.admin = false;
     this.superAdmin = false;
     this.password = "";
+    this.sendInvitation = false;
     this.firstBooking = null;
   }
 
@@ -54,6 +58,8 @@ export default class User extends Entity {
       lastname: this.lastname,
       role: this.role,
       password: this.password,
+      sendInvitation: this.sendInvitation,
+      authProviderId: this.authProviderId,
       organizationId: this.organizationId,
     });
   }
@@ -75,6 +81,9 @@ export default class User extends Entity {
     }
     if (input.requirePassword) {
       this.requirePassword = input.requirePassword;
+    }
+    if (input.passwordPending !== undefined) {
+      this.passwordPending = input.passwordPending;
     }
     this.role = input.role;
     this.spaceAdmin = input.spaceAdmin;

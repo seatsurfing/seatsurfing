@@ -526,3 +526,126 @@ func TestLogoutSpecificForeign(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
+
+func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.PasswordPending = true
+	GetUserRepository().Update(user)
+
+	// Attempt to log in should fail
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestAuthProviderBinding(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	// Create two auth providers
+	authProvider1 := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "Provider1",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider1)
+
+	authProvider2 := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "Provider2",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider2)
+
+	// Create user via OAuth (simulated with AuthResponseCache)
+	email := "test@test.com"
+	payloadAuthState := &AuthStateLoginPayload{
+		UserID:    email,
+		LoginType: "ui",
+	}
+	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
+	authState := &AuthState{
+		AuthProviderID: authProvider1.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthResponseCache,
+		Payload:        string(payloadAuthStateJson),
+	}
+	GetAuthStateRepository().Create(authState)
+
+	// User logs in via provider1 - should create user bound to provider1
+	req := NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Check user was created and bound to provider1
+	user, _ := GetUserRepository().GetByEmail(org.ID, email)
+	CheckTestBool(t, true, user != nil)
+	CheckTestString(t, authProvider1.ID, string(user.AuthProviderID))
+
+	// Try to login with provider2 - should fail
+	payloadAuthState2 := &AuthStateLoginPayload{
+		UserID:    email,
+		LoginType: "ui",
+	}
+	payloadAuthStateJson2, _ := json.Marshal(payloadAuthState2)
+	authState2 := &AuthState{
+		AuthProviderID: authProvider2.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthResponseCache,
+		Payload:        string(payloadAuthStateJson2),
+	}
+	GetAuthStateRepository().Create(authState2)
+
+	req = NewHTTPRequest("GET", "/auth/verify/"+authState2.ID, "", nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	// Create auth provider
+	authProvider := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "Provider1",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider)
+
+	// Create user without auth provider binding (existing user scenario)
+	email := "olduser@test.com"
+	user := &User{
+		Email:          email,
+		OrganizationID: org.ID,
+		Role:           UserRoleUser,
+		AuthProviderID: NullUUID(""),
+	}
+	GetUserRepository().Create(user)
+
+	// User logs in via OAuth - should bind to provider
+	payloadAuthState := &AuthStateLoginPayload{
+		UserID:    email,
+		LoginType: "ui",
+	}
+	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
+	authState := &AuthState{
+		AuthProviderID: authProvider.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthResponseCache,
+		Payload:        string(payloadAuthStateJson),
+	}
+	GetAuthStateRepository().Create(authState)
+
+	req := NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Check user is now bound to provider
+	updatedUser, _ := GetUserRepository().GetByEmail(org.ID, email)
+	CheckTestString(t, authProvider.ID, string(updatedUser.AuthProviderID))
+}
