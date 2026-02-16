@@ -256,6 +256,7 @@
   "userInvited": "User has been invited. They will receive an email to set their password.",
   "setPassword": "Set password",
   "welcomeSetPassword": "Welcome! Please set your password to get started.",
+  "inviteLinkExpired": "This invitation link has expired or has already been used.",
   "pending": "Pending",
   "pleaseSelect": "please choose",
   "preferences": "Preferences",

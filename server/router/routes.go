@@ -97,6 +97,10 @@ func SendAlreadyExists(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusConflict)
 }
 
+func SendGone(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusGone)
+}
+
 func SendAlreadyExistsCode(w http.ResponseWriter, code int) {
 	sendErrorCode(w, http.StatusConflict, code)
 }

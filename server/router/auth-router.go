@@ -150,6 +150,7 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
 	s.HandleFunc("/initpwreset", router.initPasswordReset).Methods("POST")
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
+	s.HandleFunc("/setpw/{id}", router.validateUserInvitation).Methods("GET")
 	s.HandleFunc("/setpw/{id}", router.completeUserInvitation).Methods("POST")
 	s.HandleFunc("/refresh", router.refreshAccessToken).Methods("POST")
 	s.HandleFunc("/singleorg", router.singleOrg).Methods("GET")
@@ -362,6 +363,43 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	SendUpdated(w)
 }
 
+func (router *AuthRouter) validateUserInvitation(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
+	vars := mux.Vars(r)
+	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	if authState.AuthStateType != AuthInviteUser {
+		SendNotFound(w)
+		return
+	}
+	user, err := GetUserRepository().GetOne(authState.Payload)
+	if user == nil || err != nil {
+		SendNotFound(w)
+		return
+	}
+	if !user.PasswordPending {
+		// Password has already been set - link is no longer valid
+		SendGone(w)
+		return
+	}
+	if user.Disabled {
+		SendNotFound(w)
+		return
+	}
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+		SendNotFound(w)
+		return
+	}
+	// Link is valid
+	SendUpdated(w)
+}
+
 func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.Request) {
 	if GetConfig().DisablePasswordLogin {
 		SendNotFound(w)
@@ -388,7 +426,8 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 		return
 	}
 	if !user.PasswordPending {
-		SendNotFound(w)
+		// Password has already been set - link is no longer valid
+		SendGone(w)
 		return
 	}
 	if user.Disabled {

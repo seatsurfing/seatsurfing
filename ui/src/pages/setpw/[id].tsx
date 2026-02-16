@@ -11,6 +11,7 @@ interface State {
   complete: boolean;
   success: boolean;
   newPassword: string;
+  linkValid: boolean | null; // null = checking, true = valid, false = expired
 }
 
 interface Props {
@@ -26,7 +27,32 @@ class CompleteUserInvitation extends React.Component<Props, State> {
       complete: false,
       success: false,
       newPassword: "",
+      linkValid: null, // Start with null to indicate checking
     };
+  }
+
+  componentDidMount() {
+    const { id } = this.props.router.query;
+    if (!id) {
+      this.setState({ linkValid: false });
+      return;
+    }
+    // Validate the invite link
+    Ajax.get("/auth/setpw/" + id)
+      .then((res) => {
+        if (res.status === 204 || res.status === 200) {
+          this.setState({ linkValid: true });
+        } else if (res.status === 410) {
+          // Password already set - link is no longer valid
+          this.setState({ linkValid: false });
+        } else {
+          // Link not found or other error
+          this.setState({ linkValid: false });
+        }
+      })
+      .catch((e) => {
+        this.setState({ linkValid: false });
+      });
   }
 
   onPasswordSubmit = (e: any) => {
@@ -53,6 +79,35 @@ class CompleteUserInvitation extends React.Component<Props, State> {
   };
 
   render() {
+    // Show loading state while checking link validity
+    if (this.state.linkValid === null) {
+      return (
+        <div className="container-center">
+          <div className="container-center-inner">
+            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <p>{this.props.t("loading")}</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Show error if link is expired or invalid
+    if (this.state.linkValid === false) {
+      return (
+        <div className="container-center">
+          <div className="container-center-inner">
+            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <p>{this.props.t("inviteLinkExpired")}</p>
+            <p>
+              <Link href="/login" className="btn btn-primary">
+                {this.props.t("proceedToLogin")}
+              </Link>
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (this.state.complete && this.state.success) {
       return (
         <div className="container-center">

@@ -365,6 +365,7 @@
   "setPassword": "Set password",
   "userInvited": "User has been invited. They will receive an email to set their password.",
   "welcomeSetPassword": "Welcome! Please set your password to get started.",
+  "inviteLinkExpired": "This invitation link has expired or has already been used.",
   "disableTotp": "Disable two-factor authentication",
   "disableTotpConfirm": "Are you sure you want to disable two-factor authentication? This will make your account less secure.",
   "enableTotp": "Enable two-factor authentication",
