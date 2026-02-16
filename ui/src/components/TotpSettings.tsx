@@ -79,6 +79,7 @@ class TotpSettings extends React.Component<Props, State> {
           variant="danger"
           onClick={() => this.disableTotp()}
           hidden={!this.state.totpEnabled}
+          disabled={RuntimeConfig.INFOS.enforceTOTP}
         >
           {this.props.t("disableTotp")}
         </Button>
