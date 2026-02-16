@@ -338,6 +338,7 @@
   "style": "Stil",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "newUserDefaultMailNotification": "E-Mail-Benachrichtigungen bei neuen Users standardmäßig aktivieren",
+  "enforceTOTP": "Zwei-Faktor-Authentifizierung (TOTP) für alle Benutzer erzwingen",
   "disabled": "Deaktiviert",
   "optional": "Aktiviert (standardmäßig optional)",
   "required": "Aktiviert (standardmäßig erforderlich)",
@@ -354,5 +355,19 @@
   "created": "Erstellt",
   "device": "Gerät",
   "noActiveSessions": "Keine aktiven Sitzungen",
-  "thisSession": "Diese Sitzung"
+  "thisSession": "Diese Sitzung",
+  "disableTotp": "Zwei-Faktor-Authentifizierung deaktivieren",
+  "disableTotpConfirm": "Sind Sie sicher, dass Sie die Zwei-Faktor-Authentifizierung deaktivieren möchten? Dies macht Ihr Konto weniger sicher.",
+  "enableTotp": "Zwei-Faktor-Authentifizierung aktivieren",
+  "enableTotpHint": "Um die Zwei-Faktor-Authentifizierung zu aktivieren, scannen Sie bitte den QR-Code mit Ihrer Authentifikator-App und geben Sie den generierten 6-stelligen Code ein, um zu bestätigen.",
+  "enterTotpCode": "Bitte geben Sie den 6-stelligen Code ein, der von Ihrer Authentifikator-App generiert wurde.",
+  "noQrCodeTotpHint": "Wenn Sie den QR-Code nicht scannen können, können Sie auch den folgenden geheimen Schlüssel in Ihrer Authentifikator-App eingeben:",
+  "totp": "Zwei-Faktor-Authentifizierung",
+  "totpHint": "Die Zwei-Faktor-Authentifizierung fügt Ihrem Konto eine zusätzliche Sicherheitsebene hinzu. Sobald sie aktiviert ist, müssen Sie beim Anmelden neben Ihrem Passwort auch einen 6-stelligen Code aus Ihrer Authentifikator-App eingeben.",
+  "cantScanQrCode": "QR-Code kann nicht gescannt werden? Klicken Sie hier, um den geheimen Schlüssel anzuzeigen",
+  "securityWarning": "Sicherheitshinweis",
+  "totpSecretWarning": "Halten Sie diesen geheimen Schlüssel sicher! Jeder, der Zugriff darauf hat, kann Codes für Ihr Konto generieren. Geben Sie ihn nur in Ihre Authentifikator-App ein.",
+  "copyToClipboard": "In Zwischenablage kopieren",
+  "loading": "Lädt...",
+  "totpEnforcementMessage": "Ihr Administrator hat die Zwei-Faktor-Authentifizierung für alle Benutzer erzwungen. Sie müssen die Zwei-Faktor-Authentifizierung einrichten, um Ihr Konto weiterhin nutzen zu können."
 }

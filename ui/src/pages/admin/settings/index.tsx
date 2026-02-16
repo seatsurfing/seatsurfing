@@ -69,6 +69,7 @@ interface State {
   featureCustomDomains: boolean;
   allowRecurringBookings: boolean;
   newUserDefaultMailNotification: boolean;
+  enforceTOTP: boolean;
 }
 
 interface Props {
@@ -121,6 +122,7 @@ class Settings extends React.Component<Props, State> {
       featureCustomDomains: false,
       allowRecurringBookings: true,
       newUserDefaultMailNotification: false,
+      enforceTOTP: false,
     };
   }
 
@@ -239,6 +241,7 @@ class Settings extends React.Component<Props, State> {
           state.allowRecurringBookings = s.value === "1";
         if (s.name === "new_user_default_mail_notification")
           state.newUserDefaultMailNotification = s.value === "1";
+        if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
       });
@@ -340,6 +343,7 @@ class Settings extends React.Component<Props, State> {
         "new_user_default_mail_notification",
         this.state.newUserDefaultMailNotification ? "1" : "0",
       ),
+      new OrgSettings("enforce_totp", this.state.enforceTOTP ? "1" : "0"),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
     ];
     OrgSettings.setAll(payload)
@@ -1015,6 +1019,19 @@ class Settings extends React.Component<Props, State> {
                   this.setState({
                     newUserDefaultMailNotification: e.target.checked,
                   })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-enforceTOTP"
+                label={this.props.t("enforceTOTP")}
+                checked={this.state.enforceTOTP}
+                onChange={(e: any) =>
+                  this.setState({ enforceTOTP: e.target.checked })
                 }
               />
             </Col>

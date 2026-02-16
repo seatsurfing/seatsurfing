@@ -2,6 +2,8 @@ package router
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,11 +12,13 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/pquerna/otp/totp"
 	"golang.org/x/oauth2"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -22,6 +26,51 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+
+// TOTP replay protection cache
+type usedTotpCode struct {
+	timestamp time.Time
+}
+
+type totpReplayCache struct {
+	mu    sync.RWMutex
+	codes map[string]usedTotpCode
+}
+
+var totpCache = &totpReplayCache{
+	codes: make(map[string]usedTotpCode),
+}
+
+func (c *totpReplayCache) isCodeUsed(userID, code string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	// Create a hash of userID + code for the key
+	hash := sha256.Sum256([]byte(userID + ":" + code))
+	key := hex.EncodeToString(hash[:])
+
+	_, exists := c.codes[key]
+	return exists
+}
+
+func (c *totpReplayCache) markCodeAsUsed(userID, code string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Create a hash of userID + code for the key
+	hash := sha256.Sum256([]byte(userID + ":" + code))
+	key := hex.EncodeToString(hash[:])
+
+	c.codes[key] = usedTotpCode{timestamp: time.Now()}
+
+	// Clean up old entries (older than 90 seconds)
+	cutoff := time.Now().Add(-90 * time.Second)
+	for k, v := range c.codes {
+		if v.timestamp.Before(cutoff) {
+			delete(c.codes, k)
+		}
+	}
+}
 
 type JWTResponse struct {
 	AccessToken    string `json:"accessToken"`
@@ -67,6 +116,7 @@ type AuthPasswordRequest struct {
 	Email          string `json:"email" validate:"required,email,max=254"`
 	Password       string `json:"password" validate:"required,min=8,max=64"`
 	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+	Code           string `json:"code,omitempty"`
 }
 
 type RefreshRequest struct {
@@ -396,6 +446,40 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
 		SendNotFound(w)
 		return
+	}
+	if user.TotpSecret != "" {
+		if m.Code == "" {
+			SendUnauthorized(w)
+			return
+		}
+
+		// Check for replay attack
+		if totpCache.isCodeUsed(user.ID, m.Code) {
+			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			SendNotFound(w)
+			return
+		}
+
+		totpSecret, err := DecryptString(string(user.TotpSecret))
+		if err != nil {
+			log.Println("Error decrypting TOTP secret for user " + user.ID + ": " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
+		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), totp.ValidateOpts{
+			Period:    30,
+			Skew:      1,
+			Digits:    6,
+			Algorithm: 0, // SHA1
+		})
+		if err != nil || !valid {
+			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			SendNotFound(w)
+			return
+		}
+
+		// Mark code as used to prevent replay
+		totpCache.markCodeAsUsed(user.ID, m.Code)
 	}
 	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
 	now := time.Now().UTC()

@@ -13,10 +13,14 @@ import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
 import * as Validation from "@/util/Validation";
 import * as Navigation from "@/util/Navigation";
+import AjaxError from "@/util/AjaxError";
+import TotpInput from "@/components/TotpInput";
 
 interface State {
   email: string;
   password: string;
+  code: string;
+  requireTotp: boolean;
   invalid: boolean;
   redirect: string | null;
   requirePassword: boolean;
@@ -45,6 +49,8 @@ class Login extends React.Component<Props, State> {
     this.state = {
       email: "",
       password: "",
+      code: "",
+      requireTotp: false,
       invalid: false,
       redirect: null,
       requirePassword: false,
@@ -133,6 +139,7 @@ class Login extends React.Component<Props, State> {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
+      code: this.state.code,
     };
     Ajax.postData("/auth/login", payload)
       .then((res) => {
@@ -150,7 +157,18 @@ class Login extends React.Component<Props, State> {
           this.setState({ redirect: this.getRedirectUrl() });
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        if (
+          err instanceof AjaxError &&
+          (err as AjaxError).httpStatusCode === 401
+        ) {
+          this.setState({
+            requireTotp: true,
+            invalid: false,
+            inPasswordSubmit: false,
+          });
+          return;
+        }
         this.setState({
           invalid: true,
           inPasswordSubmit: false,
@@ -318,7 +336,41 @@ class Login extends React.Component<Props, State> {
 
     return (
       <div className="container-signin">
-        <Form className="form-signin" onSubmit={this.onPasswordSubmit}>
+        <Form
+          className="form-signin"
+          onSubmit={this.onPasswordSubmit}
+          name="totp-login"
+          hidden={!this.state.requireTotp}
+        >
+          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <h3>{this.org?.name}</h3>
+          <p>{this.props.t("enterTotpCode")}</p>
+          <Form.Group>
+            <InputGroup>
+              <TotpInput
+                value={this.state.code}
+                onChange={(value: string) =>
+                  this.setState({ code: value, invalid: false })
+                }
+                onComplete={(value: string) => {
+                  this.setState({ code: value, invalid: false }, () => {
+                    this.onPasswordSubmit(new Event("submit") as any);
+                  });
+                }}
+                disabled={this.state.inPasswordSubmit}
+                invalid={this.state.invalid}
+                hidden={!this.state.requireTotp}
+                required={true}
+              />
+            </InputGroup>
+          </Form.Group>
+        </Form>
+        <Form
+          className="form-signin"
+          onSubmit={this.onPasswordSubmit}
+          name="password-login"
+          hidden={this.state.requireTotp}
+        >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
           <Form.Group style={{ marginBottom: "5px" }}>

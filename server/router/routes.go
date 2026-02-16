@@ -89,6 +89,10 @@ func SendUnauthorized(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
+func SendTooManyRequests(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusTooManyRequests)
+}
+
 func SendAlreadyExists(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusConflict)
 }
