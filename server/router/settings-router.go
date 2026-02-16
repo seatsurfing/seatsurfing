@@ -262,6 +262,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin ||
+		name == SettingEnforceTOTP.Name ||
 		name == SettingAllowRecurringBookings.Name {
 		return true
 	}
@@ -279,6 +280,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SettingBookingRetentionDays.Name ||
+		name == SettingEnforceTOTP.Name ||
 		name == SettingNewUserDefaultMailNotification.Name {
 		return true
 	}
@@ -309,6 +311,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingAllowRecurringBookings.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
+		name == SettingEnforceTOTP.Name ||
 		name == SettingSubjectDefault.Name {
 		return true
 	}
@@ -384,6 +387,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingNewUserDefaultMailNotification.Name {
 		return SettingNewUserDefaultMailNotification.Type
+	}
+	if name == SettingEnforceTOTP.Name {
+		return SettingEnforceTOTP.Type
 	}
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type

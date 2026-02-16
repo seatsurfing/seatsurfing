@@ -29,6 +29,7 @@ export default class User extends Entity {
   password: string;
   sendInvitation: boolean;
   firstBooking: BuddyBooking | null;
+  totpEnabled: boolean;
 
   constructor() {
     super();
@@ -49,6 +50,7 @@ export default class User extends Entity {
     this.password = "";
     this.sendInvitation = false;
     this.firstBooking = null;
+    this.totpEnabled = false;
   }
 
   serialize(): Object {
@@ -89,6 +91,7 @@ export default class User extends Entity {
     this.spaceAdmin = input.spaceAdmin;
     this.admin = input.admin;
     this.superAdmin = input.superAdmin;
+    this.totpEnabled = input.totpEnabled;
   }
 
   getBackendUrl(): string {
@@ -182,5 +185,42 @@ export default class User extends Entity {
       e.deserialize(result.json);
       return e;
     });
+  }
+
+  static async generateTotp(): Promise<TotpGenerateResponse> {
+    return Ajax.get("/user/totp/generate").then((result) => {
+      let e: TotpGenerateResponse = new TotpGenerateResponse();
+      e.qrCode = result.json.image;
+      e.stateId = result.json.stateId;
+      return e;
+    });
+  }
+
+  static async validateTotp(stateId: string, code: string): Promise<void> {
+    let payload = {
+      code: code,
+      stateId: stateId,
+    };
+    return Ajax.postData("/user/totp/validate", payload).then(() => undefined);
+  }
+
+  static async getTotpSecret(stateId: string): Promise<string> {
+    return Ajax.get("/user/totp/" + stateId + "/secret").then(
+      (result) => result.json.secret,
+    );
+  }
+
+  static async disableTotp(): Promise<void> {
+    return Ajax.postData("/user/totp/disable", null).then(() => undefined);
+  }
+}
+
+export class TotpGenerateResponse {
+  qrCode: string;
+  stateId: string;
+
+  constructor() {
+    this.qrCode = "";
+    this.stateId = "";
   }
 }

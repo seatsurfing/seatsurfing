@@ -1,16 +1,52 @@
 package router
 
 import (
+	"bytes"
+	"encoding/base64"
+	"image/png"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/pquerna/otp/totp"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+
+// TOTP validation rate limiter
+type totpAttemptTracker struct {
+	mu       sync.Mutex
+	attempts map[string]int
+}
+
+var totpAttemptsTracker = &totpAttemptTracker{
+	attempts: make(map[string]int),
+}
+
+const maxTotpAttempts = 5
+
+func (t *totpAttemptTracker) recordAttempt(stateID string) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	count := t.attempts[stateID]
+	if count >= maxTotpAttempts {
+		return false
+	}
+	t.attempts[stateID] = count + 1
+	return true
+}
+
+func (t *totpAttemptTracker) clearAttempts(stateID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	delete(t.attempts, stateID)
+}
 
 type UserRouter struct {
 }
@@ -43,6 +79,7 @@ type GetUserResponse struct {
 	SpaceAdmin      bool                    `json:"spaceAdmin"`
 	OrgAdmin        bool                    `json:"admin"`
 	SuperAdmin      bool                    `json:"superAdmin"`
+	TotpEnabled     bool                    `json:"totpEnabled"`
 	CreateUserRequest
 }
 
@@ -69,7 +106,25 @@ type InitMergeUsersRequest struct {
 	Email string `json:"email" validate:"required,email,max=254"`
 }
 
+type GenerateTotpResponse struct {
+	Image   string `json:"image"`
+	StateID string `json:"stateId"`
+}
+
+type GetTotpSecretResponse struct {
+	Secret string `json:"secret"`
+}
+
+type ValidateTotpRequest struct {
+	Code    string `json:"code" validate:"required,len=6,numeric"`
+	StateID string `json:"stateId" validate:"required,uuid4"`
+}
+
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/totp/generate", router.generateTotp).Methods("GET")
+	s.HandleFunc("/totp/{stateId}/secret", router.getTotpSecret).Methods("GET")
+	s.HandleFunc("/totp/validate", router.validateTotp).Methods("POST")
+	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -83,6 +138,175 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+}
+
+func (router *UserRouter) disableTotp(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+	enforceTotp, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingEnforceTOTP.Name)
+	if enforceTotp {
+		SendForbidden(w)
+		return
+	}
+	user.TotpSecret = NullString("")
+	if err := GetUserRepository().Update(user); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *UserRouter) getTotpSecret(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+
+	vars := mux.Vars(r)
+	stateID := vars["stateId"]
+
+	authState, err := GetAuthStateRepository().GetOne(stateID)
+	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.AuthProviderID != user.ID {
+		SendNotFound(w)
+		return
+	}
+
+	if time.Now().After(authState.Expiry) {
+		GetAuthStateRepository().Delete(authState)
+		totpAttemptsTracker.clearAttempts(stateID)
+		SendNotFound(w)
+		return
+	}
+
+	// Rate limiting to prevent abuse
+	if !totpAttemptsTracker.recordAttempt(stateID + ":secret") {
+		SendTooManyRequests(w)
+		return
+	}
+
+	res := &GetTotpSecretResponse{
+		Secret: authState.Payload,
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
+	var m ValidateTotpRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+	authState, err := GetAuthStateRepository().GetOne(m.StateID)
+	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.AuthProviderID != user.ID {
+		SendNotFound(w)
+		return
+	}
+	if time.Now().After(authState.Expiry) {
+		GetAuthStateRepository().Delete(authState)
+		totpAttemptsTracker.clearAttempts(m.StateID)
+		SendNotFound(w)
+		return
+	}
+
+	// Check rate limiting before validation
+	if !totpAttemptsTracker.recordAttempt(m.StateID) {
+		GetAuthStateRepository().Delete(authState)
+		totpAttemptsTracker.clearAttempts(m.StateID)
+		SendTooManyRequests(w)
+		return
+	}
+
+	valid, err := totp.ValidateCustom(m.Code, authState.Payload, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: 0, // SHA1
+	})
+	if err != nil || !valid {
+		SendBadRequest(w)
+		return
+	}
+
+	// Clear attempts on success
+	GetAuthStateRepository().Delete(authState)
+	totpAttemptsTracker.clearAttempts(m.StateID)
+
+	encryptedTotpSecret, err := EncryptString(authState.Payload)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	user.TotpSecret = NullString(encryptedTotpSecret)
+	if err := GetUserRepository().Update(user); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if user == nil {
+		SendUnauthorized(w)
+		return
+	}
+	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if org == nil || err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	opts := totp.GenerateOpts{
+		Issuer:      "Seatsurfing for " + org.Name,
+		AccountName: GetRequestUser(r).Email,
+	}
+	key, err := totp.Generate(opts)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	img, err := key.Image(256, 256)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	authState := &AuthState{
+		AuthProviderID: user.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthTotpSetup,
+		Payload:        key.Secret(),
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	imageBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+	res := &GenerateTotpResponse{
+		Image:   imageBase64,
+		StateID: authState.ID,
+	}
+	SendJSON(w, res)
 }
 
 func (router *UserRouter) getMergeRequests(w http.ResponseWriter, r *http.Request) {
@@ -541,6 +765,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.SuperAdmin = GetUserRepository().IsSuperAdmin(e)
 	m.RequirePassword = (e.HashedPassword != "")
 	m.PasswordPending = e.PasswordPending
+	m.TotpEnabled = (e.TotpSecret != "")
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
 	}

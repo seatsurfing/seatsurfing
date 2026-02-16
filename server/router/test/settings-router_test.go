@@ -72,6 +72,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingFeatureCustomDomains.Name,
 		SettingAllowRecurringBookings.Name,
 		SettingSubjectDefault.Name,
+		SettingEnforceTOTP.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -149,6 +150,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingAllowRecurringBookings.Name,
 		SettingNewUserDefaultMailNotification.Name,
 		SettingSubjectDefault.Name,
+		SettingEnforceTOTP.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

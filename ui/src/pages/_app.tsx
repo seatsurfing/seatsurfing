@@ -20,9 +20,17 @@ import Head from "next/head";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
+import TotpSetupModal from "@/components/TotpSetupModal";
+import User from "@/types/User";
 
 interface State {
   isLoading: boolean;
+  showTotpEnforcement: boolean;
+  totpQrCode: string;
+  totpStateId: string;
+  enforceTOTP: boolean;
+  totpEnabled: boolean;
+  idpLogin: boolean;
 }
 
 interface Props extends AppProps {
@@ -34,6 +42,12 @@ class App extends React.Component<Props, State> {
     super(props);
     this.state = {
       isLoading: true,
+      showTotpEnforcement: false,
+      totpQrCode: "",
+      totpStateId: "",
+      enforceTOTP: false,
+      totpEnabled: false,
+      idpLogin: false,
     };
     if (typeof window !== "undefined") {
       if (process.env.NODE_ENV.toLowerCase() === "development") {
@@ -43,10 +57,109 @@ class App extends React.Component<Props, State> {
     }
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
-        this.setState({ isLoading: false });
+        this.setState(
+          {
+            isLoading: false,
+            enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
+            totpEnabled: RuntimeConfig.INFOS.totpEnabled,
+            idpLogin: RuntimeConfig.INFOS.idpLogin,
+          },
+          () => {
+            this.checkTotpEnforcement();
+          },
+        );
       });
     }, 10);
   }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    // Sync state with RuntimeConfig.INFOS to detect changes
+    const configChanged =
+      RuntimeConfig.INFOS.enforceTOTP !== this.state.enforceTOTP ||
+      RuntimeConfig.INFOS.totpEnabled !== this.state.totpEnabled ||
+      RuntimeConfig.INFOS.idpLogin !== this.state.idpLogin;
+
+    if (configChanged) {
+      this.setState({
+        enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
+        totpEnabled: RuntimeConfig.INFOS.totpEnabled,
+        idpLogin: RuntimeConfig.INFOS.idpLogin,
+      });
+    }
+
+    // Check enforcement when loading completes
+    if (prevState.isLoading && !this.state.isLoading) {
+      this.checkTotpEnforcement();
+      return;
+    }
+
+    // Check when any of the enforcement-related config values change
+    if (
+      prevState.enforceTOTP !== this.state.enforceTOTP ||
+      prevState.totpEnabled !== this.state.totpEnabled ||
+      prevState.idpLogin !== this.state.idpLogin
+    ) {
+      this.checkTotpEnforcement();
+      return;
+    }
+
+    // Also check when enforcement modal is dismissed (in case user refreshed or navigated away)
+    if (
+      prevState.showTotpEnforcement &&
+      !this.state.showTotpEnforcement &&
+      !this.state.totpEnabled
+    ) {
+      // User dismissed modal somehow without completing setup, check again
+      this.checkTotpEnforcement();
+    }
+  }
+
+  checkTotpEnforcement = () => {
+    // Only check on client side
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // Only check if user is logged in
+    if (!Ajax.hasAccessToken()) {
+      return;
+    }
+
+    const currentPath = window.location.pathname;
+    // Don't show on login/auth pages
+    if (currentPath.includes("/login") || currentPath.includes("/resetpw")) {
+      return;
+    }
+
+    // Check if TOTP is enforced and user doesn't have it enabled
+    // Skip enforcement for IdP users (those who authenticate via external providers)
+    if (
+      RuntimeConfig.INFOS.enforceTOTP &&
+      !RuntimeConfig.INFOS.totpEnabled &&
+      !RuntimeConfig.INFOS.idpLogin
+    ) {
+      // Generate TOTP setup for the user
+      User.generateTotp()
+        .then((result) => {
+          this.setState({
+            showTotpEnforcement: true,
+            totpQrCode: result.qrCode,
+            totpStateId: result.stateId,
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to generate TOTP:", err);
+        });
+    }
+  };
+
+  onTotpEnforcementSuccess = () => {
+    RuntimeConfig.INFOS.totpEnabled = true;
+    this.setState({
+      showTotpEnforcement: false,
+      totpEnabled: true,
+    });
+  };
 
   render() {
     if (typeof window !== "undefined") {
@@ -86,6 +199,16 @@ class App extends React.Component<Props, State> {
           <link rel="apple-touch-startup-image" href="/ui/favicon-1024.png" />
           <title>Seatsurfing</title>
         </Head>
+        {this.state.showTotpEnforcement && (
+          <TotpSetupModal
+            show={true}
+            qrCode={this.state.totpQrCode}
+            stateId={this.state.totpStateId}
+            onHide={() => {}} // Cannot close
+            onSuccess={this.onTotpEnforcementSuccess}
+            canClose={false}
+          />
+        )}
         <Component {...pageProps} />
       </>
     );
