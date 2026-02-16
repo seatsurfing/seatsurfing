@@ -649,6 +649,8 @@ func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
 	// Check user is now bound to provider
 	updatedUser, _ := GetUserRepository().GetByEmail(org.ID, email)
 	CheckTestString(t, authProvider.ID, string(updatedUser.AuthProviderID))
+}
+
 func TestTotpSetup(t *testing.T) {
 	ClearTestDB()
 

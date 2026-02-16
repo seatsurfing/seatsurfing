@@ -159,18 +159,18 @@ func (r *UserRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 36 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE users " +
 			"ADD COLUMN IF NOT EXISTS password_pending boolean NOT NULL DEFAULT FALSE"); err != nil {
-      panic(err)
-    }
-  }
+			panic(err)
+		}
+	}
 }
 
 func (r *UserRepository) Create(e *User) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO users "+
 		"(organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, totp_secret, password_pending) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) "+
 		"RETURNING id",
-		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, CheckNullString(e.TotpSecret), e.PasswordPending).Scan(&id)
+		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullUUID(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, CheckNullString(e.TotpSecret), e.PasswordPending).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -393,9 +393,9 @@ func (r *UserRepository) Update(e *User) error {
 		"lastname = $10, "+
 		"last_activity_at_utc = $11, "+
 		"totp_secret = $12, "+
-    "password_pending = $13"
+		"password_pending = $13 "+
 		"WHERE id = $14",
-		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullString(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, e.LastActivityAtUTC, CheckNullString(e.TotpSecret), e.PasswordPending, e.ID)
+		e.OrganizationID, strings.ToLower(e.Email), e.Role, CheckNullString(e.HashedPassword), CheckNullUUID(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, e.LastActivityAtUTC, CheckNullString(e.TotpSecret), e.PasswordPending, e.ID)
 	if err != nil {
 		return err
 	}
