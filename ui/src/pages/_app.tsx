@@ -133,20 +133,12 @@ class App extends React.Component<Props, State> {
 
     // Check if TOTP is enforced and user doesn't have it enabled
     // Skip enforcement for IdP users (those who authenticate via external providers)
-    console.log("TOTP Enforcement Check:", {
-      enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
-      totpEnabled: RuntimeConfig.INFOS.totpEnabled,
-      idpLogin: RuntimeConfig.INFOS.idpLogin,
-      currentPath: currentPath,
-    });
-
     if (
       RuntimeConfig.INFOS.enforceTOTP &&
       !RuntimeConfig.INFOS.totpEnabled &&
       !RuntimeConfig.INFOS.idpLogin
     ) {
       // Generate TOTP setup for the user
-      console.log("Generating TOTP enforcement modal...");
       User.generateTotp()
         .then((result) => {
           this.setState({
