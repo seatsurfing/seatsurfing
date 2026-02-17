@@ -251,6 +251,7 @@
   "requestMerge": "Solicitar unión",
   "requireSubject": "Requerir asunto",
   "reset": "Restablecer",
+  "resendInvitation": "Reenviar correo de invitación",
   "role": "Rol",
   "roleOrgAdmin": "Administrador de organización",
   "roleServiceAccountRO": "Cuenta de servicio (solo lectura)",

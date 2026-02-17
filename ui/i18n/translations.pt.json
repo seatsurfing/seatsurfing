@@ -251,6 +251,7 @@
   "requestMerge": "Solicitar mesclagem",
   "requireSubject": "Exigir assunto",
   "reset": "Redefinir",
+  "resendInvitation": "Reenviar email de convite",
   "role": "Função",
   "roleOrgAdmin": "Administrador da organização",
   "roleServiceAccountRO": "Conta de serviço (somente leitura)",

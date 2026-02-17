@@ -251,6 +251,7 @@
   "requestMerge": "בקשת מיזוג",
   "requireSubject": "Require subject",
   "reset": "Reset",
+  "resendInvitation": "שלח מחדש הודעת הזמנה",
   "role": "תפקיד",
   "roleOrgAdmin": "הנהלת ארגון",
   "roleServiceAccountRO": "Service account (read-only)",

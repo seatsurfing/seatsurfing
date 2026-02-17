@@ -251,6 +251,7 @@
   "requestMerge": "Samenvoeging aanvragen",
   "requireSubject": "Require subject",
   "reset": "Reset",
+  "resendInvitation": "Uitnodigingsemail opnieuw verzenden",
   "role": "Rol",
   "roleOrgAdmin": "Organisatie beheerder",
   "roleServiceAccountRO": "Service account (read-only)",

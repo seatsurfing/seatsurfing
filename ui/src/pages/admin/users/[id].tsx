@@ -28,6 +28,7 @@ interface State {
   error: boolean;
   goBack: boolean;
   email: string;
+  originalEmail: string;
   firstname: string;
   lastname: string;
   requirePassword: boolean;
@@ -36,6 +37,7 @@ interface State {
   authMethod: string; // "password" | "provider" | "invitation"
   authProviderId: string;
   sendInvitation: boolean;
+  resendInvitation: boolean;
   role: number;
   showUsernameCopied: boolean;
   showPasswordCopied: boolean;
@@ -62,6 +64,7 @@ class EditUser extends React.Component<Props, State> {
       error: false,
       goBack: false,
       email: "",
+      originalEmail: "",
       firstname: "",
       lastname: "",
       requirePassword: false,
@@ -70,6 +73,7 @@ class EditUser extends React.Component<Props, State> {
       authMethod: "password",
       authProviderId: "",
       sendInvitation: false,
+      resendInvitation: false,
       role: User.UserRoleUser,
       showUsernameCopied: false,
       showPasswordCopied: false,
@@ -123,6 +127,7 @@ class EditUser extends React.Component<Props, State> {
         }
         this.setState({
           email: user.email,
+          originalEmail: user.email,
           firstname: user.firstname,
           lastname: user.lastname,
           requirePassword: user.requirePassword,
@@ -150,7 +155,11 @@ class EditUser extends React.Component<Props, State> {
 
     // Set authentication fields based on selected auth method
     if (this.state.authMethod === "invitation") {
-      this.entity.sendInvitation = true;
+      // Only send invitation if email changed or explicitly requested
+      const emailChanged = this.state.email !== this.state.originalEmail;
+      const isNewUser = !this.entity.id;
+      this.entity.sendInvitation =
+        isNewUser || emailChanged || this.state.resendInvitation;
       this.entity.password = "";
       this.entity.authProviderId = "";
     } else if (this.state.authMethod === "provider") {
@@ -172,7 +181,7 @@ class EditUser extends React.Component<Props, State> {
       .save()
       .then(() => {
         this.props.router.push("/admin/users/" + this.entity.id);
-        this.setState({ saved: true });
+        this.setState({ saved: true, resendInvitation: false });
       })
       .catch(() => {
         this.setState({ error: true });
@@ -553,6 +562,28 @@ class EditUser extends React.Component<Props, State> {
                 checked={this.state.changePassword}
                 onChange={(e: any) =>
                   this.setState({ changePassword: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+
+          {/* Resend invitation checkbox for existing users with invitation auth method */}
+          <Form.Group
+            as={Row}
+            hidden={
+              this.isServiceAccount(this.state.role) ||
+              !this.entity.id ||
+              this.state.authMethod !== "invitation"
+            }
+          >
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-resendInvitation"
+                label={this.props.t("resendInvitation")}
+                checked={this.state.resendInvitation}
+                onChange={(e: any) =>
+                  this.setState({ resendInvitation: e.target.checked })
                 }
               />
             </Col>

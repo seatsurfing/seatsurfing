@@ -251,6 +251,7 @@
   "requestMerge": "Egyesítési kérelem",
   "requireSubject": "Require subject",
   "reset": "Reset",
+  "resendInvitation": "Meghívó e-mail újraküldése",
   "role": "Role",
   "roleOrgAdmin": "Organization administrator",
   "roleServiceAccountRO": "Service account (read-only)",

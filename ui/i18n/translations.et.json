@@ -251,6 +251,7 @@
   "requestMerge": "Taotle ühendamist",
   "requireSubject": "Require subject",
   "reset": "Lähtesta",
+  "resendInvitation": "Saada kutse e-kiri uuesti",
   "role": "Role",
   "roleOrgAdmin": "Organization administrator",
   "roleServiceAccountRO": "Service account (read-only)",

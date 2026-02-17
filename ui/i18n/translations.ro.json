@@ -251,6 +251,7 @@
   "requestMerge": "Solicită combinarea",
   "requireSubject": "Require subject",
   "reset": "Reset",
+  "resendInvitation": "Retrimite email de invitație",
   "role": "Role",
   "roleOrgAdmin": "Organization administrator",
   "roleServiceAccountRO": "Service account (read-only)",
