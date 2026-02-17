@@ -14,7 +14,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/rustyoz/svg v0.0.0-20250705135709-8b1786137cb3
 	github.com/ulule/limiter/v3 v3.11.2
-	github.com/valkey-io/valkey-go v1.0.71
+	github.com/valkey-io/valkey-go v1.0.72
 	golang.org/x/crypto v0.48.0
 	golang.org/x/oauth2 v0.35.0
 )
