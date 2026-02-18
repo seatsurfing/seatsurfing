@@ -1,0 +1,17 @@
+{
+  "subject": "Willkommen bei Seatsurfing - Kennwort festlegen",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "Sie wurden zu Seatsurfing eingeladen. Um loszulegen, legen Sie bitte Ihr Kennwort fest."
+  ],
+  "buttons": [
+    {
+      "paragraph": "Klicken Sie auf die Schaltfläche unten, um Ihr Kennwort festzulegen:",
+      "label": "Kennwort festlegen",
+      "url": "{{orgDomain}}ui/setpw/{{confirmID}}/"
+    }
+  ],
+  "finalParagraphs": [
+    "Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail gefahrlos ignorieren."
+  ]
+}

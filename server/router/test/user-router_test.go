@@ -417,3 +417,156 @@ func TestUserCreateWithROServiceAccount(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
+
+func TestUserCreateWithInvitation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Create user with invitation
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"sendInvitation\": true, \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	userID := res.Header().Get("X-Object-Id")
+
+	// Read user and check passwordPending is true
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, username, resBody.Email)
+	CheckTestBool(t, true, resBody.PasswordPending)
+	CheckTestBool(t, false, resBody.RequirePassword)
+	CheckTestString(t, "", resBody.AuthProviderID)
+
+	// Verify auth state was created
+	newUser, _ := GetUserRepository().GetOne(userID)
+	authStates, _ := GetAuthStateRepository().GetByAuthProviderID(GetSettingsRepository().GetNullUUID())
+	foundAuthState := false
+	for _, state := range authStates {
+		if state.AuthStateType == AuthInviteUser {
+			foundAuthState = true
+			break
+		}
+	}
+	CheckTestBool(t, true, foundAuthState)
+	CheckTestBool(t, true, newUser != nil)
+}
+
+func TestUserUpdateAuthMethod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create auth provider
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	authProvider := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "TestProvider",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider)
+
+	// 1. Create user with password
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	userID := res.Header().Get("X-Object-Id")
+
+	// Verify password auth
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody1 *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody1)
+	CheckTestBool(t, true, resBody1.RequirePassword)
+	CheckTestBool(t, false, resBody1.PasswordPending)
+	CheckTestString(t, "", resBody1.AuthProviderID)
+
+	// 2. Update to auth provider
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"authProviderId\": \"" + authProvider.ID + "\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+userID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify provider auth
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestBool(t, false, resBody2.RequirePassword)
+	CheckTestBool(t, false, resBody2.PasswordPending)
+	CheckTestString(t, authProvider.ID, resBody2.AuthProviderID)
+
+	// 3. Update to invitation
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"sendInvitation\": true, \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+userID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify invitation auth
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody3 *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody3)
+	CheckTestBool(t, false, resBody3.RequirePassword)
+	CheckTestBool(t, true, resBody3.PasswordPending)
+	CheckTestString(t, "", resBody3.AuthProviderID)
+}
+
+func TestUserCompleteInvitation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create user with invitation
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"sendInvitation\": true, \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	userID := res.Header().Get("X-Object-Id")
+
+	// Find auth state
+	authStates, _ := GetAuthStateRepository().GetByAuthProviderID(GetSettingsRepository().GetNullUUID())
+	var invitationState *AuthState
+	for _, state := range authStates {
+		if state.AuthStateType == AuthInviteUser {
+			invitationState = state
+			break
+		}
+	}
+	CheckTestBool(t, true, invitationState != nil)
+
+	// Complete invitation
+	payload = "{\"password\": \"newpass123\"}"
+	req = NewHTTPRequest("POST", "/auth/setpw/"+invitationState.ID, "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify passwordPending is now false and password is set
+	newUser, _ := GetUserRepository().GetOne(userID)
+	CheckTestBool(t, false, newUser.PasswordPending)
+	CheckTestBool(t, true, newUser.HashedPassword != "")
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(newUser.HashedPassword), "newpass123"))
+
+	// Verify auth state was deleted
+	_, err := GetAuthStateRepository().GetOne(invitationState.ID)
+	CheckTestBool(t, true, err != nil)
+
+	// Verify user can log in with new password
+	loginPayload := "{ \"email\": \"" + username + "\", \"password\": \"newpass123\", \"organizationId\": \"" + org.ID + "\" }"
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(loginPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}

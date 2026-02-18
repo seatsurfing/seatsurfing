@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -163,4 +164,38 @@ func TestAuthProvidersGetPublicForOrg(t *testing.T) {
 	CheckTestString(t, "Test", resBody[0].Name)
 	CheckTestString(t, id2, resBody[1].ID)
 	CheckTestString(t, "Test2", resBody[1].Name)
+}
+
+func TestAuthProviderDeletionProtection(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create auth provider
+	payload := `{"name": "Test", "providerType": 1, "clientId": "test1", "clientSecret": "test2", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req := NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	providerID := res.Header().Get("X-Object-Id")
+
+	// Create user bound to this provider
+	user := CreateTestUserInOrg(org)
+	user.AuthProviderID = NullUUID(providerID)
+	GetUserRepository().Update(user)
+
+	// Try to delete provider - should fail
+	req = NewHTTPRequest("DELETE", "/auth-provider/"+providerID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Unbind user from provider
+	user.AuthProviderID = NullUUID("")
+	GetUserRepository().Update(user)
+
+	// Try to delete provider again - should succeed
+	req = NewHTTPRequest("DELETE", "/auth-provider/"+providerID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }

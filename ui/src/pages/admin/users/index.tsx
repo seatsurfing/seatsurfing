@@ -65,7 +65,9 @@ class Users extends React.Component<Props, State> {
 
   renderItem = (user: User) => {
     let authProvider = "";
-    if (user.requirePassword) {
+    if (user.passwordPending) {
+      authProvider = this.props.t("passwordPending");
+    } else if (user.requirePassword) {
       authProvider = this.props.t("password");
     } else if (this.authProviders[user.authProviderId]) {
       authProvider = this.authProviders[user.authProviderId];

@@ -19,6 +19,7 @@ import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import OrgSettings from "@/types/Settings";
 import RedirectUtil from "@/util/RedirectUtil";
+import AuthProvider from "@/types/AuthProvider";
 
 interface State {
   loading: boolean;
@@ -27,11 +28,16 @@ interface State {
   error: boolean;
   goBack: boolean;
   email: string;
+  originalEmail: string;
   firstname: string;
   lastname: string;
   requirePassword: boolean;
   password: string;
   changePassword: boolean;
+  authMethod: string; // "password" | "provider" | "invitation"
+  authProviderId: string;
+  sendInvitation: boolean;
+  resendInvitation: boolean;
   role: number;
   showUsernameCopied: boolean;
   showPasswordCopied: boolean;
@@ -44,6 +50,7 @@ interface Props {
 
 class EditUser extends React.Component<Props, State> {
   entity: User = new User();
+  authProviders: AuthProvider[] = [];
   usersMax: number = 0;
   usersCur: number = -1;
   adminUserRole: number = 0;
@@ -57,11 +64,16 @@ class EditUser extends React.Component<Props, State> {
       error: false,
       goBack: false,
       email: "",
+      originalEmail: "",
       firstname: "",
       lastname: "",
       requirePassword: false,
       password: "",
       changePassword: false,
+      authMethod: "password",
+      authProviderId: "",
+      sendInvitation: false,
+      resendInvitation: false,
       role: User.UserRoleUser,
       showUsernameCopied: false,
       showPasswordCopied: false,
@@ -90,6 +102,7 @@ class EditUser extends React.Component<Props, State> {
       User.getSelf().then((me) => {
         return [me];
       }),
+      AuthProvider.list(),
     ];
     const { id } = this.props.router.query;
     if (id && typeof id === "string" && id !== "add") {
@@ -99,14 +112,27 @@ class EditUser extends React.Component<Props, State> {
       this.usersMax = values[0] === "1" ? 1000000 : 10;
       this.usersCur = values[1];
       this.adminUserRole = values[2][0].role;
-      if (values.length >= 4) {
-        let user = values[3];
+      this.authProviders = values[3];
+      if (values.length >= 5) {
+        let user = values[4];
         this.entity = user;
+        // Determine auth method from user data
+        let authMethod = "password";
+        if (user.passwordPending) {
+          authMethod = "invitation";
+        } else if (user.authProviderId) {
+          authMethod = "provider";
+        } else if (user.requirePassword) {
+          authMethod = "password";
+        }
         this.setState({
           email: user.email,
+          originalEmail: user.email,
           firstname: user.firstname,
           lastname: user.lastname,
           requirePassword: user.requirePassword,
+          authMethod: authMethod,
+          authProviderId: user.authProviderId || "",
           role: user.role,
         });
       }
@@ -126,22 +152,36 @@ class EditUser extends React.Component<Props, State> {
     this.entity.firstname = this.state.firstname;
     this.entity.lastname = this.state.lastname;
     this.entity.role = this.state.role;
+
+    // Set authentication fields based on selected auth method
+    if (this.state.authMethod === "invitation") {
+      // Only send invitation if email changed or explicitly requested
+      const emailChanged = this.state.email !== this.state.originalEmail;
+      const isNewUser = !this.entity.id;
+      this.entity.sendInvitation =
+        isNewUser || emailChanged || this.state.resendInvitation;
+      this.entity.password = "";
+      this.entity.authProviderId = "";
+    } else if (this.state.authMethod === "provider") {
+      this.entity.sendInvitation = false;
+      this.entity.password = "";
+      this.entity.authProviderId = this.state.authProviderId;
+    } else {
+      // password method
+      this.entity.sendInvitation = false;
+      this.entity.authProviderId = "";
+      if (this.state.changePassword || !this.entity.id) {
+        this.entity.password = this.state.password;
+      } else {
+        this.entity.password = "";
+      }
+    }
+
     this.entity
       .save()
       .then(() => {
         this.props.router.push("/admin/users/" + this.entity.id);
-        if (this.state.changePassword) {
-          this.entity
-            .setPassword(this.state.password)
-            .then(() => {
-              this.setState({ saved: true });
-            })
-            .catch(() => {
-              this.setState({ error: true });
-            });
-        } else {
-          this.setState({ saved: true });
-        }
+        this.setState({ saved: true, resendInvitation: false });
       })
       .catch(() => {
         this.setState({ error: true });
@@ -274,31 +314,6 @@ class EditUser extends React.Component<Props, State> {
         </>
       );
     }
-    let changePasswordLabel = this.props.t("passwordLogin");
-    if (this.entity.id) {
-      changePasswordLabel = this.props.t("passwordChange");
-    }
-    let changePassword = (
-      <Form.Group
-        as={Row}
-        hidden={
-          this.isServiceAccount(this.state.role) ||
-          RuntimeConfig.INFOS.disablePasswordLogin
-        }
-      >
-        <Col sm="6">
-          <Form.Check
-            type="checkbox"
-            id="check-changePassword"
-            label={changePasswordLabel}
-            checked={this.state.changePassword}
-            onChange={(e: any) =>
-              this.setState({ changePassword: e.target.checked })
-            }
-          />
-        </Col>
-      </Form.Group>
-    );
     let roleSelect = <></>;
     if (this.adminUserRole >= this.state.role) {
       roleSelect = (
@@ -430,7 +445,7 @@ class EditUser extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
-          <Form.Group as={Row} hidden={!this.isServiceAccount(this.state.role)}>
+          <Form.Group as={Row} hidden={this.isServiceAccount(this.state.role)}>
             <Form.Label column sm="2">
               {this.props.t("username")}
             </Form.Label>
@@ -457,12 +472,131 @@ class EditUser extends React.Component<Props, State> {
               </InputGroup>
             </Col>
           </Form.Group>
-          {changePassword}
+
+          {/* Auth method selection for non-service accounts */}
           <Form.Group
             as={Row}
             hidden={
-              RuntimeConfig.INFOS.disablePasswordLogin &&
-              !this.isServiceAccount(this.state.role)
+              this.isServiceAccount(this.state.role) ||
+              RuntimeConfig.INFOS.disablePasswordLogin
+            }
+          >
+            <Form.Label column sm="2">
+              {this.props.t("authMethod")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Check
+                type="radio"
+                id="auth-method-password"
+                name="authMethod"
+                label={this.props.t("authMethodPassword")}
+                checked={this.state.authMethod === "password"}
+                onChange={() => this.setState({ authMethod: "password" })}
+              />
+              {this.authProviders.length > 0 && (
+                <Form.Check
+                  type="radio"
+                  id="auth-method-provider"
+                  name="authMethod"
+                  label={this.props.t("authMethodProvider")}
+                  checked={this.state.authMethod === "provider"}
+                  onChange={() => this.setState({ authMethod: "provider" })}
+                />
+              )}
+              <Form.Check
+                type="radio"
+                id="auth-method-invitation"
+                name="authMethod"
+                label={this.props.t("authMethodInvitation")}
+                checked={this.state.authMethod === "invitation"}
+                onChange={() => this.setState({ authMethod: "invitation" })}
+              />
+            </Col>
+          </Form.Group>
+
+          {/* Auth provider selection */}
+          <Form.Group
+            as={Row}
+            hidden={
+              this.isServiceAccount(this.state.role) ||
+              this.state.authMethod !== "provider" ||
+              RuntimeConfig.INFOS.disablePasswordLogin
+            }
+          >
+            <Form.Label column sm="2">
+              {this.props.t("chooseAuthProvider")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                value={this.state.authProviderId}
+                onChange={(e: any) =>
+                  this.setState({ authProviderId: e.target.value })
+                }
+                required={this.state.authMethod === "provider"}
+              >
+                <option value="">{this.props.t("pleaseSelect")}</option>
+                {this.authProviders.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+          </Form.Group>
+
+          {/* Password change checkbox for existing users */}
+          <Form.Group
+            as={Row}
+            hidden={
+              this.isServiceAccount(this.state.role) ||
+              !this.entity.id ||
+              this.state.authMethod !== "password" ||
+              RuntimeConfig.INFOS.disablePasswordLogin
+            }
+          >
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-changePassword"
+                label={this.props.t("passwordChange")}
+                checked={this.state.changePassword}
+                onChange={(e: any) =>
+                  this.setState({ changePassword: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+
+          {/* Resend invitation checkbox for existing users with invitation auth method */}
+          <Form.Group
+            as={Row}
+            hidden={
+              this.isServiceAccount(this.state.role) ||
+              !this.entity.id ||
+              this.state.authMethod !== "invitation"
+            }
+          >
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-resendInvitation"
+                label={this.props.t("resendInvitation")}
+                checked={this.state.resendInvitation}
+                onChange={(e: any) =>
+                  this.setState({ resendInvitation: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+
+          {/* Password field */}
+          <Form.Group
+            as={Row}
+            hidden={
+              (RuntimeConfig.INFOS.disablePasswordLogin &&
+                !this.isServiceAccount(this.state.role)) ||
+              (!this.isServiceAccount(this.state.role) &&
+                this.state.authMethod !== "password")
             }
           >
             <Form.Label column sm="2">
@@ -478,9 +612,20 @@ class EditUser extends React.Component<Props, State> {
                   onChange={(e: any) =>
                     this.setState({ password: e.target.value })
                   }
-                  required={!this.entity.id || this.state.changePassword}
+                  required={
+                    !!(
+                      this.isServiceAccount(this.state.role) ||
+                      (!this.entity.id &&
+                        this.state.authMethod === "password") ||
+                      (this.entity.id &&
+                        this.state.changePassword &&
+                        this.state.authMethod === "password")
+                    )
+                  }
                   disabled={
-                    !this.state.changePassword ||
+                    (!this.isServiceAccount(this.state.role) &&
+                      this.entity.id &&
+                      !this.state.changePassword) ||
                     this.isServiceAccount(this.state.role)
                   }
                   minLength={this.isServiceAccount(this.state.role) ? 32 : 8}

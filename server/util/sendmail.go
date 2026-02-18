@@ -151,6 +151,10 @@ func GetEmailTemplatePathResetpassword() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-resetpw.json")
 }
 
+func GetEmailTemplatePathInviteUser() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-invite-user.json")
+}
+
 func GetEmailTemplatePathConfirmDeleteOrg() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-confirm-delete-org.json")
 }
