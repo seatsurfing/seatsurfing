@@ -126,7 +126,7 @@ class Preferences extends React.Component<Props, State> {
 
   loadActiveSessions = async (): Promise<void> => {
     const accessTokenPayload = JwtDecoder.getPayload(
-      Ajax.PERSISTER.readCredentialsFromSessionStorage().accessToken,
+      Ajax.PERSISTER.readCredentialsFromLocalStorage().accessToken,
     );
     let self = this;
     return new Promise<void>(function (resolve, reject) {
@@ -452,7 +452,7 @@ class Preferences extends React.Component<Props, State> {
       );
     }
 
-    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
     const profilePageUrl = credentials.profilePageUrl;
 
     return (

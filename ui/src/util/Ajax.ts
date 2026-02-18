@@ -35,7 +35,7 @@ export default class Ajax {
     return new Promise<AjaxResult>(function (resolve, reject) {
       let performRequest = async () => {
         const credentials: AjaxCredentials =
-          await Ajax.PERSISTER.readCredentialsFromSessionStorage();
+          await Ajax.PERSISTER.readCredentialsFromLocalStorage();
         const options: RequestInit = Ajax.getFetchOptions(
           method,
           credentials.accessToken,
@@ -83,7 +83,7 @@ export default class Ajax {
     return Ajax.REFRESH_TOKEN_MUTEX.acquire().then((release) => {
       return new Promise<void>(function (resolve, reject) {
         // Once it's our turn, check if we really need to refresh the token
-        const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+        const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
         if (new Date().getTime() < credentials.accessTokenExpiry.getTime()) {
           // Token is still valid, nothing to do
           release();
@@ -96,8 +96,7 @@ export default class Ajax {
         };
         let options: RequestInit = Ajax.getFetchOptions("POST", null, data);
         let url = Ajax.getBackendUrl() + Ajax.REFRESH_URL;
-        const oldCredentials =
-          Ajax.PERSISTER.readCredentialsFromSessionStorage();
+        const oldCredentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
         fetch(url, options)
           .then((response) => {
             if (response.status >= 200 && response.status <= 299) {
@@ -112,7 +111,7 @@ export default class Ajax {
                     logoutUrl: oldCredentials.logoutUrl,
                     profilePageUrl: oldCredentials.profilePageUrl,
                   };
-                  Ajax.PERSISTER.updateCredentialsSessionStorage(c);
+                  Ajax.PERSISTER.updateCredentialsLocalStorage(c);
                   Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
                     json.refreshToken,
                   );
@@ -139,7 +138,7 @@ export default class Ajax {
   }
 
   static hasAccessToken(): boolean {
-    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
     return !!credentials.accessToken;
   }
 
