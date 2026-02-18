@@ -11,4 +11,14 @@ export default class JwtDecoder {
     let json = JSON.parse(payload);
     return json;
   }
+
+  static getExpiryDate(jwt: string): Date {
+    const payload = JwtDecoder.getPayload(jwt);
+    if (!payload || !payload.exp) {
+      // Fallback to 5 minutes from now if exp claim is missing
+      return new Date(new Date().getTime() + 5 * 60 * 1000);
+    }
+    // JWT exp is in seconds, convert to milliseconds
+    return new Date(payload.exp * 1000);
+  }
 }

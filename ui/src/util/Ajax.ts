@@ -4,6 +4,7 @@ import { Mutex } from "async-mutex";
 import AjaxCredentials from "./AjaxCredentials";
 import AjaxConfigPersister from "./AjaxConfigPersister";
 import AjaxConfigBrowserPersister from "./AjaxConfigBrowserPersister";
+import JwtDecoder from "./JwtDecoder";
 
 interface AjaxResult {
   json: any;
@@ -13,7 +14,6 @@ interface AjaxResult {
 
 export default class Ajax {
   static URL: string = "";
-  static ACCESS_TOKEN_EXPIRY_OFFSET: number = 60 * 5 * 1000; // 5 minutes
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
@@ -105,8 +105,8 @@ export default class Ajax {
                 .then((json) => {
                   let c: AjaxCredentials = {
                     accessToken: json.accessToken,
-                    accessTokenExpiry: new Date(
-                      new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
+                    accessTokenExpiry: JwtDecoder.getExpiryDate(
+                      json.accessToken,
                     ),
                     logoutUrl: oldCredentials.logoutUrl,
                     profilePageUrl: oldCredentials.profilePageUrl,

@@ -6,6 +6,7 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import Ajax from "@/util/Ajax";
 import AjaxCredentials from "@/util/AjaxCredentials";
+import JwtDecoder from "@/util/JwtDecoder";
 
 interface State {
   redirect: string | null;
@@ -35,9 +36,7 @@ class LoginSuccess extends React.Component<Props, State> {
           if (res.json && res.json.accessToken) {
             const credentials: AjaxCredentials = {
               accessToken: res.json.accessToken,
-              accessTokenExpiry: new Date(
-                new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
-              ),
+              accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
               logoutUrl: res.json.logoutUrl,
               profilePageUrl: res.json.profilePageUrl,
             };
