@@ -9,6 +9,7 @@ import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
 import AjaxCredentials from "@/util/AjaxCredentials";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import JwtDecoder from "@/util/JwtDecoder";
 import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
 import * as Validation from "@/util/Validation";
@@ -145,9 +146,7 @@ class Login extends React.Component<Props, State> {
       .then((res) => {
         const credentials: AjaxCredentials = {
           accessToken: res.json.accessToken,
-          accessTokenExpiry: new Date(
-            new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET,
-          ),
+          accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
           logoutUrl: res.json.logoutUrl,
           profilePageUrl: "",
         };
