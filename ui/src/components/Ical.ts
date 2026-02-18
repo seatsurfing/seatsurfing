@@ -1,7 +1,7 @@
 import Ajax from "@/util/Ajax";
 
 export function getIcal(bookingId: string, recurring?: boolean) {
-  const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+  const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
   let options: RequestInit = Ajax.getFetchOptions(
     "GET",
     credentials.accessToken,

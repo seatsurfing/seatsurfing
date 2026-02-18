@@ -19,26 +19,25 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
     return c;
   }
 
-  updateCredentialsSessionStorage(c: AjaxCredentials): void {
+  updateCredentialsLocalStorage(c: AjaxCredentials): void {
     try {
-      window.sessionStorage.setItem("accessToken", c.accessToken);
-      window.sessionStorage.setItem(
+      window.localStorage.setItem("accessToken", c.accessToken);
+      window.localStorage.setItem(
         "accessTokenExpiry",
         c.accessTokenExpiry.getTime().toString(),
       );
-      window.sessionStorage.setItem("logoutUrl", c.logoutUrl);
-      window.sessionStorage.setItem("profilePageUrl", c.profilePageUrl);
+      window.localStorage.setItem("logoutUrl", c.logoutUrl);
+      window.localStorage.setItem("profilePageUrl", c.profilePageUrl);
     } catch (e) {}
   }
 
-  readCredentialsFromSessionStorage(): AjaxCredentials {
+  readCredentialsFromLocalStorage(): AjaxCredentials {
     let c: AjaxCredentials = new AjaxCredentials();
     try {
-      let accessToken = window.sessionStorage.getItem("accessToken");
-      let accessTokenExpiry =
-        window.sessionStorage.getItem("accessTokenExpiry");
-      let logoutUrl = window.sessionStorage.getItem("logoutUrl");
-      let profilePageUrl = window.sessionStorage.getItem("profilePageUrl");
+      let accessToken = window.localStorage.getItem("accessToken");
+      let accessTokenExpiry = window.localStorage.getItem("accessTokenExpiry");
+      let logoutUrl = window.localStorage.getItem("logoutUrl");
+      let profilePageUrl = window.localStorage.getItem("profilePageUrl");
       if (accessToken && accessTokenExpiry) {
         c = {
           accessToken: accessToken,
@@ -53,10 +52,10 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
 
   deleteCredentialsFromStorage(): void {
     try {
-      window.sessionStorage.removeItem("accessToken");
-      window.sessionStorage.removeItem("accessTokenExpiry");
-      window.sessionStorage.removeItem("logoutUrl");
-      window.sessionStorage.removeItem("profilePageUrl");
+      window.localStorage.removeItem("accessToken");
+      window.localStorage.removeItem("accessTokenExpiry");
+      window.localStorage.removeItem("logoutUrl");
+      window.localStorage.removeItem("profilePageUrl");
       window.localStorage.removeItem("refreshToken");
     } catch (e) {}
   }

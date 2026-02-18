@@ -3,7 +3,7 @@ import AjaxCredentials from "./AjaxCredentials";
 export default interface AjaxConfigPersister {
   persistRefreshTokenInLocalStorage(refreshToken: string): void;
   readRefreshTokenFromLocalStorage(): string;
-  updateCredentialsSessionStorage(c: AjaxCredentials): void;
-  readCredentialsFromSessionStorage(): AjaxCredentials;
+  updateCredentialsLocalStorage(c: AjaxCredentials): void;
+  readCredentialsFromLocalStorage(): AjaxCredentials;
   deleteCredentialsFromStorage(): void;
 }

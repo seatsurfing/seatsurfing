@@ -90,12 +90,12 @@ export default class RuntimeConfig {
   };
 
   static verifyToken = async (resolve: Function) => {
-    let credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    let credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
     if (!credentials.accessToken) {
       const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
       if (refreshToken) {
         await Ajax.refreshAccessToken(refreshToken);
-        credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+        credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
       }
     }
     if (credentials.accessToken) {
@@ -274,7 +274,7 @@ export default class RuntimeConfig {
   }
 
   static logOut(): void {
-    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
     const logoutUrl = credentials.logoutUrl;
     const proceed = () => {
       Ajax.PERSISTER.deleteCredentialsFromStorage();
