@@ -686,6 +686,7 @@ class Settings extends React.Component<Props, State> {
             <a
               href="https://github.com/seatsurfing/seatsurfing/releases"
               target="_blank"
+              rel="noopener noreferrer"
             >
               upgrade to {this.state.latestVersion.version}
             </a>

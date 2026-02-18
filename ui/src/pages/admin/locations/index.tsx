@@ -69,7 +69,7 @@ class Locations extends React.Component<Props, State> {
           {location.mapWidth}x{location.mapHeight}
         </td>
         <td>
-          <a href={bookingLinkUrl} target="_blank">
+          <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
             {bookingLinkUrl}
           </a>
         </td>

@@ -847,6 +847,7 @@ class Preferences extends React.Component<Props, State> {
                 <a
                   href={profilePageUrl}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="btn btn-secondary btn-sm mb-2"
                 >
                   <IoLinkOutline className="feather me-1" />

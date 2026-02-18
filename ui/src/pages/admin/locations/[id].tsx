@@ -653,7 +653,7 @@ class EditLocation extends React.Component<Props, State> {
     if (space.id) {
       const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`;
       bookingLink = (
-        <a href={bookingLinkUrl} target="_blank">
+        <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
           {bookingLinkUrl}
         </a>
       );
