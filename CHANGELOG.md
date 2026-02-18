@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.59.0](https://github.com/seatsurfing/seatsurfing/compare/v1.58.0...v1.59.0) (2026-02-18)
+
+
+### Features
+
+* add TOTP support ([#1717](https://github.com/seatsurfing/seatsurfing/issues/1717)) ([ed686a1](https://github.com/seatsurfing/seatsurfing/commit/ed686a1ca62959d1df27ffd004393d501bf1abbf))
+* improved user onboarding ([#1718](https://github.com/seatsurfing/seatsurfing/issues/1718)) ([2368371](https://github.com/seatsurfing/seatsurfing/commit/2368371ff1c64fa2025dcad6a32ff2e43fe53dbc))
+
+
+### Bug Fixes
+
+* add browser console logging if localStorage access fails ([#1726](https://github.com/seatsurfing/seatsurfing/issues/1726)) ([c237587](https://github.com/seatsurfing/seatsurfing/commit/c237587d88cf5fcd362388b9d6a8baaaf8cbdb02))
+* add rel="noopener noreferrer" to all target="_blank" links ([#1725](https://github.com/seatsurfing/seatsurfing/issues/1725)) ([476c45e](https://github.com/seatsurfing/seatsurfing/commit/476c45e72501c28647cd8e3501a9c299f09e1d8b))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.71 to 1.0.72 in /server in the minor-and-patch group ([#1723](https://github.com/seatsurfing/seatsurfing/issues/1723)) ([a43a66c](https://github.com/seatsurfing/seatsurfing/commit/a43a66c4b918200780c4f1c9e2639f24b34bdc58))
+* optimize credentials handling in frontend ([#1724](https://github.com/seatsurfing/seatsurfing/issues/1724)) ([f8991f1](https://github.com/seatsurfing/seatsurfing/commit/f8991f1b6c7d540c1a28bae83c948c8a20ed4394))
+* use expiry from access token ([#1727](https://github.com/seatsurfing/seatsurfing/issues/1727)) ([112472c](https://github.com/seatsurfing/seatsurfing/commit/112472c1447b3d739ca7ba6fd24a141bc7984083))
+
 ## [1.58.0](https://github.com/seatsurfing/seatsurfing/compare/v1.57.7...v1.58.0) (2026-02-11)
 
 
