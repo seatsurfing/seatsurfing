@@ -183,7 +183,7 @@ class Dashboard extends React.Component<Props, State> {
               <a
                 href="https://github.com/seatsurfing/seatsurfing/releases"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
               >
                 {this.props.t("updateAvailable", {
                   version: this.state.latestVersion.version,
