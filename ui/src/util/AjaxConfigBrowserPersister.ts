@@ -5,7 +5,9 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
   persistRefreshTokenInLocalStorage(refreshToken: string): void {
     try {
       window.localStorage.setItem("refreshToken", refreshToken);
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to persist refresh token in localStorage:", e);
+    }
   }
 
   readRefreshTokenFromLocalStorage(): string {
@@ -15,7 +17,9 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
       if (refreshToken) {
         c = refreshToken;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to read refresh token from localStorage:", e);
+    }
     return c;
   }
 
@@ -28,7 +32,9 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
       );
       window.localStorage.setItem("logoutUrl", c.logoutUrl);
       window.localStorage.setItem("profilePageUrl", c.profilePageUrl);
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to update credentials in localStorage:", e);
+    }
   }
 
   readCredentialsFromLocalStorage(): AjaxCredentials {
@@ -46,7 +52,9 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
           profilePageUrl: profilePageUrl || "",
         };
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to read credentials from localStorage:", e);
+    }
     return c;
   }
 
@@ -57,6 +65,8 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
       window.localStorage.removeItem("logoutUrl");
       window.localStorage.removeItem("profilePageUrl");
       window.localStorage.removeItem("refreshToken");
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to delete credentials from localStorage:", e);
+    }
   }
 }
