@@ -90,59 +90,85 @@ The existing `enforce_totp` organization setting requires users to set up a seco
 |--------|------|-------------|-------------|
 | `id` | `uuid` | PK, DEFAULT `uuid_generate_v4()` | Internal row ID. |
 | `user_id` | `uuid` | NOT NULL, FK → `users.id` ON DELETE CASCADE | Owning user. |
-| `credential_id` | `bytea` | NOT NULL, UNIQUE | WebAuthn credential ID (binary). |
-| `public_key` | `bytea` | NOT NULL | CBOR-encoded public key. |
-| `attestation_type` | `varchar` | NOT NULL | Attestation type (e.g., `"none"`). |
-| `aaguid` | `bytea` | NOT NULL | Authenticator Attestation GUID. |
-| `sign_count` | `bigint` | NOT NULL DEFAULT 0 | Signature counter for clone detection. |
-| `name` | `varchar(255)` | NOT NULL | User-given display name (e.g., "MacBook Touch ID"). |
-| `transports` | `varchar[]` | | Authenticator transports (e.g., `{"internal","hybrid"}`). |
+| `credential_id` | `varchar` | NOT NULL | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded binary credential ID, then encrypted. |
+| `credential_id_hash` | `varchar(64)` | NOT NULL, UNIQUE | SHA-256 hex hash of the raw credential ID (pre-encryption). Used for lookups since the encrypted value is non-deterministic. |
+| `public_key` | `varchar` | NOT NULL | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded CBOR public key, then encrypted. |
+| `attestation_type` | `varchar` | NOT NULL | Attestation type (e.g., `"none"`). Not encrypted (non-sensitive metadata). |
+| `aaguid` | `varchar` | NOT NULL | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded AAGUID, then encrypted. |
+| `sign_count` | `bigint` | NOT NULL DEFAULT 0 | Signature counter for clone detection. Not encrypted (non-sensitive integer). |
+| `name` | `varchar(255)` | NOT NULL | User-given display name (e.g., "MacBook Touch ID"). Not encrypted. |
+| `transports` | `varchar[]` | | Authenticator transports (e.g., `{"internal","hybrid"}`). Not encrypted (non-sensitive metadata). |
 | `created_at` | `timestamp` | NOT NULL DEFAULT NOW() | Registration timestamp. |
 | `last_used_at` | `timestamp` | NULL | Last successful authentication timestamp. |
 
+**Encryption scheme:** Binary fields (`credential_id`, `public_key`, `aaguid`) are first base64-encoded to produce a string, then encrypted via `EncryptString()` (AES-256-GCM using the `CRYPT_KEY` environment variable) before being stored. On read, values are decrypted via `DecryptString()` and base64-decoded back to binary. This matches the pattern used for TOTP secrets in `user-repository.go`.
+
+**Lookup strategy:** Because `EncryptString()` uses a random nonce (non-deterministic), the same plaintext produces different ciphertexts. The `credential_id_hash` column stores a SHA-256 hex digest of the **raw** (unencrypted) credential ID bytes, enabling `WHERE credential_id_hash = $1` lookups without decryption.
+
 **Indexes:**
-- `UNIQUE INDEX passkeys_credential_id ON passkeys(credential_id)`
+- `UNIQUE INDEX passkeys_credential_id_hash ON passkeys(credential_id_hash)`
 - `INDEX passkeys_user_id ON passkeys(user_id)`
 
 ### 4.2 Database Migration
 
-In `db-updates.go`, increment `targetVersion` to **37** and add the `passkeys` table creation:
+In `db-updates.go`, increment `targetVersion` to **37**. Register `GetPasskeyRepository()` in the repositories list so its `RunSchemaUpgrade()` is called.
+
+Following the existing pattern (see `session-repository.go` for reference), the **table and index creation** happens inside the `GetPasskeyRepository()` singleton initializer, not in `RunSchemaUpgrade()`. The `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS` statements are idempotent and run on every startup:
 
 ```go
-if curVersion < 37 {
-    _, err := GetDatabase().DB().Exec(`
-        CREATE TABLE IF NOT EXISTS passkeys (
-            id uuid DEFAULT uuid_generate_v4(),
-            user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            credential_id bytea NOT NULL,
-            public_key bytea NOT NULL,
-            attestation_type varchar NOT NULL DEFAULT 'none',
-            aaguid bytea NOT NULL,
-            sign_count bigint NOT NULL DEFAULT 0,
-            name varchar(255) NOT NULL,
-            transports varchar[] DEFAULT '{}',
-            created_at timestamp NOT NULL DEFAULT NOW(),
-            last_used_at timestamp NULL,
-            PRIMARY KEY (id)
-        )`)
-    // + create indexes
+func GetPasskeyRepository() *PasskeyRepository {
+    passkeyRepositoryOnce.Do(func() {
+        passkeyRepository = &PasskeyRepository{}
+        _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS passkeys (" +
+            "id uuid DEFAULT uuid_generate_v4(), " +
+            "user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, " +
+            "credential_id varchar NOT NULL, " +
+            "credential_id_hash varchar(64) NOT NULL, " +
+            "public_key varchar NOT NULL, " +
+            "attestation_type varchar NOT NULL DEFAULT 'none', " +
+            "aaguid varchar NOT NULL, " +
+            "sign_count bigint NOT NULL DEFAULT 0, " +
+            "name varchar(255) NOT NULL, " +
+            "transports varchar[] DEFAULT '{}', " +
+            "created_at timestamp NOT NULL DEFAULT NOW(), " +
+            "last_used_at timestamp NULL, " +
+            "PRIMARY KEY (id))")
+        if err != nil {
+            panic(err)
+        }
+        if _, err = GetDatabase().DB().Exec("CREATE UNIQUE INDEX IF NOT EXISTS " +
+            "passkeys_credential_id_hash ON passkeys(credential_id_hash)"); err != nil {
+            panic(err)
+        }
+        if _, err = GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS " +
+            "idx_passkeys_user_id ON passkeys(user_id)"); err != nil {
+            panic(err)
+        }
+    })
+    return passkeyRepository
+}
+```
+
+The `RunSchemaUpgrade()` method starts empty (no schema changes yet) and will be used for future column additions or alterations:
+
+```go
+func (r *PasskeyRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+    // no schema changes yet
 }
 ```
 
 ### 4.3 New Repository: `passkey-repository.go`
 
-Register `GetPasskeyRepository()` in the repositories list in `db-updates.go`.
-
-**Entity:**
+**Entity (in-memory, decrypted):**
 
 ```go
 type Passkey struct {
     ID              string
     UserID          string
-    CredentialID    []byte
-    PublicKey       []byte
+    CredentialID    []byte     // raw binary; encrypted at rest
+    PublicKey       []byte     // raw binary; encrypted at rest
     AttestationType string
-    AAGUID          []byte
+    AAGUID          []byte     // raw binary; encrypted at rest
     SignCount       uint32
     Name            string
     Transports      []string
@@ -151,20 +177,47 @@ type Passkey struct {
 }
 ```
 
+The `Passkey` struct always holds **decrypted, decoded** binary values in memory. Encryption/decryption is handled transparently inside the repository methods, never leaking to callers.
+
+**Encryption helpers** (internal to the repository):
+
+```go
+// encryptBytes: base64-encode raw bytes, then EncryptString()
+func encryptBytes(data []byte) (string, error) {
+    b64 := base64.StdEncoding.EncodeToString(data)
+    return EncryptString(b64)
+}
+
+// decryptBytes: DecryptString(), then base64-decode to raw bytes
+func decryptBytes(ciphertext string) ([]byte, error) {
+    b64, err := DecryptString(ciphertext)
+    if err != nil {
+        return nil, err
+    }
+    return base64.StdEncoding.DecodeString(b64)
+}
+
+// hashCredentialID: SHA-256 hex digest for deterministic lookup
+func hashCredentialID(credentialID []byte) string {
+    h := sha256.Sum256(credentialID)
+    return hex.EncodeToString(h[:])
+}
+```
+
 **Methods:**
 
 | Method | Description |
 |--------|-------------|
-| `Create(p *Passkey) error` | Insert a new passkey. |
-| `GetByID(id string) (*Passkey, error)` | Get a passkey by internal ID. |
-| `GetByCredentialID(credentialID []byte) (*Passkey, error)` | Look up credential by WebAuthn credential ID. |
-| `GetAllByUserID(userID string) ([]*Passkey, error)` | List all passkeys for a user. |
-| `GetCountByUserID(userID string) (int, error)` | Count passkeys for a user. |
-| `UpdateSignCount(id string, signCount uint32) error` | Update the sign counter after authentication. |
-| `UpdateLastUsedAt(id string, t time.Time) error` | Record last authentication time. |
-| `UpdateName(id string, name string) error` | Rename a passkey. |
-| `Delete(id string) error` | Remove a single passkey. |
-| `DeleteAllByUserID(userID string) error` | Remove all passkeys for a user. |
+| `Create(p *Passkey) error` | Encrypts `CredentialID`, `PublicKey`, `AAGUID` via `encryptBytes()`; computes `credential_id_hash` via `hashCredentialID()`; inserts the row. |
+| `GetByID(id string) (*Passkey, error)` | Reads row, decrypts encrypted fields via `decryptBytes()`, returns populated struct. |
+| `GetByCredentialID(credentialID []byte) (*Passkey, error)` | Computes `hashCredentialID(credentialID)`, queries `WHERE credential_id_hash = $1`, decrypts fields. |
+| `GetAllByUserID(userID string) ([]*Passkey, error)` | Lists all rows for user, decrypts each. |
+| `GetCountByUserID(userID string) (int, error)` | `SELECT COUNT(*)` — no decryption needed. |
+| `UpdateSignCount(id string, signCount uint32) error` | Updates the unencrypted `sign_count` column. |
+| `UpdateLastUsedAt(id string, t time.Time) error` | Updates the unencrypted `last_used_at` column. |
+| `UpdateName(id string, name string) error` | Updates the unencrypted `name` column. |
+| `Delete(id string) error` | Removes a single passkey row. |
+| `DeleteAllByUserID(userID string) error` | Removes all passkey rows for a user. |
 
 ### 4.4 New AuthState Types
 
@@ -709,9 +762,18 @@ Failed passkey authentication attempts are recorded through the existing `AuthAt
 
 The `go-webauthn` library validates the origin in the client data against the configured RP origins. In multi-tenant deployments, the RP origin must match the organization's domain.
 
-### 7.8 Credential Storage
+### 7.8 Credential Storage & Encryption at Rest
 
-Credential public keys and IDs are stored as raw bytes (`bytea`) in PostgreSQL. No encryption is needed — public keys are not secrets. The security of the passkey system relies on the private key never leaving the authenticator.
+All credential material (`credential_id`, `public_key`, `aaguid`) is **encrypted at rest** using the existing `EncryptString()`/`DecryptString()` functions from `util/encryption.go`. These use AES-256-GCM with the `CRYPT_KEY` environment variable (the same key used for TOTP secret encryption).
+
+**Encryption flow (write):** raw binary → base64-encode → `EncryptString()` → stored as `varchar`.
+**Decryption flow (read):** stored `varchar` → `DecryptString()` → base64-decode → raw binary.
+
+Because `EncryptString()` uses a random nonce (non-deterministic), a separate `credential_id_hash` column stores the SHA-256 hex digest of the raw credential ID for indexed lookups. This hash is not reversible and does not leak the credential ID (SHA-256 is preimage-resistant; credential IDs are high-entropy random values).
+
+While public keys are not secrets in the cryptographic sense (the private key never leaves the authenticator), encrypting them at rest provides defense-in-depth: a database breach does not reveal any credential material that could be used for targeted phishing, credential correlation across services, or authenticator fingerprinting via AAGUIDs.
+
+**Prerequisite:** `CRYPT_KEY` must be configured (32-byte key). The `CanCrypt()` function should be checked at startup; if it returns `false`, passkey registration endpoints must return an error. This is the same prerequisite as TOTP.
 
 ### 7.9 Account Deletion
 
