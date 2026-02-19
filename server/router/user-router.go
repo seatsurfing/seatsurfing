@@ -226,12 +226,7 @@ func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, err := totp.ValidateCustom(m.Code, authState.Payload, time.Now(), totp.ValidateOpts{
-		Period:    30,
-		Skew:      1,
-		Digits:    6,
-		Algorithm: 0, // SHA1
-	})
+	valid, err := totp.ValidateCustom(m.Code, authState.Payload, time.Now(), *TotpOptions)
 	if err != nil || !valid {
 		SendBadRequest(w)
 		return

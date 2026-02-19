@@ -18,6 +18,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/oauth2"
 
@@ -26,6 +27,13 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+
+var TotpOptions *totp.ValidateOpts = &totp.ValidateOpts{
+	Period:    30,
+	Skew:      1,
+	Digits:    6,
+	Algorithm: otp.AlgorithmSHA1, // SHA1
+}
 
 // TOTP replay protection cache
 type usedTotpCode struct {
@@ -555,12 +563,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 			SendInternalServerError(w)
 			return
 		}
-		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), totp.ValidateOpts{
-			Period:    30,
-			Skew:      1,
-			Digits:    6,
-			Algorithm: 0, // SHA1
-		})
+		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), *TotpOptions)
 		if err != nil || !valid {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
 			SendNotFound(w)
