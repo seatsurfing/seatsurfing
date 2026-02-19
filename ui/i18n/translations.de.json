@@ -381,5 +381,18 @@
   "totpSecretWarning": "Halten Sie diesen geheimen Schlüssel sicher! Jeder, der Zugriff darauf hat, kann Codes für Ihr Konto generieren. Geben Sie ihn nur in Ihre Authentifikator-App ein.",
   "copyToClipboard": "In Zwischenablage kopieren",
   "loading": "Lädt...",
-  "totpEnforcementMessage": "Ihr Administrator hat die Zwei-Faktor-Authentifizierung für alle Benutzer erzwungen. Sie müssen die Zwei-Faktor-Authentifizierung einrichten, um Ihr Konto weiterhin nutzen zu können."
+  "totpEnforcementMessage": "Ihr Administrator hat die Zwei-Faktor-Authentifizierung für alle Benutzer erzwungen. Sie müssen die Zwei-Faktor-Authentifizierung einrichten, um Ihr Konto weiterhin nutzen zu können.",
+  "passkeys": "Passkeys",
+  "passkeysHint": "Passkeys allow you to sign in securely without a password using your device biometrics or security key.",
+  "passkeyAdd": "Add passkey",
+  "passkeyNamePlaceholder": "Passkey name, e.g. MacBook Face ID",
+  "passkeyNameRequired": "Please enter a name for this passkey.",
+  "passkeyRegisterError": "Failed to register passkey. Please try again.",
+  "passkeyDeleteConfirm": "Are you sure you want to remove this passkey?",
+  "passkeyDeleteError": "Failed to delete passkey. Please try again.",
+  "passkeyRegistering": "Registering...",
+  "passkeyLastUsed": "Last used: {date}",
+  "signInWithPasskey": "Sign in with passkey",
+  "passkeyRequired": "Please verify your identity using your passkey.",
+  "useTotpInstead": "Use authenticator code instead"
 }

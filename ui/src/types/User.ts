@@ -30,6 +30,7 @@ export default class User extends Entity {
   sendInvitation: boolean;
   firstBooking: BuddyBooking | null;
   totpEnabled: boolean;
+  hasPasskeys: boolean;
 
   constructor() {
     super();
@@ -51,6 +52,7 @@ export default class User extends Entity {
     this.sendInvitation = false;
     this.firstBooking = null;
     this.totpEnabled = false;
+    this.hasPasskeys = false;
   }
 
   serialize(): Object {
@@ -92,6 +94,7 @@ export default class User extends Entity {
     this.admin = input.admin;
     this.superAdmin = input.superAdmin;
     this.totpEnabled = input.totpEnabled;
+    this.hasPasskeys = input.hasPasskeys ?? false;
   }
 
   getBackendUrl(): string {

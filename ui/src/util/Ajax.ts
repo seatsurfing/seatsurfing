@@ -54,9 +54,26 @@ export default class Ajax {
                 });
             } else {
               let appCode = response.headers.get("X-Error-Code");
-              reject(
-                new AjaxError(response.status, appCode ? parseInt(appCode) : 0),
-              );
+              response
+                .text()
+                .then((body) => {
+                  reject(
+                    new AjaxError(
+                      response.status,
+                      appCode ? parseInt(appCode) : 0,
+                      undefined,
+                      body,
+                    ),
+                  );
+                })
+                .catch(() => {
+                  reject(
+                    new AjaxError(
+                      response.status,
+                      appCode ? parseInt(appCode) : 0,
+                    ),
+                  );
+                });
             }
           })
           .catch((err) => {

@@ -23,6 +23,8 @@ import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
 import TotpSettings from "@/components/TotpSettings";
+import PasskeySettings from "@/components/PasskeySettings";
+import Passkey from "@/types/Passkey";
 
 interface State {
   loading: boolean;
@@ -786,6 +788,21 @@ class Preferences extends React.Component<Props, State> {
                 RuntimeConfig.INFOS.idpLogin
               }
               t={this.props.t}
+            />
+            <PasskeySettings
+              hidden={
+                this.state.activeTab !== "tab-security" ||
+                RuntimeConfig.INFOS.idpLogin
+              }
+              t={this.props.t}
+              onPasskeyAdded={() => {
+                RuntimeConfig.INFOS.hasPasskeys = true;
+              }}
+              onPasskeyDeleted={() => {
+                Passkey.list().then((passkeys) => {
+                  RuntimeConfig.INFOS.hasPasskeys = passkeys.length > 0;
+                });
+              }}
             />
             <div hidden={this.state.activeTab !== "tab-security"}>
               <h5 className="mt-5">{this.props.t("activeSessions")}</h5>
