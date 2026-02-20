@@ -97,7 +97,7 @@ class Login extends React.Component<Props, State> {
     this.loadOrgDetails();
     // Refine the platform authenticator availability check asynchronously (Finding #14)
     Passkey.isPlatformAuthAvailable().then((available) =>
-      this.setState({ passkeyAvailable: available })
+      this.setState({ passkeyAvailable: available }),
     );
   };
 

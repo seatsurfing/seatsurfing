@@ -44,7 +44,7 @@ class PasskeySettings extends React.Component<Props, State> {
     }
     // Refine the platform authenticator availability check asynchronously (Finding #14)
     Passkey.isPlatformAuthAvailable().then((available) =>
-      this.setState({ passkeyPlatformAvailable: available })
+      this.setState({ passkeyPlatformAvailable: available }),
     );
   }
 
