@@ -477,8 +477,7 @@ class Login extends React.Component<Props, State> {
           <h3>{this.org?.name}</h3>
           <p>{this.props.t("passkeyRequired")}</p>
           <Button
-            variant="primary"
-            className="w-100 mb-2"
+            variant="link"
             onClick={() =>
               this.performPasskeyAssertion(
                 this.state.passkeyStateId,
@@ -487,11 +486,7 @@ class Login extends React.Component<Props, State> {
             }
             disabled={this.state.inPasskeyLogin}
           >
-            {this.state.inPasskeyLogin ? (
-              <Loading showText={false} paddingTop={false} />
-            ) : (
-              this.props.t("signInWithPasskey")
-            )}
+            {this.props.t("signInWithPasskey")}
           </Button>
           {this.state.allowTotpFallback && (
             <Button
@@ -588,19 +583,14 @@ class Login extends React.Component<Props, State> {
           {Passkey.isSupported() && (
             <p className="margin-top-25">
               <Button
-                variant="outline-secondary"
-                className="w-100"
+                variant="link"
                 onClick={this.loginWithPasskey}
                 disabled={
                   this.state.inPasskeyLogin || this.state.inPasswordSubmit
                 }
                 type="button"
               >
-                {this.state.inPasskeyLogin ? (
-                  <Loading showText={false} paddingTop={false} />
-                ) : (
-                  this.props.t("signInWithPasskey")
-                )}
+                {this.props.t("signInWithPasskey")}
               </Button>
             </p>
           )}

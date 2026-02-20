@@ -137,8 +137,10 @@ class PasskeySettings extends React.Component<Props, State> {
                         <small className="text-muted ms-2">
                           {Formatting.decodeHtmlEntities(
                             this.props.t("passkeyLastUsed", {
-                              date: Formatting.getFormatterShort(false).format(new Date(pk.lastUsedAt)),
-                            })
+                              date: Formatting.getFormatterShort(false).format(
+                                new Date(pk.lastUsedAt),
+                              ),
+                            }),
                           )}
                         </small>
                       ) : null}
