@@ -282,7 +282,7 @@ class Login extends React.Component<Props, State> {
     if (!Passkey.isSupported()) return;
     this.setState({ inPasskeyLogin: true, invalid: false });
     try {
-      const beginResponse = await Passkey.beginLogin();
+      const beginResponse = await Passkey.beginLogin(this.org?.id ?? "");
       const rawOpts =
         beginResponse.challenge?.publicKey ?? beginResponse.challenge;
       const publicKeyOptions = prepareRequestOptions(rawOpts);

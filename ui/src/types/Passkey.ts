@@ -173,8 +173,8 @@ export default class Passkey {
     return Ajax.delete("/user/passkey/" + id).then(() => undefined);
   }
 
-  static async beginLogin(): Promise<BeginLoginResponse> {
-    return Ajax.postData("/auth/passkey/login/begin", null).then(
+  static async beginLogin(organizationId: string): Promise<BeginLoginResponse> {
+    return Ajax.postData("/auth/passkey/login/begin", { organizationId }).then(
       (result) => result.json as BeginLoginResponse,
     );
   }
