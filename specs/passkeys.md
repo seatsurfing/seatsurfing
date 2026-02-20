@@ -22,13 +22,13 @@ This specification describes the addition of **WebAuthn/Passkeys** as a password
 
 ## 2. Terminology
 
-| Term | Definition |
-|------|-----------|
-| **Passkey** | A FIDO2/WebAuthn discoverable credential stored on the user's device or in a cloud-synced keychain. |
-| **Relying Party (RP)** | The Seatsurfing server, identified by its RP ID (domain) and RP name. |
+| Term                        | Definition                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Passkey**                 | A FIDO2/WebAuthn discoverable credential stored on the user's device or in a cloud-synced keychain.                |
+| **Relying Party (RP)**      | The Seatsurfing server, identified by its RP ID (domain) and RP name.                                              |
 | **Discoverable credential** | A WebAuthn credential that can initiate authentication without the user first providing a username (resident key). |
-| **User verification** | Biometric/PIN check performed locally by the authenticator during WebAuthn ceremonies. |
-| **Ceremony** | A WebAuthn registration or authentication handshake between browser and server. |
+| **User verification**       | Biometric/PIN check performed locally by the authenticator during WebAuthn ceremonies.                             |
+| **Ceremony**                | A WebAuthn registration or authentication handshake between browser and server.                                    |
 
 ---
 
@@ -86,26 +86,27 @@ The existing `enforce_totp` organization setting requires users to set up a seco
 
 ### 4.1 New Table: `passkeys`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | `uuid` | PK, DEFAULT `uuid_generate_v4()` | Internal row ID. |
-| `user_id` | `uuid` | NOT NULL, FK → `users.id` ON DELETE CASCADE | Owning user. |
-| `credential_id` | `varchar` | NOT NULL | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded binary credential ID, then encrypted. |
-| `credential_id_hash` | `varchar(64)` | NOT NULL, UNIQUE | SHA-256 hex hash of the raw credential ID (pre-encryption). Used for lookups since the encrypted value is non-deterministic. |
-| `public_key` | `varchar` | NOT NULL | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded CBOR public key, then encrypted. |
-| `attestation_type` | `varchar` | NOT NULL | Attestation type (e.g., `"none"`). Not encrypted (non-sensitive metadata). |
-| `aaguid` | `varchar` | NOT NULL | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded AAGUID, then encrypted. |
-| `sign_count` | `bigint` | NOT NULL DEFAULT 0 | Signature counter for clone detection. Not encrypted (non-sensitive integer). |
-| `name` | `varchar(255)` | NOT NULL | User-given display name (e.g., "MacBook Touch ID"). Not encrypted. |
-| `transports` | `varchar[]` | | Authenticator transports (e.g., `{"internal","hybrid"}`). Not encrypted (non-sensitive metadata). |
-| `created_at` | `timestamp` | NOT NULL DEFAULT NOW() | Registration timestamp. |
-| `last_used_at` | `timestamp` | NULL | Last successful authentication timestamp. |
+| Column               | Type           | Constraints                                 | Description                                                                                                                  |
+| -------------------- | -------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `id`                 | `uuid`         | PK, DEFAULT `uuid_generate_v4()`            | Internal row ID.                                                                                                             |
+| `user_id`            | `uuid`         | NOT NULL, FK → `users.id` ON DELETE CASCADE | Owning user.                                                                                                                 |
+| `credential_id`      | `varchar`      | NOT NULL                                    | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded binary credential ID, then encrypted.                            |
+| `credential_id_hash` | `varchar(64)`  | NOT NULL, UNIQUE                            | SHA-256 hex hash of the raw credential ID (pre-encryption). Used for lookups since the encrypted value is non-deterministic. |
+| `public_key`         | `varchar`      | NOT NULL                                    | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded CBOR public key, then encrypted.                                 |
+| `attestation_type`   | `varchar`      | NOT NULL                                    | Attestation type (e.g., `"none"`). Not encrypted (non-sensitive metadata).                                                   |
+| `aaguid`             | `varchar`      | NOT NULL                                    | **Encrypted** (AES-GCM via `EncryptString`). Base64-encoded AAGUID, then encrypted.                                          |
+| `sign_count`         | `bigint`       | NOT NULL DEFAULT 0                          | Signature counter for clone detection. Not encrypted (non-sensitive integer).                                                |
+| `name`               | `varchar(255)` | NOT NULL                                    | User-given display name (e.g., "MacBook Touch ID"). Not encrypted.                                                           |
+| `transports`         | `varchar[]`    |                                             | Authenticator transports (e.g., `{"internal","hybrid"}`). Not encrypted (non-sensitive metadata).                            |
+| `created_at`         | `timestamp`    | NOT NULL DEFAULT NOW()                      | Registration timestamp.                                                                                                      |
+| `last_used_at`       | `timestamp`    | NULL                                        | Last successful authentication timestamp.                                                                                    |
 
 **Encryption scheme:** Binary fields (`credential_id`, `public_key`, `aaguid`) are first base64-encoded to produce a string, then encrypted via `EncryptString()` (AES-256-GCM using the `CRYPT_KEY` environment variable) before being stored. On read, values are decrypted via `DecryptString()` and base64-decoded back to binary. This matches the pattern used for TOTP secrets in `user-repository.go`.
 
 **Lookup strategy:** Because `EncryptString()` uses a random nonce (non-deterministic), the same plaintext produces different ciphertexts. The `credential_id_hash` column stores a SHA-256 hex digest of the **raw** (unencrypted) credential ID bytes, enabling `WHERE credential_id_hash = $1` lookups without decryption.
 
 **Indexes:**
+
 - `UNIQUE INDEX passkeys_credential_id_hash ON passkeys(credential_id_hash)`
 - `INDEX passkeys_user_id ON passkeys(user_id)`
 
@@ -206,31 +207,31 @@ func hashCredentialID(credentialID []byte) string {
 
 **Methods:**
 
-| Method | Description |
-|--------|-------------|
-| `Create(p *Passkey) error` | Encrypts `CredentialID`, `PublicKey`, `AAGUID` via `encryptBytes()`; computes `credential_id_hash` via `hashCredentialID()`; inserts the row. |
-| `GetOne(id string) (*Passkey, error)` | Reads row by primary key, decrypts encrypted fields, returns populated struct. |
-| `GetByCredentialIDRaw(credentialID []byte) (*Passkey, error)` | Computes `hashCredentialID(credentialID)`, queries `WHERE credential_id_hash = $1`, decrypts fields. Used by the discoverable login handler where only the raw credential ID bytes are available. |
-| `GetByCredentialIDHash(hash string) (*Passkey, error)` | Queries `WHERE credential_id_hash = $1` directly when the caller already has the hex hash. |
-| `GetAllByUserID(userID string) ([]*Passkey, error)` | Lists all rows for user, decrypts each. |
-| `GetCountByUserID(userID string) int` | `SELECT COUNT(*)` — no decryption needed. Returns `int` (0 on error). |
-| `UpdateSignCount(p *Passkey) error` | Updates the unencrypted `sign_count` column using `p.ID` and `p.SignCount`. |
-| `UpdateLastUsedAt(p *Passkey) error` | Sets `last_used_at = NOW()` for the given passkey. |
-| `UpdateName(p *Passkey) error` | Updates the unencrypted `name` column using `p.ID` and `p.Name`. |
-| `Delete(p *Passkey) error` | Removes a single passkey row. |
-| `DeleteAllByUserID(userID string) error` | Removes all passkey rows for a user. |
-| `ToWebAuthnCredential() (*webauthn.Credential, error)` | Helper method on `*Passkey` — decrypts fields and reconstructs a `webauthn.Credential` for use in ceremonies. |
-| `NewPasskeyFromCredential(userID string, cred *webauthn.Credential, name string) (*Passkey, error)` | Package-level constructor — wraps a freshly minted `webauthn.Credential` in a `Passkey` ready for `Create()`. |
+| Method                                                                                              | Description                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Create(p *Passkey) error`                                                                          | Encrypts `CredentialID`, `PublicKey`, `AAGUID` via `encryptBytes()`; computes `credential_id_hash` via `hashCredentialID()`; inserts the row.                                                     |
+| `GetOne(id string) (*Passkey, error)`                                                               | Reads row by primary key, decrypts encrypted fields, returns populated struct.                                                                                                                    |
+| `GetByCredentialIDRaw(credentialID []byte) (*Passkey, error)`                                       | Computes `hashCredentialID(credentialID)`, queries `WHERE credential_id_hash = $1`, decrypts fields. Used by the discoverable login handler where only the raw credential ID bytes are available. |
+| `GetByCredentialIDHash(hash string) (*Passkey, error)`                                              | Queries `WHERE credential_id_hash = $1` directly when the caller already has the hex hash.                                                                                                        |
+| `GetAllByUserID(userID string) ([]*Passkey, error)`                                                 | Lists all rows for user, decrypts each.                                                                                                                                                           |
+| `GetCountByUserID(userID string) int`                                                               | `SELECT COUNT(*)` — no decryption needed. Returns `int` (0 on error).                                                                                                                             |
+| `UpdateSignCount(p *Passkey) error`                                                                 | Updates the unencrypted `sign_count` column using `p.ID` and `p.SignCount`.                                                                                                                       |
+| `UpdateLastUsedAt(p *Passkey) error`                                                                | Sets `last_used_at = NOW()` for the given passkey.                                                                                                                                                |
+| `UpdateName(p *Passkey) error`                                                                      | Updates the unencrypted `name` column using `p.ID` and `p.Name`.                                                                                                                                  |
+| `Delete(p *Passkey) error`                                                                          | Removes a single passkey row.                                                                                                                                                                     |
+| `DeleteAllByUserID(userID string) error`                                                            | Removes all passkey rows for a user.                                                                                                                                                              |
+| `ToWebAuthnCredential() (*webauthn.Credential, error)`                                              | Helper method on `*Passkey` — decrypts fields and reconstructs a `webauthn.Credential` for use in ceremonies.                                                                                     |
+| `NewPasskeyFromCredential(userID string, cred *webauthn.Credential, name string) (*Passkey, error)` | Package-level constructor — wraps a freshly minted `webauthn.Credential` in a `Passkey` ready for `Create()`.                                                                                     |
 
 ### 4.4 New AuthState Types
 
 Add three new `AuthStateType` constants for the WebAuthn challenge/response lifecycle:
 
-| Constant | Value | Purpose | Payload | Expiry |
-|----------|-------|---------|---------|--------|
-| `AuthPasskeyRegistration` | 10 | Passkey registration ceremony | JSON: `webauthn.SessionData` | 5 min |
-| `AuthPasskeyLogin` | 11 | Passkey authentication ceremony (passwordless) | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — encrypted with AES-256-GCM before storage | 5 min |
-| `AuthPasskey2FA` | 12 | Passkey 2FA challenge after password login | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — encrypted with AES-256-GCM before storage | 5 min |
+| Constant                  | Value | Purpose                                        | Payload                                                                                                  | Expiry |
+| ------------------------- | ----- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
+| `AuthPasskeyRegistration` | 10    | Passkey registration ceremony                  | JSON: `webauthn.SessionData`                                                                             | 5 min  |
+| `AuthPasskeyLogin`        | 11    | Passkey authentication ceremony (passwordless) | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — encrypted with AES-256-GCM before storage | 5 min  |
+| `AuthPasskey2FA`          | 12    | Passkey 2FA challenge after password login     | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — encrypted with AES-256-GCM before storage | 5 min  |
 
 Using **distinct** state types for the passwordless and 2FA flows prevents cross-flow state reuse: a state created by `beginPasskeyLogin` (type 11) cannot be consumed by the 2FA path (which requires type 12), and vice versa.
 
@@ -248,10 +249,10 @@ Add the [`github.com/go-webauthn/webauthn`](https://github.com/go-webauthn/webau
 
 Add to `config.go`:
 
-| Env Variable | Default | Description |
-|-------|---------|-------------|
-| `WEBAUTHN_RP_DISPLAY_NAME` | `"Seatsurfing"` | Human-readable RP display name shown in passkey prompts. |
-| `MAX_PASSKEYS_PER_USER` | `10` | Maximum number of passkeys a single user may register. Must be ≥ 1; values below 1 are reset to the default. |
+| Env Variable               | Default         | Description                                                                                                  |
+| -------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ |
+| `WEBAUTHN_RP_DISPLAY_NAME` | `"Seatsurfing"` | Human-readable RP display name shown in passkey prompts.                                                     |
+| `MAX_PASSKEYS_PER_USER`    | `10`            | Maximum number of passkeys a single user may register. Must be ≥ 1; values below 1 are reset to the default. |
 
 The RP ID and allowed origin are **always derived from the organisation's primary domain** (looked up via `GetOrganizationRepository().GetPrimaryDomain(org)`) and are **not configurable via environment variables**. This is the correct approach for a multi-tenant service: each organisation's passkeys are bound to its own domain, preventing credential reuse across organisations.
 
@@ -298,6 +299,7 @@ These endpoints are added to the `UserRouter` (same router as TOTP endpoints). A
 List all passkeys for the authenticated user.
 
 **Response** `200 OK`:
+
 ```json
 [
   {
@@ -319,18 +321,23 @@ List all passkeys for the authenticated user.
 Start the WebAuthn registration ceremony.
 
 **Preconditions:**
+
 - User must have a password set (`HashedPassword != ""`).
 - User must not be an IdP user (`AuthProviderID` is null/empty).
 
 **Response** `200 OK`:
+
 ```json
 {
   "stateId": "uuid",
-  "challenge": { /* PublicKeyCredentialCreationOptions */ }
+  "challenge": {
+    /* PublicKeyCredentialCreationOptions */
+  }
 }
 ```
 
 The `options` object contains the standard WebAuthn `PublicKeyCredentialCreationOptions`, including:
+
 - `rp`: `{ id, name }`
 - `user`: `{ id, name, displayName }`
 - `challenge`: random challenge
@@ -343,6 +350,7 @@ The `options` object contains the standard WebAuthn `PublicKeyCredentialCreation
 **Server-side:** Creates an `AuthState` (type `AuthPasskeyRegistration`) containing the `webauthn.SessionData` serialized as JSON. The payload is encrypted with AES-256-GCM (`EncryptString()`) before being stored. Expiry: 5 minutes.
 
 **Error responses:**
+
 - `403 Forbidden` — user is IdP user, has no password, or has already reached the `MAX_PASSKEYS_PER_USER` limit.
 
 ---
@@ -352,19 +360,24 @@ The `options` object contains the standard WebAuthn `PublicKeyCredentialCreation
 Complete the WebAuthn registration ceremony.
 
 **Request body:**
+
 ```json
 {
   "stateId": "uuid",
   "name": "MacBook Touch ID",
-  "credential": { /* AuthenticatorAttestationResponse */ }
+  "credential": {
+    /* AuthenticatorAttestationResponse */
+  }
 }
 ```
 
 **Validation:**
+
 - `name` is required, max 255 characters, and must not contain the characters `<`, `>`, `&`, `"`, `'`, or null bytes (returns `400 Bad Request`).
 - `stateId` must reference a valid, non-expired `AuthPasskeyRegistration` state owned by the user.
 
 **Server-side:**
+
 1. Load the `AuthState` and deserialize `webauthn.SessionData`.
 2. Call `webauthn.FinishRegistration()` with the credential response.
 3. On success: create a `Passkey` record in the database.
@@ -372,6 +385,7 @@ Complete the WebAuthn registration ceremony.
 5. Return `200 OK` with the new passkey record as JSON.
 
 **Response** `200 OK`:
+
 ```json
 {
   "id": "uuid",
@@ -381,6 +395,7 @@ Complete the WebAuthn registration ceremony.
 ```
 
 **Error responses:**
+
 - `400 Bad Request` — invalid credential or invalid name.
 - `404 Not Found` — state ID not found or expired.
 
@@ -391,6 +406,7 @@ Complete the WebAuthn registration ceremony.
 Rename an existing passkey.
 
 **Request body:**
+
 ```json
 {
   "name": "Office YubiKey"
@@ -398,12 +414,14 @@ Rename an existing passkey.
 ```
 
 **Validation:**
+
 - Passkey must belong to the authenticated user.
 - `name` is required, max 255 characters, and must not contain `<`, `>`, `&`, `"`, `'`, or null bytes.
 
 **Response** `204 No Content` (via `SendUpdated()`).
 
 **Error responses:**
+
 - `400 Bad Request` — missing or invalid name.
 - `403 Forbidden` — passkey belongs to a different user.
 - `404 Not Found` — passkey not found.
@@ -415,6 +433,7 @@ Rename an existing passkey.
 Delete a passkey.
 
 **Validation:**
+
 - Passkey must belong to the authenticated user.
 - If `enforce_totp` is enabled and this is the user's last passkey and TOTP is not configured → `403 Forbidden` (deleting would leave the user without a second factor, violating the enforcement policy).
 
@@ -431,6 +450,7 @@ These endpoints are added to the `AuthRouter` and whitelisted in the auth middle
 Start a passwordless passkey authentication ceremony.
 
 **Request body:**
+
 ```json
 {
   "organizationId": "uuid"
@@ -440,14 +460,18 @@ Start a passwordless passkey authentication ceremony.
 `organizationId` is **required**. It is used to look up the organisation's primary domain, which defines the WebAuthn Relying Party ID and allowed origin for the ceremony.
 
 **Response** `200 OK`:
+
 ```json
 {
   "stateId": "uuid",
-  "challenge": { /* PublicKeyCredentialRequestOptions */ }
+  "challenge": {
+    /* PublicKeyCredentialRequestOptions */
+  }
 }
 ```
 
 The `options` object contains:
+
 - `challenge`: random challenge
 - `rpId`: the RP ID
 - `userVerification`: `"required"`
@@ -459,6 +483,7 @@ The `options` object contains:
 No user identification is needed at this stage (discoverable credentials).
 
 **Prerequisites and protection:**
+
 - `CanCrypt()` must return `true` (i.e., `CRYPT_KEY` must be configured). If not, the endpoint returns `500 Internal Server Error` immediately.
 - The endpoint is **rate-limited** to **10 requests per minute per client IP** (using `ulule/limiter` with an in-memory store). Clients that exceed the limit receive `429 Too Many Requests`. The client IP is extracted with `X-Forwarded-For` support for deployments behind a reverse proxy.
 
@@ -469,14 +494,18 @@ No user identification is needed at this stage (discoverable credentials).
 Complete a passwordless passkey authentication ceremony.
 
 **Request body:**
+
 ```json
 {
   "stateId": "uuid",
-  "credential": { /* AuthenticatorAssertionResponse */ }
+  "credential": {
+    /* AuthenticatorAssertionResponse */
+  }
 }
 ```
 
 **Server-side:**
+
 1. Load the `AuthState` and deserialize `webauthn.SessionData`.
 2. The credential response contains the `userHandle` (= `WebAuthnID()` = user UUID).
 3. Look up the user by the `userHandle`.
@@ -497,6 +526,7 @@ Complete a passwordless passkey authentication ceremony.
 14. Return `200 OK` with `{ accessToken, refreshToken }`.
 
 **Error responses:**
+
 - `400 Bad Request` — invalid assertion.
 - `401 Unauthorized` — user is disabled/banned.
 - `404 Not Found` — state not found, expired, or user not found.
@@ -506,6 +536,7 @@ Complete a passwordless passkey authentication ceremony.
 To prevent a timing side-channel that could confirm whether a credential exists in the database, `finishPasskeyLogin` enforces a **minimum response time of 100 ms** via a deferred timer. This equalises the response time for the not-found path (single DB query) and the found path (multiple DB queries).
 
 **Brute-force protection:**
+
 - Failed passkey login attempts are recorded via `AuthAttemptRepository.RecordLoginAttempt(user, false)`.
 - The existing brute-force rate-limiting/banning logic applies.
 
@@ -516,6 +547,7 @@ To prevent a timing side-channel that could confirm whether a credential exists 
 The existing `POST /auth/login` (`loginPassword`) handler is modified:
 
 **Current behavior (unchanged for users without passkeys):**
+
 1. Verify username + password.
 2. If TOTP is configured and no `code` provided → respond `401`.
 3. If TOTP `code` provided → verify it.
@@ -534,7 +566,9 @@ After successful password verification:
        {
          "requirePasskey": true,
          "stateId": "uuid",
-         "passkeyChallenge": { /* PublicKeyCredentialRequestOptions */ },
+         "passkeyChallenge": {
+           /* PublicKeyCredentialRequestOptions */
+         },
          "allowTotpFallback": true
        }
        ```
@@ -544,6 +578,7 @@ After successful password verification:
 4. **TOTP fallback:** If the request contains a `code` field (TOTP code) and the user has both passkeys and TOTP configured, TOTP verification is still accepted. This allows users to fall back to TOTP when their passkey device is unavailable.
 
 **Modified request body** (`AuthPasswordRequest`):
+
 ```go
 type AuthPasswordRequest struct {
     Email              string `json:"email"`
@@ -589,15 +624,15 @@ Set `HasPasskeys = GetPasskeyRepository().GetCountByUserID(user.ID) > 0`.
 
 ### 5.8 Route Summary
 
-| Method | Path | Auth | Purpose |
-|--------|------|------|---------|
-| `GET` | `/user/passkey/` | JWT | List user's passkeys |
-| `POST` | `/user/passkey/registration/begin` | JWT | Start passkey registration |
-| `POST` | `/user/passkey/registration/finish` | JWT | Complete passkey registration |
-| `PUT` | `/user/passkey/{id}` | JWT | Rename a passkey |
-| `DELETE` | `/user/passkey/{id}` | JWT | Delete a passkey |
-| `POST` | `/auth/passkey/login/begin` | None | Start passwordless login |
-| `POST` | `/auth/passkey/login/finish` | None | Complete passwordless login |
+| Method   | Path                                | Auth | Purpose                       |
+| -------- | ----------------------------------- | ---- | ----------------------------- |
+| `GET`    | `/user/passkey/`                    | JWT  | List user's passkeys          |
+| `POST`   | `/user/passkey/registration/begin`  | JWT  | Start passkey registration    |
+| `POST`   | `/user/passkey/registration/finish` | JWT  | Complete passkey registration |
+| `PUT`    | `/user/passkey/{id}`                | JWT  | Rename a passkey              |
+| `DELETE` | `/user/passkey/{id}`                | JWT  | Delete a passkey              |
+| `POST`   | `/auth/passkey/login/begin`         | None | Start passwordless login      |
+| `POST`   | `/auth/passkey/login/finish`        | None | Complete passwordless login   |
 
 Unauthenticated routes (`/auth/passkey/*`) must be added to the whitelist in `unauthorized-routes.go`.
 
@@ -617,6 +652,7 @@ Add a **"Sign in with passkey"** button on the login page. This button is:
 - **Not** gated by `disablePasswordLogin` — passkey login is independent (though passkeys can only be registered by password users).
 
 **Flow:**
+
 1. User clicks "Sign in with passkey".
 2. Frontend calls `POST /auth/passkey/login/begin` with `{ organizationId }`.
 3. Frontend calls `navigator.credentials.get()` with the received options.
@@ -679,7 +715,7 @@ Add to `RuntimeUserInfos`:
 interface RuntimeUserInfos {
   // ... existing fields ...
   totpEnabled: boolean;
-  hasPasskeys: boolean;  // NEW
+  hasPasskeys: boolean; // NEW
   enforceTOTP: boolean;
 }
 ```
@@ -721,30 +757,30 @@ interface PasskeyInfo {
 
 Add translation keys for all supported languages. English keys include:
 
-| Key | Value |
-|-----|-------|
-| `passkey` | Passkey |
-| `passkeys` | Passkeys |
-| `passkeyDescription` | Sign in securely without a password using biometrics or a security key. |
-| `addPasskey` | Add passkey |
-| `namePasskey` | Name this passkey |
-| `passkeyNamePlaceholder` | e.g., MacBook Touch ID |
-| `renamePasskey` | Rename passkey |
-| `deletePasskey` | Delete passkey |
-| `deletePasskeyConfirm` | Are you sure you want to delete the passkey "{name}"? |
-| `passkeyRegistered` | Passkey registered successfully. |
-| `passkeyDeleted` | Passkey deleted. |
-| `passkeyRenamed` | Passkey renamed. |
-| `passkeyLoginFailed` | Passkey login failed. Please try again or use another login method. |
-| `passkeyRequired` | Please verify your identity with a passkey. |
-| `passkeyFallbackToTotp` | Use authenticator code instead |
-| `signInWithPasskey` | Sign in with passkey |
-| `noPasskeys` | No passkeys registered yet. |
-| `lastUsed` | Last used |
-| `neverUsed` | Never used |
-| `passkeyNotSupported` | Your browser does not support passkeys. |
-| `passkeyEnforcementMessage` | Your organization requires a second factor. Set up an authenticator app or register a passkey. |
-| `passkeyCannotDeleteLast` | Cannot delete the last passkey while second-factor enforcement is active. Set up an authenticator app first or add another passkey. |
+| Key                         | Value                                                                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `passkey`                   | Passkey                                                                                                                             |
+| `passkeys`                  | Passkeys                                                                                                                            |
+| `passkeyDescription`        | Sign in securely without a password using biometrics or a security key.                                                             |
+| `addPasskey`                | Add passkey                                                                                                                         |
+| `namePasskey`               | Name this passkey                                                                                                                   |
+| `passkeyNamePlaceholder`    | e.g., MacBook Touch ID                                                                                                              |
+| `renamePasskey`             | Rename passkey                                                                                                                      |
+| `deletePasskey`             | Delete passkey                                                                                                                      |
+| `deletePasskeyConfirm`      | Are you sure you want to delete the passkey "{name}"?                                                                               |
+| `passkeyRegistered`         | Passkey registered successfully.                                                                                                    |
+| `passkeyDeleted`            | Passkey deleted.                                                                                                                    |
+| `passkeyRenamed`            | Passkey renamed.                                                                                                                    |
+| `passkeyLoginFailed`        | Passkey login failed. Please try again or use another login method.                                                                 |
+| `passkeyRequired`           | Please verify your identity with a passkey.                                                                                         |
+| `passkeyFallbackToTotp`     | Use authenticator code instead                                                                                                      |
+| `signInWithPasskey`         | Sign in with passkey                                                                                                                |
+| `noPasskeys`                | No passkeys registered yet.                                                                                                         |
+| `lastUsed`                  | Last used                                                                                                                           |
+| `neverUsed`                 | Never used                                                                                                                          |
+| `passkeyNotSupported`       | Your browser does not support passkeys.                                                                                             |
+| `passkeyEnforcementMessage` | Your organization requires a second factor. Set up an authenticator app or register a passkey.                                      |
+| `passkeyCannotDeleteLast`   | Cannot delete the last passkey while second-factor enforcement is active. Set up an authenticator app first or add another passkey. |
 
 ---
 
@@ -839,26 +875,26 @@ Add tests in `server/repository/test/` for the passkey repository (CRUD operatio
 
 Add tests in the router test suite for:
 
-| Test Case | Description |
-|-----------|-------------|
-| Registration begin – valid | Authenticated user gets valid creation options. |
-| Registration begin – IdP user | Returns 403. |
-| Registration finish – valid | Credential is stored, state is deleted. |
-| Registration finish – expired state | Returns 404. |
-| Registration finish – duplicate name | Returns 400. |
-| Registration finish – rate limit | Returns 429 after 5 attempts. |
-| Passwordless login – valid | Full ceremony succeeds, tokens returned. |
-| Passwordless login – disabled user | Returns 401. |
-| Passwordless login – banned user | Returns 401. |
-| Passwordless login – clone detection | Returns error when sign count is suspicious. |
-| Password + passkey 2FA – valid | Password login with passkey assertion succeeds. |
-| Password + passkey 2FA – challenge returned | Password login returns 401 with passkey options. |
-| Password + TOTP fallback | User with both passkeys and TOTP can fall back to TOTP code. |
-| List passkeys | Returns passkey metadata (no secrets). |
-| Delete passkey | Removes passkey. |
-| Delete last passkey + enforce_totp | Returns 403. |
-| Rename passkey | Updates name. |
-| Rename passkey – duplicate name | Returns 400. |
+| Test Case                                   | Description                                                  |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| Registration begin – valid                  | Authenticated user gets valid creation options.              |
+| Registration begin – IdP user               | Returns 403.                                                 |
+| Registration finish – valid                 | Credential is stored, state is deleted.                      |
+| Registration finish – expired state         | Returns 404.                                                 |
+| Registration finish – duplicate name        | Returns 400.                                                 |
+| Registration finish – rate limit            | Returns 429 after 5 attempts.                                |
+| Passwordless login – valid                  | Full ceremony succeeds, tokens returned.                     |
+| Passwordless login – disabled user          | Returns 401.                                                 |
+| Passwordless login – banned user            | Returns 401.                                                 |
+| Passwordless login – clone detection        | Returns error when sign count is suspicious.                 |
+| Password + passkey 2FA – valid              | Password login with passkey assertion succeeds.              |
+| Password + passkey 2FA – challenge returned | Password login returns 401 with passkey options.             |
+| Password + TOTP fallback                    | User with both passkeys and TOTP can fall back to TOTP code. |
+| List passkeys                               | Returns passkey metadata (no secrets).                       |
+| Delete passkey                              | Removes passkey.                                             |
+| Delete last passkey + enforce_totp          | Returns 403.                                                 |
+| Rename passkey                              | Updates name.                                                |
+| Rename passkey – duplicate name             | Returns 400.                                                 |
 
 ### 9.2 Frontend Tests
 
@@ -901,27 +937,27 @@ The database migration (schema version 37) adds the `passkeys` table. No data mi
 
 ### New Files
 
-| File | Description |
-|------|-------------|
-| `server/repository/passkey-repository.go` | Passkey data access layer. |
-| `server/router/passkey-router.go` | Authenticated passkey management endpoints. |
-| `ui/src/components/PasskeySettings.tsx` | Passkey management UI component. |
-| `ui/src/types/Passkey.ts` | Passkey TypeScript type and API methods. |
+| File                                      | Description                                 |
+| ----------------------------------------- | ------------------------------------------- |
+| `server/repository/passkey-repository.go` | Passkey data access layer.                  |
+| `server/router/passkey-router.go`         | Authenticated passkey management endpoints. |
+| `ui/src/components/PasskeySettings.tsx`   | Passkey management UI component.            |
+| `ui/src/types/Passkey.ts`                 | Passkey TypeScript type and API methods.    |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `server/go.mod` | Add `github.com/go-webauthn/webauthn` dependency. |
-| `server/config/config.go` | Add `WEBAUTHN_RP_DISPLAY_NAME` and `MAX_PASSKEYS_PER_USER` configuration fields. (`WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGINS` are not used — the RP ID and origin are always derived from the org's primary domain.) |
-| `server/repository/db-updates.go` | Increment `targetVersion` to 37; register `GetPasskeyRepository()`. |
-| `server/repository/auth-state-repository.go` | Add `AuthPasskeyRegistration` (10), `AuthPasskeyLogin` (11), and `AuthPasskey2FA` (12) state types. |
-| `server/router/auth-router.go` | Add `/auth/passkey/login/begin` and `/auth/passkey/login/finish` routes; modify `loginPassword` to support passkey as second factor. |
-| `server/router/user-router.go` | Add `HasPasskeys` to `GetUserResponse`; register passkey management routes. |
-| `server/router/unauthorized-routes.go` | Whitelist `/auth/passkey/` routes. |
-| `ui/src/components/RuntimeConfig.ts` | Add `hasPasskeys` to `RuntimeUserInfos`. |
-| `ui/src/types/User.ts` | Add `hasPasskeys` field; add passkey API methods. |
-| `ui/src/pages/login/index.tsx` | Add "Sign in with a passkey" button; handle passkey 2FA challenge. |
-| `ui/src/pages/preferences.tsx` | Add `PasskeySettings` component to Security tab. |
-| `ui/src/pages/_app.tsx` | Update enforcement check to include `hasPasskeys`. |
-| `ui/i18n/*.json` | Add passkey-related translation strings. |
+| File                                         | Change                                                                                                                                                                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server/go.mod`                              | Add `github.com/go-webauthn/webauthn` dependency.                                                                                                                                                                   |
+| `server/config/config.go`                    | Add `WEBAUTHN_RP_DISPLAY_NAME` and `MAX_PASSKEYS_PER_USER` configuration fields. (`WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGINS` are not used — the RP ID and origin are always derived from the org's primary domain.) |
+| `server/repository/db-updates.go`            | Increment `targetVersion` to 37; register `GetPasskeyRepository()`.                                                                                                                                                 |
+| `server/repository/auth-state-repository.go` | Add `AuthPasskeyRegistration` (10), `AuthPasskeyLogin` (11), and `AuthPasskey2FA` (12) state types.                                                                                                                 |
+| `server/router/auth-router.go`               | Add `/auth/passkey/login/begin` and `/auth/passkey/login/finish` routes; modify `loginPassword` to support passkey as second factor.                                                                                |
+| `server/router/user-router.go`               | Add `HasPasskeys` to `GetUserResponse`; register passkey management routes.                                                                                                                                         |
+| `server/router/unauthorized-routes.go`       | Whitelist `/auth/passkey/` routes.                                                                                                                                                                                  |
+| `ui/src/components/RuntimeConfig.ts`         | Add `hasPasskeys` to `RuntimeUserInfos`.                                                                                                                                                                            |
+| `ui/src/types/User.ts`                       | Add `hasPasskeys` field; add passkey API methods.                                                                                                                                                                   |
+| `ui/src/pages/login/index.tsx`               | Add "Sign in with a passkey" button; handle passkey 2FA challenge.                                                                                                                                                  |
+| `ui/src/pages/preferences.tsx`               | Add `PasskeySettings` component to Security tab.                                                                                                                                                                    |
+| `ui/src/pages/_app.tsx`                      | Update enforcement check to include `hasPasskeys`.                                                                                                                                                                  |
+| `ui/i18n/*.json`                             | Add passkey-related translation strings.                                                                                                                                                                            |
