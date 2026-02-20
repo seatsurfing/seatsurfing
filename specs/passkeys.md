@@ -851,7 +851,7 @@ Add Playwright tests in `e2e/tests/` covering:
 
 ### 10.1 Feature Flag
 
-No feature flag is required. Passkeys are opt-in per user (users must explicitly register a passkey). The "Sign in with passkey" button appears only when the browser supports WebAuthn.
+No feature flag is required. Passkeys are opt-in per user (users must explicitly register a passkey). The "Sign in with a passkey" button appears only when the browser supports WebAuthn.
 
 ### 10.2 Migration
 
@@ -889,7 +889,7 @@ The database migration (schema version 37) adds the `passkeys` table. No data mi
 | `server/router/unauthorized-routes.go` | Whitelist `/auth/passkey/` routes. |
 | `ui/src/components/RuntimeConfig.ts` | Add `hasPasskeys` to `RuntimeUserInfos`. |
 | `ui/src/types/User.ts` | Add `hasPasskeys` field; add passkey API methods. |
-| `ui/src/pages/login/index.tsx` | Add "Sign in with passkey" button; handle passkey 2FA challenge. |
+| `ui/src/pages/login/index.tsx` | Add "Sign in with a passkey" button; handle passkey 2FA challenge. |
 | `ui/src/pages/preferences.tsx` | Add `PasskeySettings` component to Security tab. |
 | `ui/src/pages/_app.tsx` | Update enforcement check to include `hasPasskeys`. |
 | `ui/i18n/*.json` | Add passkey-related translation strings. |
