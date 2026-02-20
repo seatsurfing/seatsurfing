@@ -59,6 +59,7 @@ type Config struct {
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
 	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
+	MaxPasskeysPerUser                  int // Maximum number of passkeys a single user may register
 }
 
 var _configInstance *Config
@@ -166,6 +167,11 @@ func (c *Config) ReadConfig() {
 		c.MaxSessionsPerUser = 10
 	}
 	c.WebAuthnRPDisplayName = c.getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Seatsurfing")
+	c.MaxPasskeysPerUser = c.getEnvInt("MAX_PASSKEYS_PER_USER", 10)
+	if c.MaxPasskeysPerUser < 1 {
+		log.Println("Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
+		c.MaxPasskeysPerUser = 10
+	}
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {

@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gorilla/mux"
+	limiter "github.com/ulule/limiter/v3"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -19,6 +23,62 @@ import (
 
 const passkeyAuthStateZeroID = "00000000-0000-0000-0000-000000000000"
 const passkeyAuthStateExpiry = 5 * time.Minute
+
+// passkeyMinResponseTime is the minimum duration enforced for finishPasskeyLogin
+// responses to mitigate credential-existence timing side-channels (Finding #12).
+const passkeyMinResponseTime = 100 * time.Millisecond
+
+var passkeyLoginLimiter *limiter.Limiter
+var passkeyLoginLimiterOnce sync.Once
+
+// getPasskeyLoginRateLimiter returns a singleton per-IP rate limiter for the
+// beginPasskeyLogin endpoint: at most 10 requests per minute per IP (Finding #2).
+func getPasskeyLoginRateLimiter() *limiter.Limiter {
+	passkeyLoginLimiterOnce.Do(func() {
+		store := memory.NewStore()
+		passkeyLoginLimiter = limiter.New(store, limiter.Rate{
+			Period: 1 * time.Minute,
+			Limit:  10,
+		}, limiter.WithTrustForwardHeader(true))
+	})
+	return passkeyLoginLimiter
+}
+
+// getRequestIP extracts the client IP from the request, honoring
+// X-Forwarded-For headers set by trusted reverse proxies.
+func getRequestIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		parts := strings.SplitN(xff, ",", 2)
+		return strings.TrimSpace(parts[0])
+	}
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
+}
+
+// encryptPasskeyPayload encrypts a passkey state payload using AES-256-GCM so
+// that challenge material is not stored in plaintext in the database (Finding #1).
+func encryptPasskeyPayload(payload string) (string, error) {
+	return EncryptString(payload)
+}
+
+// decryptPasskeyPayload decrypts a passkey state payload. If decryption fails
+// it falls back to treating the value as plaintext, providing backward
+// compatibility with states created before encryption was added (Finding #1).
+func decryptPasskeyPayload(payload string) string {
+	if decrypted, err := DecryptString(payload); err == nil {
+		return decrypted
+	}
+	return payload
+}
+
+// isValidPasskeyName returns false if the name contains characters that could
+// be used for HTML injection or log injection (Finding #6).
+func isValidPasskeyName(name string) bool {
+	return !strings.ContainsAny(name, "<>&\"'\x00")
+}
 
 // BeginPasskeyLoginRequest is the body accepted by beginPasskeyLogin.
 type BeginPasskeyLoginRequest struct {
@@ -187,6 +247,11 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 		SendForbidden(w)
 		return
 	}
+	// Enforce per-user passkey limit (Finding #4)
+	if GetPasskeyRepository().GetCountByUserID(user.ID) >= GetConfig().MaxPasskeysPerUser {
+		SendForbidden(w)
+		return
+	}
 	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
 	if err != nil {
 		log.Println(err)
@@ -228,11 +293,17 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 		SendInternalServerError(w)
 		return
 	}
+	encryptedSD, err := encryptPasskeyPayload(string(sdJSON))
+	if err != nil {
+		log.Println("encryptPasskeyPayload error:", err)
+		SendInternalServerError(w)
+		return
+	}
 	state := &AuthState{
 		AuthProviderID: user.ID,
 		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
 		AuthStateType:  AuthPasskeyRegistration,
-		Payload:        string(sdJSON),
+		Payload:        encryptedSD,
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)
@@ -257,6 +328,11 @@ func (router *UserRouter) finishPasskeyRegistration(w http.ResponseWriter, r *ht
 	}
 	var m FinishPasskeyRegistrationRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	// Reject names containing characters that could be used for injection (Finding #6)
+	if !isValidPasskeyName(m.Name) {
 		SendBadRequest(w)
 		return
 	}
@@ -287,7 +363,7 @@ func (router *UserRouter) finishPasskeyRegistration(w http.ResponseWriter, r *ht
 		return
 	}
 	var sessionData webauthn.SessionData
-	if err := json.Unmarshal([]byte(state.Payload), &sessionData); err != nil {
+	if err := json.Unmarshal([]byte(decryptPasskeyPayload(state.Payload)), &sessionData); err != nil {
 		log.Println("unmarshal session data error:", err)
 		SendInternalServerError(w)
 		return
@@ -355,6 +431,11 @@ func (router *UserRouter) renamePasskey(w http.ResponseWriter, r *http.Request) 
 		SendBadRequest(w)
 		return
 	}
+	// Reject names containing characters that could be used for injection (Finding #6)
+	if !isValidPasskeyName(m.Name) {
+		SendBadRequest(w)
+		return
+	}
 	pk.Name = m.Name
 	if err := GetPasskeyRepository().UpdateName(pk); err != nil {
 		log.Println(err)
@@ -403,9 +484,21 @@ func (router *UserRouter) deletePasskey(w http.ResponseWriter, r *http.Request) 
 // ---------------------------------------------------------------------------
 
 func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+	// Encryption must be available to securely store the challenge (Finding #1)
+	if !CanCrypt() {
+		SendInternalServerError(w)
+		return
+	}
 	var m BeginPasskeyLoginRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
+		return
+	}
+	// Per-IP rate limiting to prevent DoS via challenge state exhaustion (Finding #2)
+	ip := getRequestIP(r)
+	limCtx, limErr := getPasskeyLoginRateLimiter().Get(r.Context(), ip)
+	if limErr == nil && limCtx.Reached {
+		http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
 		return
 	}
 	org, err := GetOrganizationRepository().GetOne(m.OrganizationID)
@@ -436,11 +529,17 @@ func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
+	encryptedPayload, err := encryptPasskeyPayload(string(statePayload))
+	if err != nil {
+		log.Println("encryptPasskeyPayload error:", err)
+		SendInternalServerError(w)
+		return
+	}
 	state := &AuthState{
 		AuthProviderID: passkeyAuthStateZeroID,
 		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
 		AuthStateType:  AuthPasskeyLogin,
-		Payload:        string(statePayload),
+		Payload:        encryptedPayload,
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)
@@ -454,6 +553,14 @@ func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Reque
 }
 
 func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+	// Enforce a minimum response time to mitigate credential-existence
+	// timing side-channels in the DiscoverableUserHandler (Finding #12).
+	start := time.Now()
+	defer func() {
+		if elapsed := time.Since(start); elapsed < passkeyMinResponseTime {
+			time.Sleep(passkeyMinResponseTime - elapsed)
+		}
+	}()
 	var m FinishPasskeyLoginRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -476,7 +583,7 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 	GetAuthStateRepository().Delete(state)
 
 	var sp passkeyLoginStatePayload
-	if err := json.Unmarshal([]byte(state.Payload), &sp); err != nil {
+	if err := json.Unmarshal([]byte(decryptPasskeyPayload(state.Payload)), &sp); err != nil {
 		log.Println("unmarshal state payload error:", err)
 		SendInternalServerError(w)
 		return
@@ -648,7 +755,7 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
-		if state.AuthStateType != AuthPasskeyLogin {
+		if state.AuthStateType != AuthPasskey2FA {
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
@@ -665,7 +772,7 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		GetAuthStateRepository().Delete(state)
 
 		var sp2fa passkeyLoginStatePayload
-		if err := json.Unmarshal([]byte(state.Payload), &sp2fa); err != nil {
+		if err := json.Unmarshal([]byte(decryptPasskeyPayload(state.Payload)), &sp2fa); err != nil {
 			log.Println("unmarshal state payload error:", err)
 			SendInternalServerError(w)
 			return passkey2FAHandled
@@ -697,9 +804,16 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
-		// Update sign count + last used
+		// Clone detection – same check as the discoverable login path (Finding #3)
 		pk, err := GetPasskeyRepository().GetByCredentialIDRaw(credential.ID)
 		if err == nil && pk != nil {
+			if pk.SignCount > 0 && credential.Authenticator.SignCount <= pk.SignCount {
+				log.Printf("Warning: clone detection triggered for passkey %s (user %s): stored=%d, returned=%d\n",
+					pk.ID, user.ID, pk.SignCount, credential.Authenticator.SignCount)
+				GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+				SendNotFound(w)
+				return passkey2FAHandled
+			}
 			pk.SignCount = credential.Authenticator.SignCount
 			GetPasskeyRepository().UpdateSignCount(pk)
 			GetPasskeyRepository().UpdateLastUsedAt(pk)
@@ -749,11 +863,17 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		SendInternalServerError(w)
 		return passkey2FAHandled
 	}
+	encryptedChallenge, err := encryptPasskeyPayload(string(challengePayload))
+	if err != nil {
+		log.Println("encryptPasskeyPayload error:", err)
+		SendInternalServerError(w)
+		return passkey2FAHandled
+	}
 	state := &AuthState{
 		AuthProviderID: user.ID,
 		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
-		AuthStateType:  AuthPasskeyLogin,
-		Payload:        string(challengePayload),
+		AuthStateType:  AuthPasskey2FA,
+		Payload:        encryptedChallenge,
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)

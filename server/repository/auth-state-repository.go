@@ -22,6 +22,7 @@ const (
 	AuthInviteUser           AuthStateType = 9  // used for user invitation to set initial password
 	AuthPasskeyRegistration  AuthStateType = 10 // used for WebAuthn passkey registration ceremony
 	AuthPasskeyLogin         AuthStateType = 11 // used for WebAuthn passkey authentication ceremony
+	AuthPasskey2FA           AuthStateType = 12 // used for WebAuthn passkey as second factor after password login
 )
 
 type AuthState struct {

@@ -138,8 +138,27 @@ export function serializeAssertionResponse(cred: PublicKeyCredential): object {
 // ---------------------------------------------------------------------------
 
 export default class Passkey {
+  /**
+   * Quick synchronous check: is the WebAuthn API present in this browser?
+   * Use isPlatformAuthAvailable() for a more accurate asynchronous check
+   * that also verifies a user-verifying platform authenticator is enrolled.
+   */
   static isSupported(): boolean {
     return typeof window !== "undefined" && !!window.PublicKeyCredential;
+  }
+
+  /**
+   * Asynchronous check that returns true only when the WebAuthn API is
+   * present AND a user-verifying platform authenticator (Touch ID, Face ID,
+   * Windows Hello, etc.) is available (Finding #14).
+   */
+  static async isPlatformAuthAvailable(): Promise<boolean> {
+    if (!Passkey.isSupported()) return false;
+    try {
+      return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    } catch {
+      return false;
+    }
   }
 
   static async list(): Promise<PasskeyListItem[]> {

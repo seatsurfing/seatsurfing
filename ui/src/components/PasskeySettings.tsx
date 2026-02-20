@@ -14,6 +14,7 @@ interface State {
   registering: boolean;
   newName: string;
   error: string;
+  passkeyPlatformAvailable: boolean;
 }
 
 interface Props {
@@ -32,6 +33,8 @@ class PasskeySettings extends React.Component<Props, State> {
       registering: false,
       newName: "",
       error: "",
+      // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
+      passkeyPlatformAvailable: Passkey.isSupported(),
     };
   }
 
@@ -39,6 +42,10 @@ class PasskeySettings extends React.Component<Props, State> {
     if (!this.props.hidden) {
       this.loadPasskeys();
     }
+    // Refine the platform authenticator availability check asynchronously (Finding #14)
+    Passkey.isPlatformAuthAvailable().then((available) =>
+      this.setState({ passkeyPlatformAvailable: available })
+    );
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -48,7 +55,7 @@ class PasskeySettings extends React.Component<Props, State> {
   }
 
   loadPasskeys = () => {
-    if (!Passkey.isSupported()) {
+    if (!this.state.passkeyPlatformAvailable) {
       this.setState({ loading: false });
       return;
     }
@@ -114,7 +121,7 @@ class PasskeySettings extends React.Component<Props, State> {
   };
 
   render() {
-    if (!Passkey.isSupported()) {
+    if (!this.state.passkeyPlatformAvailable) {
       return null;
     }
     const { passkeys, loading, registering, newName, error } = this.state;

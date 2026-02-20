@@ -410,7 +410,7 @@ func TestPasswordLoginPasskeyWrongUser(t *testing.T) {
 
 	state := &AuthState{
 		AuthProviderID: user1.ID,
-		AuthStateType:  AuthPasskeyLogin,
+		AuthStateType:  AuthPasskey2FA,
 		Expiry:         time.Now().Add(5 * time.Minute),
 		Payload:        `{}`,
 	}

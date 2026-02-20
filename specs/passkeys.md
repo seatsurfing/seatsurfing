@@ -224,12 +224,15 @@ func hashCredentialID(credentialID []byte) string {
 
 ### 4.4 New AuthState Types
 
-Add two new `AuthStateType` constants for the WebAuthn challenge/response lifecycle:
+Add three new `AuthStateType` constants for the WebAuthn challenge/response lifecycle:
 
 | Constant | Value | Purpose | Payload | Expiry |
 |----------|-------|---------|---------|--------|
 | `AuthPasskeyRegistration` | 10 | Passkey registration ceremony | JSON: `webauthn.SessionData` | 5 min |
-| `AuthPasskeyLogin` | 11 | Passkey authentication ceremony | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — the organisation ID is stored alongside the session data so the correct WebAuthn instance (keyed to the org's primary domain) can be reconstructed when finishing the ceremony. | 5 min |
+| `AuthPasskeyLogin` | 11 | Passkey authentication ceremony (passwordless) | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — encrypted with AES-256-GCM before storage | 5 min |
+| `AuthPasskey2FA` | 12 | Passkey 2FA challenge after password login | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — encrypted with AES-256-GCM before storage | 5 min |
+
+Using **distinct** state types for the passwordless and 2FA flows prevents cross-flow state reuse: a state created by `beginPasskeyLogin` (type 11) cannot be consumed by the 2FA path (which requires type 12), and vice versa.
 
 These follow the existing `AuthState` pattern used by TOTP setup and OAuth flows.
 
@@ -248,6 +251,7 @@ Add to `config.go`:
 | Env Variable | Default | Description |
 |-------|---------|-------------|
 | `WEBAUTHN_RP_DISPLAY_NAME` | `"Seatsurfing"` | Human-readable RP display name shown in passkey prompts. |
+| `MAX_PASSKEYS_PER_USER` | `10` | Maximum number of passkeys a single user may register. Must be ≥ 1; values below 1 are reset to the default. |
 
 The RP ID and allowed origin are **always derived from the organisation's primary domain** (looked up via `GetOrganizationRepository().GetPrimaryDomain(org)`) and are **not configurable via environment variables**. This is the correct approach for a multi-tenant service: each organisation's passkeys are bound to its own domain, preventing credential reuse across organisations.
 
@@ -336,10 +340,10 @@ The `options` object contains the standard WebAuthn `PublicKeyCredentialCreation
 - `excludeCredentials`: list of the user's already-registered credential IDs (prevents re-registration).
 - `timeout`: 300000 (5 minutes)
 
-**Server-side:** Creates an `AuthState` (type `AuthPasskeyRegistration`) containing the `webauthn.SessionData` serialized as JSON. Expiry: 5 minutes.
+**Server-side:** Creates an `AuthState` (type `AuthPasskeyRegistration`) containing the `webauthn.SessionData` serialized as JSON. The payload is encrypted with AES-256-GCM (`EncryptString()`) before being stored. Expiry: 5 minutes.
 
 **Error responses:**
-- `403 Forbidden` — user is IdP user or has no password.
+- `403 Forbidden` — user is IdP user, has no password, or has already reached the `MAX_PASSKEYS_PER_USER` limit.
 
 ---
 
@@ -357,7 +361,7 @@ Complete the WebAuthn registration ceremony.
 ```
 
 **Validation:**
-- `name` is required, max 255 characters.
+- `name` is required, max 255 characters, and must not contain the characters `<`, `>`, `&`, `"`, `'`, or null bytes (returns `400 Bad Request`).
 - `stateId` must reference a valid, non-expired `AuthPasskeyRegistration` state owned by the user.
 
 **Server-side:**
@@ -395,7 +399,7 @@ Rename an existing passkey.
 
 **Validation:**
 - Passkey must belong to the authenticated user.
-- `name` is required, max 255 characters.
+- `name` is required, max 255 characters, and must not contain `<`, `>`, `&`, `"`, `'`, or null bytes.
 
 **Response** `204 No Content` (via `SendUpdated()`).
 
@@ -450,9 +454,13 @@ The `options` object contains:
 - `timeout`: 300000 (5 minutes)
 - `allowCredentials`: **empty** (discoverable credential flow — the authenticator selects the credential)
 
-**Server-side:** Creates an `AuthState` (type `AuthPasskeyLogin`). The payload JSON is `{ orgId: string, sessionData: webauthn.SessionData }` — the organisation ID is persisted so `finishPasskeyLogin` can reconstruct the same `webauthn.WebAuthn` instance (bound to the same primary domain) when verifying the assertion. Expiry: 5 minutes.
+**Server-side:** Creates an `AuthState` (type `AuthPasskeyLogin`). The payload JSON is `{ orgId: string, sessionData: webauthn.SessionData }` — the organisation ID is persisted so `finishPasskeyLogin` can reconstruct the same `webauthn.WebAuthn` instance (bound to the same primary domain) when verifying the assertion. The payload is encrypted with AES-256-GCM (`EncryptString()`) before being stored. Expiry: 5 minutes.
 
 No user identification is needed at this stage (discoverable credentials).
+
+**Prerequisites and protection:**
+- `CanCrypt()` must return `true` (i.e., `CRYPT_KEY` must be configured). If not, the endpoint returns `500 Internal Server Error` immediately.
+- The endpoint is **rate-limited** to **10 requests per minute per client IP** (using `ulule/limiter` with an in-memory store). Clients that exceed the limit receive `429 Too Many Requests`. The client IP is extracted with `X-Forwarded-For` support for deployments behind a reverse proxy.
 
 ---
 
@@ -492,6 +500,10 @@ Complete a passwordless passkey authentication ceremony.
 - `400 Bad Request` — invalid assertion.
 - `401 Unauthorized` — user is disabled/banned.
 - `404 Not Found` — state not found, expired, or user not found.
+- `429 Too Many Requests` — rate limit exceeded on `beginPasskeyLogin` (the ceremony cannot begin).
+
+**Timing protection:**
+To prevent a timing side-channel that could confirm whether a credential exists in the database, `finishPasskeyLogin` enforces a **minimum response time of 100 ms** via a deferred timer. This equalises the response time for the not-found path (single DB query) and the found path (multiple DB queries).
 
 **Brute-force protection:**
 - Failed passkey login attempts are recorded via `AuthAttemptRepository.RecordLoginAttempt(user, false)`.
@@ -545,6 +557,8 @@ type AuthPasswordRequest struct {
 
 **Decision logic after password verification:**
 
+> **State type note:** The passkey challenge `AuthState` created here uses type `AuthPasskey2FA` (not `AuthPasskeyLogin`). The 2FA finishing path validates incoming state IDs against `AuthPasskey2FA`, preventing a state generated by the passwordless flow from being consumed here.
+
 ```
 Has passkeys?
 ├── YES → Passkey assertion provided?
@@ -597,7 +611,7 @@ Unauthenticated routes (`/auth/passkey/*`) must be added to the whitelist in `un
 
 Add a **"Sign in with passkey"** button on the login page. This button is:
 
-- Displayed when the browser supports WebAuthn (`window.PublicKeyCredential` is available) **and** `PublicKeyCredential.isConditionalMediationAvailable()` or `isUserVerifyingPlatformAuthenticatorAvailable()` resolves to `true`.
+- Displayed when the browser supports WebAuthn (`window.PublicKeyCredential` is available) as a fast synchronous pre-check, refined by an asynchronous call to `PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()` on component mount. Both the login page and passkey settings component store the result in component state and use it to gate all passkey UI (`Passkey.isPlatformAuthAvailable()`).
 - Displayed **alongside** the existing login form (both the Auth Provider buttons and the username/password form).
 - Visually separated from other login methods (e.g., a divider with "or").
 - **Not** gated by `disablePasswordLogin` — passkey login is independent (though passkeys can only be registered by password users).
@@ -754,7 +768,7 @@ WebAuthn challenges (stored as `AuthState`) expire after **5 minutes**, consiste
 
 ### 7.5 Clone Detection
 
-The `signCount` is checked during authentication. If the returned sign count is not greater than the stored value (and the stored value is > 0), the login is rejected and a warning is logged. This detects cloned authenticators. (Note: Many modern platform authenticators always return `signCount = 0`, in which case clone detection is not applicable and should be skipped.)
+The `signCount` is checked during authentication in **both** the passwordless path (`finishPasskeyLogin`) and the 2FA path (`handlePasskey2FA`). If the returned sign count is not greater than the stored value (and the stored value is > 0), the login is rejected and a warning is logged. This detects cloned authenticators. (Note: Many modern platform authenticators always return `signCount = 0`, in which case clone detection is not applicable and should be skipped.)
 
 ### 7.6 Brute-Force Protection
 
@@ -775,11 +789,29 @@ Because `EncryptString()` uses a random nonce (non-deterministic), a separate `c
 
 While public keys are not secrets in the cryptographic sense (the private key never leaves the authenticator), encrypting them at rest provides defense-in-depth: a database breach does not reveal any credential material that could be used for targeted phishing, credential correlation across services, or authenticator fingerprinting via AAGUIDs.
 
-**Prerequisite:** `CRYPT_KEY` must be configured (32-byte key). The `CanCrypt()` function should be checked at startup; if it returns `false`, passkey registration endpoints must return an error. This is the same prerequisite as TOTP.
+**WebAuthn challenge payloads** (`AuthState.Payload` for types `AuthPasskeyRegistration`, `AuthPasskeyLogin`, and `AuthPasskey2FA`) are **also encrypted** with AES-256-GCM before being written to the `auth_states` table. Decryption includes a plaintext fallback for backward compatibility with any unencrypted states written before this hardening. This protects the WebAuthn session data (challenge, allowed credentials) from direct database reads.
+
+**Prerequisite:** `CRYPT_KEY` must be configured (32-byte key). The `CanCrypt()` function is checked at startup; if it returns `false`, passkey login (`beginPasskeyLogin`) returns `500 Internal Server Error`. This is the same prerequisite as TOTP.
 
 ### 7.9 Account Deletion
 
 When a user is deleted, all associated passkeys are automatically removed via the `ON DELETE CASCADE` foreign key constraint.
+
+### 7.10 Rate Limiting on Unauthenticated Endpoints
+
+The `POST /auth/passkey/login/begin` endpoint is unauthenticated and could otherwise be used to trigger unlimited database writes (one `AuthState` per request). To prevent this:
+
+- A **per-IP rate limiter** caps requests at **10 per minute**. The client IP is resolved using `X-Forwarded-For` headers (first trusted hop), falling back to `RemoteAddr` for direct connections.
+- Requests exceeding the limit receive `429 Too Many Requests`.
+- The rate limiter uses an **in-memory store** (no Redis dependency), suitable for single-instance deployments. Horizontal scaling would require a shared store.
+
+### 7.11 Input Validation on Passkey Names
+
+Passkey names are user-visible metadata displayed in the management UI. To prevent stored content that could be interpreted as markup in non-React contexts, names are validated on both `POST /user/passkey/registration/finish` and `PUT /user/passkey/{id}` to reject strings containing `<`, `>`, `&`, `"`, `'`, or null bytes. Invalid names return `400 Bad Request`.
+
+### 7.12 Per-User Credential Limit
+
+To prevent a compromised session from exhausting database storage or degrading credential-lookup performance, the number of passkeys a user may register is capped by `MAX_PASSKEYS_PER_USER` (default: 20, configurable via environment variable). `POST /user/passkey/registration/begin` returns `403 Forbidden` when the current count meets or exceeds the limit.
 
 ---
 
@@ -881,9 +913,9 @@ The database migration (schema version 37) adds the `passkeys` table. No data mi
 | File | Change |
 |------|--------|
 | `server/go.mod` | Add `github.com/go-webauthn/webauthn` dependency. |
-| `server/config/config.go` | Add `WEBAUTHN_RP_DISPLAY_NAME` configuration field. (`WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGINS` are not used — the RP ID and origin are always derived from the org's primary domain.) |
+| `server/config/config.go` | Add `WEBAUTHN_RP_DISPLAY_NAME` and `MAX_PASSKEYS_PER_USER` configuration fields. (`WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGINS` are not used — the RP ID and origin are always derived from the org's primary domain.) |
 | `server/repository/db-updates.go` | Increment `targetVersion` to 37; register `GetPasskeyRepository()`. |
-| `server/repository/auth-state-repository.go` | Add `AuthPasskeyRegistration` (10) and `AuthPasskeyLogin` (11) state types. |
+| `server/repository/auth-state-repository.go` | Add `AuthPasskeyRegistration` (10), `AuthPasskeyLogin` (11), and `AuthPasskey2FA` (12) state types. |
 | `server/router/auth-router.go` | Add `/auth/passkey/login/begin` and `/auth/passkey/login/finish` routes; modify `loginPassword` to support passkey as second factor. |
 | `server/router/user-router.go` | Add `HasPasskeys` to `GetUserResponse`; register passkey management routes. |
 | `server/router/unauthorized-routes.go` | Whitelist `/auth/passkey/` routes. |

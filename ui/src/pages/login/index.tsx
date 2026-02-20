@@ -44,6 +44,7 @@ interface State {
   loading: boolean;
   orgDomain: string;
   domainNotFound: boolean;
+  passkeyAvailable: boolean;
 }
 
 interface Props {
@@ -79,6 +80,8 @@ class Login extends React.Component<Props, State> {
       loading: true,
       orgDomain: "",
       domainNotFound: false,
+      // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
+      passkeyAvailable: Passkey.isSupported(),
     };
   }
 
@@ -92,6 +95,10 @@ class Login extends React.Component<Props, State> {
       }
     }
     this.loadOrgDetails();
+    // Refine the platform authenticator availability check asynchronously (Finding #14)
+    Passkey.isPlatformAuthAvailable().then((available) =>
+      this.setState({ passkeyAvailable: available })
+    );
   };
 
   applyOrg = (res: any) => {
@@ -279,7 +286,7 @@ class Login extends React.Component<Props, State> {
   };
 
   loginWithPasskey = async () => {
-    if (!Passkey.isSupported()) return;
+    if (!this.state.passkeyAvailable) return;
     this.setState({ inPasskeyLogin: true, invalid: false });
     try {
       const beginResponse = await Passkey.beginLogin(this.org?.id ?? "");
@@ -580,7 +587,7 @@ class Login extends React.Component<Props, State> {
           <Form.Control.Feedback type="invalid">
             {this.props.t("errorInvalidEmail")}
           </Form.Control.Feedback>
-          {Passkey.isSupported() && (
+          {this.state.passkeyAvailable && (
             <p className="margin-top-25">
               <Button
                 variant="link"
