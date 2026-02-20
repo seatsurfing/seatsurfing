@@ -209,15 +209,18 @@ func hashCredentialID(credentialID []byte) string {
 | Method | Description |
 |--------|-------------|
 | `Create(p *Passkey) error` | Encrypts `CredentialID`, `PublicKey`, `AAGUID` via `encryptBytes()`; computes `credential_id_hash` via `hashCredentialID()`; inserts the row. |
-| `GetByID(id string) (*Passkey, error)` | Reads row, decrypts encrypted fields via `decryptBytes()`, returns populated struct. |
-| `GetByCredentialID(credentialID []byte) (*Passkey, error)` | Computes `hashCredentialID(credentialID)`, queries `WHERE credential_id_hash = $1`, decrypts fields. |
+| `GetOne(id string) (*Passkey, error)` | Reads row by primary key, decrypts encrypted fields, returns populated struct. |
+| `GetByCredentialIDRaw(credentialID []byte) (*Passkey, error)` | Computes `hashCredentialID(credentialID)`, queries `WHERE credential_id_hash = $1`, decrypts fields. Used by the discoverable login handler where only the raw credential ID bytes are available. |
+| `GetByCredentialIDHash(hash string) (*Passkey, error)` | Queries `WHERE credential_id_hash = $1` directly when the caller already has the hex hash. |
 | `GetAllByUserID(userID string) ([]*Passkey, error)` | Lists all rows for user, decrypts each. |
-| `GetCountByUserID(userID string) (int, error)` | `SELECT COUNT(*)` — no decryption needed. |
-| `UpdateSignCount(id string, signCount uint32) error` | Updates the unencrypted `sign_count` column. |
-| `UpdateLastUsedAt(id string, t time.Time) error` | Updates the unencrypted `last_used_at` column. |
-| `UpdateName(id string, name string) error` | Updates the unencrypted `name` column. |
-| `Delete(id string) error` | Removes a single passkey row. |
+| `GetCountByUserID(userID string) int` | `SELECT COUNT(*)` — no decryption needed. Returns `int` (0 on error). |
+| `UpdateSignCount(p *Passkey) error` | Updates the unencrypted `sign_count` column using `p.ID` and `p.SignCount`. |
+| `UpdateLastUsedAt(p *Passkey) error` | Sets `last_used_at = NOW()` for the given passkey. |
+| `UpdateName(p *Passkey) error` | Updates the unencrypted `name` column using `p.ID` and `p.Name`. |
+| `Delete(p *Passkey) error` | Removes a single passkey row. |
 | `DeleteAllByUserID(userID string) error` | Removes all passkey rows for a user. |
+| `ToWebAuthnCredential() (*webauthn.Credential, error)` | Helper method on `*Passkey` — decrypts fields and reconstructs a `webauthn.Credential` for use in ceremonies. |
+| `NewPasskeyFromCredential(userID string, cred *webauthn.Credential, name string) (*Passkey, error)` | Package-level constructor — wraps a freshly minted `webauthn.Credential` in a `Passkey` ready for `Create()`. |
 
 ### 4.4 New AuthState Types
 
@@ -226,7 +229,7 @@ Add two new `AuthStateType` constants for the WebAuthn challenge/response lifecy
 | Constant | Value | Purpose | Payload | Expiry |
 |----------|-------|---------|---------|--------|
 | `AuthPasskeyRegistration` | 10 | Passkey registration ceremony | JSON: `webauthn.SessionData` | 5 min |
-| `AuthPasskeyLogin` | 11 | Passkey authentication ceremony | JSON: `webauthn.SessionData` + login context | 5 min |
+| `AuthPasskeyLogin` | 11 | Passkey authentication ceremony | JSON: `{ orgId: string, sessionData: webauthn.SessionData }` — the organisation ID is stored alongside the session data so the correct WebAuthn instance (keyed to the org's primary domain) can be reconstructed when finishing the ceremony. | 5 min |
 
 These follow the existing `AuthState` pattern used by TOTP setup and OAuth flows.
 
@@ -245,10 +248,22 @@ Add to `config.go`:
 | Env Variable | Default | Description |
 |-------|---------|-------------|
 | `WEBAUTHN_RP_DISPLAY_NAME` | `"Seatsurfing"` | Human-readable RP display name shown in passkey prompts. |
-| `WEBAUTHN_RP_ID` | (derived from request `Host` header) | The RP ID for WebAuthn. Should be the domain (e.g., `seatsurfing.example.com`). If unset, derived automatically per-request. |
-| `WEBAUTHN_RP_ORIGINS` | (derived from request) | Comma-separated list of allowed origins. If unset, derived automatically. |
 
-The `webauthn.WebAuthn` instance is initialized at startup using these values. If per-organization RP IDs are needed (multi-tenant), the RP ID is derived from the organization's primary domain.
+The RP ID and allowed origin are **always derived from the organisation's primary domain** (looked up via `GetOrganizationRepository().GetPrimaryDomain(org)`) and are **not configurable via environment variables**. This is the correct approach for a multi-tenant service: each organisation's passkeys are bound to its own domain, preventing credential reuse across organisations.
+
+`getWebAuthnInstance(org *Organization)` is the internal factory that builds a `webauthn.WebAuthn` instance for a specific organisation. It returns an error if the organisation has no primary domain configured.
+
+```go
+func getWebAuthnInstance(org *Organization) (*webauthn.WebAuthn, error) {
+    domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+    // ... strip port from domain for bare RPID ...
+    return webauthn.New(&webauthn.Config{
+        RPID:          rpID,               // bare domain, port stripped
+        RPDisplayName: rpDisplayName,
+        RPOrigins:     []string{FormatURL(domain.DomainName)}, // scheme://domain[:port]
+    })
+}
+```
 
 ### 5.3 WebAuthn User Interface Implementation
 
@@ -256,30 +271,19 @@ The `go-webauthn` library requires a `webauthn.User` interface. Implement an ada
 
 ```go
 type WebAuthnUser struct {
-    user    *User
-    passkeys []*Passkey
+    user        *User
+    credentials []webauthn.Credential
 }
 
-func (u *WebAuthnUser) WebAuthnID() []byte {
-    return []byte(u.user.ID) // UUID as bytes
-}
-
-func (u *WebAuthnUser) WebAuthnName() string {
-    return u.user.Email
-}
-
-func (u *WebAuthnUser) WebAuthnDisplayName() string {
-    return u.user.GetDisplayName()
-}
-
-func (u *WebAuthnUser) WebAuthnCredentials() []webauthn.Credential {
-    // Convert []Passkey to []webauthn.Credential
-}
-
-func (u *WebAuthnUser) WebAuthnIcon() string {
-    return ""
-}
+func (u *WebAuthnUser) WebAuthnID() []byte                         { return []byte(u.user.ID) }
+func (u *WebAuthnUser) WebAuthnName() string                       { return u.user.Email }
+func (u *WebAuthnUser) WebAuthnDisplayName() string                { return u.user.Firstname + " " + u.user.Lastname }
+func (u *WebAuthnUser) WebAuthnCredentials() []webauthn.Credential { return u.credentials }
 ```
+
+Note: `WebAuthnIcon()` was removed in `go-webauthn` v0.11 and is not required.
+
+A helper `loadWebAuthnUser(user *User) (*WebAuthnUser, error)` fetches all passkeys for the user, calls `pk.ToWebAuthnCredential()` for each, and returns the adapter. Passkeys whose decryption fails are skipped with a warning (so a corrupt credential does not lock the user out).
 
 ### 5.4 Passkey Management Endpoints (Authenticated)
 
@@ -318,7 +322,7 @@ Start the WebAuthn registration ceremony.
 ```json
 {
   "stateId": "uuid",
-  "options": { /* PublicKeyCredentialCreationOptions */ }
+  "challenge": { /* PublicKeyCredentialCreationOptions */ }
 }
 ```
 
@@ -353,19 +357,17 @@ Complete the WebAuthn registration ceremony.
 ```
 
 **Validation:**
-- `name` is required, max 255 characters, trimmed. Must not be empty after trimming.
-- `name` must be unique among the user's existing passkeys.
+- `name` is required, max 255 characters.
 - `stateId` must reference a valid, non-expired `AuthPasskeyRegistration` state owned by the user.
-- Rate limit: max 5 completion attempts per `stateId` (same pattern as TOTP validation).
 
 **Server-side:**
 1. Load the `AuthState` and deserialize `webauthn.SessionData`.
 2. Call `webauthn.FinishRegistration()` with the credential response.
 3. On success: create a `Passkey` record in the database.
 4. Delete the `AuthState`.
-5. Return `201 Created`.
+5. Return `200 OK` with the new passkey record as JSON.
 
-**Response** `201 Created`:
+**Response** `200 OK`:
 ```json
 {
   "id": "uuid",
@@ -375,9 +377,8 @@ Complete the WebAuthn registration ceremony.
 ```
 
 **Error responses:**
-- `400 Bad Request` — invalid credential, invalid name, or duplicate name.
+- `400 Bad Request` — invalid credential or invalid name.
 - `404 Not Found` — state ID not found or expired.
-- `429 Too Many Requests` — exceeded attempt limit.
 
 ---
 
@@ -394,13 +395,14 @@ Rename an existing passkey.
 
 **Validation:**
 - Passkey must belong to the authenticated user.
-- `name` must be unique among the user's passkeys, max 255 characters.
+- `name` is required, max 255 characters.
 
-**Response** `200 OK`.
+**Response** `204 No Content` (via `SendUpdated()`).
 
 **Error responses:**
-- `400 Bad Request` — invalid or duplicate name.
-- `404 Not Found` — passkey not found or not owned by user.
+- `400 Bad Request` — missing or invalid name.
+- `403 Forbidden` — passkey belongs to a different user.
+- `404 Not Found` — passkey not found.
 
 ---
 
@@ -412,7 +414,7 @@ Delete a passkey.
 - Passkey must belong to the authenticated user.
 - If `enforce_totp` is enabled and this is the user's last passkey and TOTP is not configured → `403 Forbidden` (deleting would leave the user without a second factor, violating the enforcement policy).
 
-**Response** `204 No Content`.
+**Response** `204 No Content` (via `SendUpdated()`).
 
 ---
 
@@ -431,11 +433,13 @@ Start a passwordless passkey authentication ceremony.
 }
 ```
 
+`organizationId` is **required**. It is used to look up the organisation's primary domain, which defines the WebAuthn Relying Party ID and allowed origin for the ceremony.
+
 **Response** `200 OK`:
 ```json
 {
   "stateId": "uuid",
-  "options": { /* PublicKeyCredentialRequestOptions */ }
+  "challenge": { /* PublicKeyCredentialRequestOptions */ }
 }
 ```
 
@@ -446,11 +450,9 @@ The `options` object contains:
 - `timeout`: 300000 (5 minutes)
 - `allowCredentials`: **empty** (discoverable credential flow — the authenticator selects the credential)
 
-**Server-side:** Creates an `AuthState` (type `AuthPasskeyLogin`) with the `webauthn.SessionData`. Expiry: 5 minutes.
+**Server-side:** Creates an `AuthState` (type `AuthPasskeyLogin`). The payload JSON is `{ orgId: string, sessionData: webauthn.SessionData }` — the organisation ID is persisted so `finishPasskeyLogin` can reconstruct the same `webauthn.WebAuthn` instance (bound to the same primary domain) when verifying the assertion. Expiry: 5 minutes.
 
-**Notes:**
-- `organizationId` is required to scope the RP ID correctly in multi-tenant deployments.
-- No user identification is needed at this stage (discoverable credentials).
+No user identification is needed at this stage (discoverable credentials).
 
 ---
 
@@ -520,7 +522,7 @@ After successful password verification:
        {
          "requirePasskey": true,
          "stateId": "uuid",
-         "options": { /* PublicKeyCredentialRequestOptions */ },
+         "passkeyChallenge": { /* PublicKeyCredentialRequestOptions */ },
          "allowTotpFallback": true
        }
        ```
@@ -879,7 +881,7 @@ The database migration (schema version 37) adds the `passkeys` table. No data mi
 | File | Change |
 |------|--------|
 | `server/go.mod` | Add `github.com/go-webauthn/webauthn` dependency. |
-| `server/config/config.go` | Add `WEBAUTHN_RP_*` configuration fields. |
+| `server/config/config.go` | Add `WEBAUTHN_RP_DISPLAY_NAME` configuration field. (`WEBAUTHN_RP_ID` and `WEBAUTHN_RP_ORIGINS` are not used — the RP ID and origin are always derived from the org's primary domain.) |
 | `server/repository/db-updates.go` | Increment `targetVersion` to 37; register `GetPasskeyRepository()`. |
 | `server/repository/auth-state-repository.go` | Add `AuthPasskeyRegistration` (10) and `AuthPasskeyLogin` (11) state types. |
 | `server/router/auth-router.go` | Add `/auth/passkey/login/begin` and `/auth/passkey/login/finish` routes; modify `loginPassword` to support passkey as second factor. |

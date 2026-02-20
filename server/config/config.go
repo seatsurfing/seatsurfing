@@ -59,8 +59,6 @@ type Config struct {
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
 	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
-	WebAuthnRPID                        string
-	WebAuthnRPOrigins                   []string
 }
 
 var _configInstance *Config
@@ -168,13 +166,6 @@ func (c *Config) ReadConfig() {
 		c.MaxSessionsPerUser = 10
 	}
 	c.WebAuthnRPDisplayName = c.getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Seatsurfing")
-	c.WebAuthnRPID = c.getEnv("WEBAUTHN_RP_ID", "")
-	webAuthnRPOriginsRaw := c.getEnv("WEBAUTHN_RP_ORIGINS", "")
-	if webAuthnRPOriginsRaw != "" {
-		c.WebAuthnRPOrigins = strings.Split(webAuthnRPOriginsRaw, ",")
-	} else {
-		c.WebAuthnRPOrigins = []string{}
-	}
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {

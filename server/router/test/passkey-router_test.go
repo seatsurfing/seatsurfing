@@ -329,7 +329,9 @@ func TestPasskeyRegistrationFinishWrongUser(t *testing.T) {
 
 func TestPasskeyLoginBegin(t *testing.T) {
 	ClearTestDB()
-	req := newWebAuthnRequest("POST", "/auth/passkey/login/begin", "", nil)
+	org := CreateTestOrg("test.com")
+	payload := `{"organizationId": "` + org.ID + `"}`
+	req := newWebAuthnRequest("POST", "/auth/passkey/login/begin", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 

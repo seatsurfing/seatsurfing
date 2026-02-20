@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -18,6 +19,17 @@ import (
 
 const passkeyAuthStateZeroID = "00000000-0000-0000-0000-000000000000"
 const passkeyAuthStateExpiry = 5 * time.Minute
+
+// BeginPasskeyLoginRequest is the body accepted by beginPasskeyLogin.
+type BeginPasskeyLoginRequest struct {
+	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+}
+
+// passkeyLoginStatePayload is stored in the AuthState for login flows.
+type passkeyLoginStatePayload struct {
+	OrgID       string               `json:"orgId"`
+	SessionData webauthn.SessionData `json:"sessionData"`
+}
 
 // ---------------------------------------------------------------------------
 // WebAuthnUser – implements the webauthn.User interface
@@ -57,50 +69,29 @@ func loadWebAuthnUser(user *User) (*WebAuthnUser, error) {
 // WebAuthn instance factory
 // ---------------------------------------------------------------------------
 
-// getWebAuthnInstance creates a configured webauthn.WebAuthn instance.
-// RPID and RPOrigins can be overridden via environment variables
-// WEBAUTHN_RP_ID and WEBAUTHN_RP_ORIGINS.  When not set they are derived from
-// the incoming HTTP request's Host header and the configured PublicScheme.
-func getWebAuthnInstance(r *http.Request) (*webauthn.WebAuthn, error) {
-	c := GetConfig()
-	rpID := c.WebAuthnRPID
-	rpOrigins := c.WebAuthnRPOrigins
-	rpDisplayName := c.WebAuthnRPDisplayName
+// getWebAuthnInstance creates a configured webauthn.WebAuthn instance using
+// the organisation's primary domain as the Relying Party ID and origin.
+func getWebAuthnInstance(org *Organization) (*webauthn.WebAuthn, error) {
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		return nil, err
+	}
+	if domain == nil {
+		return nil, fmt.Errorf("no primary domain configured for organisation %s", org.ID)
+	}
+	// Strip port for a bare RPID (WebAuthn spec §7.1)
+	rpID := domain.DomainName
+	if colonIdx := strings.LastIndex(rpID, ":"); colonIdx != -1 {
+		rpID = rpID[:colonIdx]
+	}
+	rpDisplayName := GetConfig().WebAuthnRPDisplayName
 	if rpDisplayName == "" {
 		rpDisplayName = "Seatsurfing"
 	}
-
-	if rpID == "" && r != nil {
-		host := r.Host
-		if host == "" {
-			host = r.Header.Get("X-Forwarded-Host")
-		}
-		// Strip port
-		if colonIdx := strings.LastIndex(host, ":"); colonIdx != -1 {
-			host = host[:colonIdx]
-		}
-		rpID = host
-	}
-
-	if len(rpOrigins) == 0 && r != nil {
-		scheme := c.PublicScheme
-		if scheme == "" {
-			scheme = "https"
-		}
-		if fwdProto := r.Header.Get("X-Forwarded-Proto"); fwdProto != "" {
-			scheme = strings.Split(fwdProto, ",")[0]
-		}
-		host := r.Host
-		if host == "" {
-			host = r.Header.Get("X-Forwarded-Host")
-		}
-		rpOrigins = []string{scheme + "://" + host}
-	}
-
 	return webauthn.New(&webauthn.Config{
 		RPID:          rpID,
 		RPDisplayName: rpDisplayName,
-		RPOrigins:     rpOrigins,
+		RPOrigins:     []string{FormatURL(domain.DomainName)},
 	})
 }
 
@@ -196,7 +187,13 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 		SendForbidden(w)
 		return
 	}
-	wa, err := getWebAuthnInstance(r)
+	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	wa, err := getWebAuthnInstance(org)
 	if err != nil {
 		log.Println("WebAuthn config error:", err)
 		SendInternalServerError(w)
@@ -283,13 +280,19 @@ func (router *UserRouter) finishPasskeyRegistration(w http.ResponseWriter, r *ht
 	}
 	GetAuthStateRepository().Delete(state)
 
+	org2, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	var sessionData webauthn.SessionData
 	if err := json.Unmarshal([]byte(state.Payload), &sessionData); err != nil {
 		log.Println("unmarshal session data error:", err)
 		SendInternalServerError(w)
 		return
 	}
-	wa, err := getWebAuthnInstance(r)
+	wa, err := getWebAuthnInstance(org2)
 	if err != nil {
 		log.Println("WebAuthn config error:", err)
 		SendInternalServerError(w)
@@ -400,7 +403,17 @@ func (router *UserRouter) deletePasskey(w http.ResponseWriter, r *http.Request) 
 // ---------------------------------------------------------------------------
 
 func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Request) {
-	wa, err := getWebAuthnInstance(r)
+	var m BeginPasskeyLoginRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	org, err := GetOrganizationRepository().GetOne(m.OrganizationID)
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	wa, err := getWebAuthnInstance(org)
 	if err != nil {
 		log.Println("WebAuthn config error:", err)
 		SendInternalServerError(w)
@@ -414,7 +427,10 @@ func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
-	sdJSON, err := json.Marshal(sessionData)
+	statePayload, err := json.Marshal(&passkeyLoginStatePayload{
+		OrgID:       org.ID,
+		SessionData: *sessionData,
+	})
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -424,7 +440,7 @@ func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Reque
 		AuthProviderID: passkeyAuthStateZeroID,
 		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
 		AuthStateType:  AuthPasskeyLogin,
-		Payload:        string(sdJSON),
+		Payload:        string(statePayload),
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)
@@ -459,13 +475,20 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 	}
 	GetAuthStateRepository().Delete(state)
 
-	var sessionData webauthn.SessionData
-	if err := json.Unmarshal([]byte(state.Payload), &sessionData); err != nil {
-		log.Println("unmarshal session data error:", err)
+	var sp passkeyLoginStatePayload
+	if err := json.Unmarshal([]byte(state.Payload), &sp); err != nil {
+		log.Println("unmarshal state payload error:", err)
 		SendInternalServerError(w)
 		return
 	}
-	wa, err := getWebAuthnInstance(r)
+	sessionData := sp.SessionData
+	loginOrg, err := GetOrganizationRepository().GetOne(sp.OrgID)
+	if err != nil {
+		log.Println("Error loading org:", err)
+		SendInternalServerError(w)
+		return
+	}
+	wa, err := getWebAuthnInstance(loginOrg)
 	if err != nil {
 		log.Println("WebAuthn config error:", err)
 		SendInternalServerError(w)
@@ -610,6 +633,14 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		return passkey2FANotApplicable
 	}
 
+	// Load organisation for WebAuthn instance (needed in both the validate and challenge paths)
+	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
+	if err != nil {
+		log.Println("Error loading org for passkey 2FA:", err)
+		SendInternalServerError(w)
+		return passkey2FAHandled
+	}
+
 	// Passkey credential provided → validate it
 	if m.PasskeyStateID != "" && len(m.PasskeyCredential) > 0 {
 		state, err := GetAuthStateRepository().GetOne(m.PasskeyStateID)
@@ -633,13 +664,14 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		}
 		GetAuthStateRepository().Delete(state)
 
-		var sessionData webauthn.SessionData
-		if err := json.Unmarshal([]byte(state.Payload), &sessionData); err != nil {
-			log.Println("unmarshal session data error:", err)
+		var sp2fa passkeyLoginStatePayload
+		if err := json.Unmarshal([]byte(state.Payload), &sp2fa); err != nil {
+			log.Println("unmarshal state payload error:", err)
 			SendInternalServerError(w)
 			return passkey2FAHandled
 		}
-		wa, err := getWebAuthnInstance(r)
+		sessionData := sp2fa.SessionData
+		wa, err := getWebAuthnInstance(org)
 		if err != nil {
 			log.Println("WebAuthn config error:", err)
 			SendInternalServerError(w)
@@ -683,7 +715,7 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 	}
 
 	// No credential and no TOTP fallback → issue passkey challenge
-	wa, err := getWebAuthnInstance(r)
+	wa, err := getWebAuthnInstance(org)
 	if err != nil {
 		log.Println("WebAuthn config error:", err)
 		SendInternalServerError(w)
@@ -708,7 +740,10 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		SendInternalServerError(w)
 		return passkey2FAHandled
 	}
-	sdJSON, err := json.Marshal(sessionData)
+	challengePayload, err := json.Marshal(&passkeyLoginStatePayload{
+		OrgID:       org.ID,
+		SessionData: *sessionData,
+	})
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -718,7 +753,7 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		AuthProviderID: user.ID,
 		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
 		AuthStateType:  AuthPasskeyLogin,
-		Payload:        string(sdJSON),
+		Payload:        string(challengePayload),
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)
