@@ -6,6 +6,7 @@ import Passkey, {
   prepareCreationOptions,
   serializeAttestationResponse,
 } from "@/types/Passkey";
+import Formatting from "@/util/Formatting";
 
 interface State {
   passkeys: PasskeyListItem[];
@@ -134,9 +135,11 @@ class PasskeySettings extends React.Component<Props, State> {
                       <strong>{pk.name}</strong>
                       {pk.lastUsedAt ? (
                         <small className="text-muted ms-2">
-                          {this.props.t("passkeyLastUsed", {
-                            date: new Date(pk.lastUsedAt).toLocaleDateString(),
-                          })}
+                          {Formatting.decodeHtmlEntities(
+                            this.props.t("passkeyLastUsed", {
+                              date: Formatting.getFormatterShort(false).format(new Date(pk.lastUsedAt)),
+                            })
+                          )}
                         </small>
                       ) : null}
                     </span>

@@ -390,7 +390,7 @@
   "passkeyDeleteConfirm": "Are you sure you want to remove this passkey?",
   "passkeyDeleteError": "Failed to delete passkey. Please try again.",
   "passkeyRegistering": "Registering...",
-  "passkeyLastUsed": "Last used: {date}",
+  "passkeyLastUsed": "Viimati kasutatud: {{date}}",
   "signInWithPasskey": "Sign in with passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead"
