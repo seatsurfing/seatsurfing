@@ -32,6 +32,7 @@ interface State {
   passkeyOptions: any;
   allowTotpFallback: boolean;
   inPasskeyLogin: boolean;
+  passkeyLoginFailed: boolean;
   invalid: boolean;
   redirect: string | null;
   requirePassword: boolean;
@@ -68,6 +69,7 @@ class Login extends React.Component<Props, State> {
       passkeyOptions: null,
       allowTotpFallback: false,
       inPasskeyLogin: false,
+      passkeyLoginFailed: false,
       invalid: false,
       redirect: null,
       requirePassword: false,
@@ -312,10 +314,21 @@ class Login extends React.Component<Props, State> {
       Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
       Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.refreshToken);
       await RuntimeConfig.loadUserAndSettings();
-      this.setState({ redirect: this.getRedirectUrl(), inPasskeyLogin: false });
+      this.setState({
+        redirect: this.getRedirectUrl(),
+        inPasskeyLogin: false,
+        passkeyLoginFailed: false,
+      });
     } catch (err: any) {
-      // User cancelled or credential not found
-      this.setState({ inPasskeyLogin: false, invalid: false });
+      // NotAllowedError = user dismissed the browser passkey dialog — no error shown.
+      // Any other error (e.g. 404 from finishLogin for an expired/unknown credential)
+      // must surface to the user.
+      const cancelled =
+        err instanceof DOMException && err.name === "NotAllowedError";
+      this.setState({
+        inPasskeyLogin: false,
+        passkeyLoginFailed: !cancelled,
+      });
     }
   };
 
@@ -554,7 +567,11 @@ class Login extends React.Component<Props, State> {
               placeholder={this.props.t("emailPlaceholder")}
               value={this.state.email}
               onChange={(e: any) =>
-                this.setState({ email: e.target.value, invalid: false })
+                this.setState({
+                  email: e.target.value,
+                  invalid: false,
+                  passkeyLoginFailed: false,
+                })
               }
               required={true}
               isInvalid={this.state.invalid}
@@ -569,7 +586,11 @@ class Login extends React.Component<Props, State> {
                 placeholder={this.props.t("password")}
                 value={this.state.password}
                 onChange={(e: any) =>
-                  this.setState({ password: e.target.value, invalid: false })
+                  this.setState({
+                    password: e.target.value,
+                    invalid: false,
+                    passkeyLoginFailed: false,
+                  })
                 }
                 required={true}
                 isInvalid={this.state.invalid}
@@ -599,6 +620,11 @@ class Login extends React.Component<Props, State> {
               >
                 {this.props.t("signInWithPasskey")}
               </Button>
+              {this.state.passkeyLoginFailed && (
+                <span className="text-danger d-block">
+                  {this.props.t("passkeyLoginFailed")}
+                </span>
+              )}
             </p>
           )}
           <p className="margin-top-50" hidden={!this.org}>

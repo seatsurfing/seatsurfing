@@ -393,5 +393,6 @@
   "passkeyLastUsed": "Laatst gebruikt: {{date}}",
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
-  "useTotpInstead": "Use authenticator code instead"
+  "useTotpInstead": "Use authenticator code instead",
+  "passkeyLoginFailed": "Passkey login failed. Please try again or use another login method."
 }

@@ -394,5 +394,6 @@
   "passkeyLastUsed": "Zuletzt benutzt: {{date}}",
   "signInWithPasskey": "Mit einem Passkey anmelden",
   "passkeyRequired": "Bitte bestätigen Sie Ihre Identität mit Ihrem Passkey.",
-  "useTotpInstead": "Stattdessen Authenticator-Code verwenden"
+  "useTotpInstead": "Stattdessen Authenticator-Code verwenden",
+  "passkeyLoginFailed": "Passkey-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Anmeldemethode."
 }
