@@ -4,17 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gorilla/mux"
-	limiter "github.com/ulule/limiter/v3"
-	"github.com/ulule/limiter/v3/drivers/store/memory"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -27,36 +23,6 @@ const passkeyAuthStateExpiry = 5 * time.Minute
 // passkeyMinResponseTime is the minimum duration enforced for finishPasskeyLogin
 // responses to mitigate credential-existence timing side-channels (Finding #12).
 const passkeyMinResponseTime = 100 * time.Millisecond
-
-var passkeyLoginLimiter *limiter.Limiter
-var passkeyLoginLimiterOnce sync.Once
-
-// getPasskeyLoginRateLimiter returns a singleton per-IP rate limiter for the
-// beginPasskeyLogin endpoint: at most 10 requests per minute per IP (Finding #2).
-func getPasskeyLoginRateLimiter() *limiter.Limiter {
-	passkeyLoginLimiterOnce.Do(func() {
-		store := memory.NewStore()
-		passkeyLoginLimiter = limiter.New(store, limiter.Rate{
-			Period: 1 * time.Minute,
-			Limit:  10,
-		}, limiter.WithTrustForwardHeader(true))
-	})
-	return passkeyLoginLimiter
-}
-
-// getRequestIP extracts the client IP from the request, honoring
-// X-Forwarded-For headers set by trusted reverse proxies.
-func getRequestIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		parts := strings.SplitN(xff, ",", 2)
-		return strings.TrimSpace(parts[0])
-	}
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
-	}
-	return ip
-}
 
 // encryptPasskeyPayload encrypts a passkey state payload using AES-256-GCM so
 // that challenge material is not stored in plaintext in the database (Finding #1).
@@ -492,13 +458,6 @@ func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Reque
 	var m BeginPasskeyLoginRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
-		return
-	}
-	// Per-IP rate limiting to prevent DoS via challenge state exhaustion (Finding #2)
-	ip := getRequestIP(r)
-	limCtx, limErr := getPasskeyLoginRateLimiter().Get(r.Context(), ip)
-	if limErr == nil && limCtx.Reached {
-		http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
 		return
 	}
 	org, err := GetOrganizationRepository().GetOne(m.OrganizationID)
