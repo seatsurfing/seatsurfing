@@ -381,5 +381,19 @@
   "totpSecretWarning": "Halten Sie diesen geheimen Schlüssel sicher! Jeder, der Zugriff darauf hat, kann Codes für Ihr Konto generieren. Geben Sie ihn nur in Ihre Authentifikator-App ein.",
   "copyToClipboard": "In Zwischenablage kopieren",
   "loading": "Lädt...",
-  "totpEnforcementMessage": "Ihr Administrator hat die Zwei-Faktor-Authentifizierung für alle Benutzer erzwungen. Sie müssen die Zwei-Faktor-Authentifizierung einrichten, um Ihr Konto weiterhin nutzen zu können."
+  "totpEnforcementMessage": "Ihr Administrator hat die Zwei-Faktor-Authentifizierung für alle Benutzer erzwungen. Sie müssen die Zwei-Faktor-Authentifizierung einrichten, um Ihr Konto weiterhin nutzen zu können.",
+  "passkeys": "Passkeys",
+  "passkeysHint": "Passkeys sind eine moderne Authentifizierungsmethode, die sicherer und benutzerfreundlicher als traditionelle Passwörter ist. Mit Passkeys können Sie sich mit biometrischen Daten (wie Fingerabdruck oder Gesichtserkennung) oder einem PIN-Code anmelden, ohne ein Passwort eingeben zu müssen.",
+  "passkeyAdd": "Passkey hinzufügen",
+  "passkeyNamePlaceholder": "z.B. 'Mein iPhone' oder 'YubiKey'",
+  "passkeyNameRequired": "Bitte geben Sie einen Namen für diesen Passkey ein.",
+  "passkeyRegisterError": "Fehler beim Registrieren des Passkeys. Bitte versuchen Sie es erneut.",
+  "passkeyDeleteConfirm": "Sind Sie sicher, dass Sie diesen Passkey entfernen möchten?",
+  "passkeyDeleteError": "Fehler beim Löschen des Passkeys. Bitte versuchen Sie es erneut.",
+  "passkeyRegistering": "Registrierung...",
+  "passkeyLastUsed": "Zuletzt benutzt: {{date}}",
+  "signInWithPasskey": "Mit einem Passkey anmelden",
+  "passkeyRequired": "Bitte bestätigen Sie Ihre Identität mit Ihrem Passkey.",
+  "useTotpInstead": "Stattdessen Authenticator-Code verwenden",
+  "passkeyLoginFailed": "Passkey-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Anmeldemethode."
 }

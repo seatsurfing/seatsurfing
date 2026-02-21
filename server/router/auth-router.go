@@ -121,10 +121,12 @@ type AuthPreflightResponse struct {
 }
 
 type AuthPasswordRequest struct {
-	Email          string `json:"email" validate:"required,email,max=254"`
-	Password       string `json:"password" validate:"required,min=8,max=64"`
-	OrganizationID string `json:"organizationId" validate:"required,uuid"`
-	Code           string `json:"code,omitempty"`
+	Email             string          `json:"email" validate:"required,email,max=254"`
+	Password          string          `json:"password" validate:"required,min=8,max=64"`
+	OrganizationID    string          `json:"organizationId" validate:"required,uuid"`
+	Code              string          `json:"code,omitempty"`
+	PasskeyStateID    string          `json:"passkeyStateId,omitempty"`
+	PasskeyCredential json.RawMessage `json:"passkeyCredential,omitempty"`
 }
 
 type RefreshRequest struct {
@@ -155,6 +157,8 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
+	s.HandleFunc("/passkey/login/begin", router.beginPasskeyLogin).Methods("POST")
+	s.HandleFunc("/passkey/login/finish", router.finishPasskeyLogin).Methods("POST")
 	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
 	s.HandleFunc("/initpwreset", router.initPasswordReset).Methods("POST")
 	s.HandleFunc("/pwreset/{id}", router.completePasswordReset).Methods("POST")
@@ -544,7 +548,12 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
-	if user.TotpSecret != "" {
+	passkeyResult := router.handlePasskey2FA(w, r, user, &m)
+	if passkeyResult == passkey2FAHandled {
+		return
+	}
+	// If passkey 2FA was verified, skip TOTP entirely.
+	if passkeyResult != passkey2FAVerified && user.TotpSecret != "" {
 		if m.Code == "" {
 			SendUnauthorized(w)
 			return

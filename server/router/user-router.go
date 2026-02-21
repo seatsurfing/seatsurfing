@@ -80,6 +80,7 @@ type GetUserResponse struct {
 	OrgAdmin        bool                    `json:"admin"`
 	SuperAdmin      bool                    `json:"superAdmin"`
 	TotpEnabled     bool                    `json:"totpEnabled"`
+	HasPasskeys     bool                    `json:"hasPasskeys"`
 	CreateUserRequest
 }
 
@@ -121,6 +122,11 @@ type ValidateTotpRequest struct {
 }
 
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/passkey/", router.listPasskeys).Methods("GET")
+	s.HandleFunc("/passkey/registration/begin", router.beginPasskeyRegistration).Methods("POST")
+	s.HandleFunc("/passkey/registration/finish", router.finishPasskeyRegistration).Methods("POST")
+	s.HandleFunc("/passkey/{id}", router.renamePasskey).Methods("PUT")
+	s.HandleFunc("/passkey/{id}", router.deletePasskey).Methods("DELETE")
 	s.HandleFunc("/totp/generate", router.generateTotp).Methods("GET")
 	s.HandleFunc("/totp/{stateId}/secret", router.getTotpSecret).Methods("GET")
 	s.HandleFunc("/totp/validate", router.validateTotp).Methods("POST")
@@ -761,6 +767,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.RequirePassword = (e.HashedPassword != "")
 	m.PasswordPending = e.PasswordPending
 	m.TotpEnabled = (e.TotpSecret != "")
+	m.HasPasskeys = GetPasskeyRepository().GetCountByUserID(e.ID) > 0
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
 	}

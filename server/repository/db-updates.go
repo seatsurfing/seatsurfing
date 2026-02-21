@@ -11,7 +11,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 36
+	targetVersion := 37
 	log.Printf("Initializing database with schema version %d...\n", targetVersion)
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	if err != nil {
@@ -37,6 +37,7 @@ func RunDBSchemaUpdates() {
 		GetSpaceAttributeValueRepository(),
 		GetMailLogRepository(),
 		GetSessionRepository(),
+		GetPasskeyRepository(),
 	}
 	for _, plg := range plugin.GetPlugins() {
 		repositories = append(repositories, (*plg).GetRepositories()...)

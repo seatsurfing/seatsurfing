@@ -16,12 +16,23 @@ import * as Validation from "@/util/Validation";
 import * as Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
 import TotpInput from "@/components/TotpInput";
+import Passkey, {
+  prepareRequestOptions,
+  serializeAssertionResponse,
+  PasskeyChallengeResponse,
+} from "@/types/Passkey";
 
 interface State {
   email: string;
   password: string;
   code: string;
   requireTotp: boolean;
+  requirePasskey: boolean;
+  passkeyStateId: string;
+  passkeyOptions: any;
+  allowTotpFallback: boolean;
+  inPasskeyLogin: boolean;
+  passkeyLoginFailed: boolean;
   invalid: boolean;
   redirect: string | null;
   requirePassword: boolean;
@@ -34,6 +45,7 @@ interface State {
   loading: boolean;
   orgDomain: string;
   domainNotFound: boolean;
+  passkeyAvailable: boolean;
 }
 
 interface Props {
@@ -52,6 +64,12 @@ class Login extends React.Component<Props, State> {
       password: "",
       code: "",
       requireTotp: false,
+      requirePasskey: false,
+      passkeyStateId: "",
+      passkeyOptions: null,
+      allowTotpFallback: false,
+      inPasskeyLogin: false,
+      passkeyLoginFailed: false,
       invalid: false,
       redirect: null,
       requirePassword: false,
@@ -64,6 +82,8 @@ class Login extends React.Component<Props, State> {
       loading: true,
       orgDomain: "",
       domainNotFound: false,
+      // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
+      passkeyAvailable: Passkey.isSupported(),
     };
   }
 
@@ -77,6 +97,10 @@ class Login extends React.Component<Props, State> {
       }
     }
     this.loadOrgDetails();
+    // Refine the platform authenticator availability check asynchronously (Finding #14)
+    Passkey.isPlatformAuthAvailable().then((available) =>
+      this.setState({ passkeyAvailable: available }),
+    );
   };
 
   applyOrg = (res: any) => {
@@ -136,12 +160,16 @@ class Login extends React.Component<Props, State> {
     this.setState({
       inPasswordSubmit: true,
     });
-    const payload = {
+    const payload: any = {
       email: this.state.email,
       password: this.state.password,
       organizationId: this.org?.id,
       code: this.state.code,
     };
+    // If we have a pending passkey challenge response, attach it
+    if (this.state.requirePasskey && this.state.passkeyStateId) {
+      payload.passkeyStateId = this.state.passkeyStateId;
+    }
     Ajax.postData("/auth/login", payload)
       .then((res) => {
         const credentials: AjaxCredentials = {
@@ -161,6 +189,29 @@ class Login extends React.Component<Props, State> {
           err instanceof AjaxError &&
           (err as AjaxError).httpStatusCode === 401
         ) {
+          // Check if the body contains a passkey challenge
+          if ((err as any).responseBody) {
+            try {
+              const body: PasskeyChallengeResponse = JSON.parse(
+                (err as any).responseBody,
+              );
+              if (body.requirePasskey) {
+                const rawOpts =
+                  body.passkeyChallenge?.publicKey ?? body.passkeyChallenge;
+                this.setState({
+                  requirePasskey: true,
+                  passkeyStateId: body.stateId,
+                  passkeyOptions: rawOpts,
+                  allowTotpFallback: body.allowTotpFallback,
+                  invalid: false,
+                  inPasswordSubmit: false,
+                });
+                // Automatically trigger the passkey ceremony
+                this.performPasskeyAssertion(body.stateId, rawOpts);
+                return;
+              }
+            } catch (_) {}
+          }
           this.setState({
             requireTotp: true,
             invalid: false,
@@ -182,6 +233,103 @@ class Login extends React.Component<Props, State> {
       providers: null,
       invalid: false,
     });
+  };
+
+  performPasskeyAssertion = async (stateId: string, rawOptions: any) => {
+    this.setState({ inPasskeyLogin: true, invalid: false });
+    try {
+      const publicKeyOptions = prepareRequestOptions(rawOptions);
+      const credential = await navigator.credentials.get({
+        publicKey: publicKeyOptions,
+      });
+      if (!credential) {
+        throw new Error("No credential returned");
+      }
+      const serialized = serializeAssertionResponse(
+        credential as PublicKeyCredential,
+      );
+      // Submit password + passkey together
+      const payload: any = {
+        email: this.state.email,
+        password: this.state.password,
+        organizationId: this.org?.id,
+        code: this.state.code,
+        passkeyStateId: stateId,
+        passkeyCredential: serialized,
+      };
+      const res = await Ajax.postData("/auth/login", payload);
+      const credentials: AjaxCredentials = {
+        accessToken: res.json.accessToken,
+        accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
+        logoutUrl: res.json.logoutUrl,
+        profilePageUrl: "",
+      };
+      Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
+      await RuntimeConfig.loadUserAndSettings();
+      this.setState({ redirect: this.getRedirectUrl(), inPasskeyLogin: false });
+    } catch (err: any) {
+      // On passkey failure, offer TOTP fallback if available (spec §6.1)
+      if (this.state.allowTotpFallback) {
+        this.setState({
+          inPasskeyLogin: false,
+          requirePasskey: false,
+          requireTotp: true,
+          invalid: false,
+        });
+      } else {
+        this.setState({
+          invalid: true,
+          inPasskeyLogin: false,
+          requirePasskey: false,
+        });
+      }
+    }
+  };
+
+  loginWithPasskey = async () => {
+    if (!this.state.passkeyAvailable) return;
+    this.setState({ inPasskeyLogin: true, invalid: false });
+    try {
+      const beginResponse = await Passkey.beginLogin(this.org?.id ?? "");
+      const rawOpts =
+        beginResponse.challenge?.publicKey ?? beginResponse.challenge;
+      const publicKeyOptions = prepareRequestOptions(rawOpts);
+      const credential = await navigator.credentials.get({
+        publicKey: publicKeyOptions,
+      });
+      if (!credential) {
+        throw new Error("No credential returned");
+      }
+      const serialized = serializeAssertionResponse(
+        credential as PublicKeyCredential,
+      );
+      const res = await Passkey.finishLogin(beginResponse.stateId, serialized);
+      const credentials: AjaxCredentials = {
+        accessToken: res.accessToken,
+        accessTokenExpiry: JwtDecoder.getExpiryDate(res.accessToken),
+        logoutUrl: "",
+        profilePageUrl: "",
+      };
+      Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.refreshToken);
+      await RuntimeConfig.loadUserAndSettings();
+      this.setState({
+        redirect: this.getRedirectUrl(),
+        inPasskeyLogin: false,
+        passkeyLoginFailed: false,
+      });
+    } catch (err: any) {
+      // NotAllowedError = user dismissed the browser passkey dialog — no error shown.
+      // Any other error (e.g. 404 from finishLogin for an expired/unknown credential)
+      // must surface to the user.
+      const cancelled =
+        err instanceof DOMException && err.name === "NotAllowedError";
+      this.setState({
+        inPasskeyLogin: false,
+        passkeyLoginFailed: !cancelled,
+      });
+    }
   };
 
   getRedirectUrl = () => {
@@ -339,6 +487,42 @@ class Login extends React.Component<Props, State> {
 
     return (
       <div className="container-signin">
+        {/* Passkey 2FA prompt – shown when password verified but passkey required */}
+        <Form
+          className="form-signin"
+          name="passkey-2fa"
+          hidden={!this.state.requirePasskey}
+        >
+          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <h3>{this.org?.name}</h3>
+          <p>{this.props.t("passkeyRequired")}</p>
+          <Button
+            variant="link"
+            onClick={() =>
+              this.performPasskeyAssertion(
+                this.state.passkeyStateId,
+                this.state.passkeyOptions,
+              )
+            }
+            disabled={this.state.inPasskeyLogin}
+          >
+            {this.props.t("signInWithPasskey")}
+          </Button>
+          {this.state.allowTotpFallback && (
+            <Button
+              variant="link"
+              onClick={() =>
+                this.setState({ requirePasskey: false, requireTotp: true })
+              }
+              disabled={this.state.inPasskeyLogin}
+            >
+              {this.props.t("useTotpInstead")}
+            </Button>
+          )}
+          {this.state.invalid && (
+            <p className="text-danger">{this.props.t("errorUnknown")}</p>
+          )}
+        </Form>
         <Form
           className="form-signin"
           onSubmit={this.onPasswordSubmit}
@@ -372,7 +556,7 @@ class Login extends React.Component<Props, State> {
           className="form-signin"
           onSubmit={this.onPasswordSubmit}
           name="password-login"
-          hidden={this.state.requireTotp}
+          hidden={this.state.requireTotp || this.state.requirePasskey}
         >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
@@ -383,7 +567,11 @@ class Login extends React.Component<Props, State> {
               placeholder={this.props.t("emailPlaceholder")}
               value={this.state.email}
               onChange={(e: any) =>
-                this.setState({ email: e.target.value, invalid: false })
+                this.setState({
+                  email: e.target.value,
+                  invalid: false,
+                  passkeyLoginFailed: false,
+                })
               }
               required={true}
               isInvalid={this.state.invalid}
@@ -398,7 +586,11 @@ class Login extends React.Component<Props, State> {
                 placeholder={this.props.t("password")}
                 value={this.state.password}
                 onChange={(e: any) =>
-                  this.setState({ password: e.target.value, invalid: false })
+                  this.setState({
+                    password: e.target.value,
+                    invalid: false,
+                    passkeyLoginFailed: false,
+                  })
                 }
                 required={true}
                 isInvalid={this.state.invalid}
@@ -416,6 +608,25 @@ class Login extends React.Component<Props, State> {
           <Form.Control.Feedback type="invalid">
             {this.props.t("errorInvalidEmail")}
           </Form.Control.Feedback>
+          {this.state.passkeyAvailable && (
+            <p className="margin-top-25">
+              <Button
+                variant="link"
+                onClick={this.loginWithPasskey}
+                disabled={
+                  this.state.inPasskeyLogin || this.state.inPasswordSubmit
+                }
+                type="button"
+              >
+                {this.props.t("signInWithPasskey")}
+              </Button>
+              {this.state.passkeyLoginFailed && (
+                <span className="text-danger d-block">
+                  {this.props.t("passkeyLoginFailed")}
+                </span>
+              )}
+            </p>
+          )}
           <p className="margin-top-50" hidden={!this.org}>
             <Link href="/resetpw">{this.props.t("forgotPassword")}</Link>
           </p>

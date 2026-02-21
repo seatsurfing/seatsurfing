@@ -380,5 +380,19 @@
   "securityWarning": "Security Warning",
   "totpSecretWarning": "Keep this secret key secure! Anyone with access to it can generate codes for your account. Only enter it into your authenticator app.",
   "enforceTOTP": "Enforce Two-Factor Authentication (TOTP) for all users",
-  "totpEnforcementMessage": "Your administrator has enforced two-factor authentication for all users. You need to set up two-factor authentication to continue using your account."
+  "totpEnforcementMessage": "Your administrator has enforced two-factor authentication for all users. You need to set up two-factor authentication to continue using your account.",
+  "passkeys": "Passkeys",
+  "passkeysHint": "Passkeys allow you to sign in securely without a password using your device biometrics or security key.",
+  "passkeyAdd": "Add passkey",
+  "passkeyNamePlaceholder": "Passkey name, e.g. MacBook Face ID",
+  "passkeyNameRequired": "Please enter a name for this passkey.",
+  "passkeyRegisterError": "Failed to register passkey. Please try again.",
+  "passkeyDeleteConfirm": "Are you sure you want to remove this passkey?",
+  "passkeyDeleteError": "Failed to delete passkey. Please try again.",
+  "passkeyRegistering": "Registering...",
+  "passkeyLastUsed": "Último uso: {{date}}",
+  "signInWithPasskey": "Sign in with a passkey",
+  "passkeyRequired": "Please verify your identity using your passkey.",
+  "useTotpInstead": "Use authenticator code instead",
+  "passkeyLoginFailed": "Passkey login failed. Please try again or use another login method."
 }

@@ -41,6 +41,7 @@ interface RuntimeUserInfos {
   dateFormat: string;
   totpEnabled: boolean;
   enforceTOTP: boolean;
+  hasPasskeys: boolean;
 }
 
 export default class RuntimeConfig {
@@ -86,6 +87,7 @@ export default class RuntimeConfig {
       dateFormat: "Y-m-d",
       totpEnabled: false,
       enforceTOTP: false,
+      hasPasskeys: false,
     };
   };
 
@@ -238,6 +240,7 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.orgAdmin = user.admin;
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
       RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
+      RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
       RuntimeConfig.setDetails(user.email, user.id);
       return RuntimeConfig.loadSettings().then(() => {
         return RuntimeConfig.loadUserPreferences();

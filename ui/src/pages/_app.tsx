@@ -31,6 +31,7 @@ interface State {
   enforceTOTP: boolean;
   totpEnabled: boolean;
   idpLogin: boolean;
+  hasPasskeys: boolean;
 }
 
 interface Props extends AppProps {
@@ -48,6 +49,7 @@ class App extends React.Component<Props, State> {
       enforceTOTP: false,
       totpEnabled: false,
       idpLogin: false,
+      hasPasskeys: false,
     };
     if (typeof window !== "undefined") {
       if (process.env.NODE_ENV.toLowerCase() === "development") {
@@ -63,6 +65,7 @@ class App extends React.Component<Props, State> {
             enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
             totpEnabled: RuntimeConfig.INFOS.totpEnabled,
             idpLogin: RuntimeConfig.INFOS.idpLogin,
+            hasPasskeys: RuntimeConfig.INFOS.hasPasskeys,
           },
           () => {
             this.checkTotpEnforcement();
@@ -77,13 +80,15 @@ class App extends React.Component<Props, State> {
     const configChanged =
       RuntimeConfig.INFOS.enforceTOTP !== this.state.enforceTOTP ||
       RuntimeConfig.INFOS.totpEnabled !== this.state.totpEnabled ||
-      RuntimeConfig.INFOS.idpLogin !== this.state.idpLogin;
+      RuntimeConfig.INFOS.idpLogin !== this.state.idpLogin ||
+      RuntimeConfig.INFOS.hasPasskeys !== this.state.hasPasskeys;
 
     if (configChanged) {
       this.setState({
         enforceTOTP: RuntimeConfig.INFOS.enforceTOTP,
         totpEnabled: RuntimeConfig.INFOS.totpEnabled,
         idpLogin: RuntimeConfig.INFOS.idpLogin,
+        hasPasskeys: RuntimeConfig.INFOS.hasPasskeys,
       });
     }
 
@@ -97,7 +102,8 @@ class App extends React.Component<Props, State> {
     if (
       prevState.enforceTOTP !== this.state.enforceTOTP ||
       prevState.totpEnabled !== this.state.totpEnabled ||
-      prevState.idpLogin !== this.state.idpLogin
+      prevState.idpLogin !== this.state.idpLogin ||
+      prevState.hasPasskeys !== this.state.hasPasskeys
     ) {
       this.checkTotpEnforcement();
       return;
@@ -132,10 +138,11 @@ class App extends React.Component<Props, State> {
     }
 
     // Check if TOTP is enforced and user doesn't have it enabled
-    // Skip enforcement for IdP users (those who authenticate via external providers)
+    // Skip enforcement for IdP users and users who already have a passkey
     if (
       RuntimeConfig.INFOS.enforceTOTP &&
       !RuntimeConfig.INFOS.totpEnabled &&
+      !RuntimeConfig.INFOS.hasPasskeys &&
       !RuntimeConfig.INFOS.idpLogin
     ) {
       // Generate TOTP setup for the user

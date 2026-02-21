@@ -17,9 +17,12 @@ const (
 	AuthMergeRequest         AuthStateType = 4
 	AuthResetPasswordRequest AuthStateType = 5
 	AuthChangeOrgEmail       AuthStateType = 6
-	AuthDeleteOrg            AuthStateType = 7 // used for delete org email confirmation link
-	AuthTotpSetup            AuthStateType = 8 // used for TOTP setup process
-  AuthInviteUser           AuthStateType = 9 // used for user invitation to set initial password
+	AuthDeleteOrg            AuthStateType = 7  // used for delete org email confirmation link
+	AuthTotpSetup            AuthStateType = 8  // used for TOTP setup process
+	AuthInviteUser           AuthStateType = 9  // used for user invitation to set initial password
+	AuthPasskeyRegistration  AuthStateType = 10 // used for WebAuthn passkey registration ceremony
+	AuthPasskeyLogin         AuthStateType = 11 // used for WebAuthn passkey authentication ceremony
+	AuthPasskey2FA           AuthStateType = 12 // used for WebAuthn passkey as second factor after password login
 )
 
 type AuthState struct {
