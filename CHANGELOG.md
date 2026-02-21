@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.60.0](https://github.com/seatsurfing/seatsurfing/compare/v1.59.0...v1.60.0) (2026-02-21)
+
+
+### Features
+
+* add support for Passkeys / WebAuthn ([#1731](https://github.com/seatsurfing/seatsurfing/issues/1731)) ([34f0265](https://github.com/seatsurfing/seatsurfing/commit/34f0265d8fb88518cfa16b2257da95c7fc88162e))
+
+
+### Bug Fixes
+
+* encode UTF-8 characters in mail subjects ([#1733](https://github.com/seatsurfing/seatsurfing/issues/1733)) ([df1e613](https://github.com/seatsurfing/seatsurfing/commit/df1e613ff98c632c44920b1e899f4f62f276e9a2))
+* improve TOTP options code readability ([#1729](https://github.com/seatsurfing/seatsurfing/issues/1729)) ([83d2a57](https://github.com/seatsurfing/seatsurfing/commit/83d2a57beeae34efefd5047435f2011d3acd20f5))
+
 ## [1.59.0](https://github.com/seatsurfing/seatsurfing/compare/v1.58.0...v1.59.0) (2026-02-18)
 
 
