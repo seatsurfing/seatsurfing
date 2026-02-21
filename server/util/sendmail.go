@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"mime"
 	"mime/multipart"
 	"net/smtp"
 	"os"
@@ -346,7 +347,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		buf := bytes.NewBuffer(nil)
 		fmt.Fprintf(buf, "From: %s\n", sender.DisplayName+" <"+sender.Address+">")
 		fmt.Fprintf(buf, "To: %s\n", recipient.Address)
-		fmt.Fprintf(buf, "Subject: %s\n", subject)
+		fmt.Fprintf(buf, "Subject: %s\n", mime.QEncoding.Encode("UTF-8", subject))
 		buf.WriteString("MIME-Version: 1.0\n")
 
 		writer := multipart.NewWriter(buf)
