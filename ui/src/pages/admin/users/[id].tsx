@@ -7,6 +7,7 @@ import {
   RefreshCw as IconRefresh,
   Clipboard as IconCopy,
   Check as IconCheck,
+  XCircle as IconReset,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -41,6 +42,8 @@ interface State {
   role: number;
   showUsernameCopied: boolean;
   showPasswordCopied: boolean;
+  totpEnabled: boolean;
+  hasPasskeys: boolean;
 }
 
 interface Props {
@@ -77,6 +80,8 @@ class EditUser extends React.Component<Props, State> {
       role: User.UserRoleUser,
       showUsernameCopied: false,
       showPasswordCopied: false,
+      totpEnabled: false,
+      hasPasskeys: false,
     };
   }
 
@@ -134,6 +139,8 @@ class EditUser extends React.Component<Props, State> {
           authMethod: authMethod,
           authProviderId: user.authProviderId || "",
           role: user.role,
+          totpEnabled: user.totpEnabled,
+          hasPasskeys: user.hasPasskeys,
         });
       }
       this.setState({
@@ -192,6 +199,22 @@ class EditUser extends React.Component<Props, State> {
     if (window.confirm(this.props.t("confirmDeleteUser"))) {
       this.entity.delete().then(() => {
         this.setState({ goBack: true });
+      });
+    }
+  };
+
+  resetPasskeys = () => {
+    if (window.confirm(this.props.t("confirmResetPasskeys"))) {
+      User.adminResetPasskeys(this.entity.id).then(() => {
+        this.setState({ hasPasskeys: false });
+      });
+    }
+  };
+
+  resetTotp = () => {
+    if (window.confirm(this.props.t("confirmResetTotp"))) {
+      User.adminResetTotp(this.entity.id).then(() => {
+        this.setState({ totpEnabled: false });
       });
     }
   };
@@ -646,6 +669,41 @@ class EditUser extends React.Component<Props, State> {
                   {copyPasswordIcon}
                 </Button>
               </InputGroup>
+            </Col>
+          </Form.Group>
+
+          {/* Second factor reset — only shown for existing non-service-account users */}
+          <Form.Group
+            as={Row}
+            hidden={
+              !this.entity.id ||
+              this.isServiceAccount(this.state.role) ||
+              (!this.state.hasPasskeys && !this.state.totpEnabled)
+            }
+          >
+            <Form.Label column sm="2">
+              {this.props.t("secondFactor")}
+            </Form.Label>
+            <Col sm="4" className="d-flex gap-2 align-items-center">
+              {this.state.hasPasskeys && (
+                <Button
+                  className="btn-sm"
+                  variant="outline-danger"
+                  onClick={this.resetPasskeys}
+                >
+                  <IconReset className="feather" />{" "}
+                  {this.props.t("resetPasskeys")}
+                </Button>
+              )}
+              {this.state.totpEnabled && (
+                <Button
+                  className="btn-sm"
+                  variant="outline-danger"
+                  onClick={this.resetTotp}
+                >
+                  <IconReset className="feather" /> {this.props.t("resetTotp")}
+                </Button>
+              )}
             </Col>
           </Form.Group>
         </Form>

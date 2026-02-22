@@ -216,6 +216,14 @@ export default class User extends Entity {
   static async disableTotp(): Promise<void> {
     return Ajax.postData("/user/totp/disable", null).then(() => undefined);
   }
+
+  static async adminResetPasskeys(userId: string): Promise<void> {
+    return Ajax.delete("/user/" + userId + "/passkeys").then(() => undefined);
+  }
+
+  static async adminResetTotp(userId: string): Promise<void> {
+    return Ajax.delete("/user/" + userId + "/totp").then(() => undefined);
+  }
 }
 
 export class TotpGenerateResponse {

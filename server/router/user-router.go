@@ -131,6 +131,8 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/totp/{stateId}/secret", router.getTotpSecret).Methods("GET")
 	s.HandleFunc("/totp/validate", router.validateTotp).Methods("POST")
 	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
+	s.HandleFunc("/{id}/passkeys", router.adminResetPasskeys).Methods("DELETE")
+	s.HandleFunc("/{id}/totp", router.adminResetTotp).Methods("DELETE")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -144,6 +146,55 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
 	s.HandleFunc("/", router.getAll).Methods("GET")
+}
+
+func (router *UserRouter) adminResetPasskeys(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID {
+		SendForbidden(w)
+		return
+	}
+	if err := GetPasskeyRepository().DeleteAllByUserID(e.ID); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *UserRouter) adminResetTotp(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID {
+		SendForbidden(w)
+		return
+	}
+	e.TotpSecret = NullString("")
+	if err := GetUserRepository().Update(e); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
 }
 
 func (router *UserRouter) disableTotp(w http.ResponseWriter, r *http.Request) {
