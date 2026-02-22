@@ -350,7 +350,7 @@
   "style": "Style",
   "allowRecurringBookings": "Allow recurring bookings",
   "newUserDefaultMailNotification": "Enable mail notification for new users by default",
-  "enforceTOTP": "Enforce Two-Factor Authentication (TOTP) for all users",
+  "enforceTOTP": "Enforce Two-Factor Authentication for all users",
   "disabled": "Disabled",
   "optional": "Enabled (default optional)",
   "required": "Enabled (default required)",
