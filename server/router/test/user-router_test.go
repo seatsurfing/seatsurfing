@@ -570,3 +570,150 @@ func TestUserCompleteInvitation(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 }
+
+func TestUserGetActiveSessions(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/user/session", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetSessionResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody == nil {
+		t.Fatalf("Expected array response")
+	}
+}
+
+func TestUserGetSelf(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/user/me", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, user.ID, resBody.ID)
+}
+
+func TestUserGetByEmailForbiddenWhenNamesHidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+
+	// showNames defaults to false → 403
+	req := NewHTTPRequest("GET", "/user/byEmail/"+user2.Email, user1.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserGetByEmailNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	// Admin can use getOneByEmail because CanSpaceAdminOrg=true; but user not found → 404
+	req := NewHTTPRequest("GET", "/user/byEmail/nobody@example.com", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestUserGetByEmailSelf(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	// Admin looking up their own email → 404 (self lookup returns not found per handler)
+	req := NewHTTPRequest("GET", "/user/byEmail/"+admin.Email, admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestUserCountForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/user/count", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserCount(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	req := NewHTTPRequest("GET", "/user/count", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody GetUserCountResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody.Count < 1 {
+		t.Fatalf("Expected count >= 1, got %d", resBody.Count)
+	}
+}
+
+func TestUserAdminResetPasskeysForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Regular user tries to reset another user's passkeys → 403
+	req := NewHTTPRequest("DELETE", "/user/"+admin.ID+"/passkeys", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserAdminResetPasskeysNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	fakeID := "00000000-0000-0000-0000-000000000001"
+	req := NewHTTPRequest("DELETE", "/user/"+fakeID+"/passkeys", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestUserAdminResetTotpForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Regular user tries to reset another user's TOTP → 403
+	req := NewHTTPRequest("DELETE", "/user/"+admin.ID+"/totp", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserSetPasswordForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+
+	// user1 tries to set user2's password → 403
+	payload := `{"password": "newpassword123"}`
+	req := NewHTTPRequest("PUT", "/user/"+user2.ID+"/password", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserSetOwnPassword(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// User sets their own password → 204
+	payload := `{"password": "mynewpassword123"}`
+	req := NewHTTPRequest("PUT", "/user/"+user.ID+"/password", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}

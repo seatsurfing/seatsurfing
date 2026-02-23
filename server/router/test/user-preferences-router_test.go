@@ -124,3 +124,47 @@ func TestUserPreferencesApprovalNotifications(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
 	CheckTestString(t, "0", resBody3)
 }
+func TestPreferencesGetNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Invalid preference name → 404
+	req := NewHTTPRequest("GET", "/preference/nonexistentpreference", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPreferencesPutInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Invalid preference name → 404
+	payload := `{"value": "somevalue"}`
+	req := NewHTTPRequest("PUT", "/preference/nonexistentpreference", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPreferencesForbiddenNoAuth(t *testing.T) {
+	ClearTestDB()
+
+	// No auth → 401
+	req := NewHTTPRequest("GET", "/preference/", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestPreferencesCalDavListCalendarsInvalidBody(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Empty body → 400 (bad request) or 500 (CRYPT_KEY missing) or 404 (connection fails)
+	req := NewHTTPRequest("POST", "/preference/caldav/listCalendars", user.ID, bytes.NewBufferString(`{}`))
+	res := ExecuteTestRequest(req)
+	if res.Code != http.StatusBadRequest && res.Code != http.StatusInternalServerError && res.Code != http.StatusNotFound {
+		t.Fatalf("Expected 400, 404 or 500, got %d", res.Code)
+	}
+}

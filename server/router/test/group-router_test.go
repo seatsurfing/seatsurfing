@@ -198,3 +198,77 @@ func TestGroupsMembersAddForeignOrg(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
+
+func TestGroupsListForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Regular user (not space admin or org admin) → 403
+	req := NewHTTPRequest("GET", "/group/", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestGroupsCreateForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	payload := `{"name": "Test Group"}`
+	req := NewHTTPRequest("POST", "/group/", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestGroupsUpdateForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Admin creates group
+	payload := `{"name": "Test Group"}`
+	req := NewHTTPRequest("POST", "/group/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Regular user tries to update → 403
+	payload = `{"name": "Updated"}`
+	req = NewHTTPRequest("PUT", "/group/"+id, user.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestGroupsDeleteForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Admin creates group
+	payload := `{"name": "Test Group"}`
+	req := NewHTTPRequest("POST", "/group/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Regular user tries to delete → 403
+	req = NewHTTPRequest("DELETE", "/group/"+id, user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestGroupsGetNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	fakeID := "00000000-0000-0000-0000-000000000001"
+	req := NewHTTPRequest("GET", "/group/"+fakeID, admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}

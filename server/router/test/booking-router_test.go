@@ -2639,3 +2639,318 @@ func TestBookingsNonExistingUsers(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 
 }
+
+func TestBookingsListUnauthorized(t *testing.T) {
+	ClearTestDB()
+	// No auth token → should get 401
+	req := NewHTTPRequest("GET", "/booking/", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestBookingsFilter(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 10,
+		OrganizationID:        org.ID,
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	GetSpaceRepository().Create(s1)
+
+	// Create a booking
+	payload := "{\"spaceId\": \"" + s1.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Filter bookings as admin
+	start := "2030-01-01T00:00:00.000000000Z"
+	end := "2030-12-31T23:59:59.000000000Z"
+	req = NewHTTPRequest("GET", "/booking/filter/?start="+url.QueryEscape(start)+"&end="+url.QueryEscape(end), admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected 1 booking in filter result, got %d", len(resBody))
+	}
+}
+
+func TestBookingsFilterForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	start := "2030-01-01T00:00:00.000000000Z"
+	end := "2030-12-31T23:59:59.000000000Z"
+	req := NewHTTPRequest("GET", "/booking/filter/?start="+url.QueryEscape(start)+"&end="+url.QueryEscape(end), user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsFilterBadRequest(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	// Missing start/end params → 400
+	req := NewHTTPRequest("GET", "/booking/filter/", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestBookingsCurrent(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	req := NewHTTPRequest("GET", "/booking/current/", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody == nil {
+		t.Fatal("Expected non-nil array")
+	}
+}
+
+func TestBookingsCurrentForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/booking/current/", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsPendingApprovalsCount(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	req := NewHTTPRequest("GET", "/booking/pendingapprovals/count", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPendingApprovalsCountResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody == nil {
+		t.Fatal("Expected pending approvals count response")
+	}
+}
+
+func TestBookingsPendingApprovalsCountForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/booking/pendingapprovals/count", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsPendingApprovalsList(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	req := NewHTTPRequest("GET", "/booking/pendingapprovals/", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody == nil {
+		t.Fatal("Expected non-nil array")
+	}
+}
+
+func TestBookingsPendingApprovalsListForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/booking/pendingapprovals/", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsGetICal(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 10,
+		OrganizationID:        org.ID,
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	GetSpaceRepository().Create(s1)
+
+	payload := "{\"spaceId\": \"" + s1.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Get iCal as the booking owner
+	req = NewHTTPRequest("GET", "/booking/"+id+"/ical", user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	contentType := res.Header().Get("Content-Type")
+	if contentType != "text/calendar" {
+		t.Fatalf("Expected Content-Type text/calendar, got %s", contentType)
+	}
+}
+
+func TestBookingsGetICalNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/booking/"+uuid.New().String()+"/ical", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestBookingsGetICalForeignUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 10,
+		OrganizationID:        org.ID,
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	GetSpaceRepository().Create(s1)
+
+	// user1 creates a booking
+	payload := "{\"spaceId\": \"" + s1.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// user2 tries to get user1's iCal → should be forbidden
+	req = NewHTTPRequest("GET", "/booking/"+id+"/ical", user2.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsApproveNonApprover(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+
+	// Create a group with an approver that is NOT adminUser
+	group := &Group{
+		Name:           "Approver Group",
+		OrganizationID: org.ID,
+	}
+	GetGroupRepository().Create(group)
+	approver := CreateTestUserOrgAdmin(org)
+	GetGroupRepository().AddMembers(group, []string{approver.ID})
+
+	l := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	GetSpaceRepository().Create(s1)
+	GetSpaceRepository().AddApprovers(s1, []string{group.ID})
+
+	// Admin user creates a booking
+	payload := "{\"spaceId\": \"" + s1.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// adminUser tries to approve, but is not in the approver group → 403
+	payload = `{"approved": true}`
+	req = NewHTTPRequest("POST", "/booking/"+id+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsApproveNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+uuid.New().String()+"/approve", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestBookingsPresenceReportForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	now := time.Now()
+	start := now.Format(JsDateTimeFormatWithTimezone)
+	end := now.Add(24 * time.Hour).Format(JsDateTimeFormatWithTimezone)
+	req := NewHTTPRequest("GET", "/booking/report/presence/?start="+url.QueryEscape(start)+"&end="+url.QueryEscape(end), user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBookingsPresenceReportInvalidRange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	now := time.Now()
+	// Range > 31 days
+	start := now.Format(JsDateTimeFormatWithTimezone)
+	end := now.Add(32 * 24 * time.Hour).Format(JsDateTimeFormatWithTimezone)
+	req := NewHTTPRequest("GET", "/booking/report/presence/?start="+url.QueryEscape(start)+"&end="+url.QueryEscape(end), admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestBookingsDebugTimeIssues(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	payload := "{\"time\": \"2030-09-01T08:30:00Z\"}"
+	req := NewHTTPRequest("POST", "/booking/debugtimeissues/", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *DebugTimeIssuesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody == nil {
+		t.Fatal("Expected debug time issues response body")
+	}
+}
+
+func TestBookingsDebugTimeIssuesBadRequest(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Missing required time field → 400
+	payload := "{}"
+	req := NewHTTPRequest("POST", "/booking/debugtimeissues/", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}

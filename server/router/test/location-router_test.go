@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
+
+	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
@@ -231,4 +234,232 @@ func TestLocationsInvalidTimezone(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestLocationsSearch(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Create a location
+	admin := CreateTestUserOrgAdmin(org)
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Search with empty attributes → falls back to getAll
+	payload = `{"enter": "2030-09-01T08:00:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": []}`
+	req = NewHTTPRequest("POST", "/location/search", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) < 1 {
+		t.Fatalf("Expected at least 1 location in search result, got %d", len(resBody))
+	}
+}
+
+func TestLocationsSearchEmpty(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// No locations created, search with attributes that don't match anything → empty result
+	// Use an attribute ID that won't match
+	payload := `{"enter": "2030-09-01T08:00:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": [{"attributeId": "` + uuid.New().String() + `", "value": "some-value"}]}`
+	req := NewHTTPRequest("POST", "/location/search", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 0 {
+		t.Fatalf("Expected empty search result, got %d", len(resBody))
+	}
+}
+
+func TestLocationsLoadSampleData(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	req := NewHTTPRequest("POST", "/location/loadsampledata", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	// Should succeed without response body (handler calls GetOrganizationRepository().CreateSampleData)
+	// Returns 200 OK without a body (no explicit response send)
+	if res.Code != http.StatusOK && res.Code != http.StatusNoContent {
+		t.Fatalf("Expected 200 or 204, got %d", res.Code)
+	}
+}
+
+func TestLocationsLoadSampleDataForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("POST", "/location/loadsampledata", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestLocationsGetAttributes(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Get attributes (should be empty initially)
+	req = NewHTTPRequest("GET", "/location/"+id+"/attribute", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceAttributeValueResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 0 {
+		t.Fatalf("Expected empty attribute list, got %d", len(resBody))
+	}
+}
+
+func TestLocationsGetAttributesNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("GET", "/location/"+uuid.New().String()+"/attribute", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestLocationsAddAttribute(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	// Create a location-applicable space attribute
+	attr := &SpaceAttribute{
+		OrganizationID:     org.ID,
+		Label:              "TestAttr",
+		Type:               3, // SettingTypeString
+		LocationApplicable: true,
+		SpaceApplicable:    false,
+	}
+	GetSpaceAttributeRepository().Create(attr)
+
+	// Set the attribute value on the location
+	payload = `{"value": "test-value"}`
+	req = NewHTTPRequest("POST", "/location/"+locID+"/attribute/"+attr.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify attribute was set
+	req = NewHTTPRequest("GET", "/location/"+locID+"/attribute", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceAttributeValueResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected 1 attribute, got %d", len(resBody))
+	}
+}
+
+func TestLocationsAddAttributeInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	// Try to set non-existent attribute → 404
+	payload = `{"value": "test-value"}`
+	req = NewHTTPRequest("POST", "/location/"+locID+"/attribute/"+uuid.New().String(), loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestLocationsDeleteAttribute(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	// Create a location-applicable space attribute and set it
+	attr := &SpaceAttribute{
+		OrganizationID:     org.ID,
+		Label:              "DeleteTestAttr",
+		Type:               3, // SettingTypeString
+		LocationApplicable: true,
+		SpaceApplicable:    false,
+	}
+	GetSpaceAttributeRepository().Create(attr)
+
+	payload = `{"value": "to-be-deleted"}`
+	req = NewHTTPRequest("POST", "/location/"+locID+"/attribute/"+attr.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Delete the attribute
+	req = NewHTTPRequest("DELETE", "/location/"+locID+"/attribute/"+attr.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestLocationsGetMapNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Try to get map for a non-existent location → 404
+	fakeID := "00000000-0000-0000-0000-000000000001"
+	req := NewHTTPRequest("GET", "/location/"+fakeID+"/map", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestLocationsPostMapForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Non-admin tries to upload map → 403
+	req = NewHTTPRequest("POST", "/location/"+id+"/map", user.ID, bytes.NewBufferString("fake-image-data"))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
