@@ -1,0 +1,5005 @@
+openapi: 3.1.0
+info:
+  title: Seatsurfing REST API
+  description: |
+    Seatsurfing provides REST APIs used by the mobile and web app as well as the administrator web interface.
+
+    ## Authorization checks
+
+    Each API endpoint is protected by authorization checks:
+    1. **Role check**: Role of the user (Anonymous, User, Space Admin, Org Admin, Super Admin)
+    2. **Organization check**: Organization membership
+
+    ## Roles
+
+    - **Anonymous**: Every user allowed, no authorization required
+    - **User**: Authorized user who is a member of an organization
+    - **Space Admin**: An organization's space administrator (can manage locations, spaces, bookings)
+    - **Org Admin**: An organization's full administrator
+    - **Super Admin**: Global administrator with access to all organizations and all functions
+
+    ## Authentication
+
+    Authentication is done via JWT Bearer tokens in the `Authorization` header. Service accounts may also use HTTP Basic Authentication.
+
+    ## Session management
+
+    - Access Token Lifetime: 15 minutes
+    - Refresh Token Lifetime: 28 days
+    - Tokens are signed using RS512
+
+    ## Custom error codes
+
+    Some endpoints return custom error codes via the `X-Error-Code` response header:
+    - `1001`: Booking slot conflict
+    - `1002`: Location max concurrent bookings reached
+    - `1003`: Too many upcoming bookings for user
+    - `1004`: Too many days in advance
+    - `1005`: Invalid booking duration
+    - `1006`: Max concurrent bookings for user reached
+    - `1007`: Invalid minimum booking duration
+    - `1008`: Max hours before delete restriction
+    - `1009`: User not allowed to book this space
+    - `1010`: Booking subject required
+    - `1011`: Booking in past
+    - `2001`: Presence report date range too long
+  version: 1.60.0
+  license:
+    name: MIT
+    url: https://github.com/seatsurfing/seatsurfing/blob/main/LICENSE
+
+servers:
+  - url: /
+    description: Relative to the Seatsurfing instance
+
+tags:
+  - name: Authentication
+    description: Login, logout, password reset, token refresh, and OAuth flows
+  - name: Bookings
+    description: Create, read, update, and delete bookings
+  - name: Recurring Bookings
+    description: Create and manage recurring bookings
+  - name: Locations
+    description: Manage locations (areas/floors)
+  - name: Spaces
+    description: Manage spaces (desks/rooms) within locations
+  - name: Space Attributes
+    description: Manage space attribute definitions
+  - name: Organizations
+    description: Manage organizations and their domains
+  - name: Users
+    description: Manage users, passwords, TOTP and passkeys
+  - name: Groups
+    description: Manage user groups and memberships
+  - name: Buddies
+    description: Manage buddy relationships
+  - name: Auth Providers
+    description: Manage OAuth/OIDC authentication providers
+  - name: Settings
+    description: Get and set organization settings
+  - name: User Preferences
+    description: Get and set user preferences (CalDAV, colors, etc.)
+  - name: Statistics
+    description: Organization statistics and reports
+  - name: Search
+    description: Global search across users, locations, spaces, and groups
+  - name: Confluence
+    description: Atlassian Confluence SSO integration
+  - name: Healthcheck
+    description: Application health check
+  - name: Update Check
+    description: Check for available updates
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained via login or refresh endpoints
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Service account authentication using `{orgId}_{email}` as username and the service account password
+
+  schemas:
+    # --- Authentication ---
+    AuthPasswordRequest:
+      type: object
+      required: [email, password, organizationId]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+        organizationId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          description: TOTP code for 2FA (required if TOTP is enabled for the user)
+        passkeyStateId:
+          type: string
+          description: State ID from a passkey challenge
+        passkeyCredential:
+          type: object
+          description: Passkey credential response
+
+    JWTResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (15 min lifetime)
+        refreshToken:
+          type: string
+          description: Refresh token ID (28 day lifetime)
+        logoutUrl:
+          type: string
+          description: IdP logout URL (only for OAuth logins)
+        profilePageUrl:
+          type: string
+          description: IdP profile page URL (only for OAuth logins)
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AuthPreflightResponse:
+      type: object
+      properties:
+        organization:
+          $ref: '#/components/schemas/GetOrganizationResponse'
+        authProviders:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetAuthProviderPublicResponse'
+        requirePassword:
+          type: boolean
+          description: Whether any user has a password set
+        disablePasswordLogin:
+          type: boolean
+          description: Whether password login is disabled globally
+        domain:
+          type: string
+          description: Primary domain of the organization
+
+    InitPasswordResetRequest:
+      type: object
+      required: [organizationId, email]
+      properties:
+        organizationId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          maxLength: 254
+
+    CompletePasswordResetRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+
+    # --- Bookings ---
+    CreateBookingRequest:
+      type: object
+      required: [spaceId, enter, leave]
+      properties:
+        spaceId:
+          type: string
+          format: uuid
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+        subject:
+          type: string
+        userEmail:
+          type: string
+          format: email
+          description: Email of the user to book for (Space Admin only)
+
+    GetBookingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userEmail:
+          type: string
+          format: email
+        approved:
+          type: boolean
+        spaceId:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+        recurringId:
+          type: string
+        space:
+          $ref: '#/components/schemas/GetSpaceResponse'
+
+    PreCreateBookingRequest:
+      type: object
+      required: [locationId, enter, leave]
+      properties:
+        locationId:
+          type: string
+          format: uuid
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+
+    SetBookingApprovalRequest:
+      type: object
+      properties:
+        approved:
+          type: boolean
+
+    GetPendingApprovalsCountResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+
+    GetPresenceReportResult:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetUserInfoSmall'
+        dates:
+          type: array
+          items:
+            type: string
+        presences:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+
+    GetUserInfoSmall:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+
+    DebugTimeIssuesRequest:
+      type: object
+      required: [time]
+      properties:
+        time:
+          type: string
+          format: date-time
+
+    DebugTimeIssuesResponse:
+      type: object
+      properties:
+        tz:
+          type: string
+        error:
+          type: string
+        receivedTime:
+          type: string
+        receivedTimeTransformed:
+          type: string
+        dbTime:
+          type: string
+          format: date-time
+        result:
+          type: string
+          format: date-time
+
+    # --- Recurring Bookings ---
+    CreateRecurringBookingRequest:
+      type: object
+      required: [spaceId, enter, leave, end, cadence, cycle]
+      properties:
+        spaceId:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        enter:
+          type: string
+          format: date-time
+          description: Start time of the first booking
+        leave:
+          type: string
+          format: date-time
+          description: End time of the first booking
+        end:
+          type: string
+          format: date-time
+          description: End date of the recurrence
+        cadence:
+          type: integer
+          minimum: 1
+          maximum: 2
+          description: "1 = weekly, 2 = daily"
+        cycle:
+          type: integer
+          minimum: 1
+          description: "Repeat every N weeks/days"
+        weekdays:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          description: "Weekdays (0=Sunday..6=Saturday), used with weekly cadence"
+
+    CreateRecurringBookingResponse:
+      type: object
+      properties:
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+        success:
+          type: boolean
+        errorCode:
+          type: integer
+        id:
+          type: string
+          format: uuid
+
+    GetRecurringBookingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        spaceId:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        cadence:
+          type: integer
+        cycle:
+          type: integer
+        weekdays:
+          type: array
+          items:
+            type: integer
+
+    # --- Locations ---
+    CreateLocationRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        maxConcurrentBookings:
+          type: integer
+        timezone:
+          type: string
+          description: IANA timezone (e.g. "Europe/Berlin")
+        enabled:
+          type: boolean
+        mapScale:
+          type: number
+          format: double
+
+    GetLocationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        maxConcurrentBookings:
+          type: integer
+        timezone:
+          type: string
+        enabled:
+          type: boolean
+        mapScale:
+          type: number
+          format: double
+        mapWidth:
+          type: integer
+        mapHeight:
+          type: integer
+        mapMimeType:
+          type: string
+
+    GetMapResponse:
+      type: object
+      properties:
+        width:
+          type: integer
+        height:
+          type: integer
+        scale:
+          type: number
+          format: double
+        mimeType:
+          type: string
+        data:
+          type: string
+          format: byte
+          description: Base64-encoded image data
+
+    SearchLocationRequest:
+      type: object
+      required: [enter, leave]
+      properties:
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchAttribute'
+
+    SearchAttribute:
+      type: object
+      properties:
+        attributeId:
+          type: string
+        comparator:
+          type: string
+          enum: [eq, neq, contains, ncontains, gt, lt, gte, lte]
+        value:
+          type: string
+
+    # --- Spaces ---
+    CreateSpaceRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        x:
+          type: integer
+          description: X position on the location map
+        "y":
+          type: integer
+          description: Y position on the location map
+        width:
+          type: integer
+        height:
+          type: integer
+        rotation:
+          type: integer
+        requireSubject:
+          type: boolean
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpaceAttributeValueRequest'
+        approverGroupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        allowedBookerGroupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    SpaceAttributeValueRequest:
+      type: object
+      properties:
+        attributeId:
+          type: string
+          format: uuid
+        value:
+          type: string
+
+    GetSpaceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        available:
+          type: boolean
+        name:
+          type: string
+        x:
+          type: integer
+        "y":
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        rotation:
+          type: integer
+        requireSubject:
+          type: boolean
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpaceAttributeValueRequest'
+        approverGroupIds:
+          type: array
+          items:
+            type: string
+        allowedBookerGroupIds:
+          type: array
+          items:
+            type: string
+        location:
+          $ref: '#/components/schemas/GetLocationResponse'
+
+    GetSpaceAvailabilityResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        available:
+          type: boolean
+        name:
+          type: string
+        x:
+          type: integer
+        "y":
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        rotation:
+          type: integer
+        requireSubject:
+          type: boolean
+        allowed:
+          type: boolean
+          description: Whether the authenticated user is allowed to book this space
+        approvalRequired:
+          type: boolean
+          description: Whether booking this space requires approval
+        bookings:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetSpaceAvailabilityBookingsResponse'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpaceAttributeValueRequest'
+
+    GetSpaceAvailabilityBookingsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        recurringId:
+          type: string
+        userId:
+          type: string
+          format: uuid
+          description: Only visible if showNames is enabled or it's the user's own booking
+        userEmail:
+          type: string
+          format: email
+          description: Only visible if showNames is enabled or it's the user's own booking
+        enter:
+          type: string
+          format: date-time
+        leave:
+          type: string
+          format: date-time
+        subject:
+          type: string
+
+    SpaceBulkUpdateRequest:
+      type: object
+      properties:
+        creates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateSpaceRequest'
+        updates:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/CreateSpaceRequest'
+              - type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        deleteIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    BulkUpdateResponse:
+      type: object
+      properties:
+        creates:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkUpdateItemResponse'
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkUpdateItemResponse'
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkUpdateItemResponse'
+
+    BulkUpdateItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        success:
+          type: boolean
+
+    # --- Space Attributes ---
+    CreateSpaceAttributeRequest:
+      type: object
+      required: [label]
+      properties:
+        label:
+          type: string
+        type:
+          type: integer
+          description: "Setting type: 1=int, 2=bool, 3=string"
+        spaceApplicable:
+          type: boolean
+        locationApplicable:
+          type: boolean
+
+    GetSpaceAttributeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        label:
+          type: string
+        type:
+          type: integer
+        spaceApplicable:
+          type: boolean
+        locationApplicable:
+          type: boolean
+
+    SetSpaceAttributeValueRequest:
+      type: object
+      properties:
+        value:
+          type: string
+
+    GetSpaceAttributeValueResponse:
+      type: object
+      properties:
+        attributeId:
+          type: string
+          format: uuid
+        value:
+          type: string
+
+    # --- Organizations ---
+    CreateOrganizationRequest:
+      type: object
+      required: [name, firstname, lastname, email, language]
+      properties:
+        name:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+          format: email
+        language:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: ISO 639-1 language code (e.g. "en", "de")
+
+    GetOrganizationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+          format: email
+        language:
+          type: string
+
+    GetDomainResponse:
+      type: object
+      properties:
+        domain:
+          type: string
+        active:
+          type: boolean
+        verifyToken:
+          type: string
+        primary:
+          type: boolean
+        accessible:
+          type: boolean
+        accessCheck:
+          type:
+            - string
+            - 'null'
+          format: date-time
+
+    ChangeOrgEmailResponse:
+      type: object
+      properties:
+        verifyUuid:
+          type: string
+          description: UUID of the verification state (empty if no verification needed)
+
+    ChangeEmailAddressVerifyRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: 6-digit numeric verification code
+
+    CompleteOrgDeletionRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: 6-digit numeric confirmation code
+
+    DeleteOrgResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 6-digit confirmation code sent via email
+
+    DomainAccessibilityPayload:
+      type: object
+      properties:
+        domain:
+          type: string
+        orgId:
+          type: string
+          format: uuid
+        status:
+          type: string
+
+    # --- Users ---
+    CreateUserRequest:
+      type: object
+      required: [email, firstname, lastname]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        firstname:
+          type: string
+          maxLength: 128
+        lastname:
+          type: string
+          maxLength: 128
+        atlassianId:
+          type: string
+        role:
+          type: integer
+          description: "0=User, 1=SpaceAdmin, 2=OrgAdmin, 3=SuperAdmin, 50=ServiceAccountRO, 51=ServiceAccountRW"
+        authProviderId:
+          type: string
+          format: uuid
+        password:
+          type: string
+          description: Set initial password (alternative to sendInvitation)
+        sendInvitation:
+          type: boolean
+          description: Send email invitation to set password
+        organizationId:
+          type: string
+          format: uuid
+          description: Only usable by Super Admins to create users in other organizations
+
+    GetUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstname:
+          type: string
+        lastname:
+          type: string
+        atlassianId:
+          type: string
+        role:
+          type: integer
+        authProviderId:
+          type: string
+          format: uuid
+        requirePassword:
+          type: boolean
+          description: Whether user has a password set
+        passwordPending:
+          type: boolean
+          description: Whether user needs to set password via invitation
+        spaceAdmin:
+          type: boolean
+        admin:
+          type: boolean
+          description: Organization admin
+        superAdmin:
+          type: boolean
+        totpEnabled:
+          type: boolean
+        hasPasskeys:
+          type: boolean
+        organization:
+          $ref: '#/components/schemas/GetOrganizationResponse'
+
+    SetPasswordRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+
+    GetUserCountResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+
+    GetSessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        device:
+          type: string
+        created:
+          type: string
+          format: date-time
+
+    InitMergeUsersRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+
+    GetMergeRequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+
+    GenerateTotpResponse:
+      type: object
+      properties:
+        image:
+          type: string
+          description: Base64-encoded PNG of the TOTP QR code
+        stateId:
+          type: string
+          format: uuid
+          description: State ID for the TOTP setup flow
+
+    GetTotpSecretResponse:
+      type: object
+      properties:
+        secret:
+          type: string
+          description: TOTP secret key for manual entry
+
+    ValidateTotpRequest:
+      type: object
+      required: [code, stateId]
+      properties:
+        code:
+          type: string
+          description: 6-digit TOTP code
+          minLength: 6
+          maxLength: 6
+        stateId:
+          type: string
+          format: uuid
+
+    # --- Passkeys ---
+    BeginPasskeyLoginRequest:
+      type: object
+      required: [organizationId]
+      properties:
+        organizationId:
+          type: string
+          format: uuid
+
+    BeginPasskeyLoginResponse:
+      type: object
+      properties:
+        stateId:
+          type: string
+          format: uuid
+        challenge:
+          type: object
+          description: WebAuthn PublicKeyCredentialRequestOptions
+
+    FinishPasskeyLoginRequest:
+      type: object
+      required: [stateId, credential]
+      properties:
+        stateId:
+          type: string
+          format: uuid
+        credential:
+          type: object
+          description: WebAuthn AuthenticatorAssertionResponse
+
+    PasskeyListItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+
+    BeginPasskeyRegistrationResponse:
+      type: object
+      properties:
+        stateId:
+          type: string
+          format: uuid
+        challenge:
+          type: object
+          description: WebAuthn PublicKeyCredentialCreationOptions
+
+    FinishPasskeyRegistrationRequest:
+      type: object
+      required: [stateId, name, credential]
+      properties:
+        stateId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        credential:
+          type: object
+          description: WebAuthn AuthenticatorAttestationResponse
+
+    RenamePasskeyRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+
+    # --- Groups ---
+    CreateGroupRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 3
+
+    GetGroupResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    # --- Buddies ---
+    CreateBuddyRequest:
+      type: object
+      required: [buddyId]
+      properties:
+        buddyId:
+          type: string
+          format: uuid
+
+    GetBuddyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        buddyId:
+          type: string
+          format: uuid
+        buddyEmail:
+          type: string
+          format: email
+        buddyFirstBooking:
+          oneOf:
+            - type: object
+              properties:
+                enter:
+                  type: string
+                  format: date-time
+                leave:
+                  type: string
+                  format: date-time
+                desk:
+                  type: string
+                room:
+                  type: string
+            - type: 'null'
+
+    # --- Auth Providers ---
+    CreateAuthProviderRequest:
+      type: object
+      required: [name, providerType, authUrl, tokenUrl, scopes, userInfoUrl, userInfoEmailField, clientId, clientSecret]
+      properties:
+        name:
+          type: string
+        providerType:
+          type: integer
+        authUrl:
+          type: string
+          format: uri
+        tokenUrl:
+          type: string
+          format: uri
+        authStyle:
+          type: integer
+        scopes:
+          type: string
+          description: Comma-separated list of OAuth scopes
+        userInfoUrl:
+          type: string
+          format: uri
+        userInfoEmailField:
+          type: string
+        userInfoFirstnameField:
+          type: string
+        userInfoLastnameField:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        logoutUrl:
+          type: string
+          format: uri
+          description: "Supports placeholder: {logoutRedirectUri}"
+        profilePageUrl:
+          type: string
+          format: uri
+
+    GetAuthProviderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        readOnly:
+          type: boolean
+          description: Whether this provider was auto-configured and cannot be edited
+        name:
+          type: string
+        providerType:
+          type: integer
+        authUrl:
+          type: string
+        tokenUrl:
+          type: string
+        authStyle:
+          type: integer
+        scopes:
+          type: string
+        userInfoUrl:
+          type: string
+        userInfoEmailField:
+          type: string
+        userInfoFirstnameField:
+          type: string
+        userInfoLastnameField:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        logoutUrl:
+          type: string
+        profilePageUrl:
+          type: string
+
+    GetAuthProviderPublicResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    # --- Settings ---
+    SetSettingsRequest:
+      type: object
+      properties:
+        value:
+          type: string
+
+    GetSettingsResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+
+    # --- Statistics ---
+    GetStatsResponse:
+      type: object
+      properties:
+        numUsers:
+          type: integer
+        numBookings:
+          type: integer
+        numLocations:
+          type: integer
+        numSpaces:
+          type: integer
+        numBookingsCurrent:
+          type: integer
+        numBookingsToday:
+          type: integer
+        numBookingsYesterday:
+          type: integer
+        numBookingsThisWeek:
+          type: integer
+        spaceLoadToday:
+          type: integer
+          description: Space load percentage for today
+        spaceLoadYesterday:
+          type: integer
+          description: Space load percentage for yesterday
+        spaceLoadThisWeek:
+          type: integer
+          description: Space load percentage for this week
+        spaceLoadLastWeek:
+          type: integer
+          description: Space load percentage for last week
+
+    # --- Search ---
+    GetSearchResultsResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetUserResponse'
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetLocationResponse'
+        spaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetSpaceResponse'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetGroupResponse'
+
+    # --- Healthcheck ---
+    HealthcheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+        code:
+          type: integer
+        errors:
+          type:
+            - array
+            - 'null'
+          items:
+            type: string
+
+    # --- CalDAV ---
+    ListCaldavCalendarsRequest:
+      type: object
+      required: [url, username, password]
+      properties:
+        url:
+          type: string
+          format: uri
+        username:
+          type: string
+        password:
+          type: string
+
+    ListCaldavCalendarsResponse:
+      type: object
+      properties:
+        path:
+          type: string
+        name:
+          type: string
+
+  responses:
+    Created:
+      description: Object created successfully
+      headers:
+        X-Object-ID:
+          schema:
+            type: string
+          description: ID of the created object
+    Updated:
+      description: Object updated or deleted successfully (204 No Content)
+    BadRequest:
+      description: Malformed request or incomplete JSON
+      headers:
+        X-Error-Code:
+          schema:
+            type: integer
+          description: Custom error code (see error codes table)
+    Unauthorized:
+      description: JWT in Authorization header missing, expired, or invalid
+    Forbidden:
+      description: Authorized, but user has no access to requested resource
+    NotFound:
+      description: Object not found
+    Conflict:
+      description: Conflicting request (e.g. slot already booked)
+    PaymentRequired:
+      description: Feature not available (license/plan restriction)
+    InternalServerError:
+      description: Internal server error
+
+paths:
+  # ===========================
+  # Authentication
+  # ===========================
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Password login
+      description: Authenticate a user with email and password. Returns JWT access and refresh tokens. Supports TOTP 2FA and passkey verification.
+      operationId: loginPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthPasswordRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWTResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: TOTP code required (user has 2FA enabled but code was not provided)
+        '404':
+          description: Invalid credentials or user not found
+
+  /auth/passkey/login/begin:
+    post:
+      tags: [Authentication]
+      summary: Begin passkey login
+      description: Initiates a WebAuthn/passkey authentication flow. Returns a challenge that must be signed by the user's authenticator.
+      operationId: beginPasskeyLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeginPasskeyLoginRequest'
+      responses:
+        '200':
+          description: Passkey challenge created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeginPasskeyLoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/passkey/login/finish:
+    post:
+      tags: [Authentication]
+      summary: Finish passkey login
+      description: Completes a WebAuthn/passkey authentication flow with the signed challenge. Returns JWT tokens on success.
+      operationId: finishPasskeyLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinishPasskeyLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWTResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Exchange a valid refresh token for a new access token and refresh token pair. The old refresh token is invalidated.
+      operationId: refreshAccessToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWTResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/verify/{id}:
+    get:
+      tags: [Authentication]
+      summary: Verify OAuth/Atlassian login
+      description: Retrieve JWT tokens after a successful OAuth or Atlassian SSO login. The `id` is the auth state ID received after the OAuth callback redirect.
+      operationId: verifyLogin
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Auth state ID
+      responses:
+        '200':
+          description: Login verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWTResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/{id}/login/{type}/:
+    get:
+      tags: [Authentication]
+      summary: Initiate OAuth login
+      description: Redirects the user to the OAuth provider's authorization page.
+      operationId: oauthLogin
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Auth provider ID
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [web, app, ui]
+          description: Login type (affects redirect URL after login)
+        - name: redir
+          in: query
+          schema:
+            type: string
+          description: Optional redirect path after successful login
+      responses:
+        '307':
+          description: Redirect to OAuth provider
+
+  /auth/{id}/callback:
+    get:
+      tags: [Authentication]
+      summary: OAuth callback
+      description: Server-to-server callback endpoint used by the OAuth provider after user authorization. Not called directly by clients.
+      operationId: oauthCallback
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Auth provider ID
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: code
+          in: query
+          schema:
+            type: string
+      responses:
+        '307':
+          description: Redirect to success or failure page
+
+  /auth/singleorg:
+    get:
+      tags: [Authentication]
+      summary: Get single organization details
+      description: Returns organization details and available auth providers if the instance hosts exactly one organization. Returns 404 if there are multiple organizations.
+      operationId: singleOrg
+      security: []
+      responses:
+        '200':
+          description: Single organization details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthPreflightResponse'
+        '404':
+          description: Instance has multiple organizations
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/org/{domain}:
+    get:
+      tags: [Authentication]
+      summary: Get organization details by domain
+      description: Returns organization details and available auth providers for a domain. Used for the login preflight flow.
+      operationId: getOrgDetails
+      security: []
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Organization domain
+      responses:
+        '200':
+          description: Organization preflight data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthPreflightResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/initpwreset:
+    post:
+      tags: [Authentication]
+      summary: Initiate password reset
+      description: Sends a password reset email to the user. Always returns 204 regardless of whether the user exists (to prevent user enumeration).
+      operationId: initPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitPasswordResetRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Password login is disabled
+
+  /auth/pwreset/{id}:
+    post:
+      tags: [Authentication]
+      summary: Complete password reset
+      description: Sets a new password using the password reset token received via email.
+      operationId: completePasswordReset
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Password reset auth state ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletePasswordResetRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/setpw/{id}:
+    get:
+      tags: [Authentication]
+      summary: Validate user invitation link
+      description: Checks if a user invitation link is still valid (password not yet set).
+      operationId: validateUserInvitation
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Invitation auth state ID
+      responses:
+        '204':
+          description: Invitation link is valid
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: Password has already been set (link expired)
+    post:
+      tags: [Authentication]
+      summary: Complete user invitation
+      description: Sets the initial password for an invited user.
+      operationId: completeUserInvitation
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Invitation auth state ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletePasswordResetRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: Password has already been set (link expired)
+
+  /auth/logout/{where}:
+    get:
+      tags: [Authentication]
+      summary: Logout
+      description: |
+        Terminates sessions. The `where` parameter determines which sessions to terminate:
+        - `current`: Terminates only the current session
+        - `all`: Terminates all sessions for the user
+        - `{sessionId}`: Terminates a specific session by ID
+      operationId: logout
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: where
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "'current', 'all', or a specific session UUID"
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Bookings
+  # ===========================
+  /booking/:
+    get:
+      tags: [Bookings]
+      summary: Get own upcoming bookings
+      description: Returns the authenticated user's upcoming bookings (bookings that haven't ended yet in the location's timezone).
+      operationId: getOwnBookings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of upcoming bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetBookingResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Bookings]
+      summary: Create a booking
+      description: |
+        Creates a new booking. Space Admins can book on behalf of other users by providing `userEmail`.
+        Various validation checks are performed (max bookings, max days in advance, slot conflicts, etc.).
+      operationId: createBooking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Slot conflict (space already booked for that time)
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /booking/{id}:
+    get:
+      tags: [Bookings]
+      summary: Get a booking
+      description: Returns a single booking by ID. Users can view their own bookings; Space Admins can view any booking in their organization.
+      operationId: getBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBookingResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Bookings]
+      summary: Update a booking
+      description: Updates an existing booking. Users can update their own bookings; Space Admins can update any booking.
+      operationId: updateBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Bookings]
+      summary: Delete a booking
+      description: Deletes a booking. Users can delete their own bookings; Space Admins can delete any booking. Respects the "max hours before delete" setting.
+      operationId: deleteBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /booking/{id}/approve:
+    post:
+      tags: [Bookings]
+      summary: Approve or decline a booking
+      description: Approves or declines a pending booking. Requires Space Admin role and membership in an approver group for the space.
+      operationId: approveBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetBookingApprovalRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /booking/{id}/ical:
+    get:
+      tags: [Bookings]
+      summary: Download booking as iCal
+      description: Downloads the booking as an iCalendar (.ics) file.
+      operationId: getBookingIcal
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: iCalendar file
+          content:
+            text/calendar:
+              schema:
+                type: string
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /booking/precheck/:
+    post:
+      tags: [Bookings]
+      summary: Pre-check booking creation
+      description: Validates whether a booking can be created for the given time range and location without actually creating it. Useful for client-side validation.
+      operationId: preBookingCreateCheck
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreCreateBookingRequest'
+      responses:
+        '204':
+          description: Booking would be valid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /booking/filter/:
+    get:
+      tags: [Bookings]
+      summary: Get filtered bookings
+      description: Returns bookings for an organization filtered by date range and optionally by user email. Requires Space Admin role.
+      operationId: getFilteredBookings
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Start of date range (RFC 3339)
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: End of date range (RFC 3339)
+        - name: user
+          in: query
+          schema:
+            type: string
+            format: email
+          description: Filter by user email
+      responses:
+        '200':
+          description: Filtered bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetBookingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /booking/current/:
+    get:
+      tags: [Bookings]
+      summary: Get current bookings
+      description: Returns all currently active bookings for the organization. Requires Space Admin role.
+      operationId: getCurrentBookings
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+            format: email
+          description: Filter by user email
+      responses:
+        '200':
+          description: Current bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetBookingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /booking/pendingapprovals/count:
+    get:
+      tags: [Bookings]
+      summary: Get pending approvals count
+      description: Returns the number of bookings pending approval for the authenticated Space Admin.
+      operationId: getPendingApprovalsCount
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Pending approvals count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPendingApprovalsCountResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /booking/pendingapprovals/:
+    get:
+      tags: [Bookings]
+      summary: Get pending approvals
+      description: Returns all bookings pending approval for the authenticated Space Admin.
+      operationId: getPendingApprovals
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of pending bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetBookingResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /booking/report/presence/:
+    get:
+      tags: [Bookings]
+      summary: Get presence report
+      description: Returns a presence report showing which users were present on which dates. Maximum date range is 31 days. Requires Space Admin role.
+      operationId: getPresenceReport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: locationId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by location
+      responses:
+        '200':
+          description: Presence report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPresenceReportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /booking/debugtimeissues/:
+    post:
+      tags: [Bookings]
+      summary: Debug timezone issues
+      description: Diagnostic endpoint for debugging timezone-related issues. No authentication required (whitelisted route).
+      operationId: debugTimeIssues
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebugTimeIssuesRequest'
+      responses:
+        '200':
+          description: Debug information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugTimeIssuesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ===========================
+  # Recurring Bookings
+  # ===========================
+  /recurring-booking/:
+    post:
+      tags: [Recurring Bookings]
+      summary: Create a recurring booking
+      description: Creates a recurring booking series. Individual bookings are created for each occurrence. Returns the result for each occurrence indicating success or failure.
+      operationId: createRecurringBooking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecurringBookingRequest'
+      responses:
+        '201':
+          description: Recurring booking created
+          headers:
+            X-Object-ID:
+              schema:
+                type: string
+              description: ID of the recurring booking
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateRecurringBookingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /recurring-booking/precheck:
+    post:
+      tags: [Recurring Bookings]
+      summary: Pre-check recurring booking creation
+      description: Validates whether a recurring booking can be created without actually creating it. Returns the validation result for each planned occurrence.
+      operationId: preCheckRecurringBooking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecurringBookingRequest'
+      responses:
+        '200':
+          description: Validation results for each occurrence
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateRecurringBookingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /recurring-booking/{id}:
+    get:
+      tags: [Recurring Bookings]
+      summary: Get a recurring booking
+      description: Returns a single recurring booking by ID. Users can view their own; Space Admins can view any.
+      operationId: getRecurringBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Recurring booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRecurringBookingResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Recurring Bookings]
+      summary: Delete a recurring booking
+      description: Deletes a recurring booking and all its future individual bookings. Users can delete their own; Space Admins can delete any.
+      operationId: deleteRecurringBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /recurring-booking/{id}/ical:
+    get:
+      tags: [Recurring Bookings]
+      summary: Download recurring booking as iCal
+      description: Downloads all bookings of a recurring booking series as an iCalendar (.ics) file.
+      operationId: getRecurringBookingIcal
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: iCalendar file
+          content:
+            text/calendar:
+              schema:
+                type: string
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Locations
+  # ===========================
+  /location/:
+    get:
+      tags: [Locations]
+      summary: Get all locations
+      description: Returns all locations in the user's organization.
+      operationId: getAllLocations
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetLocationResponse'
+    post:
+      tags: [Locations]
+      summary: Create a location
+      description: Creates a new location in the user's organization. Requires Space Admin role.
+      operationId: createLocation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLocationRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/search:
+    post:
+      tags: [Locations]
+      summary: Search locations
+      description: Searches locations with optional attribute filters (e.g. number of free spaces, buddies on site). If no attributes are provided, returns all locations.
+      operationId: searchLocations
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchLocationRequest'
+      responses:
+        '200':
+          description: Matching locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetLocationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /location/loadsampledata:
+    post:
+      tags: [Locations]
+      summary: Load sample data
+      description: Creates sample locations and spaces for the organization. Requires Org Admin role.
+      operationId: loadSampleData
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sample data loaded
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{id}:
+    get:
+      tags: [Locations]
+      summary: Get a location
+      description: Returns a single location by ID.
+      operationId: getLocation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Location details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLocationResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Locations]
+      summary: Update a location
+      description: Updates an existing location. Requires Space Admin role.
+      operationId: updateLocation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLocationRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Locations]
+      summary: Delete a location
+      description: Deletes a location and all its spaces. Requires Space Admin role.
+      operationId: deleteLocation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /location/{id}/map:
+    get:
+      tags: [Locations]
+      summary: Get location map
+      description: Returns the floor plan / map image for a location as base64-encoded data.
+      operationId: getLocationMap
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Map data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMapResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Locations]
+      summary: Upload location map
+      description: Uploads or replaces the floor plan / map image for a location. Accepts PNG, JPEG, GIF, or SVG. Requires Space Admin role.
+      operationId: setLocationMap
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/gif:
+            schema:
+              type: string
+              format: binary
+          image/svg+xml:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /location/{id}/attribute:
+    get:
+      tags: [Locations]
+      summary: Get location attribute values
+      description: Returns all attribute values set on a location.
+      operationId: getLocationAttributes
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Location attribute values
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSpaceAttributeValueResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /location/{id}/attribute/{attributeId}:
+    post:
+      tags: [Locations]
+      summary: Set location attribute value
+      description: Sets an attribute value on a location. Only attributes marked as `locationApplicable` can be set. Requires Space Admin role.
+      operationId: setLocationAttribute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: attributeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetSpaceAttributeValueRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Locations]
+      summary: Delete location attribute value
+      description: Removes an attribute value from a location. Requires Space Admin role.
+      operationId: deleteLocationAttribute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: attributeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Spaces
+  # ===========================
+  /location/{locationId}/space/:
+    get:
+      tags: [Spaces]
+      summary: Get all spaces in a location
+      description: Returns all spaces in a location with their attributes, approvers, and allowed bookers.
+      operationId: getAllSpaces
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of spaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSpaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Spaces]
+      summary: Create a space
+      description: Creates a new space in a location. Requires Space Admin role.
+      operationId: createSpace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpaceRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/{id}:
+    get:
+      tags: [Spaces]
+      summary: Get a space
+      description: Returns a single space by ID with its attributes, approvers, and allowed bookers.
+      operationId: getSpace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Space details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSpaceResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Spaces]
+      summary: Update a space
+      description: Updates an existing space. Requires Space Admin role.
+      operationId: updateSpace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpaceRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Spaces]
+      summary: Delete a space
+      description: Deletes a space. Requires Space Admin role.
+      operationId: deleteSpace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /location/{locationId}/space/availability:
+    get:
+      tags: [Spaces]
+      summary: Get space availability
+      description: |
+        Returns all spaces in a location with their availability and current bookings for a time range.
+        If `enter` and `leave` are omitted, returns availability for right now.
+        Optionally filter by `attributes` (JSON-encoded search attributes).
+      operationId: getSpaceAvailability
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: enter
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start of time range (RFC 3339). Must be provided together with `leave`.
+        - name: leave
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End of time range (RFC 3339). Must be provided together with `enter`.
+        - name: attributes
+          in: query
+          schema:
+            type: string
+          description: JSON-encoded array of SearchAttribute objects for filtering
+      responses:
+        '200':
+          description: Space availability data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSpaceAvailabilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/{id}/availability:
+    get:
+      tags: [Spaces]
+      summary: Get single space availability
+      description: Returns availability and current bookings for a single space in a time range.
+      operationId: getSingleSpaceAvailability
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: enter
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: leave
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Space availability data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSpaceAvailabilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/bulk:
+    post:
+      tags: [Spaces]
+      summary: Bulk create/update/delete spaces
+      description: Performs bulk operations on spaces in a location. Allows creating, updating, and deleting multiple spaces in a single request. Requires Space Admin role.
+      operationId: bulkUpdateSpaces
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpaceBulkUpdateRequest'
+      responses:
+        '200':
+          description: Bulk operation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/{id}/approver:
+    get:
+      tags: [Spaces]
+      summary: Get approver groups for a space
+      description: Returns all groups that can approve bookings for this space. Requires Space Admin role.
+      operationId: getSpaceApprovers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of approver groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetGroupResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Spaces]
+      summary: Add approver groups to a space
+      description: Adds groups as approvers for bookings on this space. Requires Space Admin role.
+      operationId: addSpaceApprovers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Array of group IDs to add as approvers
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/{id}/approver/remove:
+    post:
+      tags: [Spaces]
+      summary: Remove approver groups from a space
+      description: Removes groups from the list of approvers for this space. Requires Space Admin role.
+      operationId: removeSpaceApprovers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Array of group IDs to remove as approvers
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/{id}/allowedbooker:
+    get:
+      tags: [Spaces]
+      summary: Get allowed booker groups for a space
+      description: Returns all groups whose members are allowed to book this space. If empty, all users can book. Requires Space Admin role.
+      operationId: getAllowedBookers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of allowed booker groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetGroupResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Spaces]
+      summary: Add allowed booker groups to a space
+      description: Adds groups whose members are allowed to book this space. Requires Space Admin role.
+      operationId: addAllowedBookers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Array of group IDs to add as allowed bookers
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /location/{locationId}/space/{id}/allowedbooker/remove:
+    post:
+      tags: [Spaces]
+      summary: Remove allowed booker groups from a space
+      description: Removes groups from the allowed booker list for this space. Requires Space Admin role.
+      operationId: removeAllowedBookers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Array of group IDs to remove from allowed bookers
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===========================
+  # Space Attributes
+  # ===========================
+  /space-attribute/:
+    get:
+      tags: [Space Attributes]
+      summary: Get all space attributes
+      description: Returns all space attribute definitions for the user's organization.
+      operationId: getAllSpaceAttributes
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of space attributes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSpaceAttributeResponse'
+    post:
+      tags: [Space Attributes]
+      summary: Create a space attribute
+      description: Creates a new space attribute definition. Requires Space Admin role.
+      operationId: createSpaceAttribute
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpaceAttributeRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /space-attribute/{id}:
+    get:
+      tags: [Space Attributes]
+      summary: Get a space attribute
+      description: Returns a single space attribute definition by ID.
+      operationId: getSpaceAttribute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Space attribute details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSpaceAttributeResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Space Attributes]
+      summary: Update a space attribute
+      description: Updates an existing space attribute definition. Requires Space Admin role.
+      operationId: updateSpaceAttribute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpaceAttributeRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Space Attributes]
+      summary: Delete a space attribute
+      description: Deletes a space attribute definition. Requires Space Admin role.
+      operationId: deleteSpaceAttribute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Organizations
+  # ===========================
+  /organization/:
+    get:
+      tags: [Organizations]
+      summary: Get all organizations
+      description: Returns all organizations. Requires Super Admin role.
+      operationId: getAllOrganizations
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetOrganizationResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Organizations]
+      summary: Create an organization
+      description: Creates a new organization. Requires Super Admin role.
+      operationId: createOrganization
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /organization/{id}:
+    get:
+      tags: [Organizations]
+      summary: Get an organization
+      description: Returns a single organization by ID. Requires Org Admin or Super Admin role.
+      operationId: getOrganization
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOrganizationResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Organizations]
+      summary: Update an organization
+      description: |
+        Updates an organization's details. Requires Org Admin or Super Admin role.
+        If a non-Super Admin changes the contact email, a verification email is sent and the response includes a `verifyUuid`.
+      operationId: updateOrganization
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+      responses:
+        '200':
+          description: Update result (includes verifyUuid if email verification is needed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeOrgEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Organizations]
+      summary: Request organization deletion
+      description: |
+        Initiates the organization deletion process. Sends a confirmation email with a 6-digit code.
+        The deletion must be confirmed via the `/organization/deleteorg/{id}` endpoint.
+        Requires Org Admin (with org delete enabled) or Super Admin role.
+      operationId: deleteOrganization
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deletion confirmation code sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteOrgResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/deleteorg/{id}:
+    post:
+      tags: [Organizations]
+      summary: Complete organization deletion
+      description: Confirms and completes an organization deletion by providing the 6-digit code received via email. No authentication required (whitelisted route).
+      operationId: completeOrgDeletion
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Auth state ID from the deletion confirmation email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteOrgDeletionRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/domain/{domain}:
+    get:
+      tags: [Organizations]
+      summary: Get organization for domain
+      description: Returns the organization associated with a domain. No authentication required (whitelisted route).
+      operationId: getOrgForDomain
+      security: []
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOrganizationResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/domain/verify/{domain}:
+    get:
+      tags: [Organizations]
+      summary: Get domain accessibility token
+      description: Returns domain accessibility information for a domain. No authentication required (whitelisted route).
+      operationId: getDomainAccessibilityToken
+      security: []
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Domain accessibility information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainAccessibilityPayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/{id}/domain/:
+    get:
+      tags: [Organizations]
+      summary: Get all domains for an organization
+      description: Returns all domains configured for an organization. Requires Org Admin or Super Admin role.
+      operationId: getDomains
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetDomainResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/{id}/domain/{domain}:
+    post:
+      tags: [Organizations]
+      summary: Add a domain to an organization
+      description: Adds a new domain to an organization. The domain must be verified via DNS TXT record before it becomes active. Requires Org Admin or Super Admin role. Requires the Custom Domains feature.
+      operationId: addDomain
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Organizations]
+      summary: Remove a domain from an organization
+      description: Removes a domain from an organization. Seatsurfing signup domains (*.seatsurfing.app) cannot be removed. Requires Org Admin or Super Admin role.
+      operationId: removeDomain
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/{id}/domain/{domain}/verify:
+    post:
+      tags: [Organizations]
+      summary: Verify a domain via DNS TXT record
+      description: Verifies domain ownership by checking for the expected DNS TXT record. Activates the domain on success. Requires Org Admin or Super Admin role.
+      operationId: verifyDomain
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          description: DNS TXT record verification failed
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /organization/{id}/domain/{domain}/primary:
+    post:
+      tags: [Organizations]
+      summary: Set primary domain
+      description: Sets a domain as the primary domain for an organization. Requires Org Admin or Super Admin role.
+      operationId: setPrimaryDomain
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /organization/{id}/verifyemail/{uuid}:
+    post:
+      tags: [Organizations]
+      summary: Verify email address change
+      description: Verifies a contact email address change by providing the 6-digit code that was sent to the new email address. Requires Org Admin or Super Admin role.
+      operationId: verifyEmail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Verification state ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailAddressVerifyRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Users
+  # ===========================
+  /user/:
+    get:
+      tags: [Users]
+      summary: Get all users
+      description: Returns all users of the organization. Supports search via `q` query parameter. Requires Space Admin role (Org Admin for search by keyword).
+      operationId: getAllUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search keyword to filter users by email, first name, or last name
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetUserResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Users]
+      summary: Create a user
+      description: |
+        Creates a new user in the organization. Requires Org Admin role. Authentication method is determined by the request:
+        - Set `sendInvitation: true` to send an email invitation for the user to set their own password
+        - Set `password` to create a user with a specific password
+        - Set `authProviderId` to bind the user to an OAuth provider
+      operationId: createUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: User with this email already exists
+
+  /user/me:
+    get:
+      tags: [Users]
+      summary: Get own user details
+      description: Returns the authenticated user's details including organization information.
+      operationId: getSelf
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/count:
+    get:
+      tags: [Users]
+      summary: Get user count
+      description: Returns the total number of users in the organization. Requires Org Admin role.
+      operationId: getUserCount
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserCountResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /user/session:
+    get:
+      tags: [Users]
+      summary: Get active sessions
+      description: Returns all active sessions for the authenticated user.
+      operationId: getActiveSessions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSessionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/{id}:
+    get:
+      tags: [Users]
+      summary: Get a user
+      description: Returns a single user by ID. Requires Org Admin role. User must belong to the same organization.
+      operationId: getUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Users]
+      summary: Update a user
+      description: Updates a user's details. Requires Org Admin role.
+      operationId: updateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      description: Deletes a user. Requires Org Admin role. Cannot delete yourself.
+      operationId: deleteUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/{id}/password:
+    put:
+      tags: [Users]
+      summary: Set user password
+      description: Sets a user's password. Users can set their own password; Org Admins can set any user's password. All sessions are terminated after a password change. Use `me` as the ID to set your own password.
+      operationId: setPassword
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID (UUID) or "me" for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPasswordRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /user/{id}/passkeys:
+    delete:
+      tags: [Users]
+      summary: Admin reset passkeys
+      description: Removes all passkeys for a user. Requires Org Admin role.
+      operationId: adminResetPasskeys
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/{id}/totp:
+    delete:
+      tags: [Users]
+      summary: Admin reset TOTP
+      description: Disables TOTP 2FA for a user. Requires Org Admin role.
+      operationId: adminResetTotp
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/byEmail/{email}:
+    get:
+      tags: [Users]
+      summary: Get user by email
+      description: Returns a user by email address. Only available when name visibility is enabled (showNames setting) or for Space Admins. Cannot look up your own email.
+      operationId: getUserByEmail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/totp/generate:
+    get:
+      tags: [Users]
+      summary: Generate TOTP setup QR code
+      description: Generates a TOTP secret and returns a QR code image for setting up 2FA. The setup must be completed by calling the validate endpoint within 5 minutes.
+      operationId: generateTotp
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: TOTP setup data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateTotpResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /user/totp/{stateId}/secret:
+    get:
+      tags: [Users]
+      summary: Get TOTP secret for manual entry
+      description: Returns the TOTP secret key for manual entry (as an alternative to scanning the QR code). Rate limited.
+      operationId: getTotpSecret
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: stateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: TOTP secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTotpSecretResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          description: Too many requests
+
+  /user/totp/validate:
+    post:
+      tags: [Users]
+      summary: Validate TOTP and enable 2FA
+      description: Validates a TOTP code against the pending setup and enables 2FA for the user if valid. Rate limited to 5 attempts per setup.
+      operationId: validateTotp
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateTotpRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          description: Invalid TOTP code
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          description: Too many attempts
+
+  /user/totp/disable:
+    post:
+      tags: [Users]
+      summary: Disable TOTP 2FA
+      description: Disables TOTP 2FA for the authenticated user. Blocked if TOTP enforcement is enabled for the organization.
+      operationId: disableTotp
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: TOTP enforcement is enabled
+
+  /user/passkey/:
+    get:
+      tags: [Users]
+      summary: List passkeys
+      description: Returns all passkeys registered for the authenticated user.
+      operationId: listPasskeys
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of passkeys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PasskeyListItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /user/passkey/registration/begin:
+    post:
+      tags: [Users]
+      summary: Begin passkey registration
+      description: Starts WebAuthn passkey registration. Requires the user to have a password set and not be bound to an OAuth provider. Limited to a configurable maximum number of passkeys per user.
+      operationId: beginPasskeyRegistration
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Registration challenge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeginPasskeyRegistrationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: User does not meet passkey prerequisites or limit reached
+
+  /user/passkey/registration/finish:
+    post:
+      tags: [Users]
+      summary: Complete passkey registration
+      description: Completes the WebAuthn passkey registration with the authenticator's response.
+      operationId: finishPasskeyRegistration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinishPasskeyRegistrationRequest'
+      responses:
+        '200':
+          description: Passkey registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyListItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /user/passkey/{id}:
+    put:
+      tags: [Users]
+      summary: Rename a passkey
+      description: Changes the display name of a passkey.
+      operationId: renamePasskey
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenamePasskeyRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Users]
+      summary: Delete a passkey
+      description: Deletes a passkey. Users can only delete their own passkeys.
+      operationId: deletePasskey
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/merge/init:
+    post:
+      tags: [Users]
+      summary: Initiate user merge
+      description: Initiates a merge request from the authenticated user to the target user (identified by email). The target user must confirm the merge.
+      operationId: mergeInit
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitMergeUsersRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/merge/finish/{id}:
+    post:
+      tags: [Users]
+      summary: Complete user merge
+      description: Confirms and completes a merge request. Merges the source user into the authenticated (target) user.
+      operationId: mergeFinish
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Merge request auth state ID
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user/merge:
+    get:
+      tags: [Users]
+      summary: Get pending merge requests
+      description: Returns all pending merge requests targeting the authenticated user.
+      operationId: getMergeRequests
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of merge requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetMergeRequestResponse'
+
+  # ===========================
+  # Groups
+  # ===========================
+  /group/:
+    get:
+      tags: [Groups]
+      summary: Get all groups
+      description: Returns all groups in the organization. Requires Space Admin role.
+      operationId: getAllGroups
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetGroupResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Groups]
+      summary: Create a group
+      description: Creates a new group in the organization. Requires Org Admin role. Requires the Groups feature.
+      operationId: createGroup
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /group/{id}:
+    get:
+      tags: [Groups]
+      summary: Get a group
+      description: Returns a single group by ID. Requires Space Admin role.
+      operationId: getGroup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGroupResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Groups]
+      summary: Update a group
+      description: Updates a group's name. Requires Org Admin role.
+      operationId: updateGroup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Groups]
+      summary: Delete a group
+      description: Deletes a group. Requires Org Admin role.
+      operationId: deleteGroup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /group/{id}/member:
+    get:
+      tags: [Groups]
+      summary: Get group members
+      description: Returns all users that are members of a group. Requires Org Admin role.
+      operationId: getGroupMembers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of member users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetUserResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Groups]
+      summary: Add members to a group
+      description: Adds users to a group by their user IDs. Requires Org Admin role. All users must exist and belong to the same organization.
+      operationId: addGroupMembers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Array of user IDs to add
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /group/{id}/member/remove:
+    post:
+      tags: [Groups]
+      summary: Remove members from a group
+      description: Removes users from a group by their user IDs. Requires Org Admin role.
+      operationId: removeGroupMembers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Array of user IDs to remove
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Buddies
+  # ===========================
+  /buddy/:
+    get:
+      tags: [Buddies]
+      summary: Get all buddies
+      description: Returns all buddies for the authenticated user, including their next booking details.
+      operationId: getAllBuddies
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of buddies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetBuddyResponse'
+    post:
+      tags: [Buddies]
+      summary: Add a buddy
+      description: Adds a user as a buddy. The buddy must be in the same organization.
+      operationId: createBuddy
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBuddyRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /buddy/{id}:
+    delete:
+      tags: [Buddies]
+      summary: Remove a buddy
+      description: Removes a buddy relationship. Users can only remove their own buddies.
+      operationId: deleteBuddy
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Auth Providers
+  # ===========================
+  /auth-provider/:
+    get:
+      tags: [Auth Providers]
+      summary: Get all auth providers
+      description: Returns all authentication providers for the organization. Requires Org Admin role.
+      operationId: getAllAuthProviders
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of auth providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetAuthProviderResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Auth Providers]
+      summary: Create an auth provider
+      description: Creates a new OAuth/OIDC authentication provider. Requires Org Admin role. Requires the Auth Providers feature.
+      operationId: createAuthProvider
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthProviderRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /auth-provider/{id}:
+    get:
+      tags: [Auth Providers]
+      summary: Get an auth provider
+      description: Returns a single authentication provider by ID. Requires Org Admin role.
+      operationId: getAuthProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Auth provider details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAuthProviderResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Auth Providers]
+      summary: Update an auth provider
+      description: Updates an authentication provider. Read-only providers cannot be updated. Requires Org Admin role.
+      operationId: updateAuthProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthProviderRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Auth Providers]
+      summary: Delete an auth provider
+      description: Deletes an authentication provider. Read-only providers cannot be deleted. Cannot delete providers that have users bound to them. Requires Org Admin role.
+      operationId: deleteAuthProvider
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          description: Provider has users bound to it
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth-provider/org/{id}:
+    get:
+      tags: [Auth Providers]
+      summary: Get public auth providers for organization
+      description: Returns the public auth provider information (ID and name only) for an organization. No authentication required (whitelisted route).
+      operationId: getPublicAuthProviders
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Organization ID
+      responses:
+        '200':
+          description: List of public auth providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetAuthProviderPublicResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===========================
+  # Settings
+  # ===========================
+  /setting/:
+    get:
+      tags: [Settings]
+      summary: Get all settings
+      description: |
+        Returns all organization settings visible to the current user.
+        Regular users see public settings; Org Admins see additional admin settings;
+        Space Admins see admin menu items. Also includes system settings and plugin settings.
+      operationId: getAllSettings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of settings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSettingsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags: [Settings]
+      summary: Update all settings
+      description: Updates multiple settings at once. Requires Org Admin role.
+      operationId: setAllSettings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/GetSettingsResponse'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Invalid setting name
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /setting/{name}:
+    get:
+      tags: [Settings]
+      summary: Get a setting
+      description: Returns a single setting by name. Access depends on the setting type (public vs admin).
+      operationId: getSetting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Setting name
+      responses:
+        '200':
+          description: Setting value
+          content:
+            application/json:
+              schema:
+                type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Settings]
+      summary: Update a setting
+      description: Updates a single setting by name. Requires Org Admin role.
+      operationId: setSetting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Setting name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetSettingsRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Invalid setting name
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /setting/timezones:
+    get:
+      tags: [Settings]
+      summary: Get available timezones
+      description: Returns the list of all available IANA timezones.
+      operationId: getTimezones
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of timezone identifiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ===========================
+  # User Preferences
+  # ===========================
+  /preference/:
+    get:
+      tags: [User Preferences]
+      summary: Get all user preferences
+      description: Returns all preferences for the authenticated user.
+      operationId: getAllPreferences
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of user preferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetSettingsResponse'
+    put:
+      tags: [User Preferences]
+      summary: Update all user preferences
+      description: Updates multiple user preferences at once.
+      operationId: setAllPreferences
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/GetSettingsResponse'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Invalid preference name
+
+  /preference/{name}:
+    get:
+      tags: [User Preferences]
+      summary: Get a user preference
+      description: Returns a single user preference by name.
+      operationId: getPreference
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Preference value
+          content:
+            application/json:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [User Preferences]
+      summary: Update a user preference
+      description: Updates a single user preference by name. Encrypted preferences (e.g. CalDAV password) are encrypted before storage.
+      operationId: setPreference
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetSettingsRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/Updated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Invalid preference name
+
+  /preference/caldav/listCalendars:
+    post:
+      tags: [User Preferences]
+      summary: List CalDAV calendars
+      description: Connects to a CalDAV server and lists available calendars. Used for configuring CalDAV integration. Requires the CRYPT_KEY environment variable to be set.
+      operationId: caldavListCalendars
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListCaldavCalendarsRequest'
+      responses:
+        '200':
+          description: List of calendars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListCaldavCalendarsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Could not connect to CalDAV server
+
+  # ===========================
+  # Statistics
+  # ===========================
+  /stats/:
+    get:
+      tags: [Statistics]
+      summary: Get organization statistics
+      description: Returns statistics for the organization including user count, booking count, space load, and more. Requires Space Admin role.
+      operationId: getStats
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Organization statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetStatsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===========================
+  # Search
+  # ===========================
+  /search/:
+    get:
+      tags: [Search]
+      summary: Search across entities
+      description: |
+        Searches across users, locations, spaces, and groups by keyword. Requires Space Admin role.
+        Use query parameters to control which entity types to include in the search:
+        - `includeUsers=1` (requires Org Admin)
+        - `includeGroups=1` (requires Space Admin)
+        - `includeLocations=1`
+        - `includeSpaces=1`
+      operationId: search
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: Search keyword
+        - name: includeUsers
+          in: query
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: Include users in search results (requires Org Admin)
+        - name: includeGroups
+          in: query
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: Include groups in search results
+        - name: includeLocations
+          in: query
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: Include locations in search results
+        - name: includeSpaces
+          in: query
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: Include spaces in search results
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchResultsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===========================
+  # Confluence
+  # ===========================
+  /confluence/{orgID}/{jwt}:
+    get:
+      tags: [Confluence]
+      summary: Confluence server SSO login
+      description: Authenticates a user via Atlassian Confluence Server JWT. Redirects to the booking UI on success. No direct authentication required (whitelisted route).
+      operationId: confluenceServerLogin
+      security: []
+      parameters:
+        - name: orgID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Organization ID
+        - name: jwt
+          in: path
+          required: true
+          schema:
+            type: string
+          description: JWT signed with the Confluence shared secret
+      responses:
+        '307':
+          description: Redirect to booking UI (success or failure page)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Organization not found (plain text response)
+
+  # ===========================
+  # Healthcheck
+  # ===========================
+  /healthcheck:
+    get:
+      tags: [Healthcheck]
+      summary: Application health check
+      description: Returns the health status of the application, including database connectivity. No authentication required (whitelisted route).
+      operationId: healthcheck
+      security: []
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthcheckResponse'
+        '503':
+          description: Application is unhealthy (e.g. database connection error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthcheckResponse'
+    head:
+      tags: [Healthcheck]
+      summary: Application health check (HEAD)
+      description: Same as GET but without response body. Useful for monitoring systems.
+      operationId: healthcheckHead
+      security: []
+      responses:
+        '200':
+          description: Application is healthy
+        '503':
+          description: Application is unhealthy
+
+  # ===========================
+  # Update Check
+  # ===========================
+  /uc/:
+    get:
+      tags: [Update Check]
+      summary: Check for updates
+      description: Returns the latest available version information if an update is available. Requires authentication.
+      operationId: checkUpdate
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Update information
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: No update available
