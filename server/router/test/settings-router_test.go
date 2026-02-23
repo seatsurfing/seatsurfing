@@ -364,3 +364,19 @@ func TestSettingsInvalidTimezone(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
+
+func TestSettingsGetTimezones(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// getTimezones has NO permission check - any authenticated user can access
+	req := NewHTTPRequest("GET", "/setting/timezones", user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []string
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) == 0 {
+		t.Fatal("Expected non-empty timezone list")
+	}
+}

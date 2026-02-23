@@ -175,3 +175,12 @@ func TestBuddiesList(t *testing.T) {
 	}
 	CheckTestString(t, buddyUser3.ID, resBody2[0].BuddyID)
 }
+
+func TestBuddiesListUnauthorized(t *testing.T) {
+	ClearTestDB()
+
+	// No auth token → 401
+	req := NewHTTPRequest("GET", "/buddy/", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}

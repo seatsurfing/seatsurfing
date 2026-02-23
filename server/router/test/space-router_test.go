@@ -611,3 +611,124 @@ func TestSpacesAvailabilitySingleSpace(t *testing.T) {
 	CheckTestString(t, "H236", resBody2[0].Name)
 	CheckTestBool(t, true, resBody2[0].Available)
 }
+
+func TestSpacesListForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user2 := CreateTestUserInOrg(org2)
+
+	// Create location and space in org
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	// User from a different org tries to list spaces → 403
+	req = NewHTTPRequest("GET", "/location/"+locID+"/space/", user2.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSpacesAvailabilityForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user2 := CreateTestUserInOrg(org2)
+
+	// Create location and space in org
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	// User from a different org tries to get availability → 403
+	enter := url.QueryEscape("2030-09-01T08:30:00+02:00")
+	leave := url.QueryEscape("2030-09-01T17:00:00+02:00")
+	req = NewHTTPRequest("GET", "/location/"+locID+"/space/availability?enter="+enter+"&leave="+leave, user2.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSpacesBulkUpdateForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Create location
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	// Non-admin tries bulk update → 403
+	req = NewHTTPRequest("POST", "/location/"+locID+"/space/bulk", user.ID, bytes.NewBufferString(`{"creates":[],"updates":[],"deleteIds":[]}`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSpacesApproverForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Create location and space
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	payload = `{"name": "Space 1", "x": 0, "y": 0, "width": 100, "height": 100, "rotation": 0}`
+	req = NewHTTPRequest("POST", "/location/"+locID+"/space/", admin.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	spaceID := res.Header().Get("X-Object-Id")
+
+	// Non-admin tries to get approvers → 403
+	req = NewHTTPRequest("GET", "/location/"+locID+"/space/"+spaceID+"/approver", user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// Non-admin tries to set approvers → 403
+	req = NewHTTPRequest("PUT", "/location/"+locID+"/space/"+spaceID+"/approver", user.ID, bytes.NewBufferString(`[]`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSpacesAllowedBookerForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	// Create location and space
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	payload = `{"name": "Space 1", "x": 0, "y": 0, "width": 100, "height": 100, "rotation": 0}`
+	req = NewHTTPRequest("POST", "/location/"+locID+"/space/", admin.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	spaceID := res.Header().Get("X-Object-Id")
+
+	// Non-admin tries to get allowed bookers → 403
+	req = NewHTTPRequest("GET", "/location/"+locID+"/space/"+spaceID+"/allowedbooker", user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// Non-admin tries to set allowed bookers → 403
+	req = NewHTTPRequest("PUT", "/location/"+locID+"/space/"+spaceID+"/allowedbooker", user.ID, bytes.NewBufferString(`[]`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}

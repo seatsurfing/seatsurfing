@@ -1,6 +1,7 @@
 package test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -124,4 +125,50 @@ func TestSearchSpaces(t *testing.T) {
 	CheckTestInt(t, 2, len(resBody.Spaces))
 	CheckTestString(t, s3.Name, resBody.Spaces[0].Name)
 	CheckTestString(t, s1.Name, resBody.Spaces[1].Name)
+}
+func TestSearchGroups(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Enable groups feature
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+
+	// Create groups
+	payload := `{"name": "Group Alpha"}`
+	req := NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	payload = `{"name": "Group Beta"}`
+	req = NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Search for "Alpha"
+	req = NewHTTPRequest("GET", "/search/?query=Alpha&includeGroups=1", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Groups))
+	CheckTestString(t, "Group Alpha", resBody.Groups[0].Name)
+}
+
+func TestSearchEmptyQuery(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Empty query → 200 with empty results (no results match empty string)
+	req := NewHTTPRequest("GET", "/search/?query=&includeSpaces=1&includeLocations=1", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody == nil {
+		t.Fatal("Expected non-nil response body")
+	}
 }
