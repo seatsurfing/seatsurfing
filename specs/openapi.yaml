@@ -156,11 +156,11 @@ components:
       type: object
       properties:
         organization:
-          $ref: '#/components/schemas/GetOrganizationResponse'
+          $ref: "#/components/schemas/GetOrganizationResponse"
         authProviders:
           type: array
           items:
-            $ref: '#/components/schemas/GetAuthProviderPublicResponse'
+            $ref: "#/components/schemas/GetAuthProviderPublicResponse"
         requirePassword:
           type: boolean
           description: Whether any user has a password set
@@ -241,7 +241,7 @@ components:
         recurringId:
           type: string
         space:
-          $ref: '#/components/schemas/GetSpaceResponse'
+          $ref: "#/components/schemas/GetSpaceResponse"
 
     PreCreateBookingRequest:
       type: object
@@ -275,7 +275,7 @@ components:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/GetUserInfoSmall'
+            $ref: "#/components/schemas/GetUserInfoSmall"
         dates:
           type: array
           items:
@@ -490,7 +490,7 @@ components:
         attributes:
           type: array
           items:
-            $ref: '#/components/schemas/SearchAttribute'
+            $ref: "#/components/schemas/SearchAttribute"
 
     SearchAttribute:
       type: object
@@ -527,7 +527,7 @@ components:
         attributes:
           type: array
           items:
-            $ref: '#/components/schemas/SpaceAttributeValueRequest'
+            $ref: "#/components/schemas/SpaceAttributeValueRequest"
         approverGroupIds:
           type: array
           items:
@@ -576,7 +576,7 @@ components:
         attributes:
           type: array
           items:
-            $ref: '#/components/schemas/SpaceAttributeValueRequest'
+            $ref: "#/components/schemas/SpaceAttributeValueRequest"
         approverGroupIds:
           type: array
           items:
@@ -586,7 +586,7 @@ components:
           items:
             type: string
         location:
-          $ref: '#/components/schemas/GetLocationResponse'
+          $ref: "#/components/schemas/GetLocationResponse"
 
     GetSpaceAvailabilityResponse:
       type: object
@@ -622,11 +622,11 @@ components:
         bookings:
           type: array
           items:
-            $ref: '#/components/schemas/GetSpaceAvailabilityBookingsResponse'
+            $ref: "#/components/schemas/GetSpaceAvailabilityBookingsResponse"
         attributes:
           type: array
           items:
-            $ref: '#/components/schemas/SpaceAttributeValueRequest'
+            $ref: "#/components/schemas/SpaceAttributeValueRequest"
 
     GetSpaceAvailabilityBookingsResponse:
       type: object
@@ -659,12 +659,12 @@ components:
         creates:
           type: array
           items:
-            $ref: '#/components/schemas/CreateSpaceRequest'
+            $ref: "#/components/schemas/CreateSpaceRequest"
         updates:
           type: array
           items:
             allOf:
-              - $ref: '#/components/schemas/CreateSpaceRequest'
+              - $ref: "#/components/schemas/CreateSpaceRequest"
               - type: object
                 properties:
                   id:
@@ -682,15 +682,15 @@ components:
         creates:
           type: array
           items:
-            $ref: '#/components/schemas/BulkUpdateItemResponse'
+            $ref: "#/components/schemas/BulkUpdateItemResponse"
         updates:
           type: array
           items:
-            $ref: '#/components/schemas/BulkUpdateItemResponse'
+            $ref: "#/components/schemas/BulkUpdateItemResponse"
         deletes:
           type: array
           items:
-            $ref: '#/components/schemas/BulkUpdateItemResponse'
+            $ref: "#/components/schemas/BulkUpdateItemResponse"
 
     BulkUpdateItemResponse:
       type: object
@@ -803,7 +803,7 @@ components:
         accessCheck:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
 
     ChangeOrgEmailResponse:
@@ -919,7 +919,7 @@ components:
         hasPasskeys:
           type: boolean
         organization:
-          $ref: '#/components/schemas/GetOrganizationResponse'
+          $ref: "#/components/schemas/GetOrganizationResponse"
 
     SetPasswordRequest:
       type: object
@@ -1048,7 +1048,7 @@ components:
         lastUsedAt:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
 
     BeginPasskeyRegistrationResponse:
@@ -1139,12 +1139,23 @@ components:
                   type: string
                 room:
                   type: string
-            - type: 'null'
+            - type: "null"
 
     # --- Auth Providers ---
     CreateAuthProviderRequest:
       type: object
-      required: [name, providerType, authUrl, tokenUrl, scopes, userInfoUrl, userInfoEmailField, clientId, clientSecret]
+      required:
+        [
+          name,
+          providerType,
+          authUrl,
+          tokenUrl,
+          scopes,
+          userInfoUrl,
+          userInfoEmailField,
+          clientId,
+          clientSecret,
+        ]
       properties:
         name:
           type: string
@@ -1287,19 +1298,19 @@ components:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/GetUserResponse'
+            $ref: "#/components/schemas/GetUserResponse"
         locations:
           type: array
           items:
-            $ref: '#/components/schemas/GetLocationResponse'
+            $ref: "#/components/schemas/GetLocationResponse"
         spaces:
           type: array
           items:
-            $ref: '#/components/schemas/GetSpaceResponse'
+            $ref: "#/components/schemas/GetSpaceResponse"
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/GetGroupResponse'
+            $ref: "#/components/schemas/GetGroupResponse"
 
     # --- Healthcheck ---
     HealthcheckResponse:
@@ -1313,7 +1324,7 @@ components:
         errors:
           type:
             - array
-            - 'null'
+            - "null"
           items:
             type: string
 
@@ -1384,19 +1395,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthPasswordRequest'
+              $ref: "#/components/schemas/AuthPasswordRequest"
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JWTResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
+                $ref: "#/components/schemas/JWTResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
           description: TOTP code required (user has 2FA enabled but code was not provided)
-        '404':
+        "404":
           description: Invalid credentials or user not found
 
   /auth/passkey/login/begin:
@@ -1411,18 +1422,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BeginPasskeyLoginRequest'
+              $ref: "#/components/schemas/BeginPasskeyLoginRequest"
       responses:
-        '200':
+        "200":
           description: Passkey challenge created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BeginPasskeyLoginResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/BeginPasskeyLoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth/passkey/login/finish:
     post:
@@ -1436,18 +1447,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FinishPasskeyLoginRequest'
+              $ref: "#/components/schemas/FinishPasskeyLoginRequest"
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JWTResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/JWTResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth/refresh:
     post:
@@ -1461,18 +1472,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RefreshRequest'
+              $ref: "#/components/schemas/RefreshRequest"
       responses:
-        '200':
+        "200":
           description: New tokens issued
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JWTResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/JWTResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth/verify/{id}:
     get:
@@ -1490,14 +1501,14 @@ paths:
             format: uuid
           description: Auth state ID
       responses:
-        '200':
+        "200":
           description: Login verified
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JWTResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/JWTResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth/{id}/login/{type}/:
     get:
@@ -1527,7 +1538,7 @@ paths:
             type: string
           description: Optional redirect path after successful login
       responses:
-        '307':
+        "307":
           description: Redirect to OAuth provider
 
   /auth/{id}/callback:
@@ -1554,7 +1565,7 @@ paths:
           schema:
             type: string
       responses:
-        '307':
+        "307":
           description: Redirect to success or failure page
 
   /auth/singleorg:
@@ -1565,16 +1576,16 @@ paths:
       operationId: singleOrg
       security: []
       responses:
-        '200':
+        "200":
           description: Single organization details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthPreflightResponse'
-        '404':
+                $ref: "#/components/schemas/AuthPreflightResponse"
+        "404":
           description: Instance has multiple organizations
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /auth/org/{domain}:
     get:
@@ -1591,16 +1602,16 @@ paths:
             type: string
           description: Organization domain
       responses:
-        '200':
+        "200":
           description: Organization preflight data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthPreflightResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/AuthPreflightResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth/initpwreset:
     post:
@@ -1614,13 +1625,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InitPasswordResetRequest'
+              $ref: "#/components/schemas/InitPasswordResetRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
           description: Password login is disabled
 
   /auth/pwreset/{id}:
@@ -1643,14 +1654,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompletePasswordResetRequest'
+              $ref: "#/components/schemas/CompletePasswordResetRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth/setpw/{id}:
     get:
@@ -1668,11 +1679,11 @@ paths:
             format: uuid
           description: Invitation auth state ID
       responses:
-        '204':
+        "204":
           description: Invitation link is valid
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '410':
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
           description: Password has already been set (link expired)
     post:
       tags: [Authentication]
@@ -1693,15 +1704,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompletePasswordResetRequest'
+              $ref: "#/components/schemas/CompletePasswordResetRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '410':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
           description: Password has already been set (link expired)
 
   /auth/logout/{where}:
@@ -1724,12 +1735,12 @@ paths:
             type: string
           description: "'current', 'all', or a specific session UUID"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Bookings
@@ -1743,16 +1754,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of upcoming bookings
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetBookingResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                  $ref: "#/components/schemas/GetBookingResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags: [Bookings]
       summary: Create a booking
@@ -1767,18 +1778,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBookingRequest'
+              $ref: "#/components/schemas/CreateBookingRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
           description: Slot conflict (space already booked for that time)
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /booking/{id}:
     get:
@@ -1796,16 +1807,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Booking details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetBookingResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetBookingResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Bookings]
       summary: Update a booking
@@ -1825,18 +1836,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBookingRequest'
+              $ref: "#/components/schemas/CreateBookingRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [Bookings]
       summary: Delete a booking
@@ -1852,14 +1863,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /booking/{id}/approve:
     post:
@@ -1881,16 +1892,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetBookingApprovalRequest'
+              $ref: "#/components/schemas/SetBookingApprovalRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /booking/{id}/ical:
     get:
@@ -1908,7 +1919,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: iCalendar file
           content:
             text/calendar:
@@ -1918,10 +1929,10 @@ paths:
             Content-Disposition:
               schema:
                 type: string
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /booking/precheck/:
     post:
@@ -1936,14 +1947,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PreCreateBookingRequest'
+              $ref: "#/components/schemas/PreCreateBookingRequest"
       responses:
-        '204':
+        "204":
           description: Booking would be valid
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /booking/filter/:
     get:
@@ -1975,18 +1986,18 @@ paths:
             format: email
           description: Filter by user email
       responses:
-        '200':
+        "200":
           description: Filtered bookings
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetBookingResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetBookingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /booking/current/:
     get:
@@ -2004,18 +2015,18 @@ paths:
             format: email
           description: Filter by user email
       responses:
-        '200':
+        "200":
           description: Current bookings
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetBookingResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetBookingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /booking/pendingapprovals/count:
     get:
@@ -2026,14 +2037,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Pending approvals count
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetPendingApprovalsCountResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/GetPendingApprovalsCountResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /booking/pendingapprovals/:
     get:
@@ -2044,16 +2055,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of pending bookings
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetBookingResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetBookingResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /booking/report/presence/:
     get:
@@ -2083,18 +2094,18 @@ paths:
             format: uuid
           description: Filter by location
       responses:
-        '200':
+        "200":
           description: Presence report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetPresenceReportResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetPresenceReportResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /booking/debugtimeissues/:
     post:
@@ -2108,16 +2119,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DebugTimeIssuesRequest'
+              $ref: "#/components/schemas/DebugTimeIssuesRequest"
       responses:
-        '200':
+        "200":
           description: Debug information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DebugTimeIssuesResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/DebugTimeIssuesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   # ===========================
   # Recurring Bookings
@@ -2135,9 +2146,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRecurringBookingRequest'
+              $ref: "#/components/schemas/CreateRecurringBookingRequest"
       responses:
-        '201':
+        "201":
           description: Recurring booking created
           headers:
             X-Object-ID:
@@ -2149,13 +2160,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CreateRecurringBookingResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/CreateRecurringBookingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /recurring-booking/precheck:
     post:
@@ -2170,22 +2181,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRecurringBookingRequest'
+              $ref: "#/components/schemas/CreateRecurringBookingRequest"
       responses:
-        '200':
+        "200":
           description: Validation results for each occurrence
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CreateRecurringBookingResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/CreateRecurringBookingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /recurring-booking/{id}:
     get:
@@ -2203,16 +2214,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Recurring booking details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetRecurringBookingResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetRecurringBookingResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     delete:
       tags: [Recurring Bookings]
       summary: Delete a recurring booking
@@ -2228,12 +2239,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /recurring-booking/{id}/ical:
     get:
@@ -2251,7 +2262,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: iCalendar file
           content:
             text/calendar:
@@ -2261,10 +2272,10 @@ paths:
             Content-Disposition:
               schema:
                 type: string
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Locations
@@ -2278,14 +2289,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of locations
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetLocationResponse'
+                  $ref: "#/components/schemas/GetLocationResponse"
     post:
       tags: [Locations]
       summary: Create a location
@@ -2298,14 +2309,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateLocationRequest'
+              $ref: "#/components/schemas/CreateLocationRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/search:
     post:
@@ -2320,18 +2331,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SearchLocationRequest'
+              $ref: "#/components/schemas/SearchLocationRequest"
       responses:
-        '200':
+        "200":
           description: Matching locations
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetLocationResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                  $ref: "#/components/schemas/GetLocationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /location/loadsampledata:
     post:
@@ -2342,10 +2353,10 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Sample data loaded
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{id}:
     get:
@@ -2363,16 +2374,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Location details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetLocationResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetLocationResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Locations]
       summary: Update a location
@@ -2392,14 +2403,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateLocationRequest'
+              $ref: "#/components/schemas/CreateLocationRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     delete:
       tags: [Locations]
       summary: Delete a location
@@ -2415,12 +2426,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /location/{id}/map:
     get:
@@ -2438,16 +2449,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Map data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetMapResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetMapResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     post:
       tags: [Locations]
       summary: Upload location map
@@ -2482,14 +2493,14 @@ paths:
               type: string
               format: binary
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /location/{id}/attribute:
     get:
@@ -2507,16 +2518,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Location attribute values
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSpaceAttributeValueResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetSpaceAttributeValueResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /location/{id}/attribute/{attributeId}:
     post:
@@ -2544,16 +2555,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetSpaceAttributeValueRequest'
+              $ref: "#/components/schemas/SetSpaceAttributeValueRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     delete:
       tags: [Locations]
       summary: Delete location attribute value
@@ -2575,12 +2586,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Spaces
@@ -2601,18 +2612,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of spaces
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSpaceResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetSpaceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [Spaces]
       summary: Create a space
@@ -2632,14 +2643,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSpaceRequest'
+              $ref: "#/components/schemas/CreateSpaceRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/{id}:
     get:
@@ -2663,16 +2674,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Space details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSpaceResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetSpaceResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Spaces]
       summary: Update a space
@@ -2698,14 +2709,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSpaceRequest'
+              $ref: "#/components/schemas/CreateSpaceRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     delete:
       tags: [Spaces]
       summary: Delete a space
@@ -2727,12 +2738,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /location/{locationId}/space/availability:
     get:
@@ -2770,18 +2781,18 @@ paths:
             type: string
           description: JSON-encoded array of SearchAttribute objects for filtering
       responses:
-        '200':
+        "200":
           description: Space availability data
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSpaceAvailabilityResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetSpaceAvailabilityResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/{id}/availability:
     get:
@@ -2815,18 +2826,18 @@ paths:
             type: string
             format: date-time
       responses:
-        '200':
+        "200":
           description: Space availability data
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSpaceAvailabilityResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetSpaceAvailabilityResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/bulk:
     post:
@@ -2848,18 +2859,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SpaceBulkUpdateRequest'
+              $ref: "#/components/schemas/SpaceBulkUpdateRequest"
       responses:
-        '200':
+        "200":
           description: Bulk operation result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BulkUpdateResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/BulkUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/{id}/approver:
     get:
@@ -2883,18 +2894,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of approver groups
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetGroupResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetGroupResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Spaces]
       summary: Add approver groups to a space
@@ -2926,12 +2937,12 @@ paths:
                 format: uuid
               description: Array of group IDs to add as approvers
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/{id}/approver/remove:
     post:
@@ -2965,12 +2976,12 @@ paths:
                 format: uuid
               description: Array of group IDs to remove as approvers
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/{id}/allowedbooker:
     get:
@@ -2994,18 +3005,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of allowed booker groups
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetGroupResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetGroupResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Spaces]
       summary: Add allowed booker groups to a space
@@ -3037,12 +3048,12 @@ paths:
                 format: uuid
               description: Array of group IDs to add as allowed bookers
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /location/{locationId}/space/{id}/allowedbooker/remove:
     post:
@@ -3076,12 +3087,12 @@ paths:
                 format: uuid
               description: Array of group IDs to remove from allowed bookers
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   # ===========================
   # Space Attributes
@@ -3095,14 +3106,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of space attributes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSpaceAttributeResponse'
+                  $ref: "#/components/schemas/GetSpaceAttributeResponse"
     post:
       tags: [Space Attributes]
       summary: Create a space attribute
@@ -3115,14 +3126,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSpaceAttributeRequest'
+              $ref: "#/components/schemas/CreateSpaceAttributeRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /space-attribute/{id}:
     get:
@@ -3140,16 +3151,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Space attribute details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSpaceAttributeResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetSpaceAttributeResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Space Attributes]
       summary: Update a space attribute
@@ -3169,14 +3180,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSpaceAttributeRequest'
+              $ref: "#/components/schemas/CreateSpaceAttributeRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     delete:
       tags: [Space Attributes]
       summary: Delete a space attribute
@@ -3192,12 +3203,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Organizations
@@ -3211,16 +3222,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of organizations
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetOrganizationResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetOrganizationResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [Organizations]
       summary: Create an organization
@@ -3233,14 +3244,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateOrganizationRequest'
+              $ref: "#/components/schemas/CreateOrganizationRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /organization/{id}:
     get:
@@ -3258,16 +3269,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Organization details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetOrganizationResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetOrganizationResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Organizations]
       summary: Update an organization
@@ -3289,20 +3300,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateOrganizationRequest'
+              $ref: "#/components/schemas/CreateOrganizationRequest"
       responses:
-        '200':
+        "200":
           description: Update result (includes verifyUuid if email verification is needed)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChangeOrgEmailResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ChangeOrgEmailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     delete:
       tags: [Organizations]
       summary: Request organization deletion
@@ -3321,16 +3332,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Deletion confirmation code sent
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteOrgResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/DeleteOrgResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/deleteorg/{id}:
     post:
@@ -3352,14 +3363,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompleteOrgDeletionRequest'
+              $ref: "#/components/schemas/CompleteOrgDeletionRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/domain/{domain}:
     get:
@@ -3375,14 +3386,14 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Organization details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetOrganizationResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetOrganizationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/domain/verify/{domain}:
     get:
@@ -3398,16 +3409,16 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Domain accessibility information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainAccessibilityPayload'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/DomainAccessibilityPayload"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/{id}/domain/:
     get:
@@ -3425,18 +3436,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of domains
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetDomainResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetDomainResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/{id}/domain/{domain}:
     post:
@@ -3459,16 +3470,16 @@ paths:
           schema:
             type: string
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [Organizations]
       summary: Remove a domain from an organization
@@ -3489,12 +3500,12 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/{id}/domain/{domain}/verify:
     post:
@@ -3517,16 +3528,16 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
           description: DNS TXT record verification failed
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /organization/{id}/domain/{domain}/primary:
     post:
@@ -3549,12 +3560,12 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /organization/{id}/verifyemail/{uuid}:
     post:
@@ -3583,16 +3594,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangeEmailAddressVerifyRequest'
+              $ref: "#/components/schemas/ChangeEmailAddressVerifyRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Users
@@ -3612,16 +3623,16 @@ paths:
             type: string
           description: Search keyword to filter users by email, first name, or last name
       responses:
-        '200':
+        "200":
           description: List of users
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetUserResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetUserResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [Users]
       summary: Create a user
@@ -3638,17 +3649,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserRequest'
+              $ref: "#/components/schemas/CreateUserRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
           description: User with this email already exists
 
   /user/me:
@@ -3660,14 +3671,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: User details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUserResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetUserResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/count:
     get:
@@ -3678,14 +3689,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: User count
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUserCountResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/GetUserCountResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /user/session:
     get:
@@ -3696,16 +3707,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of sessions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSessionResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetSessionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/{id}:
     get:
@@ -3723,16 +3734,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: User details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUserResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetUserResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Users]
       summary: Update a user
@@ -3752,16 +3763,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserRequest'
+              $ref: "#/components/schemas/CreateUserRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [Users]
       summary: Delete a user
@@ -3777,12 +3788,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/{id}/password:
     put:
@@ -3804,14 +3815,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetPasswordRequest'
+              $ref: "#/components/schemas/SetPasswordRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /user/{id}/passkeys:
     delete:
@@ -3829,12 +3840,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/{id}/totp:
     delete:
@@ -3852,12 +3863,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/byEmail/{email}:
     get:
@@ -3875,16 +3886,16 @@ paths:
             type: string
             format: email
       responses:
-        '200':
+        "200":
           description: User details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUserResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetUserResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/totp/generate:
     get:
@@ -3895,14 +3906,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: TOTP setup data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenerateTotpResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/GenerateTotpResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /user/totp/{stateId}/secret:
     get:
@@ -3920,15 +3931,15 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: TOTP secret
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetTotpSecretResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
+                $ref: "#/components/schemas/GetTotpSecretResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
           description: Too many requests
 
   /user/totp/validate:
@@ -3944,15 +3955,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ValidateTotpRequest'
+              $ref: "#/components/schemas/ValidateTotpRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
           description: Invalid TOTP code
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
           description: Too many attempts
 
   /user/totp/disable:
@@ -3964,11 +3975,11 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
           description: TOTP enforcement is enabled
 
   /user/passkey/:
@@ -3980,16 +3991,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of passkeys
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PasskeyListItemResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                  $ref: "#/components/schemas/PasskeyListItemResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /user/passkey/registration/begin:
     post:
@@ -4000,15 +4011,15 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Registration challenge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BeginPasskeyRegistrationResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
+                $ref: "#/components/schemas/BeginPasskeyRegistrationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
           description: User does not meet passkey prerequisites or limit reached
 
   /user/passkey/registration/finish:
@@ -4024,20 +4035,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FinishPasskeyRegistrationRequest'
+              $ref: "#/components/schemas/FinishPasskeyRegistrationRequest"
       responses:
-        '200':
+        "200":
           description: Passkey registered
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PasskeyListItemResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/PasskeyListItemResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /user/passkey/{id}:
     put:
@@ -4059,18 +4070,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RenamePasskeyRequest'
+              $ref: "#/components/schemas/RenamePasskeyRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     delete:
       tags: [Users]
       summary: Delete a passkey
@@ -4086,14 +4097,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/merge/init:
     post:
@@ -4108,14 +4119,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InitMergeUsersRequest'
+              $ref: "#/components/schemas/InitMergeUsersRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/merge/finish/{id}:
     post:
@@ -4134,12 +4145,12 @@ paths:
             format: uuid
           description: Merge request auth state ID
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /user/merge:
     get:
@@ -4150,14 +4161,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of merge requests
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetMergeRequestResponse'
+                  $ref: "#/components/schemas/GetMergeRequestResponse"
 
   # ===========================
   # Groups
@@ -4171,16 +4182,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of groups
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetGroupResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetGroupResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [Groups]
       summary: Create a group
@@ -4193,16 +4204,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateGroupRequest'
+              $ref: "#/components/schemas/CreateGroupRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /group/{id}:
     get:
@@ -4220,16 +4231,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Group details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetGroupResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetGroupResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Groups]
       summary: Update a group
@@ -4249,14 +4260,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateGroupRequest'
+              $ref: "#/components/schemas/CreateGroupRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     delete:
       tags: [Groups]
       summary: Delete a group
@@ -4272,12 +4283,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /group/{id}/member:
     get:
@@ -4295,18 +4306,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of member users
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetUserResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetUserResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Groups]
       summary: Add members to a group
@@ -4332,14 +4343,14 @@ paths:
                 format: uuid
               description: Array of user IDs to add
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /group/{id}/member/remove:
     post:
@@ -4367,14 +4378,14 @@ paths:
                 format: uuid
               description: Array of user IDs to remove
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Buddies
@@ -4388,14 +4399,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of buddies
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetBuddyResponse'
+                  $ref: "#/components/schemas/GetBuddyResponse"
     post:
       tags: [Buddies]
       summary: Add a buddy
@@ -4408,14 +4419,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBuddyRequest'
+              $ref: "#/components/schemas/CreateBuddyRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /buddy/{id}:
     delete:
@@ -4433,12 +4444,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Auth Providers
@@ -4452,16 +4463,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of auth providers
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetAuthProviderResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetAuthProviderResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [Auth Providers]
       summary: Create an auth provider
@@ -4474,16 +4485,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAuthProviderRequest'
+              $ref: "#/components/schemas/CreateAuthProviderRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/Created'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "402":
+          $ref: "#/components/responses/PaymentRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /auth-provider/{id}:
     get:
@@ -4501,16 +4512,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Auth provider details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetAuthProviderResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/GetAuthProviderResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Auth Providers]
       summary: Update an auth provider
@@ -4530,14 +4541,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAuthProviderRequest'
+              $ref: "#/components/schemas/CreateAuthProviderRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     delete:
       tags: [Auth Providers]
       summary: Delete an auth provider
@@ -4553,14 +4564,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
           description: Provider has users bound to it
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /auth-provider/org/{id}:
     get:
@@ -4578,16 +4589,16 @@ paths:
             format: uuid
           description: Organization ID
       responses:
-        '200':
+        "200":
           description: List of public auth providers
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetAuthProviderPublicResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/GetAuthProviderPublicResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ===========================
   # Settings
@@ -4604,16 +4615,16 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of settings
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSettingsResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/GetSettingsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     put:
       tags: [Settings]
       summary: Update all settings
@@ -4628,18 +4639,18 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/GetSettingsResponse'
+                $ref: "#/components/schemas/GetSettingsResponse"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
           description: Invalid setting name
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /setting/{name}:
     get:
@@ -4657,16 +4668,16 @@ paths:
             type: string
           description: Setting name
       responses:
-        '200':
+        "200":
           description: Setting value
           content:
             application/json:
               schema:
                 type: string
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [Settings]
       summary: Update a setting
@@ -4686,18 +4697,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetSettingsRequest'
+              $ref: "#/components/schemas/SetSettingsRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
           description: Invalid setting name
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /setting/timezones:
     get:
@@ -4708,7 +4719,7 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of timezone identifiers
           content:
             application/json:
@@ -4729,14 +4740,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of user preferences
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetSettingsResponse'
+                  $ref: "#/components/schemas/GetSettingsResponse"
     put:
       tags: [User Preferences]
       summary: Update all user preferences
@@ -4751,13 +4762,13 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/GetSettingsResponse'
+                $ref: "#/components/schemas/GetSettingsResponse"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
           description: Invalid preference name
 
   /preference/{name}:
@@ -4775,14 +4786,14 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Preference value
           content:
             application/json:
               schema:
                 type: string
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [User Preferences]
       summary: Update a user preference
@@ -4801,13 +4812,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetSettingsRequest'
+              $ref: "#/components/schemas/SetSettingsRequest"
       responses:
-        '204':
-          $ref: '#/components/responses/Updated'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
           description: Invalid preference name
 
   /preference/caldav/listCalendars:
@@ -4823,19 +4834,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListCaldavCalendarsRequest'
+              $ref: "#/components/schemas/ListCaldavCalendarsRequest"
       responses:
-        '200':
+        "200":
           description: List of calendars
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ListCaldavCalendarsResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
+                  $ref: "#/components/schemas/ListCaldavCalendarsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
           description: Could not connect to CalDAV server
 
   # ===========================
@@ -4850,14 +4861,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Organization statistics
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetStatsResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/GetStatsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   # ===========================
   # Search
@@ -4907,14 +4918,14 @@ paths:
             enum: ["0", "1"]
           description: Include spaces in search results
       responses:
-        '200':
+        "200":
           description: Search results
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSearchResultsResponse'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/GetSearchResultsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   # ===========================
   # Confluence
@@ -4941,11 +4952,11 @@ paths:
             type: string
           description: JWT signed with the Confluence shared secret
       responses:
-        '307':
+        "307":
           description: Redirect to booking UI (success or failure page)
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
           description: Organization not found (plain text response)
 
   # ===========================
@@ -4959,18 +4970,18 @@ paths:
       operationId: healthcheck
       security: []
       responses:
-        '200':
+        "200":
           description: Application is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthcheckResponse'
-        '503':
+                $ref: "#/components/schemas/HealthcheckResponse"
+        "503":
           description: Application is unhealthy (e.g. database connection error)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthcheckResponse'
+                $ref: "#/components/schemas/HealthcheckResponse"
     head:
       tags: [Healthcheck]
       summary: Application health check (HEAD)
@@ -4978,9 +4989,9 @@ paths:
       operationId: healthcheckHead
       security: []
       responses:
-        '200':
+        "200":
           description: Application is healthy
-        '503':
+        "503":
           description: Application is unhealthy
 
   # ===========================
@@ -4995,11 +5006,11 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Update information
           content:
             application/json:
               schema:
                 type: object
-        '404':
+        "404":
           description: No update available
