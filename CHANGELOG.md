@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.61.0](https://github.com/seatsurfing/seatsurfing/compare/v1.60.0...v1.61.0) (2026-02-23)
+
+
+### Features
+
+* add admin-option to reset MFA for a user ([#1736](https://github.com/seatsurfing/seatsurfing/issues/1736)) ([76c91c5](https://github.com/seatsurfing/seatsurfing/commit/76c91c5cf93e62f7d0e97618db1894eff941cba0))
+
+
+### Bug Fixes
+
+* remove "TOTP" phrase from enforce MFA option as a passkey is als… ([#1734](https://github.com/seatsurfing/seatsurfing/issues/1734)) ([5173c50](https://github.com/seatsurfing/seatsurfing/commit/5173c508197015f61afe13e682d737dcd681f49d))
+
 ## [1.60.0](https://github.com/seatsurfing/seatsurfing/compare/v1.59.0...v1.60.0) (2026-02-21)
 
 
