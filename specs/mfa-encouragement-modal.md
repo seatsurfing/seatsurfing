@@ -31,17 +31,17 @@ All of the following conditions must be true:
 
 ### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `show` | `boolean` | Controls modal visibility |
-| `onHide` | `() => void` | Called when the modal is dismissed (either button) |
-| `onSetup` | `() => void` | Called when user chooses to set up MFA |
-| `t` | `TranslationFunc` | Translation function (injected by `withTranslation`) |
+| Prop      | Type              | Description                                          |
+| --------- | ----------------- | ---------------------------------------------------- |
+| `show`    | `boolean`         | Controls modal visibility                            |
+| `onHide`  | `() => void`      | Called when the modal is dismissed (either button)   |
+| `onSetup` | `() => void`      | Called when user chooses to set up MFA               |
+| `t`       | `TranslationFunc` | Translation function (injected by `withTranslation`) |
 
 ### Modal Content
 
 - **Title:** Translated string `mfaEncouragementTitle` (e.g. "Secure your account")
-- **Body:** 
+- **Body:**
   - An informational paragraph explaining the benefit of second-factor authentication, using translated string `mfaEncouragementBody`
   - A brief mention that the user can set up either **TOTP (authenticator app)** or **Passkeys (biometrics/security key)**
 - **Footer / Buttons:**
@@ -57,8 +57,8 @@ The modal is purely presentational. All logic (visibility, dismissal persistence
 
 ### New State Fields
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
+| Field                  | Type      | Default | Description                             |
+| ---------------------- | --------- | ------- | --------------------------------------- |
 | `showMfaEncouragement` | `boolean` | `false` | Whether to show the encouragement modal |
 
 ### Logic Flow
@@ -80,11 +80,13 @@ Add a new method `checkMfaEncouragement()` that is called **after** the existing
 ### Handling User Actions
 
 **"Set up now" (`onSetup`):**
+
 1. Set `localStorage.setItem("mfaEncouragementDismissed", "1")`
 2. Set state: `showMfaEncouragement = false`
 3. Navigate to `/preferences?tab=security` using `Next.js router`
 
 **"Maybe later" (`onHide`):**
+
 1. Set `localStorage.setItem("mfaEncouragementDismissed", "1")`
 2. Set state: `showMfaEncouragement = false`
 
@@ -115,8 +117,8 @@ The `preferences.tsx` page must support reading the `tab` query parameter to set
 
 ## localStorage Key
 
-| Key | Value | Description |
-|-----|-------|-------------|
+| Key                         | Value | Description                                                                      |
+| --------------------------- | ----- | -------------------------------------------------------------------------------- |
 | `mfaEncouragementDismissed` | `"1"` | Set when the user dismisses the modal (either action). Persists across sessions. |
 
 The key is accessed directly via `window.localStorage` (same pattern as `next-export-i18n-lang` in `RuntimeConfig.getLanguage()`). It is NOT managed through `AjaxConfigBrowserPersister` since it is unrelated to auth credentials.
@@ -129,21 +131,21 @@ The key is **not** cleared on logout. This is intentional: the encouragement is 
 
 Add the following keys to all 13 translation files in `ui/i18n/`:
 
-| Key | en-US Value |
-|-----|-------------|
-| `mfaEncouragementTitle` | `"Secure your account"` |
-| `mfaEncouragementBody` | `"Protect your account by setting up a second factor for authentication. You can use an authenticator app (TOTP) or a passkey (biometrics or security key) for additional security when signing in."` |
-| `mfaEncouragementSetup` | `"Set up now"` |
-| `mfaEncouragementLater` | `"Maybe later"` |
+| Key                     | en-US Value                                                                                                                                                                                           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mfaEncouragementTitle` | `"Secure your account"`                                                                                                                                                                               |
+| `mfaEncouragementBody`  | `"Protect your account by setting up a second factor for authentication. You can use an authenticator app (TOTP) or a passkey (biometrics or security key) for additional security when signing in."` |
+| `mfaEncouragementSetup` | `"Set up now"`                                                                                                                                                                                        |
+| `mfaEncouragementLater` | `"Maybe later"`                                                                                                                                                                                       |
 
 German (`de`) translations:
 
-| Key | de Value |
-|-----|----------|
-| `mfaEncouragementTitle` | `"Konto absichern"` |
-| `mfaEncouragementBody` | `"Schützen Sie Ihr Konto, indem Sie einen zweiten Faktor für die Authentifizierung einrichten. Sie können eine Authentifikator-App (TOTP) oder einen Passkey (Biometrie oder Sicherheitsschlüssel) verwenden, um die Sicherheit bei der Anmeldung zu erhöhen."` |
-| `mfaEncouragementSetup` | `"Jetzt einrichten"` |
-| `mfaEncouragementLater` | `"Vielleicht später"` |
+| Key                     | de Value                                                                                                                                                                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mfaEncouragementTitle` | `"Konto absichern"`                                                                                                                                                                                                                                             |
+| `mfaEncouragementBody`  | `"Schützen Sie Ihr Konto, indem Sie einen zweiten Faktor für die Authentifizierung einrichten. Sie können eine Authentifikator-App (TOTP) oder einen Passkey (Biometrie oder Sicherheitsschlüssel) verwenden, um die Sicherheit bei der Anmeldung zu erhöhen."` |
+| `mfaEncouragementSetup` | `"Jetzt einrichten"`                                                                                                                                                                                                                                            |
+| `mfaEncouragementLater` | `"Vielleicht später"`                                                                                                                                                                                                                                           |
 
 For all other languages: add the keys with the en-US values as placeholders (consistent with existing practice — see e.g. `translations.es.json` where many keys use English text). The existing `add-missing-translations.sh` script can be used for this.
 
@@ -176,13 +178,13 @@ Not required for initial implementation. The existing e2e framework (`e2e/tests/
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `ui/src/components/MfaEncouragementModal.tsx` | **New** — modal component |
-| `ui/src/pages/_app.tsx` | Add state, check logic, handlers, render `MfaEncouragementModal` |
-| `ui/src/pages/preferences.tsx` | Support `?tab=security` query param to pre-select Security tab |
-| `ui/i18n/translations.*.json` (13 files) | Add 4 new translation keys each |
-| `ui/src/components/__tests__/MfaEncouragementModal.test.tsx` | **New** — unit tests |
+| File                                                         | Change                                                           |
+| ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `ui/src/components/MfaEncouragementModal.tsx`                | **New** — modal component                                        |
+| `ui/src/pages/_app.tsx`                                      | Add state, check logic, handlers, render `MfaEncouragementModal` |
+| `ui/src/pages/preferences.tsx`                               | Support `?tab=security` query param to pre-select Security tab   |
+| `ui/i18n/translations.*.json` (13 files)                     | Add 4 new translation keys each                                  |
+| `ui/src/components/__tests__/MfaEncouragementModal.test.tsx` | **New** — unit tests                                             |
 
 ## Edge Cases & Design Decisions
 
