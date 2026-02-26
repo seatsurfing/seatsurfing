@@ -400,5 +400,9 @@
   "signInWithPasskey": "Mit einem Passkey anmelden",
   "passkeyRequired": "Bitte bestätigen Sie Ihre Identität mit Ihrem Passkey.",
   "useTotpInstead": "Stattdessen Authenticator-Code verwenden",
-  "passkeyLoginFailed": "Passkey-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Anmeldemethode."
+  "passkeyLoginFailed": "Passkey-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Anmeldemethode.",
+  "mfaEncouragementTitle": "Konto absichern",
+  "mfaEncouragementBody": "Schützen Sie Ihr Konto, indem Sie einen zweiten Faktor für die Authentifizierung einrichten. Sie können eine Authentifikator-App (TOTP) oder einen Passkey (Biometrie oder Sicherheitsschlüssel) verwenden, um die Sicherheit bei der Anmeldung zu erhöhen.",
+  "mfaEncouragementSetup": "Jetzt einrichten",
+  "mfaEncouragementLater": "Vielleicht später"
 }
