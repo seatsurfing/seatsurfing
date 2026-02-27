@@ -230,33 +230,27 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ password, changePassword: true });
   };
 
-  copyUsernameToClipboard = () => {
-    navigator.clipboard
-      .writeText(RuntimeConfig.INFOS.organizationId + "_" + this.state.email)
-      .then(() => {
-        this.setState({ showUsernameCopied: true });
-        setTimeout(() => {
-          this.setState({ showUsernameCopied: false });
-        }, 2000);
-      })
-      .catch(() => {
-        // do nothing
-      });
+  copyToClipboard = (textKey: keyof State, stateKey: keyof State): Function => {
+    return () => {
+      navigator.clipboard
+        .writeText(this.state[textKey] as string)
+        .then(() => {
+          this.setState({ [stateKey]: true } as any);
+          setTimeout(() => {
+            this.setState({ [stateKey]: false } as any);
+          }, 2000);
+        })
+        .catch(() => {
+          // do nothing
+        });
+    };
   };
 
-  copyPasswordToClipboard = () => {
-    navigator.clipboard
-      .writeText(this.state.password)
-      .then(() => {
-        this.setState({ showPasswordCopied: true });
-        setTimeout(() => {
-          this.setState({ showPasswordCopied: false });
-        }, 2000);
-      })
-      .catch(() => {
-        // do nothing
-      });
-  };
+  copyUsernameToClipboard = this.copyToClipboard("email", "showUsernameCopied");
+  copyPasswordToClipboard = this.copyToClipboard(
+    "password",
+    "showPasswordCopied",
+  );
 
   changeRole = (role: number) => {
     let changePassword = this.isServiceAccount(role)
@@ -477,13 +471,7 @@ class EditUser extends React.Component<Props, State> {
                 <Form.Control
                   type="text"
                   readOnly={true}
-                  defaultValue={
-                    this.isServiceAccount(this.state.role)
-                      ? RuntimeConfig.INFOS.organizationId +
-                        "_" +
-                        this.state.email
-                      : this.state.email
-                  }
+                  defaultValue={this.state.email}
                 />
                 <Button
                   onClick={() => this.copyUsernameToClipboard()}
