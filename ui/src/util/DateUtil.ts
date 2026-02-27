@@ -1,4 +1,8 @@
 export default class DateUtil {
+  static MS_PER_MINUTE = 1000 * 60;
+  static MS_PER_HOUR = DateUtil.MS_PER_MINUTE * 60;
+  static MS_PER_DAY = DateUtil.MS_PER_HOUR * 24;
+
   /**
    * @param date Date object to format
    * @returns formatted date string in "YYYY-MM-DD" format

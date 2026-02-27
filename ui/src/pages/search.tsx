@@ -517,11 +517,9 @@ class Search extends React.Component<Props, State> {
       res = false;
       hint = this.props.t("errorLeaveAfterEnter");
     }
-    const MS_PER_MINUTE = 1000 * 60;
-    const MS_PER_HOUR = MS_PER_MINUTE * 60;
-    const MS_PER_DAY = MS_PER_HOUR * 24;
+
     let bookingAdvanceDays = Math.floor(
-      (this.state.enter.getTime() - new Date().getTime()) / MS_PER_DAY,
+      (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
       res = false;
@@ -532,7 +530,7 @@ class Search extends React.Component<Props, State> {
     let bookingDurationHours =
       Math.floor(
         (this.state.leave.getTime() - this.state.enter.getTime()) /
-          MS_PER_MINUTE,
+          DateUtil.MS_PER_MINUTE,
       ) / 60;
     if (
       bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours &&
