@@ -66,7 +66,7 @@ class Locations extends React.Component<Props, State> {
         <td>{location.name}</td>
         <td>{location.enabled ? this.props.t("yes") : ""}</td>
         <td>
-          {location.mapWidth}x{location.mapHeight}
+          {location.mapWidth}&nbsp;&times;&nbsp;{location.mapHeight}
         </td>
         <td>
           <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
