@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.62.1](https://github.com/seatsurfing/seatsurfing/compare/v1.62.0...v1.62.1) (2026-02-27)
+
+
+### Bug Fixes
+
+* fix copying username to clipboard ([#1751](https://github.com/seatsurfing/seatsurfing/issues/1751)) ([c2def02](https://github.com/seatsurfing/seatsurfing/commit/c2def02513530b58caf5d1e0589d8acf848a15f5))
+* use proper dimension x ([#1752](https://github.com/seatsurfing/seatsurfing/issues/1752)) ([a862350](https://github.com/seatsurfing/seatsurfing/commit/a862350a120a4e02503237b0f7d2dc06eb76cf08))
+
 ## [1.62.0](https://github.com/seatsurfing/seatsurfing/compare/v1.61.0...v1.62.0) (2026-02-27)
 
 
