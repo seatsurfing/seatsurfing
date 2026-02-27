@@ -22,7 +22,7 @@
    	-e POSTGRES_PASSWORD=root \
    	-p 5432:5432 \
    	-d \
-   	postgres:16-alpine
+   	postgres:17-alpine
    ```
 
 1. Create databases named `seatsurfing` (for running the application) and `seatsurfing_test` (for running the tests) in your PostgreSQL database:
