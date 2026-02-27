@@ -346,7 +346,7 @@ class Search extends React.Component<Props, State> {
   };
 
   initDates = () => {
-    let enter = new Date();
+    const enter = new Date();
     if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
       enter.setHours(enter.getHours() + 1, 0, 0);
       if (enter.getHours() < this.state.prefWorkdayStart) {
@@ -396,8 +396,8 @@ class Search extends React.Component<Props, State> {
 
     this.setState({
       earliestEnterDate: enter,
-      enter: enter,
-      leave: leave,
+      enter,
+      leave,
       daySlider: daySlider,
     });
   };
@@ -410,9 +410,12 @@ class Search extends React.Component<Props, State> {
 
   loadAvailableAttributes = async (): Promise<void> => {
     return SpaceAttribute.list().then((attributes) => {
-      let availableAttributes: SpaceAttribute[] = Object.assign([], attributes);
+      const availableAttributes: SpaceAttribute[] = Object.assign(
+        [],
+        attributes,
+      );
       if (this.buddies.length > 0) {
-        let buddyOptions = new Map<string, string>();
+        const buddyOptions = new Map<string, string>();
         buddyOptions.set("*", this.props.t("any"));
         this.buddies.forEach((buddy) =>
           buddyOptions.set(buddy.id, buddy.buddy.email),
@@ -486,7 +489,7 @@ class Search extends React.Component<Props, State> {
   updateCanSearch = async () => {
     let res = true;
     let hint = "";
-    let isAdmin =
+    const isAdmin =
       RuntimeConfig.INFOS.noAdminRestrictions && User.UserRoleSpaceAdmin;
     if (
       this.curBookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
