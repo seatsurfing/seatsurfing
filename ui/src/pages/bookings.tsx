@@ -31,6 +31,7 @@ import { Calendar, momentLocalizer, ToolbarProps } from "react-big-calendar";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
+import DateUtil from "@/util/DateUtil";
 
 interface State {
   loading: boolean;
@@ -401,10 +402,8 @@ class Bookings extends React.Component<Props, State> {
               defaultView="week"
               date={this.state.calendarDate}
               onNavigate={(newDate: Date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const navigateDate = new Date(newDate);
-                navigateDate.setHours(0, 0, 0, 0);
+                const today = DateUtil.getTodayStart();
+                const navigateDate = DateUtil.setHoursToMin(new Date(newDate));
                 if (navigateDate >= today) {
                   this.setState({ calendarDate: newDate });
                 }

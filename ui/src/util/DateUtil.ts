@@ -145,4 +145,11 @@ export default class DateUtil {
   static getTodayStart(): Date {
     return this.setHoursToMin(new Date());
   }
+
+  /**
+   * @returns Today's date with time 23:59:59.999
+   */
+  static getTodayEnd(): Date {
+    return this.setHoursToMax(new Date());
+  }
 }
