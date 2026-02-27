@@ -116,6 +116,10 @@ class Preferences extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
+    const tabParam = this.props.router.query.tab;
+    if (tabParam === "security") {
+      this.setState({ activeTab: "tab-security" });
+    }
     let promises = [
       this.loadPreferences(),
       this.loadLocations(),

@@ -21,11 +21,14 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
 import TotpSetupModal from "@/components/TotpSetupModal";
+import MfaEncouragementModal from "@/components/MfaEncouragementModal";
 import User from "@/types/User";
+import Router from "next/router";
 
 interface State {
   isLoading: boolean;
   showTotpEnforcement: boolean;
+  showMfaEncouragement: boolean;
   totpQrCode: string;
   totpStateId: string;
   enforceTOTP: boolean;
@@ -44,6 +47,7 @@ class App extends React.Component<Props, State> {
     this.state = {
       isLoading: true,
       showTotpEnforcement: false,
+      showMfaEncouragement: false,
       totpQrCode: "",
       totpStateId: "",
       enforceTOTP: false,
@@ -74,6 +78,24 @@ class App extends React.Component<Props, State> {
       });
     }, 10);
   }
+
+  componentDidMount() {
+    Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
+  }
+
+  componentWillUnmount() {
+    Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
+  }
+
+  onRouteChangeComplete = () => {
+    if (
+      !this.state.isLoading &&
+      !this.state.showTotpEnforcement &&
+      !this.state.showMfaEncouragement
+    ) {
+      this.checkTotpEnforcement();
+    }
+  };
 
   componentDidUpdate(prevProps: Props, prevState: State) {
     // Sync state with RuntimeConfig.INFOS to detect changes
@@ -157,7 +179,66 @@ class App extends React.Component<Props, State> {
         .catch((err) => {
           console.error("Failed to generate TOTP:", err);
         });
+    } else {
+      this.checkMfaEncouragement();
     }
+  };
+
+  checkMfaEncouragement = () => {
+    // Only check on client side
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // Only check if user is logged in
+    if (!Ajax.hasAccessToken()) {
+      return;
+    }
+
+    const currentPath = window.location.pathname;
+    // Don't show on login/auth pages
+    if (currentPath.includes("/login") || currentPath.includes("/resetpw")) {
+      return;
+    }
+
+    // Only show for non-IdP users without enforcement and without any second factor
+    if (
+      RuntimeConfig.INFOS.idpLogin ||
+      RuntimeConfig.INFOS.enforceTOTP ||
+      RuntimeConfig.INFOS.totpEnabled ||
+      RuntimeConfig.INFOS.hasPasskeys
+    ) {
+      return;
+    }
+
+    try {
+      if (window.localStorage.getItem("mfaEncouragementDismissed") === "1") {
+        return;
+      }
+    } catch (e) {
+      // localStorage not available; proceed to show modal
+    }
+
+    this.setState({ showMfaEncouragement: true });
+  };
+
+  onMfaEncouragementDismiss = () => {
+    try {
+      window.localStorage.setItem("mfaEncouragementDismissed", "1");
+    } catch (e) {
+      // ignore
+    }
+    this.setState({ showMfaEncouragement: false });
+  };
+
+  onMfaEncouragementSetup = () => {
+    try {
+      window.localStorage.setItem("mfaEncouragementDismissed", "1");
+    } catch (e) {
+      // ignore
+    }
+    this.setState({ showMfaEncouragement: false });
+    Router.push("/preferences?tab=security");
   };
 
   onTotpEnforcementSuccess = () => {
@@ -214,6 +295,13 @@ class App extends React.Component<Props, State> {
             onHide={() => {}} // Cannot close
             onSuccess={this.onTotpEnforcementSuccess}
             canClose={false}
+          />
+        )}
+        {this.state.showMfaEncouragement && (
+          <MfaEncouragementModal
+            show={true}
+            onHide={this.onMfaEncouragementDismiss}
+            onSetup={this.onMfaEncouragementSetup}
           />
         )}
         <Component {...pageProps} />

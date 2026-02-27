@@ -397,5 +397,9 @@
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead",
-  "passkeyLoginFailed": "Passkey login failed. Please try again or use another login method."
+  "passkeyLoginFailed": "Passkey login failed. Please try again or use another login method.",
+  "mfaEncouragementTitle": "Secure your account",
+  "mfaEncouragementBody": "Protect your account by setting up a second factor for authentication. You can use an authenticator app (TOTP) or a passkey (biometrics or security key) for additional security when signing in.",
+  "mfaEncouragementSetup": "Set up now",
+  "mfaEncouragementLater": "Maybe later"
 }

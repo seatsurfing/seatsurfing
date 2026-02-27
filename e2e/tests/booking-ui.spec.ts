@@ -3,6 +3,11 @@ import { test, expect } from "@playwright/test";
 const uiURL = process.env.UI_URL ? process.env.UI_URL : "http://localhost:8080";
 
 test.beforeEach(async ({ page }) => {
+  // Suppress the MFA encouragement modal
+  await page.addInitScript(() => {
+    window.localStorage.setItem("mfaEncouragementDismissed", "1");
+  });
+
   // Open login page
   await page.goto(uiURL + "/ui/login/");
   await expect(page).toHaveURL(/login\/$/);
