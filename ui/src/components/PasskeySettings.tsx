@@ -121,7 +121,7 @@ class PasskeySettings extends React.Component<Props, State> {
   };
 
   render() {
-    if (!this.state.passkeyPlatformAvailable) {
+    if (!this.state.passkeyPlatformAvailable && !this.state.registering) {
       return null;
     }
     const { passkeys, loading, registering, newName, error } = this.state;
