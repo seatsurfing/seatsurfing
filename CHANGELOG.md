@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.62.0](https://github.com/seatsurfing/seatsurfing/compare/v1.61.0...v1.62.0) (2026-02-27)
+
+
+### Features
+
+* encourage users to set up a second factor ([#1747](https://github.com/seatsurfing/seatsurfing/issues/1747)) ([d48c997](https://github.com/seatsurfing/seatsurfing/commit/d48c997500c15fa67733ba1e9110d86b1364af5c))
+
+
+### Bug Fixes
+
+* **deps:** bump minimatch in /ui ([#1748](https://github.com/seatsurfing/seatsurfing/issues/1748)) ([884173d](https://github.com/seatsurfing/seatsurfing/commit/884173db12f2c75bb9d706e0b64c630b29bf8956))
+* **deps:** bump rollup from 4.57.1 to 4.59.0 in /ui ([#1745](https://github.com/seatsurfing/seatsurfing/issues/1745)) ([908bc56](https://github.com/seatsurfing/seatsurfing/commit/908bc560af854f059a49c861d442ee98bce68fd2))
+* update some German translations ([#1740](https://github.com/seatsurfing/seatsurfing/issues/1740)) ([9c8044f](https://github.com/seatsurfing/seatsurfing/commit/9c8044f24705471ed23d6cd733db34f6a08f0f5a))
+
 ## [1.61.0](https://github.com/seatsurfing/seatsurfing/compare/v1.60.0...v1.61.0) (2026-02-23)
 
 
