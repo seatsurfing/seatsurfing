@@ -60,6 +60,7 @@ import AjaxError from "@/util/AjaxError";
 import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
+import DateUtil from "@/util/DateUtil";
 
 interface State {
   earliestEnterDate: Date;
@@ -260,18 +261,15 @@ class Search extends React.Component<Props, State> {
   };
 
   getEarliestSelectableEnterDate = (): Date => {
-    let date = new Date();
-    date.setHours(0, 0, 0, 0);
-
-    return date;
+    return DateUtil.setHoursToMin(new Date());
   };
 
   loadPreferences = async (): Promise<void> => {
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       UserPreference.list()
         .then((list) => {
-          let state: any = {};
+          const state: any = {};
           list.forEach((s) => {
             if (typeof window !== "undefined") {
               if (s.name === "enter_time")
@@ -505,8 +503,7 @@ class Search extends React.Component<Props, State> {
       res = false;
       hint = this.props.t("errorPickArea");
     }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = DateUtil.setHoursToMin(new Date());
     let enterTime = new Date(this.state.enter);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       enterTime.setHours(23, 59, 59);
@@ -554,7 +551,7 @@ class Search extends React.Component<Props, State> {
         num: RuntimeConfig.INFOS.minBookingDurationHours,
       });
     }
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, _reject) {
       self.setState(
         {
@@ -581,10 +578,10 @@ class Search extends React.Component<Props, State> {
   };
 
   changeEnterDay = (value: number) => {
-    let enter = new Date(this.getEarliestSelectableEnterDate().valueOf());
+    const enter = new Date(this.getEarliestSelectableEnterDate().valueOf());
     enter.setDate(enter.getDate() + value);
     enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    let leave = new Date(enter.valueOf());
+    const leave = new Date(enter.valueOf());
     leave.setHours(this.state.prefWorkdayEnd, 0, 0, 0);
     this.setEnterDate(enter);
     this.setLeaveDate(leave);
@@ -592,7 +589,7 @@ class Search extends React.Component<Props, State> {
   };
 
   setRecurrenceEndDate = (value: Date | [Date | null, Date | null]) => {
-    let date = value instanceof Date ? value : value[0];
+    const date = value instanceof Date ? value : value[0];
     if (date == null) {
       return;
     }
@@ -609,7 +606,7 @@ class Search extends React.Component<Props, State> {
   };
 
   setEnterDate = (value: Date | [Date | null, Date | null]) => {
-    let dateChangedCb = () => {
+    const dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
           this.setState({ loading: false });
@@ -624,16 +621,16 @@ class Search extends React.Component<Props, State> {
         }
       });
     };
-    let performChange = () => {
-      let diff = this.state.leave.getTime() - this.state.enter.getTime();
-      let date = value instanceof Date ? value : value[0];
+    const performChange = () => {
+      const diff = this.state.leave.getTime() - this.state.enter.getTime();
+      const date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
       }
       if (RuntimeConfig.INFOS.dailyBasisBooking) {
         date.setHours(0, 0, 0);
       }
-      let leave = new Date();
+      const leave = new Date();
       leave.setTime(date.getTime() + diff);
       const daySlider = Formatting.getDayDiff(
         date,
@@ -658,12 +655,12 @@ class Search extends React.Component<Props, State> {
   };
 
   setLeaveDate = (value: Date | [Date | null, Date | null]) => {
-    let dateChangedCb = () => {
+    const dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
           this.setState({ loading: false });
         } else {
-          let promises = [
+          const promises = [
             this.initCurrentBookingCount(),
             this.loadSpaces(this.state.locationId),
           ];
@@ -673,8 +670,8 @@ class Search extends React.Component<Props, State> {
         }
       });
     };
-    let performChange = () => {
-      let date = value instanceof Date ? value : value[0];
+    const performChange = () => {
+      const date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
       }
@@ -739,8 +736,8 @@ class Search extends React.Component<Props, State> {
     }
   };
 
-  getAvailibilityStyle = (item: Space, bookings: Booking[]) => {
-    const mydesk = bookings.find(
+  getAvailabilityStyle = (item: Space, bookings: Booking[]) => {
+    const myDesk = bookings.find(
       (b) => b.user.email === RuntimeConfig.INFOS.username,
     );
     const buddiesEmails = this.buddies.map((i) => i.buddy.email);
@@ -748,7 +745,7 @@ class Search extends React.Component<Props, State> {
       buddiesEmails.includes(b.user.email),
     );
 
-    if (mydesk) {
+    if (myDesk) {
       return this.state.prefSelfBookedColor;
     }
 
@@ -808,7 +805,7 @@ class Search extends React.Component<Props, State> {
   };
 
   renderItem = (item: Space) => {
-    let bookings = Booking.createFromRawArray(item.rawBookings);
+    const bookings = Booking.createFromRawArray(item.rawBookings);
     const boxStyle: React.CSSProperties = {
       position: "absolute",
       left: item.x,
@@ -820,7 +817,7 @@ class Search extends React.Component<Props, State> {
         (item.allowed && item.available) || (bookings && bookings.length > 0)
           ? "pointer"
           : "default",
-      backgroundColor: this.getAvailibilityStyle(item, bookings),
+      backgroundColor: this.getAvailabilityStyle(item, bookings),
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",
@@ -847,9 +844,8 @@ class Search extends React.Component<Props, State> {
   };
 
   renderListItem = (item: Space) => {
-    let bookings: Booking[];
-    bookings = Booking.createFromRawArray(item.rawBookings);
-    const bgColor = this.getAvailibilityStyle(item, bookings);
+    const bookings = Booking.createFromRawArray(item.rawBookings);
+    const bgColor = this.getAvailabilityStyle(item, bookings);
     let bookerCount = 0;
     if (bgColor === this.state.prefSelfBookedColor) {
       bookerCount = 1;
@@ -1114,7 +1110,7 @@ class Search extends React.Component<Props, State> {
   };
 
   getSearchFormComparator = (attribute: SpaceAttribute) => {
-    let items = [];
+    const items = [];
     items.push(<option value=""></option>);
     if (attribute.type !== 4) {
       items.push(<option value="eq">=</option>);
@@ -1464,7 +1460,7 @@ class Search extends React.Component<Props, State> {
   };
 
   getRecurrenceObject = (): RecurringBooking => {
-    let rb = new RecurringBooking();
+    const rb = new RecurringBooking();
     rb.spaceId = this.state.selectedSpace?.id || "";
     rb.subject = this.state.subject;
     rb.enter = new Date(this.state.enter);
@@ -1493,7 +1489,7 @@ class Search extends React.Component<Props, State> {
   };
 
   resetRecurrence = () => {
-    let weekdays = Object.assign([], this.state.prefWorkdays);
+    const weekdays = Object.assign([], this.state.prefWorkdays);
     if (weekdays.indexOf(this.state.enter.getDay()) === -1) {
       weekdays.push(this.state.enter.getDay());
     }
@@ -1503,7 +1499,7 @@ class Search extends React.Component<Props, State> {
         finalNumBookings: 0,
         cadence: 0,
         cycle: 1,
-        weekdays: weekdays,
+        weekdays,
         end: new Date(this.recurrenceMaxEndDate.valueOf()),
         precheckLoading: false,
         precheckResults: [],
@@ -1516,7 +1512,7 @@ class Search extends React.Component<Props, State> {
   };
 
   applyRecurrence = () => {
-    let precheckRequired =
+    const precheckRequired =
       this.state.recurrence.active &&
       this.state.recurrence.precheckResults.length === 0;
     this.setState({
@@ -1532,9 +1528,9 @@ class Search extends React.Component<Props, State> {
       this.setState({ showRecurringOptions: false });
       return;
     }
-    let rb = this.getRecurrenceObject();
+    const rb = this.getRecurrenceObject();
     rb.precheck().then((res) => {
-      let errorCodes: number[] = [];
+      const errorCodes: number[] = [];
       let numErrors = 0;
       res.forEach((r) => {
         if (!r.success) {
@@ -2035,7 +2031,7 @@ class Search extends React.Component<Props, State> {
         </Form>
       </Modal>
     );
-    let confirmModalRows = [];
+    const confirmModalRows = [];
     confirmModalRows.push({
       label: this.props.t("space"),
       value: this.state.selectedSpace?.name,
