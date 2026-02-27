@@ -138,4 +138,11 @@ export default class DateUtil {
     dateMaxHours.setHours(0, 0, 0, 0);
     return dateMaxHours;
   }
+
+  /**
+   * @returns Today's date with time 00:00:00.000
+   */
+  static getTodayStart(): Date {
+    return this.setHoursToMin(new Date());
+  }
 }

@@ -152,10 +152,8 @@ class Search extends React.Component<Props, State> {
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
     );
     this.recurrenceMaxEndDate.setHours(23, 59, 59, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     this.state = {
-      earliestEnterDate: today,
+      earliestEnterDate: DateUtil.getTodayStart(),
       enter: new Date(),
       leave: new Date(),
       locationId: "",
@@ -261,7 +259,7 @@ class Search extends React.Component<Props, State> {
   };
 
   getEarliestSelectableEnterDate = (): Date => {
-    return DateUtil.setHoursToMin(new Date());
+    return DateUtil.getTodayStart();
   };
 
   loadPreferences = async (): Promise<void> => {
@@ -503,7 +501,7 @@ class Search extends React.Component<Props, State> {
       res = false;
       hint = this.props.t("errorPickArea");
     }
-    const today = DateUtil.setHoursToMin(new Date());
+    const today = DateUtil.getTodayStart();
     let enterTime = new Date(this.state.enter);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       enterTime.setHours(23, 59, 59);
