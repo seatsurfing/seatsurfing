@@ -138,10 +138,8 @@ class Bookings extends React.Component<Props, State> {
   loadItems = () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
+    const startOfToday = DateUtil.getTodayStart();
+    const endOfToday = DateUtil.getTodayEnd();
 
     const bookings =
       this.state.filterOption === "enter_leave"

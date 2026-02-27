@@ -1,4 +1,8 @@
 export default class DateUtil {
+  static MS_PER_MINUTE = 1000 * 60;
+  static MS_PER_HOUR = DateUtil.MS_PER_MINUTE * 60;
+  static MS_PER_DAY = DateUtil.MS_PER_HOUR * 24;
+
   /**
    * @param date Date object to format
    * @returns formatted date string in "YYYY-MM-DD" format
@@ -137,5 +141,19 @@ export default class DateUtil {
     const dateMaxHours = new Date(date);
     dateMaxHours.setHours(0, 0, 0, 0);
     return dateMaxHours;
+  }
+
+  /**
+   * @returns Today's date with time 00:00:00.000
+   */
+  static getTodayStart(): Date {
+    return this.setHoursToMin(new Date());
+  }
+
+  /**
+   * @returns Today's date with time 23:59:59.999
+   */
+  static getTodayEnd(): Date {
+    return this.setHoursToMax(new Date());
   }
 }
