@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.63.0](https://github.com/seatsurfing/seatsurfing/compare/v1.62.2...v1.63.0) (2026-02-28)
+
+
+### Features
+
+* show max. concurrent bookings in location detail popup ([#1759](https://github.com/seatsurfing/seatsurfing/issues/1759)) ([188e6d5](https://github.com/seatsurfing/seatsurfing/commit/188e6d560e052498372e87d588b94b47bca7eb08))
+
+
+### Bug Fixes
+
+* do not toggle "show map" label in search ([#1761](https://github.com/seatsurfing/seatsurfing/issues/1761)) ([72770f3](https://github.com/seatsurfing/seatsurfing/commit/72770f3a7c4ba9eeca8066602b2e17ff305cc397))
+* fix error "ReferenceError: window is not defined" when running in SSR ([#1760](https://github.com/seatsurfing/seatsurfing/issues/1760)) ([024d997](https://github.com/seatsurfing/seatsurfing/commit/024d997800e14f7749b2e0410c51d7ea37a57039))
+
 ## [1.62.2](https://github.com/seatsurfing/seatsurfing/compare/v1.62.1...v1.62.2) (2026-02-28)
 
 
