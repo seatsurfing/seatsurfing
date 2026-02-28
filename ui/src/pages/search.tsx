@@ -1606,9 +1606,9 @@ class Search extends React.Component<Props, State> {
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
-            // TODO
-            //if (value != null && value instanceof Date)
-            //  this.setEnterDate(value);
+            if (value != null && value instanceof Date) {
+              this.setEnterDate(DateUtil.copyDate(value, this.state.enter));
+            }
           }}
         />
       </div>

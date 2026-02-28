@@ -156,4 +156,25 @@ export default class DateUtil {
   static getTodayEnd(): Date {
     return this.setHoursToMax(new Date());
   }
+
+  static copyDate(source: Date, target: Date): Date {
+    const result = new Date(target);
+    result.setFullYear(
+      source.getFullYear(),
+      source.getMonth(),
+      source.getDate(),
+    );
+    return result;
+  }
+
+  static copyTime(source: Date, target: Date): Date {
+    const result = new Date(target);
+    result.setHours(
+      source.getHours(),
+      source.getMinutes(),
+      source.getSeconds(),
+      source.getMilliseconds(),
+    );
+    return result;
+  }
 }
