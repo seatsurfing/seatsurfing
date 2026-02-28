@@ -50,7 +50,7 @@ jobs:
       - name: Run Playwright tests
         working-directory: ./e2e
         run: UI_URL="http://localhost:8080" npx playwright test
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
