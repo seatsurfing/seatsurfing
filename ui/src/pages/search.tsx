@@ -1628,13 +1628,13 @@ class Search extends React.Component<Props, State> {
         <DateTimePicker
           enableTime={false}
           disabled={!this.state.locationId}
-          value={this.state.enter}
+          value={this.state.leave}
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
-            // TODO
-            //if (value != null && value instanceof Date)
-            //  this.setEnterDate(value);
+            if (value != null && value instanceof Date) {
+              this.setLeaveDate(DateUtil.copyDate(value, this.state.leave));
+            }
           }}
         />
       </div>
@@ -1650,9 +1650,9 @@ class Search extends React.Component<Props, State> {
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
-            // TODO
-            //if (value != null && value instanceof Date)
-            //  this.setEnterDate(value);
+            if (value != null && value instanceof Date) {
+              this.setEnterDate(DateUtil.copyTime(value, this.state.enter));
+            }
           }}
         />
       </div>
@@ -1663,44 +1663,13 @@ class Search extends React.Component<Props, State> {
           noCalendar={true}
           enableTime={true}
           disabled={!this.state.locationId || this.state.selectionAllDay}
-          value={this.state.enter}
-          required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
-          onChange={(value: Date) => {
-            // TODO
-            //if (value != null && value instanceof Date)
-            //  this.setEnterDate(value);
-          }}
-        />
-      </div>
-    );
-
-    let datePickerStart = (
-      <div aria-label="Reservation start date">
-        <DateTimePicker
-          enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
-          disabled={!this.state.locationId}
-          value={this.state.enter}
-          required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
-          onChange={(value: Date) => {
-            if (value != null && value instanceof Date)
-              this.setEnterDate(value);
-          }}
-        />
-      </div>
-    );
-    let datePickerEnd = (
-      <div aria-label="Reservation end date">
-        <DateTimePicker
-          enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
-          disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
-            if (value != null && value instanceof Date)
-              this.setLeaveDate(value);
+            if (value != null && value instanceof Date) {
+              this.setLeaveDate(DateUtil.copyTime(value, this.state.leave));
+            }
           }}
         />
       </div>
@@ -1745,7 +1714,7 @@ class Search extends React.Component<Props, State> {
             ")"
           : "",
       };
-      let spaces = this.data.map((item) => {
+      const spaces = this.data.map((item) => {
         return this.renderItem(item);
       });
       listOrMap = (
