@@ -228,7 +228,7 @@ class Search extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    let promises = [
+    const promises = [
       this.loadLocations(),
       this.loadPreferences(),
       this.loadBuddies(),
@@ -237,10 +237,10 @@ class Search extends React.Component<Props, State> {
     Promise.all(promises).then(() => {
       this.initDates();
       if (this.state.locationId === "" && this.locations.length > 0) {
-        let defaultLocationId = this.getPreferredLocationId(
+        const defaultLocationId = this.getPreferredLocationId(
           (this.props.router.query["lid"] as string) || "",
         );
-        let sidParam = (this.props.router.query["sid"] as string) || "";
+        const sidParam = (this.props.router.query["sid"] as string) || "";
         this.setState({ locationId: defaultLocationId }, () => {
           if (!defaultLocationId) {
             this.setState({ loading: false });
@@ -255,7 +255,7 @@ class Search extends React.Component<Props, State> {
                   loading: false,
                 });
                 if (sidParam) {
-                  let space = this.data.find((item) => item.id == sidParam);
+                  const space = this.data.find((item) => item.id == sidParam);
                   if (space) this.onSpaceSelect(space);
                 }
               });
@@ -1058,7 +1058,7 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  getLocationAttributeAndTimezoneRows = () => {
+  getLocationAttributeRows = () => {
     const location = this.getLocation();
     if (!location) {
       return <></>;
@@ -1102,6 +1102,16 @@ class Search extends React.Component<Props, State> {
     const timezoneValue =
       location.timezone || RuntimeConfig.INFOS.defaultTimezone;
     attributeRows.push(createFormRow(this.props.t("timezone"), timezoneValue));
+
+    // max. concurrent bookings
+    if (location.maxConcurrentBookings) {
+      attributeRows.push(
+        createFormRow(
+          this.props.t("maxConcurrentBookings"),
+          String(location.maxConcurrentBookings),
+        ),
+      );
+    }
 
     return attributeRows;
   };
@@ -2039,16 +2049,8 @@ class Search extends React.Component<Props, State> {
                   type="switch"
                   checked={!this.state.listView}
                   onChange={() => this.toggleListView()}
-                  label={
-                    this.state.listView
-                      ? this.props.t("showList")
-                      : this.props.t("showMap")
-                  }
-                  aria-label={
-                    this.state.listView
-                      ? this.props.t("showList")
-                      : this.props.t("showMap")
-                  }
+                  label={this.props.t("map")}
+                  aria-label={this.props.t("map")}
                   id="switch-control"
                 />
               </div>
@@ -2075,7 +2077,7 @@ class Search extends React.Component<Props, State> {
           {this.getLocation()?.description && (
             <p>{this.getLocation()?.description}</p>
           )}
-          {this.getLocationAttributeAndTimezoneRows()}
+          {this.getLocationAttributeRows()}
         </Modal.Body>
       </Modal>
     );

@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Leave empty if booking is not limited.",
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
-  "showList": "Afișează lista",
-  "showMap": "Afișează harta",
   "showNames": "Show bookers' names (mind the privacy!)",
   "signin": "Autentificare",
   "signinAsAt": "Autentificare ca {{user}} la {{org}}:",

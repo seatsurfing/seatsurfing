@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Laat leeg als boeken niet beperkt is.",
   "setApproversHint": "Laat leeg als er geen goedkeuring nodig is.",
   "settings": "Instellingen",
-  "showList": "Toon lijst",
-  "showMap": "Toon kaart",
   "showNames": "Toon de namen van boekers (let op de privacy!)",
   "signin": "Aanmelden",
   "signinAsAt": "Aanmelden als {{user}} bij {{org}}:",
