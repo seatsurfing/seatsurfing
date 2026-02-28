@@ -1927,7 +1927,7 @@ class Search extends React.Component<Props, State> {
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <WeekIcon
-                  title={this.props.t("week")}
+                  title={this.props.t("date")}
                   color={"#555"}
                   height="20px"
                   width="20px"
@@ -1956,10 +1956,10 @@ class Search extends React.Component<Props, State> {
                     selectionMultiDay: !this.state.selectionMultiDay,
                   })
                 }
-                title={this.props.t("week")}
+                title={this.props.t("multiDay")}
               >
                 <CalenderSharpIcon
-                  title={this.props.t("week")}
+                  title={this.props.t("multiDay")}
                   color={"#555"}
                   height="20px"
                   width="20px"
@@ -1971,7 +1971,7 @@ class Search extends React.Component<Props, State> {
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <TimeIcon
-                  title={this.props.t("week")}
+                  title={this.props.t("time")}
                   color={"#555"}
                   height="20px"
                   width="20px"
@@ -1987,15 +1987,17 @@ class Search extends React.Component<Props, State> {
                     : "btn-outline-secondary"
                 }`}
                 style={{ padding: "4px 8px" }}
-                onClick={() =>
+                onClick={() => {
+                  this.setEnterDate(DateUtil.setHoursToMin(this.state.enter));
+                  this.setLeaveDate(DateUtil.setHoursToMax(this.state.leave));
                   this.setState({
                     selectionAllDay: !this.state.selectionAllDay,
-                  })
-                }
-                title={this.props.t("week")}
+                  });
+                }}
+                title={this.props.t("allDay")}
               >
                 <TimerIcon
-                  title={this.props.t("week")}
+                  title={this.props.t("allDay")}
                   color={"#555"}
                   height="20px"
                   width="20px"
