@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.62.2](https://github.com/seatsurfing/seatsurfing/compare/v1.62.1...v1.62.2) (2026-02-28)
+
+
+### Bug Fixes
+
+* if an org has multiple domains, allow passkeys registration on primary domain only ([#1758](https://github.com/seatsurfing/seatsurfing/issues/1758)) ([00ec3c9](https://github.com/seatsurfing/seatsurfing/commit/00ec3c9d47a6ab74ab13267ec6c5eabe09ef1de0))
+* improve Passkey registration ([#1756](https://github.com/seatsurfing/seatsurfing/issues/1756)) ([fba8569](https://github.com/seatsurfing/seatsurfing/commit/fba85693f91de8b9eb5a1f499eb39bae742ffc21))
+
 ## [1.62.1](https://github.com/seatsurfing/seatsurfing/compare/v1.62.0...v1.62.1) (2026-02-27)
 
 
