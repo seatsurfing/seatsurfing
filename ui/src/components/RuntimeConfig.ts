@@ -42,6 +42,7 @@ interface RuntimeUserInfos {
   totpEnabled: boolean;
   enforceTOTP: boolean;
   hasPasskeys: boolean;
+  isPrimaryDomain: boolean;
 }
 
 export default class RuntimeConfig {
@@ -88,6 +89,7 @@ export default class RuntimeConfig {
       totpEnabled: false,
       enforceTOTP: false,
       hasPasskeys: false,
+      isPrimaryDomain: false,
     };
   };
 
@@ -241,6 +243,7 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
       RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
       RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
+      RuntimeConfig.INFOS.isPrimaryDomain = user.isPrimaryDomain;
       RuntimeConfig.setDetails(user.email, user.id);
       return RuntimeConfig.loadSettings().then(() => {
         return RuntimeConfig.loadUserPreferences();

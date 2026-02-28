@@ -396,6 +396,7 @@
   "passkeyDeleteError": "Failed to delete passkey. Please try again.",
   "passkeyRegistering": "Registering...",
   "passkeyLastUsed": "Último uso: {{date}}",
+  "passkeyRegOnlyOnPrimaryDomain": "O registo de passkeys só está disponível no domínio principal. Visite",
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead",

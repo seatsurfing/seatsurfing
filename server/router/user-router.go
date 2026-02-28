@@ -81,6 +81,7 @@ type GetUserResponse struct {
 	SuperAdmin      bool                    `json:"superAdmin"`
 	TotpEnabled     bool                    `json:"totpEnabled"`
 	HasPasskeys     bool                    `json:"hasPasskeys"`
+	IsPrimaryDomain bool                    `json:"isPrimaryDomain"`
 	CreateUserRequest
 }
 
@@ -516,6 +517,10 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 		CreateOrganizationRequest: CreateOrganizationRequest{
 			Name: org.Name,
 		},
+	}
+	primaryDomain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err == nil && primaryDomain != nil {
+		res.IsPrimaryDomain = strings.EqualFold(r.Host, primaryDomain.DomainName)
 	}
 	SendJSON(w, res)
 }

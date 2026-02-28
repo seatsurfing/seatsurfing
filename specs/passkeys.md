@@ -851,9 +851,110 @@ To prevent a compromised session from exhausting database storage or degrading c
 
 ---
 
-## 8. Admin Considerations
+## 8. Multi-Domain Considerations
 
-### 8.1 Admin User Management
+Seatsurfing supports multiple organizations, each accessible under one or more custom domains, with one domain flagged as the "primary domain". The WebAuthn Relying Party ID (RPID) is always derived from the organization's primary domain (see `getWebAuthnInstance` in section 5.2). When a user accesses the application from a non-primary domain, the browser rejects the WebAuthn ceremony because the RPID does not match the current origin. The user sees an error: _"The relying party ID is not a registrable domain suffix of, nor equal to the current domain."_
+
+This section evaluates options for handling this mismatch and documents the chosen approach.
+
+### 8.1 Options Considered
+
+#### Option A: Domain-Scoped Passkeys
+
+Change `getWebAuthnInstance` to use the current request's `Host` header as the RPID instead of the primary domain. Store the RPID alongside each passkey credential in the database.
+
+**Pros:**
+
+- Passkey registration works on every domain.
+- Conceptually simple: each passkey is tied to the domain where it was created.
+- No external infrastructure needed.
+
+**Cons:**
+
+- A passkey registered on domain A is **not usable** on domain B — users switching domains must register separate passkeys or fall back to TOTP.
+- Potentially confusing if users don't understand why their passkey "disappeared" on another domain.
+- More complex login logic (must match RPID per credential).
+
+#### Option B: WebAuthn Related Origin Requests (`.well-known/webauthn`)
+
+Keep the primary domain as RPID, but serve a `/.well-known/webauthn` JSON resource on the primary domain that lists all of the organization's non-primary domains as related origins. This is the [WebAuthn Level 3 Related Origin Requests](https://w3c.github.io/webauthn/#sctn-related-origins) mechanism.
+
+**Pros:**
+
+- Single RPID — passkeys work seamlessly across all org domains.
+- Standards-based; the ideal long-term solution.
+
+**Cons:**
+
+- **Limited browser support** — Chrome 128+ and Edge support it; Safari and Firefox do not yet (as of early 2026).
+- **Infrastructure requirement**: the `.well-known/webauthn` file must be served from the primary domain's origin, meaning the primary domain must be reachable even when the user is on a secondary domain.
+- Partial solution until all major browsers adopt it.
+
+#### Option C: Disable Passkey Registration on Non-Primary Domains
+
+Detect whether the user is accessing the application from the primary domain. If not, hide or disable the "Add passkey" button and show an informational message directing the user to the primary domain.
+
+**Pros:**
+
+- Simplest change — minimal code, no schema changes, no new infrastructure.
+- Eliminates the confusing browser error entirely.
+- Clear, actionable user guidance.
+
+**Cons:**
+
+- Doesn't solve the underlying limitation — passkeys are still primary-domain-only.
+- Users on non-primary domains cannot register passkeys (they must visit the primary domain).
+
+#### Option D: Disable Registration on Non-Primary Domains + Domain-Scoped Login
+
+A hybrid of Options A and C: passkey _registration_ remains restricted to the primary domain, but passkey _login_ uses the current request domain as origin, enabling passkeys to be used (not created) on non-primary domains — but only when the RPID (primary domain) is a registrable domain suffix of the current domain (e.g., primary = `example.com`, secondary = `app.example.com`).
+
+**Pros:**
+
+- Registration is clean and predictable (primary domain only).
+- Login can work cross-subdomain when domains share a suffix.
+
+**Cons:**
+
+- Does **not** help when domains are entirely unrelated (e.g., `company-a.com` vs `company-b.com`) — the common multi-domain scenario.
+- More complex than Option C with a narrow applicability window.
+
+### 8.2 Decision: Option C
+
+Option C (disable passkey registration on non-primary domains with a clear message) is the chosen approach.
+
+**Rationale:**
+
+1. **Lowest risk and complexity** — a small frontend change and a single backend check. No database migrations, no new WebAuthn flows, no risk of breaking existing passkeys.
+2. **Eliminates user confusion** — replaces a cryptic browser error with a clear, actionable message pointing to the correct domain.
+3. **Future-proof** — when browser support for Related Origin Requests (Option B) matures, it can be layered on top without undoing any work. Option C acts as a clean stepping stone.
+4. Option A (domain-scoped passkeys) solves registration but introduces a subtler UX problem (passkeys vanishing across domains) that is arguably worse than a clear "go to the primary domain" message. Option D only helps in the narrow subdomain case.
+
+### 8.3 Implementation Details
+
+#### Backend
+
+- Extend the response of `GET /user/me` (or a suitable existing endpoint) with a boolean field `isPrimaryDomain` that indicates whether the current request's `Host` matches the organization's primary domain.
+- The `POST /user/passkey/registration/begin` endpoint should also reject requests from non-primary domains with `403 Forbidden` and a descriptive error message, as a server-side safeguard.
+
+#### Frontend
+
+- In the `PasskeySettings` component, check `isPrimaryDomain`. When `false`:
+  - Disable the "Add passkey" button.
+  - Display a message: _"Passkey registration is only available on {primaryDomain}. Please visit {link} to set up a passkey."_ where `{primaryDomain}` is a clickable link to the primary domain's preferences page.
+- Existing passkeys (registered on the primary domain) continue to be listed in read-only mode (rename/delete remain functional regardless of domain).
+
+#### New i18n Keys
+
+| Key                             | Value                                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------------- |
+| `passkeyRegOnlyOnPrimaryDomain` | Passkey registration is only available on {domain}. Please visit {link} to set up a passkey. |
+
+---
+
+## 9. Admin Considerations
+
+### 9.1 Admin User Management
 
 When an admin views a user's details (admin panel → Users → user detail):
 
@@ -861,15 +962,15 @@ When an admin views a user's details (admin panel → Users → user detail):
 - Provide an admin action to **remove all passkeys** for a user (useful for account recovery scenarios).
 - This calls a new admin endpoint: `DELETE /user/{userId}/passkey/` (requires OrgAdmin role).
 
-### 8.2 Organization Settings
+### 9.2 Organization Settings
 
 No new organization settings are required. The existing `enforce_totp` setting implicitly covers passkeys (see section 3.3).
 
 ---
 
-## 9. Testing Strategy
+## 10. Testing Strategy
 
-### 9.1 Backend Unit Tests
+### 10.1 Backend Unit Tests
 
 Add tests in `server/repository/test/` for the passkey repository (CRUD operations).
 
@@ -896,7 +997,7 @@ Add tests in the router test suite for:
 | Rename passkey                              | Updates name.                                                |
 | Rename passkey – duplicate name             | Returns 400.                                                 |
 
-### 9.2 Frontend Tests
+### 10.2 Frontend Tests
 
 Add Vitest unit tests for:
 
@@ -904,7 +1005,7 @@ Add Vitest unit tests for:
 - Login page passkey button visibility (based on WebAuthn availability).
 - TOTP enforcement modal condition update (show when no TOTP and no passkeys).
 
-### 9.3 E2E Tests
+### 10.3 E2E Tests
 
 Add Playwright tests in `e2e/tests/` covering:
 
@@ -915,17 +1016,17 @@ Add Playwright tests in `e2e/tests/` covering:
 
 ---
 
-## 10. Rollout Considerations
+## 11. Rollout Considerations
 
-### 10.1 Feature Flag
+### 11.1 Feature Flag
 
 No feature flag is required. Passkeys are opt-in per user (users must explicitly register a passkey). The "Sign in with a passkey" button appears only when the browser supports WebAuthn.
 
-### 10.2 Migration
+### 11.2 Migration
 
 The database migration (schema version 37) adds the `passkeys` table. No data migration is needed — all users start with zero passkeys.
 
-### 10.3 Backward Compatibility
+### 11.3 Backward Compatibility
 
 - Users without passkeys experience no change to their login flow.
 - The `POST /auth/login` response is extended but remains backward-compatible (new fields are additive).
@@ -933,7 +1034,7 @@ The database migration (schema version 37) adds the `passkeys` table. No data mi
 
 ---
 
-## 11. Summary of Changes by File
+## 12. Summary of Changes by File
 
 ### New Files
 
@@ -953,11 +1054,13 @@ The database migration (schema version 37) adds the `passkeys` table. No data mi
 | `server/repository/db-updates.go`            | Increment `targetVersion` to 37; register `GetPasskeyRepository()`.                                                                                                                                                 |
 | `server/repository/auth-state-repository.go` | Add `AuthPasskeyRegistration` (10), `AuthPasskeyLogin` (11), and `AuthPasskey2FA` (12) state types.                                                                                                                 |
 | `server/router/auth-router.go`               | Add `/auth/passkey/login/begin` and `/auth/passkey/login/finish` routes; modify `loginPassword` to support passkey as second factor.                                                                                |
-| `server/router/user-router.go`               | Add `HasPasskeys` to `GetUserResponse`; register passkey management routes.                                                                                                                                         |
+| `server/router/user-router.go`               | Add `HasPasskeys` and `IsPrimaryDomain` to `GetUserResponse`; set `IsPrimaryDomain` in `getSelf` by comparing `r.Host` against the org's primary domain; register passkey management routes.                        |
+| `server/router/passkey-router.go`            | Add `isRequestFromPrimaryDomain` helper; guard `POST /user/passkey/registration/begin` to return `403 Forbidden` when not on primary domain (spec §8.3).                                                            |
 | `server/router/unauthorized-routes.go`       | Whitelist `/auth/passkey/` routes.                                                                                                                                                                                  |
-| `ui/src/components/RuntimeConfig.ts`         | Add `hasPasskeys` to `RuntimeUserInfos`.                                                                                                                                                                            |
-| `ui/src/types/User.ts`                       | Add `hasPasskeys` field; add passkey API methods.                                                                                                                                                                   |
+| `ui/src/components/RuntimeConfig.ts`         | Add `hasPasskeys` and `isPrimaryDomain` to `RuntimeUserInfos`; set `isPrimaryDomain` from `GET /user/me` response.                                                                                                  |
+| `ui/src/types/User.ts`                       | Add `hasPasskeys` and `isPrimaryDomain` fields; add passkey API methods.                                                                                                                                            |
 | `ui/src/pages/login/index.tsx`               | Add "Sign in with a passkey" button; handle passkey 2FA challenge.                                                                                                                                                  |
 | `ui/src/pages/preferences.tsx`               | Add `PasskeySettings` component to Security tab.                                                                                                                                                                    |
+| `ui/src/components/PasskeySettings.tsx`      | Gate the "Add passkey" UI behind `isPrimaryDomain`; show informational message with link to primary domain when not on primary domain (spec §8.3).                                                                  |
 | `ui/src/pages/_app.tsx`                      | Update enforcement check to include `hasPasskeys`.                                                                                                                                                                  |
-| `ui/i18n/*.json`                             | Add passkey-related translation strings.                                                                                                                                                                            |
+| `ui/i18n/*.json`                             | Add `passkeyRegOnlyOnPrimaryDomain` translation key (all 13 locales) in addition to all other passkey-related translation strings.                                                                                  |

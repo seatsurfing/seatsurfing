@@ -396,6 +396,7 @@
   "passkeyDeleteError": "Failed to delete passkey. Please try again.",
   "passkeyRegistering": "Registering...",
   "passkeyLastUsed": "Ultima utilizare: {{date}}",
+  "passkeyRegOnlyOnPrimaryDomain": "Înregistrarea passkey-urilor este disponibilă doar pe domeniul principal. Vizitați",
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead",

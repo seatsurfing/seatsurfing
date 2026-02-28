@@ -121,6 +121,17 @@ func getWebAuthnInstance(org *Organization) (*webauthn.WebAuthn, error) {
 	})
 }
 
+// isRequestFromPrimaryDomain reports whether the Host of r matches the
+// organisation's primary domain (case-insensitive). Non-primary-domain
+// requests must not be permitted to register new passkeys (spec §8.3).
+func isRequestFromPrimaryDomain(r *http.Request, org *Organization) bool {
+	primaryDomain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil || primaryDomain == nil {
+		return false
+	}
+	return strings.EqualFold(r.Host, primaryDomain.DomainName)
+}
+
 // ---------------------------------------------------------------------------
 // Request / response structs
 // ---------------------------------------------------------------------------
@@ -222,6 +233,11 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
+		return
+	}
+	// Spec §8.3: passkey registration is only allowed from the primary domain.
+	if !isRequestFromPrimaryDomain(r, org) {
+		SendForbidden(w)
 		return
 	}
 	wa, err := getWebAuthnInstance(org)

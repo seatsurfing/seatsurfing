@@ -396,6 +396,7 @@
   "passkeyDeleteError": "Failed to delete passkey. Please try again.",
   "passkeyRegistering": "Registering...",
   "passkeyLastUsed": "Utoljára használva: {{date}}",
+  "passkeyRegOnlyOnPrimaryDomain": "A passkey regisztráció csak az elsődleges doménen érhető el. Látogasson el ide:",
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead",
