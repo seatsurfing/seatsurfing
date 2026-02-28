@@ -25,6 +25,9 @@ import {
   IoScan as ScanIcon,
   IoAdd as AddIcon,
   IoRemove as RemoveIcon,
+  IoTime as TimeIcon,
+  IoTimer as TimerIcon,
+  IoCalendarSharp as CalenderSharpIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -114,6 +117,9 @@ interface State {
     weekdays: number[];
     end: Date;
   };
+
+  selectionMultiDay: boolean;
+  selectionAllDay: boolean;
 }
 
 interface Props {
@@ -204,6 +210,9 @@ class Search extends React.Component<Props, State> {
         precheckNumErrors: 0,
         precheckErrorCodes: [],
       },
+
+      selectionAllDay: false,
+      selectionMultiDay: false,
     };
   }
 
@@ -640,9 +649,9 @@ class Search extends React.Component<Props, State> {
       this.setState(
         {
           enter: date,
-          leave: leave,
-          daySlider: daySlider,
-          daySliderDisabled: daySliderDisabled,
+          leave,
+          daySlider,
+          daySliderDisabled,
         },
         () => dateChangedCb(),
       );
@@ -1598,7 +1607,76 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     }
-    let enterDatePicker = (
+
+    const dateEnterPicker = (
+      <div aria-label="Reservation start date">
+        <DateTimePicker
+          enableTime={false}
+          disabled={!this.state.locationId}
+          value={this.state.enter}
+          required={true}
+          minDate={this.getEarliestSelectableEnterDate()}
+          onChange={(value: Date) => {
+            // TODO
+            //if (value != null && value instanceof Date)
+            //  this.setEnterDate(value);
+          }}
+        />
+      </div>
+    );
+    const dateLeavePicker = (
+      <div aria-label="Reservation start date">
+        <DateTimePicker
+          enableTime={false}
+          disabled={!this.state.locationId}
+          value={this.state.enter}
+          required={true}
+          minDate={this.getEarliestSelectableEnterDate()}
+          onChange={(value: Date) => {
+            // TODO
+            //if (value != null && value instanceof Date)
+            //  this.setEnterDate(value);
+          }}
+        />
+      </div>
+    );
+
+    const timeEnterPicker = (
+      <div aria-label="Reservation start date">
+        <DateTimePicker
+          noCalendar={true}
+          enableTime={true}
+          disabled={!this.state.locationId}
+          value={this.state.enter}
+          required={true}
+          minDate={this.getEarliestSelectableEnterDate()}
+          onChange={(value: Date) => {
+            // TODO
+            //if (value != null && value instanceof Date)
+            //  this.setEnterDate(value);
+          }}
+        />
+      </div>
+    );
+    const timeLeavePicker = (
+      <div aria-label="Reservation start date">
+        <DateTimePicker
+          noCalendar={true}
+          enableTime={true}
+          disabled={!this.state.locationId}
+          value={this.state.enter}
+          required={true}
+          minDate={this.getEarliestSelectableEnterDate()}
+          onChange={(value: Date) => {
+            // TODO
+            //if (value != null && value instanceof Date)
+            //  this.setEnterDate(value);
+          }}
+        />
+      </div>
+    );
+
+    let datePickerStart = (
       <div aria-label="Reservation start date">
         <DateTimePicker
           enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
@@ -1613,7 +1691,7 @@ class Search extends React.Component<Props, State> {
         />
       </div>
     );
-    let leaveDatePicker = (
+    let datePickerEnd = (
       <div aria-label="Reservation end date">
         <DateTimePicker
           enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
@@ -1876,6 +1954,91 @@ class Search extends React.Component<Props, State> {
                 </InputGroup>
               </div>
             </Form.Group>
+
+            {/* NEW BEGIN */}
+
+            <Form.Group className="d-flex margin-top-10">
+              <div className="me-2">
+                <WeekIcon
+                  title={this.props.t("week")}
+                  color={"#555"}
+                  height="20px"
+                  width="20px"
+                />
+              </div>
+              <div
+                className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
+              >
+                {dateEnterPicker}
+              </div>
+
+              {this.state.selectionMultiDay && (
+                <div className="ms-2 w-50">{dateLeavePicker}</div>
+              )}
+
+              <button
+                type="button"
+                className={`ms-2 btn d-flex align-items-center ${
+                  this.state.selectionMultiDay
+                    ? "btn-secondary"
+                    : "btn-outline-secondary"
+                }`}
+                style={{ padding: "4px 8px" }}
+                onClick={() =>
+                  this.setState({
+                    selectionMultiDay: !this.state.selectionMultiDay,
+                  })
+                }
+                title={this.props.t("week")}
+              >
+                <CalenderSharpIcon
+                  title={this.props.t("week")}
+                  color={"#555"}
+                  height="20px"
+                  width="20px"
+                />
+              </button>
+            </Form.Group>
+
+            <Form.Group className="d-flex margin-top-10">
+              <div className="me-2">
+                <TimeIcon
+                  title={this.props.t("week")}
+                  color={"#555"}
+                  height="20px"
+                  width="20px"
+                />
+              </div>
+              <div className="ms-2 w-50">{timeEnterPicker}</div>
+              <div className="ms-2 w-50">{timeLeavePicker}</div>
+
+              <button
+                type="button"
+                className={`ms-2 btn d-flex align-items-center ${
+                  this.state.selectionAllDay
+                    ? "btn-secondary"
+                    : "btn-outline-secondary"
+                }`}
+                style={{ padding: "4px 8px" }}
+                onClick={() =>
+                  this.setState({
+                    selectionAllDay: !this.state.selectionAllDay,
+                  })
+                }
+                title={this.props.t("week")}
+              >
+                <TimerIcon
+                  title={this.props.t("week")}
+                  color={"#555"}
+                  height="20px"
+                  width="20px"
+                />
+              </button>
+            </Form.Group>
+
+            {/* NEW END */}
+
+            {/*
             <Form.Group className="d-flex margin-top-10">
               <div className="pt-1 me-2">
                 <EnterIcon
@@ -1925,6 +2088,7 @@ class Search extends React.Component<Props, State> {
                 />
               </div>
             </Form.Group>
+*/}
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <MapIcon
