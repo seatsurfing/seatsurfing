@@ -585,17 +585,6 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  changeEnterDay = (value: number) => {
-    const enter = new Date(this.getEarliestSelectableEnterDate().valueOf());
-    enter.setDate(enter.getDate() + value);
-    enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    const leave = new Date(enter.valueOf());
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0, 0);
-    this.setEnterDate(enter);
-    this.setLeaveDate(leave);
-    this.setState({ daySlider: value });
-  };
-
   setRecurrenceEndDate = (value: Date | [Date | null, Date | null]) => {
     const date = value instanceof Date ? value : value[0];
     if (date == null) {
