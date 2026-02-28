@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Leave empty if booking is not limited.",
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
-  "showList": "Lista nézet",
-  "showMap": "Térkép nézet",
   "showNames": "Show bookers' names (mind the privacy!)",
   "signin": "Bejelentkezés",
   "signinAsAt": "Bejelentkezés mint {{user}} a(z) {{org}} szervezetbe:",
