@@ -1940,16 +1940,8 @@ class Search extends React.Component<Props, State> {
                   type="switch"
                   checked={!this.state.listView}
                   onChange={() => this.toggleListView()}
-                  label={
-                    this.state.listView
-                      ? this.props.t("showList")
-                      : this.props.t("showMap")
-                  }
-                  aria-label={
-                    this.state.listView
-                      ? this.props.t("showList")
-                      : this.props.t("showMap")
-                  }
+                  label={this.props.t("map")}
+                  aria-label={this.props.t("map")}
                   id="switch-control"
                 />
               </div>

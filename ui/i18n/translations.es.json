@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Deja vacío si la reserva no está limitada.",
   "setApproversHint": "Deja vacío si no se requiere aprobación.",
   "settings": "Configuración",
-  "showList": "Mostrar lista",
-  "showMap": "Mostrar mapa",
   "showNames": "Mostrar nombres de los reservantes (¡cuidado con la privacidad!)",
   "signin": "Iniciar sesión",
   "signinAsAt": "Iniciar sesión como {{user}} en {{org}}:",

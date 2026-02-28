@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Leave empty if booking is not limited.",
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
-  "showList": "Näita nimekirja",
-  "showMap": "Näita kaarti",
   "showNames": "Show bookers' names (mind the privacy!)",
   "signin": "Logi sisse",
   "signinAsAt": "Logi sisse kasutajana {{user}} organisatsioonis {{org}}:",
