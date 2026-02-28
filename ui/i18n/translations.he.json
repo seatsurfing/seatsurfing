@@ -396,6 +396,7 @@
   "passkeyDeleteError": "Failed to delete passkey. Please try again.",
   "passkeyRegistering": "Registering...",
   "passkeyLastUsed": "שימוש אחרון: {{date}}",
+  "passkeyRegOnlyOnPrimaryDomain": "רישום מפתחות הגישה זמין רק בדומיין הראשי. בקרו ב",
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead",

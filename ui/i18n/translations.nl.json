@@ -396,6 +396,7 @@
   "passkeyDeleteError": "Failed to delete passkey. Please try again.",
   "passkeyRegistering": "Registering...",
   "passkeyLastUsed": "Laatst gebruikt: {{date}}",
+  "passkeyRegOnlyOnPrimaryDomain": "Passkey-registratie is alleen beschikbaar op het primaire domein. Bezoek",
   "signInWithPasskey": "Sign in with a passkey",
   "passkeyRequired": "Please verify your identity using your passkey.",
   "useTotpInstead": "Use authenticator code instead",

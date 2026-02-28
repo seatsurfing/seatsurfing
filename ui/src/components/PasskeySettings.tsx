@@ -7,6 +7,7 @@ import Passkey, {
   serializeAttestationResponse,
 } from "@/types/Passkey";
 import Formatting from "@/util/Formatting";
+import RuntimeConfig from "./RuntimeConfig";
 
 interface State {
   passkeys: PasskeyListItem[];
@@ -125,6 +126,12 @@ class PasskeySettings extends React.Component<Props, State> {
       return null;
     }
     const { passkeys, loading, registering, newName, error } = this.state;
+    const isPrimaryDomain = RuntimeConfig.INFOS.isPrimaryDomain;
+    const primaryDomain = RuntimeConfig.INFOS.orgPrimaryDomain;
+    const prefsUrl =
+      typeof window !== "undefined"
+        ? `${window.location.protocol}//${primaryDomain}/ui/preferences`
+        : `//${primaryDomain}/ui/preferences`;
     return (
       <div hidden={this.props.hidden}>
         <h5 className="mt-5">{this.props.t("passkeys")}</h5>
@@ -163,26 +170,46 @@ class PasskeySettings extends React.Component<Props, State> {
                 ))}
               </ListGroup>
             )}
-            <InputGroup className="mb-2" style={{ maxWidth: 400 }}>
-              <Form.Control
-                type="text"
-                placeholder={this.props.t("passkeyNamePlaceholder")}
-                value={newName}
-                onChange={(e) => this.setState({ newName: e.target.value })}
-                disabled={registering}
-                maxLength={255}
-              />
-              <Button
-                variant="primary"
-                onClick={this.registerPasskey}
-                disabled={registering || !newName.trim()}
-              >
-                {registering
-                  ? this.props.t("passkeyRegistering")
-                  : this.props.t("passkeyAdd")}
-              </Button>
-            </InputGroup>
-            {error && <p className="text-danger">{error}</p>}
+            {isPrimaryDomain ? (
+              <>
+                <InputGroup className="mb-2" style={{ maxWidth: 400 }}>
+                  <Form.Control
+                    type="text"
+                    placeholder={this.props.t("passkeyNamePlaceholder")}
+                    value={newName}
+                    onChange={(e) => this.setState({ newName: e.target.value })}
+                    disabled={registering}
+                    maxLength={255}
+                  />
+                  <Button
+                    variant="primary"
+                    onClick={this.registerPasskey}
+                    disabled={registering || !newName.trim()}
+                  >
+                    {registering
+                      ? this.props.t("passkeyRegistering")
+                      : this.props.t("passkeyAdd")}
+                  </Button>
+                </InputGroup>
+                {error && <p className="text-danger">{error}</p>}
+              </>
+            ) : (
+              <p className="text-muted small">
+                {this.props.t("passkeyRegOnlyOnPrimaryDomain")}
+                {primaryDomain && (
+                  <>
+                    {" "}
+                    <a
+                      href={prefsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {primaryDomain}
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
           </>
         )}
       </div>

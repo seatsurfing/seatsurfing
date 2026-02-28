@@ -242,13 +242,28 @@ func TestPasskeyDeleteLastWithEnforceTOTPButTOTPConfigured(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
+func TestPasskeyRegistrationBeginNonPrimaryDomain(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+
+	// Host is "other.com", primary domain is "test.com" → must be rejected
+	req := NewHTTPRequest("POST", "/user/passkey/registration/begin", user.ID, nil)
+	req.Host = "other.com"
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
 func TestPasskeyRegistrationBeginNoPassword(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
 
+	// No password → 403 regardless of domain (check fires before domain check)
 	req := NewHTTPRequest("POST", "/user/passkey/registration/begin", user.ID, nil)
-	req.Host = "localhost"
+	req.Host = "test.com"
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
@@ -261,8 +276,9 @@ func TestPasskeyRegistrationBeginIdpUser(t *testing.T) {
 	user.AuthProviderID = NullUUID(uuid.New().String())
 	GetUserRepository().Update(user)
 
+	// IdP user → 403 regardless of domain (check fires before domain check)
 	req := NewHTTPRequest("POST", "/user/passkey/registration/begin", user.ID, nil)
-	req.Host = "localhost"
+	req.Host = "test.com"
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
@@ -274,7 +290,9 @@ func TestPasskeyRegistrationBeginSuccess(t *testing.T) {
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
 	GetUserRepository().Update(user)
 
+	// Host must match the primary domain ("test.com") for registration to succeed
 	req := newWebAuthnRequest("POST", "/user/passkey/registration/begin", user.ID, nil)
+	req.Host = "test.com"
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
@@ -315,7 +333,9 @@ func TestPasskeyRegistrationFinishWrongUser(t *testing.T) {
 	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
 	GetUserRepository().Update(user2)
 
+	// Begin from primary domain
 	req := newWebAuthnRequest("POST", "/user/passkey/registration/begin", user1.ID, nil)
+	req.Host = "test.com"
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var regRes BeginPasskeyRegistrationResponse
@@ -323,6 +343,7 @@ func TestPasskeyRegistrationFinishWrongUser(t *testing.T) {
 
 	payload := `{"stateId": "` + regRes.StateID + `", "name": "Hijack", "credential": {}}`
 	req = newWebAuthnRequest("POST", "/user/passkey/registration/finish", user2.ID, bytes.NewBufferString(payload))
+	req.Host = "test.com"
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
@@ -451,6 +472,54 @@ func TestGetUserMeHasPasskeysTrue(t *testing.T) {
 	var userRes GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &userRes)
 	CheckTestBool(t, true, userRes.HasPasskeys)
+}
+
+func TestGetUserMeIsPrimaryDomainTrue(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Host matches the primary domain → isPrimaryDomain must be true
+	req := NewHTTPRequest("GET", "/user/me", user.ID, nil)
+	req.Host = "test.com"
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	var userRes GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &userRes)
+	CheckTestBool(t, true, userRes.IsPrimaryDomain)
+}
+
+func TestGetUserMeIsPrimaryDomainFalse(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Host does not match the primary domain → isPrimaryDomain must be false
+	req := NewHTTPRequest("GET", "/user/me", user.ID, nil)
+	req.Host = "other.com"
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	var userRes GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &userRes)
+	CheckTestBool(t, false, userRes.IsPrimaryDomain)
+}
+
+func TestGetUserMeIsPrimaryDomainCaseInsensitive(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Host in different case → still matches (EqualFold)
+	req := NewHTTPRequest("GET", "/user/me", user.ID, nil)
+	req.Host = "TEST.COM"
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	var userRes GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &userRes)
+	CheckTestBool(t, true, userRes.IsPrimaryDomain)
 }
 
 func TestPasskeyLoginFinishExpiredState(t *testing.T) {

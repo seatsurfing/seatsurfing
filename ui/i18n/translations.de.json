@@ -397,6 +397,7 @@
   "passkeyDeleteError": "Fehler beim Löschen des Passkeys. Bitte versuchen Sie es erneut.",
   "passkeyRegistering": "Registrierung...",
   "passkeyLastUsed": "Zuletzt benutzt: {{date}}",
+  "passkeyRegOnlyOnPrimaryDomain": "Die Passkey-Registrierung ist nur auf der primären Domain verfügbar. Bitte besuchen Sie",
   "signInWithPasskey": "Mit einem Passkey anmelden",
   "passkeyRequired": "Bitte bestätigen Sie Ihre Identität mit Ihrem Passkey.",
   "useTotpInstead": "Stattdessen Authenticator-Code verwenden",
