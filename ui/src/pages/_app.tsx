@@ -61,6 +61,9 @@ class App extends React.Component<Props, State> {
           "http://" + window.location.host.split(":").shift() + ":8080";
       }
     }
+  }
+
+  componentDidMount() {
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
         this.setState(
@@ -77,9 +80,7 @@ class App extends React.Component<Props, State> {
         );
       });
     }, 10);
-  }
 
-  componentDidMount() {
     Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
   }
 
