@@ -1646,7 +1646,7 @@ class Search extends React.Component<Props, State> {
         <DateTimePicker
           noCalendar={true}
           enableTime={true}
-          disabled={!this.state.locationId}
+          disabled={!this.state.locationId || this.state.selectionAllDay}
           value={this.state.enter}
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
@@ -1663,7 +1663,7 @@ class Search extends React.Component<Props, State> {
         <DateTimePicker
           noCalendar={true}
           enableTime={true}
-          disabled={!this.state.locationId}
+          disabled={!this.state.locationId || this.state.selectionAllDay}
           value={this.state.enter}
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
@@ -1955,8 +1955,7 @@ class Search extends React.Component<Props, State> {
               </div>
             </Form.Group>
 
-            {/* NEW BEGIN */}
-
+            {/* Date selection */}
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <WeekIcon
@@ -2000,6 +1999,7 @@ class Search extends React.Component<Props, State> {
               </button>
             </Form.Group>
 
+            {/* Time selection */}
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <TimeIcon
@@ -2011,7 +2011,6 @@ class Search extends React.Component<Props, State> {
               </div>
               <div className="ms-2 w-50">{timeEnterPicker}</div>
               <div className="ms-2 w-50">{timeLeavePicker}</div>
-
               <button
                 type="button"
                 className={`ms-2 btn d-flex align-items-center ${
@@ -2036,59 +2035,6 @@ class Search extends React.Component<Props, State> {
               </button>
             </Form.Group>
 
-            {/* NEW END */}
-
-            {/*
-            <Form.Group className="d-flex margin-top-10">
-              <div className="pt-1 me-2">
-                <EnterIcon
-                  title={this.props.t("enter")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">{enterDatePicker}</div>
-            </Form.Group>
-            <Form.Group className="d-flex margin-top-10">
-              <div className="pt-1 me-2">
-                <ExitIcon
-                  title={this.props.t("leave")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">{leaveDatePicker}</div>
-            </Form.Group>
-            {hint}
-            <Form.Group className="d-flex margin-top-10">
-              <div className="me-2">
-                <WeekIcon
-                  title={this.props.t("week")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">
-                <Form.Range
-                  disabled={
-                    !this.state.locationId || this.state.daySliderDisabled
-                  }
-                  list="weekDays"
-                  min={0}
-                  max={RuntimeConfig.INFOS.maxDaysInAdvance}
-                  step="1"
-                  value={this.state.daySlider}
-                  onChange={(event) =>
-                    this.changeEnterDay(window.parseInt(event.target.value))
-                  }
-                  aria-label="Day slider"
-                />
-              </div>
-            </Form.Group>
-*/}
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <MapIcon
