@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Leave empty if booking is not limited.",
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Impostazioni",
-  "showList": "Mostra Lista",
-  "showMap": "Mostra Mappa",
   "showNames": "Msotra nomi degli utenti che prenotano (attenzione alla privacy !)",
   "signin": "Accesso",
   "signinAsAt": "Accesso eseguito come {{user}} / {{org}}:",

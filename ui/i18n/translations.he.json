@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Leave empty if booking is not limited.",
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "הגדרות",
-  "showList": "הצגת רשימה",
-  "showMap": "הצגת מפה",
   "showNames": "הצגת שמות המזמינים (נא להתחשב בפרטיות!)",
   "signin": "כניסה",
   "signinAsAt": "כניסה בתור {{user}} דרך ארגון {{org}}:",

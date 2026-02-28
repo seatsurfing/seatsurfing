@@ -276,8 +276,6 @@
   "setAllowBookersHint": "Pozostaw puste, jeśli rezerwowanie nie jest ograniczone.",
   "setApproversHint": "Pozostaw puste, jeśli zatwierdzenie nie jest wymagane.",
   "settings": "Ustawienia",
-  "showList": "Pokaż listę",
-  "showMap": "Pokaż mapę",
   "showNames": "Pokazuj nazwiska rezerwujących (pamiętaj o prywatności!)",
   "signin": "Zaloguj się",
   "signinAsAt": "Zaloguj się jako {{user}} w {{org}}:",
