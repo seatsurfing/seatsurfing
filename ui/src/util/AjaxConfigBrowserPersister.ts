@@ -13,7 +13,7 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
   readRefreshTokenFromLocalStorage(): string {
     let c: string = "";
     try {
-      let refreshToken = window.localStorage.getItem("refreshToken");
+      const refreshToken = window.localStorage.getItem("refreshToken");
       if (refreshToken) {
         c = refreshToken;
       }
@@ -40,10 +40,11 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
   readCredentialsFromLocalStorage(): AjaxCredentials {
     let c: AjaxCredentials = new AjaxCredentials();
     try {
-      let accessToken = window.localStorage.getItem("accessToken");
-      let accessTokenExpiry = window.localStorage.getItem("accessTokenExpiry");
-      let logoutUrl = window.localStorage.getItem("logoutUrl");
-      let profilePageUrl = window.localStorage.getItem("profilePageUrl");
+      const accessToken = window.localStorage.getItem("accessToken");
+      const accessTokenExpiry =
+        window.localStorage.getItem("accessTokenExpiry");
+      const logoutUrl = window.localStorage.getItem("logoutUrl");
+      const profilePageUrl = window.localStorage.getItem("profilePageUrl");
       if (accessToken && accessTokenExpiry) {
         c = {
           accessToken: accessToken,
