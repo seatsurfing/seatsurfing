@@ -1969,7 +1969,7 @@ class Search extends React.Component<Props, State> {
                   }}
                   onClick={() => {
                     if (!this.state.selectionAllDay) {
-                      this. = new Date(this.state.enter);
+                      this.resetEnterTime = new Date(this.state.enter);
                       this.resetLeaveTime = new Date(this.state.leave);
                       this.setEnterDate(
                         DateUtil.setHoursToMin(this.state.enter),
