@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.63.0](https://github.com/seatsurfing/seatsurfing/compare/v1.62.2...v1.63.0) (2026-03-01)
+
+
+### Features
+
+* redesign time selection ([#1764](https://github.com/seatsurfing/seatsurfing/issues/1764)) ([92961a9](https://github.com/seatsurfing/seatsurfing/commit/92961a97788406d78bc6c044dad8a86281d5acbf))
+* show max. concurrent bookings in location detail popup ([#1759](https://github.com/seatsurfing/seatsurfing/issues/1759)) ([188e6d5](https://github.com/seatsurfing/seatsurfing/commit/188e6d560e052498372e87d588b94b47bca7eb08))
+
+
+### Bug Fixes
+
+* do not toggle "show map" label in search ([#1761](https://github.com/seatsurfing/seatsurfing/issues/1761)) ([72770f3](https://github.com/seatsurfing/seatsurfing/commit/72770f3a7c4ba9eeca8066602b2e17ff305cc397))
+* fix error "ReferenceError: window is not defined" when running in SSR ([#1760](https://github.com/seatsurfing/seatsurfing/issues/1760)) ([024d997](https://github.com/seatsurfing/seatsurfing/commit/024d997800e14f7749b2e0410c51d7ea37a57039))
+* show times for multi day events ([#1765](https://github.com/seatsurfing/seatsurfing/issues/1765)) ([a309f91](https://github.com/seatsurfing/seatsurfing/commit/a309f91996c9aca79f6e622a50c32f646d332c00))
+
 ## [1.62.2](https://github.com/seatsurfing/seatsurfing/compare/v1.62.1...v1.62.2) (2026-02-28)
 
 
