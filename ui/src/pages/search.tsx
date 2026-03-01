@@ -610,12 +610,12 @@ class Search extends React.Component<Props, State> {
     };
     const performChange = () => {
       const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      const date = value instanceof Date ? value : value[0];
+      let date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
       }
       if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        date.setHours(0, 0, 0);
+        date = DateUtil.setHoursToMin(date);
       }
       const leave = new Date();
       leave.setTime(date.getTime() + diff);
@@ -651,12 +651,12 @@ class Search extends React.Component<Props, State> {
       });
     };
     const performChange = () => {
-      const date = value instanceof Date ? value : value[0];
+      let date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
       }
       if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        date.setHours(23, 59, 59);
+        date = DateUtil.setHoursToMax(date);
       }
       this.setState(
         {
