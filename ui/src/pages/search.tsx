@@ -592,22 +592,23 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  setEnterDate = (value: Date | [Date | null, Date | null]) => {
-    const dateChangedCb = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
+  dateChangedCb = () => {
+    this.updateCanSearch().then(() => {
+      if (!this.state.canSearch) {
+        this.setState({ loading: false });
+      } else {
+        const promises = [
+          this.initCurrentBookingCount(),
+          this.loadSpaces(this.state.locationId),
+        ];
+        Promise.all(promises).then(() => {
           this.setState({ loading: false });
-        } else {
-          let promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
-      });
-    };
+        });
+      }
+    });
+  };
+
+  setEnterDate = (value: Date | [Date | null, Date | null]) => {
     const performChange = () => {
       const diff = this.state.leave.getTime() - this.state.enter.getTime();
       let date = value instanceof Date ? value : value[0];
@@ -625,7 +626,7 @@ class Search extends React.Component<Props, State> {
           enter: date,
           leave,
         },
-        () => dateChangedCb(),
+        () => this.dateChangedCb(),
       );
     };
     if (typeof window !== "undefined") {
@@ -635,21 +636,6 @@ class Search extends React.Component<Props, State> {
   };
 
   setLeaveDate = (value: Date | [Date | null, Date | null]) => {
-    const dateChangedCb = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
-          this.setState({ loading: false });
-        } else {
-          const promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
-      });
-    };
     const performChange = () => {
       let date = value instanceof Date ? value : value[0];
       if (date == null) {
@@ -662,7 +648,7 @@ class Search extends React.Component<Props, State> {
         {
           leave: date,
         },
-        () => dateChangedCb(),
+        () => this.dateChangedCb(),
       );
     };
     if (typeof window !== "undefined") {
