@@ -595,68 +595,53 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  dateChangedCb = () => {
-    this.updateCanSearch().then(() => {
-      if (!this.state.canSearch) {
-        this.setState({ loading: false });
-      } else {
-        const promises = [
-          this.initCurrentBookingCount(),
-          this.loadSpaces(this.state.locationId),
-        ];
-        Promise.all(promises).then(() => {
+  updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
+    const dateChangedCb = () => {
+      this.updateCanSearch().then(() => {
+        if (!this.state.canSearch) {
           this.setState({ loading: false });
-        });
-      }
-    });
-  };
-
-  setEnterDate = (date: Date) => {
+        } else {
+          const promises = [
+            this.initCurrentBookingCount(),
+            this.loadSpaces(this.state.locationId),
+          ];
+          Promise.all(promises).then(() => {
+            this.setState({ loading: false });
+          });
+        }
+      });
+    };
     const performChange = () => {
-      const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      if (date == null) {
-        return;
-      }
-      if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        date = DateUtil.setHoursToMin(date);
-      }
-      const leave = new Date();
-      leave.setTime(date.getTime() + diff);
+      if (enter === null && leave === null) return;
 
+      let newEnter, newLeave;
+
+      if (enter !== null && leave !== null) {
+        newEnter = enter;
+        newLeave = leave;
+      } else if (enter !== null) {
+        newEnter = enter;
+        const diff = this.state.leave.getTime() - this.state.enter.getTime();
+        newLeave = new Date();
+        newLeave.setTime(enter.getTime() + diff);
+      } else if (leave !== null) {
+        newLeave = leave;
+      }
+
+      if (RuntimeConfig.INFOS.dailyBasisBooking) {
+        if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
+        if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
+      }
+
+      const stateEnter = newEnter ?? this.state.enter;
+      const stateLeave = newLeave ?? this.state.leave;
       const state = {
-        enter: date,
-        leave,
-        selectionMultiDay: this.state.selectionMultiDay,
+        enter: stateEnter,
+        leave: stateLeave,
+        selectionMultiDay: !DateUtil.isSameDay(stateEnter, stateLeave),
       };
 
-      // if new leave date is on the next day make sure "multi day" selection is active
-      if (!DateUtil.isSameDay(date, leave)) {
-        console.log("MULTI", date, leave);
-        state.selectionMultiDay = true;
-      }
-
-      this.setState(state, () => this.dateChangedCb());
-    };
-    if (typeof window !== "undefined") {
-      window.clearTimeout(this.enterChangeTimer);
-      this.enterChangeTimer = window.setTimeout(performChange, 1000);
-    }
-  };
-
-  setLeaveDate = (date: Date) => {
-    const performChange = () => {
-      if (date == null) {
-        return;
-      }
-      if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        date = DateUtil.setHoursToMax(date);
-      }
-      this.setState(
-        {
-          leave: date,
-        },
-        () => this.dateChangedCb(),
-      );
+      this.setState(state, () => dateChangedCb());
     };
     if (typeof window !== "undefined") {
       window.clearTimeout(this.leaveChangeTimer);
@@ -1593,7 +1578,10 @@ class Search extends React.Component<Props, State> {
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
-              this.setEnterDate(DateUtil.copyDate(value, this.state.enter));
+              this.updateEnterAndLeaveDate(
+                DateUtil.copyDate(value, this.state.enter),
+                null,
+              );
             }
           }}
         />
@@ -1609,7 +1597,10 @@ class Search extends React.Component<Props, State> {
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
-              this.setLeaveDate(DateUtil.copyDate(value, this.state.leave));
+              this.updateEnterAndLeaveDate(
+                null,
+                DateUtil.copyDate(value, this.state.leave),
+              );
             }
           }}
         />
@@ -1627,7 +1618,10 @@ class Search extends React.Component<Props, State> {
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
-              this.setEnterDate(DateUtil.copyTime(value, this.state.enter));
+              this.updateEnterAndLeaveDate(
+                DateUtil.copyTime(value, this.state.enter),
+                null,
+              );
             }
           }}
         />
@@ -1644,7 +1638,10 @@ class Search extends React.Component<Props, State> {
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
-              this.setLeaveDate(DateUtil.copyTime(value, this.state.leave));
+              this.updateEnterAndLeaveDate(
+                null,
+                DateUtil.copyTime(value, this.state.leave),
+              );
             }
           }}
         />
@@ -1970,19 +1967,15 @@ class Search extends React.Component<Props, State> {
                     if (!this.state.selectionAllDay) {
                       this.resetEnterTime = new Date(this.state.enter);
                       this.resetLeaveTime = new Date(this.state.leave);
-                      this.setEnterDate(
+                      this.updateEnterAndLeaveDate(
                         DateUtil.setHoursToMin(this.state.enter),
-                      );
-                      this.setLeaveDate(
                         DateUtil.setHoursToMax(this.state.leave),
                       );
                     } else {
-                      if (this.resetLeaveTime) {
-                        this.setLeaveDate(this.resetLeaveTime);
-                      }
-                      if (this.resetEnterTime) {
-                        this.setEnterDate(this.resetEnterTime);
-                      }
+                      this.updateEnterAndLeaveDate(
+                        this.resetEnterTime ?? null,
+                        this.resetLeaveTime ?? null,
+                      );
                     }
                     this.setState({
                       selectionAllDay: !this.state.selectionAllDay,
