@@ -388,6 +388,7 @@ class Bookings extends React.Component<Props, State> {
             style={{ width: "100%" }}
           >
             <Calendar
+              showMultiDayTimes={true}
               getNow={() => Formatting.getNowUTCDate()}
               localizer={calendarLocalizer}
               events={calendarEvents}
