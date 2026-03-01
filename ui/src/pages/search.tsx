@@ -135,7 +135,6 @@ class Search extends React.Component<Props, State> {
   mapData: any;
   curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
-  updateEnterAndLeaveDateTimer: number | undefined;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
@@ -609,45 +608,37 @@ class Search extends React.Component<Props, State> {
         }
       });
     };
-    const performChange = () => {
-      if (enter === null && leave === null) return;
 
-      let newEnter, newLeave;
+    if (enter === null && leave === null) return;
 
-      if (enter !== null && leave !== null) {
-        newEnter = enter;
-        newLeave = leave;
-      } else if (enter !== null) {
-        newEnter = enter;
-        const diff = this.state.leave.getTime() - this.state.enter.getTime();
-        newLeave = new Date();
-        newLeave.setTime(enter.getTime() + diff);
-      } else if (leave !== null) {
-        newLeave = leave;
-      }
+    let newEnter, newLeave;
 
-      if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
-        if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
-      }
-
-      const stateEnter = newEnter ?? this.state.enter;
-      const stateLeave = newLeave ?? this.state.leave;
-      const state = {
-        enter: stateEnter,
-        leave: stateLeave,
-        selectionMultiDay: !DateUtil.isSameDay(stateEnter, stateLeave),
-      };
-
-      this.setState(state, () => dateChangedCb());
-    };
-    if (typeof window !== "undefined") {
-      window.clearTimeout(this.updateEnterAndLeaveDateTimer);
-      this.updateEnterAndLeaveDateTimer = window.setTimeout(
-        performChange,
-        1000,
-      );
+    if (enter !== null && leave !== null) {
+      newEnter = enter;
+      newLeave = leave;
+    } else if (enter !== null) {
+      newEnter = enter;
+      const diff = this.state.leave.getTime() - this.state.enter.getTime();
+      newLeave = new Date();
+      newLeave.setTime(enter.getTime() + diff);
+    } else if (leave !== null) {
+      newLeave = leave;
     }
+
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
+      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
+    }
+
+    const stateEnter = newEnter ?? this.state.enter;
+    const stateLeave = newLeave ?? this.state.leave;
+    const state = {
+      enter: stateEnter,
+      leave: stateLeave,
+      selectionMultiDay: !DateUtil.isSameDay(stateEnter, stateLeave),
+    };
+
+    this.setState(state, () => dateChangedCb());
   };
 
   changeLocation = (id: string) => {
