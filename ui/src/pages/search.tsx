@@ -621,13 +621,18 @@ class Search extends React.Component<Props, State> {
       const leave = new Date();
       leave.setTime(date.getTime() + diff);
 
-      this.setState(
-        {
-          enter: date,
-          leave,
-        },
-        () => this.dateChangedCb(),
-      );
+      const state = {
+        enter: date,
+        leave,
+        selectionMultiDay: this.state.selectionMultiDay,
+      };
+
+      // if new leave date is on the next day make sure "multi day" selection is active
+      if (!DateUtil.isSameDay(date, leave)) {
+        state.selectionMultiDay = true;
+      }
+
+      this.setState(state, () => this.dateChangedCb());
     };
     if (typeof window !== "undefined") {
       window.clearTimeout(this.enterChangeTimer);
