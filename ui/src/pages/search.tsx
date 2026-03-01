@@ -141,6 +141,9 @@ class Search extends React.Component<Props, State> {
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
 
+  resetEnterTime: Date | undefined;
+  resetLeaveTime: Date | undefined;
+
   constructor(props: any) {
     super(props);
     this.data = [];
@@ -1965,8 +1968,23 @@ class Search extends React.Component<Props, State> {
                     borderColor: "#CED4DA",
                   }}
                   onClick={() => {
-                    this.setEnterDate(DateUtil.setHoursToMin(this.state.enter));
-                    this.setLeaveDate(DateUtil.setHoursToMax(this.state.leave));
+                    if (!this.state.selectionAllDay) {
+                      this. = new Date(this.state.enter);
+                      this.resetLeaveTime = new Date(this.state.leave);
+                      this.setEnterDate(
+                        DateUtil.setHoursToMin(this.state.enter),
+                      );
+                      this.setLeaveDate(
+                        DateUtil.setHoursToMax(this.state.leave),
+                      );
+                    } else {
+                      if (this.resetEnterTime) {
+                        this.setEnterDate(this.resetEnterTime);
+                      }
+                      if (this.resetLeaveTime) {
+                        this.setLeaveDate(this.resetLeaveTime);
+                      }
+                    }
                     this.setState({
                       selectionAllDay: !this.state.selectionAllDay,
                     });
