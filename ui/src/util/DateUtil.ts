@@ -190,4 +190,8 @@ export default class DateUtil {
       date1.getDate() === date2.getDate()
     );
   }
+
+  static equal(date1: Date, date2: Date): boolean {
+    return date1.getTime() === date2.getTime();
+  }
 }
