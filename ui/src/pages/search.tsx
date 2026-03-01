@@ -611,10 +611,9 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  setEnterDate = (value: Date | [Date | null, Date | null]) => {
+  setEnterDate = (date: Date) => {
     const performChange = () => {
       const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      let date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
       }
@@ -632,6 +631,7 @@ class Search extends React.Component<Props, State> {
 
       // if new leave date is on the next day make sure "multi day" selection is active
       if (!DateUtil.isSameDay(date, leave)) {
+        console.log("MULTI", date, leave);
         state.selectionMultiDay = true;
       }
 
@@ -643,9 +643,8 @@ class Search extends React.Component<Props, State> {
     }
   };
 
-  setLeaveDate = (value: Date | [Date | null, Date | null]) => {
+  setLeaveDate = (date: Date) => {
     const performChange = () => {
-      let date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
       }
@@ -1978,11 +1977,11 @@ class Search extends React.Component<Props, State> {
                         DateUtil.setHoursToMax(this.state.leave),
                       );
                     } else {
-                      if (this.resetEnterTime) {
-                        this.setEnterDate(this.resetEnterTime);
-                      }
                       if (this.resetLeaveTime) {
                         this.setLeaveDate(this.resetLeaveTime);
+                      }
+                      if (this.resetEnterTime) {
+                        this.setEnterDate(this.resetEnterTime);
                       }
                     }
                     this.setState({
