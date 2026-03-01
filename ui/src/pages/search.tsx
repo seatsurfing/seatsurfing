@@ -69,8 +69,6 @@ interface State {
   earliestEnterDate: Date;
   enter: Date;
   leave: Date;
-  daySlider: number;
-  daySliderDisabled: boolean;
   locationId: string;
   canSearch: boolean;
   canSearchHint: string;
@@ -163,8 +161,6 @@ class Search extends React.Component<Props, State> {
       enter: new Date(),
       leave: new Date(),
       locationId: "",
-      daySlider: 0,
-      daySliderDisabled: false,
       canSearch: false,
       canSearchHint: "",
       showBookingNames: false,
@@ -398,16 +394,10 @@ class Search extends React.Component<Props, State> {
       leave.setHours(23, 59, 59, 0);
     }
 
-    const daySlider = Formatting.getDayDiff(
-      enter,
-      this.getEarliestSelectableEnterDate(),
-    );
-
     this.setState({
       earliestEnterDate: enter,
       enter,
       leave,
-      daySlider: daySlider,
     });
   };
 
@@ -629,18 +619,11 @@ class Search extends React.Component<Props, State> {
       }
       const leave = new Date();
       leave.setTime(date.getTime() + diff);
-      const daySlider = Formatting.getDayDiff(
-        date,
-        this.getEarliestSelectableEnterDate(),
-      );
-      const daySliderDisabled =
-        daySlider > RuntimeConfig.INFOS.maxDaysInAdvance || daySlider < 0;
+
       this.setState(
         {
           enter: date,
           leave,
-          daySlider,
-          daySliderDisabled,
         },
         () => dateChangedCb(),
       );
