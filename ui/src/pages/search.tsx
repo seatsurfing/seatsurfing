@@ -26,7 +26,7 @@ import {
   IoAdd as AddIcon,
   IoRemove as RemoveIcon,
   IoTime as TimeIcon,
-  IoTimer as TimerIcon,
+  IoTimerOutline as TimerIcon,
   IoResize as ResizeIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
