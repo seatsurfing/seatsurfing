@@ -1777,7 +1777,7 @@ class Search extends React.Component<Props, State> {
       );
     }
 
-    let configContainer = (
+    const configContainer = (
       <div className="container-search-config" ref={this.searchContainerRef}>
         <div
           className="collapse-bar"
@@ -1951,42 +1951,44 @@ class Search extends React.Component<Props, State> {
             </Form.Group>
 
             {/* Time selection */}
-            <Form.Group className="d-flex margin-top-10">
-              <div className="me-2">
-                <TimeIcon
-                  title={this.props.t("time")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-50">{timeEnterPicker}</div>
-              <div className="ms-2 w-50">{timeLeavePicker}</div>
-              <button
-                type="button"
-                className={`ms-2 btn d-flex align-items-center ${
-                  this.state.selectionAllDay
-                    ? "btn-secondary"
-                    : "btn-outline-secondary"
-                }`}
-                style={{ padding: "4px 8px" }}
-                onClick={() => {
-                  this.setEnterDate(DateUtil.setHoursToMin(this.state.enter));
-                  this.setLeaveDate(DateUtil.setHoursToMax(this.state.leave));
-                  this.setState({
-                    selectionAllDay: !this.state.selectionAllDay,
-                  });
-                }}
-                title={this.props.t("allDay")}
-              >
-                <TimerIcon
+            {!RuntimeConfig.INFOS.dailyBasisBooking && (
+              <Form.Group className="d-flex margin-top-10">
+                <div className="me-2">
+                  <TimeIcon
+                    title={this.props.t("time")}
+                    color={"#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </div>
+                <div className="ms-2 w-50">{timeEnterPicker}</div>
+                <div className="ms-2 w-50">{timeLeavePicker}</div>
+                <button
+                  type="button"
+                  className={`ms-2 btn d-flex align-items-center ${
+                    this.state.selectionAllDay
+                      ? "btn-secondary"
+                      : "btn-outline-secondary"
+                  }`}
+                  style={{ padding: "4px 8px" }}
+                  onClick={() => {
+                    this.setEnterDate(DateUtil.setHoursToMin(this.state.enter));
+                    this.setLeaveDate(DateUtil.setHoursToMax(this.state.leave));
+                    this.setState({
+                      selectionAllDay: !this.state.selectionAllDay,
+                    });
+                  }}
                   title={this.props.t("allDay")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </button>
-            </Form.Group>
+                >
+                  <TimerIcon
+                    title={this.props.t("allDay")}
+                    color={"#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </button>
+              </Form.Group>
+            )}
 
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
