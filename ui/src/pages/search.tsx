@@ -506,7 +506,7 @@ class Search extends React.Component<Props, State> {
     const today = DateUtil.getTodayStart();
     let enterTime = new Date(this.state.enter);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterTime.setHours(23, 59, 59);
+      enterTime = DateUtil.setHoursToMax(enterTime);
     }
     if (enterTime.getTime() <= today.getTime()) {
       res = false;
@@ -517,7 +517,7 @@ class Search extends React.Component<Props, State> {
       hint = this.props.t("errorLeaveAfterEnter");
     }
 
-    let bookingAdvanceDays = Math.floor(
+    const bookingAdvanceDays = Math.floor(
       (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
@@ -526,7 +526,7 @@ class Search extends React.Component<Props, State> {
         num: RuntimeConfig.INFOS.maxDaysInAdvance,
       });
     }
-    let bookingDurationHours =
+    const bookingDurationHours =
       Math.floor(
         (this.state.leave.getTime() - this.state.enter.getTime()) /
           DateUtil.MS_PER_MINUTE,
