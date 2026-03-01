@@ -402,5 +402,9 @@
   "mfaEncouragementTitle": "Secure your account",
   "mfaEncouragementBody": "Protect your account by setting up a second factor for authentication. You can use an authenticator app (TOTP) or a passkey (biometrics or security key) for additional security when signing in.",
   "mfaEncouragementSetup": "Set up now",
-  "mfaEncouragementLater": "Maybe later"
+  "mfaEncouragementLater": "Maybe later",
+  "multiDay": "Mutliple days",
+  "allDay": "All day",
+  "time": "Time",
+  "date": "Date"
 }

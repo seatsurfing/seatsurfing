@@ -25,6 +25,9 @@ import {
   IoScan as ScanIcon,
   IoAdd as AddIcon,
   IoRemove as RemoveIcon,
+  IoTime as TimeIcon,
+  IoTimer as TimerIcon,
+  IoCalendarSharp as CalenderSharpIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -66,8 +69,6 @@ interface State {
   earliestEnterDate: Date;
   enter: Date;
   leave: Date;
-  daySlider: number;
-  daySliderDisabled: boolean;
   locationId: string;
   canSearch: boolean;
   canSearchHint: string;
@@ -114,6 +115,9 @@ interface State {
     weekdays: number[];
     end: Date;
   };
+
+  selectionMultiDay: boolean;
+  selectionAllDay: boolean;
 }
 
 interface Props {
@@ -131,11 +135,13 @@ class Search extends React.Component<Props, State> {
   mapData: any;
   curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
-  enterChangeTimer: number | undefined;
-  leaveChangeTimer: number | undefined;
+  updateEnterAndLeaveDateTimer: number | undefined;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
+
+  resetEnterTime: Date | undefined;
+  resetLeaveTime: Date | undefined;
 
   constructor(props: any) {
     super(props);
@@ -145,8 +151,7 @@ class Search extends React.Component<Props, State> {
     this.buddies = [];
     this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
-    this.enterChangeTimer = undefined;
-    this.leaveChangeTimer = undefined;
+    this.updateEnterAndLeaveDateTimer = undefined;
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
@@ -157,8 +162,6 @@ class Search extends React.Component<Props, State> {
       enter: new Date(),
       leave: new Date(),
       locationId: "",
-      daySlider: 0,
-      daySliderDisabled: false,
       canSearch: false,
       canSearchHint: "",
       showBookingNames: false,
@@ -204,6 +207,9 @@ class Search extends React.Component<Props, State> {
         precheckNumErrors: 0,
         precheckErrorCodes: [],
       },
+
+      selectionAllDay: false,
+      selectionMultiDay: false,
     };
   }
 
@@ -346,7 +352,7 @@ class Search extends React.Component<Props, State> {
   };
 
   initDates = () => {
-    const enter = new Date();
+    let enter = new Date();
     if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
       enter.setHours(enter.getHours() + 1, 0, 0);
       if (enter.getHours() < this.state.prefWorkdayStart) {
@@ -385,20 +391,14 @@ class Search extends React.Component<Props, State> {
     leave.setHours(this.state.prefWorkdayEnd, 0, 0);
 
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enter.setHours(0, 0, 0, 0);
-      leave.setHours(23, 59, 59, 0);
+      enter = DateUtil.setHoursToMin(enter);
+      leave = DateUtil.setHoursToMax(leave);
     }
-
-    const daySlider = Formatting.getDayDiff(
-      enter,
-      this.getEarliestSelectableEnterDate(),
-    );
 
     this.setState({
       earliestEnterDate: enter,
       enter,
       leave,
-      daySlider: daySlider,
     });
   };
 
@@ -507,7 +507,7 @@ class Search extends React.Component<Props, State> {
     const today = DateUtil.getTodayStart();
     let enterTime = new Date(this.state.enter);
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterTime.setHours(23, 59, 59);
+      enterTime = DateUtil.setHoursToMax(enterTime);
     }
     if (enterTime.getTime() <= today.getTime()) {
       res = false;
@@ -518,7 +518,7 @@ class Search extends React.Component<Props, State> {
       hint = this.props.t("errorLeaveAfterEnter");
     }
 
-    let bookingAdvanceDays = Math.floor(
+    const bookingAdvanceDays = Math.floor(
       (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
@@ -527,7 +527,7 @@ class Search extends React.Component<Props, State> {
         num: RuntimeConfig.INFOS.maxDaysInAdvance,
       });
     }
-    let bookingDurationHours =
+    const bookingDurationHours =
       Math.floor(
         (this.state.leave.getTime() - this.state.enter.getTime()) /
           DateUtil.MS_PER_MINUTE,
@@ -576,17 +576,6 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  changeEnterDay = (value: number) => {
-    const enter = new Date(this.getEarliestSelectableEnterDate().valueOf());
-    enter.setDate(enter.getDate() + value);
-    enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    const leave = new Date(enter.valueOf());
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0, 0);
-    this.setEnterDate(enter);
-    this.setLeaveDate(leave);
-    this.setState({ daySlider: value });
-  };
-
   setRecurrenceEndDate = (value: Date | [Date | null, Date | null]) => {
     const date = value instanceof Date ? value : value[0];
     if (date == null) {
@@ -604,56 +593,7 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  setEnterDate = (value: Date | [Date | null, Date | null]) => {
-    const dateChangedCb = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
-          this.setState({ loading: false });
-        } else {
-          let promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
-      });
-    };
-    const performChange = () => {
-      const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      const date = value instanceof Date ? value : value[0];
-      if (date == null) {
-        return;
-      }
-      if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        date.setHours(0, 0, 0);
-      }
-      const leave = new Date();
-      leave.setTime(date.getTime() + diff);
-      const daySlider = Formatting.getDayDiff(
-        date,
-        this.getEarliestSelectableEnterDate(),
-      );
-      const daySliderDisabled =
-        daySlider > RuntimeConfig.INFOS.maxDaysInAdvance || daySlider < 0;
-      this.setState(
-        {
-          enter: date,
-          leave: leave,
-          daySlider: daySlider,
-          daySliderDisabled: daySliderDisabled,
-        },
-        () => dateChangedCb(),
-      );
-    };
-    if (typeof window !== "undefined") {
-      window.clearTimeout(this.enterChangeTimer);
-      this.enterChangeTimer = window.setTimeout(performChange, 1000);
-    }
-  };
-
-  setLeaveDate = (value: Date | [Date | null, Date | null]) => {
+  updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
     const dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
@@ -670,23 +610,43 @@ class Search extends React.Component<Props, State> {
       });
     };
     const performChange = () => {
-      const date = value instanceof Date ? value : value[0];
-      if (date == null) {
-        return;
+      if (enter === null && leave === null) return;
+
+      let newEnter, newLeave;
+
+      if (enter !== null && leave !== null) {
+        newEnter = enter;
+        newLeave = leave;
+      } else if (enter !== null) {
+        newEnter = enter;
+        const diff = this.state.leave.getTime() - this.state.enter.getTime();
+        newLeave = new Date();
+        newLeave.setTime(enter.getTime() + diff);
+      } else if (leave !== null) {
+        newLeave = leave;
       }
+
       if (RuntimeConfig.INFOS.dailyBasisBooking) {
-        date.setHours(23, 59, 59);
+        if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
+        if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
       }
-      this.setState(
-        {
-          leave: date,
-        },
-        () => dateChangedCb(),
-      );
+
+      const stateEnter = newEnter ?? this.state.enter;
+      const stateLeave = newLeave ?? this.state.leave;
+      const state = {
+        enter: stateEnter,
+        leave: stateLeave,
+        selectionMultiDay: !DateUtil.isSameDay(stateEnter, stateLeave),
+      };
+
+      this.setState(state, () => dateChangedCb());
     };
     if (typeof window !== "undefined") {
-      window.clearTimeout(this.leaveChangeTimer);
-      this.leaveChangeTimer = window.setTimeout(performChange, 1000);
+      window.clearTimeout(this.updateEnterAndLeaveDateTimer);
+      this.updateEnterAndLeaveDateTimer = window.setTimeout(
+        performChange,
+        1000,
+      );
     }
   };
 
@@ -1608,32 +1568,82 @@ class Search extends React.Component<Props, State> {
         </Form.Group>
       );
     }
-    let enterDatePicker = (
+
+    const dateEnterPicker = (
       <div aria-label="Reservation start date">
         <DateTimePicker
-          enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
+          enableTime={false}
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
-            if (value != null && value instanceof Date)
-              this.setEnterDate(value);
+            if (value != null && value instanceof Date) {
+              this.updateEnterAndLeaveDate(
+                DateUtil.copyDate(value, this.state.enter),
+                null,
+              );
+            }
           }}
         />
       </div>
     );
-    let leaveDatePicker = (
-      <div aria-label="Reservation end date">
+    const dateLeavePicker = (
+      <div aria-label="Reservation start date">
         <DateTimePicker
-          enableTime={!RuntimeConfig.INFOS.dailyBasisBooking}
+          enableTime={false}
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
           minDate={this.getEarliestSelectableEnterDate()}
           onChange={(value: Date) => {
-            if (value != null && value instanceof Date)
-              this.setLeaveDate(value);
+            if (value != null && value instanceof Date) {
+              this.updateEnterAndLeaveDate(
+                null,
+                DateUtil.copyDate(value, this.state.leave),
+              );
+            }
+          }}
+        />
+      </div>
+    );
+
+    const timeEnterPicker = (
+      <div aria-label="Reservation start date">
+        <DateTimePicker
+          noCalendar={true}
+          enableTime={true}
+          disabled={!this.state.locationId || this.state.selectionAllDay}
+          value={this.state.enter}
+          required={true}
+          minDate={this.getEarliestSelectableEnterDate()}
+          onChange={(value: Date) => {
+            if (value != null && value instanceof Date) {
+              this.updateEnterAndLeaveDate(
+                DateUtil.copyTime(value, this.state.enter),
+                null,
+              );
+            }
+          }}
+        />
+      </div>
+    );
+    const timeLeavePicker = (
+      <div aria-label="Reservation start date">
+        <DateTimePicker
+          noCalendar={true}
+          enableTime={true}
+          disabled={!this.state.locationId || this.state.selectionAllDay}
+          value={this.state.leave}
+          required={true}
+          minDate={this.getEarliestSelectableEnterDate()}
+          onChange={(value: Date) => {
+            if (value != null && value instanceof Date) {
+              this.updateEnterAndLeaveDate(
+                null,
+                DateUtil.copyTime(value, this.state.leave),
+              );
+            }
           }}
         />
       </div>
@@ -1678,7 +1688,7 @@ class Search extends React.Component<Props, State> {
             ")"
           : "",
       };
-      let spaces = this.data.map((item) => {
+      const spaces = this.data.map((item) => {
         return this.renderItem(item);
       });
       listOrMap = (
@@ -1758,7 +1768,7 @@ class Search extends React.Component<Props, State> {
       );
     }
 
-    let configContainer = (
+    const configContainer = (
       <div className="container-search-config" ref={this.searchContainerRef}>
         <div
           className="collapse-bar"
@@ -1886,55 +1896,106 @@ class Search extends React.Component<Props, State> {
                 </InputGroup>
               </div>
             </Form.Group>
-            <Form.Group className="d-flex margin-top-10">
-              <div className="pt-1 me-2">
-                <EnterIcon
-                  title={this.props.t("enter")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">{enterDatePicker}</div>
-            </Form.Group>
-            <Form.Group className="d-flex margin-top-10">
-              <div className="pt-1 me-2">
-                <ExitIcon
-                  title={this.props.t("leave")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">{leaveDatePicker}</div>
-            </Form.Group>
-            {hint}
+
+            {/* Date selection */}
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <WeekIcon
-                  title={this.props.t("week")}
+                  title={this.props.t("date")}
                   color={"#555"}
                   height="20px"
                   width="20px"
                 />
               </div>
-              <div className="ms-2 w-100">
-                <Form.Range
-                  disabled={
-                    !this.state.locationId || this.state.daySliderDisabled
-                  }
-                  list="weekDays"
-                  min={0}
-                  max={RuntimeConfig.INFOS.maxDaysInAdvance}
-                  step="1"
-                  value={this.state.daySlider}
-                  onChange={(event) =>
-                    this.changeEnterDay(window.parseInt(event.target.value))
-                  }
-                  aria-label="Day slider"
-                />
+              <div
+                className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
+              >
+                {dateEnterPicker}
               </div>
+
+              {this.state.selectionMultiDay && (
+                <div className="ms-2 w-50">{dateLeavePicker}</div>
+              )}
+
+              <button
+                type="button"
+                className={`ms-2 btn d-flex align-items-center ${
+                  this.state.selectionMultiDay ? "btn-primary" : "btn-light"
+                }`}
+                style={{
+                  padding: "4px 8px",
+                  borderColor: "#CED4DA",
+                }}
+                onClick={() =>
+                  this.setState({
+                    selectionMultiDay: !this.state.selectionMultiDay,
+                  })
+                }
+                title={this.props.t("multiDay")}
+              >
+                <CalenderSharpIcon
+                  title={this.props.t("multiDay")}
+                  color={this.state.selectionMultiDay ? "#fff" : "#555"}
+                  height="20px"
+                  width="20px"
+                />
+              </button>
             </Form.Group>
+
+            {/* Time selection */}
+            {!RuntimeConfig.INFOS.dailyBasisBooking && (
+              <Form.Group className="d-flex margin-top-10">
+                <div className="me-2">
+                  <TimeIcon
+                    title={this.props.t("time")}
+                    color={"#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </div>
+                <div className="ms-2 w-50">{timeEnterPicker}</div>
+                <div className="ms-2 w-50">{timeLeavePicker}</div>
+                <button
+                  type="button"
+                  className={`ms-2 btn d-flex align-items-center ${
+                    this.state.selectionAllDay ? "btn-primary" : "btn-light"
+                  }`}
+                  style={{
+                    padding: "4px 8px",
+                    borderColor: "#CED4DA",
+                  }}
+                  onClick={() => {
+                    if (!this.state.selectionAllDay) {
+                      this.resetEnterTime = new Date(this.state.enter);
+                      this.resetLeaveTime = new Date(this.state.leave);
+                      this.updateEnterAndLeaveDate(
+                        DateUtil.setHoursToMin(this.state.enter),
+                        DateUtil.setHoursToMax(this.state.leave),
+                      );
+                    } else {
+                      this.updateEnterAndLeaveDate(
+                        this.resetEnterTime ?? null,
+                        this.resetLeaveTime ?? null,
+                      );
+                    }
+                    this.setState({
+                      selectionAllDay: !this.state.selectionAllDay,
+                    });
+                  }}
+                  title={this.props.t("allDay")}
+                >
+                  <TimerIcon
+                    title={this.props.t("allDay")}
+                    color={this.state.selectionAllDay ? "#fff" : "#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </button>
+              </Form.Group>
+            )}
+
+            {hint}
+
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <MapIcon
