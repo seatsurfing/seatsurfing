@@ -27,7 +27,7 @@ import {
   IoRemove as RemoveIcon,
   IoTime as TimeIcon,
   IoTimer as TimerIcon,
-  IoCalendarSharp as CalenderSharpIcon,
+  IoResize as ResizeIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -1939,7 +1939,7 @@ class Search extends React.Component<Props, State> {
                 }}
                 title={this.props.t("multiDay")}
               >
-                <CalenderSharpIcon
+                <ResizeIcon
                   title={this.props.t("multiDay")}
                   color={this.state.selectionMultiDay ? "#fff" : "#555"}
                   height="20px"
