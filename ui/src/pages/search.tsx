@@ -1926,11 +1926,17 @@ class Search extends React.Component<Props, State> {
                   padding: "4px 8px",
                   borderColor: "#CED4DA",
                 }}
-                onClick={() =>
+                onClick={() => {
+                  if (this.state.selectionMultiDay) {
+                    this.updateEnterAndLeaveDate(
+                      null,
+                      DateUtil.copyDate(this.state.enter, this.state.leave),
+                    );
+                  }
                   this.setState({
                     selectionMultiDay: !this.state.selectionMultiDay,
-                  })
-                }
+                  });
+                }}
                 title={this.props.t("multiDay")}
               >
                 <CalenderSharpIcon

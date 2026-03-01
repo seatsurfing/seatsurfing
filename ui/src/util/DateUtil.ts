@@ -178,6 +178,11 @@ export default class DateUtil {
     return result;
   }
 
+  /**
+   * @param date1 Date1 to compare
+   * @param date2 Date2 to compare
+   * @returns true, if both dates are on the same day
+   */
   static isSameDay(date1: Date, date2: Date): boolean {
     return (
       date1.getFullYear() === date2.getFullYear() &&
