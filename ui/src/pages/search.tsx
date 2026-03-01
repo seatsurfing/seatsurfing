@@ -613,14 +613,21 @@ class Search extends React.Component<Props, State> {
     let newEnter, newLeave;
 
     if (enter !== null && leave !== null) {
+      if (
+        DateUtil.equal(enter, this.state.enter) &&
+        DateUtil.equal(leave, this.state.leave)
+      )
+        return;
       newEnter = enter;
       newLeave = leave;
     } else if (enter !== null) {
+      if (DateUtil.equal(enter, this.state.enter)) return;
       newEnter = enter;
       const diff = this.state.leave.getTime() - this.state.enter.getTime();
       newLeave = new Date();
       newLeave.setTime(enter.getTime() + diff);
     } else if (leave !== null) {
+      if (DateUtil.equal(leave, this.state.leave)) return;
       newLeave = leave;
     }
 
