@@ -23,4 +23,11 @@ describe("DateUtil", () => {
       expect(todayStart.getMilliseconds()).toBe(0);
     });
   });
+
+  describe("isSameDate", () => {
+    it("should return true if date1=date2", () => {
+      const date = new Date();
+      expect(DateUtil.isSameDay(date, date)).toBe(true);
+    });
+  });
 });

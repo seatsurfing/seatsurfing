@@ -13,6 +13,7 @@ interface State {
 interface Props {
   t: TranslationFunc;
   enableTime?: boolean | undefined;
+  noCalendar?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
   value: Date;
@@ -56,12 +57,14 @@ class DateTimePicker extends React.Component<Props, State> {
     if (!this.state.locale) {
       return <></>;
     }
-    let formatting = RuntimeConfig.INFOS.dateFormat;
+    let formatting = this.props.noCalendar
+      ? ""
+      : RuntimeConfig.INFOS.dateFormat + " ";
     if (this.props.enableTime) {
       if (RuntimeConfig.INFOS.use24HourTime) {
-        formatting += " H:i";
+        formatting += "H:i";
       } else {
-        formatting += " h:i K";
+        formatting += "h:i K";
       }
     }
     return (
@@ -81,6 +84,7 @@ class DateTimePicker extends React.Component<Props, State> {
           minDate: this.props.minDate,
           maxDate: this.props.maxDate,
           locale: this.state.locale,
+          noCalendar: this.props.noCalendar,
         }}
       />
     );

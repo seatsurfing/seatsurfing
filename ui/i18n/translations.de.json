@@ -403,5 +403,9 @@
   "mfaEncouragementTitle": "Konto absichern",
   "mfaEncouragementBody": "Schützen Sie Ihr Konto, indem Sie einen zweiten Faktor für die Authentifizierung einrichten. Sie können eine Authentifikator-App (TOTP) oder einen Passkey (Biometrie oder Sicherheitsschlüssel) verwenden, um die Sicherheit bei der Anmeldung zu erhöhen.",
   "mfaEncouragementSetup": "Jetzt einrichten",
-  "mfaEncouragementLater": "Vielleicht später"
+  "mfaEncouragementLater": "Vielleicht später",
+  "multiDay": "Mehrere Tage",
+  "allDay": "Ganztags",
+  "time": "Zeit",
+  "date": "Datum"
 }
