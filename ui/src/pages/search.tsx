@@ -351,7 +351,7 @@ class Search extends React.Component<Props, State> {
   };
 
   initDates = () => {
-    const enter = new Date();
+    let enter = new Date();
     if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
       enter.setHours(enter.getHours() + 1, 0, 0);
       if (enter.getHours() < this.state.prefWorkdayStart) {
@@ -390,8 +390,8 @@ class Search extends React.Component<Props, State> {
     leave.setHours(this.state.prefWorkdayEnd, 0, 0);
 
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enter.setHours(0, 0, 0, 0);
-      leave.setHours(23, 59, 59, 0);
+      enter = DateUtil.setHoursToMin(enter);
+      leave = DateUtil.setHoursToMax(leave);
     }
 
     this.setState({
