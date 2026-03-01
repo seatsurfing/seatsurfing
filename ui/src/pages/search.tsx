@@ -135,8 +135,7 @@ class Search extends React.Component<Props, State> {
   mapData: any;
   curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
-  enterChangeTimer: number | undefined;
-  leaveChangeTimer: number | undefined;
+  updateEnterAndLeaveDateTimer: number | undefined;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
@@ -152,8 +151,7 @@ class Search extends React.Component<Props, State> {
     this.buddies = [];
     this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
-    this.enterChangeTimer = undefined;
-    this.leaveChangeTimer = undefined;
+    this.updateEnterAndLeaveDateTimer = undefined;
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
@@ -644,8 +642,11 @@ class Search extends React.Component<Props, State> {
       this.setState(state, () => dateChangedCb());
     };
     if (typeof window !== "undefined") {
-      window.clearTimeout(this.leaveChangeTimer);
-      this.leaveChangeTimer = window.setTimeout(performChange, 1000);
+      window.clearTimeout(this.updateEnterAndLeaveDateTimer);
+      this.updateEnterAndLeaveDateTimer = window.setTimeout(
+        performChange,
+        1000,
+      );
     }
   };
 
