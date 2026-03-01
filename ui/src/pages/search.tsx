@@ -1978,6 +1978,8 @@ class Search extends React.Component<Props, State> {
               </Form.Group>
             )}
 
+            {hint}
+
             <Form.Group className="d-flex margin-top-10">
               <div className="me-2">
                 <MapIcon
