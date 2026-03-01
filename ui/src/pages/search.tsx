@@ -27,7 +27,7 @@ import {
   IoRemove as RemoveIcon,
   IoTime as TimeIcon,
   IoTimerOutline as TimerIcon,
-  IoResize as ResizeIcon,
+  IoCalendarOutline as CalendarIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -150,7 +150,6 @@ class Search extends React.Component<Props, State> {
     this.buddies = [];
     this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
-    this.updateEnterAndLeaveDateTimer = undefined;
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
@@ -1930,7 +1929,7 @@ class Search extends React.Component<Props, State> {
                 }}
                 title={this.props.t("multiDay")}
               >
-                <ResizeIcon
+                <CalendarIcon
                   title={this.props.t("multiDay")}
                   color={this.state.selectionMultiDay ? "#fff" : "#555"}
                   height="20px"
