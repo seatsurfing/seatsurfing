@@ -66,6 +66,12 @@ export default class Booking extends Entity {
     if (input.userEmail) {
       this.user.email = input.userEmail;
     }
+    if (input.userFirstname) {
+      this.user.firstname = input.userFirstname;
+    }
+    if (input.userLastname) {
+      this.user.lastname = input.userLastname;
+    }
     if (input.approved !== undefined) {
       this.approved = input.approved;
     }

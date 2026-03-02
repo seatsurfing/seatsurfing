@@ -51,12 +51,14 @@ type PreCreateBookingRequest struct {
 }
 
 type GetBookingResponse struct {
-	ID          string           `json:"id"`
-	UserID      string           `json:"userId"`
-	UserEmail   string           `json:"userEmail"`
-	Approved    bool             `json:"approved"`
-	Space       GetSpaceResponse `json:"space"`
-	RecurringID string           `json:"recurringId"`
+	ID            string           `json:"id"`
+	UserID        string           `json:"userId"`
+	UserEmail     string           `json:"userEmail"`
+	UserFirstname string           `json:"userFirstname"`
+	UserLastname  string           `json:"userLastname"`
+	Approved      bool             `json:"approved"`
+	Space         GetSpaceResponse `json:"space"`
+	RecurringID   string           `json:"recurringId"`
 	CreateBookingRequest
 }
 
@@ -1404,6 +1406,8 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.ID = e.ID
 	m.UserID = e.UserID
 	m.UserEmail = e.UserEmail
+	m.UserFirstname = e.UserFirstname
+	m.UserLastname = e.UserLastname
 	m.SpaceID = e.SpaceID
 	m.Subject = e.Subject
 	m.Enter, _ = GetLocationRepository().AttachTimezoneInformation(e.Enter, &e.Space.Location)
