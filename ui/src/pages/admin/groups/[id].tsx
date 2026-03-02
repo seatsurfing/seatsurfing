@@ -27,6 +27,7 @@ import Group from "@/types/Group";
 import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
 import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -145,7 +146,7 @@ class EditUser extends React.Component<Props, State> {
 
   handleSearch = (query: string) => {
     this.setState({ typeaheadLoading: true });
-    let options = new SearchOptions();
+    const options = new SearchOptions();
     options.includeUsers = true;
     Search.search(query ? query : "", options).then((res) => {
       this.setState({
@@ -312,6 +313,14 @@ class EditUser extends React.Component<Props, State> {
                         <ProfilePicture width={24} height={24} />
                         <span style={{ marginLeft: "10px" }}>
                           {option.email}
+                          {RendererUtils.preAndSuffixIfDefined(
+                            RendererUtils.fullname(
+                              option.firstname,
+                              option.lastname,
+                            ),
+                            " (",
+                            ")",
+                          )}{" "}
                         </span>
                       </div>
                     )}
