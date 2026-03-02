@@ -5,12 +5,12 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
 } from "react-feather";
+import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import OrgSettings from "@/types/Settings";
 import withReadyRouter from "@/components/withReadyRouter";
-import Autosuggest from "react-autosuggest";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Space from "@/types/Space";
 import User from "@/types/User";
@@ -24,6 +24,9 @@ import RedirectUtil from "@/util/RedirectUtil";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import RendererUtils from "@/util/RendererUtils";
+import ProfilePicture from "@/components/ProfilePicture";
+import Search, { SearchOptions } from "@/types/Search";
 
 interface State {
   loading: boolean;
@@ -37,7 +40,6 @@ interface State {
   space: Space;
   user: User;
   selectedUserEmail: string;
-  selectedUserSuggestions: readonly User[];
   selectedLocationId: string;
   selectedSpaceId: string;
   users: User[];
@@ -56,6 +58,9 @@ interface State {
   prefLocationId: string;
   selfEmail: string;
   subject: string;
+  typeaheadOptions: any[];
+  typeaheadLoading: boolean;
+  typeaheadSelected: [{ email: string }];
 }
 
 interface Props {
@@ -79,6 +84,7 @@ class EditBooking extends React.Component<Props, State> {
   enterChangeTimer: number | undefined;
   leaveChangeTimer: number | undefined;
   curBookingCount: number = 0;
+  typeahead: any = null;
 
   constructor(props: any) {
     super(props);
@@ -103,7 +109,6 @@ class EditBooking extends React.Component<Props, State> {
       space: new Space(),
       user: new User(),
       selectedUserEmail: "",
-      selectedUserSuggestions: [],
       selectedLocationId: "",
       selectedSpaceId: "",
       users: [],
@@ -122,6 +127,9 @@ class EditBooking extends React.Component<Props, State> {
       prefLocationId: "",
       selfEmail: "",
       subject: "",
+      typeaheadOptions: [],
+      typeaheadLoading: false,
+      typeaheadSelected: [{ email: "" }],
     };
   }
 
@@ -175,6 +183,9 @@ class EditBooking extends React.Component<Props, State> {
             canEdit: canSave,
             subject: this.entity.subject,
             // loading: false,
+            typeaheadSelected: this.entity.user.email
+              ? [{ email: this.entity.user.email }]
+              : [{ email: "" }],
           });
           this.loadSpaces(
             this.entity.space.locationId,
@@ -636,7 +647,7 @@ class EditBooking extends React.Component<Props, State> {
 
   userOnChange = (val: string) => {
     this.setState({ selectedUserEmail: val });
-    /* IMPROVEME: LoadPreferences from selected user
+    /* IMPROVEMENT: LoadPreferences from selected user
         let promises = [
             this.loadPreferences()
           ];
@@ -646,34 +657,6 @@ class EditBooking extends React.Component<Props, State> {
         */
   };
 
-  // Teach Autosuggest how to calculate suggestions for any given input value.
-  getSuggestions(value: string) {
-    const inputValue = value ? value.trim().toLowerCase() : "";
-    const inputLength = inputValue.length;
-
-    if (inputLength === 0) return [];
-    User.list({ search: inputValue }).then((users) => {
-      this.setState({
-        selectedUserSuggestions: users,
-      });
-    });
-    return true;
-  }
-
-  getSuggestionValue = (suggestion: User) => suggestion.email;
-
-  renderSuggestion = (suggestion: User) => <div>{suggestion.email}</div>;
-
-  userOnSuggestionsFetchRequested = (name: { value: string }) => {
-    this.getSuggestions(name.value);
-  };
-
-  userOnSuggestionsClearRequested = () => {
-    this.setState({
-      selectedUserSuggestions: [],
-    });
-  };
-
   getSelectedSpace = () => {
     if (this.state.selectedSpaceId) {
       return this.state.spaces.find(
@@ -681,6 +664,28 @@ class EditBooking extends React.Component<Props, State> {
       );
     }
     return undefined;
+  };
+
+  filterSearch = () => {
+    return true;
+  };
+
+  onSearchSelected = (selected: any) => {
+    this.setState({
+      selectedUserEmail: selected[0]?.email,
+    });
+  };
+
+  handleSearch = (query: string) => {
+    this.setState({ typeaheadLoading: true });
+    const options = new SearchOptions();
+    options.includeUsers = true;
+    Search.search(query ? query : "", options).then((res) => {
+      this.setState({
+        typeaheadOptions: res.users,
+        typeaheadLoading: false,
+      });
+    });
   };
 
   render() {
@@ -799,21 +804,38 @@ class EditBooking extends React.Component<Props, State> {
     let userField = <></>;
     if (this.state.canEdit) {
       userField = (
-        <Autosuggest
-          suggestions={this.state.selectedUserSuggestions}
-          onSuggestionsFetchRequested={this.userOnSuggestionsFetchRequested}
-          onSuggestionsClearRequested={this.userOnSuggestionsClearRequested}
-          onSuggestionSelected={this.userOnSuggestionsClearRequested}
-          getSuggestionValue={this.getSuggestionValue}
-          renderSuggestion={this.renderSuggestion}
-          inputProps={{
-            value: this.state.selectedUserEmail,
-            onChange: (_, { newValue, method }) => {
-              this.userOnChange(newValue);
-            },
+        <AsyncTypeahead
+          selected={this.state.typeaheadSelected}
+          filterBy={this.filterSearch}
+          isLoading={this.state.typeaheadLoading}
+          labelKey="email"
+          multiple={false}
+          minLength={3}
+          onChange={(selected) => {
+            this.setState({
+              typeaheadSelected: selected as [{ email: string }],
+            });
+            this.onSearchSelected(selected);
           }}
-          highlightFirstSuggestion={false}
-          multiSection={false}
+          onSearch={this.handleSearch}
+          options={this.state.typeaheadOptions}
+          placeholder={this.props.t("searchForUser")}
+          ref={(ref: any) => {
+            this.typeahead = ref;
+          }}
+          renderMenuItemChildren={(option: any) => (
+            <div className="d-flex">
+              <ProfilePicture width={24} height={24} />
+              <span style={{ marginLeft: "10px" }}>
+                {option.email}
+                {RendererUtils.preAndSuffixIfDefined(
+                  RendererUtils.fullname(option.firstname, option.lastname),
+                  " (",
+                  ")",
+                )}{" "}
+              </span>
+            </div>
+          )}
         />
       );
     } else {

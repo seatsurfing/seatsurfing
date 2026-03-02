@@ -11,7 +11,6 @@
     "next": "16.1.6",
     "next-export-i18n": "2.4.3",
     "react": "19.2.4",
-    "react-autosuggest": "10.1.0",
     "react-big-calendar": "1.19.4",
     "react-bootstrap": "2.10.10",
     "react-bootstrap-typeahead": "6.4.1",
@@ -36,7 +35,6 @@
   "homepage": "/ui/",
   "devDependencies": {
     "@types/node": "25.3.2",
-    "@types/react-autosuggest": "10.1.11",
     "@types/react-big-calendar": "1.16.3",
     "eslint": "10.0.2",
     "eslint-config-next": "16.1.6",
