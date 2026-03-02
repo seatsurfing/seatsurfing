@@ -287,7 +287,7 @@ func (r *UserRepository) GetByKeyword(organizationID string, keyword string) ([]
 	var result []*User
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, role, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending "+
 		"FROM users "+
-		"WHERE organization_id = $1 AND LOWER(email) LIKE '%' || $2 || '%' "+
+		"WHERE organization_id = $1 AND (LOWER(email) LIKE '%' || $2 || '%' OR LOWER(firstname) LIKE '%' || $2 || '%' OR LOWER(lastname) LIKE '%' || $2 || '%') "+
 		"ORDER BY email", organizationID, strings.ToLower(keyword))
 	if err != nil {
 		return nil, err
