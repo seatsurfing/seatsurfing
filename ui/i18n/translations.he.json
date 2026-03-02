@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "אין ספקי אימות למשתמש שלך.",
   "errorPickArea": "נא לבחור אזור.",
   "errorSave": "שגיאה בשמירה, נא לנסות שוב בהמשך.",
+  "errorUserRequired": "יש לבחור משתמש.",
   "errorSubscriptionLimit": "הגעת למספר המשתמשים המרבי.",
   "errorTooManyConcurrent": "הגעת למגבלת הקיבולת באזור הנבחר.",
   "errorTryAgain": "משהו השתבש. נא לנסות שוב.",

@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Kasutajal puuduvad autentimise viisid.",
   "errorPickArea": "Palun vali ala.",
   "errorSave": "Salvestamisel tekkis viga, proovi hiljem uuesti.",
+  "errorUserRequired": "Palun vali kasutaja.",
   "errorSubscriptionLimit": "You've reached the maximum number of users.",
   "errorTooManyConcurrent": "Valitud alal on kohtade limiit täis.",
   "errorTryAgain": "Something went wrong. Please try again later.",

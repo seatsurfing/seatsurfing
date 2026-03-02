@@ -158,6 +158,7 @@
   "errorNoAuthProviders": "Für diesen Nutzer stehen keine Anmeldemöglichkeiten zur Verfügung.",
   "errorPickArea": "Bitte einen Bereich auswählen.",
   "errorSave": "Fehler beim Speichern, bitte probiere es später noch einmal.",
+  "errorUserRequired": "Bitte einen Benutzer auswählen.",
   "errorSubscriptionLimit": "Sie haben die maximale Anzahl von Benutzern erreicht.",
   "errorTooManyConcurrent": "Kapazitätsgrenze des gewählten Bereichs ist erreicht.",
   "errorTryAgain": "Etwas ist schief gegangen. Bitte probieren Sie es später erneut.",

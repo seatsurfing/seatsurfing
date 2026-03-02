@@ -158,6 +158,7 @@
   "errorNoAuthProviders": "No authentication providers for your user.",
   "errorPickArea": "Please pick an area.",
   "errorSave": "Error while saving, please try again later.",
+  "errorUserRequired": "Please select a user.",
   "errorSubscriptionLimit": "You've reached the maximum number of users.",
   "errorTooManyConcurrent": "Capacity limit reached in selected area.",
   "errorTryAgain": "Something went wrong. Please try again later.",

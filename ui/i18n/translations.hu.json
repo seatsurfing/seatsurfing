@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Nem található autentikációs szolgáltató ehhez a felhasználóhoz.",
   "errorPickArea": "Válassz egy teret.",
   "errorSave": "Sikertelen mentés, kérjük próbáld meg később.",
+  "errorUserRequired": "Kérjük, válasszon felhasználót.",
   "errorSubscriptionLimit": "You've reached the maximum number of users.",
   "errorTooManyConcurrent": "A választott térben nincs szabad hely.",
   "errorTryAgain": "Something went wrong. Please try again later.",

@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Nu există furnizori de autentificare pentru utilizatorul tău.",
   "errorPickArea": "Te rog să alegi o zonă.",
   "errorSave": "Eroare la salvare, te rog să încerci din nou mai târziu.",
+  "errorUserRequired": "Te rog selectează un utilizator.",
   "errorSubscriptionLimit": "You've reached the maximum number of users.",
   "errorTooManyConcurrent": "Limita de capacitate a fost atinsă în zona selectată.",
   "errorTryAgain": "Something went wrong. Please try again later.",

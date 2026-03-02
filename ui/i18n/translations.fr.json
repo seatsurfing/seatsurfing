@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Aucun fournisseur d’authentification pour votre utilisateur.",
   "errorPickArea": "Veuillez choisir une zone.",
   "errorSave": "Erreur lors de l’enregistrement, veuillez réessayer plus tard.",
+  "errorUserRequired": "Veuillez sélectionner un utilisateur.",
   "errorSubscriptionLimit": "Vous avez atteint le nombre maximal d’utilisateurs.",
   "errorTooManyConcurrent": "Limite de capacité atteinte dans la zone sélectionnée.",
   "errorTryAgain": "Quelque chose s’est mal passé. Veuillez réessayer plus tard.",
