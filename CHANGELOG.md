@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.64.0](https://github.com/seatsurfing/seatsurfing/compare/v1.63.1...v1.64.0) (2026-03-02)
+
+
+### Features
+
+* find user by firstname and lastname ([#1770](https://github.com/seatsurfing/seatsurfing/issues/1770)) ([d4231a5](https://github.com/seatsurfing/seatsurfing/commit/d4231a5680f3ace21d6d100cef9779defc80fd04))
+* show user's firstname and lastname as tooltip in admin bookings UI ([#1773](https://github.com/seatsurfing/seatsurfing/issues/1773)) ([234a20f](https://github.com/seatsurfing/seatsurfing/commit/234a20f13c8ea557072bb53800fff255798c3e06))
+
+
+### Bug Fixes
+
+* set "current" as default filter in admin bookings ([#1772](https://github.com/seatsurfing/seatsurfing/issues/1772)) ([f2e041c](https://github.com/seatsurfing/seatsurfing/commit/f2e041c8dffb617b0b6082bcefc2caef62f51c90))
+* show user's firstname and lastname in picker ([#1769](https://github.com/seatsurfing/seatsurfing/issues/1769)) ([9ca3976](https://github.com/seatsurfing/seatsurfing/commit/9ca3976acd63d3ff4a95b4d53514d7e72c73ab41))
+* use proper "…"-sign ([#1774](https://github.com/seatsurfing/seatsurfing/issues/1774)) ([2e31ab7](https://github.com/seatsurfing/seatsurfing/commit/2e31ab73bb300cf54f926842aafd2b52c4ac82f4))
+
 ## [1.63.1](https://github.com/seatsurfing/seatsurfing/compare/v1.63.0...v1.63.1) (2026-03-01)
 
 
