@@ -416,20 +416,24 @@ class EditUser extends React.Component<Props, State> {
             </Form.Label>
             <Col sm="4">{roleSelect}</Col>
           </Form.Group>
-          <Form.Group as={Row} hidden={this.isServiceAccount(this.state.role)}>
-            <Form.Label column sm="2">
-              {this.props.t("emailAddress")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                type="email"
-                placeholder="some@domain.com"
-                value={this.state.email}
-                onChange={(e: any) => this.setState({ email: e.target.value })}
-                required={!this.isServiceAccount(this.state.role)}
-              />
-            </Col>
-          </Form.Group>
+          {!this.isServiceAccount(this.state.role) && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("emailAddress")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Control
+                  type="email"
+                  placeholder="some@domain.com"
+                  value={this.state.email}
+                  onChange={(e: any) =>
+                    this.setState({ email: e.target.value })
+                  }
+                  required={true}
+                />
+              </Col>
+            </Form.Group>
+          )}
           <Form.Group as={Row}>
             <Form.Label column sm="2">
               {this.props.t("firstname")}
