@@ -84,11 +84,11 @@ class Bookings extends React.Component<Props, State> {
       end: getDateFromQuery("leave", +7), // default: 7 days in future
       filterUser: this.props.router.query["user"] as string,
       filterOption:
-        this.props.router.query["filter"] === "current"
-          ? "current"
-          : this.props.router.query["filter"] === "today"
-            ? "today"
-            : "enter_leave",
+        this.props.router.query["filter"] === "today"
+          ? "today"
+          : this.props.router.query["filter"] === "enter_leave"
+            ? "enter_leave"
+            : "current",
       typeaheadOptions: [],
       typeaheadLoading: false,
     };
@@ -368,7 +368,7 @@ class Bookings extends React.Component<Props, State> {
           </Col>
         </Form.Group>
 
-        <Form.Group as={Row}>
+        <Form.Group as={Row} hidden={this.state.filterOption !== "enter_leave"}>
           <Form.Label column sm="2">
             {this.props.t("enter")}
           </Form.Label>
@@ -385,7 +385,7 @@ class Bookings extends React.Component<Props, State> {
             />
           </Col>
         </Form.Group>
-        <Form.Group as={Row}>
+        <Form.Group as={Row} hidden={this.state.filterOption !== "enter_leave"}>
           <Form.Label column sm="2">
             {this.props.t("leave")}
           </Form.Label>
