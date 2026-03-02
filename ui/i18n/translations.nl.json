@@ -256,6 +256,7 @@
   "resendInvitation": "Uitnodigingsemail opnieuw verzenden",
   "resetPasskeys": "Passkeys opnieuw instellen",
   "resetTotp": "TOTP opnieuw instellen",
+  "cannotChangeOwnRole": "You cannot change your own role.",
   "role": "Rol",
   "roleOrgAdmin": "Organisatie beheerder",
   "roleServiceAccountRO": "Service account (read-only)",
