@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.63.1](https://github.com/seatsurfing/seatsurfing/compare/v1.63.0...v1.63.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* do not update inputs if dates remain unchanged ([#1766](https://github.com/seatsurfing/seatsurfing/issues/1766)) ([1bb60d6](https://github.com/seatsurfing/seatsurfing/commit/1bb60d6c20f6e83efbabdc4adc8b99cc8dd7ef1b))
+
 ## [1.63.0](https://github.com/seatsurfing/seatsurfing/compare/v1.62.2...v1.63.0) (2026-03-01)
 
 
