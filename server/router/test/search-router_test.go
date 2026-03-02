@@ -25,6 +25,7 @@ func TestSearchForbidden(t *testing.T) {
 func TestSearchUsers(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -39,10 +40,29 @@ func TestSearchUsers(t *testing.T) {
 	}
 	GetUserRepository().Create(u2)
 	u3 := &User{
-		Email:          "other.name@test.com",
+		Email:          "somemail1@test.com",
+		Firstname:      "Max",
 		OrganizationID: org.ID,
 	}
 	GetUserRepository().Create(u3)
+	u4 := &User{
+		Email:          "somemail2@test.com",
+		Lastname:       "Max",
+		OrganizationID: org.ID,
+	}
+	GetUserRepository().Create(u4)
+	u5 := &User{
+		Email:          "other.name@test.com",
+		OrganizationID: org.ID,
+	}
+	GetUserRepository().Create(u5)
+	u6 := &User{
+		Email:          "max@test.com",
+		Firstname:      "Max",
+		Lastname:       "Max",
+		OrganizationID: org2.ID,
+	}
+	GetUserRepository().Create(u6)
 
 	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
@@ -50,9 +70,12 @@ func TestSearchUsers(t *testing.T) {
 	var resBody *GetSearchResultsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 
-	CheckTestInt(t, 2, len(resBody.Users))
+	// search result is ordered by email
+	CheckTestInt(t, 4, len(resBody.Users))
 	CheckTestString(t, u2.Email, resBody.Users[0].Email)
-	CheckTestString(t, u1.Email, resBody.Users[1].Email)
+	CheckTestString(t, u3.Firstname, resBody.Users[1].Firstname)
+	CheckTestString(t, u4.Lastname, resBody.Users[2].Lastname)
+	CheckTestString(t, u1.Email, resBody.Users[3].Email)
 }
 
 func TestSearchLocations(t *testing.T) {
