@@ -45,7 +45,9 @@ function isRoleEditable(conditions: RoleSelectConditions): boolean {
  * The hint is shown only when the user is editing themselves AND the
  * role is read-only (i.e. the else branch is entered).
  */
-function showCannotChangeOwnRoleHint(conditions: RoleSelectConditions): boolean {
+function showCannotChangeOwnRoleHint(
+  conditions: RoleSelectConditions,
+): boolean {
   const isOwnUser = conditions.adminUserId === conditions.editedUserId;
   return isOwnUser;
 }
