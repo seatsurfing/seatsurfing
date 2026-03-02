@@ -26,6 +26,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   selectedItem: string;
@@ -282,7 +283,7 @@ class Bookings extends React.Component<Props, State> {
 
   handleSearch = (query: string) => {
     this.setState({ typeaheadLoading: true });
-    let options = new SearchOptions();
+    const options = new SearchOptions();
     options.includeUsers = true;
     Search.search(query ? query : "", options).then((res) => {
       this.setState({
@@ -308,7 +309,7 @@ class Bookings extends React.Component<Props, State> {
       </Button>
     );
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-bookings.xlsx"
         href="#"
@@ -318,7 +319,7 @@ class Bookings extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         {searchButton}
@@ -423,7 +424,14 @@ class Bookings extends React.Component<Props, State> {
               renderMenuItemChildren={(option: any) => (
                 <div className="d-flex">
                   <ProfilePicture width={24} height={24} />
-                  <span style={{ marginLeft: "10px" }}>{option.email}</span>
+                  <span style={{ marginLeft: "10px" }}>
+                    {option.email}
+                    {RendererUtils.preAndSuffixIfDefined(
+                      RendererUtils.fullname(option.firstname, option.lastname),
+                      " (",
+                      ")",
+                    )}{" "}
+                  </span>
                 </div>
               )}
             />
