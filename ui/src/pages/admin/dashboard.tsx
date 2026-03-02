@@ -248,7 +248,7 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numBookings,
             this.props.t("bookings"),
-            "/admin/bookings/?enter=2000-01-01T00:00&leave=2999-12-31T23:59",
+            "/admin/bookings/?enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
           )}
         </Row>
         <Row className="mb-4">
@@ -265,12 +265,12 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
-            `/admin/bookings/?enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59`,
+            `/admin/bookings/?enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
-            `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59`,
+            `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
           )}
         </Row>
         <Row className="mb-4">
