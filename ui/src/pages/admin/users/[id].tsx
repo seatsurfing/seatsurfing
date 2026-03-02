@@ -472,7 +472,11 @@ class EditUser extends React.Component<Props, State> {
                   type="text"
                   readOnly={!this.isServiceAccount(this.state.role)}
                   value={this.state.email}
-                  onChange={this.isServiceAccount(this.state.role) ? (e: any) => this.setState({ email: e.target.value }) : undefined}
+                  onChange={
+                    this.isServiceAccount(this.state.role)
+                      ? (e: any) => this.setState({ email: e.target.value })
+                      : undefined
+                  }
                   required={this.isServiceAccount(this.state.role)}
                 />
                 <Button
