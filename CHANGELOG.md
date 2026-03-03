@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.64.1](https://github.com/seatsurfing/seatsurfing/compare/v1.64.0...v1.64.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/go-webauthn/webauthn from 0.15.0 to 0.16.0 in /server in the minor-and-patch group ([#1781](https://github.com/seatsurfing/seatsurfing/issues/1781)) ([4a1202c](https://github.com/seatsurfing/seatsurfing/commit/4a1202cdabad95957758470f669d9d8289719bf7))
+* error handling if no or own user is set in edit booking page ([#1777](https://github.com/seatsurfing/seatsurfing/issues/1777)) ([032eb73](https://github.com/seatsurfing/seatsurfing/commit/032eb73c968b033adf5f848eadaf3c1e3e5b7575))
+* fix field logic errors in edit user page ([#1778](https://github.com/seatsurfing/seatsurfing/issues/1778)) ([fa92b72](https://github.com/seatsurfing/seatsurfing/commit/fa92b7249312ea79ce83eaad1bc208fb6a4f17eb))
+* prevent admins from accidentally changing their own role ([#1779](https://github.com/seatsurfing/seatsurfing/issues/1779)) ([d7563df](https://github.com/seatsurfing/seatsurfing/commit/d7563dfbb8645b2d1b7ad4093484a507d6b40d48))
+* use AsyncTypeahead user picker on admin booking page ([#1775](https://github.com/seatsurfing/seatsurfing/issues/1775)) ([de845ee](https://github.com/seatsurfing/seatsurfing/commit/de845ee4738f0379c5a081ba4d350868ea4e2c77))
+
 ## [1.64.0](https://github.com/seatsurfing/seatsurfing/compare/v1.63.1...v1.64.0) (2026-03-02)
 
 
