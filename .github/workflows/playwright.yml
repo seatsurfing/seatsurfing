@@ -8,11 +8,11 @@ jobs:
   container-job:
     name: Run Playwright
     runs-on: ubuntu-latest
-    container: golang:1.24-bookworm
+    container: golang:1.26-bookworm
 
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_PASSWORD: root
           POSTGRES_DB: seatsurfing_test
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install Node
-        run: curl -fsSL https://deb.nodesource.com/setup_22.x -o - | bash && apt-get install -y nodejs
+        run: curl -fsSL https://deb.nodesource.com/setup_24.x -o - | bash && apt-get install -y nodejs
       - name: Install dependencies
         run: apt-get update && apt-get install -y jq
       - name: Build UI
@@ -33,7 +33,7 @@ jobs:
 
       - name: Install server dependencies
         working-directory: ./server
-        run: go get -d -v ./...
+        run: go get -v ./...
       - uses: JarvusInnovations/background-action@v1
         name: Run server in background
         with:
