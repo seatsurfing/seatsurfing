@@ -424,20 +424,24 @@ class EditUser extends React.Component<Props, State> {
             </Form.Label>
             <Col sm="4">{roleSelect}</Col>
           </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2">
-              {this.props.t("emailAddress")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                type="email"
-                placeholder="some@domain.com"
-                value={this.state.email}
-                onChange={(e: any) => this.setState({ email: e.target.value })}
-                required={true}
-              />
-            </Col>
-          </Form.Group>
+          {!this.isServiceAccount(this.state.role) && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("emailAddress")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Control
+                  type="email"
+                  placeholder="some@domain.com"
+                  value={this.state.email}
+                  onChange={(e: any) =>
+                    this.setState({ email: e.target.value })
+                  }
+                  required={true}
+                />
+              </Col>
+            </Form.Group>
+          )}
           <Form.Group as={Row}>
             <Form.Label column sm="2">
               {this.props.t("firstname")}
@@ -470,7 +474,7 @@ class EditUser extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
-          <Form.Group as={Row} hidden={this.isServiceAccount(this.state.role)}>
+          <Form.Group as={Row}>
             <Form.Label column sm="2">
               {this.props.t("username")}
             </Form.Label>
@@ -478,8 +482,14 @@ class EditUser extends React.Component<Props, State> {
               <InputGroup>
                 <Form.Control
                   type="text"
-                  readOnly={true}
-                  defaultValue={this.state.email}
+                  readOnly={!this.isServiceAccount(this.state.role)}
+                  value={this.state.email}
+                  onChange={
+                    this.isServiceAccount(this.state.role)
+                      ? (e: any) => this.setState({ email: e.target.value })
+                      : undefined
+                  }
+                  required={this.isServiceAccount(this.state.role)}
                 />
                 <Button
                   onClick={() => this.copyUsernameToClipboard()}
