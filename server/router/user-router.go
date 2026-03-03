@@ -622,7 +622,10 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
-	if eNew.Role > user.Role && eNew.Role != UserRoleServiceAccountRO && eNew.Role != UserRoleServiceAccountRW {
+	if user.ID == e.ID {
+		// Prevent users from changing their own role
+		eNew.Role = e.Role
+	} else if eNew.Role > user.Role && eNew.Role != UserRoleServiceAccountRO && eNew.Role != UserRoleServiceAccountRW {
 		eNew.Role = e.Role
 	}
 	eNew.OrganizationID = e.OrganizationID

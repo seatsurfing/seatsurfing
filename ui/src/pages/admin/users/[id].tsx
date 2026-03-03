@@ -331,8 +331,9 @@ class EditUser extends React.Component<Props, State> {
         </>
       );
     }
+    const isOwnUser = RuntimeConfig.INFOS.userId === this.entity.id;
     let roleSelect = <></>;
-    if (this.adminUserRole >= this.state.role) {
+    if (!isOwnUser && this.adminUserRole >= this.state.role) {
       roleSelect = (
         <Form.Select
           value={this.state.role}
@@ -395,7 +396,14 @@ class EditUser extends React.Component<Props, State> {
         role = this.props.t("roleSuperAdmin");
       }
       roleSelect = (
-        <Form.Control plaintext={true} readOnly={true} defaultValue={role} />
+        <>
+          <Form.Control plaintext={true} readOnly={true} defaultValue={role} />
+          {isOwnUser && (
+            <Form.Text className="text-muted">
+              {this.props.t("cannotChangeOwnRole")}
+            </Form.Text>
+          )}
+        </>
       );
     }
     let copyPasswordIcon = <IconCopy className="feather" />;

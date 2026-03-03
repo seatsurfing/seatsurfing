@@ -717,3 +717,95 @@ func TestUserSetOwnPassword(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
+
+func TestPreventSelfRoleChange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Try to change own role from OrgAdmin to User
+	payload := "{\"email\": \"" + user.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+user.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify role was NOT changed
+	req = NewHTTPRequest("GET", "/user/"+user.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, int(UserRoleOrgAdmin), resBody.Role)
+}
+
+func TestPreventSelfRoleChangeToServiceAccount(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Try to change own role from OrgAdmin to ServiceAccountRO
+	payload := "{\"email\": \"" + user.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleServiceAccountRO)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+user.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify role was NOT changed
+	req = NewHTTPRequest("GET", "/user/"+user.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, int(UserRoleOrgAdmin), resBody.Role)
+}
+
+func TestPreventSelfRoleChangeToSpaceAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Try to change own role from OrgAdmin to SpaceAdmin
+	payload := "{\"email\": \"" + user.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+user.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify role was NOT changed
+	req = NewHTTPRequest("GET", "/user/"+user.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, int(UserRoleOrgAdmin), resBody.Role)
+}
+
+func TestAllowRoleChangeForOtherUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create another user
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"12345678\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	userID := res.Header().Get("X-Object-Id")
+
+	// Change other user's role from User to SpaceAdmin
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+userID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify role WAS changed
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, int(UserRoleSpaceAdmin), resBody.Role)
+}

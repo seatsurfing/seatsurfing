@@ -256,6 +256,7 @@
   "resendInvitation": "Wyślij ponownie e-mail z zaproszeniem",
   "resetPasskeys": "Zresetuj passkeys",
   "resetTotp": "Zresetuj TOTP",
+  "cannotChangeOwnRole": "You cannot change your own role.",
   "role": "Rola",
   "roleOrgAdmin": "Administrator organizacji",
   "roleServiceAccountRO": "Konto serwisowe (tylko odczyt)",
