@@ -257,6 +257,7 @@
   "resendInvitation": "Renvoyer l'email d'invitation",
   "resetPasskeys": "Réinitialiser les clés d'accès",
   "resetTotp": "Réinitialiser le TOTP",
+  "cannotChangeOwnRole": "You cannot change your own role.",
   "role": "Rôle",
   "roleOrgAdmin": "Administrateur de l’organisation",
   "roleServiceAccountRO": "Service account (read-only)",

@@ -257,6 +257,7 @@
   "resendInvitation": "שלח מחדש הודעת הזמנה",
   "resetPasskeys": "Reset passkeys",
   "resetTotp": "Reset TOTP",
+  "cannotChangeOwnRole": "You cannot change your own role.",
   "role": "תפקיד",
   "roleOrgAdmin": "הנהלת ארגון",
   "roleServiceAccountRO": "Service account (read-only)",

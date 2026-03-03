@@ -6,6 +6,7 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+	"net/mail"
 	"strings"
 	"sync"
 	"time"
@@ -59,7 +60,7 @@ type GetSessionResponse struct {
 }
 
 type CreateUserRequest struct {
-	Email          string `json:"email" validate:"required,email,max=254"`
+	Email          string `json:"email" validate:"required,max=254"`
 	Firstname      string `json:"firstname" validate:"required,max=128"`
 	Lastname       string `json:"lastname" validate:"required,max=128"`
 	AtlassianID    string `json:"atlassianId"`
@@ -120,6 +121,15 @@ type GetTotpSecretResponse struct {
 type ValidateTotpRequest struct {
 	Code    string `json:"code" validate:"required,len=6,numeric"`
 	StateID string `json:"stateId" validate:"required,uuid4"`
+}
+
+func isServiceAccountRole(role int) bool {
+	return role == int(UserRoleServiceAccountRO) || role == int(UserRoleServiceAccountRW)
+}
+
+func isValidEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
 
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
@@ -609,6 +619,10 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
+		SendBadRequest(w)
+		return
+	}
 	vars := mux.Vars(r)
 	e, err := GetUserRepository().GetOne(vars["id"])
 	if err != nil {
@@ -622,7 +636,10 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
-	if eNew.Role > user.Role && eNew.Role != UserRoleServiceAccountRO && eNew.Role != UserRoleServiceAccountRW {
+	if user.ID == e.ID {
+		// Prevent users from changing their own role
+		eNew.Role = e.Role
+	} else if eNew.Role > user.Role && eNew.Role != UserRoleServiceAccountRO && eNew.Role != UserRoleServiceAccountRW {
 		eNew.Role = e.Role
 	}
 	eNew.OrganizationID = e.OrganizationID
@@ -721,6 +738,10 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	var m CreateUserRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
