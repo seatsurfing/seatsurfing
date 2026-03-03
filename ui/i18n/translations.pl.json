@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Brak dostawców uwierzytelniania dla Twojego konta.",
   "errorPickArea": "Wybierz strefę.",
   "errorSave": "Błąd podczas zapisywania, spróbuj ponownie później.",
+  "errorUserRequired": "Wybierz użytkownika.",
   "errorSubscriptionLimit": "Osiągnięto maksymalną liczbę użytkowników.",
   "errorTooManyConcurrent": "Osiągnięto limit pojemności w wybranej strefie.",
   "errorTryAgain": "Coś poszło nie tak. Spróbuj ponownie później.",

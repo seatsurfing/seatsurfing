@@ -476,15 +476,19 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
 	eNew.Approved = e.Approved
-	if m.UserEmail != "" && m.UserEmail != requestUser.Email {
+	if m.UserEmail != "" {
 		if !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
 			SendForbidden(w)
 			return
 		}
-		eNew.UserID, err = router.bookForUser(requestUser, m.UserEmail, w)
-		if err != nil {
-			SendInternalServerError(w)
-			return
+		if m.UserEmail == requestUser.Email {
+			eNew.UserID = requestUser.ID
+		} else {
+			eNew.UserID, err = router.bookForUser(requestUser, m.UserEmail, w)
+			if err != nil {
+				SendInternalServerError(w)
+				return
+			}
 		}
 	}
 	bookingReq := &CreateBookingRequest{

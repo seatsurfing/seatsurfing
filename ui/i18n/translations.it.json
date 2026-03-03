@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Nessun provider di autenticazione per il vostro utente.",
   "errorPickArea": "Seleziona un'area.",
   "errorSave": "Errore duramte il salvataggio. Riprovate più tardi.",
+  "errorUserRequired": "Seleziona un utente.",
   "errorSubscriptionLimit": "You've reached the maximum number of users.",
   "errorTooManyConcurrent": "Limite di capienza raggiunto nell'area selezionata.",
   "errorTryAgain": "Something went wrong. Please try again later.",

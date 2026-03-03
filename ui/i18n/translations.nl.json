@@ -151,6 +151,7 @@
   "errorNoAuthProviders": "Geen authenticatieproviders voor uw gebruiker.",
   "errorPickArea": "Kies een gebied.",
   "errorSave": "Fout bij het opslaan. Probeer het later opnieuw.",
+  "errorUserRequired": "Selecteer een gebruiker.",
   "errorSubscriptionLimit": "U heeft het maximale aantal gebruikers bereikt.",
   "errorTooManyConcurrent": "Capaciteitslimiet bereikt in geselecteerd gebied.",
   "errorTryAgain": "Er is iets fout gegaan. Probeer het later opnieuw.",

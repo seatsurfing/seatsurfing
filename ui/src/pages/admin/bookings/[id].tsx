@@ -375,6 +375,7 @@ class EditBooking extends React.Component<Props, State> {
     this.setState({
       error: false,
       saved: false,
+      canSearchHint: "",
     });
 
     if (this.dailyBasisBooking) {
@@ -436,6 +437,13 @@ class EditBooking extends React.Component<Props, State> {
           });
         });
     } else {
+      if (!this.state.selectedUserEmail) {
+        this.setState({
+          canSearchHint: "errorUserRequired",
+          saved: false,
+        });
+        return;
+      }
       this.entity.enter = this.state.enter;
       this.entity.leave = this.state.leave;
       this.entity.space.id = this.state.selectedSpaceId;
