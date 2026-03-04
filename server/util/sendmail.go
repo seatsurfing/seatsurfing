@@ -358,7 +358,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		fmt.Fprintf(buf, "\n--%s\n", boundary)
 		buf.WriteString("Content-Type: text/html; charset=utf-8\n")
 		buf.WriteString("Content-Transfer-Encoding: base64\n")
-		fmt.Fprintf(buf, "\n%s\n", base64.StdEncoding.EncodeToString([]byte(body)))
+		fmt.Fprintf(buf, "\n%s\n", mimeBase64([]byte(body)))
 
 		// Write attachments
 		for _, attachment := range attachments {
@@ -369,7 +369,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 				fmt.Fprintf(buf, "Content-ID: <%s>\n", attachment.ContentID)
 			}
 			buf.WriteString("Content-Transfer-Encoding: base64\n")
-			fmt.Fprintf(buf, "\n%s\n", base64.StdEncoding.EncodeToString(attachment.Data))
+			fmt.Fprintf(buf, "\n%s\n", mimeBase64(attachment.Data))
 		}
 		fmt.Fprintf(buf, "--%s--\n", boundary)
 
@@ -469,6 +469,21 @@ func ValidateEmailSubject(subject string) error {
 	}
 
 	return nil
+}
+
+// mimeBase64 encodes data as base64 wrapped at 76 characters per line (RFC 2045).
+func mimeBase64(data []byte) string {
+	encoded := base64.StdEncoding.EncodeToString(data)
+	var sb strings.Builder
+	for i := 0; i < len(encoded); i += 76 {
+		end := i + 76
+		if end > len(encoded) {
+			end = len(encoded)
+		}
+		sb.WriteString(encoded[i:end])
+		sb.WriteByte('\n')
+	}
+	return sb.String()
 }
 
 // SanitizeEmailAddress removes dangerous characters from email address
