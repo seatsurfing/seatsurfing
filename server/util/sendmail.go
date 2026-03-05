@@ -358,7 +358,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		fmt.Fprintf(buf, "\n--%s\n", boundary)
 		buf.WriteString("Content-Type: text/html; charset=utf-8\n")
 		buf.WriteString("Content-Transfer-Encoding: base64\n")
-		fmt.Fprintf(buf, "\n%s\n", mimeBase64([]byte(body)))
+		fmt.Fprintf(buf, "\n%s", mimeBase64([]byte(body)))
 
 		// Write attachments
 		for _, attachment := range attachments {
@@ -369,7 +369,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 				fmt.Fprintf(buf, "Content-ID: <%s>\n", attachment.ContentID)
 			}
 			buf.WriteString("Content-Transfer-Encoding: base64\n")
-			fmt.Fprintf(buf, "\n%s\n", mimeBase64(attachment.Data))
+			fmt.Fprintf(buf, "\n%s", mimeBase64(attachment.Data))
 		}
 		fmt.Fprintf(buf, "--%s--\n", boundary)
 
