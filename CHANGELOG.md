@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.64.2](https://github.com/seatsurfing/seatsurfing/compare/v1.64.1...v1.64.2) (2026-03-06)
+
+
+### Bug Fixes
+
+* **deps:** bump react-icons from 5.5.0 to 5.6.0 in /ui in the production-dependencies group across 1 directory ([#1783](https://github.com/seatsurfing/seatsurfing/issues/1783)) ([3625ebc](https://github.com/seatsurfing/seatsurfing/commit/3625ebc238a3086e756713df0ee75a95fcf5623f))
+* lines too long error when sending emails via SMTP ([#1786](https://github.com/seatsurfing/seatsurfing/issues/1786)) ([631f394](https://github.com/seatsurfing/seatsurfing/commit/631f3949855bfcde80988a18f81411ea6d804f76))
+
 ## [1.64.1](https://github.com/seatsurfing/seatsurfing/compare/v1.64.0...v1.64.1) (2026-03-03)
 
 
