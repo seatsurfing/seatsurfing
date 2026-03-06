@@ -2,16 +2,16 @@
   "subject": "Zuruecksetzen Ihres Seatsurfing-Kennworts",
   "headline": "Hallo {{recipientName}},",
   "paragraphs": [
-    "wir haben eine Anfrage zum Zurücksetzen Ihres Kennworts erhalten."
+    "wir haben eine Anfrage zum Zurücksetzen deines Kennworts erhalten."
   ],
   "buttons": [
     {
-      "paragraph": "Wenn diese Anfrage von Ihnen stammt, können Sie Ihr Kennwort hier ändern:",
+      "paragraph": "Wenn diese Anfrage von dir stammt, kannst du dein Kennwort hier ändern:",
       "label": "Kennwort ändern",
       "url": "{{orgDomain}}ui/resetpw/{{confirmID}}/"
     }
   ],
   "finalParagraphs": [
-    "Wenn Sie keine Anfrage zur Änderung Ihres Kennworts initiiert haben, können Sie diese Mail gefahrlos ignorieren. Wir werden Ihr Kennwort nicht ändern, wenn Sie den oben stehenden Link nicht anklicken."
+    "Wenn du keine Anfrage zur Änderung deines Kennworts initiiert hast, kannst du diese Mail gefahrlos ignorieren. Wir werden dein Kennwort nicht ändern, wenn du den oben stehenden Link nicht anklickst."
   ]
 }
