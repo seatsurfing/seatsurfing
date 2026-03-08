@@ -2,7 +2,7 @@
   "subject": "Deine Seatsurfing Buchung",
   "headline": "Hallo {{recipientName}},",
   "paragraphs": [
-    "Deine Buchung wurde bestätigt.",
+    "deine Buchung wurde bestätigt.",
     "Datum: {{date}}",
     "Bereich: {{areaName}}",
     "Platz: {{spaceName}}",

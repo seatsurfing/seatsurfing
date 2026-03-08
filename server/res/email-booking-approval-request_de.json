@@ -2,7 +2,7 @@
   "subject": "Neue Buchungsanfrage zur Genehmigung",
   "headline": "Hallo {{recipientName}},",
   "paragraphs": [
-    "Eine neue Buchung benötigt deine Genehmigung.",
+    "eine neue Buchung benötigt deine Genehmigung.",
     "Benutzer: {{userEmail}}",
     "Datum: {{date}}",
     "Bereich: {{areaName}}",
