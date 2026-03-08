@@ -27,7 +27,7 @@ jobs:
       - name: Set version env
         run: echo "CI_VERSION=$(cat version.txt | awk NF)" >> $GITHUB_ENV
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Cache Docker layers
