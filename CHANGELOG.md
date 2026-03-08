@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.66.0](https://github.com/seatsurfing/seatsurfing/compare/v1.65.0...v1.66.0) (2026-03-08)
+
+
+### Features
+
+* prevent recurring password reset requests ([#1799](https://github.com/seatsurfing/seatsurfing/issues/1799)) ([ad49f28](https://github.com/seatsurfing/seatsurfing/commit/ad49f28e370f1993466987185b3bb4fe8e44af2d))
+
 ## [1.65.0](https://github.com/seatsurfing/seatsurfing/compare/v1.64.2...v1.65.0) (2026-03-08)
 
 
