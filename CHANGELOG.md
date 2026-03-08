@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.65.0](https://github.com/seatsurfing/seatsurfing/compare/v1.64.2...v1.65.0) (2026-03-08)
+
+
+### Features
+
+* show number of search results ([#1797](https://github.com/seatsurfing/seatsurfing/issues/1797)) ([0edf403](https://github.com/seatsurfing/seatsurfing/commit/0edf40366592454bfb58f2f9b88658c906bc7334))
+
+
+### Bug Fixes
+
+* **deps:** bump library/golang from 1.26.0-bookworm to 1.26.1-bookworm ([#1789](https://github.com/seatsurfing/seatsurfing/issues/1789)) ([536883d](https://github.com/seatsurfing/seatsurfing/commit/536883dee0a6d764dc2a0f5cf6f5f7f4fc696cfa))
+* minor typographic fixes ([#1798](https://github.com/seatsurfing/seatsurfing/issues/1798)) ([0c037a4](https://github.com/seatsurfing/seatsurfing/commit/0c037a44d9677c731c33778c454fe1c54accdeb8))
+* optimize search query string ([#1796](https://github.com/seatsurfing/seatsurfing/issues/1796)) ([61f1f1e](https://github.com/seatsurfing/seatsurfing/commit/61f1f1e35c640aa18b921f2beb1d4ffc3cd1850f))
+* some minor fixes for German e-mail templates ([#1788](https://github.com/seatsurfing/seatsurfing/issues/1788)) ([1c06feb](https://github.com/seatsurfing/seatsurfing/commit/1c06feb9279a3804cbab40c8b82ba564e9777005))
+
 ## [1.64.2](https://github.com/seatsurfing/seatsurfing/compare/v1.64.1...v1.64.2) (2026-03-06)
 
 
