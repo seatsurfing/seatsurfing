@@ -59,16 +59,23 @@ export default class Search {
     keyword: string,
     options: SearchOptions,
   ): Promise<Search> {
-    let params = new URLSearchParams();
+    const params = new URLSearchParams();
     params.append("query", keyword);
-    params.append("includeUsers", options.includeUsers ? "1" : "0");
-    params.append("includeLocations", options.includeLocations ? "1" : "0");
-    params.append("includeSpaces", options.includeSpaces ? "1" : "0");
-    params.append("includeGroups", options.includeGroups ? "1" : "0");
-    return Ajax.get("/search/?" + params.toString()).then((result) => {
-      let e: Search = new Search();
-      e.deserialize(result.json);
-      return e;
-    });
+    if (options.includeUsers) {
+      params.append("includeUsers", "1");
+    }
+    if (options.includeLocations) {
+      params.append("includeLocations", "1");
+    }
+    if (options.includeSpaces) {
+      params.append("includeSpaces", "1");
+    }
+    if (options.includeGroups) {
+      params.append("includeGroups", "1");
+    }
+    const result = await Ajax.get("/search/?" + params.toString());
+    const e: Search = new Search();
+    e.deserialize(result.json);
+    return e;
   }
 }
