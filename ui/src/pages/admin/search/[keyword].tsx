@@ -9,6 +9,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Search, { SearchOptions } from "@/types/Search";
 import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
+import * as Navigation from "@/util/Navigation";
 
 interface State {
   loading: boolean;
@@ -45,18 +46,17 @@ class SearchResult extends React.Component<Props, State> {
     }
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const { keyword } = this.props.router.query;
     if (typeof keyword === "string") {
-      let options = new SearchOptions();
+      const options = new SearchOptions();
       options.includeUsers = true;
       options.includeLocations = true;
       options.includeSpaces = true;
       options.includeGroups = true;
-      Search.search(keyword ? keyword : "", options).then((res) => {
-        this.data = res;
-        this.setState({ loading: false });
-      });
+      const result = await Search.search(keyword ? keyword : "", options);
+      this.data = result;
+      this.setState({ loading: false });
     } else {
       this.setState({ loading: false });
     }
@@ -67,8 +67,8 @@ class SearchResult extends React.Component<Props, State> {
   };
 
   renderUserResults = () => {
-    let items = this.data.users.map((user) => {
-      let link = "/admin/users/" + user.id;
+    const items = this.data.users.map((user) => {
+      const link = Navigation.adminUserDetails(user.id);
       return (
         <ListGroup.Item key={user.id}>
           <Link href={link}>{user.email}</Link>
@@ -85,7 +85,9 @@ class SearchResult extends React.Component<Props, State> {
     return (
       <Col sm="4" className="mb-4">
         <Card>
-          <Card.Header>{this.props.t("users")}</Card.Header>
+          <Card.Header>
+            {this.props.t("users")} ({this.data.users.length})
+          </Card.Header>
           <ListGroup variant="flush">{items}</ListGroup>
         </Card>
       </Col>
@@ -93,8 +95,8 @@ class SearchResult extends React.Component<Props, State> {
   };
 
   renderLocationResults = () => {
-    let items = this.data.locations.map((location) => {
-      let link = "/admin/locations/" + location.id;
+    const items = this.data.locations.map((location) => {
+      const link = Navigation.adminLocationDetails(location.id);
       return (
         <ListGroup.Item key={location.id}>
           <Link href={link}>{location.name}</Link>
@@ -111,7 +113,9 @@ class SearchResult extends React.Component<Props, State> {
     return (
       <Col sm="4" className="mb-4">
         <Card>
-          <Card.Header>{this.props.t("areas")}</Card.Header>
+          <Card.Header>
+            {this.props.t("areas")} ({this.data.locations.length})
+          </Card.Header>
           <ListGroup variant="flush">{items}</ListGroup>
         </Card>
       </Col>
@@ -119,8 +123,8 @@ class SearchResult extends React.Component<Props, State> {
   };
 
   renderSpaceResults = () => {
-    let items = this.data.spaces.map((space) => {
-      let link = "/admin/locations/" + space.locationId;
+    const items = this.data.spaces.map((space) => {
+      const link = Navigation.adminLocationDetails(space.locationId);
       return (
         <ListGroup.Item key={space.id}>
           <Link href={link}>{space.name}</Link>
@@ -137,7 +141,9 @@ class SearchResult extends React.Component<Props, State> {
     return (
       <Col sm="4" className="mb-4">
         <Card>
-          <Card.Header>{this.props.t("spaces")}</Card.Header>
+          <Card.Header>
+            {this.props.t("spaces")} ({this.data.spaces.length})
+          </Card.Header>
           <ListGroup variant="flush">{items}</ListGroup>
         </Card>
       </Col>
