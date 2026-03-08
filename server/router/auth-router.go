@@ -318,6 +318,11 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		SendUpdated(w)
 		return
 	}
+	existingState, _ := GetAuthStateRepository().GetActiveByPayloadAndType(user.ID, AuthResetPasswordRequest)
+	if existingState != nil {
+		SendTooManyRequests(w)
+		return
+	}
 	authState := &AuthState{
 		AuthProviderID: GetSettingsRepository().GetNullUUID(),
 		Expiry:         time.Now().Add(time.Hour * 1),
