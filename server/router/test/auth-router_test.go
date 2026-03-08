@@ -1052,3 +1052,29 @@ func TestAuthOAuthLoginValidType(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
 }
+
+func TestInitPasswordResetDuplicateReturns429(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	GetUserRepository().Update(user)
+
+	payload := "{\"organizationId\": \"" + org.ID + "\", \"email\": \"" + user.Email + "\"}"
+
+	// First request: should succeed (204)
+	req := NewHTTPRequest("POST", "/auth/initpwreset", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Second request: should also succeed (204) — only one active state so far
+	req = NewHTTPRequest("POST", "/auth/initpwreset", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Third request while two AuthStates are still active: should return 429
+	req = NewHTTPRequest("POST", "/auth/initpwreset", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusTooManyRequests, res.Code)
+}

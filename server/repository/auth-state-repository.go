@@ -88,6 +88,27 @@ func (r *AuthStateRepository) Delete(e *AuthState) error {
 	return err
 }
 
+func (r *AuthStateRepository) GetActiveByPayloadAndType(payload string, authStateType AuthStateType) ([]*AuthState, error) {
+	var result []*AuthState
+	now := time.Now()
+	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
+		"FROM auth_states "+
+		"WHERE payload = $1 AND auth_state_type = $2 AND expiry > $3",
+		payload, authStateType, now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &AuthState{}
+		if err := rows.Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload); err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *AuthStateRepository) DeleteExpired() error {
 	now := time.Now()
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_states WHERE expiry < $1", now)
