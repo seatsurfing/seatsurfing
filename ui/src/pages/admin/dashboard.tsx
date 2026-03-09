@@ -47,20 +47,24 @@ class Dashboard extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    let promises = [this.loadItems(), this.getUserInfo(), this.checkUpdates()];
+    const promises = [
+      this.loadItems(),
+      this.getUserInfo(),
+      this.checkUpdates(),
+    ];
     Promise.all(promises)
       .then(() => {
         this.setState({ loading: false });
       })
-      .catch((e) => {
+      .catch(() => {
         RedirectUtil.toLogin(this.props.router);
         return;
       });
   };
 
   checkUpdates = async (): Promise<void> => {
-    let self = this;
-    return new Promise<void>(function (resolve, reject) {
+    const self = this;
+    return new Promise<void>(function (resolve) {
       if (RuntimeConfig.INFOS.cloudHosted) {
         resolve();
         return;
@@ -88,7 +92,7 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   getUserInfo = async (): Promise<void> => {
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       User.getSelf()
         .then((user) => {
@@ -117,12 +121,12 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
-    let redirect = link ? link : "";
+    const redirect = link ?? "";
     return (
       <Col sm="2">
         <Card
           className="dashboard-card-clickable"
-          onClick={() => this.setState({ redirect: redirect })}
+          onClick={() => this.setState({ redirect })}
         >
           <Card.Body>
             <Card.Title className="dashboard-number text-center">
@@ -141,7 +145,7 @@ class Dashboard extends React.Component<Props, State> {
     if (!num) {
       num = 0;
     }
-    const label = title + ": " + num + " %";
+    const label = `${title}: ${num} %`;
     let variant = "success";
     if (num >= 80) {
       variant = "danger";
@@ -195,13 +199,10 @@ class Dashboard extends React.Component<Props, State> {
       );
     }
 
-    let cloudUpgradeHint = <></>;
-    if (
+    const cloudUpgradeHint =
       RuntimeConfig.INFOS.orgAdmin &&
       RuntimeConfig.INFOS.cloudHosted &&
-      !RuntimeConfig.INFOS.subscriptionActive
-    ) {
-      cloudUpgradeHint = (
+      !RuntimeConfig.INFOS.subscriptionActive ? (
         <Row className="mb-4">
           <Col sm="8">
             <Alert variant="info">
@@ -220,8 +221,9 @@ class Dashboard extends React.Component<Props, State> {
             </Alert>
           </Col>
         </Row>
+      ) : (
+        <></>
       );
-    }
 
     const yesterdayDateString = DateUtil.getDateString(-1);
 
