@@ -151,24 +151,35 @@ export default class Booking extends Entity {
     start: Date,
     end: Date,
     user: string,
+    location: string,
   ): Promise<Booking[]> {
-    let params = `start=${encodeURIComponent(Formatting.convertToFakeUTCDate(start).toISOString())}&end=${encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString())}`;
-    if (user) {
-      params += `&user=${encodeURIComponent(user)}`;
-    }
-    return Ajax.get(`/booking/filter/?${params}`).then((result) => {
-      const list: Booking[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Booking = new Booking();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
-    });
+    const queryParams = new URLSearchParams();
+    queryParams.set(
+      "start",
+      Formatting.convertToFakeUTCDate(start).toISOString(),
+    );
+    queryParams.set("end", Formatting.convertToFakeUTCDate(end).toISOString());
+    if (user) queryParams.set("user", user);
+    if (location) queryParams.set("location", location);
+    return Ajax.get(`/booking/filter/?${queryParams.toString()}`).then(
+      (result) => {
+        const list: Booking[] = [];
+        (result.json as []).forEach((item) => {
+          const e: Booking = new Booking();
+          e.deserialize(item);
+          list.push(e);
+        });
+        return list;
+      },
+    );
   }
 
-  static async listCurrent(user: string): Promise<Booking[]> {
-    const params = user ? `?user=${encodeURIComponent(user)}` : "";
+  static async listCurrent(user: string, location: string): Promise<Booking[]> {
+    const queryParams = new URLSearchParams();
+    if (user) queryParams.set("user", user);
+    if (location) queryParams.set("location", location);
+    const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
+
     return Ajax.get(`/booking/current/${params}`).then((result) => {
       const list: Booking[] = [];
       (result.json as []).forEach((item) => {

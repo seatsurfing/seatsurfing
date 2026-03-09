@@ -281,7 +281,16 @@ func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, filterUserEmail)
+	filterLocationId := r.URL.Query().Get("location")
+	if filterLocationId != "" {
+		filterLocation, _ := GetLocationRepository().GetOne(filterLocationId)
+		if filterLocation == nil || filterLocation.OrganizationID != user.OrganizationID {
+			SendBadRequest(w)
+			return
+		}
+	}
+
+	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, filterUserEmail, filterLocationId)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -311,7 +320,16 @@ func (router *BookingRouter) getCurrent(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, filterUserEmail)
+	filterLocationId := r.URL.Query().Get("location")
+	if filterLocationId != "" {
+		filterLocation, _ := GetLocationRepository().GetOne(filterLocationId)
+		if filterLocation == nil || filterLocation.OrganizationID != user.OrganizationID {
+			SendBadRequest(w)
+			return
+		}
+	}
+
+	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, filterUserEmail, filterLocationId)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)

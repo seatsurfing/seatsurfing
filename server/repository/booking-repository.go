@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -206,7 +207,7 @@ func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID stri
 	return e, nil
 }
 
-func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string) ([]*BookingDetails, error) {
+func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -219,8 +220,12 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 		"WHERE locations.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3"
 	args := []any{organizationID, startTime, endTime}
 	if userEmail != "" {
-		query += " AND users.email = $4"
+		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
 		args = append(args, userEmail)
+	}
+	if locationId != "" {
+		query += fmt.Sprintf(" AND locations.id = $%d", len(args)+1)
+		args = append(args, locationId)
 	}
 	query += " ORDER BY enter_time"
 	rows, err := GetDatabase().DB().Query(query, args...)
@@ -238,7 +243,8 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 	}
 	return result, nil
 }
-func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail string) ([]*BookingDetails, error) {
+
+func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -251,8 +257,12 @@ func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail 
 		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()"
 	args := []interface{}{organizationID}
 	if userEmail != "" {
-		query += " AND users.email = $2"
+		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
 		args = append(args, userEmail)
+	}
+	if locationId != "" {
+		query += fmt.Sprintf(" AND locations.id = $%d", len(args)+1)
+		args = append(args, locationId)
 	}
 	query += " ORDER BY enter_time"
 
