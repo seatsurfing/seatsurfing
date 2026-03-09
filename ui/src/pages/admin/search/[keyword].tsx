@@ -67,146 +67,73 @@ class SearchResult extends React.Component<Props, State> {
     return s;
   };
 
-  renderUserResults = () => {
-    const items = this.data.users.map((user) => {
-      const link = Navigation.adminUserDetails(user.id);
+  renderResults = <T extends { id: string }>(
+    items: T[],
+    titleKey: string,
+    getItemData: (item: T) => { text: string; link: string },
+  ) => {
+    const listItems = items.map((item) => {
+      const { text, link } = getItemData(item);
       return (
         <ListGroup.Item
-          key={user.id}
+          key={item.id}
           action
           as={Link}
           href={link}
           className="link-primary text-decoration-underline active-transparent"
         >
-          {user.email}{" "}
-          {RendererUtils.preAndSuffixIfDefined(
-            RendererUtils.fullname(user.firstname, user.lastname),
-            "(",
-            ")",
-          )}
+          {text}
         </ListGroup.Item>
       );
     });
-    if (items.length === 0) {
-      items.push(
-        <ListGroup.Item key="users-no-results">
+
+    if (listItems.length === 0) {
+      listItems.push(
+        <ListGroup.Item key={`${titleKey}-no-results`}>
           {this.props.t("noResults")}
         </ListGroup.Item>,
       );
     }
+
     return (
       <Col sm="3" className="mb-4">
         <Card>
           <Card.Header>
-            {this.props.t("users")} ({this.data.users.length})
+            {this.props.t(titleKey)} ({items.length})
           </Card.Header>
-          <ListGroup variant="flush">{items}</ListGroup>
+          <ListGroup variant="flush">{listItems}</ListGroup>
         </Card>
       </Col>
     );
   };
 
-  renderGroupResults = () => {
-    const items = this.data.groups.map((group) => {
-      const link = Navigation.adminGroupDetails(group.id);
-      return (
-        <ListGroup.Item
-          key={group.id}
-          action
-          as={Link}
-          href={link}
-          className="link-primary text-decoration-underline active-transparent"
-        >
-          {group.name}
-        </ListGroup.Item>
-      );
-    });
-    if (items.length === 0) {
-      items.push(
-        <ListGroup.Item key="groups-no-results">
-          {this.props.t("noResults")}
-        </ListGroup.Item>,
-      );
-    }
-    return (
-      <Col sm="3" className="mb-4">
-        <Card>
-          <Card.Header>
-            {this.props.t("groups")} ({this.data.groups.length})
-          </Card.Header>
-          <ListGroup variant="flush">{items}</ListGroup>
-        </Card>
-      </Col>
-    );
-  };
+  renderUserResults = () =>
+    this.renderResults(this.data.users, "users", (user) => ({
+      text: `${user.email} ${RendererUtils.preAndSuffixIfDefined(
+        RendererUtils.fullname(user.firstname, user.lastname),
+        "(",
+        ")",
+      )}`.trim(),
+      link: Navigation.adminUserDetails(user.id),
+    }));
 
-  renderLocationResults = () => {
-    const items = this.data.locations.map((location) => {
-      const link = Navigation.adminLocationDetails(location.id);
-      return (
-        <ListGroup.Item
-          key={location.id}
-          action
-          as={Link}
-          href={link}
-          className="link-primary text-decoration-underline active-transparent"
-        >
-          {location.name}
-        </ListGroup.Item>
-      );
-    });
-    if (items.length === 0) {
-      items.push(
-        <ListGroup.Item key="locations-no-results">
-          {this.props.t("noResults")}
-        </ListGroup.Item>,
-      );
-    }
-    return (
-      <Col sm="3" className="mb-4">
-        <Card>
-          <Card.Header>
-            {this.props.t("areas")} ({this.data.locations.length})
-          </Card.Header>
-          <ListGroup variant="flush">{items}</ListGroup>
-        </Card>
-      </Col>
-    );
-  };
+  renderGroupResults = () =>
+    this.renderResults(this.data.groups, "groups", (group) => ({
+      text: group.name,
+      link: Navigation.adminGroupDetails(group.id),
+    }));
 
-  renderSpaceResults = () => {
-    const items = this.data.spaces.map((space) => {
-      const link = Navigation.adminLocationDetails(space.locationId);
-      return (
-        <ListGroup.Item
-          key={space.id}
-          action
-          as={Link}
-          href={link}
-          className="link-primary text-decoration-underline active-transparent"
-        >
-          {space.location.name}
-        </ListGroup.Item>
-      );
-    });
-    if (items.length === 0) {
-      items.push(
-        <ListGroup.Item key="spaces-no-results">
-          {this.props.t("noResults")}
-        </ListGroup.Item>,
-      );
-    }
-    return (
-      <Col sm="3" className="mb-4">
-        <Card>
-          <Card.Header>
-            {this.props.t("spaces")} ({this.data.spaces.length})
-          </Card.Header>
-          <ListGroup variant="flush">{items}</ListGroup>
-        </Card>
-      </Col>
-    );
-  };
+  renderLocationResults = () =>
+    this.renderResults(this.data.locations, "areas", (location) => ({
+      text: location.name,
+      link: Navigation.adminLocationDetails(location.id),
+    }));
+
+  renderSpaceResults = () =>
+    this.renderResults(this.data.spaces, "spaces", (space) => ({
+      text: space.name,
+      link: Navigation.adminLocationDetails(space.locationId),
+    }));
 
   render() {
     const { keyword } = this.props.router.query;
