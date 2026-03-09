@@ -92,12 +92,7 @@ func (router *GroupRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.OrganizationID = e.OrganizationID
 
 	existingGroup, err := GetGroupRepository().GetByName(e.OrganizationID, e.Name)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if existingGroup != nil {
+	if err == nil && existingGroup != nil && existingGroup.ID != e.ID {
 		SendAlreadyExistsCode(w, ResponseCodeGroupAlreadyExists)
 		return
 	}
@@ -150,12 +145,7 @@ func (router *GroupRouter) create(w http.ResponseWriter, r *http.Request) {
 	e.OrganizationID = user.OrganizationID
 
 	existingGroup, err := GetGroupRepository().GetByName(e.OrganizationID, e.Name)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if existingGroup != nil {
+	if err == nil && existingGroup != nil {
 		SendAlreadyExistsCode(w, ResponseCodeGroupAlreadyExists)
 		return
 	}

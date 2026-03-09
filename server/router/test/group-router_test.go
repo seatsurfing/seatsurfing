@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -53,12 +54,19 @@ func TestGroupsCRUD(t *testing.T) {
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
-	// 1. Create
+	// 1. A) Create
 	payload := `{"name": "G11"}`
 	req := NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
+
+	// 1. B) Try to create with same name
+	payload = `{"name": "G11"}`
+	req = NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeGroupAlreadyExists), res.Header().Get("X-Error-Code"))
 
 	// 2. Read
 	req = NewHTTPRequest("GET", "/group/"+id, loginResponse.UserID, nil)
