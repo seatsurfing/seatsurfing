@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import Formatting from "./Formatting";
+import RendererUtils from "./RendererUtils";
 
-describe("Formatting", () => {
+describe("RendererUtils", () => {
   describe("decodeHtmlEntities", () => {
     it("should replace &#x2F; by /", () => {
-      expect(Formatting.decodeHtmlEntities("&#x2F;")).toBe("/");
+      expect(RendererUtils.decodeHtmlEntities("&#x2F;")).toBe("/");
     });
   });
 });
