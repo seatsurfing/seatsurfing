@@ -218,3 +218,9 @@ form#filter-locations-form .row {
     left: 10px;
   }
 }
+
+.active-transparent:active,
+.active-transparent:focus {
+  background-color: transparent !important;
+  color: #0d6efd !important;
+}

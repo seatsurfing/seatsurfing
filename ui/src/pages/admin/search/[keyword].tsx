@@ -10,6 +10,7 @@ import Search, { SearchOptions } from "@/types/Search";
 import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
 import * as Navigation from "@/util/Navigation";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -70,8 +71,19 @@ class SearchResult extends React.Component<Props, State> {
     const items = this.data.users.map((user) => {
       const link = Navigation.adminUserDetails(user.id);
       return (
-        <ListGroup.Item key={user.id}>
-          <Link href={link}>{user.email}</Link>
+        <ListGroup.Item
+          key={user.id}
+          action
+          as={Link}
+          href={link}
+          className="link-primary text-decoration-underline active-transparent"
+        >
+          {user.email}{" "}
+          {RendererUtils.preAndSuffixIfDefined(
+            RendererUtils.fullname(user.firstname, user.lastname),
+            "(",
+            ")",
+          )}
         </ListGroup.Item>
       );
     });
@@ -83,10 +95,44 @@ class SearchResult extends React.Component<Props, State> {
       );
     }
     return (
-      <Col sm="4" className="mb-4">
+      <Col sm="3" className="mb-4">
         <Card>
           <Card.Header>
             {this.props.t("users")} ({this.data.users.length})
+          </Card.Header>
+          <ListGroup variant="flush">{items}</ListGroup>
+        </Card>
+      </Col>
+    );
+  };
+
+  renderGroupResults = () => {
+    const items = this.data.groups.map((group) => {
+      const link = Navigation.adminGroupDetails(group.id);
+      return (
+        <ListGroup.Item
+          key={group.id}
+          action
+          as={Link}
+          href={link}
+          className="link-primary text-decoration-underline active-transparent"
+        >
+          {group.name}
+        </ListGroup.Item>
+      );
+    });
+    if (items.length === 0) {
+      items.push(
+        <ListGroup.Item key="users-no-results">
+          {this.props.t("noResults")}
+        </ListGroup.Item>,
+      );
+    }
+    return (
+      <Col sm="3" className="mb-4">
+        <Card>
+          <Card.Header>
+            {this.props.t("groups")} ({this.data.groups.length})
           </Card.Header>
           <ListGroup variant="flush">{items}</ListGroup>
         </Card>
@@ -98,8 +144,14 @@ class SearchResult extends React.Component<Props, State> {
     const items = this.data.locations.map((location) => {
       const link = Navigation.adminLocationDetails(location.id);
       return (
-        <ListGroup.Item key={location.id}>
-          <Link href={link}>{location.name}</Link>
+        <ListGroup.Item
+          key={location.id}
+          action
+          as={Link}
+          href={link}
+          className="link-primary text-decoration-underline active-transparent"
+        >
+          {location.name}
         </ListGroup.Item>
       );
     });
@@ -111,7 +163,7 @@ class SearchResult extends React.Component<Props, State> {
       );
     }
     return (
-      <Col sm="4" className="mb-4">
+      <Col sm="3" className="mb-4">
         <Card>
           <Card.Header>
             {this.props.t("areas")} ({this.data.locations.length})
@@ -126,8 +178,14 @@ class SearchResult extends React.Component<Props, State> {
     const items = this.data.spaces.map((space) => {
       const link = Navigation.adminLocationDetails(space.locationId);
       return (
-        <ListGroup.Item key={space.id}>
-          <Link href={link}>{space.name}</Link>
+        <ListGroup.Item
+          key={space.id}
+          action
+          as={Link}
+          href={link}
+          className="link-primary text-decoration-underline active-transparent"
+        >
+          {space.location.name}
         </ListGroup.Item>
       );
     });
@@ -139,7 +197,7 @@ class SearchResult extends React.Component<Props, State> {
       );
     }
     return (
-      <Col sm="4" className="mb-4">
+      <Col sm="3" className="mb-4">
         <Card>
           <Card.Header>
             {this.props.t("spaces")} ({this.data.spaces.length})
@@ -173,6 +231,7 @@ class SearchResult extends React.Component<Props, State> {
       <FullLayout headline={headline}>
         <Row>
           {this.renderUserResults()}
+          {this.renderGroupResults()}
           {this.renderLocationResults()}
           {this.renderSpaceResults()}
         </Row>
