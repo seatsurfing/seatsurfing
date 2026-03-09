@@ -123,7 +123,7 @@ class SearchResult extends React.Component<Props, State> {
     });
     if (items.length === 0) {
       items.push(
-        <ListGroup.Item key="users-no-results">
+        <ListGroup.Item key="groups-no-results">
           {this.props.t("noResults")}
         </ListGroup.Item>,
       );
