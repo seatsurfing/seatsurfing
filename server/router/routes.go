@@ -49,6 +49,8 @@ var (
 	ResponseCodeBookingInPast                    = 1011
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
+
+	ResponseCodeGroupAlreadyExists = 4001
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {

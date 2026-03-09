@@ -90,6 +90,18 @@ func (router *GroupRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
+
+	existingGroup, err := GetGroupRepository().GetByName(e.OrganizationID, e.Name)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if existingGroup != nil {
+		SendAlreadyExistsCode(w, ResponseCodeGroupAlreadyExists)
+		return
+	}
+
 	if err := GetGroupRepository().Update(eNew); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -136,6 +148,18 @@ func (router *GroupRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	e := router.copyFromRestModel(&m)
 	e.OrganizationID = user.OrganizationID
+
+	existingGroup, err := GetGroupRepository().GetByName(e.OrganizationID, e.Name)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if existingGroup != nil {
+		SendAlreadyExistsCode(w, ResponseCodeGroupAlreadyExists)
+		return
+	}
+
 	if err := GetGroupRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
