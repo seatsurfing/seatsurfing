@@ -120,8 +120,9 @@ class SideBar extends React.Component<Props, State> {
             eventKey="/admin/organizations"
             href="/admin/organizations"
           >
-            <IconBox className="feather" />{" "}
+            <IconBox className="feather" />
             <span className="d-none d-md-inline">
+              {" "}
               {this.props.t("organizations")}
             </span>
           </Nav.Link>
@@ -134,8 +135,9 @@ class SideBar extends React.Component<Props, State> {
         <>
           <li className="nav-item">
             <Nav.Link as={Link} eventKey="/admin/users" href="/admin/users">
-              <IconUsers className="feather" />{" "}
+              <IconUsers className="feather" />
               <span className="d-none d-md-inline">
+                {" "}
                 {this.props.t("users")}
               </span>
             </Nav.Link>
@@ -150,8 +152,9 @@ class SideBar extends React.Component<Props, State> {
                 !RuntimeConfig.INFOS.cloudHosted
               }
             >
-              <IconGroups className="feather" />{" "}
+              <IconGroups className="feather" />
               <span className="d-none d-md-inline">
+                {" "}
                 {this.props.t("groups")}
               </span>
               <PremiumFeatureIcon className="d-none d-md-inline" />
@@ -163,8 +166,9 @@ class SideBar extends React.Component<Props, State> {
               eventKey="/admin/settings"
               href="/admin/settings"
             >
-              <IconSettings className="feather" />{" "}
+              <IconSettings className="feather" />
               <span className="d-none d-md-inline">
+                {" "}
                 {this.props.t("settings")}
               </span>
             </Nav.Link>
@@ -189,8 +193,8 @@ class SideBar extends React.Component<Props, State> {
                   eventKey={"/admin/plugin/" + item.id}
                   href={"/admin/plugin/" + item.id}
                 >
-                  <PluginIcon className="feather" />{" "}
-                  <span className="d-none d-md-inline">{item.title}</span>
+                  <PluginIcon className="feather" />
+                  <span className="d-none d-md-inline"> {item.title}</span>
                 </Nav.Link>
               </li>
             );
@@ -212,8 +216,9 @@ class SideBar extends React.Component<Props, State> {
                 eventKey="/admin/dashboard"
                 href="/admin/dashboard"
               >
-                <IconClipboard className="feather" />{" "}
+                <IconClipboard className="feather" />
                 <span className="d-none d-md-inline">
+                  {" "}
                   {this.props.t("dashboard")}
                 </span>
               </Nav.Link>
@@ -224,8 +229,9 @@ class SideBar extends React.Component<Props, State> {
                 eventKey="/admin/locations"
                 href="/admin/locations"
               >
-                <IconMap className="feather" />{" "}
+                <IconMap className="feather" />
                 <span className="d-none d-md-inline">
+                  {" "}
                   {this.props.t("areas")}
                 </span>
               </Nav.Link>
@@ -236,8 +242,9 @@ class SideBar extends React.Component<Props, State> {
                 eventKey="/admin/bookings"
                 href="/admin/bookings"
               >
-                <IconBook className="feather" />{" "}
+                <IconBook className="feather" />
                 <span className="d-none d-md-inline">
+                  {" "}
                   {this.props.t("bookings")}
                 </span>
               </Nav.Link>
@@ -302,8 +309,8 @@ class SideBar extends React.Component<Props, State> {
                     eventKey={"/admin/plugin/" + item.id}
                     href={"/admin/plugin/" + item.id}
                   >
-                    <PluginIcon className="feather" />{" "}
-                    <span className="d-none d-md-inline">{item.title}</span>
+                    <PluginIcon className="feather" />
+                    <span className="d-none d-md-inline"> {item.title}</span>
                   </Nav.Link>
                 </li>
               );
@@ -312,8 +319,9 @@ class SideBar extends React.Component<Props, State> {
             {orgItem}
             <li className="nav-item">
               <Nav.Link as={Link} href="/search/">
-                <IconHome className="feather" />{" "}
+                <IconHome className="feather" />
                 <span className="d-none d-md-inline">
+                  {" "}
                   {this.props.t("bookingui")}
                 </span>
               </Nav.Link>
