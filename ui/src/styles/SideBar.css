@@ -67,7 +67,6 @@
     width: var(--sidebar-width-sm) !important;
     flex: 0 0 var(--sidebar-width-sm) !important;
     max-width: var(--sidebar-width-sm) !important;
-    padding: 0 !important;
   }
 
   .navbar-brand img {
