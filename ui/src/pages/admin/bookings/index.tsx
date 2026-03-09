@@ -135,8 +135,6 @@ class Bookings extends React.Component<Props, State> {
       ...(filterLocation && { location: filterLocation }),
     };
 
-    console.log("currentQuery", filterLocation, " ----", currentQuery);
-
     this.props.router.replace(
       {
         pathname: currentPath,
