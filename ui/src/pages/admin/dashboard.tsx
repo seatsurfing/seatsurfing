@@ -124,7 +124,7 @@ class Dashboard extends React.Component<Props, State> {
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
     const redirect = link ?? "";
     return (
-      <Col sm="2">
+      <Col sm="3" xl="2">
         <Card
           className="dashboard-card-clickable"
           onClick={() => this.setState({ redirect })}
@@ -283,7 +283,7 @@ class Dashboard extends React.Component<Props, State> {
           )}
         </Row>
         <Row className="mb-4">
-          <Col sm="8">
+          <Col sm="12" xl="8">
             <Card>
               <Card.Body>
                 <Card.Title>{this.props.t("utilization")}</Card.Title>
