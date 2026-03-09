@@ -178,6 +178,7 @@ class EditUser extends React.Component<Props, State> {
   };
 
   getMemberRow = (user: User) => {
+    const fullname = RendererUtils.fullname(user.firstname, user.lastname);
     return (
       <tr key={user.id}>
         <td style={{ tableLayout: "fixed", width: "20px" }}>
@@ -191,7 +192,15 @@ class EditUser extends React.Component<Props, State> {
           <ProfilePicture width={48} height={48} />
         </td>
         <td style={{ tableLayout: "auto" }}>
-          <span style={{ marginLeft: "10px" }}>{user.email}</span>
+          <div style={{ marginLeft: "10px" }}>
+            {user.email}
+            {fullname && (
+              <>
+                <br />
+                {fullname}
+              </>
+            )}
+          </div>
         </td>
       </tr>
     );
