@@ -66,7 +66,7 @@ func TestGroupsCRUD(t *testing.T) {
 	req = NewHTTPRequest("POST", "/group/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
-	CheckTestString(t, strconv.Itoa(ResponseCodeGroupAlreadyExists), res.Header().Get("X-Error-Code"))
+	CheckTestString(t, strconv.Itoa(ResponseCodeGroupNameAlreadyExists), res.Header().Get("X-Error-Code"))
 
 	// 2. Read
 	req = NewHTTPRequest("GET", "/group/"+id, loginResponse.UserID, nil)
