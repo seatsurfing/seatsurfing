@@ -13,6 +13,7 @@ import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
 import RedirectUtil from "@/util/RedirectUtil";
+import * as Navigation from "@/util/Navigation";
 
 interface State {
   loading: boolean;
@@ -235,44 +236,50 @@ class Dashboard extends React.Component<Props, State> {
           {this.renderStatsCard(
             this.stats?.numUsers,
             this.props.t("users"),
-            this.state.orgAdmin ? "/admin/users/" : "",
+            this.state.orgAdmin ? Navigation.adminUsers() : "",
           )}
           {this.renderStatsCard(
             this.stats?.numLocations,
             this.props.t("areas"),
-            "/admin/locations/",
+            Navigation.adminLocations(),
           )}
           {this.renderStatsCard(
             this.stats?.numSpaces,
             this.props.t("spaces"),
-            "/admin/locations/",
+            Navigation.adminLocations(),
           )}
           {this.renderStatsCard(
             this.stats?.numBookings,
             this.props.t("bookings"),
-            "/admin/bookings/?enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
+            Navigation.adminBookings(
+              "enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
+            ),
           )}
         </Row>
         <Row className="mb-4">
           {this.renderStatsCard(
             this.stats?.numBookingsCurrent,
             this.props.t("current"),
-            `/admin/bookings/?filter=current`,
+            Navigation.adminBookings("filter=current"),
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsToday,
             this.props.t("today"),
-            `/admin/bookings/?filter=today`,
+            Navigation.adminBookings("filter=today"),
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
-            `/admin/bookings/?enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
+            Navigation.adminBookings(
+              `enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
+            ),
           )}
           {this.renderStatsCard(
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
-            `/admin/bookings/?enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
+            Navigation.adminBookings(
+              `/enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
+            ),
           )}
         </Row>
         <Row className="mb-4">
