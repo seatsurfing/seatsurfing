@@ -195,7 +195,7 @@ class Bookings extends React.Component<Props, State> {
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(booking.enter),
     });
-    if (!window.confirm(Formatting.decodeHtmlEntities(confirmMessage))) {
+    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
       return;
     }
     this.setState({

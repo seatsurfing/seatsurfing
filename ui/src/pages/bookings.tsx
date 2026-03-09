@@ -32,6 +32,7 @@ import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
 import DateUtil from "@/util/DateUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -436,7 +437,7 @@ class Bookings extends React.Component<Props, State> {
               {this.state.selectedItem?.subject}
             </h6>
             <p>
-              {Formatting.decodeHtmlEntities(
+              {RendererUtils.decodeHtmlEntities(
                 this.props.t("confirmCancelYourBooking", {
                   enter: formatter.format(this.state.selectedItem?.enter),
                 }),
