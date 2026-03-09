@@ -161,8 +161,7 @@ func (r *GroupRepository) GetByName(organizationID string, name string) (*Group,
 	e := &Group{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name "+
 		"FROM groups "+
-		"WHERE organization_id = $1 AND LOWER(name) = $2 "+
-		"ORDER BY name", organizationID, strings.ToLower(name)).Scan(&e.ID, &e.OrganizationID, &e.Name)
+		"WHERE organization_id = $1 AND LOWER(name) = $2", organizationID, strings.ToLower(name)).Scan(&e.ID, &e.OrganizationID, &e.Name)
 	if err != nil {
 		return nil, err
 	}
