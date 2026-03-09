@@ -54,7 +54,9 @@ class SearchResult extends React.Component<Props, State> {
       options.includeLocations = true;
       options.includeSpaces = true;
       options.includeGroups = true;
-      const result = await Search.search(keyword ? keyword : "", options);
+      options.expandLocations = true;
+      options.keyword = keyword ? keyword : "";
+      const result = await Search.search(options);
       this.data = result;
       this.setState({ loading: false });
     } else {
@@ -127,7 +129,9 @@ class SearchResult extends React.Component<Props, State> {
       const link = Navigation.adminLocationDetails(space.locationId);
       return (
         <ListGroup.Item key={space.id}>
-          <Link href={link}>{space.name}</Link>
+          <Link href={link}>
+            {space.location.name} &gt; {space.name}
+          </Link>
         </ListGroup.Item>
       );
     });

@@ -5,10 +5,24 @@ import Ajax from "../util/Ajax";
 import Group from "./Group";
 
 export class SearchOptions {
+  keyword: string = "";
   includeUsers: boolean = false;
   includeLocations: boolean = false;
   includeSpaces: boolean = false;
   includeGroups: boolean = false;
+  expandLocations: boolean = false;
+
+  getSearchParams(): URLSearchParams {
+    const params = new URLSearchParams();
+    for (const key of Object.keys(this) as (keyof SearchOptions)[]) {
+      if (key === "keyword" && this[key]) {
+        params.append("query", this[key]);
+      } else if (this[key]) {
+        params.append(key, "1");
+      }
+    }
+    return params;
+  }
 }
 
 export default class Search {
@@ -55,25 +69,10 @@ export default class Search {
     }
   }
 
-  static async search(
-    keyword: string,
-    options: SearchOptions,
-  ): Promise<Search> {
-    const params = new URLSearchParams();
-    params.append("query", keyword);
-    if (options.includeUsers) {
-      params.append("includeUsers", "1");
-    }
-    if (options.includeLocations) {
-      params.append("includeLocations", "1");
-    }
-    if (options.includeSpaces) {
-      params.append("includeSpaces", "1");
-    }
-    if (options.includeGroups) {
-      params.append("includeGroups", "1");
-    }
-    const result = await Ajax.get("/search/?" + params.toString());
+  static async search(options: SearchOptions): Promise<Search> {
+    const result = await Ajax.get(
+      "/search/?" + options.getSearchParams().toString(),
+    );
     const e: Search = new Search();
     e.deserialize(result.json);
     return e;

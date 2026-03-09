@@ -756,7 +756,8 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ typeaheadApproversLoading: true });
     let options = new SearchOptions();
     options.includeGroups = true;
-    Search.search(query ? query : "", options).then((res) => {
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
       this.setState({
         typeaheadApproversOptions: res.groups,
         typeaheadApproversLoading: false,
@@ -780,7 +781,8 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ typeaheadAllowBookersLoading: true });
     let options = new SearchOptions();
     options.includeGroups = true;
-    Search.search(query ? query : "", options).then((res) => {
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
       this.setState({
         typeaheadAllowBookersOptions: res.groups,
         typeaheadAllowBookersLoading: false,

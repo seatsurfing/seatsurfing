@@ -148,7 +148,8 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ typeaheadLoading: true });
     const options = new SearchOptions();
     options.includeUsers = true;
-    Search.search(query ? query : "", options).then((res) => {
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
       this.setState({
         typeaheadOptions: res.users,
         typeaheadLoading: false,

@@ -30,9 +30,8 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	keyword := r.URL.Query().Get("query")
-	res := &GetSearchResultsResponse{
-		Users: []*GetUserResponse{},
-	}
+	res := &GetSearchResultsResponse{}
+
 	if r.URL.Query().Get("includeUsers") == "1" {
 		if CanAdminOrg(user, user.OrganizationID) {
 			if err := router.addUserResults(user, keyword, res); err != nil {
@@ -43,12 +42,10 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if r.URL.Query().Get("includeGroups") == "1" {
-		if CanSpaceAdminOrg(user, user.OrganizationID) {
-			if err := router.addGroupResults(user, keyword, res); err != nil {
-				log.Println(err)
-				SendInternalServerError(w)
-				return
-			}
+		if err := router.addGroupResults(user, keyword, res); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
 		}
 	}
 	if r.URL.Query().Get("includeLocations") == "1" {
@@ -59,7 +56,7 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if r.URL.Query().Get("includeSpaces") == "1" {
-		if err := router.addSpaceResults(user, keyword, res); err != nil {
+		if err := router.addSpaceResults(user, keyword, r.URL.Query().Get("expandLocations") == "1", res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
@@ -107,14 +104,31 @@ func (router *SearchRouter) addLocationResults(user *User, keyword string, res *
 	return nil
 }
 
-func (router *SearchRouter) addSpaceResults(user *User, keyword string, res *GetSearchResultsResponse) error {
+func (router *SearchRouter) addSpaceResults(user *User, keyword string, expandLocations bool, res *GetSearchResultsResponse) error {
 	list, err := GetSpaceRepository().GetByKeyword(user.OrganizationID, keyword)
 	if err != nil {
 		return err
 	}
+
+	var locationMap map[string]*Location
+	if expandLocations {
+		locations, err := GetLocationRepository().GetAll(user.OrganizationID)
+		if err != nil {
+			return err
+		}
+		locationMap = make(map[string]*Location)
+		for _, loc := range locations {
+			locationMap[loc.ID] = loc
+		}
+	}
+
 	spaceRouter := &SpaceRouter{}
+	locationRouter := &LocationRouter{}
 	for _, e := range list {
 		m := spaceRouter.copyToRestModel(e, nil, nil, nil)
+		if expandLocations {
+			m.Location = locationRouter.copyToRestModel(locationMap[e.LocationID])
+		}
 		res.Spaces = append(res.Spaces, m)
 	}
 	return nil
