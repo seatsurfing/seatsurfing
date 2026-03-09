@@ -10,6 +10,7 @@ import Search, { SearchOptions } from "@/types/Search";
 import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
 import * as Navigation from "@/util/Navigation";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -48,18 +49,19 @@ class SearchResult extends React.Component<Props, State> {
 
   loadItems = async () => {
     const { keyword } = this.props.router.query;
-    if (typeof keyword === "string") {
-      const options = new SearchOptions();
-      options.includeUsers = true;
-      options.includeLocations = true;
-      options.includeSpaces = true;
-      options.includeGroups = true;
-      const result = await Search.search(keyword ? keyword : "", options);
-      this.data = result;
+    if (typeof keyword !== "string") {
       this.setState({ loading: false });
-    } else {
-      this.setState({ loading: false });
+      return;
     }
+
+    const options = new SearchOptions();
+    options.includeUsers = true;
+    options.includeLocations = true;
+    options.includeSpaces = true;
+    options.includeGroups = true;
+    const result = await Search.search(keyword ? keyword : "", options);
+    this.data = result;
+    this.setState({ loading: false });
   };
 
   escapeHTML = (s: string): string => {
@@ -152,14 +154,14 @@ class SearchResult extends React.Component<Props, State> {
 
   render() {
     const { keyword } = this.props.router.query;
-    let headline = "";
-    if (typeof keyword === "string") {
-      headline = this.props.t("searchForX", {
-        keyword: this.escapeHTML(keyword ? keyword : ""),
-      });
-    } else {
-      headline = this.props.t("searchForX", { keyword: "" });
-    }
+
+    const headline = RendererUtils.decodeHtmlEntities(
+      this.props.t("searchForX", {
+        keyword: this.escapeHTML(
+          typeof keyword === "string" && keyword ? keyword : "",
+        ),
+      }),
+    );
 
     if (this.state.loading) {
       return (
