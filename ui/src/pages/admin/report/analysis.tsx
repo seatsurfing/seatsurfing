@@ -84,10 +84,7 @@ class ReportAnalysis extends React.Component<Props, State> {
         this.setState({ loading: false });
       })
       .catch((e: any) => {
-        let errorCode: number = 0;
-        if (e instanceof AjaxError) {
-          errorCode = e.appErrorCode;
-        }
+        const errorCode: number = AjaxError.getAppErrorCode(e);
         this.setState({ loading: false, errorCode, error: true });
       });
   };

@@ -11,3 +11,7 @@ export function adminLocationDetails(locationId: string): string {
 export function adminUserDetails(userId: string): string {
   return `/admin/users/${userId}`;
 }
+
+export function adminGroupDetails(groupId: string): string {
+  return `/admin/groups/${groupId}`;
+}

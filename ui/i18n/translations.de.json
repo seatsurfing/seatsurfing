@@ -165,6 +165,7 @@
   "errorUnknown": "Unbekannter Fehler, bitte versuche es später erneut.",
   "errorValidateDomain": "Fehler beim Bestätigen der Domain {{domain}}: Bitte stellen Sie sicher, dass der notwendige DNS-TXT-Record korrekt eingerichtet ist.",
   "errorInPast": "Buchungen in der Vergangenheit sind nicht zulässig.",
+  "errorUsernameExists": "Der Benutzername existiert bereits.",
   "every": "Jede(n)",
   "featureCurrentlyUnavailable": "Diese Funktion steht aktuell nicht zur Verfügung.",
   "filter": "Filter",
