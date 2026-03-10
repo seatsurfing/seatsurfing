@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.67.1](https://github.com/seatsurfing/seatsurfing/compare/v1.67.0...v1.67.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* fix this week link on admin dashboard ([#1815](https://github.com/seatsurfing/seatsurfing/issues/1815)) ([b28cff4](https://github.com/seatsurfing/seatsurfing/commit/b28cff4c414229e52c328727c4a0e7cfa045b8cf))
+
 ## [1.67.0](https://github.com/seatsurfing/seatsurfing/compare/v1.66.0...v1.67.0) (2026-03-10)
 
 
