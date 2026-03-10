@@ -1,62 +1,56 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc } from "@/components/withTranslation";
 
-const ResponseCodeBookingSlotConflict: number = 1001;
-const ResponseCodeBookingLocationMaxConcurrent: number = 1002;
-const ResponseCodeBookingTooManyUpcomingBookings: number = 1003;
-const ResponseCodeBookingTooManyDaysInAdvance: number = 1004;
-const ResponseCodeBookingInvalidMaxBookingDuration: number = 1005;
-const ResponseCodeBookingMaxConcurrentForUser: number = 1006;
-const ResponseCodeBookingInvalidMinBookingDuration: number = 1007;
-const ResponseCodeBookingMaxHoursBeforeDelete: number = 1008;
-const ResponseCodeBookingInPast: number = 1011;
+const enum ResponseCode {
+  BookingSlotConflict = 1001,
+  BookingLocationMaxConcurrent = 1002,
+  BookingTooManyUpcomingBookings = 1003,
+  BookingTooManyDaysInAdvance = 1004,
+  BookingInvalidMaxBookingDuration = 1005,
+  BookingMaxConcurrentForUser = 1006,
+  BookingInvalidMinBookingDuration = 1007,
+  BookingMaxHoursBeforeDelete = 1008,
+  BookingInPast = 1011,
 
-const ResponseCodePresenceReportDateRangeTooLong: number = 2001;
+  PresenceReportDateRangeTooLong = 2001,
 
-const ResponseCodeUsernameExists: number = 3001;
+  UsernameExists = 3001,
 
-const ResponseCodeGroupNameAlreadyExists: number = 4001;
+  GroupNameAlreadyExists = 4001,
+}
 
 export default class ErrorText {
   static getTextForAppCode(code: number, t: TranslationFunc): string {
-    if (code === ResponseCodeBookingSlotConflict) {
-      return t("errorSlotConflict");
-    } else if (code === ResponseCodeBookingLocationMaxConcurrent) {
-      return t("errorTooManyConcurrent");
-    } else if (code === ResponseCodeBookingInvalidMaxBookingDuration) {
-      return t("errorMaxBookingDuration", {
-        num: RuntimeConfig.INFOS.maxBookingDurationHours,
-      });
-    } else if (code === ResponseCodeBookingInvalidMinBookingDuration) {
-      return t("errorMinBookingDuration", {
-        num: RuntimeConfig.INFOS.minBookingDurationHours,
-      });
-    } else if (code === ResponseCodeBookingTooManyDaysInAdvance) {
-      return t("errorDaysAdvance", {
-        num: RuntimeConfig.INFOS.maxDaysInAdvance,
-      });
-    } else if (code === ResponseCodeBookingTooManyUpcomingBookings) {
-      return t("errorBookingLimit", {
-        num: RuntimeConfig.INFOS.maxBookingsPerUser,
-      });
-    } else if (code === ResponseCodeBookingMaxConcurrentForUser) {
-      return t("errorConcurrentBookingLimit", {
-        num: RuntimeConfig.INFOS.maxConcurrentBookingsPerUser,
-      });
-    } else if (code === ResponseCodeBookingMaxHoursBeforeDelete) {
-      return t("errorDeleteBookingBeforeMaxCancel", {
-        num: RuntimeConfig.INFOS.maxHoursBeforeDelete,
-      });
-    } else if (code === ResponseCodeBookingInPast) {
-      return t("errorInPast");
-    } else if (code === ResponseCodePresenceReportDateRangeTooLong) {
-      return t("errorDateRangeTooLong");
-    } else if (code === ResponseCodeUsernameExists) {
-      return t("errorUsernameExists");
-    } else if (code === ResponseCodeGroupNameAlreadyExists) {
-      return t("errorGroupNameAlreadyExists");
-    } else {
-      return t("errorUnknown");
-    }
+    const { INFOS } = RuntimeConfig;
+
+    const errorMap: Partial<Record<ResponseCode, () => string>> = {
+      [ResponseCode.BookingSlotConflict]: () => t("errorSlotConflict"),
+      [ResponseCode.BookingLocationMaxConcurrent]: () =>
+        t("errorTooManyConcurrent"),
+      [ResponseCode.BookingInvalidMaxBookingDuration]: () =>
+        t("errorMaxBookingDuration", { num: INFOS.maxBookingDurationHours }),
+      [ResponseCode.BookingInvalidMinBookingDuration]: () =>
+        t("errorMinBookingDuration", { num: INFOS.minBookingDurationHours }),
+      [ResponseCode.BookingTooManyDaysInAdvance]: () =>
+        t("errorDaysAdvance", { num: INFOS.maxDaysInAdvance }),
+      [ResponseCode.BookingTooManyUpcomingBookings]: () =>
+        t("errorBookingLimit", { num: INFOS.maxBookingsPerUser }),
+      [ResponseCode.BookingMaxConcurrentForUser]: () =>
+        t("errorConcurrentBookingLimit", {
+          num: INFOS.maxConcurrentBookingsPerUser,
+        }),
+      [ResponseCode.BookingMaxHoursBeforeDelete]: () =>
+        t("errorDeleteBookingBeforeMaxCancel", {
+          num: INFOS.maxHoursBeforeDelete,
+        }),
+      [ResponseCode.BookingInPast]: () => t("errorInPast"),
+      [ResponseCode.PresenceReportDateRangeTooLong]: () =>
+        t("errorDateRangeTooLong"),
+      [ResponseCode.UsernameExists]: () => t("errorUsernameExists"),
+      [ResponseCode.GroupNameAlreadyExists]: () =>
+        t("errorGroupNameAlreadyExists"),
+    };
+
+    return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");
   }
 }
