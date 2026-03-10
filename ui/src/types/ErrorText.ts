@@ -15,6 +15,8 @@ const ResponseCodePresenceReportDateRangeTooLong: number = 2001;
 
 const ResponseCodeUsernameExists: number = 3001;
 
+const ResponseCodeGroupNameAlreadyExists: number = 4001;
+
 export default class ErrorText {
   static getTextForAppCode(code: number, t: TranslationFunc): string {
     if (code === ResponseCodeBookingSlotConflict) {
@@ -51,6 +53,8 @@ export default class ErrorText {
       return t("errorDateRangeTooLong");
     } else if (code === ResponseCodeUsernameExists) {
       return t("errorUsernameExists");
+    } else if (code === ResponseCodeGroupNameAlreadyExists) {
+      return t("errorGroupNameAlreadyExists");
     } else {
       return t("errorUnknown");
     }

@@ -159,6 +159,7 @@
   "errorValidateDomain": "שגיאה באימות שם התחום {{domain}}: נא לוודא שהגדרת את רשומת ה־TXT ב־DNS כראוי.",
   "errorInPast": "Your booking cannot be in the past.",
   "errorUsernameExists": "The username already exists.",
+  "errorGroupNameAlreadyExists": "The group name already exists.",
   "every": "Every",
   "featureCurrentlyUnavailable": "היכולת הזאת לא זמינה כרגע.",
   "filter": "Filter",

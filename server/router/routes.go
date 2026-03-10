@@ -51,6 +51,8 @@ var (
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
 	ResponseCodeUserAlreadyExists = 3001
+
+	ResponseCodeGroupNameAlreadyExists = 4001
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {

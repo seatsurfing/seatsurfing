@@ -28,6 +28,8 @@ import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
+import AjaxError from "@/util/AjaxError";
+import ErrorText from "@/types/ErrorText";
 
 interface State {
   loading: boolean;
@@ -36,6 +38,7 @@ interface State {
   submitting: boolean;
   saved: boolean;
   error: boolean;
+  errorText: string;
   goBack: boolean;
   name: string;
   addUserIds: string[];
@@ -61,6 +64,7 @@ class EditUser extends React.Component<Props, State> {
       submitting: false,
       saved: false,
       error: false,
+      errorText: "",
       goBack: false,
       name: "",
       addUserIds: [],
@@ -121,8 +125,17 @@ class EditUser extends React.Component<Props, State> {
         this.props.router.push("/admin/groups/" + this.entity.id);
         this.setState({ saved: true });
       })
-      .catch(() => {
-        this.setState({ error: true });
+      .catch((e) => {
+        let code: number = 0;
+        if (e instanceof AjaxError) {
+          code = e.appErrorCode;
+        }
+        this.setState({
+          error: true,
+          errorText: code
+            ? ErrorText.getTextForAppCode(code, this.props.t)
+            : "",
+        });
       });
   };
 
@@ -262,7 +275,11 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
+      hint = (
+        <Alert variant="danger">
+          {this.state.errorText ?? this.props.t("errorSave")}
+        </Alert>
+      );
     }
 
     let buttonDelete = (
