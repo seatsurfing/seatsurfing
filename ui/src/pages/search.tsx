@@ -943,10 +943,7 @@ class Search extends React.Component<Props, State> {
         });
       })
       .catch((e: any) => {
-        let code: number = 0;
-        if (e instanceof AjaxError) {
-          code = e.appErrorCode;
-        }
+        const code = AjaxError.getAppErrorCode(e);
         this.setState({
           confirmingBooking: false,
           showConfirm: false,
@@ -974,10 +971,7 @@ class Search extends React.Component<Props, State> {
         });
       })
       .catch((e) => {
-        let code: number = 0;
-        if (e instanceof AjaxError) {
-          code = e.appErrorCode;
-        }
+        const code: number = AjaxError.getAppErrorCode(e);
         this.setState({
           loading: false,
           showError: true,

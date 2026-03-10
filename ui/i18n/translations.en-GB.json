@@ -165,6 +165,7 @@
   "errorUnknown": "Unknown error, please try again later.",
   "errorValidateDomain": "Error verifying domain {{domain}}: Please ensure that you've set up the DNS TXT record correctly.",
   "errorInPast": "Your booking cannot be in the past.",
+  "errorUsernameExists": "The username already exists.",
   "errorGroupNameAlreadyExists": "The group name already exists.",
   "every": "Every",
   "featureCurrentlyUnavailable": "This feature is currently unavailable.",

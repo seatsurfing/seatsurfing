@@ -50,6 +50,8 @@ var (
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
+	ResponseCodeUserAlreadyExists = 3001
+
 	ResponseCodeGroupNameAlreadyExists = 4001
 )
 
