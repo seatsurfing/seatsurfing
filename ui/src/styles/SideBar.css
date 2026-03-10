@@ -1,9 +1,9 @@
 :root {
-  --sidebar-width-sm: 50px;
+  --sidebar-width-fixed: 50px;
 }
 
 .sidebar {
-  min-width: var(--sidebar-width-sm);
+  min-width: var(--sidebar-width-fixed);
   position: fixed;
   top: 0;
   bottom: 0;
@@ -60,13 +60,13 @@
   color: #999;
 }
 
-/* fixed width for sidebar and icon on viewports xs + sm */
+/* fixed sidebar width on viewports xs + sm */
 @media (max-width: 767.98px) {
   .navbar-brand,
   #sidebarMenu {
-    width: var(--sidebar-width-sm) !important;
-    flex: 0 0 var(--sidebar-width-sm) !important;
-    max-width: var(--sidebar-width-sm) !important;
+    width: var(--sidebar-width-fixed) !important;
+    flex: 0 0 var(--sidebar-width-fixed) !important;
+    max-width: var(--sidebar-width-fixed) !important;
   }
 
   .navbar-brand img {
@@ -74,8 +74,8 @@
   }
 
   main[role="main"] {
-    width: calc(100% - var(--sidebar-width-sm)) !important;
-    flex: 0 0 calc(100% - var(--sidebar-width-sm)) !important;
-    max-width: calc(100% - var(--sidebar-width-sm)) !important;
+    width: calc(100% - var(--sidebar-width-fixed)) !important;
+    flex: 0 0 calc(100% - var(--sidebar-width-fixed)) !important;
+    max-width: calc(100% - var(--sidebar-width-fixed)) !important;
   }
 }

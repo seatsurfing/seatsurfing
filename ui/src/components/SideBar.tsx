@@ -117,7 +117,7 @@ class SideBar extends React.Component<Props, State> {
     icon: React.ComponentType<any>;
     title: string;
   }) => (
-    // show title tooltip on viewports xs + md
+    // show title tooltip on viewports xs + sm
     <>
       <span title={title} className="d-md-none">
         <Icon className="feather" />
