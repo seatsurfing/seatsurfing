@@ -179,20 +179,39 @@ class EditUser extends React.Component<Props, State> {
   };
 
   getMemberRow = (user: User) => {
+    const fullname = RendererUtils.fullname(user.firstname, user.lastname);
     return (
-      <tr key={user.id}>
+      <tr
+        key={user.id}
+        onClick={() =>
+          this.selectMember(
+            user.id,
+            !this.state.removeUserIds.includes(user.id),
+          )
+        }
+        style={{ cursor: "pointer" }}
+      >
         <td style={{ tableLayout: "fixed", width: "20px" }}>
           <Form.Check
             type="checkbox"
             onChange={(e: any) => this.selectMember(user.id, e.target.checked)}
             checked={this.state.removeUserIds.includes(user.id)}
+            onClick={(e: any) => e.stopPropagation()}
           />
         </td>
         <td style={{ tableLayout: "fixed", width: "64px" }}>
           <ProfilePicture width={48} height={48} />
         </td>
         <td style={{ tableLayout: "auto" }}>
-          <span style={{ marginLeft: "10px" }}>{user.email}</span>
+          <div style={{ marginLeft: "10px" }}>
+            {user.email}
+            {fullname && (
+              <>
+                <br />
+                {fullname}
+              </>
+            )}
+          </div>
         </td>
       </tr>
     );
@@ -338,7 +357,7 @@ class EditUser extends React.Component<Props, State> {
               </Col>
             </Form.Group>
           </Form>
-          <Table>
+          <Table hover>
             <tbody>
               {this.state.members.map((user: User) => this.getMemberRow(user))}
             </tbody>

@@ -475,7 +475,7 @@ class EditBooking extends React.Component<Props, State> {
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(this.entity.enter),
     });
-    if (!window.confirm(Formatting.decodeHtmlEntities(confirmMessage))) {
+    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
       return;
     }
     this.entity.delete().then(() => {
