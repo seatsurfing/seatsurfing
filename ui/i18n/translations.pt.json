@@ -159,6 +159,7 @@
   "errorValidateDomain": "Erro ao verificar domínio {{domain}}: Certifique-se de que configurou corretamente o registro DNS TXT.",
   "errorInPast": "Your booking cannot be in the past.",
   "errorUsernameExists": "The username already exists.",
+  "errorGroupNameAlreadyExists": "The group name already exists.",
   "every": "A cada",
   "featureCurrentlyUnavailable": "Este recurso está indisponível no momento.",
   "filter": "Filtrar",
