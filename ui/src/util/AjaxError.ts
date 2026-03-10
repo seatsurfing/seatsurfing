@@ -10,11 +10,7 @@ export default class AjaxError extends Error {
     responseBody?: string,
   ) {
     if (!m) {
-      m =
-        "HTTP Status " +
-        httpStatusCode +
-        " with app error code " +
-        appErrorCode;
+      m = `HTTP Status ${httpStatusCode} with app error code ${appErrorCode}`;
     }
     super(m);
     Object.setPrototypeOf(this, AjaxError.prototype);
@@ -29,5 +25,12 @@ export default class AjaxError extends Error {
 
   public get appErrorCode(): number {
     return this._appErrorCode;
+  }
+
+  static getAppErrorCode(e: Error): number {
+    if (e instanceof AjaxError) {
+      return e.appErrorCode;
+    }
+    return 0;
   }
 }

@@ -23,3 +23,7 @@ export function adminUsers(): string {
 export function adminBookings(query: string): string {
   return `/admin/bookings/?${query}`;
 }
+
+export function adminGroupDetails(groupId: string): string {
+  return `/admin/groups/${groupId}`;
+}

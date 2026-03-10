@@ -15,8 +15,11 @@ interface AjaxResult {
 export default class Ajax {
   static URL: string = "";
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
+
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
+  private static HEADER_X_OBJECT_ID: string = "X-Object-Id";
+  private static HEADER_X_ERROR_CODE: string = "X-Error-Code";
 
   static getBackendUrl(): string {
     let url = Ajax.URL.trim();
@@ -32,10 +35,11 @@ export default class Ajax {
     data?: any,
   ): Promise<AjaxResult> {
     url = Ajax.getBackendUrl() + url;
+    const xHeaderCode = this.HEADER_X_ERROR_CODE;
     return new Promise<AjaxResult>(function (resolve, reject) {
-      let performRequest = async () => {
+      const performRequest = async () => {
         const credentials: AjaxCredentials =
-          await Ajax.PERSISTER.readCredentialsFromLocalStorage();
+          Ajax.PERSISTER.readCredentialsFromLocalStorage();
         const options: RequestInit = Ajax.getFetchOptions(
           method,
           credentials.accessToken,
@@ -49,11 +53,11 @@ export default class Ajax {
                 .then((json) => {
                   resolve(Ajax.getAjaxResult(json, response));
                 })
-                .catch((err) => {
+                .catch(() => {
                   resolve(Ajax.getAjaxResult({}, response));
                 });
             } else {
-              let appCode = response.headers.get("X-Error-Code");
+              const appCode = response.headers.get(xHeaderCode);
               response
                 .text()
                 .then((body) => {
@@ -108,11 +112,11 @@ export default class Ajax {
           return;
         }
         // Refresh the token
-        let data = {
+        const data = {
           refreshToken: refreshToken,
         };
-        let options: RequestInit = Ajax.getFetchOptions("POST", null, data);
-        let url = Ajax.getBackendUrl() + Ajax.REFRESH_URL;
+        const options: RequestInit = Ajax.getFetchOptions("POST", null, data);
+        const url = Ajax.getBackendUrl() + Ajax.REFRESH_URL;
         const oldCredentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
         fetch(url, options)
           .then((response) => {
@@ -120,7 +124,7 @@ export default class Ajax {
               response
                 .json()
                 .then((json) => {
-                  let c: AjaxCredentials = {
+                  const c: AjaxCredentials = {
                     accessToken: json.accessToken,
                     accessTokenExpiry: JwtDecoder.getExpiryDate(
                       json.accessToken,
@@ -135,7 +139,7 @@ export default class Ajax {
                   release();
                   resolve();
                 })
-                .catch((err) => {
+                .catch(() => {
                   release();
                   reject(new AjaxError(response.status, 0));
                 });
@@ -160,14 +164,14 @@ export default class Ajax {
   }
 
   static getAjaxResult(json: any, response: Response): AjaxResult {
-    let objectId: string = "";
-    if (response.headers.get("X-Object-Id") != null) {
-      objectId = String(response.headers.get("X-Object-Id"));
-    }
-    let res: AjaxResult = {
-      json: json,
+    const objectId =
+      response.headers.get(this.HEADER_X_OBJECT_ID) != null
+        ? String(response.headers.get(this.HEADER_X_OBJECT_ID))
+        : "";
+    const res: AjaxResult = {
+      json,
       status: response.status,
-      objectId: objectId,
+      objectId,
     };
     return res;
   }
@@ -177,19 +181,19 @@ export default class Ajax {
     accessToken?: string | null,
     data?: any,
   ): RequestInit {
-    let headers = new Headers();
+    const headers = new Headers();
     if (accessToken) {
       headers.append("Authorization", "Bearer " + accessToken);
     }
     if (data && !(data instanceof File)) {
       headers.append("Content-Type", "application/json");
     }
-    let options: RequestInit = {
-      method: method,
+    const options: RequestInit = {
+      method,
       mode: "cors",
       cache: "no-cache",
       credentials: "same-origin",
-      headers: headers,
+      headers,
       signal: AbortSignal.timeout(30000),
     };
     if (data) {
