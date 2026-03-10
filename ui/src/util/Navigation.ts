@@ -12,6 +12,18 @@ export function adminUserDetails(userId: string): string {
   return `/admin/users/${userId}`;
 }
 
+export function adminLocations(): string {
+  return "/admin/locations/";
+}
+
+export function adminUsers(): string {
+  return "/admin/users/";
+}
+
+export function adminBookings(query: string): string {
+  return `/admin/bookings/?${query}`;
+}
+
 export function adminGroupDetails(groupId: string): string {
   return `/admin/groups/${groupId}`;
 }
