@@ -177,7 +177,7 @@ class Bookings extends React.Component<Props, State> {
       this.updateUrlParams(
         DateUtil.formatToDateTimeString(this.state.start),
         DateUtil.formatToDateTimeString(this.state.end),
-        this.state.filterOption === "current" ||
+        this.state.filterOption === "enter_leave" ||
           this.state.filterOption === "today"
           ? this.state.filterOption
           : null,
