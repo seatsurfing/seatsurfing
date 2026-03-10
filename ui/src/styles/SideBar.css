@@ -1,9 +1,10 @@
 :root {
-  --sidebar-width-fixed: 50px;
+  --sidebar-width-collapsed: 50px;
+  --sidebar-width-expanded: 190px;
 }
 
 .sidebar {
-  min-width: var(--sidebar-width-fixed);
+  min-width: var(--sidebar-width-collapsed);
   position: fixed;
   top: 0;
   bottom: 0;
@@ -60,13 +61,31 @@
   color: #999;
 }
 
+/* fixed sidebar width on viewports > sm */
+.navbar-brand,
+#sidebarMenu {
+  width: var(--sidebar-width-expanded) !important;
+  flex: 0 0 var(--sidebar-width-expanded) !important;
+  max-width: var(--sidebar-width-expanded) !important;
+}
+
+.navbar-brand img {
+  margin: 0 auto;
+}
+
+main[role="main"] {
+  width: calc(100% - var(--sidebar-width-expanded)) !important;
+  flex: 0 0 calc(100% - var(--sidebar-width-expanded)) !important;
+  max-width: calc(100% - var(--sidebar-width-expanded)) !important;
+}
+
 /* fixed sidebar width on viewports xs + sm */
 @media (max-width: 767.98px) {
   .navbar-brand,
   #sidebarMenu {
-    width: var(--sidebar-width-fixed) !important;
-    flex: 0 0 var(--sidebar-width-fixed) !important;
-    max-width: var(--sidebar-width-fixed) !important;
+    width: var(--sidebar-width-collapsed) !important;
+    flex: 0 0 var(--sidebar-width-collapsed) !important;
+    max-width: var(--sidebar-width-collapsed) !important;
   }
 
   .navbar-brand img {
@@ -74,8 +93,8 @@
   }
 
   main[role="main"] {
-    width: calc(100% - var(--sidebar-width-fixed)) !important;
-    flex: 0 0 calc(100% - var(--sidebar-width-fixed)) !important;
-    max-width: calc(100% - var(--sidebar-width-fixed)) !important;
+    width: calc(100% - var(--sidebar-width-collapsed)) !important;
+    flex: 0 0 calc(100% - var(--sidebar-width-collapsed)) !important;
+    max-width: calc(100% - var(--sidebar-width-collapsed)) !important;
   }
 }
