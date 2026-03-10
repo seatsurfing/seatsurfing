@@ -278,7 +278,7 @@ class Dashboard extends React.Component<Props, State> {
             this.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
             Navigation.adminBookings(
-              `/enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
+              `enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
             ),
           )}
         </Row>
