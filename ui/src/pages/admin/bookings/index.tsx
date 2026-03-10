@@ -27,6 +27,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
+import Location from "@/types/Location";
 
 interface State {
   selectedItem: string;
@@ -37,6 +38,7 @@ interface State {
   filterOption: "enter_leave" | "current" | "today";
   typeaheadOptions: any[];
   typeaheadLoading: boolean;
+  filterLocation: string;
 }
 
 interface Props {
@@ -46,6 +48,7 @@ interface Props {
 
 class Bookings extends React.Component<Props, State> {
   data: Booking[];
+  locations: Location[];
   ExcellentExport: any;
   maxHoursBeforeDelete: number = 0;
   typeahead: any = null;
@@ -53,6 +56,7 @@ class Bookings extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.data = [];
+    this.locations = [];
 
     const getDateFromQuery = (
       paramName: string,
@@ -91,6 +95,7 @@ class Bookings extends React.Component<Props, State> {
             : "current",
       typeaheadOptions: [],
       typeaheadLoading: false,
+      filterLocation: this.props.router.query["location"] as string,
     };
     this.loadSettings();
   }
@@ -100,6 +105,7 @@ class Bookings extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
+    Location.list().then((locations) => (this.locations = locations));
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );
@@ -111,11 +117,13 @@ class Bookings extends React.Component<Props, State> {
     leave: string,
     filter: string | null,
     filterUser: string | null,
+    filterLocation: string | null,
   ) => {
     const currentPath = this.props.router.pathname;
     const {
       filter: _,
       user: __,
+      location: ___,
       ...queryWithoutFilter
     } = this.props.router.query;
     const currentQuery = {
@@ -124,6 +132,7 @@ class Bookings extends React.Component<Props, State> {
       leave,
       ...(filter !== null && { filter }),
       ...(filterUser && { user: filterUser }),
+      ...(filterLocation && { location: filterLocation }),
     };
 
     this.props.router.replace(
@@ -144,14 +153,23 @@ class Bookings extends React.Component<Props, State> {
 
     const bookings =
       this.state.filterOption === "enter_leave"
-        ? Booking.listFiltered(this.state.start, end, this.state.filterUser)
+        ? Booking.listFiltered(
+            this.state.start,
+            end,
+            this.state.filterUser,
+            this.state.filterLocation,
+          )
         : this.state.filterOption === "today"
           ? Booking.listFiltered(
               startOfToday,
               endOfToday,
               this.state.filterUser,
+              this.state.filterLocation,
             )
-          : Booking.listCurrent(this.state.filterUser);
+          : Booking.listCurrent(
+              this.state.filterUser,
+              this.state.filterLocation,
+            );
 
     bookings.then((list) => {
       this.data = list;
@@ -164,6 +182,7 @@ class Bookings extends React.Component<Props, State> {
           ? this.state.filterOption
           : null,
         this.state.filterUser,
+        this.state.filterLocation,
       );
     });
   };
@@ -176,7 +195,7 @@ class Bookings extends React.Component<Props, State> {
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(booking.enter),
     });
-    if (!window.confirm(Formatting.decodeHtmlEntities(confirmMessage))) {
+    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
       return;
     }
     this.setState({
@@ -292,7 +311,8 @@ class Bookings extends React.Component<Props, State> {
     this.setState({ typeaheadLoading: true });
     const options = new SearchOptions();
     options.includeUsers = true;
-    Search.search(query ? query : "", options).then((res) => {
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
       this.setState({
         typeaheadOptions: res.users,
         typeaheadLoading: false,
@@ -442,6 +462,26 @@ class Bookings extends React.Component<Props, State> {
                 </div>
               )}
             />
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row}>
+          <Form.Label column sm="2">
+            {this.props.t("area")}
+          </Form.Label>
+          <Col sm="4">
+            <Form.Select
+              value={this.state.filterLocation}
+              onChange={(e: any) =>
+                this.setState({ filterLocation: e.target.value })
+              }
+            >
+              <option value="">({this.props.t("all")})</option>
+              {this.locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </Form.Select>
           </Col>
         </Form.Group>
       </Form>

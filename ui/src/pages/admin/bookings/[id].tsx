@@ -475,7 +475,7 @@ class EditBooking extends React.Component<Props, State> {
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(this.entity.enter),
     });
-    if (!window.confirm(Formatting.decodeHtmlEntities(confirmMessage))) {
+    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
       return;
     }
     this.entity.delete().then(() => {
@@ -688,7 +688,8 @@ class EditBooking extends React.Component<Props, State> {
     this.setState({ typeaheadLoading: true });
     const options = new SearchOptions();
     options.includeUsers = true;
-    Search.search(query ? query : "", options).then((res) => {
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
       this.setState({
         typeaheadOptions: res.users,
         typeaheadLoading: false,

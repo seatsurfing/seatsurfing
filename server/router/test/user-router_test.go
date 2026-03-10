@@ -283,6 +283,7 @@ func TestUserDuplicateSameOrg(t *testing.T) {
 	req = NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeUserAlreadyExists), res.Header().Get("X-Error-Code"))
 }
 
 func TestUserDuplicateDifferentOrg(t *testing.T) {
@@ -331,6 +332,7 @@ func TestUserUpdateCreatesDuplicate(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/user/"+userID2, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeUserAlreadyExists), res.Header().Get("X-Error-Code"))
 }
 
 func TestUserCreateInOwnOrgsVerifiedDomain(t *testing.T) {

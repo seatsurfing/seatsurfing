@@ -157,6 +157,17 @@ func (r *GroupRepository) GetByKeyword(organizationID string, keyword string) ([
 	return result, nil
 }
 
+func (r *GroupRepository) GetByName(organizationID string, name string) (*Group, error) {
+	e := &Group{}
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name "+
+		"FROM groups "+
+		"WHERE organization_id = $1 AND LOWER(name) = $2", organizationID, strings.ToLower(name)).Scan(&e.ID, &e.OrganizationID, &e.Name)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 func (r *GroupRepository) GroupsExistAndBelongToOrg(organizationID string, groupIDs []string) (bool, error) {
 	var count int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+

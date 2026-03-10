@@ -255,12 +255,48 @@ func (router *BookingRouter) debugTimeIssues(w http.ResponseWriter, r *http.Requ
 	SendJSON(w, res)
 }
 
-func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request) {
+func (router *BookingRouter) validateBookingFilters(w http.ResponseWriter, r *http.Request) (*User, string, string, bool) {
 	user := GetRequestUser(r)
 	if !CanSpaceAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
+		return nil, "", "", false
+	}
+
+	filterUserEmail := r.URL.Query().Get("user")
+	if filterUserEmail != "" {
+		filterUser, _ := GetUserRepository().GetByEmail(user.OrganizationID, filterUserEmail)
+		if filterUser == nil {
+			SendBadRequest(w)
+			return nil, "", "", false
+		}
+	}
+
+	filterLocationId := r.URL.Query().Get("location")
+	if filterLocationId != "" {
+		filterLocation, _ := GetLocationRepository().GetOne(filterLocationId)
+		if filterLocation == nil || filterLocation.OrganizationID != user.OrganizationID {
+			SendBadRequest(w)
+			return nil, "", "", false
+		}
+	}
+
+	return user, filterUserEmail, filterLocationId, true
+}
+
+func (router *BookingRouter) sendBookingList(w http.ResponseWriter, list []*BookingDetails) {
+	res := make([]*GetBookingResponse, 0, len(list))
+	for _, e := range list {
+		res = append(res, router.copyToRestModel(e))
+	}
+	SendJSON(w, res)
+}
+
+func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request) {
+	user, filterUserEmail, filterLocationId, ok := router.validateBookingFilters(w, r)
+	if !ok {
 		return
 	}
+
 	start, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("start"))
 	if err != nil {
 		SendBadRequest(w)
@@ -272,57 +308,28 @@ func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	filterUserEmail := r.URL.Query().Get("user")
-	if filterUserEmail != "" {
-		filterUser, _ := GetUserRepository().GetByEmail(user.OrganizationID, filterUserEmail)
-		if filterUser == nil {
-			SendBadRequest(w)
-			return
-		}
-	}
-
-	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, filterUserEmail)
+	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, filterUserEmail, filterLocationId)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	res := []*GetBookingResponse{}
-	for _, e := range list {
-		m := router.copyToRestModel(e)
-		res = append(res, m)
-	}
-	SendJSON(w, res)
+	router.sendBookingList(w, list)
 }
 
 func (router *BookingRouter) getCurrent(w http.ResponseWriter, r *http.Request) {
-	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
-		SendForbidden(w)
+	user, filterUserEmail, filterLocationId, ok := router.validateBookingFilters(w, r)
+	if !ok {
 		return
 	}
 
-	filterUserEmail := r.URL.Query().Get("user")
-	if filterUserEmail != "" {
-		filterUser, _ := GetUserRepository().GetByEmail(user.OrganizationID, filterUserEmail)
-		if filterUser == nil {
-			SendBadRequest(w)
-			return
-		}
-	}
-
-	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, filterUserEmail)
+	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, filterUserEmail, filterLocationId)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	res := []*GetBookingResponse{}
-	for _, e := range list {
-		m := router.copyToRestModel(e)
-		res = append(res, m)
-	}
-	SendJSON(w, res)
+	router.sendBookingList(w, list)
 }
 
 func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {

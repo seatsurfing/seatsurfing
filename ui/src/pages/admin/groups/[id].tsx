@@ -28,6 +28,8 @@ import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
+import AjaxError from "@/util/AjaxError";
+import ErrorText from "@/types/ErrorText";
 
 interface State {
   loading: boolean;
@@ -36,6 +38,7 @@ interface State {
   submitting: boolean;
   saved: boolean;
   error: boolean;
+  errorText: string;
   goBack: boolean;
   name: string;
   addUserIds: string[];
@@ -61,6 +64,7 @@ class EditUser extends React.Component<Props, State> {
       submitting: false,
       saved: false,
       error: false,
+      errorText: "",
       goBack: false,
       name: "",
       addUserIds: [],
@@ -121,8 +125,17 @@ class EditUser extends React.Component<Props, State> {
         this.props.router.push("/admin/groups/" + this.entity.id);
         this.setState({ saved: true });
       })
-      .catch(() => {
-        this.setState({ error: true });
+      .catch((e) => {
+        let code: number = 0;
+        if (e instanceof AjaxError) {
+          code = e.appErrorCode;
+        }
+        this.setState({
+          error: true,
+          errorText: code
+            ? ErrorText.getTextForAppCode(code, this.props.t)
+            : "",
+        });
       });
   };
 
@@ -148,7 +161,8 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ typeaheadLoading: true });
     const options = new SearchOptions();
     options.includeUsers = true;
-    Search.search(query ? query : "", options).then((res) => {
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
       this.setState({
         typeaheadOptions: res.users,
         typeaheadLoading: false,
@@ -178,20 +192,39 @@ class EditUser extends React.Component<Props, State> {
   };
 
   getMemberRow = (user: User) => {
+    const fullname = RendererUtils.fullname(user.firstname, user.lastname);
     return (
-      <tr key={user.id}>
+      <tr
+        key={user.id}
+        onClick={() =>
+          this.selectMember(
+            user.id,
+            !this.state.removeUserIds.includes(user.id),
+          )
+        }
+        style={{ cursor: "pointer" }}
+      >
         <td style={{ tableLayout: "fixed", width: "20px" }}>
           <Form.Check
             type="checkbox"
             onChange={(e: any) => this.selectMember(user.id, e.target.checked)}
             checked={this.state.removeUserIds.includes(user.id)}
+            onClick={(e: any) => e.stopPropagation()}
           />
         </td>
         <td style={{ tableLayout: "fixed", width: "64px" }}>
           <ProfilePicture width={48} height={48} />
         </td>
         <td style={{ tableLayout: "auto" }}>
-          <span style={{ marginLeft: "10px" }}>{user.email}</span>
+          <div style={{ marginLeft: "10px" }}>
+            {user.email}
+            {fullname && (
+              <>
+                <br />
+                {fullname}
+              </>
+            )}
+          </div>
         </td>
       </tr>
     );
@@ -243,7 +276,11 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
+      hint = (
+        <Alert variant="danger">
+          {this.state.errorText ?? this.props.t("errorSave")}
+        </Alert>
+      );
     }
 
     let buttonDelete = (
@@ -337,7 +374,7 @@ class EditUser extends React.Component<Props, State> {
               </Col>
             </Form.Group>
           </Form>
-          <Table>
+          <Table hover>
             <tbody>
               {this.state.members.map((user: User) => this.getMemberRow(user))}
             </tbody>
