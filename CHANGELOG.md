@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.67.0](https://github.com/seatsurfing/seatsurfing/compare/v1.66.0...v1.67.0) (2026-03-10)
+
+
+### Features
+
+* add groups to search result and show user first and last name ([#1803](https://github.com/seatsurfing/seatsurfing/issues/1803)) ([ade0000](https://github.com/seatsurfing/seatsurfing/commit/ade0000584212e69effaa1b8c5d726b13b1fee5a))
+* add location filter to bookings list in admin ui ([#1811](https://github.com/seatsurfing/seatsurfing/issues/1811)) ([67cbc4c](https://github.com/seatsurfing/seatsurfing/commit/67cbc4cd7deb652386b0fd93fd69a37a528616a4))
+* prevent duplicate group names ([#1808](https://github.com/seatsurfing/seatsurfing/issues/1808)) ([1947161](https://github.com/seatsurfing/seatsurfing/commit/1947161a9f33b3eeb6dbe3b4ff51d6fe3a715219))
+* show locations for space search results ([#1802](https://github.com/seatsurfing/seatsurfing/issues/1802)) ([9945136](https://github.com/seatsurfing/seatsurfing/commit/994513637a52fc743fc6d4ffba4e711f699e2034))
+* show user first and last name for group members ([#1804](https://github.com/seatsurfing/seatsurfing/issues/1804)) ([e83c119](https://github.com/seatsurfing/seatsurfing/commit/e83c119b039cb58307a9b093220cf5cb724372ba))
+
+
+### Bug Fixes
+
+* **deps:** bump golang.org/x/oauth2 from 0.35.0 to 0.36.0 in /server in the minor-and-patch group ([#1814](https://github.com/seatsurfing/seatsurfing/issues/1814)) ([760f1c1](https://github.com/seatsurfing/seatsurfing/commit/760f1c17571f4efca37245e11b5576595e21d93a))
+* fix special chars in search page headline ([#1801](https://github.com/seatsurfing/seatsurfing/issues/1801)) ([c55f125](https://github.com/seatsurfing/seatsurfing/commit/c55f125cf930c0677a8884910113c62ce1654a6a))
+* optimize dashboard rendering on small viewports ([#1810](https://github.com/seatsurfing/seatsurfing/issues/1810)) ([4ce0fa1](https://github.com/seatsurfing/seatsurfing/commit/4ce0fa134cf9e1bb41740710d179536531898b2e))
+* show username already exists error ([#1806](https://github.com/seatsurfing/seatsurfing/issues/1806)) ([b752a81](https://github.com/seatsurfing/seatsurfing/commit/b752a8194f5160dfba8d2bbab9724096748c5134))
+
 ## [1.66.0](https://github.com/seatsurfing/seatsurfing/compare/v1.65.0...v1.66.0) (2026-03-08)
 
 
