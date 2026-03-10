@@ -49,9 +49,9 @@ class SearchResult extends React.Component<Props, State> {
 
   loadItems = async () => {
     const { keyword } = this.props.router.query;
+
     if (typeof keyword !== "string") {
       this.setState({ loading: false });
-      return;
     }
 
     const options = new SearchOptions();
@@ -59,7 +59,9 @@ class SearchResult extends React.Component<Props, State> {
     options.includeLocations = true;
     options.includeSpaces = true;
     options.includeGroups = true;
-    const result = await Search.search(keyword ? keyword : "", options);
+    options.expandLocations = true;
+    options.keyword = keyword ? (keyword as string) : "";
+    const result = await Search.search(options);
     this.data = result;
     this.setState({ loading: false });
   };
@@ -132,7 +134,7 @@ class SearchResult extends React.Component<Props, State> {
 
   renderSpaceResults = () =>
     this.renderResults(this.data.spaces, "spaces", (space) => ({
-      text: space.name,
+      text: `${space.location.name} > ${space.name}`,
       link: Navigation.adminLocationDetails(space.locationId),
     }));
 

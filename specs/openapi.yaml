@@ -4878,12 +4878,14 @@ paths:
       tags: [Search]
       summary: Search across entities
       description: |
-        Searches across users, locations, spaces, and groups by keyword. Requires Space Admin role.
+        Searches across users, locations, spaces, and groups by keyword. Requires Org Admin role for users and Space Admin role for everything else.
         Use query parameters to control which entity types to include in the search:
         - `includeUsers=1` (requires Org Admin)
-        - `includeGroups=1` (requires Space Admin)
+        - `includeGroups=1`
         - `includeLocations=1`
         - `includeSpaces=1`
+        To expand the location object (in the spaces result), use the expand query parameter:
+        - `expandLocations=1`
       operationId: search
       security:
         - BearerAuth: []
@@ -4898,7 +4900,7 @@ paths:
           schema:
             type: string
             enum: ["0", "1"]
-          description: Include users in search results (requires Org Admin)
+          description: Include users in search results
         - name: includeGroups
           in: query
           schema:
@@ -4917,6 +4919,12 @@ paths:
             type: string
             enum: ["0", "1"]
           description: Include spaces in search results
+        - name: expandLocations
+          in: query
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: Expand the location object in search results
       responses:
         "200":
           description: Search results
