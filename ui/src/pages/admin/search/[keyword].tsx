@@ -134,7 +134,7 @@ class SearchResult extends React.Component<Props, State> {
 
   renderSpaceResults = () =>
     this.renderResults(this.data.spaces, "spaces", (space) => ({
-      text: `${space.name} > ${space.location.name}`,
+      text: `${space.location.name} > ${space.name}`,
       link: Navigation.adminLocationDetails(space.locationId),
     }));
 
