@@ -54,6 +54,7 @@ interface SpaceState {
   orgY: number;
   rotation: number;
   requireSubject: boolean;
+  enabled: boolean;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -251,6 +252,7 @@ class EditLocation extends React.Component<Props, State> {
         space.height = parseInt(item.height.replace(/^\D+/g, ""));
         space.rotation = Math.round(item.rotation);
         space.requireSubject = item.requireSubject;
+        space.enabled = item.enabled;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -425,6 +427,7 @@ class EditLocation extends React.Component<Props, State> {
       requireSubject: e
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
+      enabled: true,
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -490,6 +493,15 @@ class EditLocation extends React.Component<Props, State> {
     let spaces = this.state.spaces;
     let space = { ...spaces[i] };
     space.requireSubject = checked;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceEnabled = (i: number, checked: boolean) => {
+    let spaces = this.state.spaces;
+    let space = { ...spaces[i] };
+    space.enabled = checked;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -919,6 +931,25 @@ class EditLocation extends React.Component<Props, State> {
             </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4">
+                {this.props.t("enabled")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Check
+                  type="checkbox"
+                  id="check-enabled"
+                  label={this.props.t("yes")}
+                  checked={this.getSelectedSpace()?.enabled}
+                  onChange={(e: any) =>
+                    this.setSpaceEnabled(
+                      this.state.selectedSpace!,
+                      e.target.checked,
+                    )
+                  }
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm="4">
                 {this.props.t("approvers")}
               </Form.Label>
               <Col sm="8">
@@ -1262,7 +1293,7 @@ class EditLocation extends React.Component<Props, State> {
           </div>
         </>
       );
-      let availableAttributeOptions = this.getAvailableAttributeOptions();
+      const availableAttributeOptions = this.getAvailableAttributeOptions();
       attributeTable = (
         <>
           <div
@@ -1289,7 +1320,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form>{this.getAttributeRows()}</Form>
         </>
       );
-      let downloadButton = (
+      const downloadButton = (
         <a
           download={`seatsurfing-${this.state.name}-spaces.xlsx`}
           href="#"
