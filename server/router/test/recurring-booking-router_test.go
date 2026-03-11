@@ -24,6 +24,7 @@ func TestRecurringBookingsPrecheckFeatureDisabled(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -55,6 +56,7 @@ func TestRecurringBookingsCreateFeatureDisabled(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -88,6 +90,7 @@ func TestRecurringBookingsPrecheck(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -145,6 +148,7 @@ func TestRecurringBookingsCreateDelete(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -214,6 +218,7 @@ func TestRecurringBookingsGet(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -268,6 +273,7 @@ func TestRecurringBookingsGetForeign(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -306,7 +312,7 @@ func TestRecurringBookingsGetICal(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
-	}
+		Enabled:               true}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
 	GetSpaceRepository().Create(s1)
@@ -368,6 +374,7 @@ func TestRecurringBookingsDeleteForeign(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}

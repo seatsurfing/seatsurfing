@@ -196,6 +196,7 @@ func CreateLoginTestUserParams() *LoginResponse {
 func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
 	location := &Location{
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	if err := GetLocationRepository().Create(location); err != nil {
 		panic(err)

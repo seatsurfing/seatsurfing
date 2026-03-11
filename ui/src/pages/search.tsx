@@ -569,6 +569,10 @@ class Search extends React.Component<Props, State> {
           disabled={!location.enabled}
         >
           {location.name}
+          {location.id === this.state.prefLocationId &&
+          location.id !== this.state.locationId
+            ? " (♥)"
+            : ""}
         </option>
       );
     });
@@ -1836,6 +1840,7 @@ class Search extends React.Component<Props, State> {
         </div>
         <div className="content">
           <Form>
+            {/* Location selection */}
             <Form.Group className="d-flex">
               <div className="pt-1 me-2">
                 <LocationIcon
@@ -2041,7 +2046,7 @@ class Search extends React.Component<Props, State> {
         </Modal.Body>
       </Modal>
     );
-    let searchModal = (
+    const searchModal = (
       <Modal
         show={this.state.showSearchModal}
         onHide={() => this.setState({ showSearchModal: false })}
@@ -2134,7 +2139,7 @@ class Search extends React.Component<Props, State> {
         confirmModalRows.push({ label: attributeName, value: attribute.value });
       }
     });
-    let confirmModal = (
+    const confirmModal = (
       <Modal
         show={this.state.showConfirm}
         onHide={() =>
@@ -2455,7 +2460,7 @@ class Search extends React.Component<Props, State> {
       );
     }
     let isRecurring = false;
-    let bookingNamesModal = (
+    const bookingNamesModal = (
       <Modal
         show={this.state.showBookingNames}
         onHide={() => this.setState({ showBookingNames: false })}
@@ -2496,7 +2501,7 @@ class Search extends React.Component<Props, State> {
         </Modal.Footer>
       </Modal>
     );
-    let successModal = (
+    const successModal = (
       <Modal
         show={this.state.showSuccess}
         onHide={() => this.setState({ showSuccess: false })}
@@ -2545,7 +2550,7 @@ class Search extends React.Component<Props, State> {
         </Modal.Footer>
       </Modal>
     );
-    let errorModal = (
+    const errorModal = (
       <Modal
         show={this.state.showError}
         onHide={() => this.setState({ showError: false })}
