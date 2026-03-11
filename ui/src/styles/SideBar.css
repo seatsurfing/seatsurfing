@@ -69,10 +69,6 @@
   max-width: var(--sidebar-width-expanded) !important;
 }
 
-.navbar-brand img {
-  margin: 0 auto;
-}
-
 main[role="main"] {
   width: calc(100% - var(--sidebar-width-expanded)) !important;
   flex: 0 0 calc(100% - var(--sidebar-width-expanded)) !important;
@@ -86,10 +82,6 @@ main[role="main"] {
     width: var(--sidebar-width-collapsed) !important;
     flex: 0 0 var(--sidebar-width-collapsed) !important;
     max-width: var(--sidebar-width-collapsed) !important;
-  }
-
-  .navbar-brand img {
-    margin: 0 auto;
   }
 
   main[role="main"] {
