@@ -122,7 +122,6 @@ func TestSpacesCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody2 *GetSpaceResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
-
 	CheckTestString(t, "H235", resBody2.Name)
 	CheckTestUint(t, 51, resBody2.X)
 	CheckTestUint(t, 101, resBody2.Y)
@@ -395,11 +394,9 @@ func TestSpacesAvailabilityOuter(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-
 	if len(resBody) != 3 {
 		t.Fatalf("Expected array with 3 elements")
 	}
-
 	CheckTestString(t, "H234", resBody[0].Name)
 	CheckTestString(t, "H235", resBody[1].Name)
 	CheckTestString(t, "H236", resBody[2].Name)
