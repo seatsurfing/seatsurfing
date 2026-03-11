@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 	"testing"
@@ -123,7 +122,7 @@ func TestSpacesCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody2 *GetSpaceResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
-	log.Println("RSS 2", resBody2)
+
 	CheckTestString(t, "H235", resBody2.Name)
 	CheckTestUint(t, 51, resBody2.X)
 	CheckTestUint(t, 101, resBody2.Y)
