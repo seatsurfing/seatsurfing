@@ -194,8 +194,8 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// test if space is disabled
-	if !space.Enabled {
+	// test if space or location are disabled
+	if !location.Enabled || !space.Enabled {
 		SendBadRequest(w)
 		return
 	}
