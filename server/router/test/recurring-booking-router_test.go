@@ -27,7 +27,7 @@ func TestRecurringBookingsPrecheckFeatureDisabled(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -59,7 +59,7 @@ func TestRecurringBookingsCreateFeatureDisabled(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -93,9 +93,9 @@ func TestRecurringBookingsPrecheck(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
 
 	// Create booking 1
@@ -151,9 +151,9 @@ func TestRecurringBookingsCreateDelete(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
 
 	// Create booking 1
@@ -221,7 +221,7 @@ func TestRecurringBookingsGet(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -276,7 +276,7 @@ func TestRecurringBookingsGetForeign(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// user1 creates a recurring booking
@@ -314,7 +314,7 @@ func TestRecurringBookingsGetICal(t *testing.T) {
 		OrganizationID:        org.ID,
 		Enabled:               true}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -377,7 +377,7 @@ func TestRecurringBookingsDeleteForeign(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// user1 creates a recurring booking
