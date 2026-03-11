@@ -400,3 +400,31 @@ func TestRecurringBookingsDeleteForeign(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
+
+func TestCannotCreateRecurringBookingsInDisabledLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	user1 := CreateTestUserInOrg(org)
+
+	location, space := CreateTestLocationAndSpace(org)
+
+	location.Enabled = false
+	GetLocationRepository().Update(location)
+
+	payload := `{
+	"spaceId": "` + space.ID + `",
+	"subject": "Test",
+	"enter": "2030-08-28T09:00:00+02:00",
+	"leave": "2030-08-28T15:00:00+02:00",
+	"end": "2030-08-30T00:00:00+02:00",
+	"cadence": 1,
+	"cycle": 1
+	}`
+	req := NewHTTPRequest("POST", "/recurring-booking/", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+}
