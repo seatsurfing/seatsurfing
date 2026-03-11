@@ -655,6 +655,13 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+
+	// test if location is enabled or user is space admin
+	if !location.Enabled && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+		SendBadRequest(w)
+		return
+	}
+
 	e, err := router.copyFromRestModel(&m, location)
 	if err != nil {
 		SendInternalServerError(w)
