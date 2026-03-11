@@ -16,4 +16,6 @@ export default class RendererUtils {
     textarea.innerHTML = text;
     return textarea.value;
   }
+
+  static capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 }

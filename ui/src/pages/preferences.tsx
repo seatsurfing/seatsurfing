@@ -1,14 +1,6 @@
 import React from "react";
 import Loading from "../components/Loading";
-import {
-  Alert,
-  Button,
-  ButtonGroup,
-  Col,
-  Form,
-  Nav,
-  Row,
-} from "react-bootstrap";
+import { Alert, Button, ButtonGroup, Form, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
@@ -25,6 +17,7 @@ import Formatting from "@/util/Formatting";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
 import Passkey from "@/types/Passkey";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -40,7 +33,7 @@ interface State {
   selfBooked: string;
   partiallyBooked: string;
   buddyBooked: string;
-  disallowedColor: string;
+  disallowed: string;
   locationId: string;
   changePassword: boolean;
   password: string;
@@ -91,7 +84,7 @@ class Preferences extends React.Component<Props, State> {
       selfBooked: COLOR_SELF_BOOKED,
       partiallyBooked: COLOR_PARTIALLY_BOOKED,
       buddyBooked: COLOR_BUDDY_BOOKED,
-      disallowedColor: COLOR_DISALLOWED,
+      disallowed: COLOR_DISALLOWED,
       locationId: "",
       changePassword: false,
       password: "",
@@ -301,7 +294,7 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference("self_booked_color", this.state.selfBooked),
       new UserPreference("partially_booked_color", this.state.partiallyBooked),
       new UserPreference("buddy_booked_color", this.state.buddyBooked),
-      new UserPreference("disallowed_color", this.state.disallowedColor),
+      new UserPreference("disallowed_color", this.state.disallowed),
     ];
     UserPreference.setAll(payload)
       .then(() => {
@@ -325,7 +318,7 @@ class Preferences extends React.Component<Props, State> {
       selfBooked: COLOR_SELF_BOOKED,
       partiallyBooked: COLOR_PARTIALLY_BOOKED,
       buddyBooked: COLOR_BUDDY_BOOKED,
-      disallowedColor: COLOR_DISALLOWED,
+      disallowed: COLOR_DISALLOWED,
     });
   };
 
@@ -431,6 +424,35 @@ class Preferences extends React.Component<Props, State> {
         });
       });
   };
+
+  renderBookingColor(
+    stateKey: keyof Pick<
+      State,
+      | "notBooked"
+      | "selfBooked"
+      | "booked"
+      | "partiallyBooked"
+      | "buddyBooked"
+      | "disallowed"
+    >,
+    labelKey: string,
+  ) {
+    const id = `color${RendererUtils.capitalize(stateKey)}`;
+    return (
+      <Form.Group className="margin-top-15 d-flex align-items-center">
+        <Form.Control
+          type="color"
+          key={id}
+          id={id}
+          value={this.state[stateKey]}
+          onChange={(e: any) =>
+            this.setState({ [stateKey]: e.target.value } as any)
+          }
+        />
+        <Form.Label className="mb-0">{this.props.t(labelKey)}</Form.Label>
+      </Form.Group>
+    );
+  }
 
   render() {
     if (this.state.loading) {
@@ -657,84 +679,17 @@ class Preferences extends React.Component<Props, State> {
               className="form-colors"
             >
               <h5 className="margin-top-15">{this.props.t("bookingcolors")}</h5>
-              <Form.Group className="margin-top-15 d-flex">
-                <Form.Control
-                  type="color"
-                  key={"colorBooked"}
-                  id={"colorBooked"}
-                  value={this.state.booked}
-                  onChange={(e: any) =>
-                    this.setState({ booked: e.target.value })
-                  }
-                />
-                <Form.Label>{this.props.t("colorAlreadyBooked")}</Form.Label>
-              </Form.Group>
-              <Form.Group className="margin-top-15 d-flex">
-                <Form.Control
-                  type="color"
-                  key={"colorNotBooked"}
-                  id={"colorNotBooked"}
-                  value={this.state.notBooked}
-                  onChange={(e: any) =>
-                    this.setState({ notBooked: e.target.value })
-                  }
-                />
-                <Form.Label>{this.props.t("colorNotBooked")}</Form.Label>
-              </Form.Group>
-              <Form.Group className="margin-top-15 d-flex">
-                <Form.Control
-                  type="color"
-                  key={"colorSelfBooked"}
-                  id={"colorSelfBooked"}
-                  value={this.state.selfBooked}
-                  onChange={(e: any) =>
-                    this.setState({ selfBooked: e.target.value })
-                  }
-                />
-                <Form.Label>{this.props.t("colorSelfBooked")}</Form.Label>
-              </Form.Group>
-              {RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled && (
-                <Form.Group className="margin-top-15 d-flex">
-                  <Form.Control
-                    type="color"
-                    key={"colorPartiallyBooked"}
-                    id={"colorPartiallyBooked"}
-                    value={this.state.partiallyBooked}
-                    onChange={(e: any) =>
-                      this.setState({ partiallyBooked: e.target.value })
-                    }
-                  />
-                  <Form.Label>
-                    {this.props.t("colorPartiallyBooked")}
-                  </Form.Label>
-                </Form.Group>
-              )}
-              {!RuntimeConfig.INFOS.disableBuddies && (
-                <Form.Group className="margin-top-15 d-flex">
-                  <Form.Control
-                    type="color"
-                    key={"colorBuddyBooked"}
-                    id={"colorBuddyBooked"}
-                    value={this.state.buddyBooked}
-                    onChange={(e: any) =>
-                      this.setState({ buddyBooked: e.target.value })
-                    }
-                  />
-                  <Form.Label>{this.props.t("colorBuddyBooked")}</Form.Label>
-                </Form.Group>
-              )}
-              <Form.Group className="margin-top-15 d-flex">
-                <Form.Control
-                  type="color"
-                  key={"colorDisallowed"}
-                  id={"colorDisallowed"}
-                  value={this.state.disallowedColor}
-                  onChange={(e: any) =>
-                    this.setState({ disallowedColor: e.target.value })
-                  }
-                />
-                <Form.Label>{this.props.t("colorDisallowed")}</Form.Label>
-              </Form.Group>
+              {this.renderBookingColor("booked", "colorAlreadyBooked")}
+              {this.renderBookingColor("notBooked", "colorNotBooked")}
+              {this.renderBookingColor("selfBooked", "colorSelfBooked")}
+              {RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled &&
+                this.renderBookingColor(
+                  "partiallyBooked",
+                  "colorPartiallyBooked",
+                )}
+              {!RuntimeConfig.INFOS.disableBuddies &&
+                this.renderBookingColor("buddyBooked", "colorBuddyBooked")}
+              {this.renderBookingColor("disallowed", "colorDisallowed")}
               <ButtonGroup className="margin-top-15">
                 <Button
                   type="button"
