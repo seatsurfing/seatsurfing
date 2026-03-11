@@ -395,18 +395,17 @@ func TestSpacesAvailabilityOuter(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetSpaceResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	/*
-			if len(resBody) != 3 {
-				t.Fatalf("Expected array with 3 elements")
-			}
 
-		CheckTestString(t, "H234", resBody[0].Name)
-		CheckTestString(t, "H235", resBody[1].Name)
-		CheckTestString(t, "H236", resBody[2].Name)
-		CheckTestBool(t, false, resBody[0].Available)
-		CheckTestBool(t, true, resBody[1].Available)
-		CheckTestBool(t, true, resBody[2].Available)
-	*/
+	if len(resBody) != 3 {
+		t.Fatalf("Expected array with 3 elements")
+	}
+
+	CheckTestString(t, "H234", resBody[0].Name)
+	CheckTestString(t, "H235", resBody[1].Name)
+	CheckTestString(t, "H236", resBody[2].Name)
+	CheckTestBool(t, false, resBody[0].Available)
+	CheckTestBool(t, true, resBody[1].Available)
+	CheckTestBool(t, true, resBody[2].Available)
 }
 
 func TestSpacesAvailabilityInner(t *testing.T) {
