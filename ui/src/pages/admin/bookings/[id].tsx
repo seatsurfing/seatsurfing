@@ -32,7 +32,7 @@ interface State {
   loading: boolean;
   saved: boolean;
   error: boolean;
-  wascreated: boolean;
+  wasCreated: boolean;
   goBack: boolean;
   enter: Date;
   leave: Date;
@@ -101,7 +101,7 @@ class EditBooking extends React.Component<Props, State> {
       loading: true,
       saved: false,
       error: false,
-      wascreated: false,
+      wasCreated: false,
       goBack: false,
       enter: new Date(),
       leave: new Date(),
@@ -149,19 +149,6 @@ class EditBooking extends React.Component<Props, State> {
       this.setState({ loading: false });
       this.initDates();
     });
-  };
-
-  createDateAsUTC = (date: Date) => {
-    return new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-        date.getSeconds(),
-      ),
-    );
   };
 
   loadData = () => {
@@ -425,7 +412,7 @@ class EditBooking extends React.Component<Props, State> {
             saved: true,
             isDisabledLocation: false,
             isDisabledSpace: false,
-            wascreated: true,
+            wasCreated: true,
             selectedUserEmail: user,
           });
         })
@@ -433,7 +420,7 @@ class EditBooking extends React.Component<Props, State> {
           this.setState({
             error: true,
             saved: false,
-            wascreated: true,
+            wasCreated: true,
           });
         });
     } else {
@@ -454,14 +441,14 @@ class EditBooking extends React.Component<Props, State> {
         .then(() => {
           this.setState({
             saved: true,
-            wascreated: false,
+            wasCreated: false,
           });
         })
         .catch(() => {
           this.setState({
             error: true,
             saved: false,
-            wascreated: false,
+            wasCreated: false,
           });
         });
     }
@@ -492,9 +479,9 @@ class EditBooking extends React.Component<Props, State> {
         num: this.maxBookingsPerUser,
       });
     }
-    let todayMorning = this.createDateAsUTC(new Date());
+    const todayMorning = DateUtil.convertToUTC(new Date());
     todayMorning.setHours(0, 0, 0);
-    let enterTime = new Date(this.state.enter);
+    const enterTime = new Date(this.state.enter);
     if (this.dailyBasisBooking) {
       enterTime.setHours(23, 59, 59);
     }
@@ -511,7 +498,7 @@ class EditBooking extends React.Component<Props, State> {
       hint = this.props.t("errorLeavePast");
     }
 
-    let bookingAdvanceDays = Math.floor(
+    const bookingAdvanceDays = Math.floor(
       (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (
@@ -544,7 +531,7 @@ class EditBooking extends React.Component<Props, State> {
         num: this.minBookingDurationHours,
       });
     }
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       self.setState(
         {
@@ -557,7 +544,7 @@ class EditBooking extends React.Component<Props, State> {
   };
 
   setEnterDate = (value: Date | [Date | null, Date | null]) => {
-    let dateChangedCb = () => {
+    const dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
           this.setState({ loading: false });
@@ -572,12 +559,12 @@ class EditBooking extends React.Component<Props, State> {
         }
       });
     };
-    let performChange = () => {
-      let enter = value instanceof Date ? value : value[0];
+    const performChange = () => {
+      const enter = value instanceof Date ? value : value[0];
       if (enter == null) {
         return;
       }
-      let leave = new Date(enter);
+      const leave = new Date(enter);
       leave.setHours(leave.getHours() + 1);
       if (this.dailyBasisBooking) {
         enter.setHours(0, 0, 0);
@@ -620,7 +607,7 @@ class EditBooking extends React.Component<Props, State> {
         }
       });
     };
-    let performChange = () => {
+    const performChange = () => {
       let date = value instanceof Date ? value : value[0];
       if (date == null) {
         return;
@@ -717,7 +704,7 @@ class EditBooking extends React.Component<Props, State> {
       );
     }
 
-    let enterDatePicker = (
+    const enterDatePicker = (
       <DateTimePicker
         value={this.state.enter}
         onChange={(value: Date | null) => {
@@ -728,7 +715,7 @@ class EditBooking extends React.Component<Props, State> {
         enableTime={!this.dailyBasisBooking}
       />
     );
-    let leaveDatePicker = (
+    const leaveDatePicker = (
       <DateTimePicker
         value={this.state.leave}
         onChange={(value: Date | null) => {
@@ -740,7 +727,7 @@ class EditBooking extends React.Component<Props, State> {
       />
     );
 
-    let backButton = (
+    const backButton = (
       <Link href="/admin/bookings" className="btn btn-sm btn-outline-secondary">
         <IconBack className="feather" /> {this.props.t("back")}
       </Link>
@@ -764,7 +751,7 @@ class EditBooking extends React.Component<Props, State> {
       hint = (
         <Alert variant="success">
           {this.props.t(
-            this.state.wascreated ? "entryCreated" : "entryUpdated",
+            this.state.wasCreated ? "entryCreated" : "entryUpdated",
           )}
         </Alert>
       );
@@ -776,7 +763,7 @@ class EditBooking extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
     }
 
-    let buttonDelete = (
+    const buttonDelete = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -786,7 +773,7 @@ class EditBooking extends React.Component<Props, State> {
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
     );
-    let buttonSave = (
+    const buttonSave = (
       <Button
         disabled={!(this.state.canSave && this.state.canEdit)}
         className="btn-sm"
