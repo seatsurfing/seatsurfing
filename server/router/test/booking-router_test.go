@@ -40,7 +40,7 @@ func TestBookingsCRUD(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -114,6 +114,25 @@ func TestBookingsCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestCannotCreateBookingInDisabledLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	// disable location
+	location.Enabled = false
+	GetLocationRepository().Update(location)
+
+	// try to create booking in disabled location
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestBookingsSubjectRequired(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -125,6 +144,7 @@ func TestBookingsSubjectRequired(t *testing.T) {
 	location := &Location{
 		Name:           "Location 1",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	if err := GetLocationRepository().Create(location); err != nil {
 		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
@@ -182,6 +202,7 @@ func TestBookingsApproval(t *testing.T) {
 	location := &Location{
 		Name:           "Location 1",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	GetGroupRepository().AddMembers(group, []string{adminUser.ID})
 	if err := GetLocationRepository().Create(location); err != nil {
@@ -248,6 +269,7 @@ func TestBookingsAllowedUsersRestricted(t *testing.T) {
 	location := &Location{
 		Name:           "Location 1",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	if err := GetLocationRepository().Create(location); err != nil {
 		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
@@ -284,7 +306,7 @@ func TestBookingsCreateNonExistingUser(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingAllowBookingsNonExistingUsers.Name, "1")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -322,7 +344,7 @@ func TestBookingsCreateNonExistingUserNoAdmin(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingAllowBookingsNonExistingUsers.Name, "1")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -354,7 +376,7 @@ func TestBookingsCreateNonExistingUserNotEnabled(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -383,7 +405,7 @@ func TestBookingsCreateNonExistingUserForeignDomain(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingAllowBookingsNonExistingUsers.Name, "1")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -411,7 +433,7 @@ func TestBookingsList(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -471,7 +493,7 @@ func TestBookingsGetForeign(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -514,7 +536,7 @@ func TestBookingsUpdateForeign(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -545,7 +567,7 @@ func TestBookingsUpdateForeign(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
 	// Create location #2
-	payload = `{"name": "Location 2"}`
+	payload = `{"name": "Location 2", "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -578,7 +600,7 @@ func TestBookingsCreateForeign(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -613,7 +635,7 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "24")
 
 	// Create location
-	payload := `{"name": "Location 1", "timezone": "UTC"}`
+	payload := `{"name": "Location 1", "timezone": "UTC", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -743,7 +765,9 @@ func TestBookingsMaxHoursRespectsLocationTimezone(t *testing.T) {
 	location := &Location{
 		Name:           "Test",
 		OrganizationID: org.ID,
-		Timezone:       timezone}
+		Timezone:       timezone,
+		Enabled:        true,
+	}
 	GetLocationRepository().Create(location)
 	space := &Space{Name: "Test 1", LocationID: location.ID}
 	GetSpaceRepository().Create(space)
@@ -794,7 +818,7 @@ func TestBookingsInPastAreNotDeletable(t *testing.T) {
 	loginResponse := LoginTestUser(user.ID)
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -835,7 +859,7 @@ func TestBookingsDeleteToCloseBeingAdmin(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -892,7 +916,7 @@ func TestBookingConflictDurationTooShort(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "2")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -947,7 +971,7 @@ func TestBookingUpdateConflictDurationTooShort(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -995,7 +1019,7 @@ func TestBookingsDeleteForeign(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1037,7 +1061,7 @@ func TestBookingsDeleteSpaceAdmin(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1079,7 +1103,7 @@ func TestBookingsConflictEnd(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1113,7 +1137,7 @@ func TestBookingsConflictStart(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1147,7 +1171,7 @@ func TestBookingsConflictInner(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1181,7 +1205,7 @@ func TestBookingsConflictOuter(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1215,7 +1239,7 @@ func TestBookingsConflictUpdateSelf(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1250,7 +1274,7 @@ func TestBookingsConflictUpdateOther(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 
 	// Create location
-	payload := `{"name": "Location 1"}`
+	payload := `{"name": "Location 1", "enabled": true}`
 	req := NewHTTPRequest("POST", "/location/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1617,6 +1641,7 @@ func TestBookingsInvalidMaxUpcomingBookings(t *testing.T) {
 	l := &Location{
 		Name:           "Test",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
 	s := &Space{
@@ -1650,6 +1675,7 @@ func TestBookingsMaxConcurrentOK(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1690,6 +1716,7 @@ func TestBookingsSwitchToWinterTime(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1722,6 +1749,7 @@ func TestBookingsSwitchToSummerTime(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1753,6 +1781,7 @@ func TestBookingsSameDay(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1783,6 +1812,7 @@ func TestBookingsMaxConcurrentLimitExceeded(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1831,6 +1861,7 @@ func TestBookingsMaxConcurrentLimitOKOnUpdate(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1873,6 +1904,7 @@ func TestBookingsMaxConcurrentLimitExceededOnUpdate(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1929,6 +1961,7 @@ func TestBookingsMaxConcurrentLimitExceededHeadRequest(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -1975,6 +2008,7 @@ func TestBookingsMaxConcurrentLimitComplex(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 2,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2038,6 +2072,7 @@ func TestBookingsMaxConcurrentLimitOKComplex(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 1,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2080,6 +2115,7 @@ func TestBookingsConvertTimestampDefaultSetting(t *testing.T) {
 	l := &Location{
 		Name:           "Test",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2112,6 +2148,7 @@ func TestBookingsConvertTimestamp(t *testing.T) {
 		Name:           "Test",
 		OrganizationID: org.ID,
 		Timezone:       "US/Central",
+		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2160,6 +2197,7 @@ func TestBookingsPresenceReport(t *testing.T) {
 	l := &Location{
 		Name:           "Test",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2267,6 +2305,7 @@ func TestBookingsUserConcurrentOk(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2326,6 +2365,7 @@ func TestBookingsUserConcurrentExceedLimit(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2397,6 +2437,7 @@ func TestBookingsUserConcurrentNoLimit(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2452,6 +2493,7 @@ func TestBookingsUserConcurrentLimitOkOnUpdate(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2514,6 +2556,7 @@ func TestBookingsUserConcurrentLimitExceededOnUpdate(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2581,6 +2624,7 @@ func TestBookingsNonExistingUsers(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2658,6 +2702,7 @@ func TestBookingsFilter(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2790,6 +2835,7 @@ func TestBookingsGetICal(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2832,6 +2878,7 @@ func TestBookingsGetICalForeignUser(t *testing.T) {
 		Name:                  "Test",
 		MaxConcurrentBookings: 10,
 		OrganizationID:        org.ID,
+		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
@@ -2869,6 +2916,7 @@ func TestBookingsApproveNonApprover(t *testing.T) {
 	l := &Location{
 		Name:           "Test",
 		OrganizationID: org.ID,
+		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
 	s1 := &Space{Name: "Test 1", LocationID: l.ID}
