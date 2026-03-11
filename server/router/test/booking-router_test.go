@@ -47,7 +47,7 @@ func TestBookingsCRUD(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -158,6 +158,7 @@ func TestBookingsSubjectRequired(t *testing.T) {
 		Rotation:       90,
 		LocationID:     location.ID,
 		RequireSubject: true,
+		Enabled:        true,
 	}
 	if err := GetSpaceRepository().Create(space); err != nil {
 		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
@@ -216,6 +217,7 @@ func TestBookingsApproval(t *testing.T) {
 		Height:     300,
 		Rotation:   90,
 		LocationID: location.ID,
+		Enabled:    true,
 	}
 	if err := GetSpaceRepository().Create(space); err != nil {
 		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
@@ -282,6 +284,7 @@ func TestBookingsAllowedUsersRestricted(t *testing.T) {
 		Height:     300,
 		Rotation:   90,
 		LocationID: location.ID,
+		Enabled:    true,
 	}
 	if err := GetSpaceRepository().Create(space); err != nil {
 		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
@@ -313,7 +316,7 @@ func TestBookingsCreateNonExistingUser(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -351,7 +354,7 @@ func TestBookingsCreateNonExistingUserNoAdmin(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -383,7 +386,7 @@ func TestBookingsCreateNonExistingUserNotEnabled(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -412,7 +415,7 @@ func TestBookingsCreateNonExistingUserForeignDomain(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -440,7 +443,7 @@ func TestBookingsList(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -500,7 +503,7 @@ func TestBookingsGetForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -543,7 +546,7 @@ func TestBookingsUpdateForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -574,7 +577,7 @@ func TestBookingsUpdateForeign(t *testing.T) {
 	locationID2 := res.Header().Get("X-Object-Id")
 
 	// Create space #2
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID2+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -607,7 +610,7 @@ func TestBookingsCreateForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -642,7 +645,7 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -769,7 +772,7 @@ func TestBookingsMaxHoursRespectsLocationTimezone(t *testing.T) {
 		Enabled:        true,
 	}
 	GetLocationRepository().Create(location)
-	space := &Space{Name: "Test 1", LocationID: location.ID}
+	space := &Space{Name: "Test 1", LocationID: location.ID, Enabled: true}
 	GetSpaceRepository().Create(space)
 
 	now, _ := GetUTCNowInTimezone(timezone) // create now as UTC time (without timezone information)
@@ -825,7 +828,7 @@ func TestBookingsInPastAreNotDeletable(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -866,7 +869,7 @@ func TestBookingsDeleteToCloseBeingAdmin(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -923,7 +926,7 @@ func TestBookingConflictDurationTooShort(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -978,7 +981,7 @@ func TestBookingUpdateConflictDurationTooShort(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1026,7 +1029,7 @@ func TestBookingsDeleteForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1068,7 +1071,7 @@ func TestBookingsDeleteSpaceAdmin(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1110,7 +1113,7 @@ func TestBookingsConflictEnd(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1144,7 +1147,7 @@ func TestBookingsConflictStart(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1178,7 +1181,7 @@ func TestBookingsConflictInner(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1212,7 +1215,7 @@ func TestBookingsConflictOuter(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1246,7 +1249,7 @@ func TestBookingsConflictUpdateSelf(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1281,7 +1284,7 @@ func TestBookingsConflictUpdateOther(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1647,6 +1650,7 @@ func TestBookingsInvalidMaxUpcomingBookings(t *testing.T) {
 	s := &Space{
 		Name:       "Test",
 		LocationID: l.ID,
+		Enabled:    true,
 	}
 	GetSpaceRepository().Create(s)
 	b := &Booking{
@@ -1678,11 +1682,11 @@ func TestBookingsMaxConcurrentOK(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
 
 	// Create booking 1
@@ -1719,7 +1723,7 @@ func TestBookingsSwitchToWinterTime(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	now := time.Now().UTC()
@@ -1752,7 +1756,7 @@ func TestBookingsSwitchToSummerTime(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	now := time.Now().UTC()
@@ -1784,7 +1788,7 @@ func TestBookingsSameDay(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	now := time.Now().UTC()
@@ -1815,11 +1819,11 @@ func TestBookingsMaxConcurrentLimitExceeded(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
 
 	// Create booking 1
@@ -1864,9 +1868,9 @@ func TestBookingsMaxConcurrentLimitOKOnUpdate(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
 
 	// Create booking 1
@@ -1907,11 +1911,11 @@ func TestBookingsMaxConcurrentLimitExceededOnUpdate(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
 
 	// Create booking 1
@@ -1964,9 +1968,9 @@ func TestBookingsMaxConcurrentLimitExceededHeadRequest(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
 
 	//	 |------------------------| #1 - OK
@@ -2011,15 +2015,15 @@ func TestBookingsMaxConcurrentLimitComplex(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
-	s4 := &Space{Name: "Test 4", LocationID: l.ID}
+	s4 := &Space{Name: "Test 4", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s4)
-	s5 := &Space{Name: "Test 5", LocationID: l.ID}
+	s5 := &Space{Name: "Test 5", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s5)
 
 	//	|------------|                   #1 - OK  (07:30 - 12:00)
@@ -2075,11 +2079,11 @@ func TestBookingsMaxConcurrentLimitOKComplex(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
 
 	//	|------------|                   #1 - OK  (07:30 - 12:00)
@@ -2118,7 +2122,7 @@ func TestBookingsConvertTimestampDefaultSetting(t *testing.T) {
 		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// Create booking
@@ -2151,7 +2155,7 @@ func TestBookingsConvertTimestamp(t *testing.T) {
 		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// Create booking
@@ -2200,7 +2204,7 @@ func TestBookingsPresenceReport(t *testing.T) {
 		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	tomorrow := time.Now().Add(24 * time.Hour)
@@ -2308,15 +2312,15 @@ func TestBookingsUserConcurrentOk(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
-	s4 := &Space{Name: "Test 4", LocationID: l.ID}
+	s4 := &Space{Name: "Test 4", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s4)
-	s5 := &Space{Name: "Test 5", LocationID: l.ID}
+	s5 := &Space{Name: "Test 5", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s5)
 
 	// all with overlap
@@ -2368,15 +2372,15 @@ func TestBookingsUserConcurrentExceedLimit(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
-	s4 := &Space{Name: "Test 4", LocationID: l.ID}
+	s4 := &Space{Name: "Test 4", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s4)
-	s5 := &Space{Name: "Test 5", LocationID: l.ID}
+	s5 := &Space{Name: "Test 5", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s5)
 
 	// all with overlap
@@ -2440,15 +2444,15 @@ func TestBookingsUserConcurrentNoLimit(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
-	s4 := &Space{Name: "Test 4", LocationID: l.ID}
+	s4 := &Space{Name: "Test 4", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s4)
-	s5 := &Space{Name: "Test 5", LocationID: l.ID}
+	s5 := &Space{Name: "Test 5", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s5)
 
 	// all with overlap
@@ -2496,15 +2500,15 @@ func TestBookingsUserConcurrentLimitOkOnUpdate(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
-	s4 := &Space{Name: "Test 4", LocationID: l.ID}
+	s4 := &Space{Name: "Test 4", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s4)
-	s5 := &Space{Name: "Test 5", LocationID: l.ID}
+	s5 := &Space{Name: "Test 5", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s5)
 
 	// all with overlap
@@ -2559,15 +2563,15 @@ func TestBookingsUserConcurrentLimitExceededOnUpdate(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
-	s3 := &Space{Name: "Test 3", LocationID: l.ID}
+	s3 := &Space{Name: "Test 3", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s3)
-	s4 := &Space{Name: "Test 4", LocationID: l.ID}
+	s4 := &Space{Name: "Test 4", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s4)
-	s5 := &Space{Name: "Test 5", LocationID: l.ID}
+	s5 := &Space{Name: "Test 5", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s5)
 
 	// all with overlap
@@ -2627,7 +2631,7 @@ func TestBookingsNonExistingUsers(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// admin books
@@ -2705,7 +2709,7 @@ func TestBookingsFilter(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// Create a booking
@@ -2838,7 +2842,7 @@ func TestBookingsGetICal(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := "{\"spaceId\": \"" + s1.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\"}"
@@ -2881,7 +2885,7 @@ func TestBookingsGetICalForeignUser(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// user1 creates a booking
@@ -2919,7 +2923,7 @@ func TestBookingsApproveNonApprover(t *testing.T) {
 		Enabled:        true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 	GetSpaceRepository().AddApprovers(s1, []string{group.ID})
 
