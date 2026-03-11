@@ -181,7 +181,7 @@ class EditLocation extends React.Component<Props, State> {
           return Space.list(this.entity.id).then((spaces) => {
             this.setState({
               spaces: spaces.map((s) => {
-                let spaceState = this.newSpaceState(s);
+                const spaceState = this.newSpaceState(s);
                 spaceState.changed = false;
                 return spaceState;
               }),
@@ -427,7 +427,7 @@ class EditLocation extends React.Component<Props, State> {
       requireSubject: e
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
-      enabled: true,
+      enabled: e ? e.enabled : true,
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -461,8 +461,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpacePosition = (i: number, x: number, y: number) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.x = x;
     space.y = y;
     space.changed = true;
@@ -471,8 +471,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceDimensions = (i: number, width: string, height: string) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.width = width;
     space.height = height;
     space.changed = true;
@@ -481,8 +481,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceName = (i: number, name: string) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.name = name;
     space.changed = true;
     spaces[i] = space;
@@ -490,8 +490,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceRequireSubject = (i: number, checked: boolean) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.requireSubject = checked;
     space.changed = true;
     spaces[i] = space;
@@ -499,8 +499,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceEnabled = (i: number, checked: boolean) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.enabled = checked;
     space.changed = true;
     spaces[i] = space;
