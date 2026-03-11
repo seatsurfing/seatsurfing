@@ -193,6 +193,13 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
+
+	// test if space is disabled
+	if !space.Enabled {
+		SendBadRequest(w)
+		return
+	}
+
 	recurringBookingsAllowed, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingAllowRecurringBookings.Name)
 	if !recurringBookingsAllowed {
 		SendBadRequest(w)
