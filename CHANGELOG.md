@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.67.2](https://github.com/seatsurfing/seatsurfing/compare/v1.67.1...v1.67.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* **deps:** bump react-rnd from 10.5.2 to 10.5.3 in /ui in the production-dependencies group across 1 directory ([#1819](https://github.com/seatsurfing/seatsurfing/issues/1819)) ([8781ded](https://github.com/seatsurfing/seatsurfing/commit/8781dede7a58e84575316cf840f06a13ed4dc8ce))
+* fix setting filter query parameter to "enter_leave" ([#1818](https://github.com/seatsurfing/seatsurfing/issues/1818)) ([313a456](https://github.com/seatsurfing/seatsurfing/commit/313a45614c4c1990150442cc1857766f9122c96e))
+* use fixed width for admin sidebar and add tooltips on small viewports ([#1817](https://github.com/seatsurfing/seatsurfing/issues/1817)) ([ed7781b](https://github.com/seatsurfing/seatsurfing/commit/ed7781bbfc1ad95b4170fa945a29c76d201d402e))
+
 ## [1.67.1](https://github.com/seatsurfing/seatsurfing/compare/v1.67.0...v1.67.1) (2026-03-10)
 
 
