@@ -203,6 +203,7 @@ func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
 	}
 	space := &Space{
 		LocationID: location.ID,
+		Enabled:    true,
 	}
 	if err := GetSpaceRepository().Create(space); err != nil {
 		panic(err)
