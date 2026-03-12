@@ -172,7 +172,12 @@ class Search extends React.Component<Props, State> {
       showError: false,
       errorText: "",
       loading: true,
-      listView: false,
+      listView: (function () {
+        if (window !== undefined && window.localStorage !== undefined) {
+          return window.localStorage.getItem("listView") === "1";
+        }
+        return false;
+      })(),
       prefEnterTime: 0,
       prefWorkdayStart: 0,
       prefWorkdayEnd: 0,
@@ -1010,8 +1015,11 @@ class Search extends React.Component<Props, State> {
 
   toggleListView = () => {
     this.setState({ listView: !this.state.listView }, () => {
-      if (!this.state.listView) {
-        // this.centerMapView();
+      if (window !== undefined && window.localStorage !== undefined) {
+        window.localStorage.setItem(
+          "listView",
+          this.state.listView ? "1" : "0",
+        );
       }
     });
   };
