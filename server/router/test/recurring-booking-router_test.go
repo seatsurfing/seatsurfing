@@ -27,7 +27,7 @@ func TestRecurringBookingsPrecheckFeatureDisabled(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -59,7 +59,7 @@ func TestRecurringBookingsCreateFeatureDisabled(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -93,9 +93,9 @@ func TestRecurringBookingsPrecheck(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
 
 	// Create booking 1
@@ -151,9 +151,9 @@ func TestRecurringBookingsCreateDelete(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
-	s2 := &Space{Name: "Test 2", LocationID: l.ID}
+	s2 := &Space{Name: "Test 2", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s2)
 
 	// Create booking 1
@@ -221,7 +221,7 @@ func TestRecurringBookingsGet(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -276,7 +276,7 @@ func TestRecurringBookingsGetForeign(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// user1 creates a recurring booking
@@ -314,7 +314,7 @@ func TestRecurringBookingsGetICal(t *testing.T) {
 		OrganizationID:        org.ID,
 		Enabled:               true}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	payload := `{
@@ -377,7 +377,7 @@ func TestRecurringBookingsDeleteForeign(t *testing.T) {
 		Enabled:               true,
 	}
 	GetLocationRepository().Create(l)
-	s1 := &Space{Name: "Test 1", LocationID: l.ID}
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
 	GetSpaceRepository().Create(s1)
 
 	// user1 creates a recurring booking
@@ -426,5 +426,31 @@ func TestCannotCreateRecurringBookingsInDisabledLocation(t *testing.T) {
 	req := NewHTTPRequest("POST", "/recurring-booking/", user1.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
 
+func TestCannotCreateRecurringBookingsInDisabledSpace(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	user1 := CreateTestUserInOrg(org)
+
+	_, space := CreateTestLocationAndSpace(org)
+
+	space.Enabled = false
+	GetSpaceRepository().Update(space)
+
+	payload := `{
+	"spaceId": "` + space.ID + `",
+	"subject": "Test",
+	"enter": "2030-08-28T09:00:00+02:00",
+	"leave": "2030-08-28T15:00:00+02:00",
+	"end": "2030-08-30T00:00:00+02:00",
+	"cadence": 1,
+	"cycle": 1
+	}`
+	req := NewHTTPRequest("POST", "/recurring-booking/", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }

@@ -673,7 +673,7 @@ class Search extends React.Component<Props, State> {
   };
 
   onSpaceSelect = (item: Space) => {
-    if (!item.allowed) {
+    if (!item.allowed || !item.enabled) {
       return;
     }
     if (item.available) {
@@ -713,7 +713,7 @@ class Search extends React.Component<Props, State> {
       return this.state.prefBuddyBookedColor;
     }
 
-    if (!item.allowed) {
+    if (!item.allowed || !item.enabled) {
       return this.state.prefDisallowedColor;
     }
 
@@ -774,7 +774,8 @@ class Search extends React.Component<Props, State> {
       height: item.height,
       transform: "rotate: " + item.rotation + "deg",
       cursor:
-        (item.allowed && item.available) || (bookings && bookings.length > 0)
+        (item.enabled && item.allowed && item.available) ||
+        (bookings && bookings.length > 0)
           ? "pointer"
           : "default",
       backgroundColor: this.getAvailabilityStyle(item, bookings),

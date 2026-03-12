@@ -54,6 +54,7 @@ interface SpaceState {
   orgY: number;
   rotation: number;
   requireSubject: boolean;
+  enabled: boolean;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -180,7 +181,7 @@ class EditLocation extends React.Component<Props, State> {
           return Space.list(this.entity.id).then((spaces) => {
             this.setState({
               spaces: spaces.map((s) => {
-                let spaceState = this.newSpaceState(s);
+                const spaceState = this.newSpaceState(s);
                 spaceState.changed = false;
                 return spaceState;
               }),
@@ -251,6 +252,7 @@ class EditLocation extends React.Component<Props, State> {
         space.height = parseInt(item.height.replace(/^\D+/g, ""));
         space.rotation = Math.round(item.rotation);
         space.requireSubject = item.requireSubject;
+        space.enabled = item.enabled;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -425,6 +427,7 @@ class EditLocation extends React.Component<Props, State> {
       requireSubject: e
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
+      enabled: e ? e.enabled : true,
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -458,8 +461,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpacePosition = (i: number, x: number, y: number) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.x = x;
     space.y = y;
     space.changed = true;
@@ -468,8 +471,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceDimensions = (i: number, width: string, height: string) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.width = width;
     space.height = height;
     space.changed = true;
@@ -478,8 +481,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceName = (i: number, name: string) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.name = name;
     space.changed = true;
     spaces[i] = space;
@@ -487,9 +490,18 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setSpaceRequireSubject = (i: number, checked: boolean) => {
-    let spaces = this.state.spaces;
-    let space = { ...spaces[i] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
     space.requireSubject = checked;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceEnabled = (i: number, checked: boolean) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.enabled = checked;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -919,6 +931,25 @@ class EditLocation extends React.Component<Props, State> {
             </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4">
+                {this.props.t("enabled")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Check
+                  type="checkbox"
+                  id="check-enabled"
+                  label={this.props.t("yes")}
+                  checked={this.getSelectedSpace()?.enabled}
+                  onChange={(e: any) =>
+                    this.setSpaceEnabled(
+                      this.state.selectedSpace!,
+                      e.target.checked,
+                    )
+                  }
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm="4">
                 {this.props.t("approvers")}
               </Form.Label>
               <Col sm="8">
@@ -1262,7 +1293,7 @@ class EditLocation extends React.Component<Props, State> {
           </div>
         </>
       );
-      let availableAttributeOptions = this.getAvailableAttributeOptions();
+      const availableAttributeOptions = this.getAvailableAttributeOptions();
       attributeTable = (
         <>
           <div
@@ -1289,7 +1320,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form>{this.getAttributeRows()}</Form>
         </>
       );
-      let downloadButton = (
+      const downloadButton = (
         <a
           download={`seatsurfing-${this.state.name}-spaces.xlsx`}
           href="#"

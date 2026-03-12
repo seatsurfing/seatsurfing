@@ -656,8 +656,8 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// test if location is enabled or user is space admin
-	if !location.Enabled && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+	// test if location and space is enabled or user is space admin
+	if (!location.Enabled || !space.Enabled) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
 		SendBadRequest(w)
 		return
 	}
