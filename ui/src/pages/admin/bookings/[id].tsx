@@ -844,6 +844,10 @@ class EditBooking extends React.Component<Props, State> {
       );
     }
 
+    const getDisabledInfo = (enabled: boolean): string => {
+      return enabled ? "" : ` - ${this.props.t("disabled")}`;
+    };
+
     return (
       <FullLayout
         headline={this.props.t(
@@ -904,9 +908,11 @@ class EditBooking extends React.Component<Props, State> {
                   (location: {
                     name: string | undefined;
                     id: string | undefined;
+                    enabled: boolean;
                   }) => (
                     <option key={location.id} value={location.id}>
                       {location.name}
+                      {getDisabledInfo(location.enabled)}
                     </option>
                   ),
                 )}
@@ -936,23 +942,29 @@ class EditBooking extends React.Component<Props, State> {
                     name: string | null | undefined;
                     available: boolean;
                     rawBookings: any[];
+                    enabled: boolean;
                   }) => {
-                    let bookings = Booking.createFromRawArray(
+                    const bookings = Booking.createFromRawArray(
                       space.rawBookings,
                     );
                     if (space.available) {
                       return (
                         <option key={space.id} value={space.id}>
                           {space.name}
+                          {getDisabledInfo(space.enabled)}
                         </option>
                       );
                     } else {
-                      let booker = this.getBookersList(bookings);
-                      if (booker) booker = " (" + booker + ")";
+                      const booker = RendererUtils.preAndSuffixIfDefined(
+                        this.getBookersList(bookings),
+                        " (",
+                        ")",
+                      );
                       return (
                         <option key={space.id} disabled value={space.id}>
                           {space.name}
                           {booker}
+                          {getDisabledInfo(space.enabled)}
                         </option>
                       );
                     }

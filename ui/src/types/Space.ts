@@ -91,7 +91,7 @@ export default class Space extends Entity {
     }
     if (input.attributes) {
       this.attributes = input.attributes.map((a: any) => {
-        let e = new SpaceAttributeValue();
+        const e = new SpaceAttributeValue();
         e.deserialize(a);
         return e;
       });
@@ -119,9 +119,9 @@ export default class Space extends Entity {
   async getApprovers(): Promise<Group[]> {
     return Ajax.get(this.getBackendUrl() + this.id + "/approver").then(
       (result) => {
-        let list: Group[] = [];
+        const list: Group[] = [];
         (result.json as []).forEach((item) => {
-          let e: Group = new Group();
+          const e: Group = new Group();
           e.deserialize(item);
           list.push(e);
         });
@@ -147,9 +147,9 @@ export default class Space extends Entity {
   async getAllowedBookers(): Promise<Group[]> {
     return Ajax.get(this.getBackendUrl() + this.id + "/allowedbooker").then(
       (result) => {
-        let list: Group[] = [];
+        const list: Group[] = [];
         (result.json as []).forEach((item) => {
-          let e: Group = new Group();
+          const e: Group = new Group();
           e.deserialize(item);
           list.push(e);
         });
@@ -175,7 +175,7 @@ export default class Space extends Entity {
   static async get(locationId: string, id: string): Promise<Space> {
     return Ajax.get("/location/" + locationId + "/space/" + id).then(
       (result) => {
-        let e: Space = new Space();
+        const e: Space = new Space();
         e.deserialize(result.json);
         return e;
       },
@@ -184,9 +184,9 @@ export default class Space extends Entity {
 
   static async list(locationId: string): Promise<Space[]> {
     return Ajax.get("/location/" + locationId + "/space/").then((result) => {
-      let list: Space[] = [];
+      const list: Space[] = [];
       (result.json as []).forEach((item) => {
-        let e: Space = new Space();
+        const e: Space = new Space();
         e.deserialize(item);
         list.push(e);
       });
@@ -216,9 +216,9 @@ export default class Space extends Entity {
     return Ajax.get(
       "/location/" + locationId + "/space/availability?" + params,
     ).then((result) => {
-      let list: Space[] = [];
+      const list: Space[] = [];
       (result.json as []).forEach((item) => {
-        let e: Space = new Space();
+        const e: Space = new Space();
         e.deserialize(item);
         list.push(e);
       });
@@ -232,7 +232,7 @@ export default class Space extends Entity {
     updates: Space[],
     deleteIds: string[],
   ): Promise<BulkUpdateResponse> {
-    let payload = {
+    const payload = {
       creates: creates,
       updates: updates,
       deleteIds: deleteIds,
@@ -241,7 +241,7 @@ export default class Space extends Entity {
       "/location/" + locationId + "/space/bulk",
       payload,
     ).then((result) => {
-      let e = new BulkUpdateResponse();
+      const e = new BulkUpdateResponse();
       e.deserialize(result);
       return e;
     });
