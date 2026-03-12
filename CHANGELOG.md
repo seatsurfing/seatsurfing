@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.68.1](https://github.com/seatsurfing/seatsurfing/compare/v1.68.0...v1.68.1) (2026-03-12)
+
+
+### Bug Fixes
+
+* **deps:** bump the minor-and-patch group in /server with 2 updates ([#1833](https://github.com/seatsurfing/seatsurfing/issues/1833)) ([92fc21e](https://github.com/seatsurfing/seatsurfing/commit/92fc21e93db61c2eb16f3077b25b713c6da141e2))
+* save map/list view state of in browser's localStorage ([#1835](https://github.com/seatsurfing/seatsurfing/issues/1835)) ([54c5144](https://github.com/seatsurfing/seatsurfing/commit/54c51448b7b016093e03bc427488f1741604e9a8))
+
 ## [1.68.0](https://github.com/seatsurfing/seatsurfing/compare/v1.67.2...v1.68.0) (2026-03-12)
 
 
