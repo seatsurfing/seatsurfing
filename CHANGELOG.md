@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.68.0](https://github.com/seatsurfing/seatsurfing/compare/v1.67.2...v1.68.0) (2026-03-12)
+
+
+### Features
+
+* add space attribute "enabled" ([#1825](https://github.com/seatsurfing/seatsurfing/issues/1825)) ([c00b23c](https://github.com/seatsurfing/seatsurfing/commit/c00b23c93f13a7a27d57b54806dc5a92f8b454ee))
+* mark preferred location in dropdown ([#1822](https://github.com/seatsurfing/seatsurfing/issues/1822)) ([7491a82](https://github.com/seatsurfing/seatsurfing/commit/7491a82b763cbe79907b028df63932665ecf010a))
+
+
+### Bug Fixes
+
+* align  admin sidebar logo on different viewports ([#1821](https://github.com/seatsurfing/seatsurfing/issues/1821)) ([591d83c](https://github.com/seatsurfing/seatsurfing/commit/591d83c602ece9a05b24b943790370f93beb9585))
+* align booking color labels ([#1823](https://github.com/seatsurfing/seatsurfing/issues/1823)) ([c19876b](https://github.com/seatsurfing/seatsurfing/commit/c19876b6cf3a22b84e3f9eac32aa1b20bb48521e))
+* fix some German translations ([#1824](https://github.com/seatsurfing/seatsurfing/issues/1824)) ([abbd580](https://github.com/seatsurfing/seatsurfing/commit/abbd580760c2bdb7121124224350b8c31c3686e9))
+* prevent creating bookings in disabled location ([#1826](https://github.com/seatsurfing/seatsurfing/issues/1826)) ([917498e](https://github.com/seatsurfing/seatsurfing/commit/917498e1eb734047ed4dbbe244ebdcba972507e8))
+* prevent creating recurring bookings in disabled location ([#1828](https://github.com/seatsurfing/seatsurfing/issues/1828)) ([2667aa9](https://github.com/seatsurfing/seatsurfing/commit/2667aa9d8b7143e4cf07decd72c96e77f9a3abb3))
+* use more subtle color for disabled dropdown options ([#1830](https://github.com/seatsurfing/seatsurfing/issues/1830)) ([8c016ad](https://github.com/seatsurfing/seatsurfing/commit/8c016ad0a05e5f1ee11dd30378474499fcc87751))
+
 ## [1.67.2](https://github.com/seatsurfing/seatsurfing/compare/v1.67.1...v1.67.2) (2026-03-10)
 
 
