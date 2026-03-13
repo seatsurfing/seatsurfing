@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.68.2](https://github.com/seatsurfing/seatsurfing/compare/v1.68.1...v1.68.2) (2026-03-13)
+
+
+### Bug Fixes
+
+* prevent dir listing when accessing /ui/admin/ ([#1836](https://github.com/seatsurfing/seatsurfing/issues/1836)) ([b0da06a](https://github.com/seatsurfing/seatsurfing/commit/b0da06a88ffb5ce402bff6c17f1092de718aa924))
+
 ## [1.68.1](https://github.com/seatsurfing/seatsurfing/compare/v1.68.0...v1.68.1) (2026-03-12)
 
 
