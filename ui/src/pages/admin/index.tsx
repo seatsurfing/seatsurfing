@@ -3,19 +3,16 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { withTranslation } from "@/components/withTranslation";
 
-interface State {
-}
+interface State {}
 
 interface Props {
   router: NextRouter;
 }
 
 class AdminIndex extends React.Component<Props, State> {
-
   constructor(props: any) {
     super(props);
-    this.state = {
-    };
+    this.state = {};
   }
 
   componentDidMount() {
@@ -23,9 +20,7 @@ class AdminIndex extends React.Component<Props, State> {
   }
 
   render() {
-    return (
-      <></>
-    );
+    return <></>;
   }
 }
 
