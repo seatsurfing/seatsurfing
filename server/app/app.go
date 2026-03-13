@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -313,7 +314,7 @@ func (a *App) setupStaticUIRoutes(router *mux.Router) {
 		return
 	}
 	attributesPaths := a.getAttributePaths(GetConfig().StaticUiPath)
-	fs := http.FileServer(http.Dir(GetConfig().StaticUiPath))
+	fs := http.FileServer(neuteredFileSystem{http.Dir(GetConfig().StaticUiPath)})
 	for _, attrPath := range attributesPaths {
 		path := strings.ReplaceAll(attrPath, "[", "{")
 		path = strings.ReplaceAll(path, "]", "}/")
@@ -321,6 +322,29 @@ func (a *App) setupStaticUIRoutes(router *mux.Router) {
 	}
 	router.Path(basePath + "/").Handler(a.stripStaticPrefix(fs, basePath+"/"))
 	router.PathPrefix(basePath + "/").Handler(http.StripPrefix(basePath+"/", fs))
+}
+
+type neuteredFileSystem struct {
+	fs http.FileSystem
+}
+
+func (nfs neuteredFileSystem) Open(p string) (http.File, error) {
+	f, err := nfs.fs.Open(p)
+	if err != nil {
+		return nil, err
+	}
+	s, err := f.Stat()
+	if err != nil {
+		f.Close()
+		return nil, err
+	}
+	if s.IsDir() {
+		if _, err := nfs.fs.Open(path.Join(p, "index.html")); err != nil {
+			f.Close()
+			return nil, os.ErrNotExist
+		}
+	}
+	return f, nil
 }
 
 func (a *App) getAttributePaths(dir string) []string {
