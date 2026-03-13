@@ -151,7 +151,8 @@ func TestLocationsList(t *testing.T) {
 
 func TestLocationsUpload(t *testing.T) {
 	reqPlan, _ := http.NewRequest("GET", "https://upload.wikimedia.org/wikipedia/commons/7/70/Claybury_Asylum%2C_first_floor_plan._Wellcome_L0023316.jpg", nil)
-	reqPlan.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari")
+	reqPlan.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0")
+	reqPlan.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	c := http.DefaultClient
 	resp, err := c.Do(reqPlan)
 	if err != nil {
