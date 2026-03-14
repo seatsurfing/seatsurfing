@@ -15,8 +15,9 @@ type Props = DocumentProps & {
 class Doc extends Document<Props> {
   render() {
     const nonce = randomBytes(128).toString("base64");
-    let csp = new Map<string, string[]>();
+    const csp = new Map<string, string[]>();
     csp.set("default-src", ["'self'"]);
+    csp.set("form-src", ["'self'"]);
     csp.set("img-src", ["'self'", "data:", "https:", "'unsafe-eval'"]);
     csp.set("style-src", ["'self'", "data:", "'unsafe-inline'"]);
     csp.set("object-src", ["data:", "'unsafe-eval'"]);
@@ -36,7 +37,7 @@ class Doc extends Document<Props> {
         ),
       );
     }
-    let cspString = ``;
+    let cspString = "";
     csp.keys().forEach((key) => {
       cspString += `${key} ${csp.get(key)?.join(" ")}; `;
     });
