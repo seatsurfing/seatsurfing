@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.68.3](https://github.com/seatsurfing/seatsurfing/compare/v1.68.2...v1.68.3) (2026-03-14)
+
+
+### Bug Fixes
+
+* add CSP header form-action ([#1840](https://github.com/seatsurfing/seatsurfing/issues/1840)) ([f8d1db9](https://github.com/seatsurfing/seatsurfing/commit/f8d1db91ef040e967f193b1eedb603f9a631f6ad))
+* **deps:** bump undici from 7.22.0 to 7.24.1 in /ui ([#1838](https://github.com/seatsurfing/seatsurfing/issues/1838)) ([0401678](https://github.com/seatsurfing/seatsurfing/commit/0401678adaf17a60f61f1b53a9e9a974dc17b078))
+* show admin username as default when creating new bookings ([#1841](https://github.com/seatsurfing/seatsurfing/issues/1841)) ([df27322](https://github.com/seatsurfing/seatsurfing/commit/df27322e5be375377e2464d05b6b05d1d1de9ef3))
+
 ## [1.68.2](https://github.com/seatsurfing/seatsurfing/compare/v1.68.1...v1.68.2) (2026-03-13)
 
 
