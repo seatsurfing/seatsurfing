@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.68.4](https://github.com/seatsurfing/seatsurfing/compare/v1.68.3...v1.68.4) (2026-03-14)
+
+
+### Bug Fixes
+
+* fix form-action CSP ([#1842](https://github.com/seatsurfing/seatsurfing/issues/1842)) ([acefb7b](https://github.com/seatsurfing/seatsurfing/commit/acefb7bef9af134986a71ae7aba035b9dbe22600))
+
 ## [1.68.3](https://github.com/seatsurfing/seatsurfing/compare/v1.68.2...v1.68.3) (2026-03-14)
 
 
