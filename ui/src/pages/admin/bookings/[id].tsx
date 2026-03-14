@@ -138,7 +138,7 @@ class EditBooking extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    let promises = [
+    const promises = [
       this.loadData(),
       this.loadSettings(),
       this.loadLocations(),
@@ -184,11 +184,10 @@ class EditBooking extends React.Component<Props, State> {
       } else {
         // add
         this.isNewBooking = true;
-        let start = new Date();
         this.setState({
           isDisabledLocation: false,
           isDisabledSpace: false,
-          enter: start,
+          enter: new Date(),
           canSave: true,
           canEdit: true,
           // loading: false,
@@ -201,7 +200,7 @@ class EditBooking extends React.Component<Props, State> {
 
   initDates = () => {
     if (!this.isNewBooking) return;
-    let enter = new Date();
+    const enter = new Date();
     if (this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNow) {
       enter.setHours(enter.getHours() + 1, 0, 0);
       if (enter.getHours() < this.state.prefWorkdayStart) {
@@ -238,7 +237,7 @@ class EditBooking extends React.Component<Props, State> {
       enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
     }
 
-    let leave = new Date(enter);
+    const leave = new Date(enter);
     leave.setHours(this.state.prefWorkdayEnd, 0, 0);
 
     if (this.dailyBasisBooking) {
@@ -246,8 +245,8 @@ class EditBooking extends React.Component<Props, State> {
       leave.setHours(23, 59, 59, 0);
     }
     this.setState({
-      enter: enter,
-      leave: leave,
+      enter,
+      leave,
     });
   };
 
@@ -271,6 +270,11 @@ class EditBooking extends React.Component<Props, State> {
       this.setState({
         selfEmail: user.email,
       });
+      if (!this.state.typeaheadSelected[0]?.email) {
+        this.setState({
+          typeaheadSelected: [{ email: user.email }],
+        });
+      }
     });
   };
 
@@ -379,22 +383,20 @@ class EditBooking extends React.Component<Props, State> {
         leave: leave,
       });
     } else {
-      let enter = new Date();
-      enter = this.state.enter;
-      let leave = new Date();
-      leave = this.state.leave;
+      const enter = this.state.enter;
+      const leave = this.state.leave;
       enter.setSeconds(0);
       enter.setMilliseconds(0);
       leave.setSeconds(0);
       leave.setMilliseconds(0);
       this.setState({
-        enter: enter,
-        leave: leave,
+        enter,
+        leave,
       });
     }
 
     if (this.isNewBooking) {
-      var user = this.state.selectedUserEmail;
+      let user = this.state.selectedUserEmail;
       if (!user) {
         user = this.state.selfEmail;
       }
