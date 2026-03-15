@@ -57,6 +57,49 @@ func (a *App) InitializePlugins() {
 	}
 }
 
+type notFoundResponseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *notFoundResponseWriter) WriteHeader(status int) {
+	w.status = status
+	if status != http.StatusNotFound {
+		w.ResponseWriter.WriteHeader(status)
+	}
+}
+
+func (w *notFoundResponseWriter) Write(b []byte) (int, error) {
+	if w.status == http.StatusNotFound {
+		return len(b), nil
+	}
+	return w.ResponseWriter.Write(b)
+}
+
+func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
+
+	content404, content404Err := os.ReadFile(GetConfig().StaticUiPath + "/Error404/index.html")
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		wrapped := &notFoundResponseWriter{ResponseWriter: w, status: 0}
+		next.ServeHTTP(wrapped, r)
+		path404 := "/ui/Error404/"
+		if wrapped.status == http.StatusNotFound && strings.HasPrefix(r.URL.Path, "/ui/") && r.URL.Path != path404 {
+			if GetConfig().Development {
+				a.proxyHandler(w, r, "localhost:3000"+path404)
+				return
+			}
+			if content404Err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(content404)
+		}
+	})
+}
+
 func (a *App) InitializeRouter() {
 	a.Router = mux.NewRouter()
 	routers := make(map[string]Route)
@@ -96,6 +139,7 @@ func (a *App) InitializeRouter() {
 	a.Router.Use(SecurityHeaderMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
 	a.Router.Use(GetRateLimiterMiddleware())
+	a.Router.Use(a.globalNotFoundMiddleware)
 }
 
 func (a *App) RobotsTxtHandler(w http.ResponseWriter, r *http.Request) {
