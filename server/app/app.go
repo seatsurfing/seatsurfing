@@ -83,20 +83,23 @@ func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wrapped := &notFoundResponseWriter{ResponseWriter: w, status: 0}
 		next.ServeHTTP(wrapped, r)
-		path404 := "/ui/404/"
-		if wrapped.status == http.StatusNotFound && strings.HasPrefix(r.URL.Path, "/ui/") && r.URL.Path != path404 {
-			if GetConfig().Development {
-				a.proxyHandler(w, r, "localhost:3000"+path404)
-				return
-			}
-			if content404Err != nil {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusNotFound)
-			w.Write(content404)
+
+		isNotFound := wrapped.status == http.StatusNotFound || wrapped.status == http.StatusMethodNotAllowed
+		if !isNotFound || r.URL.Path == "/ui/404/" {
+			return
 		}
+
+		if GetConfig().Development {
+			a.proxyHandler(w, r, "localhost:3000/ui/404/")
+			return
+		}
+		if content404Err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(content404)
 	})
 }
 
@@ -139,6 +142,10 @@ func (a *App) InitializeRouter() {
 	a.Router.Use(SecurityHeaderMiddleware)
 	a.Router.Use(VerifyAuthMiddleware)
 	a.Router.Use(GetRateLimiterMiddleware())
+	notFoundBase := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+	a.Router.MethodNotAllowedHandler = a.globalNotFoundMiddleware(notFoundBase)
 	a.Router.Use(a.globalNotFoundMiddleware)
 }
 
