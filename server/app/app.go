@@ -78,12 +78,12 @@ func (w *notFoundResponseWriter) Write(b []byte) (int, error) {
 
 func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
 
-	content404, content404Err := os.ReadFile(GetConfig().StaticUiPath + "/Error404/index.html")
+	content404, content404Err := os.ReadFile(GetConfig().StaticUiPath + "/404.html")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wrapped := &notFoundResponseWriter{ResponseWriter: w, status: 0}
 		next.ServeHTTP(wrapped, r)
-		path404 := "/ui/Error404/"
+		path404 := "/ui/404/"
 		if wrapped.status == http.StatusNotFound && strings.HasPrefix(r.URL.Path, "/ui/") && r.URL.Path != path404 {
 			if GetConfig().Development {
 				a.proxyHandler(w, r, "localhost:3000"+path404)
