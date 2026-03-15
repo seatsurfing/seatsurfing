@@ -492,7 +492,8 @@ class Preferences extends React.Component<Props, State> {
               variant="underline"
               activeKey={this.state.activeTab}
               onSelect={(key) => {
-                if (key) this.setState({ activeTab: key });
+                if (key)
+                  this.setState({ activeTab: key, error: false, saved: false });
               }}
             >
               <Nav.Item>

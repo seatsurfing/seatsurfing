@@ -64,7 +64,7 @@ class Locations extends React.Component<Props, State> {
     return (
       <tr key={location.id} onClick={() => this.onItemSelect(location)}>
         <td>{location.name}</td>
-        <td>{location.enabled ? this.props.t("yes") : ""}</td>
+        <td>{location.enabled ? "☑" : "☐"}</td>
         <td>
           {location.mapWidth}&nbsp;&times;&nbsp;{location.mapHeight}
         </td>
