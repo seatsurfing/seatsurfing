@@ -411,5 +411,6 @@
   "multiDay": "Mehrere Tage",
   "allDay": "Ganztags",
   "time": "Zeit",
-  "date": "Datum"
+  "date": "Datum",
+  "error404": "Die Seite wurde nicht gefunden. Klicke hier um zurück zu kommen."
 }
