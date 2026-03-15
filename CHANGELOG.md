@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.69.0](https://github.com/seatsurfing/seatsurfing/compare/v1.68.4...v1.69.0) (2026-03-15)
+
+
+### Features
+
+* add custom 404 error page ([#1845](https://github.com/seatsurfing/seatsurfing/issues/1845)) ([c42d932](https://github.com/seatsurfing/seatsurfing/commit/c42d9322e6ddea9908893c5640317a79312cc431))
+* add properties "enabled" and "require subject" to space list ([#1849](https://github.com/seatsurfing/seatsurfing/issues/1849)) ([2dee90b](https://github.com/seatsurfing/seatsurfing/commit/2dee90b9ff21632eb9d5cc8aa2f704bb9893aa59))
+
+
+### Bug Fixes
+
+* reset success and error message when changing preferences tabs ([#1847](https://github.com/seatsurfing/seatsurfing/issues/1847)) ([db5f3f2](https://github.com/seatsurfing/seatsurfing/commit/db5f3f22475be9345676791f704db508038df4fb))
+* use unicode char for character location state ([#1848](https://github.com/seatsurfing/seatsurfing/issues/1848)) ([51237e9](https://github.com/seatsurfing/seatsurfing/commit/51237e9d252a8de609b51b46fcf4163b50864f10))
+
 ## [1.68.4](https://github.com/seatsurfing/seatsurfing/compare/v1.68.3...v1.68.4) (2026-03-14)
 
 
