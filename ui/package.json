@@ -25,7 +25,7 @@
   },
   "scripts": {
     "start": "PORT=3000 next start",
-    "build": "next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
+    "build": "rm -rf ./build/ && next build && cd build && find . -name '\\[*\\]' | cut -c2- | jq -R | jq -s > _attr.json",
     "dev": "PORT=3000 NEXT_PUBLIC_PRODUCT_VERSION=0.0.1-dev next dev",
     "lint": "next lint",
     "prettier:check": "prettier --check \"../**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}\"",
