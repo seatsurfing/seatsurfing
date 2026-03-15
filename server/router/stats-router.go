@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -37,6 +38,12 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+
+	vars := mux.Vars(r)
+	locationId, _ := vars["location"]
+
+	log.Println("LOC", "*"+locationId+"*")
+
 	m := &GetStatsResponse{}
 	m.NumUsers, _ = GetUserRepository().GetCount(user.OrganizationID)
 	m.NumBookings, _ = GetBookingRepository().GetCount(user.OrganizationID)
@@ -62,10 +69,10 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	m.NumBookingsYesterday, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, yesterdayEnter, yesterdayLeave)
 	m.NumBookingsThisWeek, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, thisWeekEnter, thisWeekLeave)
 
-	m.SpaceLoadToday, _ = GetBookingRepository().GetLoad(user.OrganizationID, todayEnter, todayLeave)
-	m.SpaceLoadYesterday, _ = GetBookingRepository().GetLoad(user.OrganizationID, yesterdayEnter, yesterdayLeave)
-	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave)
-	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave)
+	m.SpaceLoadToday, _ = GetBookingRepository().GetLoad(user.OrganizationID, todayEnter, todayLeave, locationId)
+	m.SpaceLoadYesterday, _ = GetBookingRepository().GetLoad(user.OrganizationID, yesterdayEnter, yesterdayLeave, locationId)
+	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave, locationId)
+	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave, locationId)
 
 	SendJSON(w, m)
 }

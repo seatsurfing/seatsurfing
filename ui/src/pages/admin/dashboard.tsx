@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Row, Col, ProgressBar, Alert } from "react-bootstrap";
+import { Card, Row, Col, ProgressBar, Alert, Dropdown } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -286,7 +286,21 @@ class Dashboard extends React.Component<Props, State> {
           <Col sm="12" xl="8">
             <Card>
               <Card.Body>
-                <Card.Title>{this.props.t("utilization")}</Card.Title>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <Card.Title className="mb-0">
+                    {this.props.t("utilization")}
+                  </Card.Title>
+                  <Dropdown>
+                    <Dropdown.Toggle variant="outline-secondary" size="sm">
+                      {this.props.t("Bereiche")}
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu align="end">
+                      <Dropdown.Item>{this.props.t("Bereich 1")}</Dropdown.Item>
+                      <Dropdown.Item>{this.props.t("Bereich 2")}</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
+
                 {this.renderProgressBar(
                   this.stats?.spaceLoadToday,
                   this.props.t("today"),

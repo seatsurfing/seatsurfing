@@ -262,6 +262,16 @@ func (r *SpaceRepository) GetCount(organizationID string) (int, error) {
 	return res, err
 }
 
+func (r *SpaceRepository) GetCountByLocation(organizationID string, locationID string) (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(spaces.id) "+
+		"FROM spaces "+
+		"INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE locations.organization_id = $1 AND location.id = $2",
+		organizationID, locationID).Scan(&res)
+	return res, err
+}
+
 func (r *SpaceRepository) GetTotalCountMap(organizationID string) (map[string]int, error) {
 	res := make(map[string]int)
 	rows, err := GetDatabase().DB().Query("SELECT spaces.location_id, COUNT(spaces.id) "+

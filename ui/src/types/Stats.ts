@@ -44,11 +44,13 @@ export default class Stats {
     this.spaceLoadLastWeek = input.spaceLoadLastWeek;
   }
 
-  static async get(): Promise<Stats> {
-    return Ajax.get("/stats/").then((result) => {
-      let e: Stats = new Stats();
-      e.deserialize(result.json);
-      return e;
-    });
+  static async get(locationId: string): Promise<Stats> {
+    const queryParams = new URLSearchParams();
+    if (location) queryParams.set("location", locationId);
+    const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    const result = await Ajax.get(`/stats/${params}`);
+    const e: Stats = new Stats();
+    e.deserialize(result.json);
+    return e;
   }
 }
