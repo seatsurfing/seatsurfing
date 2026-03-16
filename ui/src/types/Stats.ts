@@ -44,11 +44,8 @@ export default class Stats {
     this.spaceLoadLastWeek = input.spaceLoadLastWeek;
   }
 
-  static async get(locationId: string): Promise<Stats> {
-    const queryParams = new URLSearchParams();
-    if (location) queryParams.set("location", locationId);
-    const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    const result = await Ajax.get(`/stats/${params}`);
+  static async get(): Promise<Stats> {
+    const result = await Ajax.get(`/stats/`);
     const e: Stats = new Stats();
     e.deserialize(result.json);
     return e;

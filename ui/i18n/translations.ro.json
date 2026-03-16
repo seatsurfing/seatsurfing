@@ -411,5 +411,6 @@
   "allDay": "All day",
   "time": "Time",
   "date": "Date",
-  "error404": "This page was not found. Click here to get back."
+  "error404": "This page was not found. Click here to get back.",
+  "allAreas": "All areas"
 }
