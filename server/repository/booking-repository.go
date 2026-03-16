@@ -408,7 +408,6 @@ func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leav
 }
 
 func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
-
 	query := "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60), 0) " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
