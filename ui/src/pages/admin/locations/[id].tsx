@@ -149,7 +149,7 @@ class EditLocation extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    let promises = [this.loadData(), this.loadTimezones()];
+    const promises = [this.loadData(), this.loadTimezones()];
     Promise.all(promises).then(() => {
       this.setState({
         loading: false,
@@ -235,8 +235,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   saveSpaces = async () => {
-    let creates: Space[] = [];
-    let updates: Space[] = [];
+    const creates: Space[] = [];
+    const updates: Space[] = [];
 
     for (let item of this.state.spaces) {
       if (item.changed) {
@@ -293,7 +293,7 @@ class EditLocation extends React.Component<Props, State> {
       return;
     }
 
-    let bulkUpdateResponse = await Space.bulkUpdate(
+    const bulkUpdateResponse = await Space.bulkUpdate(
       this.entity.id,
       creates,
       updates,
@@ -386,7 +386,7 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setMapScale = (scale: number) => {
-    let spaces = this.state.spaces;
+    const spaces = this.state.spaces;
     spaces.forEach((space) => {
       space.x = Math.round((space.orgX / this.state.mapScaleOnLoad) * scale);
       space.y = Math.round((space.orgY / this.state.mapScaleOnLoad) * scale);
@@ -412,7 +412,7 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   newSpaceState = (e?: Space): SpaceState => {
-    let res: SpaceState = {
+    const res: SpaceState = {
       id: e ? e.id : "",
       name: e ? e.name : this.props.t("unnamed"),
       x: e ? e.x : 10,
@@ -450,9 +450,9 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   addRect = (e?: Space): number => {
-    let spaces = this.state.spaces;
-    let space = this.newSpaceState(e);
-    let i = spaces.push(space);
+    const spaces = this.state.spaces;
+    const space = this.newSpaceState(e);
+    const i = spaces.push(space);
     this.setState({
       spaces: spaces,
       changed: this.state.changed || (e ? false : true),
@@ -518,8 +518,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   checkDoubleClickSpace = (i: number) => {
-    let now: number = new Date().getTime();
-    let diff: number = now - this.state.selectedSpaceMouseDownTimestamp;
+    const now: number = new Date().getTime();
+    const diff: number = now - this.state.selectedSpaceMouseDownTimestamp;
     if (diff <= 300) {
       this.setState({
         showEditSpaceDetailsModal: true,
@@ -548,9 +548,9 @@ class EditLocation extends React.Component<Props, State> {
 
   copySpace = () => {
     if (this.state.selectedSpace != null) {
-      let spaces = this.state.spaces;
-      let space = { ...spaces[this.state.selectedSpace] };
-      let newSpace: SpaceState = Object.assign({}, space);
+      const spaces = this.state.spaces;
+      const space = { ...spaces[this.state.selectedSpace] };
+      const newSpace: SpaceState = Object.assign({}, space);
       newSpace.id = "";
       newSpace.x += 20;
       newSpace.y += 20;
@@ -563,10 +563,10 @@ class EditLocation extends React.Component<Props, State> {
 
   deleteSpace = () => {
     if (this.state.selectedSpace != null) {
-      let spaces = this.state.spaces;
-      let space = { ...spaces[this.state.selectedSpace] };
+      const spaces = this.state.spaces;
+      const space = { ...spaces[this.state.selectedSpace] };
       if (space.id) {
-        let deleteIds = [...this.state.deleteIds];
+        const deleteIds = [...this.state.deleteIds];
         deleteIds.push(space.id);
         this.setState({ deleteIds: deleteIds });
       }
@@ -585,13 +585,13 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   renderRect = (i: number) => {
-    let size = {
+    const size = {
       width: this.state.spaces[i].width,
       height: this.state.spaces[i].height,
     };
-    let position = { x: this.state.spaces[i].x, y: this.state.spaces[i].y };
-    let width = parseInt(this.state.spaces[i].width.replace(/^\D+/g, ""));
-    let height = parseInt(this.state.spaces[i].height.replace(/^\D+/g, ""));
+    const position = { x: this.state.spaces[i].x, y: this.state.spaces[i].y };
+    const width = parseInt(this.state.spaces[i].width.replace(/^\D+/g, ""));
+    const height = parseInt(this.state.spaces[i].height.replace(/^\D+/g, ""));
     let className = "space-dragger";
     let inputStyle = {};
     if (width < height) {
@@ -676,6 +676,8 @@ class EditLocation extends React.Component<Props, State> {
     return (
       <tr key={space.id}>
         <td>{space.name}</td>
+        <td>{space.enabled ? "☑" : "☐"}</td>
+        <td>{space.requireSubject ? "☑" : "☐"}</td>
         <td>{bookingLink}</td>
       </tr>
     );
@@ -696,7 +698,7 @@ class EditLocation extends React.Component<Props, State> {
       if (!ok) {
         return;
       }
-      let option = (
+      const option = (
         <Dropdown.Item key={a.id} onClick={(e) => this.setAttribute(a.id)}>
           {a.label}
         </Dropdown.Item>
@@ -710,8 +712,8 @@ class EditLocation extends React.Component<Props, State> {
     if (this.state.selectedSpace == null) {
       return;
     }
-    let spaces = this.state.spaces;
-    let space = { ...spaces[this.state.selectedSpace] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[this.state.selectedSpace] };
     space.attributes.set(attributeId, value);
     if (space.enabledAttributes.indexOf(attributeId) === -1) {
       space.enabledAttributes.push(attributeId);
@@ -736,8 +738,8 @@ class EditLocation extends React.Component<Props, State> {
     if (this.state.selectedSpace == null) {
       return;
     }
-    let spaces = this.state.spaces;
-    let space = { ...spaces[this.state.selectedSpace] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[this.state.selectedSpace] };
     const index = space.enabledAttributes.indexOf(attributeId);
     if (enabled && index === -1) {
       space.enabledAttributes.push(attributeId);
@@ -766,7 +768,7 @@ class EditLocation extends React.Component<Props, State> {
 
   handleApproversSearch = (query: string) => {
     this.setState({ typeaheadApproversLoading: true });
-    let options = new SearchOptions();
+    const options = new SearchOptions();
     options.includeGroups = true;
     options.keyword = query ? query : "";
     Search.search(options).then((res) => {
@@ -781,8 +783,8 @@ class EditLocation extends React.Component<Props, State> {
     if (this.state.selectedSpace == null) {
       return;
     }
-    let spaces = this.state.spaces;
-    let space = { ...spaces[this.state.selectedSpace] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[this.state.selectedSpace] };
     space.approvers = selected.map((e: any) => e as Group);
     space.changed = true;
     spaces[this.state.selectedSpace] = space;
@@ -806,8 +808,8 @@ class EditLocation extends React.Component<Props, State> {
     if (this.state.selectedSpace == null) {
       return;
     }
-    let spaces = this.state.spaces;
-    let space = { ...spaces[this.state.selectedSpace] };
+    const spaces = this.state.spaces;
+    const space = { ...spaces[this.state.selectedSpace] };
     space.allowBookers = selected.map((e: any) => e as Group);
     space.changed = true;
     spaces[this.state.selectedSpace] = space;
@@ -815,7 +817,7 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   getSpaceAttributeRows = () => {
-    let res: any = [];
+    const res: any = [];
     this.state.availableAttributes.forEach((a) => {
       if (!a.spaceApplicable) {
         return;
@@ -857,7 +859,7 @@ class EditLocation extends React.Component<Props, State> {
           />
         );
       }
-      let row = (
+      const row = (
         <Form.Group as={Row} key={a.id}>
           <Col sm="4">
             <Form.Check
@@ -1036,8 +1038,8 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   setAttribute = (id: string, value?: string) => {
-    let newAttributeValues: SpaceAttributeValue[] = [];
-    let av = new SpaceAttributeValue();
+    const newAttributeValues: SpaceAttributeValue[] = [];
+    const av = new SpaceAttributeValue();
     av.attributeId = id;
     av.value = value ? value : "";
     let found = false;
@@ -1066,7 +1068,7 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   deleteAttribute = (id: string) => {
-    let newAttributeValues: SpaceAttributeValue[] = [];
+    const newAttributeValues: SpaceAttributeValue[] = [];
     this.state.attributeValues.forEach((e) => {
       if (e.attributeId !== id) {
         newAttributeValues.push(e);
@@ -1096,9 +1098,9 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   getAttributeRows = () => {
-    let res: any = [];
+    const res: any = [];
     this.state.attributeValues.forEach((av, idx) => {
-      let a = this.getAttributeById(av.attributeId);
+      const a = this.getAttributeById(av.attributeId);
       if (a != null) {
         let input = <></>;
         if (a.type === 1) {
@@ -1170,7 +1172,7 @@ class EditLocation extends React.Component<Props, State> {
       return <></>;
     }
 
-    let backButton = (
+    const backButton = (
       <Link
         href="/admin/locations"
         onClick={this.onBackButtonClick}
@@ -1210,7 +1212,7 @@ class EditLocation extends React.Component<Props, State> {
     let floorPlan = <></>;
     let attributeTable = <></>;
     let spaceTable = <></>;
-    let rows = this.state.spaces.map((item) => this.renderRow(item));
+    const rows = this.state.spaces.map((item) => this.renderRow(item));
     if (this.entity.id) {
       buttons = (
         <>
@@ -1345,6 +1347,8 @@ class EditLocation extends React.Component<Props, State> {
             <thead>
               <tr>
                 <th>{this.props.t("name")}</th>
+                <th>{this.props.t("enabled")}</th>
+                <th>{this.props.t("requireSubject")}</th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
