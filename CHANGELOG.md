@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.70.0](https://github.com/seatsurfing/seatsurfing/compare/v1.69.0...v1.70.0) (2026-03-16)
+
+
+### Features
+
+* add location filter to utilization view on admin dashboard ([#1850](https://github.com/seatsurfing/seatsurfing/issues/1850)) ([7017df3](https://github.com/seatsurfing/seatsurfing/commit/7017df3c0ba3b8df61c37900ce9b4b8c0fdf4feb))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.72 to 1.0.73 in /server in the minor-and-patch group ([#1852](https://github.com/seatsurfing/seatsurfing/issues/1852)) ([1b7d543](https://github.com/seatsurfing/seatsurfing/commit/1b7d5436e36ef62d3761c261636fbe1d41696d77))
+
 ## [1.69.0](https://github.com/seatsurfing/seatsurfing/compare/v1.68.4...v1.69.0) (2026-03-15)
 
 
