@@ -447,6 +447,11 @@ func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Tim
 		}
 	}
 	totalTimeMinutes := leave.Sub(enter).Minutes() * float64(numSpaces)
+
+	if totalTimeMinutes == 0 {
+		return 0, nil
+	}
+
 	res := float64(totalBookedMinutes) / float64(totalTimeMinutes) * float64(100)
 	if res > 100.0 {
 		res = 100.0
