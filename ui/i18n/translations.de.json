@@ -412,5 +412,6 @@
   "allDay": "Ganztags",
   "time": "Zeit",
   "date": "Datum",
-  "error404": "Die Seite wurde nicht gefunden. Klicke hier um zurück zu kommen."
+  "error404": "Die Seite wurde nicht gefunden. Klicke hier um zurück zu kommen.",
+  "allAreas": "Alle Bereiche"
 }

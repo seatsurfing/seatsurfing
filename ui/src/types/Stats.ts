@@ -45,10 +45,9 @@ export default class Stats {
   }
 
   static async get(): Promise<Stats> {
-    return Ajax.get("/stats/").then((result) => {
-      let e: Stats = new Stats();
-      e.deserialize(result.json);
-      return e;
-    });
+    const result = await Ajax.get(`/stats/`);
+    const e: Stats = new Stats();
+    e.deserialize(result.json);
+    return e;
   }
 }

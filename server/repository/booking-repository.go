@@ -407,32 +407,51 @@ func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leav
 	return res, err
 }
 
-func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, leave time.Time) (int, error) {
+func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
+	query := "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60), 0) " +
+		"FROM bookings " +
+		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
+		"INNER JOIN locations ON locations.id = spaces.location_id " +
+		"WHERE locations.organization_id = $1 AND (" +
+		"($2 BETWEEN enter_time AND leave_time) OR " +
+		"($3 BETWEEN enter_time AND leave_time) OR " +
+		"(enter_time BETWEEN $2 AND $3) OR " +
+		"(leave_time BETWEEN $2 AND $3)" +
+		")"
+	args := []any{organizationID, enter, leave}
+	if location != nil {
+		query += " AND spaces.location_id = $4"
+		args = append(args, location.ID)
+	}
 	var totalBookedMinutes float64
-	err := GetDatabase().DB().QueryRow("SELECT SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1 AND ("+
-		"($2 BETWEEN enter_time AND leave_time) OR "+
-		"($3 BETWEEN enter_time AND leave_time) OR "+
-		"(enter_time BETWEEN $2 AND $3) OR "+
-		"(leave_time BETWEEN $2 AND $3)"+
-		")",
-		organizationID, enter, leave).Scan(&totalBookedMinutes)
+	err := GetDatabase().DB().QueryRow(query, args...).Scan(&totalBookedMinutes)
 	return int(math.RoundToEven(totalBookedMinutes)), err
 }
 
-func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Time) (int, error) {
-	totalBookedMinutes, err := r.GetTotalBookedMinutes(organizationID, enter, leave)
+func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Time, location *Location) (int, error) {
+	totalBookedMinutes, err := r.GetTotalBookedMinutes(organizationID, enter, leave, location)
 	if err != nil {
 		return 0, err
 	}
-	numSpaces, err := GetSpaceRepository().GetCount(organizationID)
-	if err != nil {
-		return 0, err
+	numSpaces := 0
+	if location != nil {
+		loc := *location
+		numSpaces, err = GetSpaceRepository().GetCountByLocation(organizationID, loc)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		numSpaces, err = GetSpaceRepository().GetCount(organizationID)
+		if err != nil {
+			return 0, err
+		}
 	}
 	totalTimeMinutes := leave.Sub(enter).Minutes() * float64(numSpaces)
+
+	if totalTimeMinutes == 0 {
+		return 0, nil
+	}
+
 	res := float64(totalBookedMinutes) / float64(totalTimeMinutes) * float64(100)
 	if res > 100.0 {
 		res = 100.0

@@ -476,3 +476,15 @@ func TestBookingRepositoryGetAllByRecurringID(t *testing.T) {
 	CheckTestBool(t, true, found1)
 	CheckTestBool(t, true, found2)
 }
+
+func TestLoadShouldBe0IfNoSpacesExist(t *testing.T) {
+
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	enter := time.Date(2023, 10, 1, 9, 0, 0, 0, time.UTC)
+	leave := time.Date(2023, 10, 2, 9, 0, 0, 0, time.UTC)
+	load, _ := GetBookingRepository().GetLoad(org.ID, enter, leave, nil)
+
+	CheckTestInt(t, 0, load)
+}

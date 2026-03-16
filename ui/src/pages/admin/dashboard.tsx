@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Row, Col, ProgressBar, Alert } from "react-bootstrap";
+import { Card, Row, Col, ProgressBar, Alert, Dropdown } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -9,6 +9,8 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import Link from "next/link";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import Stats from "@/types/Stats";
+import StatsLoad from "@/types/StatsLoad";
+import Location from "@/types/Location";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
@@ -21,6 +23,8 @@ interface State {
   spaceAdmin: boolean;
   orgAdmin: boolean;
   latestVersion: any;
+  selectedLocationId: string | null;
+  stats: Stats | null;
 }
 
 interface Props {
@@ -29,17 +33,19 @@ interface Props {
 }
 
 class Dashboard extends React.Component<Props, State> {
-  stats: Stats | null;
+  locations: Location[];
 
   constructor(props: any) {
     super(props);
-    this.stats = null;
+    this.locations = [];
     this.state = {
       loading: true,
       redirect: "",
       spaceAdmin: false,
       orgAdmin: false,
       latestVersion: null,
+      selectedLocationId: null,
+      stats: null,
     };
   }
 
@@ -50,6 +56,7 @@ class Dashboard extends React.Component<Props, State> {
     }
     const promises = [
       this.loadItems(),
+      this.loadLocations(),
       this.getUserInfo(),
       this.checkUpdates(),
     ];
@@ -109,12 +116,41 @@ class Dashboard extends React.Component<Props, State> {
     });
   };
 
+  loadLocations = async (): Promise<void> => {
+    const self = this;
+    return new Promise<void>(function (resolve, reject) {
+      Location.list()
+        .then((locations) => {
+          self.locations = locations;
+          resolve();
+        })
+        .catch((e) => reject(e));
+    });
+  };
+
   loadItems = async (): Promise<void> => {
     const self = this;
     return new Promise<void>(function (resolve, reject) {
       Stats.get()
         .then((stats) => {
-          self.stats = stats;
+          self.setState({ stats: stats });
+          resolve();
+        })
+        .catch((e) => reject(e));
+    });
+  };
+
+  updateLoad = async (locationId: string): Promise<void> => {
+    const self = this;
+    return new Promise<void>(function (resolve, reject) {
+      StatsLoad.get(locationId)
+        .then((statsLoad) => {
+          const stats = self.state.stats ?? ({} as any);
+          stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
+          stats.spaceLoadThisWeek = statsLoad.spaceLoadThisWeek;
+          stats.spaceLoadToday = statsLoad.spaceLoadToday;
+          stats.spaceLoadYesterday = statsLoad.spaceLoadYesterday;
+          self.setState({ stats, selectedLocationId: locationId });
           resolve();
         })
         .catch((e) => reject(e));
@@ -234,22 +270,22 @@ class Dashboard extends React.Component<Props, State> {
         {updateHint}
         <Row className="mb-4">
           {this.renderStatsCard(
-            this.stats?.numUsers,
+            this.state.stats?.numUsers,
             this.props.t("users"),
             this.state.orgAdmin ? Navigation.adminUsers() : "",
           )}
           {this.renderStatsCard(
-            this.stats?.numLocations,
+            this.state.stats?.numLocations,
             this.props.t("areas"),
             Navigation.adminLocations(),
           )}
           {this.renderStatsCard(
-            this.stats?.numSpaces,
+            this.state.stats?.numSpaces,
             this.props.t("spaces"),
             Navigation.adminLocations(),
           )}
           {this.renderStatsCard(
-            this.stats?.numBookings,
+            this.state.stats?.numBookings,
             this.props.t("bookings"),
             Navigation.adminBookings(
               "enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
@@ -258,24 +294,24 @@ class Dashboard extends React.Component<Props, State> {
         </Row>
         <Row className="mb-4">
           {this.renderStatsCard(
-            this.stats?.numBookingsCurrent,
+            this.state.stats?.numBookingsCurrent,
             this.props.t("current"),
             Navigation.adminBookings("filter=current"),
           )}
           {this.renderStatsCard(
-            this.stats?.numBookingsToday,
+            this.state.stats?.numBookingsToday,
             this.props.t("today"),
             Navigation.adminBookings("filter=today"),
           )}
           {this.renderStatsCard(
-            this.stats?.numBookingsYesterday,
+            this.state.stats?.numBookingsYesterday,
             this.props.t("yesterday"),
             Navigation.adminBookings(
               `enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
             ),
           )}
           {this.renderStatsCard(
-            this.stats?.numBookingsThisWeek,
+            this.state.stats?.numBookingsThisWeek,
             this.props.t("thisWeek"),
             Navigation.adminBookings(
               `enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
@@ -286,21 +322,53 @@ class Dashboard extends React.Component<Props, State> {
           <Col sm="12" xl="8">
             <Card>
               <Card.Body>
-                <Card.Title>{this.props.t("utilization")}</Card.Title>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <Card.Title className="mb-0">
+                    {this.props.t("utilization")}
+                  </Card.Title>
+                  <Dropdown>
+                    <Dropdown.Toggle variant="outline-secondary" size="sm">
+                      {this.state.selectedLocationId
+                        ? this.locations.find(
+                            (e) => e.id == this.state.selectedLocationId,
+                          )?.name
+                        : this.props.t("allAreas")}
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu align="end">
+                      <Dropdown.Item
+                        onClick={() => {
+                          this.updateLoad("");
+                        }}
+                      >
+                        {this.props.t("allAreas")}
+                      </Dropdown.Item>
+                      {this.locations.map((location) => (
+                        <Dropdown.Item
+                          onClick={() => {
+                            this.updateLoad(location.id);
+                          }}
+                        >
+                          {location.name}
+                        </Dropdown.Item>
+                      ))}
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
+
                 {this.renderProgressBar(
-                  this.stats?.spaceLoadToday,
+                  this.state.stats?.spaceLoadToday,
                   this.props.t("today"),
                 )}
                 {this.renderProgressBar(
-                  this.stats?.spaceLoadYesterday,
+                  this.state.stats?.spaceLoadYesterday,
                   this.props.t("yesterday"),
                 )}
                 {this.renderProgressBar(
-                  this.stats?.spaceLoadThisWeek,
+                  this.state.stats?.spaceLoadThisWeek,
                   this.props.t("thisWeek"),
                 )}
                 {this.renderProgressBar(
-                  this.stats?.spaceLoadLastWeek,
+                  this.state.stats?.spaceLoadLastWeek,
                   this.props.t("lastWeek"),
                 )}
               </Card.Body>
