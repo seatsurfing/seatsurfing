@@ -979,13 +979,17 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="targetUtilizationHoursPerWeek">
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-targetUtilizationHoursPerWeek"
+            >
               {this.props.t("targetUtilizationHoursPerWeek")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
-                  id="targetUtilizationHoursPerWeek"
+                  id="input-targetUtilizationHoursPerWeek"
                   type="number"
                   value={this.state.targetUtilizationHoursPerWeek}
                   onChange={(e: any) =>
