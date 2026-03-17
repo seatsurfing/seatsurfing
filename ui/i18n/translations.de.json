@@ -413,5 +413,8 @@
   "time": "Zeit",
   "date": "Datum",
   "error404": "Die Seite wurde nicht gefunden. Klicke hier um zurück zu kommen.",
-  "allAreas": "Alle Bereiche"
+  "allAreas": "Alle Bereiche",
+  "targetUtilizationHoursPerWeek": "Wöchentl. Zielauslastung pro Platz",
+  "nextWeek": "Nächste Woche",
+  "lastMonth": "Letzter Monat"
 }

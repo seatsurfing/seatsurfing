@@ -446,16 +446,24 @@ func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Tim
 			return 0, err
 		}
 	}
-	totalTimeMinutes := leave.Sub(enter).Minutes() * float64(numSpaces)
 
-	if totalTimeMinutes == 0 {
+	if numSpaces == 0 {
+		return 0, nil
+	}
+
+	var totalTimeMinutes float64
+	targetUtilizationHoursPerWeek, _ := GetSettingsRepository().GetInt(organizationID, SettingTargetUtilizationHoursPerWeek.Name)
+	if targetUtilizationHoursPerWeek != 0 {
+		totalTimeMinutes = math.Floor(leave.Sub(enter).Hours()/24*(float64(targetUtilizationHoursPerWeek)/7)*float64(numSpaces)) * 60
+	} else {
+		totalTimeMinutes = leave.Sub(enter).Minutes() * float64(numSpaces)
+	}
+
+	if totalBookedMinutes == 0 {
 		return 0, nil
 	}
 
 	res := float64(totalBookedMinutes) / float64(totalTimeMinutes) * float64(100)
-	if res > 100.0 {
-		res = 100.0
-	}
 	return int(math.RoundToEven(res)), nil
 }
 
