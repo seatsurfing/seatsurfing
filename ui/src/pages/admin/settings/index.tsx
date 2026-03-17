@@ -51,6 +51,7 @@ interface State {
   maxHoursPartiallyBookedEnabled: boolean;
   maxBookingDurationHours: number;
   minBookingDurationHours: number;
+  targetUtilizationHoursPerWeek: number;
   dailyBasisBooking: boolean;
   noAdminRestrictions: boolean;
   showNames: boolean;
@@ -96,6 +97,7 @@ class Settings extends React.Component<Props, State> {
       maxConcurrentBookingsPerUser: 0,
       maxBookingDurationHours: 0,
       minBookingDurationHours: 0,
+      targetUtilizationHoursPerWeek: 0,
       maxDaysInAdvance: 0,
       bookingRetentionEnabled: false,
       bookingRetentionDays: 0,
@@ -218,6 +220,8 @@ class Settings extends React.Component<Props, State> {
           state.maxBookingDurationHours = window.parseInt(s.value);
         if (s.name === "min_booking_duration_hours")
           state.minBookingDurationHours = window.parseInt(s.value);
+        if (s.name === "target_utilization_hours_per_week")
+          state.targetUtilizationHoursPerWeek = window.parseInt(s.value);
         if (s.name === "subject_default")
           state.subjectDefault = window.parseInt(s.value);
         if (s.name === "daily_basis_booking")
@@ -334,6 +338,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "min_booking_duration_hours",
         this.state.minBookingDurationHours.toString(),
+      ),
+      new OrgSettings(
+        "target_utilization_hours_per_week",
+        this.state.targetUtilizationHoursPerWeek.toString(),
       ),
       new OrgSettings(
         "allow_recurring_bookings",
@@ -965,6 +973,28 @@ class Settings extends React.Component<Props, State> {
                   }
                   min="0"
                   max="9999"
+                />
+                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="targetUtilizationHoursPerWeek">
+              {this.props.t("targetUtilizationHoursPerWeek")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <Form.Control
+                  id="targetUtilizationHoursPerWeek"
+                  type="number"
+                  value={this.state.targetUtilizationHoursPerWeek}
+                  onChange={(e: any) =>
+                    this.setState({
+                      targetUtilizationHoursPerWeek: e.target.value,
+                    })
+                  }
+                  min="0"
+                  max="168"
                 />
                 <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
               </InputGroup>
