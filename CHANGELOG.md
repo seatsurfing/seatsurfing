@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.71.1](https://github.com/seatsurfing/seatsurfing/compare/v1.71.0...v1.71.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* add validation for org settings ([#1867](https://github.com/seatsurfing/seatsurfing/issues/1867)) ([417ccb6](https://github.com/seatsurfing/seatsurfing/commit/417ccb67cde24aaf332175c1a2a45d2b6db31a6d))
+* **deps:** bump github.com/lib/pq from 1.11.2 to 1.12.0 in /server in the minor-and-patch group ([#1865](https://github.com/seatsurfing/seatsurfing/issues/1865)) ([a7da098](https://github.com/seatsurfing/seatsurfing/commit/a7da0980f6c9c57b3398f888a0712b09735189bc))
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#1863](https://github.com/seatsurfing/seatsurfing/issues/1863)) ([7e57b56](https://github.com/seatsurfing/seatsurfing/commit/7e57b56a0d43802508331eadf2955d0d65151a18))
+* fix some english translations ([#1860](https://github.com/seatsurfing/seatsurfing/issues/1860)) ([3c8b041](https://github.com/seatsurfing/seatsurfing/commit/3c8b041a23d40761c92400b839442586c7f01aa5))
+* remove unused translation key "mangageOrgHeadline" ([#1862](https://github.com/seatsurfing/seatsurfing/issues/1862)) ([38fba54](https://github.com/seatsurfing/seatsurfing/commit/38fba5491bd3a780e046394b5f10c78a3581631f))
+
 ## [1.71.0](https://github.com/seatsurfing/seatsurfing/compare/v1.70.0...v1.71.0) (2026-03-17)
 
 

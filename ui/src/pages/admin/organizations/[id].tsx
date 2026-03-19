@@ -137,7 +137,7 @@ class EditOrganization extends React.Component<Props, State> {
       return <></>;
     }
 
-    let backButton = (
+    const backButton = (
       <Link
         href="/admin/organizations"
         className="btn btn-sm btn-outline-secondary"
@@ -162,7 +162,7 @@ class EditOrganization extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
     }
 
-    let buttonDelete = (
+    const buttonDelete = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -172,7 +172,7 @@ class EditOrganization extends React.Component<Props, State> {
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
     );
-    let buttonSave = (
+    const buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -196,37 +196,7 @@ class EditOrganization extends React.Component<Props, State> {
       );
     }
 
-    let countries = [
-      "BE",
-      "BG",
-      "DK",
-      "DE",
-      "EE",
-      "FJ",
-      "FR",
-      "GR",
-      "IE",
-      "IL",
-      "IT",
-      "HR",
-      "LV",
-      "LT",
-      "LU",
-      "MT",
-      "NL",
-      "AT",
-      "PL",
-      "PT",
-      "RO",
-      "SE",
-      "SK",
-      "SI",
-      "ES",
-      "CY",
-      "CZ",
-      "HU",
-    ];
-    let languages = ["de", "en", "he"];
+    const languages = ["de", "en", "he"];
 
     let adminSection = <></>;
     if (!this.entity.id) {
