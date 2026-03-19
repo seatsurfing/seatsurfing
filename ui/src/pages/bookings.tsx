@@ -416,6 +416,12 @@ class Bookings extends React.Component<Props, State> {
               culture={Formatting.Language}
               length={7}
               views={["week"]}
+              eventPropGetter={(event: Event) => {
+                if (event.booking.approved === false) {
+                  return { style: { opacity: 0.5 } };
+                }
+                return {};
+              }}
               components={{
                 toolbar: CustomToolbar,
                 event: CustomEvent,
