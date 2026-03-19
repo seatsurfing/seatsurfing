@@ -267,6 +267,7 @@ export default class RuntimeConfig {
       "en-US",
       "de",
       "et",
+      "fi",
       "fr",
       "he",
       "hu",

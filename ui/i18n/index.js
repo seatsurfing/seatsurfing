@@ -2,6 +2,7 @@ const en_gb = require("./translations.en-GB.json");
 const en_us = require("./translations.en-US.json");
 const de = require("./translations.de.json");
 const et = require("./translations.et.json");
+const fi = require("./translations.fi.json");
 const fr = require("./translations.fr.json");
 const he = require("./translations.he.json");
 const hu = require("./translations.hu.json");
@@ -18,6 +19,7 @@ const i18n = {
     "en-US": en_us,
     de,
     et,
+    fi,
     fr,
     he,
     hu,
