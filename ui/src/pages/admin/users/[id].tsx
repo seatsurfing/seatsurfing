@@ -353,6 +353,7 @@ class EditUser extends React.Component<Props, State> {
     if (!isOwnUser && this.adminUserRole >= this.state.role) {
       roleSelect = (
         <Form.Select
+          id="role"
           value={this.state.role}
           onChange={(e: any) => this.changeRole(parseInt(e.target.value))}
           required={true}
@@ -414,7 +415,7 @@ class EditUser extends React.Component<Props, State> {
       }
       roleSelect = (
         <>
-          <Form.Control plaintext={true} readOnly={true} defaultValue={role} />
+          <Form.Control id="role" plaintext={true} readOnly={true} defaultValue={role} />
           {isOwnUser && (
             <Form.Text className="text-muted">
               {this.props.t("cannotChangeOwnRole")}
@@ -436,18 +437,19 @@ class EditUser extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="role" column sm="2">
               {this.props.t("role")}
             </Form.Label>
             <Col sm="4">{roleSelect}</Col>
           </Form.Group>
           {!this.isServiceAccount(this.state.role) && (
             <Form.Group as={Row}>
-              <Form.Label column sm="2">
+              <Form.Label htmlFor="email" column sm="2">
                 {this.props.t("emailAddress")}
               </Form.Label>
               <Col sm="4">
                 <Form.Control
+                  id="email"
                   type="email"
                   placeholder="some@domain.com"
                   value={this.state.email}
@@ -460,11 +462,12 @@ class EditUser extends React.Component<Props, State> {
             </Form.Group>
           )}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="firstname" column sm="2">
               {this.props.t("firstname")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="firstname"
                 type="firstname"
                 placeholder=""
                 value={this.state.firstname}
@@ -476,11 +479,12 @@ class EditUser extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="lastname" column sm="2">
               {this.props.t("lastname")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="lastname"
                 type="lastname"
                 placeholder=""
                 value={this.state.lastname}
@@ -492,12 +496,13 @@ class EditUser extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="username" column sm="2">
               {this.props.t("username")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="username"
                   type="text"
                   readOnly={!this.isServiceAccount(this.state.role)}
                   value={this.state.email}
@@ -527,7 +532,7 @@ class EditUser extends React.Component<Props, State> {
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="auth-method-password" column sm="2">
               {this.props.t("authMethod")}
             </Form.Label>
             <Col sm="4">
@@ -569,11 +574,12 @@ class EditUser extends React.Component<Props, State> {
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="authProvider" column sm="2">
               {this.props.t("chooseAuthProvider")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="authProvider"
                 value={this.state.authProviderId}
                 onChange={(e: any) =>
                   this.setState({ authProviderId: e.target.value })
@@ -645,12 +651,13 @@ class EditUser extends React.Component<Props, State> {
                 this.state.authMethod !== "password")
             }
           >
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="password" column sm="2">
               {this.props.t("password")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="password"
                   type={
                     this.isServiceAccount(this.state.role) ? "text" : "password"
                   }

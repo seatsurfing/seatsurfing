@@ -1283,13 +1283,16 @@ class Search extends React.Component<Props, State> {
         return <></>;
       }
       attributesApplicable = true;
+      const key = `${type}-attribute-${attribute.id}`;
+      const keySelect = `${key}-select`;
       return (
-        <Form.Group as={Row} key={type + "-attribute-" + attribute.id}>
-          <Form.Label column sm="4">
+        <Form.Group as={Row} key={key}>
+          <Form.Label column sm="4" htmlFor={keySelect}>
             {attribute.label}
           </Form.Label>
           <Col sm="3">
             <Form.Select
+              id={keySelect}
               value={
                 searchAttributes.find(
                   (attr) => attr.attributeId === attribute.id,
@@ -2180,12 +2183,13 @@ class Search extends React.Component<Props, State> {
               style={{ marginTop: "25px" }}
               hidden={RuntimeConfig.INFOS.subjectDefault === 1}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="subject">
                 {this.props.t("subject")}:
               </Form.Label>
               <Col sm="8">
                 <Form.Control
                   type="text"
+                  id="subject"
                   autoFocus={true}
                   placeholder={this.props.t(
                     this.state.selectedSpace?.requireSubject
@@ -2212,11 +2216,12 @@ class Search extends React.Component<Props, State> {
             }
           >
             <Form.Group as={Row} className="d-flex margin-top-10">
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="repeat">
                 {this.props.t("repeat")}:
               </Form.Label>
               <Col sm="8">
                 <Form.Select
+                  id="repeat"
                   value={this.state.recurrence.cadence}
                   onChange={(e: any) => {
                     this.setState(
@@ -2244,12 +2249,13 @@ class Search extends React.Component<Props, State> {
               }
               hidden={!this.state.recurrence.active}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="every">
                 {this.props.t("every")}:
               </Form.Label>
               <Col sm="8">
                 <InputGroup>
                   <Form.Control
+                    id="every"
                     type="number"
                     min={1}
                     max={30}
@@ -2295,11 +2301,12 @@ class Search extends React.Component<Props, State> {
               }
               hidden={!this.state.recurrence.active}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="end">
                 {this.props.t("end")}:
               </Form.Label>
               <Col sm="8">
                 <DateTimePicker
+                  id="end"
                   value={this.state.recurrence.end}
                   onChange={(
                     value: Date | null | [Date | null, Date | null],

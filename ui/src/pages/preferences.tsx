@@ -449,7 +449,9 @@ class Preferences extends React.Component<Props, State> {
             this.setState({ [stateKey]: e.target.value } as any)
           }
         />
-        <Form.Label className="mb-0">{this.props.t(labelKey)}</Form.Label>
+        <Form.Label htmlFor={id} className="mb-0">
+          {this.props.t(labelKey)}
+        </Form.Label>
       </Form.Group>
     );
   }
@@ -535,8 +537,11 @@ class Preferences extends React.Component<Props, State> {
               hidden={this.state.activeTab !== "tab-bookings"}
             >
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("notice")}</Form.Label>
+                <Form.Label htmlFor="enterTime">
+                  {this.props.t("notice")}
+                </Form.Label>
                 <Form.Select
+                  id="enterTime"
                   value={this.state.enterTime}
                   onChange={(e: any) =>
                     this.setState({ enterTime: e.target.value })
@@ -548,10 +553,13 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Select>
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("workingHours")}</Form.Label>
+                <Form.Label htmlFor="workdayStart">
+                  {this.props.t("workingHours")}
+                </Form.Label>
                 <div>
                   <Form.Control
                     type="number"
+                    id="workdayStart"
                     value={this.state.workdayStart}
                     onChange={(e: any) =>
                       this.setState({
@@ -572,10 +580,13 @@ class Preferences extends React.Component<Props, State> {
                       textAlign: "center",
                     }}
                   >
-                    {this.props.t("to").toString()}
+                    <Form.Label htmlFor="workdayEnd">
+                      {this.props.t("to").toString()}
+                    </Form.Label>
                   </span>
                   <Form.Control
                     type="number"
+                    id="workdayEnd"
                     value={this.state.workdayEnd}
                     onChange={(e: any) =>
                       this.setState({ workdayEnd: e.target.value })
@@ -604,7 +615,9 @@ class Preferences extends React.Component<Props, State> {
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("mailNotifications")}</Form.Label>
+                <Form.Label htmlFor="mailNotifications">
+                  {this.props.t("mailNotifications")}
+                </Form.Label>
                 <div className="text-left">
                   <Form.Check
                     type="checkbox"
@@ -618,7 +631,9 @@ class Preferences extends React.Component<Props, State> {
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("timeFormat")}</Form.Label>
+                <Form.Label htmlFor="use24HourTime">
+                  {this.props.t("timeFormat")}
+                </Form.Label>
                 <div className="text-left">
                   <Form.Check
                     type="checkbox"
@@ -632,8 +647,11 @@ class Preferences extends React.Component<Props, State> {
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("dateFormat")}</Form.Label>
+                <Form.Label htmlFor="dateFormat">
+                  {this.props.t("dateFormat")}
+                </Form.Label>
                 <Form.Select
+                  id="dateFormat"
                   value={this.state.dateFormat}
                   onChange={(e: any) =>
                     this.setState({ dateFormat: e.target.value })
@@ -646,8 +664,11 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Select>
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("preferredLocation")}</Form.Label>
+                <Form.Label htmlFor="preferredLocation">
+                  {this.props.t("preferredLocation")}
+                </Form.Label>
                 <Form.Select
+                  id="preferredLocation"
                   value={this.state.locationId}
                   onChange={(e: any) =>
                     this.setState({ locationId: e.target.value })
@@ -850,8 +871,11 @@ class Preferences extends React.Component<Props, State> {
                 {this.props.t("caldavCalendar")}
               </h5>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("caldavUrl")}</Form.Label>
+                <Form.Label htmlFor="caldavUrl">
+                  {this.props.t("caldavUrl")}
+                </Form.Label>
                 <Form.Control
+                  id="caldavUrl"
                   type="url"
                   value={this.state.caldavUrl}
                   onChange={(e: any) =>
@@ -863,8 +887,11 @@ class Preferences extends React.Component<Props, State> {
                 />
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("username")}</Form.Label>
+                <Form.Label htmlFor="caldavUser">
+                  {this.props.t("username")}
+                </Form.Label>
                 <Form.Control
+                  id="caldavUser"
                   type="text"
                   value={this.state.caldavUser}
                   onChange={(e: any) =>
@@ -876,8 +903,11 @@ class Preferences extends React.Component<Props, State> {
                 />
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("password")}</Form.Label>
+                <Form.Label htmlFor="caldavPass">
+                  {this.props.t("password")}
+                </Form.Label>
                 <Form.Control
+                  id="caldavPass"
                   type="password"
                   value={this.state.caldavPass}
                   onChange={(e: any) =>
@@ -889,8 +919,11 @@ class Preferences extends React.Component<Props, State> {
                 />
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label>{this.props.t("calendar")}</Form.Label>
+                <Form.Label htmlFor="caldavCalendar">
+                  {this.props.t("calendar")}
+                </Form.Label>
                 <Form.Select
+                  id="caldavCalendar"
                   value={this.state.caldavCalendar}
                   onChange={(e: any) =>
                     this.setState({ caldavCalendar: e.target.value })
