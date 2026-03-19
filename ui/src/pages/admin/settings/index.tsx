@@ -51,6 +51,7 @@ interface State {
   maxHoursPartiallyBookedEnabled: boolean;
   maxBookingDurationHours: number;
   minBookingDurationHours: number;
+  targetUtilizationHoursPerWeek: number;
   dailyBasisBooking: boolean;
   noAdminRestrictions: boolean;
   showNames: boolean;
@@ -96,6 +97,7 @@ class Settings extends React.Component<Props, State> {
       maxConcurrentBookingsPerUser: 0,
       maxBookingDurationHours: 0,
       minBookingDurationHours: 0,
+      targetUtilizationHoursPerWeek: 0,
       maxDaysInAdvance: 0,
       bookingRetentionEnabled: false,
       bookingRetentionDays: 0,
@@ -218,6 +220,8 @@ class Settings extends React.Component<Props, State> {
           state.maxBookingDurationHours = window.parseInt(s.value);
         if (s.name === "min_booking_duration_hours")
           state.minBookingDurationHours = window.parseInt(s.value);
+        if (s.name === "target_utilization_hours_per_week")
+          state.targetUtilizationHoursPerWeek = window.parseInt(s.value);
         if (s.name === "subject_default")
           state.subjectDefault = window.parseInt(s.value);
         if (s.name === "daily_basis_booking")
@@ -334,6 +338,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "min_booking_duration_hours",
         this.state.minBookingDurationHours.toString(),
+      ),
+      new OrgSettings(
+        "target_utilization_hours_per_week",
+        this.state.targetUtilizationHoursPerWeek.toString(),
       ),
       new OrgSettings(
         "allow_recurring_bookings",
@@ -739,11 +747,12 @@ class Settings extends React.Component<Props, State> {
             <Col sm="4">{updateHint}</Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-customLogoUrl">
               {this.props.t("customLogoUrl")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="input-customLogoUrl"
                 type="url"
                 value={this.state.customLogoUrl}
                 onChange={(e: any) =>
@@ -756,11 +765,12 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-maxBookingsPerUser">
               {this.props.t("maxBookingsPerUser")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="input-maxBookingsPerUser"
                 type="number"
                 value={this.state.maxBookingsPerUser}
                 onChange={(e: any) =>
@@ -772,11 +782,16 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-maxConcurrentBookingsPerUser"
+            >
               {this.props.t("maxConcurrentBookingsPerUser")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="input-maxConcurrentBookingsPerUser"
                 type="number"
                 value={this.state.maxConcurrentBookingsPerUser}
                 onChange={(e: any) =>
@@ -790,12 +805,13 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-maxDaysInAdvance">
               {this.props.t("maxDaysInAdvance")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="input-maxDaysInAdvance"
                   type="number"
                   value={this.state.maxDaysInAdvance}
                   onChange={(e: any) =>
@@ -809,7 +825,7 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-bookingRetentionDays">
               {this.props.t("bookingRetention")}
             </Form.Label>
             <Col sm="4">
@@ -824,6 +840,7 @@ class Settings extends React.Component<Props, State> {
                   }
                 />
                 <Form.Control
+                  id="input-bookingRetentionDays"
                   type="number"
                   value={this.state.bookingRetentionDays}
                   onChange={(e: any) =>
@@ -838,7 +855,7 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-maxHoursBeforeDelete">
               {this.props.t("maxHoursBeforeDelete")}
             </Form.Label>
             <Col sm="4">
@@ -853,6 +870,7 @@ class Settings extends React.Component<Props, State> {
                   }
                 />
                 <Form.Control
+                  id="input-maxHoursBeforeDelete"
                   type="number"
                   value={this.state.maxHoursBeforeDelete}
                   onChange={(e: any) =>
@@ -866,7 +884,7 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-maxHoursPartiallyBooked">
               {this.props.t("maxHoursPartiallyBooked")}
             </Form.Label>
             <Col sm="4">
@@ -880,6 +898,7 @@ class Settings extends React.Component<Props, State> {
                   }
                 />
                 <Form.Control
+                  id="input-maxHoursPartiallyBooked"
                   type="number"
                   value={this.state.maxHoursPartiallyBooked}
                   onChange={(e: any) =>
@@ -933,12 +952,13 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-maxBookingDurationHours">
               {this.props.t("maxBookingDurationHours")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="input-maxBookingDurationHours"
                   type="number"
                   value={this.state.maxBookingDurationHours}
                   onChange={(e: any) =>
@@ -952,12 +972,13 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-minBookingDurationHours">
               {this.props.t("minBookingDurationHours")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="input-minBookingDurationHours"
                   type="number"
                   value={this.state.minBookingDurationHours}
                   onChange={(e: any) =>
@@ -965,6 +986,32 @@ class Settings extends React.Component<Props, State> {
                   }
                   min="0"
                   max="9999"
+                />
+                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-targetUtilizationHoursPerWeek"
+            >
+              {this.props.t("targetUtilizationHoursPerWeek")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <Form.Control
+                  id="input-targetUtilizationHoursPerWeek"
+                  type="number"
+                  value={this.state.targetUtilizationHoursPerWeek}
+                  onChange={(e: any) =>
+                    this.setState({
+                      targetUtilizationHoursPerWeek: e.target.value,
+                    })
+                  }
+                  min="0"
+                  max="168"
                 />
                 <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
               </InputGroup>
@@ -1038,11 +1085,12 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-defaultTimezone">
               {this.props.t("defaultTimezone")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="input-defaultTimezone"
                 value={this.state.defaultTimezone}
                 onChange={(e: any) =>
                   this.setState({ defaultTimezone: e.target.value })
@@ -1055,11 +1103,12 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-subjectDefault">
               {this.props.t("subjectDefault")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="input-subjectDefault"
                 value={this.state.subjectDefault}
                 onChange={(e: any) =>
                   this.setState({ subjectDefault: e.target.value })
@@ -1072,11 +1121,16 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-confluenceServerSharedSecret"
+            >
               {this.props.t("confluenceServerSharedSecret")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="input-confluenceServerSharedSecret"
                 type="text"
                 value={this.state.confluenceServerSharedSecret}
                 onChange={(e: any) =>
@@ -1088,7 +1142,7 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-newDomain">
               {this.props.t("domains")}
               <PremiumFeatureIcon />
             </Form.Label>
@@ -1096,6 +1150,7 @@ class Settings extends React.Component<Props, State> {
               {domains}
               <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
                 <Form.Control
+                  id="input-newDomain"
                   type="text"
                   value={this.state.newDomain}
                   onChange={(e: any) =>

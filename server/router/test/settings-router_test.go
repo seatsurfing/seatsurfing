@@ -151,6 +151,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingNewUserDefaultMailNotification.Name,
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
+		SettingTargetUtilizationHoursPerWeek.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

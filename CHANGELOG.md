@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.71.0](https://github.com/seatsurfing/seatsurfing/compare/v1.70.0...v1.71.0) (2026-03-17)
+
+
+### Features
+
+* show utilization per week/month and add target utilization system setting ([#1857](https://github.com/seatsurfing/seatsurfing/issues/1857)) ([94248ef](https://github.com/seatsurfing/seatsurfing/commit/94248efa5d3aa7f71e9fc9843f4982cecb07340d))
+
+
+### Bug Fixes
+
+* bind labels to input elements on settings page ([#1858](https://github.com/seatsurfing/seatsurfing/issues/1858)) ([1ce598f](https://github.com/seatsurfing/seatsurfing/commit/1ce598f3fa9eee880d907bef76d8b9969a28f67e))
+* **deps:** bump next from 16.1.6 to 16.1.7 in /ui in the production-dependencies group across 1 directory ([#1854](https://github.com/seatsurfing/seatsurfing/issues/1854)) ([b039e53](https://github.com/seatsurfing/seatsurfing/commit/b039e532fb5c43c4a8d6342e4da0e3913866971d))
+
 ## [1.70.0](https://github.com/seatsurfing/seatsurfing/compare/v1.69.0...v1.70.0) (2026-03-16)
 
 

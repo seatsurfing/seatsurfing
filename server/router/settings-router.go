@@ -281,7 +281,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingSubjectDefault.Name ||
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingEnforceTOTP.Name ||
-		name == SettingNewUserDefaultMailNotification.Name {
+		name == SettingNewUserDefaultMailNotification.Name ||
+		name == SettingTargetUtilizationHoursPerWeek.Name {
 		return true
 	}
 	return false
@@ -312,7 +313,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingAllowRecurringBookings.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingEnforceTOTP.Name ||
-		name == SettingSubjectDefault.Name {
+		name == SettingSubjectDefault.Name ||
+		name == SettingTargetUtilizationHoursPerWeek.Name {
 		return true
 	}
 	return false
@@ -375,6 +377,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingMinBookingDurationHours.Name {
 		return SettingMinBookingDurationHours.Type
+	}
+	if name == SettingTargetUtilizationHoursPerWeek.Name {
+		return SettingTargetUtilizationHoursPerWeek.Type
 	}
 	if name == SettingBookingRetentionDays.Name {
 		return SettingBookingRetentionDays.Type

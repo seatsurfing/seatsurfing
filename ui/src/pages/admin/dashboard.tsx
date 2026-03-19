@@ -184,11 +184,11 @@ class Dashboard extends React.Component<Props, State> {
     }
     const label = `${title}: ${num} %`;
     let variant = "success";
-    if (num >= 80) {
-      variant = "danger";
-    }
-    if (num >= 60) {
+    if (num >= 75) {
       variant = "warning";
+    }
+    if (num >= 100) {
+      variant = "danger";
     }
     return (
       <div>
@@ -356,12 +356,8 @@ class Dashboard extends React.Component<Props, State> {
                 </div>
 
                 {this.renderProgressBar(
-                  this.state.stats?.spaceLoadToday,
-                  this.props.t("today"),
-                )}
-                {this.renderProgressBar(
-                  this.state.stats?.spaceLoadYesterday,
-                  this.props.t("yesterday"),
+                  this.state.stats?.spaceLoadNextWeek,
+                  this.props.t("nextWeek"),
                 )}
                 {this.renderProgressBar(
                   this.state.stats?.spaceLoadThisWeek,
@@ -370,6 +366,10 @@ class Dashboard extends React.Component<Props, State> {
                 {this.renderProgressBar(
                   this.state.stats?.spaceLoadLastWeek,
                   this.props.t("lastWeek"),
+                )}
+                {this.renderProgressBar(
+                  this.state.stats?.spaceLoadLastMonth,
+                  this.props.t("lastMonth"),
                 )}
               </Card.Body>
             </Card>
