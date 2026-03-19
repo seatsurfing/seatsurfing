@@ -198,7 +198,6 @@
   "approvalNotifications": "Ilmoita minulle sähköpostitse",
   "timeFormat": "Kellonaikamuoto",
   "use24HourTime": "Käytä 24 tunnin kellomuotoa",
-  "mangageOrgHeadline": "Hallitse organisaatiota.",
   "map": "Kartta",
   "mapFileTypes": "PNG, JPEG tai GIF",
   "maxBookingDurationHours": "Varauksen enimmäiskesto",
@@ -411,7 +410,7 @@
   "date": "Päivämäärä",
   "error404": "Sivua ei löytynyt. Palaa napsauttamalla tästä.",
   "allAreas": "Kaikki alueet",
-  "lastMonth": "Last month",
-  "nextWeek": "Next week",
-  "targetUtilizationHoursPerWeek": "Target weekly utilization per space"
+  "lastMonth": "Edellinen kuukausi",
+  "nextWeek": "Seuraava viikko",
+  "targetUtilizationHoursPerWeek": "Viikkokohtainen työpisteen käyttöastetavoite"
 }
