@@ -3,7 +3,7 @@ module github.com/seatsurfing/seatsurfing/server
 go 1.25.0
 
 require (
-	github.com/coocood/freecache v1.2.5
+	github.com/coocood/freecache v1.2.7
 	github.com/emersion/go-ical v0.0.0-20250609112844-439c63cef608
 	github.com/emersion/go-webdav v0.7.0
 	github.com/go-playground/validator v9.31.0+incompatible
