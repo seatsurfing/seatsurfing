@@ -410,5 +410,8 @@
     "time": "Aika",
     "date": "Päivämäärä",
     "error404": "Sivua ei löytynyt. Palaa napsauttamalla tästä.",
-    "allAreas": "Kaikki alueet"
+    "allAreas": "Kaikki alueet",
+    "lastMonth": "Edellinen kuukausi",
+    "nextWeek": "Seuraava viikko",
+    "targetUtilizationHoursPerWeek": "Viikkokohtainen työpisteen käyttöastetavoite"
   }
