@@ -407,7 +407,7 @@ func (router *SettingsRouter) isValidSettingType(name string, value string) bool
 	if settingType == 0 {
 		return false
 	}
-	if settingType == SettingTypeString {
+	if settingType == SettingTypeString && len(value) <= 256 {
 		return true
 	}
 	if settingType == SettingTypeBool && (value == "1" || value == "0") {
@@ -422,7 +422,44 @@ func (router *SettingsRouter) isValidSettingType(name string, value string) bool
 }
 
 func (router *SettingsRouter) isValidSettingValue(name string, value string) bool {
+	if value == "" {
+		return true
+	}
+	if name == SettingCustomLogoUrl.Name {
+		if !ValidateURL(value) {
+			return false
+		}
+		return true
+	}
+	if name == SettingMaxBookingsPerUser.Name {
+		if !ValidateNumber(value, 1, 9999) {
+			return false
+		}
+		return true
+	}
+	if name == SettingMaxConcurrentBookingsPerUser.Name || name == SettingMaxDaysInAdvance.Name || name == SettingMaxHoursBeforeDelete.Name ||
+		name == SettingMaxHoursPartiallyBooked.Name || name == SettingMaxBookingDurationHours.Name || name == SettingMinBookingDurationHours.Name {
+		if !ValidateNumber(value, 0, 9999) {
+			return false
+		}
+		return true
+	}
+	if name == SettingBookingRetentionDays.Name {
+		if !ValidateNumber(value, 30, 999) {
+			return false
+		}
+		return true
+	}
+	if name == SettingTargetUtilizationHoursPerWeek.Name {
+		if !ValidateNumber(value, 0, 168) {
+			return false
+		}
+		return true
+	}
 	if name == SettingDefaultTimezone.Name && !IsValidTimeZone(value) {
+		return false
+	}
+	if name == SettingConfluenceServerSharedSecret.Name && len(value) > 256 {
 		return false
 	}
 	if name == SettingSubjectDefault.Name {
