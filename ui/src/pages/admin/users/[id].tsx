@@ -415,7 +415,12 @@ class EditUser extends React.Component<Props, State> {
       }
       roleSelect = (
         <>
-          <Form.Control id="role" plaintext={true} readOnly={true} defaultValue={role} />
+          <Form.Control
+            id="role"
+            plaintext={true}
+            readOnly={true}
+            defaultValue={role}
+          />
           {isOwnUser && (
             <Form.Text className="text-muted">
               {this.props.t("cannotChangeOwnRole")}
@@ -468,7 +473,7 @@ class EditUser extends React.Component<Props, State> {
             <Col sm="4">
               <Form.Control
                 id="firstname"
-                type="firstname"
+                type="text"
                 placeholder=""
                 value={this.state.firstname}
                 onChange={(e: any) =>
@@ -485,7 +490,7 @@ class EditUser extends React.Component<Props, State> {
             <Col sm="4">
               <Form.Control
                 id="lastname"
-                type="lastname"
+                type="text"
                 placeholder=""
                 value={this.state.lastname}
                 onChange={(e: any) =>
