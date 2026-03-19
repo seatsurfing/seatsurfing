@@ -708,6 +708,7 @@ class EditBooking extends React.Component<Props, State> {
 
     const enterDatePicker = (
       <DateTimePicker
+        id="booking-enter"
         value={this.state.enter}
         onChange={(value: Date | null) => {
           if (value != null) this.setEnterDate(value);
@@ -719,6 +720,7 @@ class EditBooking extends React.Component<Props, State> {
     );
     const leaveDatePicker = (
       <DateTimePicker
+        id="booking-leave"
         value={this.state.leave}
         onChange={(value: Date | null) => {
           if (value != null) this.setLeaveDate(value);
@@ -806,6 +808,7 @@ class EditBooking extends React.Component<Props, State> {
           selected={this.state.typeaheadSelected}
           filterBy={this.filterSearch}
           isLoading={this.state.typeaheadLoading}
+          inputProps={{ id: "booking-user" }}
           labelKey="email"
           multiple={false}
           minLength={3}
@@ -839,6 +842,7 @@ class EditBooking extends React.Component<Props, State> {
     } else {
       userField = (
         <Form.Control
+          id="booking-user"
           type="text"
           disabled
           value={this.state.selectedUserEmail}
@@ -861,32 +865,33 @@ class EditBooking extends React.Component<Props, State> {
           {hint}
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-user">
               {this.props.t("user")}
             </Form.Label>
             <Col sm="4">{userField}</Col>
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-enter">
               {this.props.t("enter")}
             </Form.Label>
             <Col sm="4">{enterDatePicker}</Col>
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-leave">
               {this.props.t("leave")}
             </Form.Label>
             <Col sm="4">{leaveDatePicker}</Col>
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-location">
               {this.props.t("area")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="booking-location"
                 disabled={this.state.isDisabledLocation || !this.state.canEdit}
                 required={true}
                 value={this.state.selectedLocationId}
@@ -923,11 +928,12 @@ class EditBooking extends React.Component<Props, State> {
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-space">
               {this.props.t("space")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="booking-space"
                 disabled={this.state.isDisabledSpace || !this.state.canEdit}
                 required={true}
                 value={this.state.selectedSpaceId}
@@ -977,11 +983,12 @@ class EditBooking extends React.Component<Props, State> {
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-subject">
               {this.props.t("subject")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="booking-subject"
                 type="subject"
                 value={this.state.subject}
                 minLength={this.getSelectedSpace()?.requireSubject ? 3 : 0}

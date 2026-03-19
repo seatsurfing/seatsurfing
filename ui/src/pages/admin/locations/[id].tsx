@@ -839,6 +839,7 @@ class EditLocation extends React.Component<Props, State> {
         input = (
           <Form.Check
             type="checkbox"
+            id={`space-attr-${a.id}`}
             disabled={!this.isSpaceAttributeEnabled(a.id)}
             label={this.props.t("yes")}
             checked={this.getSpaceAttributeValue(a.id) === "1"}
@@ -864,6 +865,7 @@ class EditLocation extends React.Component<Props, State> {
           <Col sm="4">
             <Form.Check
               type="checkbox"
+              id={`space-attr-${a.id}`}
               label={a.label}
               checked={this.isSpaceAttributeEnabled(a.id)}
               onChange={(e: any) =>
@@ -895,11 +897,12 @@ class EditLocation extends React.Component<Props, State> {
             }}
           >
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="space-name">
                 {this.props.t("name")}
               </Form.Label>
               <Col sm="8">
                 <Form.Control
+                  id="space-name"
                   type="text"
                   value={this.getSelectedSpace()?.name}
                   onChange={(e: any) =>
@@ -913,7 +916,7 @@ class EditLocation extends React.Component<Props, State> {
               as={Row}
               hidden={RuntimeConfig.INFOS.subjectDefault === 1}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="check-requireSubject">
                 {this.props.t("requireSubject")}
               </Form.Label>
               <Col sm="8">
@@ -932,13 +935,13 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="space-enabled">
                 {this.props.t("enabled")}
               </Form.Label>
               <Col sm="8">
                 <Form.Check
                   type="checkbox"
-                  id="check-enabled"
+                  id="space-enabled"
                   label={this.props.t("yes")}
                   checked={this.getSelectedSpace()?.enabled}
                   onChange={(e: any) =>
@@ -951,7 +954,7 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="search-approvers-input">
                 {this.props.t("approvers")}
               </Form.Label>
               <Col sm="8">
@@ -959,6 +962,7 @@ class EditLocation extends React.Component<Props, State> {
                   disabled={!RuntimeConfig.INFOS.featureGroups}
                   filterBy={this.filterSearch}
                   id="search-approvers"
+                  inputProps={{ id: "search-approvers-input" }}
                   isLoading={this.state.typeaheadApproversLoading}
                   labelKey="name"
                   multiple={true}
@@ -987,7 +991,7 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="search-allowbookers-input">
                 {this.props.t("allowBookers")}
               </Form.Label>
               <Col sm="8">
@@ -995,6 +999,7 @@ class EditLocation extends React.Component<Props, State> {
                   disabled={!RuntimeConfig.INFOS.featureGroups}
                   filterBy={this.filterSearch}
                   id="search-allowbookers"
+                  inputProps={{ id: "search-allowbookers-input" }}
                   isLoading={this.state.typeaheadAllowBookersLoading}
                   labelKey="name"
                   multiple={true}
@@ -1368,11 +1373,12 @@ class EditLocation extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-name">
               {this.props.t("name")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="location-name"
                 type="text"
                 placeholder={this.props.t("name")}
                 value={this.state.name}
@@ -1382,11 +1388,12 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-description">
               {this.props.t("description")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="location-description"
                 type="text"
                 placeholder={this.props.t("description")}
                 value={this.state.description}
@@ -1397,11 +1404,12 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-timezone">
               {this.props.t("timezone")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="location-timezone"
                 value={this.state.timezone}
                 onChange={(e: any) =>
                   this.setState({ timezone: e.target.value })
@@ -1420,13 +1428,13 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-enabled">
               {this.props.t("enabled")}
             </Form.Label>
             <Col sm="4">
               <Form.Check
                 type="checkbox"
-                id="check-enabled"
+                id="location-enabled"
                 label={this.props.t("yes")}
                 checked={this.state.enabled}
                 onChange={(e: any) =>
@@ -1436,7 +1444,7 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-limitConcurrentBookings">
               {this.props.t("maxConcurrentBookings")}
             </Form.Label>
             <Col sm="4">
@@ -1451,6 +1459,7 @@ class EditLocation extends React.Component<Props, State> {
                 />
                 <Form.Control
                   type="number"
+                  id="input-limitConcurrentBookings"
                   min="0"
                   value={this.state.maxConcurrentBookings}
                   onChange={(e: any) =>
@@ -1464,11 +1473,12 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-floorplan">
               {this.props.t("floorplan")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="location-floorplan"
                 type="file"
                 accept="image/png, image/jpeg, image/gif, image/svg+xml"
                 onChange={(e: any) =>
@@ -1483,12 +1493,13 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-scale">
               {this.props.t("scale")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="location-scale"
                   type="number"
                   disabled={!this.entity.id || this.state.files !== null}
                   placeholder={this.props.t("scale")}

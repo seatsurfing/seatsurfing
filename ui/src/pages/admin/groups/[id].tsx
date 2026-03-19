@@ -398,12 +398,13 @@ class EditUser extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="name">
               {this.props.t("name")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
-                type="name"
+                id="name"
+                type="text"
                 value={this.state.name}
                 minLength={3}
                 onChange={(e: any) => this.setState({ name: e.target.value })}

@@ -396,11 +396,12 @@ class Bookings extends React.Component<Props, State> {
         </Form.Group>
 
         <Form.Group as={Row} hidden={this.state.filterOption !== "enter_leave"}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="input-enter">
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
             <DateTimePicker
+              id="input-enter"
               value={this.state.start}
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ start: value });
@@ -413,11 +414,12 @@ class Bookings extends React.Component<Props, State> {
           </Col>
         </Form.Group>
         <Form.Group as={Row} hidden={this.state.filterOption !== "enter_leave"}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="input-leave">
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
             <DateTimePicker
+              id="input-leave"
               value={this.state.end}
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ end: value });
@@ -465,11 +467,12 @@ class Bookings extends React.Component<Props, State> {
           </Col>
         </Form.Group>
         <Form.Group as={Row}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="area-select">
             {this.props.t("area")}
           </Form.Label>
           <Col sm="4">
             <Form.Select
+              id="area-select"
               value={this.state.filterLocation}
               onChange={(e: any) =>
                 this.setState({ filterLocation: e.target.value })
