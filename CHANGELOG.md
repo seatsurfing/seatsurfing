@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.73.1](https://github.com/seatsurfing/seatsurfing/compare/v1.73.0...v1.73.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* fix prev and next buttons in booking UI ([#1879](https://github.com/seatsurfing/seatsurfing/issues/1879)) ([54e4e52](https://github.com/seatsurfing/seatsurfing/commit/54e4e52dcc98b870c023067292ddef84cd0ca562))
+
 ## [1.73.0](https://github.com/seatsurfing/seatsurfing/compare/v1.72.0...v1.73.0) (2026-03-20)
 
 
