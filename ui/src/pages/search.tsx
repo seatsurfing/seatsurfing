@@ -267,10 +267,6 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  getEarliestSelectableEnterDate = (): Date => {
-    return DateUtil.getTodayStart();
-  };
-
   loadPreferences = async (): Promise<void> => {
     const self = this;
     return new Promise<void>(function (resolve, reject) {
@@ -1562,6 +1558,8 @@ class Search extends React.Component<Props, State> {
   };
 
   render() {
+    const earliestEnterDate = DateUtil.getTodayStart();
+
     let hint = <></>;
     if (!this.state.canSearch && this.state.canSearchHint) {
       hint = (
@@ -1583,7 +1581,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1602,7 +1600,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1623,7 +1621,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId || this.state.selectionAllDay}
           value={this.state.enter}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1643,7 +1641,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId || this.state.selectionAllDay}
           value={this.state.leave}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1915,6 +1913,29 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
+
+              <button
+                type="button"
+                className={`ms-2 btn d-flex align-items-center`}
+                style={{
+                  padding: "4px 8px",
+                  borderColor: "#CED4DA",
+                }}
+                disabled={DateUtil.isSameDay(
+                  this.state.enter,
+                  earliestEnterDate,
+                )}
+                onClick={() => {
+                  this.setState({
+                    enter: DateUtil.prevDay(this.state.enter),
+                    leave: DateUtil.prevDay(this.state.leave),
+                  });
+                }}
+                title={this.props.t("multiDay")}
+              >
+                ❮
+              </button>
+
               <div
                 className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
               >
@@ -1924,6 +1945,24 @@ class Search extends React.Component<Props, State> {
               {this.state.selectionMultiDay && (
                 <div className="ms-2 w-50">{dateLeavePicker}</div>
               )}
+
+              <button
+                type="button"
+                className={`ms-2 btn d-flex align-items-center`}
+                style={{
+                  padding: "4px 8px",
+                  borderColor: "#CED4DA",
+                }}
+                onClick={() => {
+                  this.setState({
+                    enter: DateUtil.nextDay(this.state.enter),
+                    leave: DateUtil.nextDay(this.state.leave),
+                  });
+                }}
+                title={this.props.t("multiDay")}
+              >
+                ❯
+              </button>
 
               <button
                 type="button"
