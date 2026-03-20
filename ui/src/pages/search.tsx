@@ -1926,10 +1926,10 @@ class Search extends React.Component<Props, State> {
                   earliestEnterDate,
                 )}
                 onClick={() => {
-                  this.setState({
-                    enter: DateUtil.prevDay(this.state.enter),
-                    leave: DateUtil.prevDay(this.state.leave),
-                  });
+                  this.updateEnterAndLeaveDate(
+                    DateUtil.prevDay(this.state.enter),
+                    DateUtil.prevDay(this.state.leave),
+                  );
                 }}
                 title={this.props.t("multiDay")}
               >
@@ -1954,10 +1954,10 @@ class Search extends React.Component<Props, State> {
                   borderColor: "#CED4DA",
                 }}
                 onClick={() => {
-                  this.setState({
-                    enter: DateUtil.nextDay(this.state.enter),
-                    leave: DateUtil.nextDay(this.state.leave),
-                  });
+                  this.updateEnterAndLeaveDate(
+                    DateUtil.nextDay(this.state.enter),
+                    DateUtil.nextDay(this.state.leave),
+                  );
                 }}
                 title={this.props.t("multiDay")}
               >
