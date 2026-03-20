@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.73.0](https://github.com/seatsurfing/seatsurfing/compare/v1.72.0...v1.73.0) (2026-03-20)
+
+
+### Features
+
+* add prev and next day buttons ([#1875](https://github.com/seatsurfing/seatsurfing/issues/1875)) ([41b9dfd](https://github.com/seatsurfing/seatsurfing/commit/41b9dfd4f92a58e840e94cb565a92823591925ed))
+
+
+### Bug Fixes
+
+* add spinner to save button on preference dialogs ([#1874](https://github.com/seatsurfing/seatsurfing/issues/1874)) ([be00106](https://github.com/seatsurfing/seatsurfing/commit/be0010611ce622477a0f628fbceadbb0817d5a38))
+* deleting location should also delete space approvers and allowed bookers ([#1876](https://github.com/seatsurfing/seatsurfing/issues/1876)) ([057663b](https://github.com/seatsurfing/seatsurfing/commit/057663b58e9559e9e6908a5099be936ad617745b))
+
 ## [1.72.0](https://github.com/seatsurfing/seatsurfing/compare/v1.71.1...v1.72.0) (2026-03-19)
 
 
