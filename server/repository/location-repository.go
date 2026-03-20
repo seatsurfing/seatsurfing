@@ -86,6 +86,14 @@ func (r *LocationRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 39 {
+		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS locations_allowed_bookers (" +
+			"location_id uuid NOT NULL, " +
+			"group_id uuid NOT NULL, " +
+			"PRIMARY KEY (location_id, group_id))"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *LocationRepository) Create(e *Location) error {
@@ -180,6 +188,10 @@ func (r *LocationRepository) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE entity_id = $1 AND entity_type = $2", e.ID, SpaceAttributeValueEntityTypeLocation); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1", e.ID); err != nil {
+		return err
+	}
+
 	_, err := GetDatabase().DB().Exec("DELETE FROM locations WHERE id = $1", e.ID)
 	return err
 }
