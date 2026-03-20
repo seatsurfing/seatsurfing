@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.72.0](https://github.com/seatsurfing/seatsurfing/compare/v1.71.1...v1.72.0) (2026-03-19)
+
+
+### Features
+
+* add finnish translation ([#1870](https://github.com/seatsurfing/seatsurfing/issues/1870)) ([17bcabd](https://github.com/seatsurfing/seatsurfing/commit/17bcabd535b87ee69ea2dbf2d71421967ccda77b))
+
+
+### Bug Fixes
+
+* add opacity to non-approved bookings ([#1869](https://github.com/seatsurfing/seatsurfing/issues/1869)) ([2a60b59](https://github.com/seatsurfing/seatsurfing/commit/2a60b594c7a9df37259361e2919c416218ea8990))
+* **deps:** bump github.com/coocood/freecache from 1.2.5 to 1.2.7 in /server in the minor-and-patch group ([#1871](https://github.com/seatsurfing/seatsurfing/issues/1871)) ([10b55bd](https://github.com/seatsurfing/seatsurfing/commit/10b55bd1bee5dd223d8dfe9cf9481c7ec7cb69c5))
+* link labels to form elements ([#1868](https://github.com/seatsurfing/seatsurfing/issues/1868)) ([6fea0ed](https://github.com/seatsurfing/seatsurfing/commit/6fea0edf4d86e4089bbb5ce5c5d23c4769b33399))
+
 ## [1.71.1](https://github.com/seatsurfing/seatsurfing/compare/v1.71.0...v1.71.1) (2026-03-19)
 
 
