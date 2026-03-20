@@ -27,12 +27,13 @@ type LocationRouter struct {
 }
 
 type CreateLocationRequest struct {
-	Name                  string  `json:"name" validate:"required"`
-	Description           string  `json:"description"`
-	MaxConcurrentBookings uint    `json:"maxConcurrentBookings"`
-	Timezone              string  `json:"timezone"`
-	Enabled               bool    `json:"enabled"`
-	MapScale              float64 `json:"mapScale"`
+	Name                  string   `json:"name" validate:"required"`
+	Description           string   `json:"description"`
+	MaxConcurrentBookings uint     `json:"maxConcurrentBookings"`
+	Timezone              string   `json:"timezone"`
+	Enabled               bool     `json:"enabled"`
+	MapScale              float64  `json:"mapScale"`
+	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds"`
 }
 
 type GetLocationResponse struct {
@@ -179,7 +180,9 @@ func (router *LocationRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e)
+
+	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList([]string{e.ID})
+	res := router.copyToRestModel(e, allowedBookers)
 	SendJSON(w, res)
 }
 
@@ -191,9 +194,22 @@ func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+
+	locationIDs := []string{}
+	for _, e := range list {
+		locationIDs = append(locationIDs, e.ID)
+	}
+	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList(locationIDs)
+
 	res := []*GetLocationResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e)
+		filteredLocationGroup := []*LocationGroup{}
+		for _, ab := range allowedBookers {
+			if ab.LocationID == e.ID {
+				filteredLocationGroup = append(filteredLocationGroup, ab)
+			}
+		}
+		m := router.copyToRestModel(e, filteredLocationGroup)
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -322,9 +338,22 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	res := []*GetLocationResponse{}
+
+	locationIDs := []string{}
+	for _, e := range list {
+		locationIDs = append(locationIDs, e.ID)
+	}
+	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList(locationIDs)
+
 	for _, e := range list {
 		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
-			m := router.copyToRestModel(e)
+			filteredLocationGroup := []*LocationGroup{}
+			for _, ab := range allowedBookers {
+				if ab.LocationID == e.ID {
+					filteredLocationGroup = append(filteredLocationGroup, ab)
+				}
+			}
+			m := router.copyToRestModel(e, filteredLocationGroup)
 			res = append(res, m)
 		}
 	}
@@ -528,7 +557,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	return e
 }
 
-func (router *LocationRouter) copyToRestModel(e *Location) *GetLocationResponse {
+func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*LocationGroup) *GetLocationResponse {
 	m := &GetLocationResponse{}
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
@@ -541,5 +570,15 @@ func (router *LocationRouter) copyToRestModel(e *Location) *GetLocationResponse 
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
+
+	if allowedBookers != nil {
+		m.AllowedBookerGroupIDs = []string{}
+		for _, allowedBooker := range allowedBookers {
+			if allowedBooker.LocationID == e.ID {
+				m.AllowedBookerGroupIDs = append(m.AllowedBookerGroupIDs, allowedBooker.GroupID)
+			}
+		}
+	}
+
 	return m
 }

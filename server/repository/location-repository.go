@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -31,6 +32,11 @@ type LocationMap struct {
 	Height   uint
 	Scale    float64
 	Data     []byte
+}
+
+type LocationGroup struct {
+	LocationID string
+	GroupID    string
 }
 
 var locationRepository *LocationRepository
@@ -268,4 +274,25 @@ func (r *LocationRepository) GetTimezone(location *Location) string {
 func (r *LocationRepository) AttachTimezoneInformation(timestamp time.Time, location *Location) (time.Time, error) {
 	tz := GetLocationRepository().GetTimezone(location)
 	return util.AttachTimezoneInformationTz(timestamp, tz)
+}
+
+func (r *LocationRepository) GetAllAllowedBookersForLocationList(locationIDs []string) ([]*LocationGroup, error) {
+	var result []*LocationGroup
+	rows, err := GetDatabase().DB().Query("SELECT location_id, group_id "+
+		"FROM locations_allowed_bookers "+
+		"WHERE space_id = ANY($1::uuid[])",
+		pq.StringArray(locationIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &LocationGroup{}
+		err = rows.Scan(&e.LocationID, &e.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
 }
