@@ -11,7 +11,11 @@ interface Props {
 const SaveButton: React.FC<Props> = ({ submitting, className, disabled }) => {
   const { t } = useTranslation();
   return (
-    <Button type="submit" disabled={submitting || disabled} className={className}>
+    <Button
+      type="submit"
+      disabled={submitting || disabled}
+      className={className}
+    >
       {submitting && (
         <span
           className="spinner-border spinner-border-sm me-2"
