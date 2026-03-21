@@ -391,6 +391,14 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+
+	err = GetLocationRepository().ReplaceAllowedBookers(eNew, m.AllowedBookerGroupIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+
 	SendUpdated(w)
 }
 
@@ -438,6 +446,14 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+
+	err := GetLocationRepository().ReplaceAllowedBookers(e, m.AllowedBookerGroupIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+
 	SendCreated(w, e.ID)
 }
 

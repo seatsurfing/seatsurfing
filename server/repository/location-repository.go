@@ -276,6 +276,23 @@ func (r *LocationRepository) AttachTimezoneInformation(timestamp time.Time, loca
 	return util.AttachTimezoneInformationTz(timestamp, tz)
 }
 
+func (r *LocationRepository) ReplaceAllowedBookers(location *Location, allowedBookersGroupIDs []string) error {
+	if len(allowedBookersGroupIDs) == 0 {
+		_, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1", location.ID)
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1 AND group_id != ALL($2::uuid[])",
+		location.ID, pq.StringArray(allowedBookersGroupIDs)); err != nil {
+		return err
+	}
+	for _, groupID := range allowedBookersGroupIDs {
+		if _, err := GetDatabase().DB().Exec("INSERT INTO locations_allowed_bookers (location_id, group_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", location.ID, groupID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (r *LocationRepository) GetAllAllowedBookersForLocationList(locationIDs []string) ([]*LocationGroup, error) {
 	var result []*LocationGroup
 	rows, err := GetDatabase().DB().Query("SELECT location_id, group_id "+
