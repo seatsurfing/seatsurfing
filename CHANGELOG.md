@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.73.2](https://github.com/seatsurfing/seatsurfing/compare/v1.73.1...v1.73.2) (2026-03-21)
+
+
+### Bug Fixes
+
+* prev and next button should not disable multiday option ([#1881](https://github.com/seatsurfing/seatsurfing/issues/1881)) ([063b5d5](https://github.com/seatsurfing/seatsurfing/commit/063b5d59c79fcfabfe274a214c90329eeec16f37))
+
 ## [1.73.1](https://github.com/seatsurfing/seatsurfing/compare/v1.73.0...v1.73.1) (2026-03-20)
 
 
