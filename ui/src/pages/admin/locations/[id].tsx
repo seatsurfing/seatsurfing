@@ -216,7 +216,6 @@ class EditLocation extends React.Component<Props, State> {
           });
         });
       });
-    } else {
     }
   };
 
