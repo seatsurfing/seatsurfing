@@ -646,7 +646,6 @@ class Search extends React.Component<Props, State> {
     const state = {
       enter: stateEnter,
       leave: stateLeave,
-      selectionMultiDay: !DateUtil.isSameDay(stateEnter, stateLeave),
     };
 
     this.setState(state, () => dateChangedCb());
