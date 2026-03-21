@@ -94,7 +94,7 @@ interface State {
   typeaheadAllowBookersLoading: boolean;
   typeaheadLocationAllowBookersOptions: Group[];
   typeaheadLocationAllowBookersLoading: boolean;
-  locationAllowBookers: string[];
+  locationAllowBookers: any[] | undefined;
 }
 
 interface Props {
@@ -208,6 +208,13 @@ class EditLocation extends React.Component<Props, State> {
                     mapScaleOnLoad: location.mapScale,
                     attributeValues: attributeValues,
                     availableAttributes: attributes,
+                    locationAllowBookers:
+                      location.allowedBookerGroupIds &&
+                      location.allowedBookerGroupIds
+                        ? this.groups.filter((g) =>
+                            location.allowedBookerGroupIds.includes(g.id),
+                          )
+                        : [],
                     loading: false,
                   });
                 });
@@ -338,7 +345,9 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
     this.entity.mapScale = this.state.mapScale;
-    this.entity.allowedBookerGroupIds = this.state.locationAllowBookers;
+    this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
+      ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
+      : [];
     this.entity
       .save()
       .then(() => {
@@ -838,7 +847,7 @@ class EditLocation extends React.Component<Props, State> {
 
   onLocationAllowBookersSearchSelected = (selected: any) => {
     this.setState({
-      locationAllowBookers: selected.map((group: any) => group.id),
+      locationAllowBookers: selected.map((group: any) => group as Group),
     });
   };
 
@@ -1556,7 +1565,7 @@ class EditLocation extends React.Component<Props, State> {
                 minLength={3}
                 onChange={this.onLocationAllowBookersSearchSelected}
                 onSearch={this.handleLocationAllowBookersSearch}
-                defaultSelected={this.locationAllowBookers}
+                defaultSelected={this.state.locationAllowBookers}
                 options={this.state.typeaheadLocationAllowBookersOptions}
                 placeholder={this.props.t("searchForGroup")}
                 ref={(ref: any) => {
