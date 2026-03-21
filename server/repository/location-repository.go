@@ -297,7 +297,7 @@ func (r *LocationRepository) GetAllAllowedBookersForLocationList(locationIDs []s
 	var result []*LocationGroup
 	rows, err := GetDatabase().DB().Query("SELECT location_id, group_id "+
 		"FROM locations_allowed_bookers "+
-		"WHERE space_id = ANY($1::uuid[])",
+		"WHERE location_id = ANY($1::uuid[])",
 		pq.StringArray(locationIDs))
 	if err != nil {
 		return nil, err
