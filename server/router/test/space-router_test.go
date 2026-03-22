@@ -211,7 +211,7 @@ func TestSpacesApproversCRUD(t *testing.T) {
 	CheckTestString(t, group2ID, resBody2[0].ID)
 }
 
-func TestSpacesAllowedBookersCRUD(t *testing.T) {
+func TestSpacesAllowedSpaceBookersCRUD(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
@@ -733,4 +733,38 @@ func TestSpacesAllowedBookerForbidden(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/location/"+locID+"/space/"+spaceID+"/allowedbooker", user.ID, bytes.NewBufferString(`[]`))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestLocationAllowedBookerForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	loginResponse1 := LoginTestUser(user1.ID)
+	user2 := CreateTestUserInOrg(org)
+	loginResponse2 := LoginTestUser(user2.ID)
+
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	// create restricted location
+	location, _ := CreateTestLocationAndSpace(org)
+	group := CreateTestGroup(org, user2)
+	GetLocationRepository().ReplaceAllowedBookers(location, []string{group.ID})
+
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+
+	// Check availability (for user 1)
+	req := NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse1.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceAvailabilityResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, false, resBody[0].IsAllowed)
+
+	// Check availability (for user 2)
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse2.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody[0].IsAllowed)
 }

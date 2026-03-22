@@ -211,6 +211,20 @@ func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
 	return location, space
 }
 
+func CreateTestGroup(org *Organization, user *User) *Group {
+	group := &Group{
+		OrganizationID: org.ID,
+	}
+	if err := GetGroupRepository().Create(group); err != nil {
+		panic(err)
+	}
+	if user != nil {
+		GetGroupRepository().AddMembers(group, []string{user.ID})
+	}
+
+	return group
+}
+
 func CreateTestBooking9To5(user *User, space *Space, offsetDay int) *Booking {
 	now := time.Now()
 	enterTime := time.Date(now.Year(), now.Month(), now.Day()+offsetDay, 9, 0, 0, 0, time.Local)
