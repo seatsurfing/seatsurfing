@@ -313,3 +313,7 @@ func (r *LocationRepository) GetAllAllowedBookersForLocationList(locationIDs []s
 	}
 	return result, nil
 }
+
+func (r *LocationRepository) GetAllAllowedBookersForLocation(locationID string) ([]*LocationGroup, error) {
+	return r.GetAllAllowedBookersForLocationList([]string{locationID})
+}

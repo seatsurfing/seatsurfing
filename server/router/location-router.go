@@ -181,7 +181,7 @@ func (router *LocationRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList([]string{e.ID})
+	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(e.ID)
 	res := router.copyToRestModel(e, allowedBookers)
 	SendJSON(w, res)
 }
