@@ -14,6 +14,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   selectedItem: string;
@@ -64,7 +65,7 @@ class Locations extends React.Component<Props, State> {
     return (
       <tr key={location.id} onClick={() => this.onItemSelect(location)}>
         <td>{location.name}</td>
-        <td>{location.enabled ? "☑" : "☐"}</td>
+        <td>{RendererUtils.state(location.enabled)}</td>
         <td>
           {location.mapWidth}&nbsp;&times;&nbsp;{location.mapHeight}
         </td>

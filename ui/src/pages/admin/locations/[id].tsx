@@ -40,6 +40,7 @@ import Search, { SearchOptions } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface SpaceState {
   id: string;
@@ -692,8 +693,16 @@ class EditLocation extends React.Component<Props, State> {
     return (
       <tr key={space.id}>
         <td>{space.name}</td>
-        <td>{space.enabled ? "☑" : "☐"}</td>
-        <td>{space.requireSubject ? "☑" : "☐"}</td>
+        <td>{RendererUtils.state(space.enabled)}</td>
+        <td>{RendererUtils.state(space.requireSubject)}</td>
+        <td>
+          {RendererUtils.state(space.approvers && space.approvers?.length > 0)}
+        </td>
+        <td>
+          {RendererUtils.state(
+            space.allowBookers && space.allowBookers?.length > 0,
+          )}
+        </td>
         <td>{bookingLink}</td>
       </tr>
     );
@@ -1389,6 +1398,8 @@ class EditLocation extends React.Component<Props, State> {
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
+                <th>{this.props.t("approvers")}</th>
+                <th>{this.props.t("allowBookers")}</th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
