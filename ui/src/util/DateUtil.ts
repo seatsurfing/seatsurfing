@@ -194,4 +194,16 @@ export default class DateUtil {
   static equal(date1: Date, date2: Date): boolean {
     return date1.getTime() === date2.getTime();
   }
+
+  static prevDay(date: Date): Date {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() - 1);
+    return nextDay;
+  }
+
+  static nextDay(date: Date): Date {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return nextDay;
+  }
 }

@@ -16,6 +16,7 @@ import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
+import SaveButton from "@/components/SaveButton";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
 
@@ -682,13 +683,10 @@ class Preferences extends React.Component<Props, State> {
                   ))}
                 </Form.Select>
               </Form.Group>
-              <Button
+              <SaveButton
+                submitting={this.state.submitting}
                 className="margin-top-15"
-                type="submit"
-                disabled={this.state.submitting}
-              >
-                {this.props.t("save")}
-              </Button>
+              />
             </Form>
 
             {/* ----- */}
@@ -720,7 +718,7 @@ class Preferences extends React.Component<Props, State> {
                 >
                   {this.props.t("reset")}
                 </Button>
-                <Button type="submit">{this.props.t("save")}</Button>
+                <SaveButton submitting={this.state.submitting} />
               </ButtonGroup>
             </Form>
 
@@ -755,13 +753,11 @@ class Preferences extends React.Component<Props, State> {
                   minLength={8}
                 />
               </Form.Group>
-              <Button
+              <SaveButton
+                submitting={this.state.submitting}
+                disabled={!this.state.changePassword}
                 className="margin-top-15"
-                type="submit"
-                disabled={this.state.submitting}
-              >
-                {this.props.t("save")}
-              </Button>
+              />
             </Form>
             <TotpSettings
               hidden={
@@ -965,17 +961,15 @@ class Preferences extends React.Component<Props, State> {
                 >
                   {this.props.t("disconnect")}
                 </Button>
-                <Button
-                  type="submit"
+                <SaveButton
+                  submitting={this.state.submitting}
                   disabled={
                     !(
                       this.state.caldavCalendarsLoaded &&
                       this.state.caldavCalendar != ""
                     ) || this.state.submitting
                   }
-                >
-                  {this.props.t("save")}
-                </Button>
+                />
               </ButtonGroup>
             </Form>
           </div>
