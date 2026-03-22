@@ -98,7 +98,7 @@ func (router *SearchRouter) addLocationResults(user *User, keyword string, res *
 	}
 	locationRouter := &LocationRouter{}
 	for _, e := range list {
-		m := locationRouter.copyToRestModel(e)
+		m := locationRouter.copyToRestModel(e, nil)
 		res.Locations = append(res.Locations, m)
 	}
 	return nil
@@ -127,7 +127,7 @@ func (router *SearchRouter) addSpaceResults(user *User, keyword string, expandLo
 	for _, e := range list {
 		m := spaceRouter.copyToRestModel(e, nil, nil, nil)
 		if expandLocations {
-			m.Location = locationRouter.copyToRestModel(locationMap[e.LocationID])
+			m.Location = locationRouter.copyToRestModel(locationMap[e.LocationID], nil)
 		}
 		res.Spaces = append(res.Spaces, m)
 	}

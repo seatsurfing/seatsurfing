@@ -578,7 +578,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, location *Location, requestUser *User, bookingID string, upcomingBookingsMarkup int) (bool, int) {
-	if valid, code := router.isValidBookingRequest(m, requestUser, location.OrganizationID, bookingID, upcomingBookingsMarkup); !valid {
+	if valid, code := router.isValidBookingRequest(m, location, requestUser, location.OrganizationID, bookingID, upcomingBookingsMarkup); !valid {
 		return false, code
 	}
 	if !router.isValidConcurrent(m, location, bookingID) {
@@ -924,7 +924,7 @@ func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, u
 	return len(curAtTime) < maxConcurrent
 }
 
-func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
+func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, location *Location, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
 	isUpdate := bookingID != ""
 	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration
@@ -947,11 +947,28 @@ func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user
 	if m.SpaceID == "" {
 		return true, 0
 	}
+
+	// check allowed space and location bookers
 	groupMemberships, _ := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
-	allowedBookers, _ := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{m.SpaceID})
-	if len(allowedBookers) > 0 {
+	allowedSpaceBookers, _ := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{m.SpaceID})
+	if len(allowedSpaceBookers) > 0 {
 		allowed := false
-		for _, allowedBooker := range allowedBookers {
+		for _, allowedBooker := range allowedSpaceBookers {
+			for _, group := range groupMemberships {
+				if group.ID == allowedBooker.GroupID {
+					allowed = true
+					break
+				}
+			}
+		}
+		if !allowed {
+			return false, ResponseCodeBookingNotAllowedBooker
+		}
+	}
+	allowedLocationBookers, _ := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
+	if len(allowedLocationBookers) > 0 {
+		allowed := false
+		for _, allowedBooker := range allowedLocationBookers {
 			for _, group := range groupMemberships {
 				if group.ID == allowedBooker.GroupID {
 					allowed = true
