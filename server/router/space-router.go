@@ -310,7 +310,7 @@ func (router *SpaceRouter) IsApprovalRequired(e *Space, approvers []*SpaceGroup)
 	return false
 }
 
-func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
+func (router *SpaceRouter) IsUserAllowedToBookSpace(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
 	restricted := false
 	for _, allowedBooker := range allowedBookers {
 		if allowedBooker.SpaceID == e.ID {
