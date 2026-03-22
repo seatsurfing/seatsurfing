@@ -229,7 +229,13 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 		SendInternalServerError(w)
 		return
 	}
-	allowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
+	spaceAllowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	locationAllowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(locationId)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -245,6 +251,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	if r.URL.Query().Has("attributes") {
 		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
 	}
+	isAllowedToBookLocation := router.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
 		if spaceID != "" && e.ID != spaceID {
@@ -263,7 +270,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 			m.RequireSubject = e.RequireSubject
 			m.Enabled = e.Enabled
 			m.Available = e.Available
-			m.IsAllowed = router.IsUserAllowedToBook(&e.Space, allowedBookers, userGroups)
+			m.IsAllowed = isAllowedToBookLocation && router.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups)
 			m.IsApprovalRequired = router.IsApprovalRequired(&e.Space, approvers)
 			router.appendAttributesToRestModel(&m.GetSpaceResponse, attributeValues)
 			m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
@@ -303,7 +310,7 @@ func (router *SpaceRouter) IsApprovalRequired(e *Space, approvers []*SpaceGroup)
 	return false
 }
 
-func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
+func (router *SpaceRouter) IsUserAllowedToBookSpace(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
 	restricted := false
 	for _, allowedBooker := range allowedBookers {
 		if allowedBooker.SpaceID == e.ID {
@@ -312,6 +319,19 @@ func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*Space
 				if allowedBooker.GroupID == userGroup.ID {
 					return true
 				}
+			}
+		}
+	}
+	return !restricted
+}
+
+func (router *SpaceRouter) IsUserAllowedToBookLocation(allowedBookers []*LocationGroup, userGroups []*Group) bool {
+	restricted := false
+	for _, allowedBooker := range allowedBookers {
+		restricted = true
+		for _, userGroup := range userGroups {
+			if allowedBooker.GroupID == userGroup.ID {
+				return true
 			}
 		}
 	}

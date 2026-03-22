@@ -11,7 +11,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 38
+	targetVersion := 39
 	log.Printf("Initializing database with schema version %d...\n", targetVersion)
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	if err != nil {
