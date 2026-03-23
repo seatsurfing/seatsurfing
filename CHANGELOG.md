@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.74.1](https://github.com/seatsurfing/seatsurfing/compare/v1.74.0...v1.74.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **deps:** bump next from 16.2.0 to 16.2.1 in /ui in the production-dependencies group across 1 directory ([#1887](https://github.com/seatsurfing/seatsurfing/issues/1887)) ([1c2340f](https://github.com/seatsurfing/seatsurfing/commit/1c2340ff45037878f2aa1c656422c459cb1e47fd))
+* shorten booking links and add "copy to clipboard" button ([#1886](https://github.com/seatsurfing/seatsurfing/issues/1886)) ([0ce4e08](https://github.com/seatsurfing/seatsurfing/commit/0ce4e08915720199cc4ef2b01bb2099f3ca0b785))
+
 ## [1.74.0](https://github.com/seatsurfing/seatsurfing/compare/v1.73.2...v1.74.0) (2026-03-22)
 
 
