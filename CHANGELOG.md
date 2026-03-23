@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.74.0](https://github.com/seatsurfing/seatsurfing/compare/v1.73.2...v1.74.0) (2026-03-22)
+
+
+### Features
+
+* add allowed booker groups on location level ([#1883](https://github.com/seatsurfing/seatsurfing/issues/1883)) ([9189be4](https://github.com/seatsurfing/seatsurfing/commit/9189be49d2bba3292f949efa119301ba10b23318))
+* add columns "Approvers" and "Allowed bookers" to space list ([#1884](https://github.com/seatsurfing/seatsurfing/issues/1884)) ([f8eeb26](https://github.com/seatsurfing/seatsurfing/commit/f8eeb26edec8c1250e4583a231e7e5d251fe151d))
+
 ## [1.73.2](https://github.com/seatsurfing/seatsurfing/compare/v1.73.1...v1.73.2) (2026-03-21)
 
 
