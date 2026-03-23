@@ -21,5 +21,11 @@ export default class RendererUtils {
     return state ? "☑" : "☐";
   }
 
+  static shortenLink(url: string, maxLength: number): string {
+    if (url.length <= maxLength) return url;
+    const half = Math.floor((maxLength - 1) / 2) - 1;
+    return `${url.slice(0, half)}[…]${url.slice(-half)}`;
+  }
+
   static capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 }

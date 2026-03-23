@@ -9,7 +9,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Search, { SearchOptions } from "@/types/Search";
 import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
-import * as Navigation from "@/util/Navigation";
+import Navigation from "@/util/Navigation";
 import RendererUtils from "@/util/RendererUtils";
 
 interface State {

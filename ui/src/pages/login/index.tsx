@@ -12,8 +12,8 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import JwtDecoder from "@/util/JwtDecoder";
 import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
-import * as Validation from "@/util/Validation";
-import * as Navigation from "@/util/Navigation";
+import Validation from "@/util/Validation";
+import Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
 import TotpInput from "@/components/TotpInput";
 import Passkey, {

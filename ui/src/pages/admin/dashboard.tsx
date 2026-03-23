@@ -15,7 +15,7 @@ import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
 import RedirectUtil from "@/util/RedirectUtil";
-import * as Navigation from "@/util/Navigation";
+import Navigation from "@/util/Navigation";
 
 interface State {
   loading: boolean;
