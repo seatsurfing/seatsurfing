@@ -5,14 +5,13 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
   RefreshCw as IconRefresh,
-  Clipboard as IconCopy,
-  Check as IconCheck,
   XCircle as IconReset,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -43,8 +42,6 @@ interface State {
   sendInvitation: boolean;
   resendInvitation: boolean;
   role: number;
-  showUsernameCopied: boolean;
-  showPasswordCopied: boolean;
   totpEnabled: boolean;
   hasPasskeys: boolean;
 }
@@ -82,8 +79,6 @@ class EditUser extends React.Component<Props, State> {
       sendInvitation: false,
       resendInvitation: false,
       role: User.UserRoleUser,
-      showUsernameCopied: false,
-      showPasswordCopied: false,
       totpEnabled: false,
       hasPasskeys: false,
     };
@@ -242,28 +237,6 @@ class EditUser extends React.Component<Props, State> {
     }
     this.setState({ password, changePassword: true });
   };
-
-  copyToClipboard = (textKey: keyof State, stateKey: keyof State): Function => {
-    return () => {
-      navigator.clipboard
-        .writeText(this.state[textKey] as string)
-        .then(() => {
-          this.setState({ [stateKey]: true } as any);
-          setTimeout(() => {
-            this.setState({ [stateKey]: false } as any);
-          }, 2000);
-        })
-        .catch(() => {
-          // do nothing
-        });
-    };
-  };
-
-  copyUsernameToClipboard = this.copyToClipboard("email", "showUsernameCopied");
-  copyPasswordToClipboard = this.copyToClipboard(
-    "password",
-    "showPasswordCopied",
-  );
 
   changeRole = (role: number) => {
     let changePassword = this.isServiceAccount(role)
@@ -429,14 +402,6 @@ class EditUser extends React.Component<Props, State> {
         </>
       );
     }
-    let copyPasswordIcon = <IconCopy className="feather" />;
-    if (this.state.showPasswordCopied) {
-      copyPasswordIcon = <IconCheck className="feather" />;
-    }
-    let copyUsernameIcon = <IconCopy className="feather" />;
-    if (this.state.showUsernameCopied) {
-      copyUsernameIcon = <IconCheck className="feather" />;
-    }
     return (
       <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
         <Form onSubmit={this.onSubmit} id="form">
@@ -518,13 +483,7 @@ class EditUser extends React.Component<Props, State> {
                   }
                   required={this.isServiceAccount(this.state.role)}
                 />
-                <Button
-                  onClick={() => this.copyUsernameToClipboard()}
-                  disabled={this.state.email === ""}
-                  variant="outline-secondary"
-                >
-                  {copyUsernameIcon}
-                </Button>
+                <CopyToClipboardButton text={this.state.email} />
               </InputGroup>
             </Col>
           </Form.Group>
@@ -695,14 +654,10 @@ class EditUser extends React.Component<Props, State> {
                 >
                   <IconRefresh className="feather" />
                 </Button>
-                <Button
-                  onClick={() => this.copyPasswordToClipboard()}
-                  disabled={this.state.password === ""}
+                <CopyToClipboardButton
+                  text={this.state.password}
                   hidden={!this.isServiceAccount(this.state.role)}
-                  variant="outline-secondary"
-                >
-                  {copyPasswordIcon}
-                </Button>
+                />
               </InputGroup>
             </Col>
           </Form.Group>

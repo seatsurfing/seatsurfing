@@ -28,6 +28,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttributeValue from "@/types/SpaceAttributeValue";
@@ -41,6 +42,7 @@ import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
+import Navigation from "@/util/Navigation";
 
 interface SpaceState {
   id: string;
@@ -680,11 +682,14 @@ class EditLocation extends React.Component<Props, State> {
   renderRow = (space: SpaceState) => {
     let bookingLink;
     if (space.id) {
-      const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`;
+      const bookingLinkUrl = Navigation.spaceAbsolute(this.entity.id, space.id);
       bookingLink = (
-        <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
-          {bookingLinkUrl}
-        </a>
+        <>
+          <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
+            {RendererUtils.shortenLink(bookingLinkUrl, 40)}
+          </a>
+          <CopyToClipboardButton text={bookingLinkUrl} small={true} />
+        </>
       );
     } else {
       bookingLink = this.props.t("saveAreaToGetLink");
