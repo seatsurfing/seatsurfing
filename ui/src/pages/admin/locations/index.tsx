@@ -15,6 +15,8 @@ import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
+import Navigation from "@/util/Navigation";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 
 interface State {
   selectedItem: string;
@@ -61,7 +63,7 @@ class Locations extends React.Component<Props, State> {
   };
 
   renderItem = (location: Location) => {
-    const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${location.id}`;
+    const bookingLinkUrl = Navigation.locationAbsolute(location.id);
     return (
       <tr key={location.id} onClick={() => this.onItemSelect(location)}>
         <td>{location.name}</td>
@@ -71,8 +73,9 @@ class Locations extends React.Component<Props, State> {
         </td>
         <td>
           <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
-            {bookingLinkUrl}
+            {RendererUtils.shortenLink(bookingLinkUrl, 40)}
           </a>
+          <CopyToClipboardButton text={bookingLinkUrl} small={true} />
         </td>
       </tr>
     );
