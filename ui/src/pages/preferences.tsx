@@ -150,37 +150,37 @@ class Preferences extends React.Component<Props, State> {
           let state: any = {};
           list.forEach((s) => {
             if (typeof window !== "undefined") {
-              if (s.name === "enter_time")
+              if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.enterTime = window.parseInt(s.value);
-              if (s.name === "workday_start")
+              if (s.name === UserPreference.PREF_WORKDAY_START)
                 state.workdayStart = window.parseInt(s.value);
-              if (s.name === "workday_end")
+              if (s.name === UserPreference.PREF_WORKDAY_END)
                 state.workdayEnd = window.parseInt(s.value);
             }
-            if (s.name === "workdays") {
+            if (s.name === UserPreference.PREF_WORKDAYS) {
               state.workdays = [];
               for (let i = 0; i <= 6; i++) {
                 state.workdays[i] = false;
               }
               s.value.split(",").forEach((val) => (state.workdays[val] = true));
             }
-            if (s.name === "booked_color") state.booked = s.value;
-            if (s.name === "not_booked_color") state.notBooked = s.value;
-            if (s.name === "self_booked_color") state.selfBooked = s.value;
-            if (s.name === "partially_booked_color")
+            if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
+            if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR) state.notBooked = s.value;
+            if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR) state.selfBooked = s.value;
+            if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
               state.partiallyBooked = s.value;
-            if (s.name === "buddy_booked_color") state.buddyBooked = s.value;
-            if (s.name === "disallowed_color") state.disallowedColor = s.value;
-            if (s.name === "location_id") state.locationId = s.value;
-            if (s.name === "caldav_url") state.caldavUrl = s.value;
-            if (s.name === "caldav_user") state.caldavUser = s.value;
-            if (s.name === "caldav_pass") state.caldavPass = s.value;
-            if (s.name === "caldav_path") state.caldavCalendar = s.value;
-            if (s.name === "mail_notifications")
+            if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR) state.buddyBooked = s.value;
+            if (s.name === UserPreference.PREF_DISALLOWED_COLOR) state.disallowedColor = s.value;
+            if (s.name === UserPreference.PREF_LOCATION_ID) state.locationId = s.value;
+            if (s.name === UserPreference.PREF_CALDAV_URL) state.caldavUrl = s.value;
+            if (s.name === UserPreference.PREF_CALDAV_USER) state.caldavUser = s.value;
+            if (s.name === UserPreference.PREF_CALDAV_PASS) state.caldavPass = s.value;
+            if (s.name === UserPreference.PREF_CALDAV_PATH) state.caldavCalendar = s.value;
+            if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
               state.mailNotifications = s.value === "1";
-            if (s.name === "use_24_hour_time")
+            if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
               state.use24HourTime = s.value === "1";
-            if (s.name === "date_format") state.dateFormat = s.value;
+            if (s.name === UserPreference.PREF_DATE_FORMAT) state.dateFormat = s.value;
           });
           self.setState(
             {

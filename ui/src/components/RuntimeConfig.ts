@@ -206,10 +206,10 @@ export default class RuntimeConfig {
     UserPreference.list()
       .then((list) => {
         list.forEach((pref) => {
-          if (pref.name === "use_24_hour_time") {
+          if (pref.name === UserPreference.PREF_USE_24_HOUR_TIME) {
             RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
           }
-          if (pref.name === "date_format") {
+          if (pref.name === UserPreference.PREF_DATE_FORMAT) {
             RuntimeConfig.INFOS.dateFormat = pref.value;
           }
         });
