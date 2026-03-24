@@ -447,7 +447,9 @@ class Bookings extends React.Component<Props, State> {
                 toolbar: CustomToolbar,
                 event: CustomEvent,
               }}
-              scrollToTime={DateUtil.getTodayTime(this.workdayStartHour, 0, 0)}
+              scrollToTime={Formatting.convertToFakeUTCDate(
+                DateUtil.getTodayTime(this.workdayStartHour, 0, 0),
+              )}
             ></Calendar>
           </div>
         </div>
