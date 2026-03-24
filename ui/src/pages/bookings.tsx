@@ -34,6 +34,7 @@ import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
 import DateUtil from "@/util/DateUtil";
 import RendererUtils from "@/util/RendererUtils";
 import BrowserUtil from "@/util/BrowserUtil";
+import UserPreference from "@/types/UserPreference";
 
 interface State {
   loading: boolean;
@@ -51,9 +52,11 @@ interface Props {
 
 class Bookings extends React.Component<Props, State> {
   data: Booking[];
+  workdayStartHour: number;
 
   constructor(props: any) {
     super(props);
+    this.workdayStartHour = 0;
     this.data = [];
     this.state = {
       loading: true,
@@ -78,8 +81,13 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadData = () => {
-    Booking.list().then((list) => {
+    Promise.all([
+      Booking.list(),
+      UserPreference.getOne(UserPreference.PREF_WORKDAY_START),
+    ]).then(([list, workDayStart]) => {
       this.data = list;
+      const ws = parseInt(workDayStart);
+      this.workdayStartHour = !isNaN(ws) && ws >= 0 && ws <= 23 ? ws : 9;
       this.setState({ loading: false });
     });
   };
@@ -439,7 +447,7 @@ class Bookings extends React.Component<Props, State> {
                 toolbar: CustomToolbar,
                 event: CustomEvent,
               }}
-              scrollToTime={new Date(1970, 0, 1, 8, 0, 0)}
+              scrollToTime={DateUtil.getTodayTime(this.workdayStartHour, 0, 0)}
             ></Calendar>
           </div>
         </div>

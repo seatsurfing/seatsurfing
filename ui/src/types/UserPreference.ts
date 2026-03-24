@@ -1,5 +1,6 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
+import Navigation from "@/util/Navigation";
 
 export default class UserPreference extends Entity {
   static readonly PREF_ENTER_TIME = "enter_time";
@@ -26,8 +27,8 @@ export default class UserPreference extends Entity {
 
   constructor(name?: string, value?: string) {
     super();
-    this.name = name ? name : "";
-    this.value = value ? value : "";
+    this.name = name ?? "";
+    this.value = value ?? "";
   }
 
   serialize(): Object {
@@ -44,32 +45,37 @@ export default class UserPreference extends Entity {
   }
 
   getBackendUrl(): string {
-    return "/preference/";
+    return Navigation.PATH_API_USER_PREFERENCES;
   }
 
   static async list(): Promise<UserPreference[]> {
-    return Ajax.get("/preference/").then((result) => {
-      let list: UserPreference[] = [];
-      (result.json as []).forEach((item) => {
-        let e: UserPreference = new UserPreference();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
+    const result = await Ajax.get(Navigation.PATH_API_USER_PREFERENCES);
+    return (result.json as []).map((item) => {
+      const e = new UserPreference();
+      e.deserialize(item);
+      return e;
     });
   }
 
   static async setAll(preferences: UserPreference[]): Promise<void> {
-    let payload = preferences.map((e) => e.serialize());
-    return Ajax.putData("/preference/", payload).then(() => undefined);
+    const payload = preferences.map((e) => e.serialize());
+    return Ajax.putData(Navigation.PATH_API_USER_PREFERENCES, payload).then(
+      () => undefined,
+    );
   }
 
   static async setOne(name: string, value: string): Promise<void> {
-    let payload = { value: value };
-    return Ajax.putData("/preference/" + name, payload).then(() => undefined);
+    const payload = { value: value };
+    await Ajax.putData(
+      `${Navigation.PATH_API_USER_PREFERENCES}${encodeURIComponent(name)}`,
+      payload,
+    );
   }
 
   static async getOne(name: string): Promise<string> {
-    return Ajax.get("/preference/" + name).then((res) => res.json);
+    const res = await Ajax.get(
+      `${Navigation.PATH_API_USER_PREFERENCES}${encodeURIComponent(name)}`,
+    );
+    return res.json;
   }
 }
