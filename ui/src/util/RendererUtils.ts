@@ -21,6 +21,10 @@ export default class RendererUtils {
     return state ? "☑" : "☐";
   }
 
+  static stateXls(state: boolean | undefined): string {
+    return state ? "yes" : "no";
+  }
+
   static shortenLink(url: string, maxLength: number): string {
     if (url.length <= maxLength) return url;
     const half = Math.floor((maxLength - 1) / 2) - 1;

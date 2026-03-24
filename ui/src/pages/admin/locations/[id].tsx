@@ -1214,9 +1214,28 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
+    const t = this.props.t;
+    const headers = [
+      t("name"),
+      t("enabled"),
+      t("requireSubject"),
+      t("approvers"),
+      t("allowBookers"),
+      t("bookingLink"),
+    ];
+    const rows = this.state.spaces.map((space) => [
+      space.name,
+      RendererUtils.stateXls(space.enabled),
+      RendererUtils.stateXls(space.requireSubject),
+      RendererUtils.stateXls(space.approvers && space.approvers?.length > 0),
+      RendererUtils.stateXls(
+        space.allowBookers && space.allowBookers?.length > 0,
+      ),
+      space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
+    ]);
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-spaces", format: "xlsx" },
-      [{ name: "Seatsurfing Spaces", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Spaces", from: { array: [headers, ...rows] } }],
     );
   };
 
