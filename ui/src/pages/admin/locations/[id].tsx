@@ -679,24 +679,32 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
-  renderRow = (space: SpaceState) => {
+  renderRow = (space: SpaceState, rowNumber: number) => {
     let bookingLink;
     if (space.id) {
       const bookingLinkUrl = Navigation.spaceAbsolute(this.entity.id, space.id);
       bookingLink = (
-        <>
+        <span onClick={(e) => e.stopPropagation()}>
           <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
             {RendererUtils.shortenLink(bookingLinkUrl, 40)}
           </a>
           <CopyToClipboardButton text={bookingLinkUrl} small={true} />
-        </>
+        </span>
       );
     } else {
       bookingLink = this.props.t("saveAreaToGetLink");
     }
 
     return (
-      <tr key={space.id}>
+      <tr
+        key={space.id}
+        onClick={() => {
+          this.setState({
+            selectedSpace: rowNumber,
+            showEditSpaceDetailsModal: true,
+          });
+        }}
+      >
         <td>{space.name}</td>
         <td>{RendererUtils.state(space.enabled)}</td>
         <td>{RendererUtils.state(space.requireSubject)}</td>
@@ -1286,7 +1294,9 @@ class EditLocation extends React.Component<Props, State> {
     let floorPlan = <></>;
     let attributeTable = <></>;
     let spaceTable = <></>;
-    const rows = this.state.spaces.map((item) => this.renderRow(item));
+    const rows = this.state.spaces.map((item, rowNumber) =>
+      this.renderRow(item, rowNumber),
+    );
     if (this.entity.id) {
       buttons = (
         <>
@@ -1417,7 +1427,12 @@ class EditLocation extends React.Component<Props, State> {
               <div className="btn-group me-2">{downloadButton}</div>
             </div>
           </div>
-          <Table striped={true} hover={true} id="datatable">
+          <Table
+            striped={true}
+            hover={true}
+            id="datatable"
+            className="clickable-table"
+          >
             <thead>
               <tr>
                 <th>{this.props.t("name")}</th>
