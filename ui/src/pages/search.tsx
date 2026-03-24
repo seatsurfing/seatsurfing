@@ -64,6 +64,7 @@ import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
 import DateUtil from "@/util/DateUtil";
+import BrowserUtil from "@/util/BrowserUtil";
 
 interface State {
   earliestEnterDate: Date;
@@ -172,12 +173,11 @@ class Search extends React.Component<Props, State> {
       showError: false,
       errorText: "",
       loading: true,
-      listView: (function () {
-        if (window !== undefined && window.localStorage !== undefined) {
-          return window.localStorage.getItem("listView") === "1";
-        }
-        return false;
-      })(),
+      listView: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
+          "0",
+        ) === "1")(),
       prefEnterTime: 0,
       prefWorkdayStart: 0,
       prefWorkdayEnd: 0,
@@ -1010,12 +1010,10 @@ class Search extends React.Component<Props, State> {
 
   toggleListView = () => {
     this.setState({ listView: !this.state.listView }, () => {
-      if (window !== undefined && window.localStorage !== undefined) {
-        window.localStorage.setItem(
-          "listView",
-          this.state.listView ? "1" : "0",
-        );
-      }
+      BrowserUtil.tryLocalStorageSetItem(
+        BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
+        this.state.listView ? "1" : "0",
+      );
     });
   };
 
