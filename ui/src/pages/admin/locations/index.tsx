@@ -65,11 +65,18 @@ class Locations extends React.Component<Props, State> {
   renderItem = (location: Location) => {
     const bookingLinkUrl = Navigation.locationAbsolute(location.id);
     return (
-      <tr key={location.id} onClick={() => this.onItemSelect(location)}>
+      <tr
+        key={location.id}
+        onClick={() => this.onItemSelect(location)}
+        title={location.description}
+      >
         <td>{location.name}</td>
         <td>{RendererUtils.state(location.enabled)}</td>
         <td>
           {location.mapWidth}&nbsp;&times;&nbsp;{location.mapHeight}
+        </td>
+        <td>
+          {RendererUtils.state(location.allowedBookerGroupIds?.length > 0)}
         </td>
         <td>
           <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
@@ -152,6 +159,7 @@ class Locations extends React.Component<Props, State> {
               <th>{this.props.t("name")}</th>
               <th>{this.props.t("enabled")}</th>
               <th>{this.props.t("map")}</th>
+              <th>{this.props.t("allowBookers")}</th>
               <th>{this.props.t("bookingLink")}</th>
             </tr>
           </thead>
