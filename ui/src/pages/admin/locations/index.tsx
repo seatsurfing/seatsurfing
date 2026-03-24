@@ -82,9 +82,24 @@ class Locations extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
+    const t = this.props.t;
+    const headers = [
+      t("name"),
+      t("enabled"),
+      t("map"),
+      t("allowBookers"),
+      t("bookingLink"),
+    ];
+    const rows = this.data.map((loc) => [
+      loc.name,
+      RendererUtils.stateXls(loc.enabled, t),
+      `${loc.mapWidth} x ${loc.mapHeight}`,
+      RendererUtils.stateXls(loc.allowedBookerGroupIds?.length > 0, t),
+      Navigation.locationAbsolute(loc.id),
+    ]);
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-areas", format: "xlsx" },
-      [{ name: "Seatsurfing Areas", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Areas", from: { array: [headers, ...rows] } }],
     );
   };
 

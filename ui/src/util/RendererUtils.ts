@@ -1,3 +1,5 @@
+import { TranslationFunc } from "@/components/withTranslation";
+
 export default class RendererUtils {
   static fullname(firstname: string, lastname: string): string {
     if (!firstname && !lastname) return "";
@@ -19,6 +21,10 @@ export default class RendererUtils {
 
   static state(state: boolean | undefined): string {
     return state ? "☑" : "☐";
+  }
+
+  static stateXls(state: boolean | undefined, t: TranslationFunc): string {
+    return state ? t("yes") : t("no");
   }
 
   static shortenLink(url: string, maxLength: number): string {
