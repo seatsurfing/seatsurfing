@@ -11,6 +11,6 @@ export default class BrowserUtil {
   static tryLocalStorageGetItem(key: string, defaultValue: any): any {
     if (window === undefined || window.localStorage === undefined)
       return defaultValue;
-    return window.localStorage.getItem(key);
+    return window.localStorage.getItem(key) ?? defaultValue;
   }
 }
