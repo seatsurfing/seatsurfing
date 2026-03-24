@@ -275,28 +275,30 @@ class Search extends React.Component<Props, State> {
           const state: any = {};
           list.forEach((s) => {
             if (typeof window !== "undefined") {
-              if (s.name === "enter_time")
+              if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
-              if (s.name === "workday_start")
+              if (s.name === UserPreference.PREF_WORKDAY_START)
                 state.prefWorkdayStart = window.parseInt(s.value);
-              if (s.name === "workday_end")
+              if (s.name === UserPreference.PREF_WORKDAY_END)
                 state.prefWorkdayEnd = window.parseInt(s.value);
-              if (s.name === "workdays")
+              if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
                   .map((val) => window.parseInt(val));
             }
-            if (s.name === "location_id") state.prefLocationId = s.value;
-            if (s.name === "booked_color") state.prefBookedColor = s.value;
-            if (s.name === "not_booked_color")
+            if (s.name === UserPreference.PREF_LOCATION_ID)
+              state.prefLocationId = s.value;
+            if (s.name === UserPreference.PREF_BOOKED_COLOR)
+              state.prefBookedColor = s.value;
+            if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
               state.prefNotBookedColor = s.value;
-            if (s.name === "self_booked_color")
+            if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
               state.prefSelfBookedColor = s.value;
-            if (s.name === "partially_booked_color")
+            if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
               state.prefPartiallyBookedColor = s.value;
-            if (s.name === "buddy_booked_color")
+            if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
               state.prefBuddyBookedColor = s.value;
-            if (s.name === "disallowed_color")
+            if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
               state.prefDisallowedColor = s.value;
           });
           if (RuntimeConfig.INFOS.dailyBasisBooking) {
