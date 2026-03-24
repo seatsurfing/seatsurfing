@@ -92,9 +92,9 @@ class Locations extends React.Component<Props, State> {
     ];
     const rows = this.data.map((loc) => [
       loc.name,
-      RendererUtils.stateXls(loc.enabled),
+      RendererUtils.stateXls(loc.enabled, t),
       `${loc.mapWidth} x ${loc.mapHeight}`,
-      RendererUtils.stateXls(loc.allowedBookerGroupIds?.length > 0),
+      RendererUtils.stateXls(loc.allowedBookerGroupIds?.length > 0, t),
       Navigation.locationAbsolute(loc.id),
     ]);
     return this.ExcellentExport.convert(

@@ -1225,11 +1225,12 @@ class EditLocation extends React.Component<Props, State> {
     ];
     const rows = this.state.spaces.map((space) => [
       space.name,
-      RendererUtils.stateXls(space.enabled),
-      RendererUtils.stateXls(space.requireSubject),
-      RendererUtils.stateXls(space.approvers && space.approvers?.length > 0),
+      RendererUtils.stateXls(space.enabled, t),
+      RendererUtils.stateXls(space.requireSubject, t),
+      RendererUtils.stateXls(space.approvers && space.approvers?.length > 0, t),
       RendererUtils.stateXls(
         space.allowBookers && space.allowBookers?.length > 0,
+        t,
       ),
       space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
     ]);

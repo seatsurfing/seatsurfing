@@ -80,8 +80,8 @@ class Attributes extends React.Component<Props, State> {
     const rows = this.data.map((item) => [
       item.label,
       this.getTextForType(item.type),
-      RendererUtils.stateXls(item.locationApplicable),
-      RendererUtils.stateXls(item.spaceApplicable),
+      RendererUtils.stateXls(item.locationApplicable, t),
+      RendererUtils.stateXls(item.spaceApplicable, t),
     ]);
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-attributes", format: "xlsx" },
