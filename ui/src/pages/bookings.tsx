@@ -33,6 +33,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
 import DateUtil from "@/util/DateUtil";
 import RendererUtils from "@/util/RendererUtils";
+import BrowserUtil from "@/util/BrowserUtil";
 
 interface State {
   loading: boolean;
@@ -60,7 +61,11 @@ class Bookings extends React.Component<Props, State> {
       selectedItem: null,
       cancelSeries: false,
       calendarDate: new Date(),
-      calendarShow: true,
+      calendarShow: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW,
+          "1",
+        ) === "1")(),
     };
   }
 
@@ -358,9 +363,17 @@ class Bookings extends React.Component<Props, State> {
                       type="switch"
                       checked={this.state.calendarShow}
                       onChange={() => {
-                        this.setState({
-                          calendarShow: !this.state.calendarShow,
-                        });
+                        this.setState(
+                          {
+                            calendarShow: !this.state.calendarShow,
+                          },
+                          () => {
+                            BrowserUtil.tryLocalStorageSetItem(
+                              BrowserUtil.LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW,
+                              this.state.calendarShow ? "1" : "0",
+                            );
+                          },
+                        );
                       }}
                       label={this.props.t("calendar")}
                       aria-label={this.props.t("calendar")}
