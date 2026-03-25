@@ -24,6 +24,7 @@ import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   approvalCount: number;
@@ -302,18 +303,21 @@ class SideBar extends React.Component<Props, State> {
                   icon={IconApproval}
                   title={this.props.t("approvals")}
                 />
-                <span className="d-none d-md-inline">
+                <span className="d-none d-md-inline position-relative">
                   {" "}
                   {this.props.t("approvals")}
+                  <Badge
+                    bg="primary"
+                    hidden={this.state.approvalCount === 0}
+                    className="position-absolute top-50 start-100 translate-middle-y"
+                    style={{
+                      marginLeft: "5px",
+                    }}
+                  >
+                    {RendererUtils.numberPlus(this.state.approvalCount, 9)}
+                  </Badge>
                 </span>
                 <PremiumFeatureIcon className="d-none d-md-inline" />
-                <Badge
-                  bg="primary"
-                  hidden={this.state.approvalCount === 0}
-                  style={{ marginLeft: "5px" }}
-                >
-                  {this.state.approvalCount}
-                </Badge>
               </Nav.Link>
             </li>
             <li className="nav-item">
