@@ -726,10 +726,10 @@ class Search extends React.Component<Props, State> {
       let prefWorkdayStartDate = new Date(this.state.enter);
       prefWorkdayStartDate.setHours(this.state.prefWorkdayStart, 0, 0);
       prefWorkdayStartDate =
-        Formatting.convertToFakeUTCDate(prefWorkdayStartDate);
+        DateUtil.convertToFakeUTCDate(prefWorkdayStartDate);
       let prefWorkdayEndDate = new Date(this.state.leave);
       prefWorkdayEndDate.setHours(this.state.prefWorkdayEnd, 0, 0);
-      prefWorkdayEndDate = Formatting.convertToFakeUTCDate(prefWorkdayEndDate);
+      prefWorkdayEndDate = DateUtil.convertToFakeUTCDate(prefWorkdayEndDate);
 
       let leastEnter = bookings.reduce((a, b) =>
         a.enter < b.enter ? a : b,
@@ -1826,7 +1826,7 @@ class Search extends React.Component<Props, State> {
             </div>
             <div className="ms-2 w-100">
               {Formatting.getFormatterShort().format(
-                Formatting.convertToFakeUTCDate(new Date(this.state.enter)),
+                DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
               )}
             </div>
           </div>
@@ -1841,7 +1841,7 @@ class Search extends React.Component<Props, State> {
             </div>
             <div className="ms-2 w-100">
               {Formatting.getFormatterShort().format(
-                Formatting.convertToFakeUTCDate(new Date(this.state.leave)),
+                DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
               )}
             </div>
           </div>
@@ -2157,13 +2157,13 @@ class Search extends React.Component<Props, State> {
     confirmModalRows.push({
       label: this.props.t("enter"),
       value: formatter.format(
-        Formatting.convertToFakeUTCDate(new Date(this.state.enter)),
+        DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
       ),
     });
     confirmModalRows.push({
       label: this.props.t("leave"),
       value: formatter.format(
-        Formatting.convertToFakeUTCDate(new Date(this.state.leave)),
+        DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
       ),
     });
     confirmModalRows.push({

@@ -403,7 +403,7 @@ class Bookings extends React.Component<Props, State> {
           >
             <Calendar
               showMultiDayTimes={true}
-              getNow={() => Formatting.getNowUTCDate()}
+              getNow={() => DateUtil.getNowFakeUTC()}
               localizer={calendarLocalizer}
               events={calendarEvents}
               startAccessor="start"
