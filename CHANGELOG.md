@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.75.0](https://github.com/seatsurfing/seatsurfing/compare/v1.74.1...v1.75.0) (2026-03-24)
+
+
+### Features
+
+* open edit space dialog on table row click ([#1891](https://github.com/seatsurfing/seatsurfing/issues/1891)) ([71d2b45](https://github.com/seatsurfing/seatsurfing/commit/71d2b45bcb42e4b5516fd3cf273a6b9ea8d6309e))
+* save view mode on my bookings page in local storage ([#1894](https://github.com/seatsurfing/seatsurfing/issues/1894)) ([81c6da5](https://github.com/seatsurfing/seatsurfing/commit/81c6da57fe6ecc32ecf32aa0540ece92ceb20e0a))
+* show column "allow bookers" in areas table and use description as row title ([#1892](https://github.com/seatsurfing/seatsurfing/issues/1892)) ([932028b](https://github.com/seatsurfing/seatsurfing/commit/932028bbb7adcfb36d8daf4836ba92c8baa9f314))
+
+
+### Bug Fixes
+
+* various fixes for Excel downloads ([#1893](https://github.com/seatsurfing/seatsurfing/issues/1893)) ([59ba5d3](https://github.com/seatsurfing/seatsurfing/commit/59ba5d308d2aa186c244c604d7423e55e8c5576b))
+
 ## [1.74.1](https://github.com/seatsurfing/seatsurfing/compare/v1.74.0...v1.74.1) (2026-03-23)
 
 
