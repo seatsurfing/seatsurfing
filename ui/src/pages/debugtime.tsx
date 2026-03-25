@@ -1,6 +1,7 @@
 import React from "react";
 import Loading from "../components/Loading";
 import Formatting from "@/util/Formatting";
+import DateUtil from "@/util/DateUtil";
 import Ajax from "@/util/Ajax";
 
 interface State {
@@ -19,7 +20,7 @@ class DebugTimeIssues extends React.Component<Props, State> {
     this.state = {
       loading: true,
       now: now,
-      fakeUtcTime: Formatting.convertToFakeUTCDate(now),
+      fakeUtcTime: DateUtil.convertToFakeUTCDate(now),
       res: {},
     };
   }

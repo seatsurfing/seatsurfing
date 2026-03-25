@@ -10,7 +10,8 @@ import Loading from "@/components/Loading";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import Formatting from "@/util/Formatting";
+
+import DateUtil from "@/util/DateUtil";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
 import RedirectUtil from "@/util/RedirectUtil";
@@ -72,11 +73,11 @@ class ReportAnalysis extends React.Component<Props, State> {
     let params =
       "start=" +
       encodeURIComponent(
-        Formatting.convertToFakeUTCDate(this.state.start).toISOString(),
+        DateUtil.convertToFakeUTCDate(this.state.start).toISOString(),
       );
     params +=
       "&end=" +
-      encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
+      encodeURIComponent(DateUtil.convertToFakeUTCDate(end).toISOString());
     params += "&locationId=" + encodeURIComponent(this.state.locationId);
     Ajax.get("/booking/report/presence/?" + params)
       .then((res) => {

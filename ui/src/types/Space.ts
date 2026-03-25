@@ -1,7 +1,7 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import Location from "./Location";
-import Formatting from "../util/Formatting";
+import DateUtil from "../util/DateUtil";
 import BulkUpdateResponse from "./BulkUpdateResponse";
 import SpaceAttributeValue from "./SpaceAttributeValue";
 import SearchAttribute from "./SearchAttribute";
@@ -202,10 +202,10 @@ export default class Space extends Entity {
   ): Promise<Space[]> {
     let params =
       "enter=" +
-      encodeURIComponent(Formatting.convertToFakeUTCDate(enter).toISOString());
+      encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString());
     params +=
       "&leave=" +
-      encodeURIComponent(Formatting.convertToFakeUTCDate(leave).toISOString());
+      encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString());
     if (attributes && attributes.length > 0) {
       params +=
         "&attributes=" +
