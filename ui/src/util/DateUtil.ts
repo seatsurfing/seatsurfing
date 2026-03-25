@@ -72,8 +72,23 @@ export default class DateUtil {
       date.getUTCHours(),
       date.getUTCMinutes(),
       date.getUTCSeconds(),
+      0,
     );
   };
+
+  static convertToFakeUTCDate(d: Date): Date {
+    return new Date(
+      Date.UTC(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        d.getHours(),
+        d.getMinutes(),
+        d.getSeconds(),
+        0,
+      ),
+    );
+  }
 
   static isInPast(date: Date): boolean {
     return this.convertToUTC(date) < new Date();
@@ -205,5 +220,9 @@ export default class DateUtil {
     const nextDay = new Date(date);
     nextDay.setDate(nextDay.getDate() + 1);
     return nextDay;
+  }
+
+  static getNowFakeUTC(): Date {
+    return this.convertToFakeUTCDate(new Date());
   }
 }
