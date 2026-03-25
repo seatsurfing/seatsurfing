@@ -39,6 +39,7 @@ import {
   Loader as IconLoad,
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
+  UserCheck as IconUserCheck,
 } from "react-feather";
 import { getIcal } from "@/components/Ical";
 import {
@@ -801,6 +802,13 @@ class Search extends React.Component<Props, State> {
         title={this.getBookersList(bookings)}
       >
         <Tooltip id="my-tooltip" />
+        {item.approvalRequired && (
+          <IconUserCheck
+            size={16}
+            className="position-absolute top-0 end-0"
+            style={{ marginRight: "2px", mar }}
+          />
+        )}
         <p style={textStyle}>{item.name}</p>
       </div>
     );
