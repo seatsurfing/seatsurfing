@@ -1,24 +1,32 @@
 export default class Navigation {
-  static PATH_SEARCH: string = "/search";
+  // API
+  static readonly PATH_API_USER_PREFERENCES = "/preference/";
+
+  // Pages
+  static readonly PATH_PAGE_SEARCH: string = "/search";
 
   static isAdminPath(url: string): boolean {
     return url.startsWith("/admin/");
+  }
+
+  // -----------
+  // ADMIN PAGES
+  // -----------
+
+  static adminLocations(): string {
+    return "/admin/locations/";
   }
 
   static adminLocationDetails(locationId: string): string {
     return `/admin/locations/${locationId}`;
   }
 
-  static adminUserDetails(userId: string): string {
-    return `/admin/users/${userId}`;
-  }
-
-  static adminLocations(): string {
-    return "/admin/locations/";
-  }
-
   static adminUsers(): string {
     return "/admin/users/";
+  }
+
+  static adminUserDetails(userId: string): string {
+    return `/admin/users/${userId}`;
   }
 
   static adminBookings(query: string): string {
@@ -28,6 +36,10 @@ export default class Navigation {
   static adminGroupDetails(groupId: string): string {
     return `/admin/groups/${groupId}`;
   }
+
+  // -------------
+  // BOOKING PAGES
+  // -------------
 
   static spaceAbsolute(locationId: string, spaceId: string): string {
     return `${window.location.origin}/ui/search/?lid=${encodeURIComponent(locationId)}&sid=${encodeURIComponent(spaceId)}`;

@@ -336,7 +336,7 @@ class Login extends React.Component<Props, State> {
     // prevent (open) redirect to absolute URLs
     const redirectUrl = this.props.router.query["redir"] as string;
     if (!redirectUrl || Validation.isAbsoluteUrl(redirectUrl)) {
-      return Navigation.PATH_SEARCH;
+      return Navigation.PATH_PAGE_SEARCH;
     }
 
     // do not redirect to admin pages for non-admin users (to prevent "auto logout")
@@ -344,7 +344,7 @@ class Login extends React.Component<Props, State> {
       Navigation.isAdminPath(redirectUrl) &&
       !RuntimeConfig.INFOS?.spaceAdmin
     ) {
-      return Navigation.PATH_SEARCH;
+      return Navigation.PATH_PAGE_SEARCH;
     }
 
     return redirectUrl;

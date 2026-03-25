@@ -172,6 +172,15 @@ export default class DateUtil {
     return this.setHoursToMax(new Date());
   }
 
+  /**
+   * @returns Today's date with time 23:59:59.999
+   */
+  static getTodayTime(hour: number, minute: number, second: number): Date {
+    const todayTime = new Date();
+    todayTime.setHours(hour, minute, second, 0);
+    return todayTime;
+  }
+
   static copyDate(source: Date, target: Date): Date {
     const result = new Date(target);
     result.setFullYear(
