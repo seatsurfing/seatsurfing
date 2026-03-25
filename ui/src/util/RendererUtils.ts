@@ -27,6 +27,10 @@ export default class RendererUtils {
     return state ? t("yes") : t("no");
   }
 
+  static numberPlus(number: number, max: number): string {
+    return number > max ? `${max}+` : String(number);
+  }
+
   static shortenLink(url: string, maxLength: number): string {
     if (url.length <= maxLength) return url;
     const half = Math.floor((maxLength - 1) / 2) - 1;
