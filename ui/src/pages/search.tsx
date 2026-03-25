@@ -803,11 +803,7 @@ class Search extends React.Component<Props, State> {
       >
         <Tooltip id="my-tooltip" />
         {item.approvalRequired && (
-          <IconUserCheck
-            size={16}
-            className="position-absolute top-0 end-0"
-            style={{ marginRight: "2px", mar }}
-          />
+          <IconUserCheck size={16} className="position-absolute top-0 end-0" />
         )}
         <p style={textStyle}>{item.name}</p>
       </div>
