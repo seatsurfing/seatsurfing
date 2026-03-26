@@ -721,7 +721,7 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   getAvailableAttributeOptions = () => {
-    let res: any[] = [];
+    const res: any[] = [];
     this.state.availableAttributes.forEach((a) => {
       let ok = true;
       if (!a.locationApplicable) {
@@ -830,7 +830,7 @@ class EditLocation extends React.Component<Props, State> {
 
   handleAllowBookersSearch = (query: string) => {
     this.setState({ typeaheadAllowBookersLoading: true });
-    let options = new SearchOptions();
+    const options = new SearchOptions();
     options.includeGroups = true;
     options.keyword = query ? query : "";
     Search.search(options).then((res) => {
@@ -1115,7 +1115,7 @@ class EditLocation extends React.Component<Props, State> {
     if (!found) {
       newAttributeValues.push(av);
     }
-    let changedAttributeIds: string[] = Object.assign(
+    const changedAttributeIds: string[] = Object.assign(
       [],
       this.state.changedAttributeIds,
     );
@@ -1135,7 +1135,7 @@ class EditLocation extends React.Component<Props, State> {
         newAttributeValues.push(e);
       }
     });
-    let deletedAttributeIds: string[] = Object.assign(
+    const deletedAttributeIds: string[] = Object.assign(
       [],
       this.state.deletedAttributeIds,
     );
@@ -1317,7 +1317,7 @@ class EditLocation extends React.Component<Props, State> {
             ")"
           : "",
       };
-      let spaces = this.state.spaces.map((item, i) => {
+      let spaces = this.state.spaces.map((_item, i) => {
         return this.renderRect(i);
       });
       let buttonEditSpaceDetails = <></>;
