@@ -28,6 +28,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
+import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -612,12 +613,8 @@ class EditLocation extends React.Component<Props, State> {
     const width = parseInt(this.state.spaces[i].width.replace(/^\D+/g, ""));
     const height = parseInt(this.state.spaces[i].height.replace(/^\D+/g, ""));
     let className = "space-dragger";
-    let inputStyle = {};
     if (width < height) {
       className += " space-dragger-vertical";
-      inputStyle = {
-        width: height + "px",
-      };
     }
     if (i === this.state.selectedSpace) {
       className += " space-dragger-selected";
@@ -640,9 +637,11 @@ class EditLocation extends React.Component<Props, State> {
         }}
         className={className}
       >
+        {this.state.spaces[i].approvers &&
+          this.state.spaces[i].approvers.length > 0 && <SpaceApprovalIcon />}
         <input
           type="text"
-          style={inputStyle}
+          id={`spaceName${i}`}
           value={this.state.spaces[i].name}
           onChange={(e) => {
             this.setSpaceName(i, e.target.value);

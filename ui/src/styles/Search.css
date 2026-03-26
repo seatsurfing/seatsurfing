@@ -46,11 +46,6 @@
   align-items: center;
 }
 
-.space-box svg {
-  margin-right: 2px;
-  margin-top: 2px;
-}
-
 .space-box p {
   width: 100%;
   height: auto;
