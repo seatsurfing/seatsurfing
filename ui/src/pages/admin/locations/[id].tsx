@@ -28,6 +28,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
+import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -612,12 +613,8 @@ class EditLocation extends React.Component<Props, State> {
     const width = parseInt(this.state.spaces[i].width.replace(/^\D+/g, ""));
     const height = parseInt(this.state.spaces[i].height.replace(/^\D+/g, ""));
     let className = "space-dragger";
-    let inputStyle = {};
     if (width < height) {
       className += " space-dragger-vertical";
-      inputStyle = {
-        width: height + "px",
-      };
     }
     if (i === this.state.selectedSpace) {
       className += " space-dragger-selected";
@@ -640,9 +637,11 @@ class EditLocation extends React.Component<Props, State> {
         }}
         className={className}
       >
+        {this.state.spaces[i].approvers &&
+          this.state.spaces[i].approvers.length > 0 && <SpaceApprovalIcon />}
         <input
           type="text"
-          style={inputStyle}
+          id={`spaceName${i}`}
           value={this.state.spaces[i].name}
           onChange={(e) => {
             this.setSpaceName(i, e.target.value);
@@ -722,7 +721,7 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   getAvailableAttributeOptions = () => {
-    let res: any[] = [];
+    const res: any[] = [];
     this.state.availableAttributes.forEach((a) => {
       let ok = true;
       if (!a.locationApplicable) {
@@ -831,7 +830,7 @@ class EditLocation extends React.Component<Props, State> {
 
   handleAllowBookersSearch = (query: string) => {
     this.setState({ typeaheadAllowBookersLoading: true });
-    let options = new SearchOptions();
+    const options = new SearchOptions();
     options.includeGroups = true;
     options.keyword = query ? query : "";
     Search.search(options).then((res) => {
@@ -1116,7 +1115,7 @@ class EditLocation extends React.Component<Props, State> {
     if (!found) {
       newAttributeValues.push(av);
     }
-    let changedAttributeIds: string[] = Object.assign(
+    const changedAttributeIds: string[] = Object.assign(
       [],
       this.state.changedAttributeIds,
     );
@@ -1136,7 +1135,7 @@ class EditLocation extends React.Component<Props, State> {
         newAttributeValues.push(e);
       }
     });
-    let deletedAttributeIds: string[] = Object.assign(
+    const deletedAttributeIds: string[] = Object.assign(
       [],
       this.state.deletedAttributeIds,
     );
@@ -1318,7 +1317,7 @@ class EditLocation extends React.Component<Props, State> {
             ")"
           : "",
       };
-      let spaces = this.state.spaces.map((item, i) => {
+      let spaces = this.state.spaces.map((_item, i) => {
         return this.renderRect(i);
       });
       let buttonEditSpaceDetails = <></>;
