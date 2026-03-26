@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if ! command -v tmux &> /dev/null; then
+    echo "Error: tmux is not installed. Please install it first (e.g. 'sudo apt install tmux' or 'brew install tmux') to start (Seat)surfing 🏄."
+    exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ "$*" == *"--install"* ]]; then
