@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.77.0](https://github.com/seatsurfing/seatsurfing/compare/v1.76.0...v1.77.0) (2026-03-26)
+
+
+### Features
+
+* show approval icon and rotate space names in admin location UI ([#1905](https://github.com/seatsurfing/seatsurfing/issues/1905)) ([e4ace69](https://github.com/seatsurfing/seatsurfing/commit/e4ace69c912fc7967d70376d3865164e171fa631))
+
+
+### Bug Fixes
+
+* use blue instead of red for selected space ([#1902](https://github.com/seatsurfing/seatsurfing/issues/1902)) ([72bd348](https://github.com/seatsurfing/seatsurfing/commit/72bd348a7d2cb096aba64ef58aea7c3786ed1f62))
+
 ## [1.76.0](https://github.com/seatsurfing/seatsurfing/compare/v1.75.0...v1.76.0) (2026-03-26)
 
 
