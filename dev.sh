@@ -14,8 +14,8 @@ tmux send-keys -t "$SESSION:0.0" "cd '$SCRIPT_DIR/ui' && npm ci && npm run dev" 
 # Top right: backend
 tmux send-keys -t "$SESSION:0.1" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
 
-# Bottom: dev console
-tmux split-window -v -t "$SESSION:0.1"
+# Bottom: dev console (full width)
+tmux split-window -v -f -t "$SESSION:0"
 tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR'; bash; tmux kill-session -t '$SESSION'" Enter
 
 tmux attach-session -t "$SESSION"
