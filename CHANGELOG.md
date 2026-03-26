@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.76.0](https://github.com/seatsurfing/seatsurfing/compare/v1.75.0...v1.76.0) (2026-03-26)
+
+
+### Features
+
+* add icon on map for spaces which require approval ([#1901](https://github.com/seatsurfing/seatsurfing/issues/1901)) ([78f00db](https://github.com/seatsurfing/seatsurfing/commit/78f00db70933bac0ba6a96068baa238d0c67e1a8))
+* scroll calender view to user's start working hour ([#1897](https://github.com/seatsurfing/seatsurfing/issues/1897)) ([290f99a](https://github.com/seatsurfing/seatsurfing/commit/290f99a82feece839c718e59b6f5a357ea68ea38))
+
+
+### Bug Fixes
+
+* **deps:** bump picomatch in /ui ([#1903](https://github.com/seatsurfing/seatsurfing/issues/1903)) ([22ce962](https://github.com/seatsurfing/seatsurfing/commit/22ce96286639ca45980ab2e20f924603fa66b3bd))
+* improve approval count badge in admin sidebar ([#1900](https://github.com/seatsurfing/seatsurfing/issues/1900)) ([1faf9e7](https://github.com/seatsurfing/seatsurfing/commit/1faf9e757aec5d0877054d85bdb1cf7d9d063c74))
+
 ## [1.75.0](https://github.com/seatsurfing/seatsurfing/compare/v1.74.1...v1.75.0) (2026-03-24)
 
 
