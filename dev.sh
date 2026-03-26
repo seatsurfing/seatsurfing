@@ -7,15 +7,19 @@ SESSION="seatsurfing-dev"
 tmux new-session -d -s "$SESSION" -x 220 -y 50
 
 tmux split-window -h -t "$SESSION:0.0"
+tmux split-window -h -t "$SESSION:0.0"
 
 # Top left: frontend
 tmux send-keys -t "$SESSION:0.0" "cd '$SCRIPT_DIR/ui' && npm ci && npm run dev" Enter
 
+# Top middle: frontend tests
+tmux send-keys -t "$SESSION:0.1" "cd '$SCRIPT_DIR/ui' && npm run test" Enter
+
 # Top right: backend
-tmux send-keys -t "$SESSION:0.1" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
+tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
 
 # Bottom: dev console (full width)
 tmux split-window -v -f -t "$SESSION:0"
-tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR'; bash; tmux kill-session -t '$SESSION'" Enter
+tmux send-keys -t "$SESSION:0.3" "cd '$SCRIPT_DIR'; bash; tmux kill-session -t '$SESSION'" Enter
 
 tmux attach-session -t "$SESSION"
