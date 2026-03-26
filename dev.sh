@@ -6,14 +6,15 @@ SESSION="seatsurfing-dev"
 
 tmux new-session -d -s "$SESSION" -x 220 -y 50
 
-# Pane 0 (links): UI
+tmux split-window -h -t "$SESSION:0.0"
+
+# Top left: frontend
 tmux send-keys -t "$SESSION:0.0" "cd '$SCRIPT_DIR/ui' && npm ci && npm run dev" Enter
 
-# Pane 1 (rechts oben): Server
-tmux split-window -h -t "$SESSION:0.0"
+# Top right: backend
 tmux send-keys -t "$SESSION:0.1" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
 
-# Pane 2 (rechts unten): Arbeits-Terminal — beim Verlassen wird die Session gekillt
+# Bottom: dev console
 tmux split-window -v -t "$SESSION:0.1"
 tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR'; bash; tmux kill-session -t '$SESSION'" Enter
 
