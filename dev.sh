@@ -2,6 +2,10 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+if [[ "$*" == *"--install"* ]]; then
+    (cd "$SCRIPT_DIR/ui" && npm ci)
+fi
+
 SESSION="seatsurfing-dev"
 
 tmux new-session -d -s "$SESSION" -x 220 -y 50
@@ -10,7 +14,7 @@ tmux split-window -h -t "$SESSION:0.0"
 tmux split-window -h -t "$SESSION:0.0"
 
 # Top left: frontend
-tmux send-keys -t "$SESSION:0.0" "cd '$SCRIPT_DIR/ui' && npm ci && npm run dev" Enter
+tmux send-keys -t "$SESSION:0.0" "cd '$SCRIPT_DIR/ui' && npm run dev" Enter
 
 # Top middle: frontend tests
 tmux send-keys -t "$SESSION:0.1" "cd '$SCRIPT_DIR/ui' && npm run test" Enter
