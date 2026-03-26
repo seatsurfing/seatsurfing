@@ -30,7 +30,8 @@
 }
 
 .space-dragger-vertical input {
-  transform: rotate(-90deg);
+  width: auto;
+  height: 100%;
 }
 
 .space-dragger input:focus {
