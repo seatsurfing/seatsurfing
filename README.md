@@ -87,7 +87,7 @@ This starts...
 
 The Seatsurfing Booking UI is accessible at :8080/ui/search/ and the Seatsurfing Admin UI instance at :8080/ui/admin/.
 
-To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.io/docs/self-hosted/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
+To login, use the default admin login (user `admin@seatsurfing.local` and password `5ea!surfing`) or set the [environment variables](https://seatsurfing.io/docs/self-hosted/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
 
 ### Running on Kubernetes
 

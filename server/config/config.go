@@ -117,7 +117,7 @@ func (c *Config) ReadConfig() {
 	c.MockSendmail = (c.getEnv("MOCK_SENDMAIL", "0") == "1")
 	c.InitOrgName = c.getEnv("INIT_ORG_NAME", "Sample Company")
 	c.InitOrgUser = c.getEnv("INIT_ORG_USER", "admin")
-	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "12345678")
+	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "5ea!surfing")
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")
 	c.AllowOrgDelete = (c.getEnv("ALLOW_ORG_DELETE", "0") == "1")
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)

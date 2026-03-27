@@ -26,11 +26,11 @@ func TestAuthPasswordLogin(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Log in
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -53,7 +53,7 @@ func TestAuthPasswordLoginBan(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Attempt 1
@@ -78,7 +78,7 @@ func TestAuthPasswordLoginBan(t *testing.T) {
 	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Would be successful, but fails cause banned
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -90,11 +90,11 @@ func TestAuthRefresh(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Log in
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -132,7 +132,7 @@ func TestAuthRefreshNonExistent(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Refresh access token
@@ -147,7 +147,7 @@ func TestAuthPasswordReset(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Init password reset
@@ -172,7 +172,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
 	// Test login with old password
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -216,7 +216,7 @@ func TestAuthOrgDetails(t *testing.T) {
 
 	org2 := CreateTestOrg("test2.com")
 	user2 := CreateTestUserInOrg(org2)
-	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user2)
 
 	req := NewHTTPRequestWithAccessToken("GET", "/auth/org/test1.com", "", nil)
@@ -284,14 +284,14 @@ func TestAuthServiceAccountNoLogin(t *testing.T) {
 		Email:          uuid.New().String() + "@test.com",
 		OrganizationID: org.ID,
 		Role:           UserRoleServiceAccountRO,
-		HashedPassword: NullString(GetUserRepository().GetHashedPassword("12345678")),
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword(TestPassword)),
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		t.Fatal(err)
 	}
 
 	// Log in
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -532,12 +532,12 @@ func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	user.PasswordPending = true
 	GetUserRepository().Update(user)
 
 	// Attempt to log in should fail
-	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345678\", \"organizationId\": \"" + org.ID + "\" }"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -728,7 +728,7 @@ func TestTotpLoginWithCode(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -768,7 +768,7 @@ func TestTotpLoginWithCode(t *testing.T) {
 	})
 
 	// 5. Login with password and TOTP code
-	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "code": "` + newCode + `"}`
+	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `", "code": "` + newCode + `"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -783,7 +783,7 @@ func TestTotpLoginWithoutCode(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -809,7 +809,7 @@ func TestTotpLoginWithoutCode(t *testing.T) {
 	res = ExecuteTestRequest(req)
 
 	// 2. Try to login without TOTP code (should fail with 401)
-	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `"}`
+	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
@@ -820,7 +820,7 @@ func TestTotpLoginWithInvalidCode(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -846,7 +846,7 @@ func TestTotpLoginWithInvalidCode(t *testing.T) {
 	res = ExecuteTestRequest(req)
 
 	// 2. Try to login with invalid TOTP code
-	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "code": "000000"}`
+	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `", "code": "000000"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -857,7 +857,7 @@ func TestTotpDisable(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -897,7 +897,7 @@ func TestTotpDisable(t *testing.T) {
 	CheckTestBool(t, true, updatedUser.TotpSecret == "")
 
 	// 5. Login without TOTP code should now work
-	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `"}`
+	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -908,7 +908,7 @@ func TestTotpReplayAttack(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	loginResponse := LoginTestUser(user.ID)
 
@@ -943,7 +943,7 @@ func TestTotpReplayAttack(t *testing.T) {
 	})
 
 	// 3. First login should succeed
-	payload = `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "code": "` + loginCode + `"}`
+	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `", "code": "` + loginCode + `"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -1058,7 +1058,7 @@ func TestInitPasswordResetDuplicateReturns429(t *testing.T) {
 
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	payload := "{\"organizationId\": \"" + org.ID + "\", \"email\": \"" + user.Email + "\"}"

@@ -66,7 +66,7 @@ func TestPasskeyListNonEmpty(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	createRouterTestPasskey(user, "Key A")
@@ -92,7 +92,7 @@ func TestPasskeyRenameSuccess(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	pk := createRouterTestPasskey(user, "Old Name")
@@ -246,7 +246,7 @@ func TestPasskeyRegistrationBeginNonPrimaryDomain(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Host is "other.com", primary domain is "test.com" → must be rejected
@@ -272,7 +272,7 @@ func TestPasskeyRegistrationBeginIdpUser(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	user.AuthProviderID = NullUUID(uuid.New().String())
 	GetUserRepository().Update(user)
 
@@ -287,7 +287,7 @@ func TestPasskeyRegistrationBeginSuccess(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	// Host must match the primary domain ("test.com") for registration to succeed
@@ -314,7 +314,7 @@ func TestPasskeyRegistrationFinishExpiredState(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 
 	payload := `{"stateId": "` + uuid.New().String() + `", "name": "My Key", "credential": {}}`
@@ -327,10 +327,10 @@ func TestPasskeyRegistrationFinishWrongUser(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user1 := CreateTestUserInOrg(org)
-	user1.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user1.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user1)
 	user2 := CreateTestUserInOrg(org)
-	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user2)
 
 	// Begin from primary domain
@@ -366,11 +366,11 @@ func TestPasswordLoginPasskeyChallenge(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	createRouterTestPasskey(user, "Test Key")
 
-	payload := `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `"}`
+	payload := `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `"}`
 	req := newWebAuthnRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
@@ -386,12 +386,12 @@ func TestPasswordLoginPasskeyAllowTotpFallback(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	user.TotpSecret = NullString("JBSWY3DPEHPK3PXP")
 	GetUserRepository().Update(user)
 	createRouterTestPasskey(user, "Test Key")
 
-	payload := `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `"}`
+	payload := `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `"}`
 	req := newWebAuthnRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
@@ -407,11 +407,11 @@ func TestPasswordLoginPasskeyExpiredState(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	createRouterTestPasskey(user, "Test Key")
 
-	payload := `{"email": "` + user.Email + `", "password": "12345678", "organizationId": "` + org.ID + `", "passkeyStateId": "` + uuid.New().String() + `", "passkeyCredential": {}}`
+	payload := `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `", "passkeyStateId": "` + uuid.New().String() + `", "passkeyCredential": {}}`
 	req := newWebAuthnRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
@@ -421,7 +421,7 @@ func TestPasswordLoginPasskeyWrongUser(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user1 := CreateTestUserInOrg(org)
-	user1.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user1.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user1)
 	user2 := CreateTestUserInOrg(org)
 	user2.HashedPassword = NullString(GetUserRepository().GetHashedPassword("87654321"))
@@ -461,7 +461,7 @@ func TestGetUserMeHasPasskeysTrue(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
-	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword("12345678"))
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
 	GetUserRepository().Update(user)
 	createRouterTestPasskey(user, "My Passkey")
 
