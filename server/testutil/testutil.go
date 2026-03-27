@@ -19,6 +19,8 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/router"
 )
 
+const TestPassword = "5ea!surfing"
+
 type LoginResponse struct {
 	RequireOTP   bool   `json:"otpRequired"`
 	AccessToken  string `json:"accessToken"`
