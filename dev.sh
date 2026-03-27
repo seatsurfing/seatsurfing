@@ -29,6 +29,6 @@ tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
 
 # Bottom: dev console (full width)
 tmux split-window -v -f -t "$SESSION:0"
-tmux send-keys -t "$SESSION:0.3" "cd '$SCRIPT_DIR' && printf '\nLet'\''s go (Seat)surfing... 🏄\n\n'; bash; tmux kill-session -t '$SESSION'" Enter
+tmux send-keys -t "$SESSION:0.3" "cd '$SCRIPT_DIR' && printf '\nOpen http://localhost:3000/ui/ and start (Seat)surfing... 🏄\n\n'; bash; tmux kill-session -t '$SESSION'" Enter
 
 tmux attach-session -t "$SESSION"
