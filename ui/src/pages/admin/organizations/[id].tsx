@@ -16,7 +16,11 @@ import Domain from "@/types/Domain";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import RedirectUtil from "@/util/RedirectUtil";
-import { PASSWORD_PATTERN, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/util/Validation";
+import {
+  PASSWORD_PATTERN,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+} from "@/util/Validation";
 
 interface State {
   loading: boolean;

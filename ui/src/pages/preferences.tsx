@@ -14,7 +14,11 @@ import RedirectUtil from "@/util/RedirectUtil";
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
-import { PASSWORD_PATTERN, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/util/Validation";
+import {
+  PASSWORD_PATTERN,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+} from "@/util/Validation";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
 import SaveButton from "@/components/SaveButton";
