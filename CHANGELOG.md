@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.78.0](https://github.com/seatsurfing/seatsurfing/compare/v1.77.0...v1.78.0) (2026-03-28)
+
+
+### Features
+
+* update password requirements ([#1909](https://github.com/seatsurfing/seatsurfing/issues/1909)) ([eec5af3](https://github.com/seatsurfing/seatsurfing/commit/eec5af342adaefbb75f2997f285d5e4278d80afd))
+
 ## [1.77.0](https://github.com/seatsurfing/seatsurfing/compare/v1.76.0...v1.77.0) (2026-03-26)
 
 
