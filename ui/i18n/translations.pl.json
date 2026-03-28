@@ -241,6 +241,7 @@
   "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Zmień hasło",
   "passwordChanged": "Twoje hasło zostało zmienione.",
+  "passwordChangedLoginAgain": "Your password has been changed. You need to log in again.",
   "passwordLogin": "Logowanie hasłem",
   "pending": "Oczekujące",
   "pleaseSelect": "proszę wybrać",

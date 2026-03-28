@@ -250,6 +250,7 @@
   "passwordRequirements": "Das Kennwort muss mindestens 8 Zeichen, einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
   "passwordChange": "Kennwort ändern",
   "passwordChanged": "Dein Kennwort wurde erfolgreich geändert.",
+  "passwordChangedLoginAgain": "Dein Kennwort wurde erfolgreich geändert. Du musst dich erneut einloggen.",
   "passwordLogin": "Login mit Kennwort",
   "passwordPending": "Einladung ausstehend",
   "authMethod": "Authentifizierungsmethode",
