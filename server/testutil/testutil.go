@@ -20,6 +20,7 @@ import (
 )
 
 const TestPassword = "Sea!surf1ng"
+const TestPasswordNew = "Changed!Pass1"
 
 type LoginResponse struct {
 	RequireOTP   bool   `json:"otpRequired"`
