@@ -5,6 +5,7 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
+import { PASSWORD_PATTERN } from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -73,7 +74,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
           this.setState({ loading: false, complete: true, success: false });
         }
       })
-      .catch((e) => {
+      .catch(() => {
         this.setState({ loading: false, complete: true, success: false });
       });
   };
@@ -143,6 +144,8 @@ class CompleteUserInvitation extends React.Component<Props, State> {
               required={true}
               autoFocus={true}
               minLength={8}
+              pattern={PASSWORD_PATTERN}
+              title={this.props.t("passwordRequirements")}
               disabled={this.state.loading}
               isInvalid={this.state.complete && !this.state.success}
             />

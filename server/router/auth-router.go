@@ -346,6 +346,12 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	authState, err := GetAuthStateRepository().GetOne(vars["id"])
 	if err != nil {
@@ -427,6 +433,12 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	authState, err := GetAuthStateRepository().GetOne(vars["id"])
 	if err != nil {

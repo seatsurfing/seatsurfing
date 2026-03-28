@@ -16,6 +16,7 @@ import Domain from "@/types/Domain";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import RedirectUtil from "@/util/RedirectUtil";
+import { PASSWORD_PATTERN } from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -102,7 +103,7 @@ class EditOrganization extends React.Component<Props, State> {
       .then(() => {
         if (createUser) {
           Domain.add(this.entity.id, this.state.domain).then(() => {
-            let user = new User();
+            const user = new User();
             user.organizationId = this.entity.id;
             user.email = this.state.email;
             user.password = this.state.password;
@@ -239,6 +240,8 @@ class EditOrganization extends React.Component<Props, State> {
                 }
                 required={true}
                 minLength={8}
+                pattern={PASSWORD_PATTERN}
+                title={this.props.t("passwordRequirements")}
               />
             </Col>
           </Form.Group>

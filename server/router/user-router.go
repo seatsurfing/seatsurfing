@@ -657,6 +657,12 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.AuthProviderID = NullUUID("")
 		eNew.PasswordPending = true
 	} else if m.Password != "" {
+
+		if !ValidatePassword(m.Password) {
+			SendBadRequest(w)
+			return
+		}
+
 		// Admin provided a new password - update it
 		eNew.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 		eNew.AuthProviderID = NullUUID("")
