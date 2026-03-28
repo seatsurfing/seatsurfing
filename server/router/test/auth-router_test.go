@@ -164,9 +164,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	confirmID := confirmTokens[1]
 
 	// Complete password reset
-	payload = `{
-			"password": "abcd1234"
-		}`
+	payload = `{"password": "` + TestPasswordNew + `"}`
 	req = NewHTTPRequest("POST", "/auth/pwreset/"+confirmID, "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -178,7 +176,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 
 	// Test login with new password
-	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"abcd1234\", \"organizationId\": \"" + org.ID + "\" }"
+	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPasswordNew + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
