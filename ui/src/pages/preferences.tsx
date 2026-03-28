@@ -14,11 +14,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
-import {
-  PASSWORD_PATTERN,
-  PASSWORD_MIN_LENGTH,
-  PASSWORD_MAX_LENGTH,
-} from "@/util/Validation";
+import Validation from "@/util/Validation";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
 import SaveButton from "@/components/SaveButton";
@@ -766,9 +762,9 @@ class Preferences extends React.Component<Props, State> {
                   }
                   required={this.state.changePassword}
                   disabled={!this.state.changePassword}
-                  minLength={PASSWORD_MIN_LENGTH}
-                  maxLength={PASSWORD_MAX_LENGTH}
-                  pattern={PASSWORD_PATTERN}
+                  minLength={Validation.PASSWORD_MIN_LENGTH}
+                  maxLength={Validation.PASSWORD_MAX_LENGTH}
+                  pattern={Validation.PASSWORD_PATTERN}
                   title={this.props.t("passwordRequirements")}
                 />
               </Form.Group>

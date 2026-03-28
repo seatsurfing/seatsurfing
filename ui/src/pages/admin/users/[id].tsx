@@ -22,6 +22,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import AuthProvider from "@/types/AuthProvider";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -228,13 +229,7 @@ class EditUser extends React.Component<Props, State> {
   };
 
   generatePassword = () => {
-    const length = 32;
-    const charset =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let password = "";
-    for (let i = 0, n = charset.length; i < length; ++i) {
-      password += charset.charAt(Math.floor(Math.random() * n));
-    }
+    const password = Validation.generatePassword();
     this.setState({ password, changePassword: true });
   };
 
@@ -645,7 +640,13 @@ class EditUser extends React.Component<Props, State> {
                       !this.state.changePassword) ||
                     this.isServiceAccount(this.state.role)
                   }
-                  minLength={this.isServiceAccount(this.state.role) ? 32 : 8}
+                  minLength={
+                    this.isServiceAccount(this.state.role)
+                      ? Validation.PASSWORD_MIN_LENGTH_SA
+                      : Validation.PASSWORD_MIN_LENGTH
+                  }
+                  pattern={Validation.PASSWORD_PATTERN}
+                  title={this.props.t("passwordRequirements")}
                 />
                 <Button
                   onClick={() => this.generatePassword()}
