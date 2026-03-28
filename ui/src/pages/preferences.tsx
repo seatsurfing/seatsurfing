@@ -762,6 +762,8 @@ class Preferences extends React.Component<Props, State> {
                   required={this.state.changePassword}
                   disabled={!this.state.changePassword}
                   minLength={8}
+                  pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$"
+                  title={this.props.t("passwordRequirements")}
                 />
               </Form.Group>
               <SaveButton

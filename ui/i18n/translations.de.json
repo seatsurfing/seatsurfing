@@ -247,6 +247,7 @@
   "orgSignupSuccess": "Es kann losgehen! Deine Seatsurfing-Organisation ist eingerichtet.",
   "organizations": "Organisationen",
   "password": "Kennwort",
+  "passwordRequirements": "Das Kennwort muss mindestens 8 Zeichen, einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
   "passwordChange": "Kennwort ändern",
   "passwordChanged": "Dein Kennwort wurde erfolgreich geändert.",
   "passwordLogin": "Login mit Kennwort",
