@@ -702,7 +702,7 @@ func TestUserSetPasswordForbidden(t *testing.T) {
 	user2 := CreateTestUserInOrg(org)
 
 	// user1 tries to set user2's password → 403
-	payload := `{"password": "NewPassword123!"}`
+	payload := `{"password": "` + TestPasswordNew + `"}`
 	req := NewHTTPRequest("PUT", "/user/"+user2.ID+"/password", user1.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
@@ -714,7 +714,7 @@ func TestUserSetOwnPassword(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	// User sets their own password → 204
-	payload := `{"password": "NewPassword123!"}`
+	payload := `{"password": "` + TestPasswordNew + `"}`
 	req := NewHTTPRequest("PUT", "/user/"+user.ID+"/password", user.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
