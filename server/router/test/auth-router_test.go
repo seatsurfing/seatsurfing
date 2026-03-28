@@ -988,7 +988,7 @@ func TestAuthCompletePasswordResetInvalidID(t *testing.T) {
 	ClearTestDB()
 
 	fakeID := "00000000-0000-0000-0000-000000000001"
-	payload := `{"password": "newpassword123"}`
+	payload := `{"password": "` + TestPasswordNew + `"}`
 	req := NewHTTPRequest("POST", "/auth/pwreset/"+fakeID, "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
