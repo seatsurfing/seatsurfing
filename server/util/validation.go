@@ -7,7 +7,8 @@ import (
 )
 
 func ValidatePassword(s string) bool {
-	if len([]rune(s)) < 8 {
+	l := len([]rune(s))
+	if l < 8 || l > 64 {
 		return false
 	}
 	var hasUpper, hasLower, hasDigit, hasSpecial bool

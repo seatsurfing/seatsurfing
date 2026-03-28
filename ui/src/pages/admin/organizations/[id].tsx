@@ -16,7 +16,7 @@ import Domain from "@/types/Domain";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import RedirectUtil from "@/util/RedirectUtil";
-import { PASSWORD_PATTERN } from "@/util/Validation";
+import { PASSWORD_PATTERN, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -239,7 +239,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ password: e.target.value })
                 }
                 required={true}
-                minLength={8}
+                minLength={PASSWORD_MIN_LENGTH}
+                maxLength={PASSWORD_MAX_LENGTH}
                 pattern={PASSWORD_PATTERN}
                 title={this.props.t("passwordRequirements")}
               />
