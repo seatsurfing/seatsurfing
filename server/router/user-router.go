@@ -629,6 +629,12 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if m.Password != "" && !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	e, err := GetUserRepository().GetOne(vars["id"])
 	if err != nil {
@@ -657,12 +663,6 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.AuthProviderID = NullUUID("")
 		eNew.PasswordPending = true
 	} else if m.Password != "" {
-
-		if !ValidatePassword(m.Password) {
-			SendBadRequest(w)
-			return
-		}
-
 		// Admin provided a new password - update it
 		eNew.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 		eNew.AuthProviderID = NullUUID("")
@@ -757,6 +757,12 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if m.Password != "" && !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	if m.OrganizationID != "" && m.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
 		SendForbidden(w)
 		return
