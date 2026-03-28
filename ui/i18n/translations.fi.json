@@ -247,6 +247,7 @@
   "orgSignupSuccess": "Kaikki on valmista! Seatsurfing-organisaatiosi on luotu.",
   "organizations": "Organisaatiot",
   "password": "Salasana",
+  "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Vaihda salasana",
   "passwordChanged": "Salasanasi on vaihdettu.",
   "passwordLogin": "Salasanakirjautuminen",

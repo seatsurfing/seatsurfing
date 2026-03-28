@@ -460,6 +460,12 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	user := GetRequestUser(r)
 	e := user
@@ -623,6 +629,12 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if m.Password != "" && !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	e, err := GetUserRepository().GetOne(vars["id"])
 	if err != nil {
@@ -745,6 +757,12 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if m.Password != "" && !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	if m.OrganizationID != "" && m.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
 		SendForbidden(w)
 		return

@@ -5,6 +5,7 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -86,7 +87,10 @@ class CompletePasswordReset extends React.Component<Props, State> {
               }
               required={true}
               autoFocus={true}
-              minLength={8}
+              minLength={Validation.PASSWORD_MIN_LENGTH}
+              maxLength={Validation.PASSWORD_MAX_LENGTH}
+              pattern={Validation.PASSWORD_PATTERN}
+              title={this.props.t("passwordRequirements")}
               disabled={this.state.loading}
               isInvalid={this.state.complete && !this.state.success}
             />

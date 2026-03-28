@@ -14,6 +14,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
+import Validation from "@/util/Validation";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
 import SaveButton from "@/components/SaveButton";
@@ -275,7 +276,7 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    let payload = {
+    const payload = {
       password: this.state.password,
     };
     Ajax.putData("/user/me/password", payload).then(() => {
@@ -761,7 +762,10 @@ class Preferences extends React.Component<Props, State> {
                   }
                   required={this.state.changePassword}
                   disabled={!this.state.changePassword}
-                  minLength={8}
+                  minLength={Validation.PASSWORD_MIN_LENGTH}
+                  maxLength={Validation.PASSWORD_MAX_LENGTH}
+                  pattern={Validation.PASSWORD_PATTERN}
+                  title={this.props.t("passwordRequirements")}
                 />
               </Form.Group>
               <SaveButton

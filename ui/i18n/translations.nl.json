@@ -238,6 +238,7 @@
   "orgSignupSuccess": "Je bent klaar om te gaan! Jouw Seatsurfing organisatie is opgezet.",
   "organizations": "Organisaties",
   "password": "Wachtwoord",
+  "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Wachtwoord veranderen",
   "passwordChanged": "Je wachtwoord is gewijzigd.",
   "passwordLogin": "Wachtwoord login",

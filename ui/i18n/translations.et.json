@@ -238,6 +238,7 @@
   "orgSignupSuccess": "You're ready to go! Your Seatsurfing organization has been set up.",
   "organizations": "Organizations",
   "password": "Parool",
+  "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Parooli muutmine",
   "passwordChanged": "Parool on muudetud.",
   "passwordLogin": "Password login",

@@ -551,7 +551,7 @@ func TestUserCompleteInvitation(t *testing.T) {
 	CheckTestBool(t, true, invitationState != nil)
 
 	// Complete invitation
-	payload = "{\"password\": \"newpass123\"}"
+	payload = "{\"password\": \"" + TestPasswordNew + "\"}"
 	req = NewHTTPRequest("POST", "/auth/setpw/"+invitationState.ID, "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -560,14 +560,14 @@ func TestUserCompleteInvitation(t *testing.T) {
 	newUser, _ := GetUserRepository().GetOne(userID)
 	CheckTestBool(t, false, newUser.PasswordPending)
 	CheckTestBool(t, true, newUser.HashedPassword != "")
-	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(newUser.HashedPassword), "newpass123"))
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(newUser.HashedPassword), TestPasswordNew))
 
 	// Verify auth state was deleted
 	_, err := GetAuthStateRepository().GetOne(invitationState.ID)
 	CheckTestBool(t, true, err != nil)
 
 	// Verify user can log in with new password
-	loginPayload := "{ \"email\": \"" + username + "\", \"password\": \"newpass123\", \"organizationId\": \"" + org.ID + "\" }"
+	loginPayload := "{ \"email\": \"" + username + "\", \"password\": \"" + TestPasswordNew + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(loginPayload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -702,7 +702,7 @@ func TestUserSetPasswordForbidden(t *testing.T) {
 	user2 := CreateTestUserInOrg(org)
 
 	// user1 tries to set user2's password → 403
-	payload := `{"password": "newpassword123"}`
+	payload := `{"password": "` + TestPasswordNew + `"}`
 	req := NewHTTPRequest("PUT", "/user/"+user2.ID+"/password", user1.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
@@ -714,10 +714,22 @@ func TestUserSetOwnPassword(t *testing.T) {
 	user := CreateTestUserInOrg(org)
 
 	// User sets their own password → 204
-	payload := `{"password": "mynewpassword123"}`
+	payload := `{"password": "` + TestPasswordNew + `"}`
 	req := NewHTTPRequest("PUT", "/user/"+user.ID+"/password", user.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestUserSetOwnPasswordNotComplexEnough(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// User sets their own password → 204
+	payload := `{"password": "simplepassword"}`
+	req := NewHTTPRequest("PUT", "/user/"+user.ID+"/password", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestPreventSelfRoleChange(t *testing.T) {

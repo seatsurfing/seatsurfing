@@ -238,6 +238,7 @@
   "orgSignupSuccess": "Wszystko gotowe! Twoja organizacja Seatsurfing została skonfigurowana.",
   "organizations": "Organizacje",
   "password": "Hasło",
+  "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Zmień hasło",
   "passwordChanged": "Twoje hasło zostało zmienione.",
   "passwordLogin": "Logowanie hasłem",
