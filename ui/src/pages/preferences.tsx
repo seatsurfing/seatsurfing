@@ -275,7 +275,7 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    let payload = {
+    const payload = {
       password: this.state.password,
     };
     Ajax.putData("/user/me/password", payload).then(() => {

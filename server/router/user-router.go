@@ -460,6 +460,12 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	user := GetRequestUser(r)
 	e := user
