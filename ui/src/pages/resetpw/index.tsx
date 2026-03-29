@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
+import Navigation from "@/util/Navigation";
 
 interface State {
   loading: boolean;
@@ -35,16 +36,17 @@ class InitPasswordReset extends React.Component<Props, State> {
   };
 
   loadOrgDetails = async () => {
-    const domain = window.location.host.split(":").shift();
+    const domain = window.location.host.split(":").shift() ?? "";
+    let res;
     try {
-      const res = await Ajax.get("/auth/org/" + domain);
-      this.org = new Organization();
-      this.org.deserialize(res.json.organization);
+      res = await Ajax.get(
+        `${Navigation.PATH_API_AUTH_ORG}${encodeURIComponent(domain)}`,
+      );
     } catch {
-      const res = await Ajax.get("/auth/singleorg");
-      this.org = new Organization();
-      this.org.deserialize(res.json.organization);
+      res = await Ajax.get(Navigation.PATH_API_AUTH_SINGLE_ORG);
     }
+    this.org = new Organization();
+    this.org.deserialize(res.json.organization);
   };
 
   onPasswordSubmit = async (e: any) => {
@@ -52,10 +54,13 @@ class InitPasswordReset extends React.Component<Props, State> {
     this.setState({ loading: true, complete: false, success: false });
     const payload = {
       email: this.state.email,
-      organizationId: this.org ? this.org.id : "",
+      organizationId: this.org ?? "",
     };
     try {
-      const res = await Ajax.postData("/auth/initpwreset", payload);
+      const res = await Ajax.postData(
+        Navigation.PATH_API_AUTH_INIT_PW_RESET,
+        payload,
+      );
       const success = res.status >= 200 && res.status <= 299;
       this.setState({ loading: false, complete: true, success });
     } catch {
