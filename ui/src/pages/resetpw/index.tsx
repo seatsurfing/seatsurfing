@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
+import Navigation from "@/util/Navigation";
 
 interface State {
   loading: boolean;
@@ -34,72 +35,72 @@ class InitPasswordReset extends React.Component<Props, State> {
     this.loadOrgDetails();
   };
 
-  loadOrgDetails = () => {
-    const domain = window.location.host.split(":").shift();
-    Ajax.get("/auth/org/" + domain)
-      .then((res) => {
-        this.org = new Organization();
-        this.org.deserialize(res.json.organization);
-      })
-      .catch(() => {
-        Ajax.get("/auth/singleorg").then((res) => {
-          this.org = new Organization();
-          this.org.deserialize(res.json.organization);
-        });
-      });
+  loadOrgDetails = async () => {
+    const domain = window.location.host.split(":").shift() ?? "";
+    let res;
+    try {
+      res = await Ajax.get(
+        `${Navigation.PATH_API_AUTH_ORG}${encodeURIComponent(domain)}`,
+      );
+    } catch {
+      res = await Ajax.get(Navigation.PATH_API_AUTH_SINGLE_ORG);
+    }
+    this.org = new Organization();
+    this.org.deserialize(res.json.organization);
   };
 
-  onPasswordSubmit = (e: any) => {
+  onPasswordSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({ loading: true, complete: false, success: false });
-    let payload = {
+    const payload = {
       email: this.state.email,
-      organizationId: this.org ? this.org.id : "",
+      organizationId: this.org?.id ?? "",
     };
-    Ajax.postData("/auth/initpwreset", payload)
-      .then((res) => {
-        if (res.status >= 200 && res.status <= 299) {
-          this.setState({ loading: false, complete: true, success: true });
-        } else {
-          this.setState({ loading: false, complete: true, success: false });
-        }
-      })
-      .catch((e) => {
-        this.setState({ loading: false, complete: true, success: false });
-      });
+    try {
+      const res = await Ajax.postData(
+        Navigation.PATH_API_AUTH_INIT_PW_RESET,
+        payload,
+      );
+      const success = res.status >= 200 && res.status <= 299;
+      this.setState({ loading: false, complete: true, success });
+    } catch {
+      this.setState({ loading: false, complete: true, success: false });
+    }
   };
 
-  render() {
+  renderContent() {
     if (this.state.complete) {
-      if (this.state.success) {
-        return (
-          <div className="container-center">
-            <div className="container-center-inner">
-              <img
-                src="/ui/seatsurfing.svg"
-                alt="Seatsurfing"
-                className="logo"
-              />
-              <p>{this.props.t("initPasswordResetEmail")}</p>
-            </div>
-          </div>
-        );
-      } else {
-        return (
-          <div className="container-center">
-            <div className="container-center-inner">
-              <img
-                src="/ui/seatsurfing.svg"
-                alt="Seatsurfing"
-                className="logo"
-              />
-              <p>{this.props.t("initPasswordResetFailed")}</p>
-            </div>
-          </div>
-        );
-      }
+      const message = this.state.success
+        ? this.props.t("initPasswordResetEmail")
+        : this.props.t("initPasswordResetFailed");
+      return <p>{message}</p>;
     }
 
+    return (
+      <>
+        <Form.Group>
+          <Form.Control
+            type="email"
+            placeholder={this.props.t("emailPlaceholder")}
+            value={this.state.email}
+            onChange={(e: any) => this.setState({ email: e.target.value })}
+            required={true}
+            autoFocus={true}
+          />
+        </Form.Group>
+        <Button
+          className="margin-top-10"
+          variant="primary"
+          type="submit"
+          disabled={this.state.loading}
+        >
+          {this.props.t("changePassword")}
+        </Button>
+      </>
+    );
+  }
+
+  render() {
     return (
       <div className="container-center">
         <Form
@@ -107,24 +108,7 @@ class InitPasswordReset extends React.Component<Props, State> {
           onSubmit={this.onPasswordSubmit}
         >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
-          <Form.Group>
-            <Form.Control
-              type="email"
-              placeholder={this.props.t("emailPlaceholder")}
-              value={this.state.email}
-              onChange={(e: any) => this.setState({ email: e.target.value })}
-              required={true}
-              autoFocus={true}
-            />
-          </Form.Group>
-          <Button
-            className="margin-top-10"
-            variant="primary"
-            type="submit"
-            disabled={this.state.loading}
-          >
-            {this.props.t("changePassword")}
-          </Button>
+          {this.renderContent()}
           <p className="margin-top-50">
             <Link href="/login">{this.props.t("back")}</Link>
           </p>
