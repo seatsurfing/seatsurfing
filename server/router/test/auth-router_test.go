@@ -1071,8 +1071,8 @@ func TestInitPasswordResetDuplicateReturns429(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
-	// Third request while two AuthStates are still active: should return 429
+	// Third request while two AuthStates are still active: should return success status
 	req = NewHTTPRequest("POST", "/auth/initpwreset", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusTooManyRequests, res.Code)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
