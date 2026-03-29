@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.79.0](https://github.com/seatsurfing/seatsurfing/compare/v1.78.0...v1.79.0) (2026-03-29)
+
+
+### Features
+
+* add "login info" after changing password ([#1911](https://github.com/seatsurfing/seatsurfing/issues/1911)) ([9faf05d](https://github.com/seatsurfing/seatsurfing/commit/9faf05d0f0bc4971cf22c416ebb80c6dd26788cd))
+
 ## [1.78.0](https://github.com/seatsurfing/seatsurfing/compare/v1.77.0...v1.78.0) (2026-03-28)
 
 
