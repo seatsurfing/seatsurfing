@@ -81,6 +81,9 @@ class InitPasswordReset extends React.Component<Props, State> {
                 className="logo"
               />
               <p>{this.props.t("initPasswordResetEmail")}</p>
+              <p className="margin-top-50">
+                <Link href="/login">{this.props.t("back")}</Link>
+              </p>
             </div>
           </div>
         );
@@ -94,6 +97,9 @@ class InitPasswordReset extends React.Component<Props, State> {
                 className="logo"
               />
               <p>{this.props.t("initPasswordResetFailed")}</p>
+              <p className="margin-top-50">
+                <Link href="/login">{this.props.t("back")}</Link>
+              </p>
             </div>
           </div>
         );
