@@ -1,6 +1,6 @@
 import React from "react";
 import Loading from "../components/Loading";
-import { Alert, Button, ButtonGroup, Form, Nav } from "react-bootstrap";
+import { Alert, Button, ButtonGroup, Form, Modal, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
@@ -52,6 +52,7 @@ interface State {
   dateFormat: string;
   activeSessions: Session[];
   currentSessionId: string;
+  showPasswordChangedModal: boolean;
 }
 
 interface Props {
@@ -103,6 +104,7 @@ class Preferences extends React.Component<Props, State> {
       dateFormat: "Y-m-d",
       activeSessions: [],
       currentSessionId: "",
+      showPasswordChangedModal: false,
     };
   }
 
@@ -265,7 +267,7 @@ class Preferences extends React.Component<Props, State> {
       });
   };
 
-  onSubmitSecurity = (e: any) => {
+  onSubmitSecurity = async (e: any) => {
     e.preventDefault();
     if (!this.state.changePassword) {
       return;
@@ -279,12 +281,9 @@ class Preferences extends React.Component<Props, State> {
     const payload = {
       password: this.state.password,
     };
-    Ajax.putData("/user/me/password", payload).then(() => {
-      this.setState({
-        submitting: false,
-        saved: true,
-      });
-    });
+
+    await Ajax.putData("/user/me/password", payload);
+    this.setState({ submitting: false, showPasswordChangedModal: true });
   };
 
   onSubmitColors = (e: any) => {
@@ -989,6 +988,21 @@ class Preferences extends React.Component<Props, State> {
             </Form>
           </div>
         </div>
+        <Modal
+          show={this.state.showPasswordChangedModal}
+          onHide={() => {}}
+          backdrop="static"
+          keyboard={false}
+        >
+          <Modal.Body>
+            <p>{this.props.t("passwordChangedLoginAgain")}</p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              {this.props.t("ok")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </>
     );
   }

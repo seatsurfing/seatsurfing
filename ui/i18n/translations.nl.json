@@ -241,6 +241,7 @@
   "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Wachtwoord veranderen",
   "passwordChanged": "Je wachtwoord is gewijzigd.",
+  "passwordChangedLoginAgain": "Your password has been changed. You need to log in again.",
   "passwordLogin": "Wachtwoord login",
   "pending": "In behandeling",
   "pleaseSelect": "maak een keuze",

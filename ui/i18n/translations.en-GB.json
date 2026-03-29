@@ -250,6 +250,7 @@
   "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordChange": "Change password",
   "passwordChanged": "Your password has been changed.",
+  "passwordChangedLoginAgain": "Your password has been changed. You need to log in again.",
   "passwordLogin": "Password login",
   "passwordPending": "Pending invitation",
   "authMethod": "Authentication method",
