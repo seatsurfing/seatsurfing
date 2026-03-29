@@ -178,7 +178,7 @@ func (a *App) InitializeDefaultOrg() {
 	if err == nil && numOrgs == 0 {
 		log.Println("Creating default organization...")
 		config := GetConfig()
-		domain := "seatsurfing.local"
+		domain := config.InitOrgDomain
 		email := config.InitOrgUser + "@" + domain
 		org := &Organization{
 			Name:             config.InitOrgName,
