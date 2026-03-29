@@ -320,6 +320,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	}
 	existingStates, _ := GetAuthStateRepository().GetActiveByPayloadAndType(user.ID, AuthResetPasswordRequest)
 	if len(existingStates) >= 2 {
+		log.Printf("Max. password reset requests exceeded for user %s\n", user.Email)
 		SendUpdated(w) // for security reasons, we send success message to not disclose existing user accounts
 		return
 	}
