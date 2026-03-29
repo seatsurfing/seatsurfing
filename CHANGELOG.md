@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.79.0](https://github.com/seatsurfing/seatsurfing/compare/v1.78.0...v1.79.0) (2026-03-29)
+
+
+### Features
+
+* add "login info" after changing password ([#1911](https://github.com/seatsurfing/seatsurfing/issues/1911)) ([9faf05d](https://github.com/seatsurfing/seatsurfing/commit/9faf05d0f0bc4971cf22c416ebb80c6dd26788cd))
+
+
+### Bug Fixes
+
+* send success status when max. password reset requests exceeded ([#1916](https://github.com/seatsurfing/seatsurfing/issues/1916)) ([5caef4a](https://github.com/seatsurfing/seatsurfing/commit/5caef4afcc0fcf0bdf1f867837cb14b11be0d808))
+* show back link on "reset password" result page ([#1915](https://github.com/seatsurfing/seatsurfing/issues/1915)) ([a9001e9](https://github.com/seatsurfing/seatsurfing/commit/a9001e9001b90d84e75b0aed5b13fab78e38999d))
+
 ## [1.78.0](https://github.com/seatsurfing/seatsurfing/compare/v1.77.0...v1.78.0) (2026-03-28)
 
 
