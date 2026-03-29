@@ -39,6 +39,7 @@ type Config struct {
 	InitOrgUser                         string
 	InitOrgPass                         string
 	InitOrgLanguage                     string
+	InitOrgDomain                       string
 	AllowOrgDelete                      bool
 	LoginProtectionMaxFails             int
 	LoginProtectionSlidingWindowSeconds int
@@ -119,6 +120,11 @@ func (c *Config) ReadConfig() {
 	c.InitOrgUser = c.getEnv("INIT_ORG_USER", "admin")
 	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "Sea!surf1ng")
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")
+	if !c.IsValidLanguageCode(c.InitOrgLanguage) {
+		log.Println("Warning: Invalid INIT_ORG_LANGUAGE set. Defaulting to 'en'.")
+		c.InitOrgLanguage = "en"
+	}
+	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "seatsurfing.local")
 	c.AllowOrgDelete = (c.getEnv("ALLOW_ORG_DELETE", "0") == "1")
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)
 	c.LoginProtectionSlidingWindowSeconds = c.getEnvInt("LOGIN_PROTECTION_SLIDING_WINDOW_SECONDS", 600)
