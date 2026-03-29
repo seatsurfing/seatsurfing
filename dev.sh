@@ -13,6 +13,13 @@ fi
 
 SESSION="seatsurfing-dev"
 
+if [[ "$*" == *"restartServer"* ]]; then
+    tmux send-keys -t "$SESSION:0.2" C-c "" Enter
+    sleep 1
+    tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
+    exit 0
+fi
+
 tmux new-session -d -s "$SESSION" -x 220 -y 50
 
 tmux split-window -h -t "$SESSION:0.0"
