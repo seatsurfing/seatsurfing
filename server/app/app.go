@@ -180,6 +180,9 @@ func (a *App) InitializeDefaultOrg() {
 		config := GetConfig()
 		domain := config.InitOrgDomain
 		email := config.InitOrgUser + "@" + domain
+		if domain == "localhost" {
+			email = config.InitOrgUser + "@" + "seatsurfing.local"
+		}
 		org := &Organization{
 			Name:             config.InitOrgName,
 			ContactEmail:     email,

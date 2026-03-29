@@ -103,10 +103,10 @@ func (c *Config) ReadConfig() {
 		log.Println("Warning: Invalid SMTP_AUTH_METHOD set. Only 'PLAIN' and 'LOGIN' are allowed. Defaulting to 'PLAIN'.")
 		c.SMTPAuthMethod = "PLAIN"
 	}
-	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@seatsurfing.local")
+	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@localhost")
 	if c.MailSenderAddress == "" {
 		// Deprecated
-		c.MailSenderAddress = c.getEnv("SMTP_SENDER_ADDRESS", "no-reply@seatsurfing.local")
+		c.MailSenderAddress = c.getEnv("SMTP_SENDER_ADDRESS", "no-reply@localhost")
 	}
 	c.MailService = strings.ToLower(c.getEnv("MAIL_SERVICE", "smtp"))
 	if c.MailService != "smtp" && c.MailService != "acs" {
@@ -124,7 +124,7 @@ func (c *Config) ReadConfig() {
 		log.Println("Warning: Invalid INIT_ORG_LANGUAGE set. Defaulting to 'en'.")
 		c.InitOrgLanguage = "en"
 	}
-	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "seatsurfing.local")
+	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "localhost")
 	c.AllowOrgDelete = (c.getEnv("ALLOW_ORG_DELETE", "0") == "1")
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)
 	c.LoginProtectionSlidingWindowSeconds = c.getEnvInt("LOGIN_PROTECTION_SLIDING_WINDOW_SECONDS", 600)
