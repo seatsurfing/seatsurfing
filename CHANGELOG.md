@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.79.1](https://github.com/seatsurfing/seatsurfing/compare/v1.79.0...v1.79.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* add primary domain for default org ([#1914](https://github.com/seatsurfing/seatsurfing/issues/1914)) ([01b9bcf](https://github.com/seatsurfing/seatsurfing/commit/01b9bcfcdf4e16803ff4922b5f44048e9f5b7d53))
+* fix attaching timezone multiple times ([#1922](https://github.com/seatsurfing/seatsurfing/issues/1922)) ([daf6320](https://github.com/seatsurfing/seatsurfing/commit/daf63204c6ca61b568b79ff48c9803676f98f8c6))
+* fix location filter in presence report ([#1923](https://github.com/seatsurfing/seatsurfing/issues/1923)) ([e229343](https://github.com/seatsurfing/seatsurfing/commit/e229343eeebc7527d84372afdd1cb2512f0d8dc5))
+* fix sending multiple invitation mail when saving new user ([#1925](https://github.com/seatsurfing/seatsurfing/issues/1925)) ([728cd51](https://github.com/seatsurfing/seatsurfing/commit/728cd5134634b7d648ea24d1e414f2a52a5cfe1f))
+
 ## [1.79.0](https://github.com/seatsurfing/seatsurfing/compare/v1.78.0...v1.79.0) (2026-03-29)
 
 
