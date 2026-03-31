@@ -101,7 +101,7 @@ class EditUser extends React.Component<Props, State> {
   };
 
   loadData = () => {
-    let promises: Promise<any>[] = [
+    const promises: Promise<any>[] = [
       OrgSettings.getOne("feature_no_user_limit"),
       User.getCount(),
       User.getSelf().then((me) => {
@@ -188,7 +188,11 @@ class EditUser extends React.Component<Props, State> {
       .save()
       .then(() => {
         this.props.router.push("/admin/users/" + this.entity.id);
-        this.setState({ saved: true, resendInvitation: false });
+        this.setState({
+          saved: true,
+          resendInvitation: false,
+          originalEmail: this.entity.email, // don't (re)send invitation mails on second save
+        });
       })
       .catch((e) => {
         let code: number = 0;
