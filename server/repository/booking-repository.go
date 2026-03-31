@@ -606,10 +606,15 @@ func (r *BookingRepository) GetPresenceReport(organizationID string, location *L
 	curTime := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
 	var cols strings.Builder
 	const DateFormat string = "2006-01-02"
+
+	locationConditions := ""
+	if location != nil {
+		locationConditions = " AND b2.space_id IN (SELECT id FROM spaces WHERE location_id = $2) "
+	}
 	for curTime.Before(end) {
 		times = append(times, curTime)
 		cols.WriteString(", ")
-		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND '" + curTime.Format(DateFormat) + "'::DATE BETWEEN DATE(b2.enter_time) AND DATE(b2.leave_time))")
+		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND '" + curTime.Format(DateFormat) + "'::DATE BETWEEN DATE(b2.enter_time) AND DATE(b2.leave_time)" + locationConditions + ")")
 		curTime = curTime.AddDate(0, 0, 1)
 	}
 
