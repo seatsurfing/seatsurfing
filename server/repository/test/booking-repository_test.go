@@ -92,6 +92,59 @@ func TestBookingRepositoryPresenceReport(t *testing.T) {
 	CheckTestInt(t, 0, res[2].Presence[tomorrow.Add(24*7*time.Hour).Format(DateFormat)])
 }
 
+func TestBookingRepositoryPresenceReportFilterByLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrgWithName(org, "u1@test.com", UserRoleUser)
+	user2 := CreateTestUserInOrgWithName(org, "u2@test.com", UserRoleUser)
+
+	location1, space1 := CreateTestLocationAndSpace(org)
+	_, space2 := CreateTestLocationAndSpace(org)
+
+	yesterday := time.Now().Add(-24 * time.Hour)
+	yesterday = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 8, 0, 0, 0, yesterday.Location())
+
+	// user1 was in location1 yesterday
+	b1_1 := &Booking{
+		UserID:  user1.ID,
+		SpaceID: space1.ID,
+		Enter:   yesterday.Add(0 * time.Hour),
+		Leave:   yesterday.Add(8 * time.Hour),
+	}
+	GetBookingRepository().Create(b1_1)
+
+	// user2 was in location2 yesterday and in location1 last week
+	b2_1 := &Booking{
+		UserID:  user2.ID,
+		SpaceID: space2.ID,
+		Enter:   yesterday.Add(0 * time.Hour),
+		Leave:   yesterday.Add(8 * time.Hour),
+	}
+	GetBookingRepository().Create(b2_1)
+	b2_2 := &Booking{
+		UserID:  user2.ID,
+		SpaceID: space1.ID,
+		Enter:   yesterday.Add((-7 * 24) * time.Hour),
+		Leave:   yesterday.Add(((-7 * 24) + 8) * time.Hour),
+	}
+	GetBookingRepository().Create(b2_2)
+
+	// get presence report for location1 for yesterday
+	res, err := GetBookingRepository().GetPresenceReport(org.ID, location1, yesterday, yesterday.Add(8*time.Hour), 99999, 0)
+	CheckTestBool(t, true, err == nil)
+
+	for _, item := range res {
+		log.Printf("User: %s (%s)\n", item.User.Email, item.User.ID)
+		for _, count := range item.Presence {
+			if item.User.Email == user1.Email {
+				CheckTestInt(t, 1, count)
+			} else {
+				CheckTestInt(t, 0, count)
+			}
+		}
+	}
+}
+
 func TestBookingRepositoryGetBookingsRequiringApproval(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
