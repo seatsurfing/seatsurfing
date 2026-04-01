@@ -662,16 +662,21 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.HashedPassword = NullString("")
 		eNew.AuthProviderID = NullUUID("")
 		eNew.PasswordPending = true
+		GetSessionRepository().DeleteOfUser(e)
 	} else if m.Password != "" {
 		// Admin provided a new password - update it
 		eNew.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 		eNew.AuthProviderID = NullUUID("")
 		eNew.PasswordPending = false
+		GetSessionRepository().DeleteOfUser(e)
 	} else if m.AuthProviderID != "" {
 		// Admin set an auth provider - update it
 		eNew.HashedPassword = NullString("")
 		eNew.AuthProviderID = NullUUID(m.AuthProviderID)
 		eNew.PasswordPending = false
+		if m.AuthProviderID != string(e.AuthProviderID) {
+			GetSessionRepository().DeleteOfUser(e)
+		}
 	} else {
 		// No auth method change - preserve existing values
 		eNew.HashedPassword = e.HashedPassword
