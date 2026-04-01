@@ -14,24 +14,6 @@
    go version
    ```
 
-1. Set up a local PostgreSQL database, i.e. using a container:
-
-   ```shell
-   docker run --name postgres \
-   	-v postgres:/var/lib/postgresql/data \
-   	-e POSTGRES_PASSWORD=root \
-   	-p 5432:5432 \
-   	-d \
-   	postgres:17-alpine
-   ```
-
-1. Create databases named `seatsurfing` (for running the application) and `seatsurfing_test` (for running the tests) in your PostgreSQL database:
-
-   ```sql
-   CREATE DATABASE seatsurfing;
-   CREATE DATABASE seatsurfing_test;
-   ```
-
 1. Check out Seatsurfing's code:
 
    ```shell
