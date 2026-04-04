@@ -38,7 +38,15 @@ cd '$SCRIPT_DIR' \
   && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; \
 } \
 && export -f restartServer \
-&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\nrestartServer: restarts the backend server\n\nHappy (Seat)surfing... 🏄\n\n' \
+&& clearDatabase() { \
+  tmux send-keys -t '$SESSION:0.2' C-c '' Enter \
+  && sleep 1 \
+  && docker exec postgres-seatsurfing psql -U postgres -c 'DROP DATABASE IF EXISTS seatsurfing;' \
+  && docker exec postgres-seatsurfing psql -U postgres -c 'CREATE DATABASE seatsurfing;' \
+  && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; \
+} \
+&& export -f clearDatabase \
+&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\nrestartServer: restarts the backend server\nclearDatabase: drops and recreates the seatsurfing database, then restarts the server\n\nHappy (Seat)surfing... 🏄\n\n' \
 ; bash \
 ; tmux kill-session -t '$SESSION'\
 "
