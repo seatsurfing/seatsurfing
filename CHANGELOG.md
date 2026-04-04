@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.79.2](https://github.com/seatsurfing/seatsurfing/compare/v1.79.1...v1.79.2) (2026-04-03)
+
+
+### Bug Fixes
+
+* delete user sessions when admin changes auth information ([#1929](https://github.com/seatsurfing/seatsurfing/issues/1929)) ([af18f2d](https://github.com/seatsurfing/seatsurfing/commit/af18f2d92994a7c05e3786eec41b145c32c5b8fb))
+* **deps:** bump lodash from 4.17.23 to 4.18.1 in /ui ([#1932](https://github.com/seatsurfing/seatsurfing/issues/1932)) ([ea45957](https://github.com/seatsurfing/seatsurfing/commit/ea45957d3c508cf4ba2881144224e52dd22b78eb))
+* **deps:** bump lodash-es from 4.17.23 to 4.18.1 in /ui ([#1930](https://github.com/seatsurfing/seatsurfing/issues/1930)) ([ac3fa91](https://github.com/seatsurfing/seatsurfing/commit/ac3fa914d4589ed67f74b52a0d0b2b51264c4262))
+* update email footer texts ([#1928](https://github.com/seatsurfing/seatsurfing/issues/1928)) ([d9fad2e](https://github.com/seatsurfing/seatsurfing/commit/d9fad2e966a8f8cea231fc6f9f18da4fcabd0832))
+
 ## [1.79.1](https://github.com/seatsurfing/seatsurfing/compare/v1.79.0...v1.79.1) (2026-03-31)
 
 
