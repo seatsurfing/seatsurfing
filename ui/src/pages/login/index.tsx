@@ -159,6 +159,23 @@ class Login extends React.Component<Props, State> {
       });
   };
 
+  onSuccessfulLogin = async (data: {
+    accessToken: string;
+    logoutUrl: string;
+    refreshToken: string;
+  }): Promise<void> => {
+    const credentials: AjaxCredentials = {
+      accessToken: data.accessToken,
+      accessTokenExpiry: JwtDecoder.getExpiryDate(data.accessToken),
+      logoutUrl: data.logoutUrl,
+      profilePageUrl: "",
+    };
+    Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+    Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
+    await RuntimeConfig.loadUserAndSettings();
+    this.setState({ redirect: this.getRedirectUrl() });
+  };
+
   onPasswordSubmit = (e: any) => {
     e.preventDefault();
     this.setState({
@@ -176,18 +193,7 @@ class Login extends React.Component<Props, State> {
     }
     Ajax.postData("/auth/login", payload)
       .then((res) => {
-        const data = res.json;
-        const credentials: AjaxCredentials = {
-          accessToken: data.accessToken,
-          accessTokenExpiry: JwtDecoder.getExpiryDate(data.accessToken),
-          logoutUrl: data.logoutUrl,
-          profilePageUrl: "",
-        };
-        Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
-        RuntimeConfig.loadUserAndSettings().then(() => {
-          this.setState({ redirect: this.getRedirectUrl() });
-        });
+        this.onSuccessfulLogin(res.json);
       })
       .catch((err) => {
         if (
@@ -254,18 +260,7 @@ class Login extends React.Component<Props, State> {
     };
     Ajax.postData("/auth/updatepw", payload)
       .then((res) => {
-        const data = res.json;
-        const credentials: AjaxCredentials = {
-          accessToken: data.accessToken,
-          accessTokenExpiry: JwtDecoder.getExpiryDate(data.accessToken),
-          logoutUrl: data.logoutUrl,
-          profilePageUrl: "",
-        };
-        Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
-        RuntimeConfig.loadUserAndSettings().then(() => {
-          this.setState({ redirect: this.getRedirectUrl() });
-        });
+        this.onSuccessfulLogin(res.json);
       })
       .catch(() => {
         this.setState({
@@ -307,16 +302,8 @@ class Login extends React.Component<Props, State> {
         passkeyCredential: serialized,
       };
       const res = await Ajax.postData("/auth/login", payload);
-      const credentials: AjaxCredentials = {
-        accessToken: res.json.accessToken,
-        accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
-        logoutUrl: res.json.logoutUrl,
-        profilePageUrl: "",
-      };
-      Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
-      await RuntimeConfig.loadUserAndSettings();
-      this.setState({ redirect: this.getRedirectUrl(), inPasskeyLogin: false });
+      await this.onSuccessfulLogin(res.json);
+      this.setState({ inPasskeyLogin: false });
     } catch (err: any) {
       // On passkey failure, offer TOTP fallback if available (spec §6.1)
       if (this.state.allowTotpFallback) {
@@ -354,20 +341,8 @@ class Login extends React.Component<Props, State> {
         credential as PublicKeyCredential,
       );
       const res = await Passkey.finishLogin(beginResponse.stateId, serialized);
-      const credentials: AjaxCredentials = {
-        accessToken: res.accessToken,
-        accessTokenExpiry: JwtDecoder.getExpiryDate(res.accessToken),
-        logoutUrl: "",
-        profilePageUrl: "",
-      };
-      Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.refreshToken);
-      await RuntimeConfig.loadUserAndSettings();
-      this.setState({
-        redirect: this.getRedirectUrl(),
-        inPasskeyLogin: false,
-        passkeyLoginFailed: false,
-      });
+      await this.onSuccessfulLogin({ ...res, logoutUrl: "" });
+      this.setState({ inPasskeyLogin: false, passkeyLoginFailed: false });
     } catch (err: any) {
       // NotAllowedError = user dismissed the browser passkey dialog — no error shown.
       // Any other error (e.g. 404 from finishLogin for an expired/unknown credential)
