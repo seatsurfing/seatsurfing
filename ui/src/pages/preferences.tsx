@@ -117,7 +117,7 @@ class Preferences extends React.Component<Props, State> {
     if (tabParam === "security") {
       this.setState({ activeTab: "tab-security" });
     }
-    let promises = [
+    const promises = [
       this.loadPreferences(),
       this.loadLocations(),
       this.loadActiveSessions(),
@@ -131,7 +131,7 @@ class Preferences extends React.Component<Props, State> {
     const accessTokenPayload = JwtDecoder.getPayload(
       Ajax.PERSISTER.readCredentialsFromLocalStorage().accessToken,
     );
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       Session.list()
         .then((sessions) => {
@@ -146,11 +146,11 @@ class Preferences extends React.Component<Props, State> {
   };
 
   loadPreferences = async (): Promise<void> => {
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       UserPreference.list()
         .then((list) => {
-          let state: any = {};
+          const state: any = {};
           list.forEach((s) => {
             if (typeof window !== "undefined") {
               if (s.name === UserPreference.PREF_ENTER_TIME)
@@ -209,7 +209,7 @@ class Preferences extends React.Component<Props, State> {
   };
 
   loadLocations = async (): Promise<void> => {
-    let self = this;
+    const self = this;
     return new Promise<void>(function (resolve, reject) {
       Location.list()
         .then((list) => {
@@ -228,13 +228,13 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    let workdays: string[] = [];
+    const workdays: string[] = [];
     this.state.workdays.forEach((val, day) => {
       if (val) {
         workdays.push(day.toString());
       }
     });
-    let payload = [
+    const payload = [
       new UserPreference("enter_time", this.state.enterTime.toString()),
       new UserPreference("workday_start", this.state.workdayStart.toString()),
       new UserPreference("workday_end", this.state.workdayEnd.toString()),
@@ -294,13 +294,13 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    let workdays: string[] = [];
+    const workdays: string[] = [];
     this.state.workdays.forEach((val, day) => {
       if (val) {
         workdays.push(day.toString());
       }
     });
-    let payload = [
+    const payload = [
       new UserPreference("booked_color", this.state.booked),
       new UserPreference("not_booked_color", this.state.notBooked),
       new UserPreference("self_booked_color", this.state.selfBooked),
@@ -335,7 +335,7 @@ class Preferences extends React.Component<Props, State> {
   };
 
   onWorkdayCheck = (day: number, checked: boolean) => {
-    let workdays = this.state.workdays.map((val, i) =>
+    const workdays = this.state.workdays.map((val, i) =>
       i === day ? checked : val,
     );
     this.setState({
@@ -351,7 +351,7 @@ class Preferences extends React.Component<Props, State> {
       caldavError: false,
       caldavCalendarsLoaded: false,
     });
-    let payload = {
+    const payload = {
       url: this.state.caldavUrl,
       username: this.state.caldavUser,
       password: this.state.caldavPass,
@@ -382,7 +382,7 @@ class Preferences extends React.Component<Props, State> {
       caldavError: false,
       caldavCalendarsLoaded: false,
     });
-    let payload = [
+    const payload = [
       new UserPreference("caldav_url", ""),
       new UserPreference("caldav_user", ""),
       new UserPreference("caldav_pass", ""),
@@ -416,7 +416,7 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    let payload = [
+    const payload = [
       new UserPreference("caldav_url", this.state.caldavUrl),
       new UserPreference("caldav_user", this.state.caldavUser),
       new UserPreference("caldav_pass", this.state.caldavPass),
@@ -841,7 +841,22 @@ class Preferences extends React.Component<Props, State> {
                       ))}
                     </tbody>
                   </table>
-                  * {this.props.t("thisSession")}
+                  <p>* {this.props.t("thisSession")}</p>
+                  <Button
+                    hidden={this.state.activeSessions?.length <= 1}
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      const others = this.state.activeSessions.filter(
+                        (s) => s.id !== this.state.currentSessionId,
+                      );
+                      Promise.all(others.map((s) => s.delete()))
+                        .then(() => this.loadActiveSessions())
+                        .catch(() => RuntimeConfig.logOut());
+                    }}
+                  >
+                    {this.props.t("logoutOthers")}
+                  </Button>
                 </div>
               )}
             </div>
