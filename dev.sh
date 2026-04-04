@@ -13,13 +13,6 @@ fi
 
 SESSION="seatsurfing-dev"
 
-if [[ "$*" == *"restartServer"* ]]; then
-    tmux send-keys -t "$SESSION:0.2" C-c "" Enter
-    sleep 1
-    tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
-    exit 0
-fi
-
 tmux new-session -d -s "$SESSION" -x 220 -y 50
 
 tmux split-window -h -t "$SESSION:0.0"
@@ -36,6 +29,6 @@ tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
 
 # Bottom: dev console (full width)
 tmux split-window -v -f -t "$SESSION:0"
-tmux send-keys -t "$SESSION:0.3" "cd '$SCRIPT_DIR' && printf '\n\rLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\n\rMails: http://localhost:8025\n\r\n\rHappy (Seat)surfing... 🏄\n\n'; bash; tmux kill-session -t '$SESSION'" Enter
+tmux send-keys -t "$SESSION:0.3" "cd '$SCRIPT_DIR' && restartServer() { tmux send-keys -t '$SESSION:0.2' C-c '' Enter && sleep 1 && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; } && export -f restartServer && printf '\n\rLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\n\rMails: http://localhost:8025\n\r\n\rHappy (Seat)surfing... 🏄\n\rCommands: restartServer\n\n'; bash; tmux kill-session -t '$SESSION'" Enter
 
 tmux attach-session -t "$SESSION"
