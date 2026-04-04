@@ -414,5 +414,7 @@
   "allAreas": "Kaikki alueet",
   "lastMonth": "Edellinen kuukausi",
   "nextWeek": "Seuraava viikko",
-  "targetUtilizationHoursPerWeek": "Viikkokohtainen työpisteen käyttöastetavoite"
+  "targetUtilizationHoursPerWeek": "Viikkokohtainen työpisteen käyttöastetavoite",
+  "newPasswordPlaceholder": "New password",
+  "passwordUpdateInfo": "Your current password needs to be changed. Please select a new password that is different to the current one."
 }

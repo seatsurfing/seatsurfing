@@ -15,6 +15,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import Validation from "@/util/Validation";
 import Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
+import { ResponseCode } from "@/types/ErrorText";
 import TotpInput from "@/components/TotpInput";
 import Passkey, {
   prepareRequestOptions,
@@ -200,7 +201,7 @@ class Login extends React.Component<Props, State> {
           err instanceof AjaxError &&
           (err as AjaxError).httpStatusCode === 401
         ) {
-          if (err.appErrorCode === 5001) {
+          if (err.appErrorCode === ResponseCode.PasswordUpdateRequired) {
             this.setState({
               requirePasswordUpdate: true,
               invalid: false,
