@@ -301,15 +301,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		SendUpdated(w)
 		return
 	}
-	if user.HashedPassword == "" {
-		SendUpdated(w)
-		return
-	}
-	if user.Disabled {
-		SendUpdated(w)
-		return
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if !CanResetPassword(user) {
 		SendUpdated(w)
 		return
 	}
@@ -545,22 +537,12 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
-	if user.HashedPassword == "" {
+
+	if !CanPasswordLogin(user) {
 		SendNotFound(w)
 		return
 	}
-	if user.PasswordPending {
-		SendNotFound(w)
-		return
-	}
-	if user.Disabled {
-		SendNotFound(w)
-		return
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
-		SendNotFound(w)
-		return
-	}
+
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
 		SendNotFound(w)
