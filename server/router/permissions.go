@@ -26,3 +26,13 @@ func CanResetPassword(user *User) bool {
 	}
 	return true
 }
+
+func CanUpdatePassword(user *User) bool {
+	if user.PasswordPending {
+		return false
+	}
+	if !user.PasswordUpdateRequired {
+		return false
+	}
+	return CanResetPassword(user)
+}

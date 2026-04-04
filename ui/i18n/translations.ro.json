@@ -416,5 +416,7 @@
   "allAreas": "All areas",
   "lastMonth": "Last month",
   "nextWeek": "Next week",
-  "targetUtilizationHoursPerWeek": "Target weekly utilization per space"
+  "targetUtilizationHoursPerWeek": "Target weekly utilization per space",
+  "newPasswordPlaceholder": "New password",
+  "passwordUpdateInfo": "Your current password needs to be changed. Please select a new password that is different to the current one."
 }

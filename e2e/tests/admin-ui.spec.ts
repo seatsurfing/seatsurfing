@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-const uiURL = process.env.UI_URL ? process.env.UI_URL : "http://localhost:8080";
+import { login } from "../util/helper";
 
 test.beforeEach(async ({ page }) => {
   // Suppress the MFA encouragement modal
@@ -8,16 +7,8 @@ test.beforeEach(async ({ page }) => {
     window.localStorage.setItem("mfaEncouragementDismissed", "1");
   });
 
-  // Open login page
-  await page.goto(uiURL + "/ui/login/");
-  await expect(page).toHaveURL(/login\/$/);
-
-  // Enter credentials
-  await page
-    .getByPlaceholder("you@company.com")
-    .fill("admin@seatsurfing.local");
-  await page.getByPlaceholder("Password").fill("Sea!surf1ng");
-  await page.getByRole("button", { name: "➤" }).click();
+  // Enter credentials and log in
+  await login(page, "admin@seatsurfing.local", "Sea!surf1ng");
 
   // Ensure we've reached the dashboard
   await expect(page).toHaveURL(/search\/$/);
