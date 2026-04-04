@@ -597,24 +597,8 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		// Mark code as used to prevent replay
 		totpCache.markCodeAsUsed(user.ID, m.Code)
 	}
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	now := time.Now().UTC()
-	user.LastActivityAtUTC = &now
-	GetUserRepository().Update(user)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during password login")
-		SendInternalServerError(w)
-		return
-	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-	SendJSON(w, res)
+
+	router.createAndSendJWT(w, r, user, "password login", "", "")
 }
 
 func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request) {
@@ -655,28 +639,11 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	now := time.Now().UTC()
-	user.LastActivityAtUTC = &now
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
 	user.PasswordUpdateRequired = false
-
 	GetUserRepository().Update(user)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during password login")
-		SendInternalServerError(w)
-		return
-	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-	SendJSON(w, res)
 
+	router.createAndSendJWT(w, r, user, "password update", "", "")
 }
 
 func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
@@ -813,21 +780,8 @@ func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *Auth
 		return
 	}
 	GetAuthStateRepository().Delete(authState)
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during Atlassian verify")
-		SendInternalServerError(w)
-		return
-	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-	SendJSON(w, res)
+
+	router.createAndSendJWT(w, r, user, "Atlassian verify", "", "")
 }
 
 func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
@@ -920,26 +874,8 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	GetAuthStateRepository().Delete(authState)
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	now := time.Now().UTC()
-	user.LastActivityAtUTC = &now
-	GetUserRepository().Update(user)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during OAuth verify")
-		SendInternalServerError(w)
-		return
-	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:    accessToken,
-		RefreshToken:   refreshToken,
-		LogoutURL:      router.getLogoutUrl(provider),
-		ProfilePageURL: router.getProfilePageURL(provider),
-	}
-	SendJSON(w, res)
+
+	router.createAndSendJWT(w, r, user, "OAuth verify", router.getLogoutUrl(provider), router.getProfilePageURL(provider))
 }
 
 func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
@@ -1330,4 +1266,27 @@ func unmarshalAuthStateLoginPayload(payload string) *AuthStateLoginPayload {
 	var o *AuthStateLoginPayload
 	json.Unmarshal([]byte(payload), &o)
 	return o
+}
+
+func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Request, user *User, authMethod string, logoutURL string, profilePageURL string) {
+	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
+	now := time.Now().UTC()
+	user.LastActivityAtUTC = &now
+	GetUserRepository().Update(user)
+	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during " + authMethod)
+		SendInternalServerError(w)
+		return
+	}
+	claims := router.CreateClaims(user, session)
+	accessToken := router.CreateAccessToken(claims)
+	refreshToken := router.createRefreshToken(claims)
+	res := &JWTResponse{
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
+		LogoutURL:      logoutURL,
+		ProfilePageURL: profilePageURL,
+	}
+	SendJSON(w, res)
 }
