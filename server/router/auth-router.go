@@ -129,6 +129,13 @@ type AuthPasswordRequest struct {
 	PasskeyCredential json.RawMessage `json:"passkeyCredential,omitempty"`
 }
 
+type PasswordUpdateRequest struct {
+	Email          string `json:"email" validate:"required,email,max=254"`
+	Password       string `json:"password" validate:"required,min=8,max=64"`
+	NewPassword    string `json:"newPassword" validate:"required,min=8,max=64"`
+	OrganizationID string `json:"organizationId" validate:"required,uuid"`
+}
+
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken" validate:"required"`
 }
@@ -157,6 +164,7 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
+	s.HandleFunc("/updatepw", router.updatePassword).Methods("POST")
 	s.HandleFunc("/passkey/login/begin", router.beginPasskeyLogin).Methods("POST")
 	s.HandleFunc("/passkey/login/finish", router.finishPasskeyLogin).Methods("POST")
 	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
@@ -298,18 +306,9 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if user == nil || err != nil {
 		log.Printf("Password reset failed: user %s not found in org %s\n", m.Email, m.OrganizationID)
-		SendUpdated(w)
 		return
 	}
-	if user.HashedPassword == "" {
-		SendUpdated(w)
-		return
-	}
-	if user.Disabled {
-		SendUpdated(w)
-		return
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if !CanResetPassword(user) {
 		SendUpdated(w)
 		return
 	}
@@ -470,6 +469,7 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 	}
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	user.PasswordPending = false
+	user.PasswordUpdateRequired = false
 	user.AuthProviderID = NullUUID("")
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
@@ -545,27 +545,24 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		SendNotFound(w)
 		return
 	}
-	if user.HashedPassword == "" {
+
+	if !CanPasswordLogin(user) {
 		SendNotFound(w)
 		return
 	}
-	if user.PasswordPending {
-		SendNotFound(w)
-		return
-	}
-	if user.Disabled {
-		SendNotFound(w)
-		return
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
-		SendNotFound(w)
-		return
-	}
+
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
 		SendNotFound(w)
 		return
 	}
+
+	// check if password update is required
+	if user.PasswordUpdateRequired {
+		SendUnauthorizedCode(w, ResponseCodePasswordUpdateRequired)
+		return
+	}
+
 	passkeyResult := router.handlePasskey2FA(w, r, user, &m)
 	if passkeyResult == passkey2FAHandled {
 		return
@@ -618,6 +615,68 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		RefreshToken: refreshToken,
 	}
 	SendJSON(w, res)
+}
+
+func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
+	var m PasswordUpdateRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+
+	if m.Password == m.NewPassword {
+		SendBadRequest(w)
+		return
+	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
+	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+
+	// check if password update is allowed
+	if !CanUpdatePassword(user) {
+		SendNotFound(w)
+		return
+	}
+
+	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
+		SendNotFound(w)
+		return
+	}
+
+	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
+	now := time.Now().UTC()
+	user.LastActivityAtUTC = &now
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
+	user.PasswordUpdateRequired = false
+
+	GetUserRepository().Update(user)
+	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during password login")
+		SendInternalServerError(w)
+		return
+	}
+	claims := router.CreateClaims(user, session)
+	accessToken := router.CreateAccessToken(claims)
+	refreshToken := router.createRefreshToken(claims)
+	res := &JWTResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	SendJSON(w, res)
+
 }
 
 func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {

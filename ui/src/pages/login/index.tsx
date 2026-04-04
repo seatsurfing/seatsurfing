@@ -46,6 +46,8 @@ interface State {
   orgDomain: string;
   domainNotFound: boolean;
   passkeyAvailable: boolean;
+  requirePasswordUpdate: boolean;
+  newPassword: string;
 }
 
 interface Props {
@@ -84,6 +86,8 @@ class Login extends React.Component<Props, State> {
       domainNotFound: false,
       // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
       passkeyAvailable: Passkey.isSupported(),
+      requirePasswordUpdate: false,
+      newPassword: "",
     };
   }
 
@@ -172,14 +176,15 @@ class Login extends React.Component<Props, State> {
     }
     Ajax.postData("/auth/login", payload)
       .then((res) => {
+        const data = res.json;
         const credentials: AjaxCredentials = {
-          accessToken: res.json.accessToken,
-          accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
-          logoutUrl: res.json.logoutUrl,
+          accessToken: data.accessToken,
+          accessTokenExpiry: JwtDecoder.getExpiryDate(data.accessToken),
+          logoutUrl: data.logoutUrl,
           profilePageUrl: "",
         };
         Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
+        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
         RuntimeConfig.loadUserAndSettings().then(() => {
           this.setState({ redirect: this.getRedirectUrl() });
         });
@@ -189,6 +194,15 @@ class Login extends React.Component<Props, State> {
           err instanceof AjaxError &&
           (err as AjaxError).httpStatusCode === 401
         ) {
+          if (err.appErrorCode === 5001) {
+            this.setState({
+              requirePasswordUpdate: true,
+              invalid: false,
+              inPasswordSubmit: false,
+            });
+            return;
+          }
+
           // Check if the body contains a passkey challenge
           if ((err as any).responseBody) {
             try {
@@ -210,7 +224,7 @@ class Login extends React.Component<Props, State> {
                 this.performPasskeyAssertion(body.stateId, rawOpts);
                 return;
               }
-            } catch (_) {}
+            } catch {}
           }
           this.setState({
             requireTotp: true,
@@ -219,6 +233,41 @@ class Login extends React.Component<Props, State> {
           });
           return;
         }
+        this.setState({
+          invalid: true,
+          inPasswordSubmit: false,
+        });
+      });
+  };
+
+  onNewPasswordSubmit = (e: any) => {
+    e.preventDefault();
+    this.setState({
+      inPasswordSubmit: true,
+    });
+
+    const payload: any = {
+      email: this.state.email,
+      password: this.state.password,
+      organizationId: this.org?.id,
+      newPassword: this.state.newPassword,
+    };
+    Ajax.postData("/auth/updatepw", payload)
+      .then((res) => {
+        const data = res.json;
+        const credentials: AjaxCredentials = {
+          accessToken: data.accessToken,
+          accessTokenExpiry: JwtDecoder.getExpiryDate(data.accessToken),
+          logoutUrl: data.logoutUrl,
+          profilePageUrl: "",
+        };
+        Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
+        RuntimeConfig.loadUserAndSettings().then(() => {
+          this.setState({ redirect: this.getRedirectUrl() });
+        });
+      })
+      .catch(() => {
         this.setState({
           invalid: true,
           inPasswordSubmit: false,
@@ -487,11 +536,17 @@ class Login extends React.Component<Props, State> {
 
     return (
       <div className="container-signin">
-        {/* Passkey 2FA prompt – shown when password verified but passkey required */}
+        {/* ------------------ */}
+        {/* Passkey 2FA prompt */}
+        {/* ------------------ */}
+
+        {/* Shown when password verified but passkey required */}
         <Form
           className="form-signin"
           name="passkey-2fa"
-          hidden={!this.state.requirePasskey}
+          hidden={
+            !this.state.requirePasskey || this.state.requirePasswordUpdate
+          }
         >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
@@ -552,11 +607,78 @@ class Login extends React.Component<Props, State> {
             </InputGroup>
           </Form.Group>
         </Form>
+
+        {/* --------------- */}
+        {/* Password update */}
+        {/* --------------- */}
+
+        <Form
+          className="form-signin"
+          onSubmit={this.onNewPasswordSubmit}
+          name="password-login"
+          hidden={
+            this.state.requireTotp ||
+            this.state.requirePasskey ||
+            !this.state.requirePasswordUpdate
+          }
+        >
+          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <h3>{this.org?.name}</h3>
+          <p>{this.props.t("passwordUpdateInfo")}</p>
+          <Form.Group style={{ marginBottom: "5px" }}>
+            <Form.Control
+              type="email"
+              readOnly={true}
+              value={this.state.email}
+            />
+          </Form.Group>
+          <Form.Group style={{ marginBottom: "5px" }}>
+            <InputGroup>
+              <Form.Control
+                type="password"
+                readOnly={this.state.inPasswordSubmit}
+                placeholder={this.props.t("newPasswordPlaceholder")}
+                value={this.state.newPassword}
+                onChange={(e: any) =>
+                  this.setState({
+                    newPassword: e.target.value,
+                  })
+                }
+                minLength={Validation.PASSWORD_MIN_LENGTH}
+                maxLength={Validation.PASSWORD_MAX_LENGTH}
+                pattern={Validation.PASSWORD_PATTERN}
+                required={true}
+                isInvalid={this.state.invalid}
+                autoFocus={true}
+                title={this.props.t("passwordRequirements")}
+              />
+              <Button variant="primary" type="submit">
+                {this.state.inPasswordSubmit ? (
+                  <Loading showText={false} paddingTop={false} />
+                ) : (
+                  <div className="feather-btn">&#10148;</div>
+                )}
+              </Button>
+            </InputGroup>
+            <p className="margin-top-50">
+              <Link href="/login">{this.props.t("back")}</Link>
+            </p>
+          </Form.Group>
+        </Form>
+
+        {/* -------------- */}
+        {/* Standard login */}
+        {/* -------------- */}
+
         <Form
           className="form-signin"
           onSubmit={this.onPasswordSubmit}
           name="password-login"
-          hidden={this.state.requireTotp || this.state.requirePasskey}
+          hidden={
+            this.state.requireTotp ||
+            this.state.requirePasskey ||
+            this.state.requirePasswordUpdate
+          }
         >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>

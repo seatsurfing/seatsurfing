@@ -53,6 +53,8 @@ var (
 	ResponseCodeUserAlreadyExists = 3001
 
 	ResponseCodeGroupNameAlreadyExists = 4001
+
+	ResponseCodePasswordUpdateRequired = 5001
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {
@@ -91,6 +93,10 @@ func SendPaymentRequired(w http.ResponseWriter) {
 
 func SendUnauthorized(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func SendUnauthorizedCode(w http.ResponseWriter, code int) {
+	sendErrorCode(w, http.StatusUnauthorized, code)
 }
 
 func SendTooManyRequests(w http.ResponseWriter) {

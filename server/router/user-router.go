@@ -482,6 +482,7 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
+	e.PasswordUpdateRequired = user.ID != e.ID
 	if err := GetUserRepository().Update(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -835,16 +836,19 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 		// Invitation mode: user needs to set password via email link
 		e.HashedPassword = NullString("")
 		e.AuthProviderID = NullUUID("")
+		e.PasswordUpdateRequired = false
 		e.PasswordPending = true
 	} else if m.Password != "" {
 		// Password mode: password provided by admin
 		e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 		e.AuthProviderID = NullUUID("")
+		e.PasswordUpdateRequired = true
 		e.PasswordPending = false
 	} else {
 		// IdP mode: user logs in via external auth provider
 		e.HashedPassword = NullString("")
 		e.AuthProviderID = NullUUID(m.AuthProviderID)
+		e.PasswordUpdateRequired = false
 		e.PasswordPending = false
 	}
 
