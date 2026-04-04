@@ -591,7 +591,7 @@ class Login extends React.Component<Props, State> {
         <Form
           className="form-signin"
           onSubmit={this.onNewPasswordSubmit}
-          name="password-login"
+          name="password-update"
           hidden={
             this.state.requireTotp ||
             this.state.requirePasskey ||

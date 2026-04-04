@@ -16,7 +16,9 @@ test.beforeEach(async ({ page }) => {
   await page
     .getByPlaceholder("you@company.com")
     .fill("admin@seatsurfing.local");
-  await page.getByPlaceholder("Password").fill("Sea!surf1ng");
+  await page
+    .locator("form[name='password-login'] input[type='password']")
+    .fill("Sea!surf1ng");
   await page.getByRole("button", { name: "➤" }).click();
 
   // Ensure we've reached the dashboard
