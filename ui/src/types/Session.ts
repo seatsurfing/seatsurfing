@@ -1,5 +1,4 @@
 import Ajax from "../util/Ajax";
-import { Entity } from "./Entity";
 
 export default class Session {
   id: string;
@@ -23,19 +22,18 @@ export default class Session {
     }
   }
 
-  delete(): Promise<void> {
-    return Ajax.get("/auth/logout/" + this.id).then(() => undefined);
+  async delete(): Promise<void> {
+    await Ajax.get(`/auth/logout/${decodeURIComponent(this.id)}`);
   }
 
   static async list(): Promise<Session[]> {
-    return Ajax.get("/user/session").then((result) => {
-      let list: Session[] = [];
-      (result.json as []).forEach((item) => {
-        let e: Session = new Session();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
+    const result = await Ajax.get("/user/session");
+    const list: Session[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Session = new Session();
+      e.deserialize(item);
+      list.push(e);
     });
+    return list;
   }
 }
