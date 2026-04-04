@@ -661,7 +661,19 @@ class Login extends React.Component<Props, State> {
               </Button>
             </InputGroup>
             <p className="margin-top-50">
-              <Link href="/login">{this.props.t("back")}</Link>
+              <Button
+                variant="link"
+                className="p-0"
+                onClick={() =>
+                  this.setState({
+                    requirePasswordUpdate: false,
+                    email: "",
+                    password: "",
+                  })
+                }
+              >
+                {this.props.t("back")}
+              </Button>
             </p>
           </Form.Group>
         </Form>
