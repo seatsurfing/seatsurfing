@@ -32,6 +32,9 @@
     "prettier:format": "prettier --write \"../**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}\"",
     "test": "vitest"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "homepage": "/ui/",
   "devDependencies": {
     "@types/node": "25.5.0",
