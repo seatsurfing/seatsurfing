@@ -41,7 +41,7 @@ type BookingRequest struct {
 
 type CreateBookingRequest struct {
 	SpaceID string `json:"spaceId" validate:"required"`
-	Subject string `json:"subject"`
+	Subject string `json:"subject" validate:"omitempty,max=256"`
 	BookingRequest
 }
 
