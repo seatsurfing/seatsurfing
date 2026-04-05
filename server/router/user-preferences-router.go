@@ -279,6 +279,7 @@ func (router *UserPreferencesRouter) isValidPreferenceType(name string, value st
 		}
 		return ok
 	}
+
 	return false
 }
 
@@ -319,7 +320,8 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			return false
 		}
 	}
-	return true
+
+	return len(value) <= 512
 }
 
 func (router *UserPreferencesRouter) copyToRestModel(e *UserPreference) *GetSettingsResponse {
