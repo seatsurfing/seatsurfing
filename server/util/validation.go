@@ -2,6 +2,7 @@ package util
 
 import (
 	"net/url"
+	"regexp"
 	"strconv"
 	"unicode"
 )
@@ -33,6 +34,12 @@ func ValidateURL(s string) bool {
 	}
 	u, err := url.ParseRequestURI(s)
 	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
+var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
+func ValidateGUID(s string) bool {
+	return guidRegex.MatchString(s)
 }
 
 func ValidateNumber(s string, min, max int) bool {
