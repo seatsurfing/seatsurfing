@@ -420,5 +420,6 @@
   "lastMonth": "Letzter Monat",
   "newPasswordPlaceholder": "Neues Passwort",
   "passwordUpdateInfo": "Dein aktuelles Passwort muss geändert werden. Wähle ein neues Passwort, welches sich von dem aktuellen unterscheidet.",
-  "logoutOthers": "Alle außer diese Session abmelden"
+  "logoutOthers": "Alle außer diese Session abmelden",
+  "previousDay": "Vorheriger Tag"
 }

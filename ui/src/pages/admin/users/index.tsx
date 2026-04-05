@@ -168,7 +168,7 @@ class Users extends React.Component<Props, State> {
           </caption>
           <thead>
             <tr>
-              <th>{this.props.t("username")}</th>
+              <th>{this.props.t("user")}</th>
               <th>
                 {this.props.t("lastname")}, {this.props.t("firstname")}
               </th>
