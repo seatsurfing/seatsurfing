@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.80.0](https://github.com/seatsurfing/seatsurfing/compare/v1.79.2...v1.80.0) (2026-04-04)
+
+
+### Features
+
+* add button to log out all sessions but the current one ([#1939](https://github.com/seatsurfing/seatsurfing/issues/1939)) ([b771ec5](https://github.com/seatsurfing/seatsurfing/commit/b771ec5ed187f5b21ac3784c7de7ee4d15c4c3ba))
+* update runtime to distroless Debian 13 ([#1942](https://github.com/seatsurfing/seatsurfing/issues/1942)) ([4da32ee](https://github.com/seatsurfing/seatsurfing/commit/4da32ee1d933c94ef1e2777f61aa38e0455d4828))
+* user needs to change init password on login ([#1935](https://github.com/seatsurfing/seatsurfing/issues/1935)) ([719cf10](https://github.com/seatsurfing/seatsurfing/commit/719cf109613eb3560e75c2db4de4762987a26a09))
+
+
+### Bug Fixes
+
+* fix Hebrew translation ([#1940](https://github.com/seatsurfing/seatsurfing/issues/1940)) ([8e6a0b4](https://github.com/seatsurfing/seatsurfing/commit/8e6a0b40ba251209a5f460fcc8537a6dfe790efa))
+* log error if password reset failed due to an error ([#1933](https://github.com/seatsurfing/seatsurfing/issues/1933)) ([5695f63](https://github.com/seatsurfing/seatsurfing/commit/5695f63cc827617fc83a86d80543c8149e45c6f1))
+* test user's AuthProviderID when login or reset password ([#1934](https://github.com/seatsurfing/seatsurfing/issues/1934)) ([9a45703](https://github.com/seatsurfing/seatsurfing/commit/9a4570340c20faf56d49cff02eace2a62d7c7e74))
+
 ## [1.79.2](https://github.com/seatsurfing/seatsurfing/compare/v1.79.1...v1.79.2) (2026-04-03)
 
 
