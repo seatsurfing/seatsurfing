@@ -419,5 +419,6 @@
   "targetUtilizationHoursPerWeek": "Target weekly utilization per space",
   "newPasswordPlaceholder": "New password",
   "passwordUpdateInfo": "Your current password needs to be changed. Please select a new password that is different to the current one.",
-  "logoutOthers": "Log out all but this session"
+  "logoutOthers": "Log out all but this session",
+  "previewsDay": "Previous day"
 }

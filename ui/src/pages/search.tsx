@@ -1934,7 +1934,7 @@ class Search extends React.Component<Props, State> {
                     DateUtil.prevDay(this.state.leave),
                   );
                 }}
-                title={this.props.t("multiDay")}
+                title={this.props.t("previousDay")}
               >
                 ❮
               </button>
@@ -1962,7 +1962,7 @@ class Search extends React.Component<Props, State> {
                     DateUtil.nextDay(this.state.leave),
                   );
                 }}
-                title={this.props.t("multiDay")}
+                title={this.props.t("nextDay")}
               >
                 ❯
               </button>
