@@ -7,6 +7,9 @@ import (
 	"unicode"
 )
 
+var colorHexRegex = regexp.MustCompile(`^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$`)
+var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
 func ValidatePassword(s string) bool {
 	l := len([]rune(s))
 	if l < 8 || l > 64 {
@@ -36,7 +39,9 @@ func ValidateURL(s string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+func ValidateColorHex(s string) bool {
+	return colorHexRegex.MatchString(s)
+}
 
 func ValidateGUID(s string) bool {
 	return guidRegex.MatchString(s)
