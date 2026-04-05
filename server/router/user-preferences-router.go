@@ -319,6 +319,15 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			return false
 		}
 	}
+	if name == PreferenceBookedColor.Name ||
+		name == PreferenceNotBookedColor.Name ||
+		name == PreferenceSelfBookedColor.Name ||
+		name == PreferencePartiallyBookedColor.Name ||
+		name == PreferenceBuddyBookedColor.Name ||
+		name == PreferenceDisallowedColor.Name {
+		return ValidateColorHex(value)
+	}
+
 	return true
 }
 

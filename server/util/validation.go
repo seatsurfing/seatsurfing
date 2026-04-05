@@ -2,6 +2,7 @@ package util
 
 import (
 	"net/url"
+	"regexp"
 	"strconv"
 	"unicode"
 )
@@ -33,6 +34,12 @@ func ValidateURL(s string) bool {
 	}
 	u, err := url.ParseRequestURI(s)
 	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
+var colorHexRegex = regexp.MustCompile(`^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$`)
+
+func ValidateColorHex(s string) bool {
+	return colorHexRegex.MatchString(s)
 }
 
 func ValidateNumber(s string, min, max int) bool {

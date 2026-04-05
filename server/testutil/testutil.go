@@ -174,6 +174,10 @@ func CreateTestUserOrgAdmin(org *Organization) *User {
 	return CreateTestUserOrgAdminDomain(org, "test.com")
 }
 
+func CreateTestString(length int) string {
+	return strings.Repeat("a", 1000)
+}
+
 func LoginTestUserParams(userID string) *LoginResponse {
 	// TODO
 	res := &LoginResponse{
