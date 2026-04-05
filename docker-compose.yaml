@@ -1,0 +1,28 @@
+services:
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      sql:
+    ports:
+      - 8080:8080
+    environment:
+      POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
+  db:
+    image: postgres:17
+    restart: always
+    networks:
+      sql:
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: DB_PASSWORD
+      POSTGRES_USER: seatsurfing
+      POSTGRES_DB: seatsurfing
+
+volumes:
+  db:
+
+networks:
+  sql:
