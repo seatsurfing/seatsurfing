@@ -64,6 +64,7 @@ import AjaxError from "@/util/AjaxError";
 import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
+import IconTextButton from "@/components/IconTextButton";
 import DateUtil from "@/util/DateUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 
@@ -1917,13 +1918,9 @@ class Search extends React.Component<Props, State> {
                 />
               </div>
 
-              <button
-                type="button"
-                className={`ms-2 btn d-flex align-items-center`}
-                style={{
-                  padding: "4px 8px",
-                  borderColor: "#CED4DA",
-                }}
+              <IconTextButton
+                text="❮"
+                title={this.props.t("previousDay")}
                 disabled={DateUtil.isSameDay(
                   this.state.enter,
                   earliestEnterDate,
@@ -1934,10 +1931,7 @@ class Search extends React.Component<Props, State> {
                     DateUtil.prevDay(this.state.leave),
                   );
                 }}
-                title={this.props.t("multiDay")}
-              >
-                ❮
-              </button>
+              />
 
               <div
                 className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
@@ -1949,23 +1943,16 @@ class Search extends React.Component<Props, State> {
                 <div className="ms-2 w-50">{dateLeavePicker}</div>
               )}
 
-              <button
-                type="button"
-                className={`ms-2 btn d-flex align-items-center`}
-                style={{
-                  padding: "4px 8px",
-                  borderColor: "#CED4DA",
-                }}
+              <IconTextButton
+                text="❯"
+                title={this.props.t("nextDay")}
                 onClick={() => {
                   this.updateEnterAndLeaveDate(
                     DateUtil.nextDay(this.state.enter),
                     DateUtil.nextDay(this.state.leave),
                   );
                 }}
-                title={this.props.t("multiDay")}
-              >
-                ❯
-              </button>
+              />
 
               <button
                 type="button"
