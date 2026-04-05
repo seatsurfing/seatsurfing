@@ -420,5 +420,5 @@
   "passwordUpdateInfo": "Your current password needs to be changed. Please select a new password that is different to the current one.",
   "newPasswordPlaceholder": "New password",
   "logoutOthers": "Log out all but this session",
-  "previewsDay": "Previous day"
+  "previousDay": "Previous day"
 }
