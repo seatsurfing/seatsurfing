@@ -95,7 +95,7 @@ func (router *UserPreferencesRouter) setPreference(w http.ResponseWriter, r *htt
 		SendBadRequest(w)
 		return
 	}
-	if !router.isValidPreferenceValue(vars["name"], value.Value) {
+	if !router.isValidPreferenceValue(vars["name"], value.Value, user) {
 		SendBadRequest(w)
 		return
 	}
@@ -141,7 +141,7 @@ func (router *UserPreferencesRouter) setAll(w http.ResponseWriter, r *http.Reque
 			SendBadRequest(w)
 			return
 		}
-		if !router.isValidPreferenceValue(e.Name, e.Value) {
+		if !router.isValidPreferenceValue(e.Name, e.Value, user) {
 			SendBadRequest(w)
 			return
 		}
@@ -279,10 +279,11 @@ func (router *UserPreferencesRouter) isValidPreferenceType(name string, value st
 		}
 		return ok
 	}
+
 	return false
 }
 
-func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value string) bool {
+func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value string, user *User) bool {
 	if name == PreferenceEnterTime.Name {
 		i, _ := strconv.Atoi(value)
 		if !(i == PreferenceEnterTimeNow || i == PreferenceEnterTimeNextDay || i == PreferenceEnterTimeNextWorkday) {
@@ -327,8 +328,18 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 		name == PreferenceDisallowedColor.Name {
 		return ValidateColorHex(value)
 	}
+	if name == PreferenceLocation.Name {
+		if value == "" {
+			return true
+		}
+		if !ValidateGUID(value) {
+			return false
+		}
+		location, _ := GetLocationRepository().GetOne(value)
+		return location.OrganizationID == user.OrganizationID
+	}
 
-	return true
+	return len(value) <= 512
 }
 
 func (router *UserPreferencesRouter) copyToRestModel(e *UserPreference) *GetSettingsResponse {
