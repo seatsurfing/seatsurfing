@@ -7,7 +7,12 @@ interface Props {
   disabled?: boolean;
 }
 
-const IconTextButton: React.FC<Props> = ({ text, title, onClick, disabled }) => {
+const IconTextButton: React.FC<Props> = ({
+  text,
+  title,
+  onClick,
+  disabled,
+}) => {
   return (
     <button
       type="button"
