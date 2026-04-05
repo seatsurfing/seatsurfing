@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.81.0](https://github.com/seatsurfing/seatsurfing/compare/v1.80.0...v1.81.0) (2026-04-05)
+
+
+### Features
+
+* mark current page in booking UI ([#1948](https://github.com/seatsurfing/seatsurfing/issues/1948)) ([a93da47](https://github.com/seatsurfing/seatsurfing/commit/a93da47ae4e663170f3d10434cfcb3e42f040c0b))
+
+
+### Bug Fixes
+
+* add validation for color code values ([#1949](https://github.com/seatsurfing/seatsurfing/issues/1949)) ([186170b](https://github.com/seatsurfing/seatsurfing/commit/186170b6976dd09398f36495e2684271cff7b408))
+* add validation for preferred location ([#1950](https://github.com/seatsurfing/seatsurfing/issues/1950)) ([e5b63ca](https://github.com/seatsurfing/seatsurfing/commit/e5b63ca73c9f0f2f65577601951cc546d1138fd7))
+* fix title of prev and next day buttons ([#1947](https://github.com/seatsurfing/seatsurfing/issues/1947)) ([08dc48e](https://github.com/seatsurfing/seatsurfing/commit/08dc48e0832c0d2f7ea0880a6219cf4eb55708b2))
+* limit booking subjects to max. 256 chars ([#1952](https://github.com/seatsurfing/seatsurfing/issues/1952)) ([dcf26bf](https://github.com/seatsurfing/seatsurfing/commit/dcf26bf6bd3934407807238ce63a9d5ceafded6c))
+* rename column "Username" to "User" ([#1946](https://github.com/seatsurfing/seatsurfing/issues/1946)) ([cbc8f00](https://github.com/seatsurfing/seatsurfing/commit/cbc8f00d960d60feb9f9d1d3e86afe874f587426))
+* set default check to max. length of 512 ([#1951](https://github.com/seatsurfing/seatsurfing/issues/1951)) ([a67d207](https://github.com/seatsurfing/seatsurfing/commit/a67d207dcd0f52d69e5c01842114b3888c111847))
+
 ## [1.80.0](https://github.com/seatsurfing/seatsurfing/compare/v1.79.2...v1.80.0) (2026-04-04)
 
 
