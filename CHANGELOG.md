@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.81.1](https://github.com/seatsurfing/seatsurfing/compare/v1.81.0...v1.81.1) (2026-04-06)
+
+
+### Bug Fixes
+
+* add additional request validation ([#1954](https://github.com/seatsurfing/seatsurfing/issues/1954)) ([ff8ce23](https://github.com/seatsurfing/seatsurfing/commit/ff8ce231d494305eccac862f329f748b369d00db))
+
 ## [1.81.0](https://github.com/seatsurfing/seatsurfing/compare/v1.80.0...v1.81.0) (2026-04-05)
 
 
