@@ -20,7 +20,7 @@ type SpaceAttributeValueRequest struct {
 }
 
 type CreateSpaceRequest struct {
-	Name                  string                       `json:"name" validate:"required"`
+	Name                  string                       `json:"name" validate:"required,max=128"`
 	X                     uint                         `json:"x"`
 	Y                     uint                         `json:"y"`
 	Width                 uint                         `json:"width"`

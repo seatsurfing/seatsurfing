@@ -60,7 +60,7 @@ type GetSessionResponse struct {
 }
 
 type CreateUserRequest struct {
-	Email          string `json:"email" validate:"required,max=254"`
+	Email          string `json:"email" validate:"required,max=256"`
 	Firstname      string `json:"firstname" validate:"required,max=128"`
 	Lastname       string `json:"lastname" validate:"required,max=128"`
 	AtlassianID    string `json:"atlassianId"`
@@ -106,7 +106,7 @@ type SetPasswordRequest struct {
 }
 
 type InitMergeUsersRequest struct {
-	Email string `json:"email" validate:"required,email,max=254"`
+	Email string `json:"email" validate:"required,email,max=256"`
 }
 
 type GenerateTotpResponse struct {
@@ -647,6 +647,19 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+
+	if m.AuthProviderID != "" {
+		if !ValidateGUID(m.AuthProviderID) {
+			SendBadRequest(w)
+			return
+		}
+		authProvider, _ := GetAuthProviderRepository().GetOneByOrgId(m.AuthProviderID, user.OrganizationID)
+		if authProvider == nil {
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	if user.ID == e.ID {
@@ -773,6 +786,19 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+
+	if m.AuthProviderID != "" {
+		if !ValidateGUID(m.AuthProviderID) {
+			SendBadRequest(w)
+			return
+		}
+		authProvider, _ := GetAuthProviderRepository().GetOneByOrgId(m.AuthProviderID, user.OrganizationID)
+		if authProvider == nil {
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	e := router.copyFromRestModel(&m)
 	if e.OrganizationID == "" || !GetUserRepository().IsSuperAdmin(user) {
 		e.OrganizationID = user.OrganizationID

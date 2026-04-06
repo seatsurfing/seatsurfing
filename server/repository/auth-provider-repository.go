@@ -113,6 +113,18 @@ func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 	return e, nil
 }
 
+func (r *AuthProviderRepository) GetOneByOrgId(id string, orgId string) (*AuthProvider, error) {
+	e := &AuthProvider{}
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+		"FROM auth_providers "+
+		"WHERE id = $1 AND organization_id = $2",
+		id, orgId).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 func (r *AuthProviderRepository) GetAll(organizationID string) ([]*AuthProvider, error) {
 	var result []*AuthProvider
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+

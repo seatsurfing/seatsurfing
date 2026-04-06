@@ -13,7 +13,7 @@ type GroupRouter struct {
 }
 
 type CreateGroupRequest struct {
-	Name string `json:"name" validate:"required,min=3"`
+	Name string `json:"name" validate:"required,min=3,max=256"`
 }
 
 type GetGroupResponse struct {

@@ -92,6 +92,19 @@ func TestPreventSelfDeletion(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
+func TestUpdateInvalidAuthProviderId(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	invalidAuthProviderID := uuid.New().String()
+	payload := "{\"email\": \"" + user.Email + "\", \"firstname\": \"John2\", \"lastname\": \"Doe2\", \"authProviderId\": \"" + invalidAuthProviderID + "\", \"role\": " + strconv.Itoa(int(UserRoleSpaceAdmin)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+user.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestUserForbidden(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

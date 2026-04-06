@@ -105,7 +105,7 @@ type IdPUserInfo struct {
 
 type InitPasswordResetRequest struct {
 	OrganizationID string `json:"organizationId" validate:"required,uuid"`
-	Email          string `json:"email" validate:"required,email,max=254"`
+	Email          string `json:"email" validate:"required,email,max=256"`
 }
 
 type CompletePasswordResetRequest struct {
@@ -121,7 +121,7 @@ type AuthPreflightResponse struct {
 }
 
 type AuthPasswordRequest struct {
-	Email             string          `json:"email" validate:"required,email,max=254"`
+	Email             string          `json:"email" validate:"required,email,max=256"`
 	Password          string          `json:"password" validate:"required,min=8,max=64"`
 	OrganizationID    string          `json:"organizationId" validate:"required,uuid"`
 	Code              string          `json:"code,omitempty"`
@@ -130,7 +130,7 @@ type AuthPasswordRequest struct {
 }
 
 type PasswordUpdateRequest struct {
-	Email          string `json:"email" validate:"required,email,max=254"`
+	Email          string `json:"email" validate:"required,email,max=256"`
 	Password       string `json:"password" validate:"required,min=8,max=64"`
 	NewPassword    string `json:"newPassword" validate:"required,min=8,max=64"`
 	OrganizationID string `json:"organizationId" validate:"required,uuid"`
@@ -307,7 +307,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	if user == nil || err != nil {
 		if err != nil {
 			log.Println(err)
-		}		
+		}
 		log.Printf("Password reset failed: user %s not found in org %s\n", m.Email, m.OrganizationID)
 		SendUpdated(w)
 		return
