@@ -273,6 +273,10 @@ func (router *BookingRouter) validateBookingFilters(w http.ResponseWriter, r *ht
 
 	filterLocationId := r.URL.Query().Get("location")
 	if filterLocationId != "" {
+		if !ValidateGUID(filterLocationId) {
+			SendBadRequest(w)
+			return nil, "", "", false
+		}
 		filterLocation, _ := GetLocationRepository().GetOne(filterLocationId)
 		if filterLocation == nil || filterLocation.OrganizationID != user.OrganizationID {
 			SendBadRequest(w)
@@ -789,9 +793,13 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 	locationID := r.URL.Query().Get("locationId")
 	var location *Location = nil
 	if locationID != "" {
+		if !ValidateGUID(locationID) {
+			SendBadRequest(w)
+			return
+		}
 		location, _ = GetLocationRepository().GetOne(locationID)
 		if location == nil {
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 		if !GetUserRepository().IsSuperAdmin(user) && location.OrganizationID != user.OrganizationID {

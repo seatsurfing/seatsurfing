@@ -13,20 +13,20 @@ type AuthProviderRouter struct {
 }
 
 type CreateAuthProviderRequest struct {
-	Name                   string `json:"name" validate:"required"`
+	Name                   string `json:"name" validate:"required,max=256"`
 	ProviderType           int    `json:"providerType" validate:"required"`
-	AuthURL                string `json:"authUrl" validate:"required"`
-	TokenURL               string `json:"tokenUrl" validate:"required"`
+	AuthURL                string `json:"authUrl" validate:"required,max=512"`
+	TokenURL               string `json:"tokenUrl" validate:"required,max=512"`
 	AuthStyle              int    `json:"authStyle"`
-	Scopes                 string `json:"scopes" validate:"required"`
-	UserInfoURL            string `json:"userInfoUrl" validate:"required"`
-	UserInfoEmailField     string `json:"userInfoEmailField" validate:"required"`
-	UserInfoFirstnameField string `json:"userInfoFirstnameField"`
-	UserInfoLastnameField  string `json:"userInfoLastnameField"`
-	ClientID               string `json:"clientId" validate:"required"`
-	ClientSecret           string `json:"clientSecret" validate:"required"`
-	LogoutURL              string `json:"logoutUrl"`
-	ProfilePageURL         string `json:"profilePageUrl"`
+	Scopes                 string `json:"scopes" validate:"required,max=256"`
+	UserInfoURL            string `json:"userInfoUrl" validate:"required,max=512"`
+	UserInfoEmailField     string `json:"userInfoEmailField" validate:"required,max=256"`
+	UserInfoFirstnameField string `json:"userInfoFirstnameField" validate:"max=256"`
+	UserInfoLastnameField  string `json:"userInfoLastnameField" validate:"max=256"`
+	ClientID               string `json:"clientId" validate:"required,max=256"`
+	ClientSecret           string `json:"clientSecret" validate:"required,max=256"`
+	LogoutURL              string `json:"logoutUrl" validate:"max=256"`
+	ProfilePageURL         string `json:"profilePageUrl" validate:"max=256"`
 }
 
 type GetAuthProviderResponse struct {

@@ -27,10 +27,10 @@ type LocationRouter struct {
 }
 
 type CreateLocationRequest struct {
-	Name                  string   `json:"name" validate:"required"`
-	Description           string   `json:"description"`
+	Name                  string   `json:"name" validate:"required,max=128"`
+	Description           string   `json:"description" validate:"max=512"`
 	MaxConcurrentBookings uint     `json:"maxConcurrentBookings"`
-	Timezone              string   `json:"timezone"`
+	Timezone              string   `json:"timezone" validate:"max=32"`
 	Enabled               bool     `json:"enabled"`
 	MapScale              float64  `json:"mapScale"`
 	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds"`
@@ -54,7 +54,7 @@ type GetMapResponse struct {
 }
 
 type SetSpaceAttributeValueRequest struct {
-	Value string `json:"value"`
+	Value string `json:"value" validate:"max=256"`
 }
 
 type GetSpaceAttributeValueResponse struct {

@@ -20,9 +20,9 @@ type OrganizationRouter struct {
 
 type CreateOrganizationRequest struct {
 	Name      string `json:"name" validate:"required"`
-	Firstname string `json:"firstname" validate:"required"`
-	Lastname  string `json:"lastname" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
+	Firstname string `json:"firstname" validate:"required,max=128"`
+	Lastname  string `json:"lastname" validate:"required,max=128"`
+	Email     string `json:"email" validate:"required,email,max=128"`
 	Language  string `json:"language" validate:"required,len=2"`
 }
 
@@ -42,7 +42,7 @@ type GetDomainResponse struct {
 
 type ChangeOrgEmailPayload struct {
 	OrgID string `json:"orgId" validate:"required,uuid"`
-	Email string `json:"email" validate:"required,email,max=254"`
+	Email string `json:"email" validate:"required,email,max=256"`
 	Code  int    `json:"code" validate:"required,numeric,len=6"`
 }
 
