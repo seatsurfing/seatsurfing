@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the [latest stable release](/releases) is supported. Please make sure you're upgrading regularly.
+Only the [latest stable release](/seatsurfing/seatsurfing/releases) is supported. Please make sure you're upgrading regularly.
 
 ## Reporting a Vulnerability
 
@@ -14,6 +14,6 @@ We may offer a monetary reward for responsibly disclosed vulnerabilities. The de
 
 To be eligible for a reward, the following conditions must all be met:
 
-- The vulnerability must be present in the [latest stable release](/releases).
+- The vulnerability must be present in the [latest stable release](/seatsurfing/seatsurfing/releases).
 - The vulnerability must not have been previously disclosed or publicly known.
 - The vulnerability must be practically exploitable (i.e. a real-world attack scenario must be feasible).
