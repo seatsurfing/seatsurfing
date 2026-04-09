@@ -75,7 +75,7 @@ func GetConfig() *Config {
 }
 
 func (c *Config) ReadConfig() {
-	log.Println("Reading config...")
+	log.Println("Reading config …")
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
 	c.StaticUiPath = strings.TrimSuffix(c.getEnv("STATIC_UI_PATH", "/app/ui"), "/") + "/"

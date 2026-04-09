@@ -415,7 +415,7 @@ func (a *App) getAttributePaths(dir string) []string {
 }
 
 func (a *App) startPublicHttpServer() {
-	log.Println("Initializing Public REST services...")
+	log.Println("Initializing Public REST services …")
 	a.PublicHttpServer = &http.Server{
 		Addr:         GetConfig().PublicListenAddr,
 		WriteTimeout: time.Second * 15,
