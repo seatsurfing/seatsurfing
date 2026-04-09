@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"log"
+	"net/url"
+	"strings"
 	"sync"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
@@ -26,7 +28,11 @@ func GetDatabase() *Database {
 }
 
 func (db *Database) Open() {
-	log.Println("Connecting to database...")
+	dbName := "unknown"
+	if u, err := url.Parse(GetConfig().PostgresURL); err == nil {
+		dbName = strings.TrimPrefix(u.Path, "/")
+	}
+	log.Println("Connecting to database ", dbName, " …")
 	conn, err := sql.Open("postgres", GetConfig().PostgresURL)
 	if err != nil {
 		panic(err)

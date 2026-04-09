@@ -12,8 +12,8 @@ import (
 
 func RunDBSchemaUpdates() {
 	targetVersion := 40
-	log.Printf("Initializing database with schema version %d...\n", targetVersion)
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
+	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
 		curVersion = 0
 	}
@@ -57,7 +57,7 @@ func SetGlobalInstallID() {
 }
 
 func InitDefaultOrgSettings() {
-	log.Println("Configuring default settings for orgs...")
+	log.Println("Configuring default settings for orgs …")
 	list, err := GetOrganizationRepository().GetAllIDs()
 	if err != nil {
 		panic(err)
@@ -68,7 +68,7 @@ func InitDefaultOrgSettings() {
 }
 
 func InitDefaultUserPreferences() {
-	log.Println("Configuring default preferences for users...")
+	log.Println("Configuring default preferences for users …")
 	list, err := GetUserRepository().GetAllIDs()
 	if err != nil {
 		panic(err)
