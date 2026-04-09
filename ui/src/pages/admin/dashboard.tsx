@@ -1,5 +1,15 @@
 import React from "react";
-import { Card, Row, Col, ProgressBar, Alert, Dropdown } from "react-bootstrap";
+import { Info } from "react-feather";
+import {
+  Card,
+  Row,
+  Col,
+  ProgressBar,
+  Alert,
+  Dropdown,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -323,8 +333,23 @@ class Dashboard extends React.Component<Props, State> {
             <Card>
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <Card.Title className="mb-0">
+                  <Card.Title className="mb-0 d-flex align-items-center gap-2">
                     {this.props.t("utilization")}
+                    <OverlayTrigger
+                      placement="right"
+                      overlay={
+                        <Tooltip>
+                          {this.props.t("targetUtilizationHoursPerWeek")}:{" "}
+                          {RuntimeConfig.INFOS.targetUtilizationHoursPerWeek}{" "}
+                          {this.props.t("hours")}
+                        </Tooltip>
+                      }
+                    >
+                      <Info
+                        size={16}
+                        style={{ cursor: "pointer", color: "#6c757d" }}
+                      />
+                    </OverlayTrigger>
                   </Card.Title>
                   <Dropdown>
                     <Dropdown.Toggle variant="outline-secondary" size="sm">

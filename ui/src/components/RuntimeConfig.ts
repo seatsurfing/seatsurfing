@@ -43,6 +43,7 @@ interface RuntimeUserInfos {
   enforceTOTP: boolean;
   hasPasskeys: boolean;
   isPrimaryDomain: boolean;
+  targetUtilizationHoursPerWeek: number;
 }
 
 export default class RuntimeConfig {
@@ -90,6 +91,7 @@ export default class RuntimeConfig {
       enforceTOTP: false,
       hasPasskeys: false,
       isPrimaryDomain: false,
+      targetUtilizationHoursPerWeek: 0,
     };
   };
 
@@ -196,6 +198,10 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
           if (s.name === "enforce_totp")
             RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
+          if (s.name === "target_utilization_hours_per_week")
+            RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
+              s.value,
+            );
         });
         resolve();
       });
