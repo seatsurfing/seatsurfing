@@ -85,7 +85,6 @@ class Login extends React.Component<Props, State> {
       loading: true,
       orgDomain: "",
       domainNotFound: false,
-      // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
       passkeyAvailable: Passkey.isSupported(),
       requirePasswordUpdate: false,
       newPassword: "",
@@ -102,10 +101,6 @@ class Login extends React.Component<Props, State> {
       }
     }
     this.loadOrgDetails();
-    // Refine the platform authenticator availability check asynchronously (Finding #14)
-    Passkey.isPlatformAuthAvailable().then((available) =>
-      this.setState({ passkeyAvailable: available }),
-    );
   };
 
   applyOrg = (res: any) => {
@@ -345,9 +340,8 @@ class Login extends React.Component<Props, State> {
       await this.onSuccessfulLogin({ ...res, logoutUrl: "" });
       this.setState({ inPasskeyLogin: false, passkeyLoginFailed: false });
     } catch (err: any) {
+      console.log("Passkey login failed", err);
       // NotAllowedError = user dismissed the browser passkey dialog — no error shown.
-      // Any other error (e.g. 404 from finishLogin for an expired/unknown credential)
-      // must surface to the user.
       const cancelled =
         err instanceof DOMException && err.name === "NotAllowedError";
       this.setState({
