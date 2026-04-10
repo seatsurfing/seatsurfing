@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.82.0](https://github.com/seatsurfing/seatsurfing/compare/v1.81.1...v1.82.0) (2026-04-10)
+
+
+### Features
+
+* show info tooltip for target utilization hours per week ([#1967](https://github.com/seatsurfing/seatsurfing/issues/1967)) ([c16b910](https://github.com/seatsurfing/seatsurfing/commit/c16b9107e7671c71af98b36950ca5272c2ade975))
+
+
+### Bug Fixes
+
+* allow passkey login if passkey is not available in the browser itself ([#1969](https://github.com/seatsurfing/seatsurfing/issues/1969)) ([ee7d4fc](https://github.com/seatsurfing/seatsurfing/commit/ee7d4fc3c720e63fe083b5aee5652b2607436276))
+* **deps:** bump github.com/go-webauthn/webauthn from 0.16.1 to 0.16.2 in /server in the minor-and-patch group ([#1961](https://github.com/seatsurfing/seatsurfing/issues/1961)) ([5d305f2](https://github.com/seatsurfing/seatsurfing/commit/5d305f234ced23d80d847e63d004197fc83cf752))
+* **deps:** bump github.com/lib/pq from 1.12.0 to 1.12.1 in /server in the minor-and-patch group ([#1956](https://github.com/seatsurfing/seatsurfing/issues/1956)) ([b3165c7](https://github.com/seatsurfing/seatsurfing/commit/b3165c758a9e0e25db5c75448ed174425dea7e56))
+* **deps:** bump github.com/lib/pq from 1.12.1 to 1.12.2 in /server in the minor-and-patch group ([#1968](https://github.com/seatsurfing/seatsurfing/issues/1968)) ([5e89143](https://github.com/seatsurfing/seatsurfing/commit/5e89143138c5e805bf0a79a10c69f04fe4beb344))
+* **deps:** bump next from 16.2.1 to 16.2.2 in /ui in the production-dependencies group across 1 directory ([#1963](https://github.com/seatsurfing/seatsurfing/issues/1963)) ([1e7bff6](https://github.com/seatsurfing/seatsurfing/commit/1e7bff608435104886b91a389c5ca3fbc485b52c))
+* minor improvements for startup log ([#1965](https://github.com/seatsurfing/seatsurfing/issues/1965)) ([b657930](https://github.com/seatsurfing/seatsurfing/commit/b657930da9a9c3adca6afb699fd5386e23204892))
+
 ## [1.81.1](https://github.com/seatsurfing/seatsurfing/compare/v1.81.0...v1.81.1) (2026-04-06)
 
 
