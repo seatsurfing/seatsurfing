@@ -138,7 +138,8 @@ export default class Search {
   deserialize(input: any): void {
     if (input.users) this.users = input.users.map(UserSearchResult.from);
     if (input.groups) this.groups = input.groups.map(GroupSearchResult.from);
-    if (input.locations) this.locations = input.locations.map(LocationSearchResult.from);
+    if (input.locations)
+      this.locations = input.locations.map(LocationSearchResult.from);
     if (input.spaces) this.spaces = input.spaces.map(SpaceSearchResult.from);
   }
 
@@ -149,7 +150,9 @@ export default class Search {
   }
 
   static async search(options: SearchOptions): Promise<Search> {
-    const { json } = await Ajax.get("/search/?" + options.getSearchParams().toString());
+    const { json } = await Ajax.get(
+      `/search/?${options.getSearchParams().toString()}`,
+    );
     return Search.from(json);
   }
 }
