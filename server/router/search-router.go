@@ -33,7 +33,7 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 	res := &GetSearchResultsResponse{}
 
 	if r.URL.Query().Get("includeUsers") == "1" {
-		if CanAdminOrg(user, user.OrganizationID) {
+		if CanAdminOrg(user, user.OrganizationID) || CanSpaceAdminOrg(user, user.OrganizationID) {
 			if err := router.addUserResults(user, keyword, res); err != nil {
 				log.Println(err)
 				SendInternalServerError(w)
