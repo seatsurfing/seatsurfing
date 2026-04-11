@@ -168,12 +168,15 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
-    const redirect = link ?? "";
     return (
       <Col sm="3" xl="2">
         <Card
-          className="dashboard-card-clickable"
-          onClick={() => this.setState({ redirect })}
+          {...(link
+            ? {
+                className: "dashboard-card-clickable",
+                onClick: () => this.setState({ redirect: link }),
+              }
+            : {})}
         >
           <Card.Body>
             <Card.Title className="dashboard-number text-center">
