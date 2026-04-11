@@ -86,7 +86,12 @@ func TestSearchUsers(t *testing.T) {
 	var resBody2 *GetSearchResultsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
 
-	CheckTestInt(t, 4, len(resBody.Users))
+	CheckTestInt(t, len(resBody.Users), len(resBody2.Users))
+	for i := range resBody.Users {
+		CheckTestString(t, resBody.Users[i].Email, resBody2.Users[i].Email)
+		CheckTestString(t, resBody.Users[i].Firstname, resBody2.Users[i].Firstname)
+		CheckTestString(t, resBody.Users[i].Lastname, resBody2.Users[i].Lastname)
+	}
 }
 
 func TestSearchLocations(t *testing.T) {
