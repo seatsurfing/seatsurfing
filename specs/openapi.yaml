@@ -1292,25 +1292,73 @@ components:
           description: Space load percentage for last week
 
     # --- Search ---
+    GetUserSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstname:
+          type: string
+        lastname:
+          type: string
+
+    GetLocationSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    GetSpaceSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          $ref: "#/components/schemas/GetLocationSearchResponse"
+
+    GetGroupSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        organizationId:
+          type: string
+          format: uuid
+
     GetSearchResultsResponse:
       type: object
       properties:
         users:
           type: array
           items:
-            $ref: "#/components/schemas/GetUserResponse"
+            $ref: "#/components/schemas/GetUserSearchResponse"
         locations:
           type: array
           items:
-            $ref: "#/components/schemas/GetLocationResponse"
+            $ref: "#/components/schemas/GetLocationSearchResponse"
         spaces:
           type: array
           items:
-            $ref: "#/components/schemas/GetSpaceResponse"
+            $ref: "#/components/schemas/GetSpaceSearchResponse"
         groups:
           type: array
           items:
-            $ref: "#/components/schemas/GetGroupResponse"
+            $ref: "#/components/schemas/GetGroupSearchResponse"
 
     # --- Healthcheck ---
     HealthcheckResponse:
@@ -4878,7 +4926,7 @@ paths:
       tags: [Search]
       summary: Search across entities
       description: |
-        Searches across users, locations, spaces, and groups by keyword. Requires Org Admin role for users and Space Admin role for everything else.
+        Searches across users, locations, spaces, and groups by keyword. Requires Space Admin role.
         Use query parameters to control which entity types to include in the search:
         - `includeUsers=1` (requires Org Admin)
         - `includeGroups=1`
