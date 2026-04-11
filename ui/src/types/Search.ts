@@ -19,6 +19,12 @@ export class UserSearchResult {
     this.firstname = input.firstname;
     this.lastname = input.lastname;
   }
+
+  static from(input: any): UserSearchResult {
+    const e = new UserSearchResult();
+    e.deserialize(input);
+    return e;
+  }
 }
 
 export class LocationSearchResult {
@@ -37,6 +43,12 @@ export class LocationSearchResult {
     this.name = input.name;
     this.description = input.description;
   }
+
+  static from(input: any): LocationSearchResult {
+    const e = new LocationSearchResult();
+    e.deserialize(input);
+    return e;
+  }
 }
 
 export class SpaceSearchResult {
@@ -54,10 +66,14 @@ export class SpaceSearchResult {
     this.id = input.id;
     this.name = input.name;
     if (input.location) {
-      const loc = new LocationSearchResult();
-      loc.deserialize(input.location);
-      this.location = loc;
+      this.location = LocationSearchResult.from(input.location);
     }
+  }
+
+  static from(input: any): SpaceSearchResult {
+    const e = new SpaceSearchResult();
+    e.deserialize(input);
+    return e;
   }
 }
 
@@ -76,6 +92,12 @@ export class GroupSearchResult {
     this.id = input.id;
     this.name = input.name;
     this.organizationId = input.organizationId;
+  }
+
+  static from(input: any): GroupSearchResult {
+    const e = new GroupSearchResult();
+    e.deserialize(input);
+    return e;
   }
 }
 
@@ -114,42 +136,20 @@ export default class Search {
   }
 
   deserialize(input: any): void {
-    if (input.users) {
-      this.users = input.users.map((user: any) => {
-        const e = new UserSearchResult();
-        e.deserialize(user);
-        return e;
-      });
-    }
-    if (input.groups) {
-      this.groups = input.groups.map((group: any) => {
-        const e = new GroupSearchResult();
-        e.deserialize(group);
-        return e;
-      });
-    }
-    if (input.locations) {
-      this.locations = input.locations.map((location: any) => {
-        const e = new LocationSearchResult();
-        e.deserialize(location);
-        return e;
-      });
-    }
-    if (input.spaces) {
-      this.spaces = input.spaces.map((space: any) => {
-        const e = new SpaceSearchResult();
-        e.deserialize(space);
-        return e;
-      });
-    }
+    if (input.users) this.users = input.users.map(UserSearchResult.from);
+    if (input.groups) this.groups = input.groups.map(GroupSearchResult.from);
+    if (input.locations) this.locations = input.locations.map(LocationSearchResult.from);
+    if (input.spaces) this.spaces = input.spaces.map(SpaceSearchResult.from);
+  }
+
+  static from(input: any): Search {
+    const e = new Search();
+    e.deserialize(input);
+    return e;
   }
 
   static async search(options: SearchOptions): Promise<Search> {
-    const result = await Ajax.get(
-      "/search/?" + options.getSearchParams().toString(),
-    );
-    const e: Search = new Search();
-    e.deserialize(result.json);
-    return e;
+    const { json } = await Ajax.get("/search/?" + options.getSearchParams().toString());
+    return Search.from(json);
   }
 }
