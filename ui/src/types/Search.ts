@@ -1,4 +1,5 @@
 import Ajax from "../util/Ajax";
+import Navigation from "@/util/Navigation";
 
 export class UserSearchResult {
   id: string;
@@ -151,7 +152,7 @@ export default class Search {
 
   static async search(options: SearchOptions): Promise<Search> {
     const { json } = await Ajax.get(
-      `/search/?${options.getSearchParams().toString()}`,
+      `${Navigation.PATH_API_SEARCH}/?${options.getSearchParams().toString()}`,
     );
     return Search.from(json);
   }

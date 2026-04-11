@@ -4,6 +4,7 @@ export default class Navigation {
   static readonly PATH_API_AUTH_INIT_PW_RESET = "/auth/initpwreset";
   static readonly PATH_API_AUTH_ORG = "/auth/org/";
   static readonly PATH_API_AUTH_SINGLE_ORG = "/auth/singleorg";
+  static readonly PATH_API_SEARCH = "/search";
 
   // Pages
   static readonly PATH_PAGE_SEARCH: string = "/search";
