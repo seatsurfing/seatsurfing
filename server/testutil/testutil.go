@@ -158,11 +158,11 @@ func CreateTestUserInOrg(org *Organization) *User {
 	return CreateTestUserInOrgDomain(org, "test.com")
 }
 
-func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
+func CreateTestUserDomain(org *Organization, domain string, role UserRole) *User {
 	user := &User{
 		Email:          uuid.New().String() + "@" + domain,
 		OrganizationID: org.ID,
-		Role:           UserRoleOrgAdmin,
+		Role:           role,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
@@ -170,8 +170,16 @@ func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
 	return user
 }
 
+func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
+	return CreateTestUserDomain(org, domain, UserRoleOrgAdmin)
+}
+
 func CreateTestUserOrgAdmin(org *Organization) *User {
 	return CreateTestUserOrgAdminDomain(org, "test.com")
+}
+
+func CreateTestUserOrgSpaceAdmin(org *Organization) *User {
+	return CreateTestUserDomain(org, "test.com", UserRoleSpaceAdmin)
 }
 
 func CreateTestString(length int) string {
