@@ -69,28 +69,28 @@ func TestSearchUsers(t *testing.T) {
 	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseOrgAdmin.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody *GetSearchResultsResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
+	var resBodyOrgAdmin *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBodyOrgAdmin)
 
 	// search result is ordered by email
-	CheckTestInt(t, 4, len(resBody.Users))
-	CheckTestString(t, u2.Email, resBody.Users[0].Email)
-	CheckTestString(t, u3.Firstname, resBody.Users[1].Firstname)
-	CheckTestString(t, u4.Lastname, resBody.Users[2].Lastname)
-	CheckTestString(t, u1.Email, resBody.Users[3].Email)
+	CheckTestInt(t, 4, len(resBodyOrgAdmin.Users))
+	CheckTestString(t, u2.Email, resBodyOrgAdmin.Users[0].Email)
+	CheckTestString(t, u3.Firstname, resBodyOrgAdmin.Users[1].Firstname)
+	CheckTestString(t, u4.Lastname, resBodyOrgAdmin.Users[2].Lastname)
+	CheckTestString(t, u1.Email, resBodyOrgAdmin.Users[3].Email)
 
 	// test space admin can also search for users
 	req = NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseSpaceAdmin.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody2 *GetSearchResultsResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	var resBodySpaceAdmin *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBodySpaceAdmin)
 
-	CheckTestInt(t, len(resBody.Users), len(resBody2.Users))
-	for i := range resBody.Users {
-		CheckTestString(t, resBody.Users[i].Email, resBody2.Users[i].Email)
-		CheckTestString(t, resBody.Users[i].Firstname, resBody2.Users[i].Firstname)
-		CheckTestString(t, resBody.Users[i].Lastname, resBody2.Users[i].Lastname)
+	CheckTestInt(t, len(resBodyOrgAdmin.Users), len(resBodySpaceAdmin.Users))
+	for i := range resBodyOrgAdmin.Users {
+		CheckTestString(t, resBodyOrgAdmin.Users[i].Email, resBodySpaceAdmin.Users[i].Email)
+		CheckTestString(t, resBodyOrgAdmin.Users[i].Firstname, resBodySpaceAdmin.Users[i].Firstname)
+		CheckTestString(t, resBodyOrgAdmin.Users[i].Lastname, resBodySpaceAdmin.Users[i].Lastname)
 	}
 }
 
