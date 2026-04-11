@@ -26,8 +26,10 @@ func TestSearchUsers(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	org2 := CreateTestOrg("test2.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
+	userOrgAdmin := CreateTestUserOrgAdmin(org)
+	loginResponseOrgAdmin := LoginTestUser(userOrgAdmin.ID)
+	userSpaceAdmin := CreateTestUserOrgSpaceAdmin(org)
+	loginResponseSpaceAdmin := LoginTestUser(userSpaceAdmin.ID)
 
 	u1 := &User{
 		Email:          "this.is.max@test.com",
@@ -64,7 +66,7 @@ func TestSearchUsers(t *testing.T) {
 	}
 	GetUserRepository().Create(u6)
 
-	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponse.UserID, nil)
+	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseOrgAdmin.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetSearchResultsResponse
@@ -76,6 +78,15 @@ func TestSearchUsers(t *testing.T) {
 	CheckTestString(t, u3.Firstname, resBody.Users[1].Firstname)
 	CheckTestString(t, u4.Lastname, resBody.Users[2].Lastname)
 	CheckTestString(t, u1.Email, resBody.Users[3].Email)
+
+	// test space admin can also search for users
+	req = NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseSpaceAdmin.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+
+	CheckTestInt(t, 4, len(resBody.Users))
 }
 
 func TestSearchLocations(t *testing.T) {
