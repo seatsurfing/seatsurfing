@@ -38,7 +38,7 @@ import Group from "@/types/Group";
 import Location from "@/types/Location";
 import Ajax from "@/util/Ajax";
 import Space from "@/types/Space";
-import Search, { SearchOptions } from "@/types/Search";
+import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import RedirectUtil from "@/util/RedirectUtil";
@@ -92,11 +92,11 @@ interface State {
   deletedAttributeIds: string[];
   showEditSpaceDetailsModal: boolean;
   selectedSpaceMouseDownTimestamp: number;
-  typeaheadApproversOptions: Group[];
+  typeaheadApproversOptions: GroupSearchResult[];
   typeaheadApproversLoading: boolean;
-  typeaheadAllowBookersOptions: Group[];
+  typeaheadAllowBookersOptions: GroupSearchResult[];
   typeaheadAllowBookersLoading: boolean;
-  typeaheadLocationAllowBookersOptions: Group[];
+  typeaheadLocationAllowBookersOptions: GroupSearchResult[];
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
 }

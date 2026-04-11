@@ -6,7 +6,7 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import Search, { SearchOptions } from "@/types/Search";
+import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
 import Navigation from "@/util/Navigation";
@@ -134,8 +134,8 @@ class SearchResult extends React.Component<Props, State> {
 
   renderSpaceResults = () =>
     this.renderResults(this.data.spaces, "spaces", (space) => ({
-      text: `${space.location.name} > ${space.name}`,
-      link: Navigation.adminLocationDetails(space.locationId),
+      text: `${space.location!.name} > ${space.name}`,
+      link: Navigation.adminLocationDetails(space.location!.id),
     }));
 
   render() {

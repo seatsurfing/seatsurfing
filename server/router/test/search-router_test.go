@@ -26,8 +26,10 @@ func TestSearchUsers(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	org2 := CreateTestOrg("test2.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
+	userOrgAdmin := CreateTestUserOrgAdmin(org)
+	loginResponseOrgAdmin := LoginTestUser(userOrgAdmin.ID)
+	userSpaceAdmin := CreateTestUserOrgSpaceAdmin(org)
+	loginResponseSpaceAdmin := LoginTestUser(userSpaceAdmin.ID)
 
 	u1 := &User{
 		Email:          "this.is.max@test.com",
@@ -64,18 +66,32 @@ func TestSearchUsers(t *testing.T) {
 	}
 	GetUserRepository().Create(u6)
 
-	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponse.UserID, nil)
+	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseOrgAdmin.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody *GetSearchResultsResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
+	var resBodyOrgAdmin *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBodyOrgAdmin)
 
 	// search result is ordered by email
-	CheckTestInt(t, 4, len(resBody.Users))
-	CheckTestString(t, u2.Email, resBody.Users[0].Email)
-	CheckTestString(t, u3.Firstname, resBody.Users[1].Firstname)
-	CheckTestString(t, u4.Lastname, resBody.Users[2].Lastname)
-	CheckTestString(t, u1.Email, resBody.Users[3].Email)
+	CheckTestInt(t, 4, len(resBodyOrgAdmin.Users))
+	CheckTestString(t, u2.Email, resBodyOrgAdmin.Users[0].Email)
+	CheckTestString(t, u3.Firstname, resBodyOrgAdmin.Users[1].Firstname)
+	CheckTestString(t, u4.Lastname, resBodyOrgAdmin.Users[2].Lastname)
+	CheckTestString(t, u1.Email, resBodyOrgAdmin.Users[3].Email)
+
+	// test space admin can also search for users
+	req = NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseSpaceAdmin.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBodySpaceAdmin *GetSearchResultsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBodySpaceAdmin)
+
+	CheckTestInt(t, len(resBodyOrgAdmin.Users), len(resBodySpaceAdmin.Users))
+	for i := range resBodyOrgAdmin.Users {
+		CheckTestString(t, resBodyOrgAdmin.Users[i].Email, resBodySpaceAdmin.Users[i].Email)
+		CheckTestString(t, resBodyOrgAdmin.Users[i].Firstname, resBodySpaceAdmin.Users[i].Firstname)
+		CheckTestString(t, resBodyOrgAdmin.Users[i].Lastname, resBodySpaceAdmin.Users[i].Lastname)
+	}
 }
 
 func TestSearchLocations(t *testing.T) {
