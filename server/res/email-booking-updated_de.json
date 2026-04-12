@@ -7,5 +7,11 @@
     "Bereich: {{areaName}}",
     "Platz: {{spaceName}}",
     "Betreff: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Deine Buchungen",
+      "url": "{{orgDomain}}ui/bookings/"
+    }
   ]
 }
