@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.82.1](https://github.com/seatsurfing/seatsurfing/compare/v1.82.0...v1.82.1) (2026-04-11)
+
+
+### Bug Fixes
+
+* allow space admins to search for users ([#1976](https://github.com/seatsurfing/seatsurfing/issues/1976)) ([c28efd0](https://github.com/seatsurfing/seatsurfing/commit/c28efd07cc2127d3c009b468da05613dc429f53f))
+* **deps:** bump distroless/base-debian13 from `b051042` to `c83f022` ([#1970](https://github.com/seatsurfing/seatsurfing/issues/1970)) ([ba6d5a7](https://github.com/seatsurfing/seatsurfing/commit/ba6d5a744c8671a630f834bd499cc1c78cdd1ade))
+* **deps:** bump github.com/lib/pq from 1.12.2 to 1.12.3 in /server in the minor-and-patch group ([#1972](https://github.com/seatsurfing/seatsurfing/issues/1972)) ([801f68e](https://github.com/seatsurfing/seatsurfing/commit/801f68ee7f87f4df2da60d6491885671f43ada05))
+* **deps:** bump next from 16.2.2 to 16.2.3 in /ui ([#1973](https://github.com/seatsurfing/seatsurfing/issues/1973)) ([21bd9dd](https://github.com/seatsurfing/seatsurfing/commit/21bd9dd8689050fc630c89d00cc07edf550d9f68))
+* do not set clickable class if card has no link ([#1975](https://github.com/seatsurfing/seatsurfing/issues/1975)) ([9fcb968](https://github.com/seatsurfing/seatsurfing/commit/9fcb968b097b15daa753aa4a3f043e187b24853c))
+
 ## [1.82.0](https://github.com/seatsurfing/seatsurfing/compare/v1.81.1...v1.82.0) (2026-04-10)
 
 
