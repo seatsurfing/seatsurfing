@@ -9,7 +9,7 @@ export default class Formatting {
   }
 
   static getFormatter(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
+    return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
       weekday: "long",
       year: "numeric",
@@ -19,18 +19,22 @@ export default class Formatting {
       minute: "numeric",
       hour12: !RuntimeConfig.INFOS.use24HourTime,
     });
-    return formatter;
   }
 
   static getFormatterNoTime(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
+    return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
       weekday: "long",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     });
-    return formatter;
+  }
+
+  static getBookingDateFormatter(): Intl.DateTimeFormat {
+    return RuntimeConfig.INFOS.dailyBasisBooking
+      ? Formatting.getFormatterNoTime()
+      : Formatting.getFormatter();
   }
 
   static getFormatterShort(local?: boolean): Intl.DateTimeFormat {
@@ -47,18 +51,17 @@ export default class Formatting {
   }
 
   static getFormatterDate(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
+    return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     });
-    return formatter;
   }
 
   static getDateTimePickerFormatString(): string {
-    let date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
-    let formattedDate = Formatting.getFormatterShort().format(date);
+    const date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
+    const formattedDate = Formatting.getFormatterShort().format(date);
     return formattedDate
       .replace("2006", "y")
       .replace("12", "MM")
@@ -68,8 +71,8 @@ export default class Formatting {
   }
 
   static getDateTimePickerFormatDailyString(): string {
-    let date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
-    let formattedDate = Formatting.getFormatterDate().format(date);
+    const date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
+    const formattedDate = Formatting.getFormatterDate().format(date);
     return formattedDate
       .replace("2006", "y")
       .replace("12", "MM")
@@ -77,7 +80,7 @@ export default class Formatting {
   }
 
   static getDayValue(date: Date): number {
-    let s =
+    const s =
       date.getFullYear().toString().padStart(4, "0") +
       (date.getMonth() + 1).toString().padStart(2, "0") +
       date.getDate().toString().padStart(2, "0");
@@ -93,7 +96,7 @@ export default class Formatting {
   }
 
   static getISO8601(date: Date): string {
-    let s =
+    const s =
       date.getFullYear().toString().padStart(4, "0") +
       "-" +
       (date.getMonth() + 1).toString().padStart(2, "0") +
@@ -103,9 +106,9 @@ export default class Formatting {
   }
 
   static getDateOffsetText(enter: Date, leave: Date): string {
-    let today = Formatting.getDayValue(new Date());
-    let start = Formatting.getDayValue(enter);
-    let end = Formatting.getDayValue(leave);
+    const today = Formatting.getDayValue(new Date());
+    const start = Formatting.getDayValue(enter);
+    const end = Formatting.getDayValue(leave);
     if (start <= today && today <= end) {
       return Formatting.t("today");
     }

@@ -19,6 +19,7 @@ import UserPreference from "@/types/UserPreference";
 import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
 import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   data: Booking[];
@@ -92,6 +93,14 @@ class Approvals extends React.Component<Props, State> {
   };
 
   approveBooking = (booking: Booking, approve: boolean) => {
+    if (!approve) {
+      const formatter = Formatting.getBookingDateFormatter();
+      const confirmMessage = this.props.t("confirmCancelBooking", {
+        enter: formatter.format(booking.enter),
+      });
+      if (!confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) return;
+    }
+
     this.setState({
       updating: true,
     });
@@ -133,7 +142,7 @@ class Approvals extends React.Component<Props, State> {
             id="approveBookingButton"
             disabled={this.state.updating}
             style={btnStyle}
-            onClick={(e) => {
+            onClick={() => {
               this.approveBooking(booking, true);
             }}
           >
@@ -146,7 +155,7 @@ class Approvals extends React.Component<Props, State> {
             id="cancelBookingButton"
             disabled={this.state.updating}
             style={btnStyle}
-            onClick={(e) => {
+            onClick={() => {
               this.approveBooking(booking, false);
             }}
           >
@@ -189,7 +198,7 @@ class Approvals extends React.Component<Props, State> {
     }
 
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-approvals.xlsx"
         href="#"
@@ -199,7 +208,7 @@ class Approvals extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.state.data && this.state.data.length > 0 ? downloadButton : <></>}
       </>
@@ -213,7 +222,7 @@ class Approvals extends React.Component<Props, State> {
       );
     }
 
-    let rows = this.state.data.map((item) => this.renderItem(item));
+    const rows = this.state.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("approvals")} buttons={buttons}>

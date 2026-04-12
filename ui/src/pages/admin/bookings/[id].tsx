@@ -459,10 +459,7 @@ class EditBooking extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
-
+    const formatter = Formatting.getBookingDateFormatter();
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(this.entity.enter),
     });

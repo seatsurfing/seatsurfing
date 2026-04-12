@@ -2065,11 +2065,7 @@ class Search extends React.Component<Props, State> {
       </div>
     );
 
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
-
+    const formatter = Formatting.getBookingDateFormatter();
     const locationInfoModal = (
       <Modal
         show={this.state.showLocationDetails}

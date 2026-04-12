@@ -143,9 +143,7 @@ class Bookings extends React.Component<Props, State> {
   };
 
   renderItem = (item: Booking) => {
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
+    const formatter = Formatting.getBookingDateFormatter();
 
     let pending = <></>;
     if (item.approved === false) {
@@ -233,9 +231,7 @@ class Bookings extends React.Component<Props, State> {
       });
     }
 
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
+    const formatter = Formatting.getBookingDateFormatter();
 
     const CustomEvent = ({ event }: { event: Event }) => {
       // show no information for events < 1 hr
