@@ -154,10 +154,7 @@ class Buddies extends React.Component<Props, State> {
       id,
       buddy: { email, firstBooking },
     } = item;
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
+    const formatter = Formatting.getBookingDateFormatter();
     return (
       <ListGroup.Item key={id} style={{ minWidth: "300px" }}>
         <h5>{email}</h5>
