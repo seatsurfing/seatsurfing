@@ -9,5 +9,11 @@
     "Space: {{spaceName}}",
     "Subject: {{subject}}",
     "Please review and approve or decline this booking in the admin panel."
+  ],
+  "buttons": [
+    {
+      "label": "Genehmigungen ansehen",
+      "url": "{{orgDomain}}ui/admin/approvals/"
+    }
   ]
 }
