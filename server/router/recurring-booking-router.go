@@ -420,7 +420,14 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 	if subject == "" {
 		subject = "—"
 	}
+
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	vars := map[string]string{
+		"orgDomain":     FormatURL(domain.DomainName) + "/",
 		"recipientName": user.GetSafeRecipientName(),
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
