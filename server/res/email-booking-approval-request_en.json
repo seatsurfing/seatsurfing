@@ -12,7 +12,7 @@
   ],
   "buttons": [
     {
-      "label": "Genehmigungen ansehen",
+      "label": "Show approvals",
       "url": "{{orgDomain}}ui/admin/approvals/"
     }
   ]
