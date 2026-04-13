@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.83.0](https://github.com/seatsurfing/seatsurfing/compare/v1.82.1...v1.83.0) (2026-04-12)
+
+
+### Features
+
+* add buttons to booking mails ([#1977](https://github.com/seatsurfing/seatsurfing/issues/1977)) ([24562a1](https://github.com/seatsurfing/seatsurfing/commit/24562a136a686b9346574f1ba100395fa51624ff))
+* confirm dialog when declining approval ([#1978](https://github.com/seatsurfing/seatsurfing/issues/1978)) ([ed8650b](https://github.com/seatsurfing/seatsurfing/commit/ed8650b75c129f4f9fe7bcf12d1fb888eef5f372))
+
 ## [1.82.1](https://github.com/seatsurfing/seatsurfing/compare/v1.82.0...v1.82.1) (2026-04-11)
 
 
