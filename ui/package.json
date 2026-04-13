@@ -39,7 +39,7 @@
   "devDependencies": {
     "@types/node": "25.5.2",
     "@types/react-big-calendar": "1.16.3",
-    "eslint": "10.1.0",
+    "eslint": "10.2.0",
     "eslint-config-next": "16.2.2",
     "jsdom": "29.0.1",
     "prettier": "3.8.1",
