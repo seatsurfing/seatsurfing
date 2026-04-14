@@ -20,6 +20,7 @@ import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
+import Event from "@/util/Event";
 
 interface State {
   data: Booking[];
@@ -111,6 +112,7 @@ class Approvals extends React.Component<Props, State> {
           updating: false,
           data: this.state.data.filter((b) => b.id !== booking.id),
         });
+        window.dispatchEvent(Event.ApprovalCountChanged());
       })
       .catch(() => {
         this.setState({ updating: false });
