@@ -210,7 +210,7 @@ func (a *App) InitializeDefaultOrg() {
 func (a *App) InitializeSingleOrgSettings() {
 	numOrgs, err := GetOrganizationRepository().GetNumOrgs()
 	if err == nil && numOrgs == 1 {
-		log.Println("Updating settings for primary organization...")
+		log.Println("Updating settings for primary organization …")
 		orgs, err := GetOrganizationRepository().GetAll()
 		if err != nil {
 			log.Println("Error while getting primary organization:", err)
