@@ -21,7 +21,7 @@
     "react-rnd": "10.5.3",
     "react-tooltip": "5.30.0",
     "react-zoom-pan-pinch": "3.7.0",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   },
   "scripts": {
     "start": "PORT=3000 next start",
