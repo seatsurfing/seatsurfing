@@ -46,7 +46,7 @@ cd '$SCRIPT_DIR' \
   && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; \
 } \
 && export -f clearDatabase \
-&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\n- restartServer: restarts the backend server\n- clearDatabase: restarts with a clean new database\n\nHappy (Seat)surfing... 🏄\n\n' \
+&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\n- restartServer: restarts the backend server\n- clearDatabase: restarts with a clean new database\n\nHappy Seatsurfing … 🏄\n\n' \
 ; bash \
 ; tmux kill-session -t '$SESSION'\
 "
