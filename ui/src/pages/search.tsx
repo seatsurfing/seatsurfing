@@ -255,10 +255,13 @@ class Search extends React.Component<Props, State> {
             ?.getAttributes()
             .then((attributes) => {
               this.loadMap(this.state.locationId).then(() => {
-                this.setState({
-                  attributeValues: attributes,
-                  loading: false,
-                }, () => this.centerMap());
+                this.setState(
+                  {
+                    attributeValues: attributes,
+                    loading: false,
+                  },
+                  () => this.centerMap(),
+                );
                 if (sidParam) {
                   const space = this.data.find((item) => item.id == sidParam);
                   if (space) this.onSpaceSelect(space);
@@ -669,10 +672,13 @@ class Search extends React.Component<Props, State> {
           ?.getAttributes()
           .then((attributes) => {
             this.loadMap(id).then(() => {
-              this.setState({
-                attributeValues: attributes,
-                loading: false,
-              }, () => this.centerMap());
+              this.setState(
+                {
+                  attributeValues: attributes,
+                  loading: false,
+                },
+                () => this.centerMap(),
+              );
             });
           });
       },
@@ -1767,9 +1773,7 @@ class Search extends React.Component<Props, State> {
                     <ScanIcon />
                   </button>
                 </div>
-                <TransformComponent
-                  contentClass="border border-3"
-                >
+                <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>{spaces}</div>
                 </TransformComponent>
               </>
