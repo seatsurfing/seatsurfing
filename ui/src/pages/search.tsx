@@ -46,6 +46,7 @@ import {
   TransformWrapper,
   TransformComponent,
   MiniMap,
+  ReactZoomPanPinchContentRef,
 } from "react-zoom-pan-pinch";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttributeValue from "@/types/SpaceAttributeValue";
@@ -138,6 +139,7 @@ class Search extends React.Component<Props, State> {
   mapData: any;
   curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
+  transformWrapperRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
@@ -153,6 +155,7 @@ class Search extends React.Component<Props, State> {
     this.buddies = [];
     this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
+    this.transformWrapperRef = React.createRef();
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
@@ -255,7 +258,7 @@ class Search extends React.Component<Props, State> {
                 this.setState({
                   attributeValues: attributes,
                   loading: false,
-                });
+                }, () => this.centerMap());
                 if (sidParam) {
                   const space = this.data.find((item) => item.id == sidParam);
                   if (space) this.onSpaceSelect(space);
@@ -669,7 +672,7 @@ class Search extends React.Component<Props, State> {
               this.setState({
                 attributeValues: attributes,
                 loading: false,
-              });
+              }, () => this.centerMap());
             });
           });
       },
@@ -1384,7 +1387,7 @@ class Search extends React.Component<Props, State> {
             this.getLocation()
               ?.getAttributes()
               .then((_attributes) => {
-                this.setState({ loading: false });
+                this.setState({ loading: false }, () => this.centerMap());
               });
           });
         },
@@ -1706,11 +1709,10 @@ class Search extends React.Component<Props, State> {
           style={{ position: "relative" }}
         >
           <TransformWrapper
+            ref={this.transformWrapperRef}
             initialScale={0.8}
-            initialPositionY={-100}
             minScale={0.2}
             maxScale={5}
-            centerOnInit={true}
           >
             {({ zoomIn, zoomOut, resetTransform }) => (
               <>
@@ -1724,6 +1726,7 @@ class Search extends React.Component<Props, State> {
                       border: "1px solid #ccc",
                       background: "#fff",
                       borderRadius: "5px",
+                      overflow: "hidden",
                     }}
                   >
                     <MiniMap>
@@ -1765,7 +1768,6 @@ class Search extends React.Component<Props, State> {
                   </button>
                 </div>
                 <TransformComponent
-                  wrapperClass="h-100 w-100"
                   contentClass="border border-3"
                 >
                   <div style={floorPlanStyle}>{spaces}</div>
@@ -2635,7 +2637,16 @@ class Search extends React.Component<Props, State> {
       loading: true,
     });
     this.loadMap(this.state.locationId).then(() => {
-      this.setState({ loading: false });
+      this.setState({ loading: false }, () => this.centerMap());
+    });
+  };
+
+  centerMap = () => {
+    // v4 centerOnInit is unreliable because TransformComponent may mount
+    // before map data is loaded, causing centering with 0-size content.
+    // Instead, center explicitly after data is loaded and React has painted.
+    requestAnimationFrame(() => {
+      this.transformWrapperRef.current?.centerView(0.8, 0);
     });
   };
 }

@@ -219,6 +219,13 @@ form#filter-locations-form .row {
   }
 }
 
+/* Override react-zoom-pan-pinch v4 CSS module fit-content sizing
+   so the wrapper fills its parent and centerOnInit works correctly. */
+.react-transform-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .active-transparent:active,
 .active-transparent:focus {
   background-color: transparent !important;
