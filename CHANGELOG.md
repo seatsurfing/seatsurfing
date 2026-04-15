@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.84.0](https://github.com/seatsurfing/seatsurfing/compare/v1.83.0...v1.84.0) (2026-04-14)
+
+
+### Features
+
+* trigger pending approval count update after approving or declining booking ([#1986](https://github.com/seatsurfing/seatsurfing/issues/1986)) ([dac57a6](https://github.com/seatsurfing/seatsurfing/commit/dac57a616183caee78fdeb3ae4d843e9151669e5))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/go-webauthn/webauthn from 0.16.2 to 0.16.3 in /server in the minor-and-patch group ([#1983](https://github.com/seatsurfing/seatsurfing/issues/1983)) ([8056f5e](https://github.com/seatsurfing/seatsurfing/commit/8056f5e842a8d744f46595a8a6006b70aba75dbd))
+* fix typo in org delete confirmation ([#1980](https://github.com/seatsurfing/seatsurfing/issues/1980)) ([be7b519](https://github.com/seatsurfing/seatsurfing/commit/be7b519971bd1350c6c610841b18f06fc03e1f62))
+* minor fix for startup message ([#1985](https://github.com/seatsurfing/seatsurfing/issues/1985)) ([1c2d246](https://github.com/seatsurfing/seatsurfing/commit/1c2d2462b6eebc72a8fa2ebaae1d5084490e980b))
+
 ## [1.83.0](https://github.com/seatsurfing/seatsurfing/compare/v1.82.1...v1.83.0) (2026-04-12)
 
 
