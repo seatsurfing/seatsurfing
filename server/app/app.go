@@ -179,13 +179,13 @@ func (a *App) InitializeDefaultOrg() {
 		log.Println("Creating default organization...")
 		config := GetConfig()
 		domain := config.InitOrgDomain
-		email := config.InitOrgUser + "@" + domain
+		emailDomain := "@" + domain
 		if domain == "localhost" {
-			email = config.InitOrgUser + "@" + "seatsurfing.local"
+			emailDomain = "@" + "seatsurfing.local"
 		}
 		org := &Organization{
 			Name:             config.InitOrgName,
-			ContactEmail:     email,
+			ContactEmail:     "admin" + emailDomain,
 			ContactFirstname: "Organization",
 			ContactLastname:  "Admin",
 			Language:         strings.ToLower(config.InitOrgLanguage),
@@ -194,15 +194,42 @@ func (a *App) InitializeDefaultOrg() {
 		GetOrganizationRepository().Create(org)
 		GetOrganizationRepository().AddDomain(org, domain, true)
 		GetOrganizationRepository().SetPrimaryDomain(org, domain)
+
+		hashedPassword := NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass))
+
+		// admin user
 		user := &User{
 			OrganizationID: org.ID,
-			Email:          email,
-			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
+			Email:          "admin" + emailDomain,
+			HashedPassword: hashedPassword,
 			Role:           UserRoleOrgAdmin,
 			Firstname:      "Organization",
 			Lastname:       "Admin",
 		}
 		GetUserRepository().Create(user)
+
+		// floorplan user
+		user = &User{
+			OrganizationID: org.ID,
+			Email:          "floorplanadmin" + emailDomain,
+			HashedPassword: hashedPassword,
+			Role:           UserRoleSpaceAdmin,
+			Firstname:      "Floorplan",
+			Lastname:       "Admin",
+		}
+		GetUserRepository().Create(user)
+
+		// normal user
+		user = &User{
+			OrganizationID: org.ID,
+			Email:          "user" + emailDomain,
+			HashedPassword: hashedPassword,
+			Role:           UserRoleUser,
+			Firstname:      "Normal",
+			Lastname:       "User",
+		}
+		GetUserRepository().Create(user)
+
 		GetOrganizationRepository().CreateSampleData(org)
 	}
 }
