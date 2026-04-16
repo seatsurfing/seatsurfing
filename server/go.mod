@@ -16,7 +16,7 @@ require (
 	github.com/rustyoz/svg v0.0.0-20250705135709-8b1786137cb3
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/valkey-io/valkey-go v1.0.73
-	golang.org/x/crypto v0.49.0
+	golang.org/x/crypto v0.50.0
 	golang.org/x/oauth2 v0.36.0
 )
 
@@ -39,6 +39,6 @@ require (
 	github.com/teambition/rrule-go v1.8.2 // indirect
 	github.com/tinylib/msgp v1.6.3 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
