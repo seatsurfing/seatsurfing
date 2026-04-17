@@ -74,7 +74,7 @@ func TestOrganizationsUpdateWithoutMailChange(t *testing.T) {
 		"firstname": "Foo 2",
 		"lastname": "Bar 2",
 		"email": "foo@seatsurfing.app",
-		"language": "us"
+		"language": "en"
 	}`
 	req := NewHTTPRequest("PUT", "/organization/"+org.ID, loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
@@ -115,7 +115,7 @@ func TestOrganizationsUpdateWithMailChange(t *testing.T) {
 		"firstname": "Foo 2",
 		"lastname": "Bar 2",
 		"email": "foo2@seatsurfing.app",
-		"language": "us"
+		"language": "en"
 	}`
 	req := NewHTTPRequest("PUT", "/organization/"+org.ID, loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
