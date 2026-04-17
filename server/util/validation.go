@@ -10,6 +10,7 @@ import (
 var colorHexRegex = regexp.MustCompile(`^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$`)
 var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var domainRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)+$`)
+var nameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.]+$`)
 
 func ValidatePassword(s string) bool {
 	l := len([]rune(s))
@@ -53,6 +54,19 @@ func ValidateDomain(s string) bool {
 		return false
 	}
 	return domainRegex.MatchString(s)
+}
+
+var validOrgLanguages = map[string]bool{"de": true, "en": true}
+
+func IsValidOrgLanguage(s string) bool {
+	return validOrgLanguages[s]
+}
+
+func IsValidName(s string) bool {
+	if len([]rune(s)) == 0 {
+		return false
+	}
+	return nameRegex.MatchString(s)
 }
 
 func ValidateNumber(s string, min, max int) bool {

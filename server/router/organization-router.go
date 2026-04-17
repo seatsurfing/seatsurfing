@@ -391,6 +391,10 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !isValidCreateOrganizationRequest(&m) {
+		SendBadRequest(w)
+		return
+	}
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		SendNotFound(w)
@@ -573,6 +577,10 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !isValidCreateOrganizationRequest(&m) {
+		SendBadRequest(w)
+		return
+	}
 	e := router.copyFromRestModel(&m)
 	e.SignupDate = time.Now()
 	if err := GetOrganizationRepository().Create(e); err != nil {
@@ -602,6 +610,10 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 			}
 		}
 	}
+}
+
+func isValidCreateOrganizationRequest(m *CreateOrganizationRequest) bool {
+	return IsValidName(m.Name) && IsValidName(m.Firstname) && IsValidName(m.Lastname) && IsValidOrgLanguage(m.Language)
 }
 
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {
