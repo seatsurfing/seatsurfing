@@ -19,9 +19,9 @@ type OrganizationRouter struct {
 }
 
 type CreateOrganizationRequest struct {
-	Name      string `json:"name" validate:"required,max=64"`
-	Firstname string `json:"firstname" validate:"required,max=128"`
-	Lastname  string `json:"lastname" validate:"required,max=128"`
+	Name      string `json:"name" validate:"required,min=2,max=64"`
+	Firstname string `json:"firstname" validate:"required,min=2,max=64"`
+	Lastname  string `json:"lastname" validate:"required,min=2,max=64"`
 	Email     string `json:"email" validate:"required,email,max=128"`
 	Language  string `json:"language" validate:"required,len=2"`
 }
