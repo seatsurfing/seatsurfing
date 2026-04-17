@@ -1103,29 +1103,36 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	// Extract email address from JSON response
 	var result map[string]interface{}
 	json.Unmarshal([]byte(contents), &result)
-	if (result[provider.UserInfoEmailField] == nil) || (strings.TrimSpace(result[provider.UserInfoEmailField].(string)) == "") {
-		return nil, nil, fmt.Errorf("could not read email address from field: %s", provider.UserInfoEmailField)
-	}
-	email := strings.TrimSpace(result[provider.UserInfoEmailField].(string))
-	firstname := ""
-	lastname := ""
-	if provider.UserInfoFirstnameField != "" {
-		if result[provider.UserInfoFirstnameField] != nil {
-			firstname = strings.TrimSpace(result[provider.UserInfoFirstnameField].(string))
-		}
-	}
-	if provider.UserInfoLastnameField != "" {
-		if result[provider.UserInfoLastnameField] != nil {
-			lastname = strings.TrimSpace(result[provider.UserInfoLastnameField].(string))
-		}
-	}
-	info := &IdPUserInfo{
-		Email:     email,
-		Firstname: firstname,
-		Lastname:  lastname,
+	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField)
+	if err != nil {
+		return nil, nil, err
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	return info, payload, nil
+}
+
+func ExtractUserInfoFields(result map[string]interface{}, emailField, firstnameField, lastnameField string) (*IdPUserInfo, error) {
+	emailVal, ok := result[emailField].(string)
+	if !ok || strings.TrimSpace(emailVal) == "" {
+		return nil, fmt.Errorf("could not read email address from field: %s", emailField)
+	}
+	firstname := ""
+	lastname := ""
+	if firstnameField != "" {
+		if val, ok := result[firstnameField].(string); ok {
+			firstname = strings.TrimSpace(val)
+		}
+	}
+	if lastnameField != "" {
+		if val, ok := result[lastnameField].(string); ok {
+			lastname = strings.TrimSpace(val)
+		}
+	}
+	return &IdPUserInfo{
+		Email:     strings.TrimSpace(emailVal),
+		Firstname: firstname,
+		Lastname:  lastname,
+	}, nil
 }
 
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {
