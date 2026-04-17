@@ -8,6 +8,36 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
+func TestValidEmails(t *testing.T) {
+	inputs := []string{
+		"user@example.com",
+		"user.name@example.com",
+		"user+tag@example.org",
+		"user_name@sub.domain.de",
+		"u@example.io",
+		"confluence-user@company.com",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, ValidateEmail(input), true)
+	}
+}
+
+func TestInvalidEmails(t *testing.T) {
+	inputs := []string{
+		"",
+		"notanemail",
+		"missing@tld",
+		"@nodomain.com",
+		"no space@example.com",
+		"double@@example.com",
+		"user@",
+		strings.Repeat("a", 250) + "@example.com",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, ValidateEmail(input), false)
+	}
+}
+
 func TestValidPasswords(t *testing.T) {
 	inputs := []string{
 		"Abc!1234",
