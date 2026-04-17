@@ -159,7 +159,7 @@ func TestAuthProvidersGetPublicForOrg(t *testing.T) {
 	id1 := res.Header().Get("X-Object-Id")
 
 	// Create 2
-	payload = `{"name": "Test2", "providerType": 2, "clientId": "test2", "clientSecret": "test3", "authUrl": "http://test.com/7", "tokenUrl": "http://test.com/8", "authStyle": 0, "scopes": "http://test.com/9", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	payload = `{"name": "Test2", "providerType": 1, "clientId": "test2", "clientSecret": "test3", "authUrl": "http://test.com/7", "tokenUrl": "http://test.com/8", "authStyle": 0, "scopes": "http://test.com/9", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
 	req = NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
