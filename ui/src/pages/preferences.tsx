@@ -881,6 +881,7 @@ class Preferences extends React.Component<Props, State> {
                 src={profilePageUrl}
                 style={{ width: "100%", height: "100vh", borderWidth: 0 }}
                 id="idp-profilepage-iframe"
+                sandbox="allow-scripts allow-same-origin allow-forms"
               ></iframe>
             </div>
 
