@@ -2,7 +2,6 @@ import React from "react";
 import { Nav, Button, Form } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import Link from "next/link";
-import Ajax from "@/util/Ajax";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import withReadyRouter from "./withReadyRouter";
 import RuntimeConfig from "./RuntimeConfig";
@@ -40,8 +39,8 @@ class AdminNavBar extends React.Component<Props, State> {
   };
 
   componentDidMount = () => {
-    let isSearchPage = window.location.href.indexOf("/admin/search/") > -1;
-    let keyword = window.sessionStorage.getItem("searchKeyword");
+    const isSearchPage = window.location.href.indexOf("/admin/search/") > -1;
+    const keyword = window.sessionStorage.getItem("searchKeyword");
     if (isSearchPage && keyword) {
       this.setState({ search: keyword });
     } else {
@@ -51,7 +50,7 @@ class AdminNavBar extends React.Component<Props, State> {
 
   render() {
     if (this.state.redirect != null) {
-      let target = this.state.redirect;
+      const target = this.state.redirect;
       this.setState({ redirect: null });
       this.props.router.push(target);
       return <></>;
@@ -83,6 +82,7 @@ class AdminNavBar extends React.Component<Props, State> {
             value={this.state.search}
             onChange={(e: any) => this.setState({ search: e.target.value })}
             required={true}
+            maxLength={64}
           />
         </Form>
         <ul className="navbar-nav px-3">

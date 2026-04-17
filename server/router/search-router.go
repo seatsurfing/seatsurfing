@@ -49,14 +49,18 @@ func (router *SearchRouter) SetupRoutes(s *mux.Router) {
 }
 
 func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
+	keyword := r.URL.Query().Get("query")
+	if len(keyword) > 64 {
+		SendBadRequest(w)
+		return
+	}
 	user := GetRequestUser(r)
 	if !CanSpaceAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
-	keyword := r.URL.Query().Get("query")
-	res := &GetSearchResultsResponse{}
 
+	res := &GetSearchResultsResponse{}
 	if r.URL.Query().Get("includeUsers") == "1" {
 		if err := router.addUserResults(user, keyword, res); err != nil {
 			log.Println(err)
