@@ -93,4 +93,4 @@ Before submitting a pull request, please make sure the unit and e2e (written in 
 
 We use [conventional commits](https://www.conventionalcommits.org/) and squash merges, so the PR title should follow the conventional commit conventions.
 
-Please provide a comprehensible description about the added/changed functionality. If frontend functionality is modified, screenshots are a welcome addition.
+Please provide a comprehensive description about the added/changed functionality. If frontend functionality is modified, screenshots are a welcome addition.

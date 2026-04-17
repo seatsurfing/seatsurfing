@@ -7,7 +7,7 @@
 
 ## 🚀 Seatsurfing SaaS available!
 
-We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS) at. [Start for free now](https://seatsurfing.io/sign-up)!
+We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS). [Start for free now](https://seatsurfing.io/sign-up)!
 
 - **No installation required** - Get started immediately
 - **Microsoft Teams integration** - See [Microsoft AppSource marketplace](https://appsource.microsoft.com/product/office/WA200008773)
