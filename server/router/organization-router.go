@@ -19,9 +19,9 @@ type OrganizationRouter struct {
 }
 
 type CreateOrganizationRequest struct {
-	Name      string `json:"name" validate:"required"`
-	Firstname string `json:"firstname" validate:"required,max=128"`
-	Lastname  string `json:"lastname" validate:"required,max=128"`
+	Name      string `json:"name" validate:"required,min=2,max=64"`
+	Firstname string `json:"firstname" validate:"required,min=2,max=64"`
+	Lastname  string `json:"lastname" validate:"required,min=2,max=64"`
 	Email     string `json:"email" validate:"required,email,max=128"`
 	Language  string `json:"language" validate:"required,len=2"`
 }
@@ -209,6 +209,10 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	domainName := strings.TrimSpace(strings.ToLower(vars["domain"]))
+	if !ValidateDomain(domainName) {
+		SendBadRequest(w)
+		return
+	}
 	// Check if domain is special
 	if strings.HasSuffix(domainName, ".seatsurfing.app") || strings.HasSuffix(domainName, ".seatsurfing.io") {
 		SendBadRequest(w)
@@ -384,6 +388,10 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	}
 	var m CreateOrganizationRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !isValidCreateOrganizationRequest(&m) {
 		SendBadRequest(w)
 		return
 	}
@@ -569,6 +577,10 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !isValidCreateOrganizationRequest(&m) {
+		SendBadRequest(w)
+		return
+	}
 	e := router.copyFromRestModel(&m)
 	e.SignupDate = time.Now()
 	if err := GetOrganizationRepository().Create(e); err != nil {
@@ -598,6 +610,10 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 			}
 		}
 	}
+}
+
+func isValidCreateOrganizationRequest(m *CreateOrganizationRequest) bool {
+	return IsValidOrgName(m.Name) && IsValidHumanName(m.Firstname) && IsValidHumanName(m.Lastname) && IsValidOrgLanguage(m.Language)
 }
 
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {
