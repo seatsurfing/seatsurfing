@@ -93,7 +93,7 @@ func TestOrganizationsUpdateWithoutMailChange(t *testing.T) {
 	CheckTestString(t, "Foo 2", resBody2.Firstname)
 	CheckTestString(t, "Bar 2", resBody2.Lastname)
 	CheckTestString(t, "foo@seatsurfing.app", resBody2.Email)
-	CheckTestString(t, "us", resBody2.Language)
+	CheckTestString(t, "en", resBody2.Language)
 }
 
 func TestOrganizationsUpdateWithMailChange(t *testing.T) {
@@ -140,7 +140,7 @@ func TestOrganizationsUpdateWithMailChange(t *testing.T) {
 	CheckTestString(t, "Foo 2", resBody2.Firstname)
 	CheckTestString(t, "Bar 2", resBody2.Lastname)
 	CheckTestString(t, "foo@seatsurfing.app", resBody2.Email)
-	CheckTestString(t, "us", resBody2.Language)
+	CheckTestString(t, "en", resBody2.Language)
 
 	// Verify
 	payload = `{
@@ -201,7 +201,7 @@ func TestOrganizationsCRUD(t *testing.T) {
 		"firstname": "Foo 2",
 		"lastname": "Bar 2",
 		"email": "foo2@seatsurfing.app",
-		"language": "us"
+		"language": "en"
 	}`
 	req = NewHTTPRequest("PUT", "/organization/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
@@ -217,7 +217,7 @@ func TestOrganizationsCRUD(t *testing.T) {
 	CheckTestString(t, "Foo 2", resBody2.Firstname)
 	CheckTestString(t, "Bar 2", resBody2.Lastname)
 	CheckTestString(t, "foo2@seatsurfing.app", resBody2.Email)
-	CheckTestString(t, "us", resBody2.Language)
+	CheckTestString(t, "en", resBody2.Language)
 
 	// 4. Delete
 	req = NewHTTPRequest("DELETE", "/organization/"+id, loginResponse.UserID, nil)
