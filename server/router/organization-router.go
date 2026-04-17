@@ -19,7 +19,7 @@ type OrganizationRouter struct {
 }
 
 type CreateOrganizationRequest struct {
-	Name      string `json:"name" validate:"required"`
+	Name      string `json:"name" validate:"required,max=64"`
 	Firstname string `json:"firstname" validate:"required,max=128"`
 	Lastname  string `json:"lastname" validate:"required,max=128"`
 	Email     string `json:"email" validate:"required,email,max=128"`
@@ -209,6 +209,10 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	domainName := strings.TrimSpace(strings.ToLower(vars["domain"]))
+	if !ValidateDomain(domainName) {
+		SendBadRequest(w)
+		return
+	}
 	// Check if domain is special
 	if strings.HasSuffix(domainName, ".seatsurfing.app") || strings.HasSuffix(domainName, ".seatsurfing.io") {
 		SendBadRequest(w)

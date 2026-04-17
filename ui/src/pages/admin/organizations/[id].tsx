@@ -265,6 +265,7 @@ class EditOrganization extends React.Component<Props, State> {
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
                 autoFocus={true}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -303,6 +304,7 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                maxLength={128}
               />
             </Col>
           </Form.Group>
@@ -318,6 +320,7 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                maxLength={128}
               />
             </Col>
           </Form.Group>
@@ -331,6 +334,7 @@ class EditOrganization extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+                maxLength={128}
               />
             </Col>
           </Form.Group>
