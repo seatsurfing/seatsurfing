@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -30,5 +31,40 @@ func TestInvalidPasswords(t *testing.T) {
 	}
 	for _, input := range inputs {
 		CheckTestBool(t, ValidatePassword(input), false)
+	}
+}
+
+func TestValidNames(t *testing.T) {
+	inputs := []string{
+		"John",
+		"Jane Doe",
+		"O'Brien",
+		"Anne-Marie",
+		"St. John",
+		"Müller",
+		"José",
+		"山田太郎",
+		"Ångström Lab",
+		"Room 42",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, IsValidName(input), true)
+	}
+}
+
+func TestInvalidNames(t *testing.T) {
+	inputs := []string{
+		"",
+		"A",
+		strings.Repeat("A", 65),
+		"Invalid<Name>",
+		"Name@Domain",
+		"Name\nWithNewline",
+		"Name\tWithTab",
+		"Name!Exclamation",
+		"Name#Hash",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, IsValidName(input), false)
 	}
 }

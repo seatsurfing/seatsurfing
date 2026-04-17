@@ -62,7 +62,8 @@ func IsValidOrgLanguage(s string) bool {
 }
 
 func IsValidName(s string) bool {
-	if len([]rune(s)) == 0 {
+	l := len([]rune(s))
+	if l < 2 || l > 64 {
 		return false
 	}
 	return nameRegex.MatchString(s)
