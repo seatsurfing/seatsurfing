@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type AuthProviderRouter struct {
@@ -110,9 +111,32 @@ func (router *AuthProviderRouter) getAll(w http.ResponseWriter, r *http.Request)
 	}
 	SendJSON(w, res)
 }
+func (router *AuthProviderRouter) validateCreateAuthProviderRequest(m *CreateAuthProviderRequest) bool {
+	if m.ProviderType != int(OAuth2) {
+		return false
+	}
+	if m.AuthStyle < 0 || m.AuthStyle > 2 {
+		return false
+	}
+	if !ValidateURL(m.AuthURL) || !ValidateURL(m.TokenURL) || !ValidateURL(m.UserInfoURL) {
+		return false
+	}
+	if m.LogoutURL != "" && !ValidateURL(m.LogoutURL) {
+		return false
+	}
+	if m.ProfilePageURL != "" && !ValidateURL(m.ProfilePageURL) {
+		return false
+	}
+	return true
+}
+
 func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request) {
 	var m CreateAuthProviderRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !router.validateCreateAuthProviderRequest(&m) {
 		SendBadRequest(w)
 		return
 	}
@@ -185,6 +209,10 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 	var m CreateAuthProviderRequest
 	if err := UnmarshalValidateBody(r, &m); err != nil {
 		log.Println(err)
+		SendBadRequest(w)
+		return
+	}
+	if !router.validateCreateAuthProviderRequest(&m) {
 		SendBadRequest(w)
 		return
 	}

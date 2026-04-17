@@ -130,6 +130,20 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestTryCreateAuthProvidersWithInvalidURLs(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	userAdmin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(userAdmin.ID)
+
+	// 1. Create
+	payload := `{"name": "Test", "providerType": 1, "clientId": "test1", "clientSecret": "test2", "authUrl": "INVALID-URÖ", "tokenUrl": "INVALID-URÖ", "authStyle": 0, "scopes": "INVALID-URÖ", "userInfoUrl": "INVALID-URÖ", "userInfoEmailField": "email"}`
+	req := NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestAuthProvidersGetPublicForOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
