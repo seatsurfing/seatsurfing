@@ -4,7 +4,7 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { NextRouter } from "next/router";
 import RuntimeConfig from "@/components/RuntimeConfig";
-import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import { withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 
 interface State {
@@ -15,7 +15,6 @@ interface State {
 
 interface Props {
   router: NextRouter;
-  t: TranslationFunc;
 }
 
 class PluginPage extends React.Component<Props, State> {
@@ -58,7 +57,7 @@ class PluginPage extends React.Component<Props, State> {
     window.setTimeout(() => {
       if (!window.location.pathname.startsWith("/ui/admin/plugin/")) return;
       this.checkiFrameHeight();
-      let iFrame = document.getElementById(
+      const iFrame = document.getElementById(
         "plugin-iframe",
       ) as HTMLIFrameElement;
       if (
@@ -68,7 +67,7 @@ class PluginPage extends React.Component<Props, State> {
         !iFrame.contentWindow.document.body
       )
         return;
-      let height = iFrame.contentWindow.document.body.scrollHeight;
+      const height = iFrame.contentWindow.document.body.scrollHeight;
       iFrame.style.height = height + "px";
       if (height > 0) {
         this.setState({ iFrameLoaded: true });
@@ -88,10 +87,19 @@ class PluginPage extends React.Component<Props, State> {
         </FullLayout>
       );
     }
-    let url = this.state.pluginMenuItem.src;
-    if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-      url = Ajax.getBackendUrl() + url;
+    const src = this.state.pluginMenuItem.src;
+    if (
+      src.startsWith("http://") ||
+      src.startsWith("https://") ||
+      src.startsWith("//")
+    ) {
+      console.error(
+        "Plugin URL must be relative, absolute URLs are not allowed:",
+        src,
+      );
+      return <></>;
     }
+    const url = `${Ajax.getBackendUrl()}${src}`;
     return (
       <FullLayout
         headline={
