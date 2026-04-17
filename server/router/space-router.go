@@ -344,6 +344,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if len(m.Creates)+len(m.Updates)+len(m.DeleteIDs) > 64 {
+		SendBadRequest(w)
+		return
+	}
 	vars := mux.Vars(r)
 	location, err := GetLocationRepository().GetOne(vars["locationId"])
 	if err != nil {
