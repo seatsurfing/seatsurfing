@@ -613,7 +613,7 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 }
 
 func isValidCreateOrganizationRequest(m *CreateOrganizationRequest) bool {
-	return IsValidName(m.Name) && IsValidName(m.Firstname) && IsValidName(m.Lastname) && IsValidOrgLanguage(m.Language)
+	return IsValidOrgName(m.Name) && IsValidHumanName(m.Firstname) && IsValidHumanName(m.Lastname) && IsValidOrgLanguage(m.Language)
 }
 
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {
