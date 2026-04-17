@@ -337,7 +337,7 @@ func TestRecurringBookingRepositoryCreateBookingsWeeklyCadenceNoWeekdays(t *test
 		},
 		End: time.Date(future14days.Year(), future14days.Month(), future14days.Day(), 10, 0, 0, 0, time.UTC),
 	}
-	bookings := GetRecurringBookingRepository().CreateBookings(rb)
+	bookings, _ := GetRecurringBookingRepository().CreateBookings(rb)
 
 	CheckTestInt(t, 0, len(bookings))
 }
@@ -365,7 +365,7 @@ func TestDeleteLastBookingInSeriesAlsoDeletesRecurringBooking(t *testing.T) {
 	err := GetRecurringBookingRepository().Create(rb)
 	CheckTestIsNil(t, err)
 	CheckTestBool(t, true, len(rb.ID) > 0)
-	bookings := GetRecurringBookingRepository().CreateBookings(rb)
+	bookings, err := GetRecurringBookingRepository().CreateBookings(rb)
 	CheckTestInt(t, 2, len(bookings))
 	for _, b := range bookings {
 		err := GetBookingRepository().Create(b)
