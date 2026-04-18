@@ -15,12 +15,16 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import AuthProvider from "@/types/AuthProvider";
 import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
+import ErrorText from "@/types/ErrorText";
+import AjaxError from "@/util/AjaxError";
 
 interface State {
   loading: boolean;
   submitting: boolean;
   saved: boolean;
   goBack: boolean;
+  error: boolean;
+  errorText: string;
   name: string;
   providerType: number;
   authUrl: string;
@@ -53,6 +57,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       submitting: false,
       saved: false,
       goBack: false,
+      error: false,
+      errorText: "",
       name: "",
       providerType: 0,
       authUrl: "",
@@ -79,10 +85,11 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.loadData();
   };
 
-  loadData = () => {
+  loadData = async () => {
     const { id } = this.props.router.query;
     if (id && typeof id === "string" && id !== "add") {
-      AuthProvider.get(id).then((authProvider) => {
+      try {
+        const authProvider = await AuthProvider.get(id);
         this.entity = authProvider;
         this.setState({
           name: authProvider.name,
@@ -102,7 +109,9 @@ class EditAuthProvider extends React.Component<Props, State> {
           readOnly: authProvider.readOnly,
           loading: false,
         });
-      });
+      } catch {
+        this.setState({ loading: false, error: true });
+      }
     } else {
       this.setState({
         loading: false,
@@ -110,7 +119,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     }
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.entity.name = this.state.name;
     this.entity.providerType = this.state.providerType;
@@ -126,21 +135,33 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
     this.entity.profilePageUrl = this.state.profilePageUrl;
-    this.entity.save().then(() => {
+
+    try {
+      await this.entity.save();
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
       );
+      this.setState({ saved: true, submitting: false });
+    } catch (e) {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
       this.setState({
-        saved: true,
+        error: true,
+        errorText: code ? ErrorText.getTextForAppCode(code, this.props.t) : "",
       });
-    });
+    }
   };
 
-  deleteItem = () => {
+  deleteItem = async () => {
     if (window.confirm(this.props.t("confirmDeleteAuthProvider"))) {
-      this.entity.delete().then(() => {
+      try {
+        await this.entity.delete();
         this.setState({ goBack: true });
-      });
+      } catch {
+        this.setState({ error: true });
+      }
     }
   };
 
@@ -242,6 +263,12 @@ class EditAuthProvider extends React.Component<Props, State> {
     let hint = <></>;
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
+    } else if (this.state.error) {
+      hint = (
+        <Alert variant="danger">
+          {this.state.errorText ?? this.props.t("errorSave")}
+        </Alert>
+      );
     }
 
     let urlInfo = <></>;

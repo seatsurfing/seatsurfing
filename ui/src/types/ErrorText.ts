@@ -19,6 +19,8 @@ export const enum ResponseCode {
   GroupNameAlreadyExists = 4001,
 
   PasswordUpdateRequired = 5001,
+
+  AuthProviderNameExists = 6001,
 }
 
 export default class ErrorText {
@@ -51,6 +53,8 @@ export default class ErrorText {
       [ResponseCode.UsernameExists]: () => t("errorUsernameExists"),
       [ResponseCode.GroupNameAlreadyExists]: () =>
         t("errorGroupNameAlreadyExists"),
+      [ResponseCode.AuthProviderNameExists]: () =>
+        t("errorAuthProviderNameExists"),
     };
 
     return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");

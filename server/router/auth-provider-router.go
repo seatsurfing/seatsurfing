@@ -155,6 +155,13 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
+
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, e.Name)
+	if err == nil && existingAuthProvider != nil && existingAuthProvider.ID != e.ID {
+		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
+		return
+	}
+
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
@@ -216,19 +223,29 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+
 	user := GetRequestUser(r)
-	e := router.copyFromRestModel(&m)
-	e.OrganizationID = user.OrganizationID
-	e.ReadOnly = false
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !CanAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
+
+	e := router.copyFromRestModel(&m)
+	e.OrganizationID = user.OrganizationID
+	e.ReadOnly = false
+
 	featureAuthProviders, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingFeatureAuthProviders.Name)
 	if !featureAuthProviders {
 		SendPaymentRequired(w)
 		return
 	}
+
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, e.Name)
+	if err == nil && existingAuthProvider != nil {
+		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
+		return
+	}
+
 	if err := GetAuthProviderRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
