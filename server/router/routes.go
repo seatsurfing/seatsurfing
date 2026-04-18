@@ -55,6 +55,8 @@ var (
 	ResponseCodeGroupNameAlreadyExists = 4001
 
 	ResponseCodePasswordUpdateRequired = 5001
+
+	ResponseCodeAuthProviderAlreadyExists = 6001
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {
