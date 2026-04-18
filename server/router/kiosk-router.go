@@ -94,7 +94,9 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 		log.Println("kiosk: error loading timezone:", tz, err)
 		tzLocation = time.UTC
 	}
-	now := time.Now().In(tzLocation)
+	// DB stores booking times as "fake UTC" (local time values with no offset),
+	// so the comparison timestamp must also be plain UTC.
+	now := time.Now().UTC()
 
 	// Determine name visibility
 	showNames, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingShowNames.Name)
@@ -110,7 +112,7 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 		Timezone:       tz,
 		CurrentBooking: nil,
 		NextBooking:    nil,
-		RefreshedAt:    now,
+		RefreshedAt:    now.In(tzLocation),
 	}
 
 	if current != nil {
