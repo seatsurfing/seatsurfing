@@ -222,7 +222,7 @@ export default function KioskPage() {
                   <div className="kiosk-card-label">{t("kioskNow")}</div>
                   <div className="kiosk-card-time">
                     {formatTime(data.currentBooking.enter, data.timezone)}
-                    {" — "}
+                    &nbsp;&ndash;&nbsp;
                     {formatTime(data.currentBooking.leave, data.timezone)}
                   </div>
                   {data.currentBooking.subject && (
@@ -244,7 +244,7 @@ export default function KioskPage() {
                   <div className="kiosk-card-label">{t("kioskNext")}</div>
                   <div className="kiosk-card-time">
                     {formatTime(data.nextBooking.enter, data.timezone)}
-                    {" — "}
+                    &nbsp;&ndash;&nbsp;
                     {formatTime(data.nextBooking.leave, data.timezone)}
                   </div>
                   {data.nextBooking.subject && (

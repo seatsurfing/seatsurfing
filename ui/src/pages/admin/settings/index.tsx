@@ -35,6 +35,7 @@ import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 import RedirectUtil from "@/util/RedirectUtil";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import Validation from "@/util/Validation";
 
 interface State {
   allowAnyUser: boolean;
@@ -74,6 +75,7 @@ interface State {
   newUserDefaultMailNotification: boolean;
   enforceTOTP: boolean;
   kioskSecret: string;
+  kioskModeEnabled: boolean;
 }
 
 interface Props {
@@ -129,6 +131,7 @@ class Settings extends React.Component<Props, State> {
       newUserDefaultMailNotification: false,
       enforceTOTP: false,
       kioskSecret: "",
+      kioskModeEnabled: false,
     };
   }
 
@@ -250,6 +253,8 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "new_user_default_mail_notification")
           state.newUserDefaultMailNotification = s.value === "1";
         if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
+        if (s.name === "kiosk_mode_enabled")
+          state.kioskModeEnabled = s.value === "1";
         if (s.name === "kiosk_access_secret")
           state.kioskSecret = s.value === "1" ? "(configured)" : "";
         if (s.name === "_sys_org_signup_delete")
@@ -267,12 +272,7 @@ class Settings extends React.Component<Props, State> {
   };
 
   generateKioskSecret = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    const secret = Array.from({ length: 32 }, () =>
-      chars.charAt(Math.floor(Math.random() * chars.length)),
-    ).join("");
-    this.setState({ kioskSecret: secret });
+    this.setState({ kioskSecret: Validation.generatePassword(32, true) });
   };
 
   saveKioskSecret = (e: any) => {
@@ -381,6 +381,10 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings("enforce_totp", this.state.enforceTOTP ? "1" : "0"),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
+      new OrgSettings(
+        "kiosk_mode_enabled",
+        this.state.kioskModeEnabled ? "1" : "0",
+      ),
     ];
     OrgSettings.setAll(payload)
       .then(() => {
@@ -1201,6 +1205,20 @@ class Settings extends React.Component<Props, State> {
             <h4>{this.props.t("kioskMode")}</h4>
           </div>
           <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-kioskModeEnabled"
+                label={this.props.t("kioskMode")}
+                checked={this.state.kioskModeEnabled}
+                disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                onChange={(e: any) =>
+                  this.setState({ kioskModeEnabled: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="input-kioskSecret">
               {this.props.t("kioskSecret")}
             </Form.Label>
@@ -1216,10 +1234,17 @@ class Settings extends React.Component<Props, State> {
                   variant="outline-secondary"
                   onClick={this.generateKioskSecret}
                   title={this.props.t("generatePassword")}
+                  disabled={!RuntimeConfig.INFOS.featureKioskMode}
                 >
                   <IconRefresh className="feather" />
                 </Button>
-                <CopyToClipboardButton text={this.state.kioskSecret} />
+                <CopyToClipboardButton
+                  text={this.state.kioskSecret}
+                  disabled={
+                    !this.state.kioskSecret ||
+                    this.state.kioskSecret === "(configured)"
+                  }
+                />
               </InputGroup>
             </Col>
             <Col sm="2">
@@ -1227,6 +1252,7 @@ class Settings extends React.Component<Props, State> {
                 variant="outline-secondary"
                 onClick={this.saveKioskSecret}
                 disabled={
+                  !RuntimeConfig.INFOS.featureKioskMode ||
                   !this.state.kioskSecret ||
                   this.state.kioskSecret === "(configured)"
                 }

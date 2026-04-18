@@ -20,6 +20,11 @@ func newKioskRequest(spaceID, secret string) *http.Request {
 	return req
 }
 
+func enableKioskForOrg(orgID string) {
+	GetSettingsRepository().Set(orgID, SettingFeatureKioskMode.Name, "1")
+	GetSettingsRepository().Set(orgID, SettingKioskModeEnabled.Name, "1")
+}
+
 func TestKioskNotFound(t *testing.T) {
 	ClearTestDB()
 	req := newKioskRequest("00000000-0000-0000-0000-000000000000", "anysecret")
@@ -75,6 +80,7 @@ func TestKioskWrongSecret(t *testing.T) {
 
 	space.KioskEnabled = true
 	GetSpaceRepository().Update(space)
+	enableKioskForOrg(org.ID)
 
 	// Configure a kiosk secret via the settings endpoint
 	adminUser := CreateTestUserOrgAdmin(org)
@@ -96,6 +102,7 @@ func TestKioskAvailable(t *testing.T) {
 
 	space.KioskEnabled = true
 	GetSpaceRepository().Update(space)
+	enableKioskForOrg(org.ID)
 
 	adminUser := CreateTestUserOrgAdmin(org)
 	payload := `{"value": "myKioskSecret"}`
@@ -110,7 +117,6 @@ func TestKioskAvailable(t *testing.T) {
 	var resBody KioskResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestString(t, "available", resBody.Status)
-	CheckTestString(t, space.ID, resBody.SpaceID)
 	CheckTestIsNil(t, resBody.CurrentBooking)
 	CheckTestIsNil(t, resBody.NextBooking)
 }
@@ -124,6 +130,7 @@ func TestKioskOccupied(t *testing.T) {
 
 	space.KioskEnabled = true
 	GetSpaceRepository().Update(space)
+	enableKioskForOrg(org.ID)
 
 	adminUser := CreateTestUserOrgAdmin(org)
 	payload := `{"value": "myKioskSecret"}`
@@ -166,6 +173,7 @@ func TestKioskNextBooking(t *testing.T) {
 
 	space.KioskEnabled = true
 	GetSpaceRepository().Update(space)
+	enableKioskForOrg(org.ID)
 
 	adminUser := CreateTestUserOrgAdmin(org)
 	payload := `{"value": "myKioskSecret"}`

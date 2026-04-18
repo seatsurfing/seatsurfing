@@ -286,6 +286,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
 		name == SettingFeatureAuthProviders.Name ||
+		name == SettingFeatureKioskMode.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
@@ -311,7 +312,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingEnforceTOTP.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
-		name == SettingKioskSecret.Name {
+		name == SettingKioskSecret.Name ||
+		name == SettingKioskModeEnabled.Name {
 		return true
 	}
 	return false
@@ -344,7 +346,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingEnforceTOTP.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
-		name == SettingKioskSecret.Name {
+		name == SettingKioskSecret.Name ||
+		name == SettingKioskModeEnabled.Name {
 		return true
 	}
 	return false
@@ -431,6 +434,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingKioskSecret.Name {
 		return SettingKioskSecret.Type
+	}
+	if name == SettingKioskModeEnabled.Name {
+		return SettingKioskModeEnabled.Type
 	}
 	return 0
 }

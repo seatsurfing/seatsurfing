@@ -17,7 +17,6 @@ type KioskRouter struct {
 }
 
 type KioskBookingResponse struct {
-	ID           string    `json:"id"`
 	Subject      string    `json:"subject"`
 	Owner        string    `json:"owner"`
 	OwnerVisible bool      `json:"ownerVisible"`
@@ -26,9 +25,7 @@ type KioskBookingResponse struct {
 }
 
 type KioskResponse struct {
-	SpaceID        string                `json:"spaceId"`
 	SpaceName      string                `json:"spaceName"`
-	LocationID     string                `json:"locationId"`
 	LocationName   string                `json:"locationName"`
 	Timezone       string                `json:"timezone"`
 	Status         string                `json:"status"`
@@ -48,8 +45,14 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 	// Extract kiosk secret from Authorization: Bearer <secret> header
 	secret := ""
 	authHeader := r.Header.Get("Authorization")
-	if strings.HasPrefix(authHeader, "Bearer ") {
-		secret = strings.TrimPrefix(authHeader, "Bearer ")
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		SendUnauthorized(w)
+		return
+	}
+	secret = strings.TrimPrefix(authHeader, "Bearer ")
+	if secret == "" {
+		SendUnauthorized(w)
+		return
 	}
 
 	// Look up space
@@ -73,10 +76,6 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate kiosk secret
-	if secret == "" {
-		SendUnauthorized(w)
-		return
-	}
 	storedHash, err := GetSettingsRepository().Get(location.OrganizationID, SettingKioskSecret.Name)
 	if err != nil || storedHash == "" {
 		SendUnauthorized(w)
@@ -84,6 +83,18 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 	}
 	if bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(secret)) != nil {
 		SendUnauthorized(w)
+		return
+	}
+
+	// Check feature flag and org-level enable switch
+	featureEnabled, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingFeatureKioskMode.Name)
+	if !featureEnabled {
+		SendNotFound(w)
+		return
+	}
+	kioskModeEnabled, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingKioskModeEnabled.Name)
+	if !kioskModeEnabled {
+		SendNotFound(w)
 		return
 	}
 
@@ -109,9 +120,7 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 	current, next, _ := GetBookingRepository().GetCurrentAndNextBySpaceID(spaceID, now)
 
 	res := &KioskResponse{
-		SpaceID:        space.ID,
 		SpaceName:      space.Name,
-		LocationID:     location.ID,
 		LocationName:   location.Name,
 		Timezone:       tz,
 		CurrentBooking: nil,
@@ -146,7 +155,6 @@ func (router *KioskRouter) toKioskBooking(b *KioskBookingEntry, showNames bool, 
 	enter, _ := AttachTimezoneInformationTz(b.Enter, tz)
 	leave, _ := AttachTimezoneInformationTz(b.Leave, tz)
 	return &KioskBookingResponse{
-		ID:           b.ID,
 		Subject:      b.Subject,
 		Owner:        owner,
 		OwnerVisible: ownerVisible,

@@ -710,6 +710,7 @@ class EditLocation extends React.Component<Props, State> {
         <td>{space.name}</td>
         <td>{RendererUtils.state(space.enabled)}</td>
         <td>{RendererUtils.state(space.requireSubject)}</td>
+        <td>{RendererUtils.state(space.kioskEnabled)}</td>
         <td>
           {RendererUtils.state(space.approvers && space.approvers?.length > 0)}
         </td>
@@ -1012,9 +1013,15 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row}>
+            <Form.Group
+              as={Row}
+              hidden={
+                !RuntimeConfig.INFOS.featureKioskMode ||
+                !RuntimeConfig.INFOS.kioskModeEnabled
+              }
+            >
               <Form.Label column sm="4" htmlFor="space-kiosk-enabled">
-                {this.props.t("kioskModeEnabled")}
+                {this.props.t("kioskMode")}
               </Form.Label>
               <Col sm="8">
                 <Form.Check
@@ -1037,8 +1044,8 @@ class EditLocation extends React.Component<Props, State> {
                     <Form.Text as="div" className="text-muted">
                       {(() => {
                         const spaceId = this.getSelectedSpace()!.id;
-                        const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}?variant=color`;
-                        const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}?variant=mono`;
+                        const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=color&lang=en&secret=YOUR_SECRET_KEY`;
+                        const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=mono&lang=en&secret=YOUR_SECRET_KEY`;
                         const copy = (url: string) =>
                           navigator.clipboard.writeText(url);
                         return (
@@ -1303,6 +1310,7 @@ class EditLocation extends React.Component<Props, State> {
       t("name"),
       t("enabled"),
       t("requireSubject"),
+      t("kioskMode"),
       t("approvers"),
       t("allowBookers"),
       t("bookingLink"),
@@ -1311,6 +1319,7 @@ class EditLocation extends React.Component<Props, State> {
       space.name,
       RendererUtils.stateXls(space.enabled, t),
       RendererUtils.stateXls(space.requireSubject, t),
+      RendererUtils.stateXls(space.kioskEnabled, t),
       RendererUtils.stateXls(space.approvers && space.approvers?.length > 0, t),
       RendererUtils.stateXls(
         space.allowBookers && space.allowBookers?.length > 0,
@@ -1514,6 +1523,7 @@ class EditLocation extends React.Component<Props, State> {
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
+                <th>{this.props.t("kioskMode")}</th>
                 <th>{this.props.t("approvers")}</th>
                 <th>{this.props.t("allowBookers")}</th>
                 <th>{this.props.t("bookingLink")}</th>

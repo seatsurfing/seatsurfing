@@ -420,7 +420,6 @@
   "logoutOthers": "Log out all but this session",
   "previousDay": "Previous day",
   "kioskMode": "Kiosk Mode",
-  "kioskModeEnabled": "Kiosk Mode enabled",
   "kioskModeUrl": "Kiosk URL",
   "kioskModeColorUrl": "Color",
   "kioskModeMonoUrl": "Mono",
