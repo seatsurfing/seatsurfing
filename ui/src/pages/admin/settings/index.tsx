@@ -267,7 +267,8 @@ class Settings extends React.Component<Props, State> {
   };
 
   generateKioskSecret = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const secret = Array.from({ length: 32 }, () =>
       chars.charAt(Math.floor(Math.random() * chars.length)),
     ).join("");
@@ -1225,7 +1226,10 @@ class Settings extends React.Component<Props, State> {
               <Button
                 variant="outline-secondary"
                 onClick={this.saveKioskSecret}
-                disabled={!this.state.kioskSecret || this.state.kioskSecret === "(configured)"}
+                disabled={
+                  !this.state.kioskSecret ||
+                  this.state.kioskSecret === "(configured)"
+                }
               >
                 {this.props.t("save")}
               </Button>

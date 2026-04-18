@@ -76,7 +76,9 @@ export default function KioskPage() {
 
   const getSecret = useCallback((): string => {
     try {
-      return localStorage.getItem(KIOSK_SECRET_KEY + "_" + (spaceId ?? "")) ?? "";
+      return (
+        localStorage.getItem(KIOSK_SECRET_KEY + "_" + (spaceId ?? "")) ?? ""
+      );
     } catch {
       return "";
     }
@@ -130,9 +132,7 @@ export default function KioskPage() {
   const isMono = variant === "mono";
   const isOccupied = data?.status === "occupied";
 
-  const colorClass = isOccupied
-    ? "kiosk-occupied"
-    : "kiosk-available";
+  const colorClass = isOccupied ? "kiosk-occupied" : "kiosk-available";
 
   return (
     <>
@@ -212,11 +212,12 @@ export default function KioskPage() {
                     {data.currentBooking.subject}
                   </div>
                 )}
-                {data.currentBooking.ownerVisible && data.currentBooking.owner && (
-                  <div className="kiosk-card-owner">
-                    {data.currentBooking.owner}
-                  </div>
-                )}
+                {data.currentBooking.ownerVisible &&
+                  data.currentBooking.owner && (
+                    <div className="kiosk-card-owner">
+                      {data.currentBooking.owner}
+                    </div>
+                  )}
               </div>
             )}
 
@@ -234,7 +235,9 @@ export default function KioskPage() {
                   </div>
                 )}
                 {data.nextBooking.ownerVisible && data.nextBooking.owner && (
-                  <div className="kiosk-card-owner">{data.nextBooking.owner}</div>
+                  <div className="kiosk-card-owner">
+                    {data.nextBooking.owner}
+                  </div>
                 )}
               </div>
             )}

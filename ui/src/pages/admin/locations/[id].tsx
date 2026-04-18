@@ -1032,26 +1032,27 @@ class EditLocation extends React.Component<Props, State> {
                     this.setState({ spaces: spaces, changed: true });
                   }}
                 />
-                {this.getSelectedSpace()?.kioskEnabled && this.getSelectedSpace()?.id && (
-                  <Form.Text className="text-muted">
-                    {this.props.t("kioskModeUrl")}:{" "}
-                    <a
-                      href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=color`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {this.props.t("kioskModeColorUrl")}
-                    </a>
-                    {" / "}
-                    <a
-                      href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=mono`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {this.props.t("kioskModeMonoUrl")}
-                    </a>
-                  </Form.Text>
-                )}
+                {this.getSelectedSpace()?.kioskEnabled &&
+                  this.getSelectedSpace()?.id && (
+                    <Form.Text className="text-muted">
+                      {this.props.t("kioskModeUrl")}:{" "}
+                      <a
+                        href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=color`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {this.props.t("kioskModeColorUrl")}
+                      </a>
+                      {" / "}
+                      <a
+                        href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=mono`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {this.props.t("kioskModeMonoUrl")}
+                      </a>
+                    </Form.Text>
+                  )}
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
