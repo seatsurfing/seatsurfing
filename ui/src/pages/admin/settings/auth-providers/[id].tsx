@@ -135,8 +135,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.clientSecret = this.state.clientSecret;
     this.entity.logoutUrl = this.state.logoutUrl;
     this.entity.profilePageUrl = this.state.profilePageUrl;
-    
-    
+
     try {
       await this.entity.save();
       this.props.router.push(
@@ -144,17 +143,14 @@ class EditAuthProvider extends React.Component<Props, State> {
       );
       this.setState({ saved: true, submitting: false });
     } catch (e) {
-       let code: number = 0;
-              if (e instanceof AjaxError) {
-                code = e.appErrorCode;
-              }
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
       this.setState({
-          error: true,
-          errorText: code
-            ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
-        });
-
+        error: true,
+        errorText: code ? ErrorText.getTextForAppCode(code, this.props.t) : "",
+      });
     }
   };
 
