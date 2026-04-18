@@ -189,12 +189,14 @@ func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
 
 // KioskBookingEntry holds the minimal booking data needed for the kiosk display.
 type KioskBookingEntry struct {
-	ID        string
-	UserID    string
-	UserEmail string
-	Enter     time.Time
-	Leave     time.Time
-	Subject   string
+	ID            string
+	UserID        string
+	UserEmail     string
+	UserFirstname string
+	UserLastname  string
+	Enter         time.Time
+	Leave         time.Time
+	Subject       string
 }
 
 // GetCurrentAndNextBySpaceID returns the currently-active booking and the next upcoming
@@ -203,14 +205,14 @@ func (r *BookingRepository) GetCurrentAndNextBySpaceID(spaceID string, now time.
 	var current *KioskBookingEntry
 	c := &KioskBookingEntry{}
 	err := GetDatabase().DB().QueryRow(
-		"SELECT bookings.id, bookings.user_id, users.email, bookings.enter_time, bookings.leave_time, bookings.subject "+
+		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
 			"FROM bookings "+
 			"INNER JOIN users ON users.id = bookings.user_id "+
 			"WHERE bookings.space_id = $1 "+
 			"AND bookings.enter_time <= $2 AND bookings.leave_time >= $2 "+
 			"AND bookings.approved = true "+
 			"ORDER BY bookings.enter_time ASC LIMIT 1",
-		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.Enter, &c.Leave, &c.Subject)
+		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.UserFirstname, &c.UserLastname, &c.Enter, &c.Leave, &c.Subject)
 	if err == nil {
 		current = c
 	}
@@ -218,14 +220,14 @@ func (r *BookingRepository) GetCurrentAndNextBySpaceID(spaceID string, now time.
 	var next *KioskBookingEntry
 	n := &KioskBookingEntry{}
 	err2 := GetDatabase().DB().QueryRow(
-		"SELECT bookings.id, bookings.user_id, users.email, bookings.enter_time, bookings.leave_time, bookings.subject "+
+		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
 			"FROM bookings "+
 			"INNER JOIN users ON users.id = bookings.user_id "+
 			"WHERE bookings.space_id = $1 "+
 			"AND bookings.enter_time > $2 "+
 			"AND bookings.approved = true "+
 			"ORDER BY bookings.enter_time ASC LIMIT 1",
-		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.Enter, &n.Leave, &n.Subject)
+		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.UserFirstname, &n.UserLastname, &n.Enter, &n.Leave, &n.Subject)
 	if err2 == nil {
 		next = n
 	}

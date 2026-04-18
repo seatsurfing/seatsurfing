@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type KioskRouter struct {
@@ -114,30 +115,36 @@ func (router *KioskRouter) getKiosk(w http.ResponseWriter, r *http.Request) {
 
 	if current != nil {
 		res.Status = "occupied"
-		res.CurrentBooking = router.toKioskBooking(current, showNames, tzLocation)
+		res.CurrentBooking = router.toKioskBooking(current, showNames, tz)
 	} else {
 		res.Status = "available"
 	}
 	if next != nil {
-		res.NextBooking = router.toKioskBooking(next, showNames, tzLocation)
+		res.NextBooking = router.toKioskBooking(next, showNames, tz)
 	}
 
 	SendJSON(w, res)
 }
 
-func (router *KioskRouter) toKioskBooking(b *KioskBookingEntry, showNames bool, loc *time.Location) *KioskBookingResponse {
+func (router *KioskRouter) toKioskBooking(b *KioskBookingEntry, showNames bool, tz string) *KioskBookingResponse {
 	owner := ""
 	ownerVisible := false
 	if showNames {
-		owner = b.UserEmail
+		if b.UserFirstname != "" || b.UserLastname != "" {
+			owner = strings.TrimSpace(b.UserFirstname + " " + b.UserLastname)
+		} else {
+			owner = b.UserEmail
+		}
 		ownerVisible = true
 	}
+	enter, _ := AttachTimezoneInformationTz(b.Enter, tz)
+	leave, _ := AttachTimezoneInformationTz(b.Leave, tz)
 	return &KioskBookingResponse{
 		ID:           b.ID,
 		Subject:      b.Subject,
 		Owner:        owner,
 		OwnerVisible: ownerVisible,
-		Enter:        b.Enter.In(loc),
-		Leave:        b.Leave.In(loc),
+		Enter:        enter,
+		Leave:        leave,
 	}
 }

@@ -1034,23 +1034,54 @@ class EditLocation extends React.Component<Props, State> {
                 />
                 {this.getSelectedSpace()?.kioskEnabled &&
                   this.getSelectedSpace()?.id && (
-                    <Form.Text className="text-muted">
-                      {this.props.t("kioskModeUrl")}:{" "}
-                      <a
-                        href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=color`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {this.props.t("kioskModeColorUrl")}
-                      </a>
-                      {" / "}
-                      <a
-                        href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=mono`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {this.props.t("kioskModeMonoUrl")}
-                      </a>
+                    <Form.Text as="div" className="text-muted">
+                      {(() => {
+                        const spaceId = this.getSelectedSpace()!.id;
+                        const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}?variant=color`;
+                        const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}?variant=mono`;
+                        const copy = (url: string) =>
+                          navigator.clipboard.writeText(url);
+                        return (
+                          <>
+                            <div className="mt-1">
+                              <a
+                                href={colorUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {this.props.t("kioskModeColorUrl")}
+                              </a>{" "}
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  copy(colorUrl);
+                                }}
+                              >
+                                ({this.props.t("copyToClipboard")})
+                              </a>
+                            </div>
+                            <div className="mt-1">
+                              <a
+                                href={monoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {this.props.t("kioskModeMonoUrl")}
+                              </a>{" "}
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  copy(monoUrl);
+                                }}
+                              >
+                                ({this.props.t("copyToClipboard")})
+                              </a>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </Form.Text>
                   )}
               </Col>

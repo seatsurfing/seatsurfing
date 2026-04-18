@@ -130,14 +130,21 @@ export default function KioskPage() {
 
   // Initial load and periodic refresh
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fetchDataRef = useRef(fetchData);
+  useEffect(() => {
+    fetchDataRef.current = fetchData;
+  }, [fetchData]);
   useEffect(() => {
     if (!router.isReady || !spaceId) return;
-    fetchData();
-    intervalRef.current = setInterval(fetchData, REFRESH_INTERVAL_MS);
+    fetchDataRef.current();
+    intervalRef.current = setInterval(
+      () => fetchDataRef.current(),
+      REFRESH_INTERVAL_MS,
+    );
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [router.isReady, spaceId, fetchData]);
+  }, [router.isReady, spaceId]);
 
   const isMono = variant === "mono";
   const isOccupied = data?.status === "occupied";
@@ -252,7 +259,7 @@ export default function KioskPage() {
               </div>
             )}
 
-            {lastRefresh && (
+            {lastRefresh && !isMono && (
               <div className="kiosk-footer">
                 {t("kioskLastRefreshed")}: {lastRefresh.toLocaleTimeString()}
               </div>
