@@ -119,7 +119,8 @@ func TestKioskOccupied(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	location, space := CreateTestLocationAndSpace(org)
-	_ = location
+	location.Timezone = "UTC"
+	GetLocationRepository().Update(location)
 
 	space.KioskEnabled = true
 	GetSpaceRepository().Update(space)
@@ -160,7 +161,8 @@ func TestKioskNextBooking(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	location, space := CreateTestLocationAndSpace(org)
-	_ = location
+	location.Timezone = "UTC"
+	GetLocationRepository().Update(location)
 
 	space.KioskEnabled = true
 	GetSpaceRepository().Update(space)
