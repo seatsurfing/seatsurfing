@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "next-export-i18n";
+import { useTranslation, useSelectedLanguage } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
 
 interface KioskBooking {
@@ -43,6 +43,7 @@ const formatTime = (iso: string, timezone: string): string => {
 export default function KioskPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { setLang } = useSelectedLanguage();
 
   const [data, setData] = useState<KioskData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,15 @@ export default function KioskPage() {
   const spaceId = router.query.id as string | undefined;
   const variant =
     (router.query.variant as string | undefined) === "mono" ? "mono" : "color";
+
+  // Apply ?lang= URL param to override the stored language
+  useEffect(() => {
+    if (!router.isReady) return;
+    const langFromUrl = router.query.lang as string | undefined;
+    if (langFromUrl) {
+      setLang(langFromUrl);
+    }
+  }, [router.isReady, router.query.lang, setLang]);
 
   // Store kiosk secret from URL param into localStorage, then strip from URL
   useEffect(() => {
