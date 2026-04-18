@@ -1046,8 +1046,6 @@ class EditLocation extends React.Component<Props, State> {
                         const spaceId = this.getSelectedSpace()!.id;
                         const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=color&lang=en&secret=YOUR_SECRET_KEY`;
                         const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=mono&lang=en&secret=YOUR_SECRET_KEY`;
-                        const copy = (url: string) =>
-                          navigator.clipboard.writeText(url);
                         return (
                           <>
                             <div className="mt-1">
@@ -1058,33 +1056,22 @@ class EditLocation extends React.Component<Props, State> {
                               >
                                 {this.props.t("kioskModeColorUrl")}
                               </a>{" "}
+                              <CopyToClipboardButton
+                                text={colorUrl}
+                                small={true}
+                                />
                               <a
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  copy(colorUrl);
-                                }}
-                              >
-                                ({this.props.t("copyToClipboard")})
-                              </a>
-                            </div>
-                            <div className="mt-1">
-                              <a
+                                style={{ marginLeft: "20px" }}
                                 href={monoUrl}
                                 target="_blank"
                                 rel="noreferrer"
                               >
                                 {this.props.t("kioskModeMonoUrl")}
                               </a>{" "}
-                              <a
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  copy(monoUrl);
-                                }}
-                              >
-                                ({this.props.t("copyToClipboard")})
-                              </a>
+                              <CopyToClipboardButton
+                                text={monoUrl}
+                                small={true}
+                              />
                             </div>
                           </>
                         );
