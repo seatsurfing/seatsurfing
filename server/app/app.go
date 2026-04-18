@@ -124,6 +124,7 @@ func (a *App) InitializeRouter() {
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
+	routers["/kiosk/"] = &KioskRouter{}
 	for _, plg := range plugin.GetPlugins() {
 		for route, router := range (*plg).GetPublicRoutes() {
 			routers[route] = router

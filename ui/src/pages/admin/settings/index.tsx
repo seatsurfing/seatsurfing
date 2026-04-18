@@ -16,6 +16,7 @@ import {
   Save as IconSave,
   AlertTriangle as IconAlert,
   Check as IconCheck,
+  RefreshCw as IconRefresh,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -33,6 +34,7 @@ import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 import RedirectUtil from "@/util/RedirectUtil";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 
 interface State {
   allowAnyUser: boolean;
@@ -71,6 +73,7 @@ interface State {
   allowRecurringBookings: boolean;
   newUserDefaultMailNotification: boolean;
   enforceTOTP: boolean;
+  kioskSecret: string;
 }
 
 interface Props {
@@ -125,6 +128,7 @@ class Settings extends React.Component<Props, State> {
       allowRecurringBookings: true,
       newUserDefaultMailNotification: false,
       enforceTOTP: false,
+      kioskSecret: "",
     };
   }
 
@@ -246,6 +250,8 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "new_user_default_mail_notification")
           state.newUserDefaultMailNotification = s.value === "1";
         if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
+        if (s.name === "kiosk_access_secret")
+          state.kioskSecret = s.value === "1" ? "(configured)" : "";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
       });
@@ -258,6 +264,27 @@ class Settings extends React.Component<Props, State> {
         ...state,
       });
     });
+  };
+
+  generateKioskSecret = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const secret = Array.from({ length: 32 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length)),
+    ).join("");
+    this.setState({ kioskSecret: secret });
+  };
+
+  saveKioskSecret = (e: any) => {
+    e.preventDefault();
+    OrgSettings.setOne("kiosk_access_secret", this.state.kioskSecret)
+      .then(() => {
+        this.setState({
+          kioskSecret: "(configured)",
+        });
+      })
+      .catch(() => {
+        this.setState({ error: true });
+      });
   };
 
   loadTimezones = async (): Promise<void> => {
@@ -1167,6 +1194,41 @@ class Settings extends React.Component<Props, State> {
                   {this.props.t("addDomain")}
                 </Button>
               </InputGroup>
+            </Col>
+          </Form.Group>
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>{this.props.t("kioskMode")}</h4>
+          </div>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="input-kioskSecret">
+              {this.props.t("kioskSecret")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <Form.Control
+                  id="input-kioskSecret"
+                  type="text"
+                  value={this.state.kioskSecret}
+                  disabled={true}
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.generateKioskSecret}
+                  title={this.props.t("generatePassword")}
+                >
+                  <IconRefresh className="feather" />
+                </Button>
+                <CopyToClipboardButton text={this.state.kioskSecret} />
+              </InputGroup>
+            </Col>
+            <Col sm="2">
+              <Button
+                variant="outline-secondary"
+                onClick={this.saveKioskSecret}
+                disabled={!this.state.kioskSecret || this.state.kioskSecret === "(configured)"}
+              >
+                {this.props.t("save")}
+              </Button>
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

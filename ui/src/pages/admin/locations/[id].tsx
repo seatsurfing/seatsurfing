@@ -59,6 +59,7 @@ interface SpaceState {
   rotation: number;
   requireSubject: boolean;
   enabled: boolean;
+  kioskEnabled: boolean;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -270,6 +271,7 @@ class EditLocation extends React.Component<Props, State> {
         space.rotation = Math.round(item.rotation);
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
+        space.kioskEnabled = item.kioskEnabled;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -448,6 +450,7 @@ class EditLocation extends React.Component<Props, State> {
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
+      kioskEnabled: e ? e.kioskEnabled : false,
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -1007,6 +1010,48 @@ class EditLocation extends React.Component<Props, State> {
                     )
                   }
                 />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm="4" htmlFor="space-kiosk-enabled">
+                {this.props.t("kioskModeEnabled")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Check
+                  type="checkbox"
+                  id="space-kiosk-enabled"
+                  label={this.props.t("yes")}
+                  checked={this.getSelectedSpace()?.kioskEnabled}
+                  onChange={(e: any) => {
+                    const spaces = this.state.spaces;
+                    const idx = this.state.selectedSpace!;
+                    const space = { ...spaces[idx] };
+                    space.kioskEnabled = e.target.checked;
+                    space.changed = true;
+                    spaces[idx] = space;
+                    this.setState({ spaces: spaces, changed: true });
+                  }}
+                />
+                {this.getSelectedSpace()?.kioskEnabled && this.getSelectedSpace()?.id && (
+                  <Form.Text className="text-muted">
+                    {this.props.t("kioskModeUrl")}:{" "}
+                    <a
+                      href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=color`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {this.props.t("kioskModeColorUrl")}
+                    </a>
+                    {" / "}
+                    <a
+                      href={`/ui/kiosk/${this.getSelectedSpace()!.id}?variant=mono`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {this.props.t("kioskModeMonoUrl")}
+                    </a>
+                  </Form.Text>
+                )}
               </Col>
             </Form.Group>
             <Form.Group as={Row}>

@@ -421,5 +421,20 @@
   "newPasswordPlaceholder": "Neues Passwort",
   "passwordUpdateInfo": "Dein aktuelles Passwort muss geändert werden. Wähle ein neues Passwort, welches sich von dem aktuellen unterscheidet.",
   "logoutOthers": "Alle außer diese Session abmelden",
-  "previousDay": "Vorheriger Tag"
+  "previousDay": "Vorheriger Tag",
+  "kioskMode": "Kiosk-Modus",
+  "kioskModeEnabled": "Kiosk-Modus aktiv",
+  "kioskModeUrl": "Kiosk-URL",
+  "kioskModeColorUrl": "Farbe",
+  "kioskModeMonoUrl": "Mono",
+  "kioskSecret": "Kiosk-Zugriffsgeheimnis",
+  "kioskAvailable": "Verfügbar",
+  "kioskOccupied": "Belegt",
+  "kioskNow": "Aktuelle Buchung",
+  "kioskNext": "Nächste Buchung",
+  "kioskLastRefreshed": "Zuletzt aktualisiert",
+  "kioskAuthError": "Ungültiges Kiosk-Geheimnis. URL-Parameter prüfen.",
+  "kioskNotFound": "Raum nicht gefunden oder Kiosk-Modus nicht aktiviert.",
+  "kioskFetchError": "Raumstatus konnte nicht geladen werden.",
+  "kioskSecretMissing": "Kein Kiosk-Geheimnis angegeben. ?secret=... zur URL hinzufügen."
 }

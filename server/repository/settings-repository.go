@@ -61,6 +61,7 @@ var (
 	SettingFeatureAuthProviders           SettingName = SettingName{Name: "feature_auth_providers", Type: SettingTypeBool}
 	SettingFeatureRecurringBookings       SettingName = SettingName{Name: "feature_recurring_bookings", Type: SettingTypeBool}
 	SettingEnforceTOTP                    SettingName = SettingName{Name: "enforce_totp", Type: SettingTypeBool}
+	SettingKioskSecret                    SettingName = SettingName{Name: "kiosk_access_secret", Type: SettingTypeString}
 )
 
 var settingsRepository *SettingsRepository
