@@ -126,16 +126,16 @@ Each organization gains one kiosk credential with these properties:
 
 Add the following field to the space entity:
 
-| Field | Type | Description |
-| --- | --- | --- |
+| Field          | Type   | Description                                 |
+| -------------- | ------ | ------------------------------------------- |
 | `kioskEnabled` | `bool` | Whether kiosk mode is enabled for the space |
 
 Add organization-level settings for kiosk authentication:
 
-| Setting | Type | Description |
-| --- | --- | --- |
-| `kiosk_access_secret_hash` | `string` | Hash of the organization-wide kiosk secret |
-| `kiosk_access_secret_updated_at` | `timestamp` | Last set / rotation timestamp |
+| Setting                          | Type        | Description                                |
+| -------------------------------- | ----------- | ------------------------------------------ |
+| `kiosk_access_secret_hash`       | `string`    | Hash of the organization-wide kiosk secret |
+| `kiosk_access_secret_updated_at` | `timestamp` | Last set / rotation timestamp              |
 
 The kiosk secret itself is never returned from normal `GET setting`, `GET space`, or similar read APIs after it has been saved.
 
@@ -236,28 +236,28 @@ Response shape:
 
 Field requirements:
 
-| Field | Required | Notes |
-| --- | --- | --- |
-| `spaceId` | yes | Existing space UUID |
-| `spaceName` | yes | Space title shown on page |
-| `locationId` | yes | For internal reference and future expansion |
-| `locationName` | no | Optional in UI, useful in payload |
-| `timezone` | yes | Use location timezone for formatting |
-| `status` | yes | `available` or `occupied` |
-| `currentBooking` | yes | `null` when no active booking |
-| `nextBooking` | yes | `null` when no upcoming booking exists |
-| `refreshedAt` | yes | Timestamp of server evaluation |
+| Field            | Required | Notes                                       |
+| ---------------- | -------- | ------------------------------------------- |
+| `spaceId`        | yes      | Existing space UUID                         |
+| `spaceName`      | yes      | Space title shown on page                   |
+| `locationId`     | yes      | For internal reference and future expansion |
+| `locationName`   | no       | Optional in UI, useful in payload           |
+| `timezone`       | yes      | Use location timezone for formatting        |
+| `status`         | yes      | `available` or `occupied`                   |
+| `currentBooking` | yes      | `null` when no active booking               |
+| `nextBooking`    | yes      | `null` when no upcoming booking exists      |
+| `refreshedAt`    | yes      | Timestamp of server evaluation              |
 
 Booking object requirements:
 
-| Field | Required | Notes |
-| --- | --- | --- |
-| `id` | yes | Booking UUID |
-| `subject` | yes | Empty string if no subject is set |
-| `owner` | yes | Visible value or empty string if hidden by privacy rules |
-| `ownerVisible` | yes | Explicit flag so UI can render correct fallback |
-| `enter` | yes | Localized to space location timezone |
-| `leave` | yes | Localized to space location timezone |
+| Field          | Required | Notes                                                    |
+| -------------- | -------- | -------------------------------------------------------- |
+| `id`           | yes      | Booking UUID                                             |
+| `subject`      | yes      | Empty string if no subject is set                        |
+| `owner`        | yes      | Visible value or empty string if hidden by privacy rules |
+| `ownerVisible` | yes      | Explicit flag so UI can render correct fallback          |
+| `enter`        | yes      | Localized to space location timezone                     |
+| `leave`        | yes      | Localized to space location timezone                     |
 
 ### Booking Selection Rules
 
@@ -486,18 +486,18 @@ Add at least one end-to-end scenario that:
 
 ## Files Expected to Change During Implementation
 
-| File or Area | Expected Change |
-| --- | --- |
-| `server/repository/space-repository.go` and related schema code | Persist kiosk enablement |
+| File or Area                                                       | Expected Change                                 |
+| ------------------------------------------------------------------ | ----------------------------------------------- |
+| `server/repository/space-repository.go` and related schema code    | Persist kiosk enablement                        |
 | `server/repository/settings-repository.go` and related schema code | Persist the organization-wide kiosk secret hash |
-| `server/router/space-router.go` or a new dedicated router | Add kiosk endpoint |
-| `specs/openapi.yaml` | Document kiosk API |
-| `ui/src/pages/admin/locations/[id].tsx` | Add kiosk controls to the space settings modal |
-| `ui/src/pages/admin/settings/index.tsx` | Add global kiosk credential controls |
-| `ui/src/types/Space.ts` | Extend space model with kiosk properties |
-| `ui/src/pages/ui/kiosk/...` or equivalent Next.js route | Add kiosk page |
-| frontend test files | Add kiosk page and admin UI coverage |
-| backend router tests | Add kiosk endpoint coverage |
+| `server/router/space-router.go` or a new dedicated router          | Add kiosk endpoint                              |
+| `specs/openapi.yaml`                                               | Document kiosk API                              |
+| `ui/src/pages/admin/locations/[id].tsx`                            | Add kiosk controls to the space settings modal  |
+| `ui/src/pages/admin/settings/index.tsx`                            | Add global kiosk credential controls            |
+| `ui/src/types/Space.ts`                                            | Extend space model with kiosk properties        |
+| `ui/src/pages/ui/kiosk/...` or equivalent Next.js route            | Add kiosk page                                  |
+| frontend test files                                                | Add kiosk page and admin UI coverage            |
+| backend router tests                                               | Add kiosk endpoint coverage                     |
 
 ## Acceptance Criteria
 
