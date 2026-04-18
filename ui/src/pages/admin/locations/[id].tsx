@@ -1059,7 +1059,7 @@ class EditLocation extends React.Component<Props, State> {
                               <CopyToClipboardButton
                                 text={colorUrl}
                                 small={true}
-                                />
+                              />
                               <a
                                 style={{ marginLeft: "20px" }}
                                 href={monoUrl}
