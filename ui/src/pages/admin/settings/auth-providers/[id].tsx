@@ -1,9 +1,18 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert, ButtonGroup } from "react-bootstrap";
+import {
+  Form,
+  Col,
+  Row,
+  Button,
+  Alert,
+  ButtonGroup,
+  InputGroup,
+} from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
   Trash2 as IconDelete,
+  Edit2 as IconEdit,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -37,6 +46,7 @@ interface State {
   userInfoLastnameField: string;
   clientId: string;
   clientSecret: string;
+  clientSecretEditing: boolean;
   logoutUrl: string;
   profilePageUrl: string;
   readOnly: boolean;
@@ -71,6 +81,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoLastnameField: "",
       clientId: "",
       clientSecret: "",
+      clientSecretEditing: true,
       logoutUrl: "",
       profilePageUrl: "",
       readOnly: false,
@@ -104,6 +115,7 @@ class EditAuthProvider extends React.Component<Props, State> {
           userInfoLastnameField: authProvider.userInfoLastnameField,
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
+          clientSecretEditing: false,
           logoutUrl: authProvider.logoutUrl,
           profilePageUrl: authProvider.profilePageUrl,
           readOnly: authProvider.readOnly,
@@ -132,7 +144,9 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.userInfoFirstnameField = this.state.userInfoFirstnameField;
     this.entity.userInfoLastnameField = this.state.userInfoLastnameField;
     this.entity.clientId = this.state.clientId;
-    this.entity.clientSecret = this.state.clientSecret;
+    if (this.state.clientSecretEditing) {
+      this.entity.clientSecret = this.state.clientSecret;
+    }
     this.entity.logoutUrl = this.state.logoutUrl;
     this.entity.profilePageUrl = this.state.profilePageUrl;
 
@@ -141,7 +155,11 @@ class EditAuthProvider extends React.Component<Props, State> {
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
       );
-      this.setState({ saved: true, submitting: false });
+      this.setState({
+        saved: true,
+        submitting: false,
+        clientSecretEditing: false,
+      });
     } catch (e) {
       let code: number = 0;
       if (e instanceof AjaxError) {
@@ -477,17 +495,40 @@ class EditAuthProvider extends React.Component<Props, State> {
               Client Secret
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="text"
-                placeholder="Client Secret"
-                value={this.state.clientSecret}
-                onChange={(e: any) =>
-                  this.setState({ clientSecret: e.target.value })
-                }
-                required={true}
-                pattern="[^\s]+"
-                title="Client Secret (whitespaces are not allowed)"
-              />
+              {!this.state.clientSecretEditing && this.entity.id ? (
+                <InputGroup>
+                  <Form.Control
+                    type="text"
+                    value="••••••••••••••••"
+                    readOnly={true}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() =>
+                      this.setState({
+                        clientSecretEditing: true,
+                        clientSecret: "",
+                      })
+                    }
+                    title={this.props.t("edit")}
+                  >
+                    <IconEdit className="feather" />
+                  </Button>
+                </InputGroup>
+              ) : (
+                <Form.Control
+                  type="text"
+                  placeholder="Client Secret"
+                  value={this.state.clientSecret}
+                  onChange={(e: any) =>
+                    this.setState({ clientSecret: e.target.value })
+                  }
+                  required={true}
+                  pattern="[^\s]+"
+                  title="Client Secret (whitespaces are not allowed)"
+                  autoFocus={this.state.clientSecretEditing && !!this.entity.id}
+                />
+              )}
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

@@ -25,7 +25,7 @@ type CreateAuthProviderRequest struct {
 	UserInfoFirstnameField string `json:"userInfoFirstnameField" validate:"max=256"`
 	UserInfoLastnameField  string `json:"userInfoLastnameField" validate:"max=256"`
 	ClientID               string `json:"clientId" validate:"required,max=256"`
-	ClientSecret           string `json:"clientSecret" validate:"required,max=256"`
+	ClientSecret           string `json:"clientSecret,omitempty" validate:"max=256"`
 	LogoutURL              string `json:"logoutUrl" validate:"max=256"`
 	ProfilePageURL         string `json:"profilePageUrl" validate:"max=256"`
 }
@@ -111,6 +111,7 @@ func (router *AuthProviderRouter) getAll(w http.ResponseWriter, r *http.Request)
 	}
 	SendJSON(w, res)
 }
+
 func (router *AuthProviderRouter) validateCreateAuthProviderRequest(m *CreateAuthProviderRequest) bool {
 	if m.ProviderType != int(OAuth2) {
 		return false
@@ -163,6 +164,12 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 	}
 
 	eNew := router.copyFromRestModel(&m)
+
+	// keep existing client secret
+	if eNew.ClientSecret == "" {
+		eNew.ClientSecret = e.ClientSecret
+	}
+
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
 	eNew.ReadOnly = e.ReadOnly
@@ -219,7 +226,7 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-	if !router.validateCreateAuthProviderRequest(&m) {
+	if !router.validateCreateAuthProviderRequest(&m) || m.ClientSecret == "" {
 		SendBadRequest(w)
 		return
 	}
@@ -279,7 +286,6 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	m.ClientSecret = e.ClientSecret
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle

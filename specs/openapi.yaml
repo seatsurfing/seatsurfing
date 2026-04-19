@@ -1227,8 +1227,6 @@ components:
           type: string
         clientId:
           type: string
-        clientSecret:
-          type: string
         logoutUrl:
           type: string
         profilePageUrl:

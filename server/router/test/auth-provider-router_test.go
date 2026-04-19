@@ -85,7 +85,7 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestString(t, "Test", resBody.Name)
 	CheckTestString(t, "test1", resBody.ClientID)
-	CheckTestString(t, "test2", resBody.ClientSecret)
+	CheckTestString(t, "", resBody.ClientSecret) // secret is not returned
 	CheckTestString(t, "http://test.com/1", resBody.AuthURL)
 	CheckTestString(t, "http://test.com/2", resBody.TokenURL)
 	CheckTestInt(t, 0, resBody.AuthStyle)
@@ -109,7 +109,7 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
 	CheckTestString(t, "Test_2", resBody2.Name)
 	CheckTestString(t, "test1_2", resBody2.ClientID)
-	CheckTestString(t, "test2_2", resBody2.ClientSecret)
+	CheckTestString(t, "", resBody2.ClientSecret) // secret is not returned
 	CheckTestString(t, "http://test.com/1_2", resBody2.AuthURL)
 	CheckTestString(t, "http://test.com/2_2", resBody2.TokenURL)
 	CheckTestInt(t, 1, resBody2.AuthStyle)
@@ -118,6 +118,13 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	CheckTestString(t, "http://test.com/userinfo_2", resBody2.UserInfoURL)
 	CheckTestString(t, "email_2", resBody2.UserInfoEmailField)
 	CheckTestInt(t, int(OAuth2), resBody2.ProviderType)
+
+	// Read client secret in database
+	dbEntity, err := GetAuthProviderRepository().GetOne(id)
+	if err != nil {
+		t.Fatalf("Expected auth provider to exist")
+	}
+	CheckTestString(t, "test2_2", dbEntity.ClientSecret)
 
 	// 4. Delete
 	req = NewHTTPRequest("DELETE", "/auth-provider/"+id, loginResponse.UserID, nil)
@@ -211,6 +218,63 @@ func TestAuthProviderUpdateDuplicateName(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/auth-provider/"+idA, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestAuthProvidersUpdateKeepsExistingClientSecret(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	userAdmin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(userAdmin.ID)
+
+	// Create with secret
+	payload := `{"name": "Test", "providerType": 1, "clientId": "test1", "clientSecret": "original-secret", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req := NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Update without clientSecret field
+	payload = `{"name": "Test_2", "providerType": 1, "clientId": "test1", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req = NewHTTPRequest("PUT", "/auth-provider/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify secret is preserved via repository
+	e, err := GetAuthProviderRepository().GetOne(id)
+	if err != nil {
+		t.Fatalf("Expected auth provider to exist")
+	}
+	CheckTestString(t, "original-secret", e.ClientSecret)
+	CheckTestString(t, "Test_2", e.Name)
+}
+
+func TestAuthProvidersUpdateChangesClientSecret(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	userAdmin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(userAdmin.ID)
+
+	// Create with secret
+	payload := `{"name": "Test", "providerType": 1, "clientId": "test1", "clientSecret": "original-secret", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req := NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Update with new clientSecret
+	payload = `{"name": "Test", "providerType": 1, "clientId": "test1", "clientSecret": "new-secret", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req = NewHTTPRequest("PUT", "/auth-provider/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify secret was changed via repository
+	e, err := GetAuthProviderRepository().GetOne(id)
+	if err != nil {
+		t.Fatalf("Expected auth provider to exist")
+	}
+	CheckTestString(t, "new-secret", e.ClientSecret)
 }
 
 func TestAuthProviderDeletionProtection(t *testing.T) {
