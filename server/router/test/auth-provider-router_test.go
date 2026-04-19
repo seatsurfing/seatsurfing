@@ -85,7 +85,7 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestString(t, "Test", resBody.Name)
 	CheckTestString(t, "test1", resBody.ClientID)
-	CheckTestString(t, "", resBody.ClientSecret)
+	CheckTestString(t, "", resBody.ClientSecret) // secret is not returned
 	CheckTestString(t, "http://test.com/1", resBody.AuthURL)
 	CheckTestString(t, "http://test.com/2", resBody.TokenURL)
 	CheckTestInt(t, 0, resBody.AuthStyle)
