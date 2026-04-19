@@ -73,6 +73,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingAllowRecurringBookings.Name,
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
+		SettingFeatureKioskMode.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -152,6 +153,8 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
 		SettingTargetUtilizationHoursPerWeek.Name,
+		SettingFeatureKioskMode.Name,
+		SettingKioskModeEnabled.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

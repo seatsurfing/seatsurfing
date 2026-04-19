@@ -28,6 +28,7 @@ type CreateSpaceRequest struct {
 	Rotation              uint                         `json:"rotation" validate:"max=359"`
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
+	KioskEnabled          bool                         `json:"kioskEnabled"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
@@ -927,6 +928,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Rotation = m.Rotation
 	e.RequireSubject = m.RequireSubject
 	e.Enabled = m.Enabled
+	e.KioskEnabled = m.KioskEnabled
 	return e
 }
 
@@ -942,6 +944,7 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.Rotation = e.Rotation
 	m.RequireSubject = e.RequireSubject
 	m.Enabled = e.Enabled
+	m.KioskEnabled = e.KioskEnabled
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {

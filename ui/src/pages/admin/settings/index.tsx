@@ -16,6 +16,7 @@ import {
   Save as IconSave,
   AlertTriangle as IconAlert,
   Check as IconCheck,
+  RefreshCw as IconRefresh,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -33,6 +34,8 @@ import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 import RedirectUtil from "@/util/RedirectUtil";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import Validation from "@/util/Validation";
 
 interface State {
   allowAnyUser: boolean;
@@ -71,6 +74,8 @@ interface State {
   allowRecurringBookings: boolean;
   newUserDefaultMailNotification: boolean;
   enforceTOTP: boolean;
+  kioskSecret: string;
+  kioskModeEnabled: boolean;
 }
 
 interface Props {
@@ -125,6 +130,8 @@ class Settings extends React.Component<Props, State> {
       allowRecurringBookings: true,
       newUserDefaultMailNotification: false,
       enforceTOTP: false,
+      kioskSecret: "",
+      kioskModeEnabled: false,
     };
   }
 
@@ -246,6 +253,10 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "new_user_default_mail_notification")
           state.newUserDefaultMailNotification = s.value === "1";
         if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
+        if (s.name === "kiosk_mode_enabled")
+          state.kioskModeEnabled = s.value === "1";
+        if (s.name === "kiosk_access_secret")
+          state.kioskSecret = s.value === "1" ? "(configured)" : "";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
       });
@@ -258,6 +269,23 @@ class Settings extends React.Component<Props, State> {
         ...state,
       });
     });
+  };
+
+  generateKioskSecret = () => {
+    this.setState({ kioskSecret: Validation.generatePassword(32, true) });
+  };
+
+  saveKioskSecret = (e: any) => {
+    e.preventDefault();
+    OrgSettings.setOne("kiosk_access_secret", this.state.kioskSecret)
+      .then(() => {
+        this.setState({
+          kioskSecret: "(configured)",
+        });
+      })
+      .catch(() => {
+        this.setState({ error: true });
+      });
   };
 
   loadTimezones = async (): Promise<void> => {
@@ -353,6 +381,10 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings("enforce_totp", this.state.enforceTOTP ? "1" : "0"),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
+      new OrgSettings(
+        "kiosk_mode_enabled",
+        this.state.kioskModeEnabled ? "1" : "0",
+      ),
     ];
     OrgSettings.setAll(payload)
       .then(() => {
@@ -1170,7 +1202,79 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("authProviders")}</h4>
+            <h4>
+              {this.props.t("kioskMode")}
+              <PremiumFeatureIcon />
+            </h4>
+          </div>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-kioskModeEnabled"
+                label={this.props.t("kioskModeAvailable")}
+                checked={
+                  this.state.kioskModeEnabled &&
+                  RuntimeConfig.INFOS.featureKioskMode
+                }
+                disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                onChange={(e: any) =>
+                  this.setState({ kioskModeEnabled: e.target.checked })
+                }
+              />
+              <Form.Text className="text-muted">
+                {this.props.t("kioskModeAvailableHint")}
+              </Form.Text>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="input-kioskSecret">
+              {this.props.t("kioskSecret")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <Form.Control
+                  id="input-kioskSecret"
+                  type="text"
+                  value={this.state.kioskSecret}
+                  disabled={true}
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.generateKioskSecret}
+                  title={this.props.t("generatePassword")}
+                  disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                >
+                  <IconRefresh className="feather" />
+                </Button>
+                <CopyToClipboardButton
+                  text={this.state.kioskSecret}
+                  disabled={
+                    !this.state.kioskSecret ||
+                    this.state.kioskSecret === "(configured)"
+                  }
+                />
+              </InputGroup>
+            </Col>
+            <Col sm="2">
+              <Button
+                variant="outline-secondary"
+                onClick={this.saveKioskSecret}
+                disabled={
+                  !RuntimeConfig.INFOS.featureKioskMode ||
+                  !this.state.kioskSecret ||
+                  this.state.kioskSecret === "(configured)"
+                }
+              >
+                {this.props.t("save")}
+              </Button>
+            </Col>
+          </Form.Group>
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>
+              {this.props.t("authProviders")}
+              <PremiumFeatureIcon />
+            </h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
                 <Link
