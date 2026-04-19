@@ -157,7 +157,7 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, e.Name)
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, m.Name)
 	if err == nil && existingAuthProvider != nil && existingAuthProvider.ID != e.ID {
 		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
 		return

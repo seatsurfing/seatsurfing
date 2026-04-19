@@ -101,11 +101,12 @@ Each organization gains one kiosk credential with these properties:
 
 ### Provisioning Flow
 
-1. An admin configures the organization-wide kiosk secret in the Settings page.
-2. An admin enables kiosk mode for one or more spaces.
-3. For each enabled space, the admin is shown kiosk URLs for the available presentation variants.
-4. The admin provisions kiosk devices using the global kiosk secret.
-5. Subsequent kiosk API calls use the stored secret in an `Authorization` header.
+1. An admin enables kiosk mode organization-wide (`kiosk_mode_enabled`) from the Settings page.
+2. An admin configures the organization-wide kiosk secret in the Settings page.
+3. An admin enables kiosk mode for one or more spaces.
+4. For each enabled space, the admin is shown kiosk URLs for the available presentation variants.
+5. The admin provisions kiosk devices by opening the URL directly: passing `?secret=<kiosk-secret>` as a query parameter on the first visit stores the secret in the device's `localStorage` and removes it from the URL. Subsequent visits use the stored secret.
+6. Subsequent kiosk API calls use the stored secret in an `Authorization: Bearer` header.
 
 ### Why This Design
 
@@ -130,16 +131,23 @@ Add the following field to the space entity:
 | -------------- | ------ | ------------------------------------------- |
 | `kioskEnabled` | `bool` | Whether kiosk mode is enabled for the space |
 
-Add organization-level settings for kiosk authentication:
+Add organization-level settings for kiosk authentication and feature control:
 
-| Setting                          | Type        | Description                                |
-| -------------------------------- | ----------- | ------------------------------------------ |
-| `kiosk_access_secret_hash`       | `string`    | Hash of the organization-wide kiosk secret |
-| `kiosk_access_secret_updated_at` | `timestamp` | Last set / rotation timestamp              |
+| Setting               | Type     | Visibility    | Description                                                   |
+| --------------------- | -------- | ------------- | ------------------------------------------------------------- |
+| `kiosk_access_secret` | `string` | admin only    | Bcrypt hash of the organization-wide kiosk secret             |
+| `kiosk_mode_enabled`  | `bool`   | admin only    | Whether kiosk mode is active for this organization            |
+| `feature_kiosk_mode`  | `bool`   | public (read) | License/feature flag controlling kiosk availability in the UI |
 
-The kiosk secret itself is never returned from normal `GET setting`, `GET space`, or similar read APIs after it has been saved.
+Notes on storage:
 
-The implementation may store these values either in the existing settings repository or in a dedicated organization-scoped kiosk settings store. The effective domain model must remain organization-wide for the credential and per-space for kiosk enablement.
+- `kiosk_access_secret` stores the bcrypt hash directly under this key — no `_hash` suffix. There is no separate `_updated_at` field.
+- `kiosk_mode_enabled` defaults to `false` for all organizations; an admin must explicitly enable it.
+- `feature_kiosk_mode` is a deployment-level flag; it is publicly readable so the UI can gate kiosk controls without an authenticated request.
+
+The kiosk secret itself is never returned from normal `GET setting`, `GET space`, or similar read APIs after it has been saved. Reading `kiosk_access_secret` returns `"1"` when a hash is stored, or `""` when none is configured.
+
+These values are stored in the existing settings repository, organization-wide for the credential and org-level toggle, and per-space for kiosk enablement.
 
 ## Admin UI Changes
 
@@ -148,20 +156,23 @@ The implementation may store these values either in the existing settings reposi
 Extend the existing per-space settings modal in the location admin page with a new section:
 
 - `Enable kiosk mode` checkbox
-- Read-only display of the kiosk page URL for the color variant
-- Read-only display of the kiosk page URL for the monochrome variant
+- Read-only display of the kiosk page URL for the color variant (with `CopyToClipboard` button)
+- Read-only display of the kiosk page URL for the monochrome variant (with `CopyToClipboard` button)
 - Hint that kiosk authentication is configured globally in Settings
 
-The kiosk section belongs in the existing space details dialog, alongside fields like name, enabled, and require subject.
+The kiosk section is hidden entirely when `feature_kiosk_mode` is `false` or when `kiosk_mode_enabled` is `false` for the organization. It belongs in the existing space details dialog, alongside fields like name, enabled, and require subject.
 
 ### Settings Page
 
 Extend the admin Settings page with a new kiosk access section:
 
-- `Kiosk access secret` input
-- `Save` action to set or replace the organization-wide kiosk secret
-- Optional `Generate random secret` helper for admins who do not want to choose one manually
+- `Enable kiosk mode` toggle (`kiosk_mode_enabled`) to activate or deactivate kiosk access organization-wide
+- `Kiosk access secret` input; displays `(configured)` when a hash is already stored, empty otherwise
+- `Generate random secret` button to produce a cryptographically random alphanumeric secret
+- `Save secret` action to set or replace the organization-wide kiosk secret
 - Warning that replacing the secret invalidates all existing kiosk sessions in the organization
+
+All kiosk controls (generate, save, copy) are disabled when `feature_kiosk_mode` is `false`.
 
 This section belongs in the existing organization settings flow, not in the per-space dialog.
 
@@ -186,11 +197,13 @@ Add a new UI route:
 
 - `GET /ui/kiosk/{spaceUuid}`
 
-Variant selection:
+Query parameters:
 
 - `?variant=color` selects the color LCD-oriented presentation
 - `?variant=mono` selects the monochrome e-ink-oriented presentation
-- If omitted, `color` is the default
+- `?lang=<locale>` overrides the display language (e.g. `lang=en`, `lang=de`). The value is persisted in `localStorage` so subsequent visits without the parameter retain the chosen language.
+- `?secret=<plaintext-secret>` provisions the kiosk device on first visit: the value is stored in `localStorage` under a space-scoped key and immediately stripped from the URL so it does not appear in browser history. All subsequent API calls use the stored secret.
+- If `variant` is omitted, `color` is the default.
 
 Behavior:
 
@@ -203,11 +216,14 @@ Behavior:
 
 Add a new dedicated endpoint:
 
-- `GET /space/{spaceUuid}/kiosk`
+- `GET /kiosk/{spaceUuid}/status`
+
+This route is registered outside the normal session-authenticated middleware (unauthorized routes). Authentication is performed by the handler itself.
 
 Authentication:
 
-- Uses a kiosk-specific bearer token or equivalent header-based credential derived from the organization-wide kiosk secret
+- Uses `Authorization: Bearer <plaintext-secret>` where the secret is the organization-wide kiosk secret in plaintext
+- The handler bcrypt-compares the presented value against the stored hash
 - Does not use normal session auth
 - Does not require `locationId`
 
@@ -250,14 +266,14 @@ Field requirements:
 
 Booking object requirements:
 
-| Field          | Required | Notes                                                    |
-| -------------- | -------- | -------------------------------------------------------- |
-| `id`           | yes      | Booking UUID                                             |
-| `subject`      | yes      | Empty string if no subject is set                        |
-| `owner`        | yes      | Visible value or empty string if hidden by privacy rules |
-| `ownerVisible` | yes      | Explicit flag so UI can render correct fallback          |
-| `enter`        | yes      | Localized to space location timezone                     |
-| `leave`        | yes      | Localized to space location timezone                     |
+| Field          | Required | Notes                                                                                                   |
+| -------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `id`           | yes      | Booking UUID                                                                                            |
+| `subject`      | yes      | Empty string if no subject is set                                                                       |
+| `owner`        | yes      | First and last name of the booking owner, or email as fallback; empty string if hidden by privacy rules |
+| `ownerVisible` | yes      | Explicit flag so UI can render correct fallback                                                         |
+| `enter`        | yes      | Localized to space location timezone                                                                    |
+| `leave`        | yes      | Localized to space location timezone                                                                    |
 
 ### Booking Selection Rules
 
@@ -420,12 +436,17 @@ The kiosk API should reuse the same repository logic used by existing space avai
 
 ### Authorization Checks
 
-The kiosk API must validate:
+The kiosk API validates in this order to avoid leaking information about space existence:
 
-1. Space exists
-2. Space kiosk mode is enabled
-3. Presented kiosk credential matches the organization-wide stored hash for the owning organization
-4. Space is still within an accessible organization context
+1. `Authorization: Bearer` header is present — returns `401` immediately if missing or malformed
+2. Space exists — returns `404` if not found
+3. `space.kioskEnabled` is `true` — returns `404` if not
+4. Location associated with the space exists — returns `404` if not
+5. `kiosk_access_secret` is configured and bcrypt matches the presented secret — returns `401` on mismatch or if no secret is configured
+6. `feature_kiosk_mode` is enabled — returns `404` if not
+7. `kiosk_mode_enabled` is `true` for the organization — returns `404` if not
+
+Returning `404` for disabled kiosk mode (steps 3, 6, 7) avoids distinguishing between "space exists but kiosk disabled" and "space does not exist" to any caller that has not yet authenticated.
 
 The kiosk credential alone is the authorization scope; it must not grant access to any non-kiosk APIs. It may be reused across kiosk-enabled spaces in the same organization by design.
 
@@ -484,20 +505,28 @@ Add at least one end-to-end scenario that:
 5. Replaces the global kiosk secret
 6. Verifies the old kiosk session stops working after reload
 
-## Files Expected to Change During Implementation
+## Files Changed During Implementation
 
-| File or Area                                                       | Expected Change                                 |
-| ------------------------------------------------------------------ | ----------------------------------------------- |
-| `server/repository/space-repository.go` and related schema code    | Persist kiosk enablement                        |
-| `server/repository/settings-repository.go` and related schema code | Persist the organization-wide kiosk secret hash |
-| `server/router/space-router.go` or a new dedicated router          | Add kiosk endpoint                              |
-| `specs/openapi.yaml`                                               | Document kiosk API                              |
-| `ui/src/pages/admin/locations/[id].tsx`                            | Add kiosk controls to the space settings modal  |
-| `ui/src/pages/admin/settings/index.tsx`                            | Add global kiosk credential controls            |
-| `ui/src/types/Space.ts`                                            | Extend space model with kiosk properties        |
-| `ui/src/pages/ui/kiosk/...` or equivalent Next.js route            | Add kiosk page                                  |
-| frontend test files                                                | Add kiosk page and admin UI coverage            |
-| backend router tests                                               | Add kiosk endpoint coverage                     |
+| File                                         | Change                                                                           |
+| -------------------------------------------- | -------------------------------------------------------------------------------- |
+| `server/repository/space-repository.go`      | Added `KioskEnabled` field; DB migration adds `kiosk_enabled` column             |
+| `server/repository/settings-repository.go`   | Added `SettingKioskSecret`, `SettingKioskModeEnabled`, `SettingFeatureKioskMode` |
+| `server/repository/booking-repository.go`    | Added `GetCurrentAndNextBySpaceID`; `KioskBookingEntry` with name fields         |
+| `server/repository/db-updates.go`            | DB migration version 41: adds `kiosk_enabled` column to spaces table             |
+| `server/router/kiosk-router.go`              | New router; handles `GET /kiosk/{id}/status`                                     |
+| `server/router/unauthorized-routes.go`       | Registers `/kiosk/` prefix as an unauthenticated route                           |
+| `server/router/settings-router.go`           | Allowlists kiosk settings; bcrypt hashing on write; masking on read              |
+| `server/router/space-router.go`              | Exposes `kioskEnabled` in space REST model                                       |
+| `server/router/test/kiosk-router_test.go`    | New test file; 9 kiosk handler tests                                             |
+| `server/router/test/settings-router_test.go` | Updated expected setting counts for public and admin read tests                  |
+| `specs/openapi.yaml`                         | Documents kiosk endpoint, auth scheme, response schema                           |
+| `ui/src/components/RuntimeConfig.ts`         | Added `featureKioskMode` and `kioskModeEnabled` fields                           |
+| `ui/src/types/Space.ts`                      | Added `kioskEnabled` field to space model                                        |
+| `ui/src/pages/admin/locations/[id].tsx`      | Kiosk section in space modal with URLs and copy buttons                          |
+| `ui/src/pages/admin/settings/index.tsx`      | Kiosk section with org-enable toggle, secret management                          |
+| `ui/src/pages/kiosk/[id].tsx`                | New kiosk page (color + mono variants, lang/secret/variant params)               |
+| `ui/src/util/Validation.ts`                  | Added `excludeSpecial` param to `generatePassword`                               |
+| `ui/i18n/translations.*.json` (all 14 files) | Added kiosk translation keys                                                     |
 
 ## Acceptance Criteria
 
