@@ -278,12 +278,16 @@ func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest
 }
 
 func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProviderResponse {
+	ClientSecretDecrypted, err := DecryptString(e.ClientSecret)
+	if err != nil {
+		log.Printf("Error decrypting client secret for auth provider %s\n", e.ID)
+	}
 	m := &GetAuthProviderResponse{}
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	m.ClientSecret = "" // do not send client secret
+	m.ClientSecret = ClientSecretDecrypted
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle
