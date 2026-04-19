@@ -44,6 +44,7 @@ import Loading from "@/components/Loading";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
+import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 
 interface SpaceState {
   id: string;
@@ -1510,9 +1511,9 @@ class EditLocation extends React.Component<Props, State> {
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
-                <th>{this.props.t("kioskMode")}</th>
-                <th>{this.props.t("approvers")}</th>
-                <th>{this.props.t("allowBookers")}</th>
+                <th>{this.props.t("kioskMode")} <PremiumFeatureIcon /></th>
+                <th>{this.props.t("approvers")} <PremiumFeatureIcon /></th>
+                <th>{this.props.t("allowBookers")} <PremiumFeatureIcon /></th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
