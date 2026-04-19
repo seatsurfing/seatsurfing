@@ -271,7 +271,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       );
     }
 
-    let urlInfo = <></>;
+    let callbackUrlInfo = <></>;
     let buttonDelete = (
       <Button
         className="btn-sm"
@@ -299,7 +299,7 @@ class EditAuthProvider extends React.Component<Props, State> {
           {backButton} {buttonDelete} {buttonSave}
         </>
       );
-      urlInfo = (
+      callbackUrlInfo = (
         <Form.Group as={Row}>
           <Form.Label column sm="2">
             Callback URL
@@ -329,6 +329,36 @@ class EditAuthProvider extends React.Component<Props, State> {
       <FullLayout headline={this.props.t("editAuthProvider")} buttons={buttons}>
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
+          <Form.Group as={Row} hidden={this.entity.id !== ""}>
+            <Form.Label column sm="2">
+              {this.props.t("templates")}
+            </Form.Label>
+            <Col sm="9">
+              <ButtonGroup>
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.templateGoogle}
+                >
+                  Google
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.templateMicrosoft}
+                >
+                  Microsoft
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.templateKeycloak}
+                >
+                  Keycloak
+                </Button>
+                <Button variant="outline-secondary" onClick={this.templateOkta}>
+                  Okta
+                </Button>
+              </ButtonGroup>
+            </Col>
+          </Form.Group>
           <Form.Group as={Row}>
             <Form.Label column sm="2">
               {this.props.t("name")}
@@ -552,37 +582,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
-          {urlInfo}
-          <Form.Group as={Row} hidden={this.entity.id !== ""}>
-            <Form.Label column sm="2">
-              {this.props.t("templates")}
-            </Form.Label>
-            <Col sm="9">
-              <ButtonGroup>
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.templateGoogle}
-                >
-                  Google
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.templateMicrosoft}
-                >
-                  Microsoft
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.templateKeycloak}
-                >
-                  Keycloak
-                </Button>
-                <Button variant="outline-secondary" onClick={this.templateOkta}>
-                  Okta
-                </Button>
-              </ButtonGroup>
-            </Col>
-          </Form.Group>
+          {callbackUrlInfo}
         </Form>
       </FullLayout>
     );
