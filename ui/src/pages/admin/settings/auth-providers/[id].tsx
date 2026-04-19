@@ -1,5 +1,13 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert, ButtonGroup, InputGroup } from "react-bootstrap";
+import {
+  Form,
+  Col,
+  Row,
+  Button,
+  Alert,
+  ButtonGroup,
+  InputGroup,
+} from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
@@ -147,7 +155,11 @@ class EditAuthProvider extends React.Component<Props, State> {
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
       );
-      this.setState({ saved: true, submitting: false, clientSecretEditing: false });
+      this.setState({
+        saved: true,
+        submitting: false,
+        clientSecretEditing: false,
+      });
     } catch (e) {
       let code: number = 0;
       if (e instanceof AjaxError) {
@@ -492,7 +504,12 @@ class EditAuthProvider extends React.Component<Props, State> {
                   />
                   <Button
                     variant="outline-secondary"
-                    onClick={() => this.setState({ clientSecretEditing: true, clientSecret: "" })}
+                    onClick={() =>
+                      this.setState({
+                        clientSecretEditing: true,
+                        clientSecret: "",
+                      })
+                    }
                     title={this.props.t("edit")}
                   >
                     <IconEdit className="feather" />
