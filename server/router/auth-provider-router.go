@@ -284,7 +284,7 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	e.ClientSecret = ClientSecretDecrypted
+	m.ClientSecret = ClientSecretDecrypted
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle
