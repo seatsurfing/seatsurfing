@@ -163,6 +163,12 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 	}
 
 	eNew := router.copyFromRestModel(&m)
+
+	// keep existing client secret
+	if eNew.ClientSecret == "" {
+		eNew.ClientSecret = e.ClientSecret
+	}
+
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
 	eNew.ReadOnly = e.ReadOnly
@@ -279,7 +285,6 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	m.ClientSecret = e.ClientSecret
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle
