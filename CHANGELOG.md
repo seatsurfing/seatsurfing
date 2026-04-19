@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.85.0](https://github.com/seatsurfing/seatsurfing/compare/v1.84.1...v1.85.0) (2026-04-19)
+
+
+### Features
+
+* kiosk mode ([#2012](https://github.com/seatsurfing/seatsurfing/issues/2012)) ([0ba8cbf](https://github.com/seatsurfing/seatsurfing/commit/0ba8cbf9a89f8a259a7d68b2dce19ebed1177d60))
+
+
+### Bug Fixes
+
+* make sure auth provider name is unique per organization ([#2016](https://github.com/seatsurfing/seatsurfing/issues/2016)) ([d9c7baf](https://github.com/seatsurfing/seatsurfing/commit/d9c7bafa15dd762a6cadb5bd1e27c48a4e718abd))
+* move template buttons for auth providers to top ([#2018](https://github.com/seatsurfing/seatsurfing/issues/2018)) ([6d17df3](https://github.com/seatsurfing/seatsurfing/commit/6d17df3c8cafc38ced484f4c442734c62f9230e4))
+
 ## [1.84.1](https://github.com/seatsurfing/seatsurfing/compare/v1.84.0...v1.84.1) (2026-04-17)
 
 
