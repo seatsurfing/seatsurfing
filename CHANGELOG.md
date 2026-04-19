@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.85.1](https://github.com/seatsurfing/seatsurfing/compare/v1.85.0...v1.85.1) (2026-04-19)
+
+
+### Bug Fixes
+
+* do not show existing client secret when editing auth provider ([#2021](https://github.com/seatsurfing/seatsurfing/issues/2021)) ([0136788](https://github.com/seatsurfing/seatsurfing/commit/0136788a9370caf6a353151b222bcfa9c7919eb9))
+* fix unique name check when updating existing auth provider ([#2020](https://github.com/seatsurfing/seatsurfing/issues/2020)) ([77084e5](https://github.com/seatsurfing/seatsurfing/commit/77084e5eb0e3efa7a0d46baaa0247941422eccb2))
+
 ## [1.85.0](https://github.com/seatsurfing/seatsurfing/compare/v1.84.1...v1.85.0) (2026-04-19)
 
 
