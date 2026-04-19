@@ -87,7 +87,7 @@ func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 	}
-	if curVersion < 42 {
+	if curVersion < 41 {
 		r.encryptExistingClientSecrets()
 	}
 }
