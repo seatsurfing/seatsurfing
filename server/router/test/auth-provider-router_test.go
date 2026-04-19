@@ -180,6 +180,39 @@ func TestAuthProvidersGetPublicForOrg(t *testing.T) {
 	CheckTestString(t, "Test2", resBody[1].Name)
 }
 
+func TestAuthProviderUpdateDuplicateName(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	userAdmin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(userAdmin.ID)
+
+	// Create first provider
+	payload := `{"name": "Provider A", "providerType": 1, "clientId": "test1", "clientSecret": "test2", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req := NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	idA := res.Header().Get("X-Object-Id")
+
+	// Create second provider
+	payload = `{"name": "Provider B", "providerType": 1, "clientId": "test2", "clientSecret": "test3", "authUrl": "http://test.com/4", "tokenUrl": "http://test.com/5", "authStyle": 0, "scopes": "http://test.com/6", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req = NewHTTPRequest("POST", "/auth-provider/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Try to rename Provider A to "Provider B" (already taken) - must fail with conflict
+	payload = `{"name": "Provider B", "providerType": 1, "clientId": "test1", "clientSecret": "test2", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req = NewHTTPRequest("PUT", "/auth-provider/"+idA, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+
+	// Rename Provider A to a unique name - must succeed
+	payload = `{"name": "Provider C", "providerType": 1, "clientId": "test1", "clientSecret": "test2", "authUrl": "http://test.com/1", "tokenUrl": "http://test.com/2", "authStyle": 0, "scopes": "http://test.com/3", "userInfoUrl": "http://test.com/userinfo", "userInfoEmailField": "email"}`
+	req = NewHTTPRequest("PUT", "/auth-provider/"+idA, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
 func TestAuthProviderDeletionProtection(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
