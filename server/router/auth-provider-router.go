@@ -255,10 +255,14 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 }
 
 func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest) *AuthProvider {
+	ClientSecretEncrypted, err := EncryptString(m.ClientSecret)
+	if err != nil {
+		log.Println("Error decrypting client secret")
+	}
 	e := &AuthProvider{}
 	e.Name = m.Name
 	e.ClientID = m.ClientID
-	e.ClientSecret = m.ClientSecret
+	e.ClientSecret = ClientSecretEncrypted
 	e.AuthURL = m.AuthURL
 	e.TokenURL = m.TokenURL
 	e.AuthStyle = m.AuthStyle
@@ -274,12 +278,16 @@ func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest
 }
 
 func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProviderResponse {
+	ClientSecretDecrypted, err := DecryptString(e.ClientSecret)
+	if err != nil {
+		log.Printf("Error decrypting client secret for auth provider %s\n", e.ID)
+	}
 	m := &GetAuthProviderResponse{}
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	m.ClientSecret = e.ClientSecret
+	m.ClientSecret = ClientSecretDecrypted
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle
