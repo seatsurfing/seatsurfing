@@ -1172,10 +1172,9 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 	}
 
 	clientSecret, err := DecryptString(provider.ClientSecret)
-	if err != nil || clientSecret == "" {
-		// backward compatibility (client secret is stored in plain text)
-		log.Printf("Unencrypted client secret found for auth provider %s\n", provider.ID)
-		clientSecret = provider.ClientSecret
+	if err != nil {
+		log.Printf("Error decrypting client secret for auth provider %s\n", provider.ID)
+		return nil
 	}
 
 	config := &oauth2.Config{
