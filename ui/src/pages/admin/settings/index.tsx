@@ -1202,20 +1202,29 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("kioskMode")}</h4>
+            <h4>
+              {this.props.t("kioskMode")}
+              <PremiumFeatureIcon />
+            </h4>
           </div>
           <Form.Group as={Row}>
             <Col sm="6">
               <Form.Check
                 type="checkbox"
                 id="check-kioskModeEnabled"
-                label={this.props.t("kioskMode")}
-                checked={this.state.kioskModeEnabled}
+                label={this.props.t("kioskModeAvailable")}
+                checked={
+                  this.state.kioskModeEnabled &&
+                  RuntimeConfig.INFOS.featureKioskMode
+                }
                 disabled={!RuntimeConfig.INFOS.featureKioskMode}
                 onChange={(e: any) =>
                   this.setState({ kioskModeEnabled: e.target.checked })
                 }
               />
+              <Form.Text className="text-muted">
+                {this.props.t("kioskModeAvailableHint")}
+              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1262,7 +1271,10 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("authProviders")}</h4>
+            <h4>
+              {this.props.t("authProviders")}
+              <PremiumFeatureIcon />
+            </h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
                 <Link

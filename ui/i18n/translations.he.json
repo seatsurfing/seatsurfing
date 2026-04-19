@@ -434,5 +434,7 @@
   "kioskAuthError": "Invalid kiosk secret. Check URL parameters.",
   "kioskNotFound": "Space not found or kiosk mode not enabled.",
   "kioskFetchError": "Could not load space status.",
-  "kioskSecretMissing": "No kiosk secret provided. Add ?secret=... to the URL."
+  "kioskSecretMissing": "No kiosk secret provided. Add ?secret=... to the URL.",
+  "kioskModeAvailable": "Kiosk mode available",
+  "kioskModeAvailableHint": "Enables the use of Seatsurfing in a kiosk mode, e.g. for display on a screen outside the meeting room. Activation is done per space/room in the respective settings."
 }
