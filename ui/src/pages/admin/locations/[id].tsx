@@ -1511,9 +1511,15 @@ class EditLocation extends React.Component<Props, State> {
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
-                <th>{this.props.t("kioskMode")} <PremiumFeatureIcon /></th>
-                <th>{this.props.t("approvers")} <PremiumFeatureIcon /></th>
-                <th>{this.props.t("allowBookers")} <PremiumFeatureIcon /></th>
+                <th>
+                  {this.props.t("kioskMode")} <PremiumFeatureIcon />
+                </th>
+                <th>
+                  {this.props.t("approvers")} <PremiumFeatureIcon />
+                </th>
+                <th>
+                  {this.props.t("allowBookers")} <PremiumFeatureIcon />
+                </th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
