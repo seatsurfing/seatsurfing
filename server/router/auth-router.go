@@ -1170,10 +1170,17 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 		log.Println("Error compiling config for auth provider " + provider.Name + ": No primary domain found for organization")
 		return nil
 	}
+
+	clientSecret, err := DecryptString(provider.ClientSecret)
+	if err != nil || clientSecret == "" {
+		// backward compatibility (client secret is stored in plain text)
+		clientSecret = provider.ClientSecret
+	}
+
 	config := &oauth2.Config{
 		RedirectURL:  FormatURL(primaryDomain.DomainName) + "/auth/" + provider.ID + "/callback",
 		ClientID:     provider.ClientID,
-		ClientSecret: provider.ClientSecret,
+		ClientSecret: clientSecret,
 		Scopes:       strings.Split(provider.Scopes, ","),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   provider.AuthURL,
