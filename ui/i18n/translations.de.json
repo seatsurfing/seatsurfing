@@ -437,5 +437,6 @@
   "kioskFetchError": "Raumstatus konnte nicht geladen werden.",
   "kioskSecretMissing": "Kein Kiosk-Geheimnis angegeben. ?secret=... zur URL hinzufügen.",
   "kioskModeAvailable": "Kiosk-Modus verfügbar",
-  "kioskModeAvailableHint": "Ermöglicht die Nutzung von Seatsurfing in einem Kiosk-Modus, z.B. für die Anzeige auf einem Bildschirm außerhalb des Besprechungsraums. Die Aktivierung erfolgt pro Platz/Raum in den jeweiligen Einstellungen."
+  "kioskModeAvailableHint": "Ermöglicht die Nutzung von Seatsurfing in einem Kiosk-Modus, z.B. für die Anzeige auf einem Bildschirm außerhalb des Besprechungsraums. Die Aktivierung erfolgt pro Platz/Raum in den jeweiligen Einstellungen.",
+  "errorAuthProviderNameExists": "The Auth Provider Name existiert bereits."
 }
