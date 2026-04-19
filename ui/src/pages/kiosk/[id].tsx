@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation, useSelectedLanguage } from "next-export-i18n";
+import { useTranslation } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
 
 interface KioskBooking {
@@ -42,8 +42,21 @@ const formatTime = (iso: string, timezone: string): string => {
 
 export default function KioskPage() {
   const router = useRouter();
+
+  // Pre-seed localStorage synchronously from ?lang= before the i18n library
+  // initializes its hook state — this ensures the first effect run picks up
+  // the correct language without needing a page reload.
+  useState(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const lang = new URLSearchParams(window.location.search).get("lang");
+      if (lang) localStorage.setItem("next-export-i18n-lang", lang);
+    } catch {
+      // ignore
+    }
+  });
+
   const { t } = useTranslation();
-  const { setLang } = useSelectedLanguage();
 
   const [data, setData] = useState<KioskData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +66,19 @@ export default function KioskPage() {
   const variant =
     (router.query.variant as string | undefined) === "mono" ? "mono" : "color";
 
-  // Apply ?lang= URL param to override the stored language
+  // Apply ?lang= URL param — dispatch the library's event so already-mounted
+  // hook instances also update (runs once on mount, uses window.location directly).
   useEffect(() => {
-    if (!router.isReady) return;
-    const langFromUrl = router.query.lang as string | undefined;
-    if (langFromUrl) {
-      setLang(langFromUrl);
+    try {
+      const lang = new URLSearchParams(window.location.search).get("lang");
+      if (lang) {
+        localStorage.setItem("next-export-i18n-lang", lang);
+        document.dispatchEvent(new Event("localStorageLangChange"));
+      }
+    } catch {
+      // ignore
     }
-  }, [router.isReady, router.query.lang, setLang]);
+  }, []);
 
   // Store kiosk secret from URL param into localStorage, then strip from URL
   useEffect(() => {
