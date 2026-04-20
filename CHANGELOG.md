@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.86.0](https://github.com/seatsurfing/seatsurfing/compare/v1.85.1...v1.86.0) (2026-04-20)
+
+
+### Features
+
+* add global setting for email footer ([#2029](https://github.com/seatsurfing/seatsurfing/issues/2029)) ([be1197b](https://github.com/seatsurfing/seatsurfing/commit/be1197b0f352ecbb99b130c0d928f2383703130f))
+
+
+### Bug Fixes
+
+* do not remove secret placeholder from URL in kiosk mode ([#2027](https://github.com/seatsurfing/seatsurfing/issues/2027)) ([7dddfe7](https://github.com/seatsurfing/seatsurfing/commit/7dddfe759a6582e4ebeab855a1a1ceeb0067568f))
+* do not send changed client secret for auth provider multiple times ([#2025](https://github.com/seatsurfing/seatsurfing/issues/2025)) ([8ecd363](https://github.com/seatsurfing/seatsurfing/commit/8ecd3635ed53923aaf0a4d364c536c4cbc4b5cb4))
+* show date offset for next booking in kiosk mode ([#2028](https://github.com/seatsurfing/seatsurfing/issues/2028)) ([47e0fd4](https://github.com/seatsurfing/seatsurfing/commit/47e0fd48ba1d81bdbd492848b4cd716e94f29cd8))
+* store auth provider client secret encrypted ([#2019](https://github.com/seatsurfing/seatsurfing/issues/2019)) ([dd7b199](https://github.com/seatsurfing/seatsurfing/commit/dd7b19973e8f574420877f093fc3498445215cc4))
+* update warning if CRYPT_KEY is missing or invalid ([#2026](https://github.com/seatsurfing/seatsurfing/issues/2026)) ([6894fde](https://github.com/seatsurfing/seatsurfing/commit/6894fde909a5813d5a50d90f08330cc1326b1a39))
+* use ****** as secret placeholder for kiosk mode secret ([#2030](https://github.com/seatsurfing/seatsurfing/issues/2030)) ([b5453d3](https://github.com/seatsurfing/seatsurfing/commit/b5453d3b6a411c3b4a9d1841a8c90a4a569ec357))
+
 ## [1.85.1](https://github.com/seatsurfing/seatsurfing/compare/v1.85.0...v1.85.1) (2026-04-19)
 
 
