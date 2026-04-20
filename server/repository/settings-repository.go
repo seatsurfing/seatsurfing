@@ -61,6 +61,7 @@ var (
 	SettingFeatureAuthProviders           SettingName = SettingName{Name: "feature_auth_providers", Type: SettingTypeBool}
 	SettingFeatureRecurringBookings       SettingName = SettingName{Name: "feature_recurring_bookings", Type: SettingTypeBool}
 	SettingEnforceTOTP                    SettingName = SettingName{Name: "enforce_totp", Type: SettingTypeBool}
+	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
 )
 
 var settingsRepository *SettingsRepository
@@ -284,7 +285,8 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingBookingRetentionEnabled.Name+"', '0'), "+
 		"($1, '"+SettingBookingRetentionDays.Name+"', '365'), "+
 		"($1, '"+SettingSubjectDefault.Name+"', '"+strconv.Itoa(SettingSubjectDefaultOptional)+"'), "+
-		"($1, '"+SettingEnforceTOTP.Name+"', '0') "+
+		"($1, '"+SettingEnforceTOTP.Name+"', '0'), "+
+		"($1, '"+SettingHideReports.Name+"', '0') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)
 	return err
