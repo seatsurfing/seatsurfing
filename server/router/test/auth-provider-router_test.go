@@ -278,7 +278,8 @@ func TestAuthProvidersUpdateChangesClientSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected auth provider to exist")
 	}
-	CheckTestString(t, "new-secret", e.ClientSecret)
+	ClientSecretDecrypted, _ := DecryptString(e.ClientSecret)
+	CheckTestString(t, "new-secret", ClientSecretDecrypted)
 }
 
 func TestAuthProviderDeletionProtection(t *testing.T) {
