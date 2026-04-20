@@ -131,7 +131,7 @@ func (c *Config) ReadConfig() {
 	c.LoginProtectionBanMinutes = c.getEnvInt("LOGIN_PROTECTION_BAN_MINUTES", 5)
 	c.CryptKey = c.getEnv("CRYPT_KEY", "")
 	if c.CryptKey == "" || len(c.CryptKey) != 32 {
-		log.Println("Warning: No valid CRYPT_KEY set. Future versions of Seatsurfing won't work without a valid CRYPT_KEY (32 bytes long string).")
+		log.Fatalln("Error: No valid CRYPT_KEY set. CRYPT_KEY needs to be set to a 32 bytes long random string.")
 	}
 	pwd, _ := os.Getwd()
 	c.FilesystemBasePath = c.getEnv("FILESYSTEM_BASE_PATH", pwd)

@@ -1173,7 +1173,7 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 
 	clientSecret, err := DecryptString(provider.ClientSecret)
 	if err != nil {
-		log.Printf("Error decrypting client secret for auth provider %s\n", provider.ID)
+		log.Printf("Error decrypting client secret for auth provider %s: %v\n", provider.ID, err)
 		return nil
 	}
 
