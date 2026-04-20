@@ -418,5 +418,22 @@
   "newPasswordPlaceholder": "New password",
   "passwordUpdateInfo": "Your current password needs to be changed. Please select a new password that is different to the current one.",
   "logoutOthers": "Log out all but this session",
-  "previousDay": "Previous day"
+  "previousDay": "Previous day",
+  "kioskMode": "Kiosk Mode",
+  "kioskModeUrl": "Kiosk URL",
+  "kioskModeColorUrl": "Color",
+  "kioskModeMonoUrl": "Mono",
+  "kioskSecret": "Kiosk Access Secret",
+  "kioskAvailable": "Available",
+  "kioskOccupied": "Occupied",
+  "kioskNow": "Current booking",
+  "kioskNext": "Next booking",
+  "kioskLastRefreshed": "Last refreshed",
+  "kioskAuthError": "Invalid kiosk secret. Check URL parameters.",
+  "kioskNotFound": "Space not found or kiosk mode not enabled.",
+  "kioskFetchError": "Could not load space status.",
+  "kioskSecretMissing": "No kiosk secret provided. Add ?secret=... to the URL.",
+  "kioskModeAvailable": "Kiosk mode available",
+  "kioskModeAvailableHint": "Enables the use of Seatsurfing in a kiosk mode, e.g. for display on a screen outside the meeting room. Activation is done per space/room in the respective settings.",
+  "errorAuthProviderNameExists": "The auth provider name already exists."
 }

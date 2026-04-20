@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type GroupRouter struct {
@@ -175,6 +176,16 @@ func (router *GroupRouter) addMembers(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if len(members) > 64 {
+		SendBadRequest(w)
+		return
+	}
+	for _, id := range members {
+		if !util.ValidateGUID(id) {
+			SendBadRequest(w)
+			return
+		}
+	}
 	ok, err := GetUserRepository().UsersExistAndBelongToOrg(e.OrganizationID, members)
 	if err != nil {
 		log.Println(err)
@@ -209,6 +220,16 @@ func (router *GroupRouter) removeMembers(w http.ResponseWriter, r *http.Request)
 	if UnmarshalBody(r, &members) != nil {
 		SendBadRequest(w)
 		return
+	}
+	if len(members) > 64 {
+		SendBadRequest(w)
+		return
+	}
+	for _, id := range members {
+		if !util.ValidateGUID(id) {
+			SendBadRequest(w)
+			return
+		}
 	}
 	if err := GetGroupRepository().RemoveMembers(e, members); err != nil {
 		log.Println(err)

@@ -25,10 +25,10 @@ github.com/go-playground/validator v9.31.0+incompatible h1:UA72EPEogEnq76ehGdEDp
 github.com/go-playground/validator v9.31.0+incompatible/go.mod h1:yrEkQXlcI+PugkyDjY2bRrL/UBU4f3rvrgkN3V8JEig=
 github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=
 github.com/go-viper/mapstructure/v2 v2.5.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
-github.com/go-webauthn/webauthn v0.16.3 h1:RorP0c6VbaKP0i0Jxf/vAf7EFb2lmdLW8GLKITeaN5A=
-github.com/go-webauthn/webauthn v0.16.3/go.mod h1:R2xjJxSPat5PYKg5r6cUmqXgbHtbv4GmF6uGkqFMLNI=
-github.com/go-webauthn/x v0.2.2 h1:zIiipvMbr48CXi5RG0XdBJR94kd8I5LfzHPb/q+YYmk=
-github.com/go-webauthn/x v0.2.2/go.mod h1:IpJ5qyWB9NRhLX3C7gIfjTU7RZLXEP6kzFkoVSE7Fz4=
+github.com/go-webauthn/webauthn v0.16.4 h1:R9jqR/cYZa7hRquFF7Za/8qoH/K/TIs1/Q/4CyGN+1Q=
+github.com/go-webauthn/webauthn v0.16.4/go.mod h1:SU2ljAgToTV/YLPI0C05QS4qn+e04WpB5g1RMfcZfS4=
+github.com/go-webauthn/x v0.2.3 h1:8oArS+Rc1SWFLXhE17KZNx258Z4kUSyaDgsSncCO5RA=
+github.com/go-webauthn/x v0.2.3/go.mod h1:tM04GF3V6VYq79AZMl7vbj4q6pz9r7L2criWRzbWhPk=
 github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=
 github.com/golang-jwt/jwt/v5 v5.3.1/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=

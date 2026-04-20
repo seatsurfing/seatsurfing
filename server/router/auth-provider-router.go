@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type AuthProviderRouter struct {
@@ -24,7 +25,7 @@ type CreateAuthProviderRequest struct {
 	UserInfoFirstnameField string `json:"userInfoFirstnameField" validate:"max=256"`
 	UserInfoLastnameField  string `json:"userInfoLastnameField" validate:"max=256"`
 	ClientID               string `json:"clientId" validate:"required,max=256"`
-	ClientSecret           string `json:"clientSecret" validate:"required,max=256"`
+	ClientSecret           string `json:"clientSecret,omitempty" validate:"max=256"`
 	LogoutURL              string `json:"logoutUrl" validate:"max=256"`
 	ProfilePageURL         string `json:"profilePageUrl" validate:"max=256"`
 }
@@ -110,9 +111,33 @@ func (router *AuthProviderRouter) getAll(w http.ResponseWriter, r *http.Request)
 	}
 	SendJSON(w, res)
 }
+
+func (router *AuthProviderRouter) validateCreateAuthProviderRequest(m *CreateAuthProviderRequest) bool {
+	if m.ProviderType != int(OAuth2) {
+		return false
+	}
+	if m.AuthStyle < 0 || m.AuthStyle > 2 {
+		return false
+	}
+	if !ValidateURL(m.AuthURL) || !ValidateURL(m.TokenURL) || !ValidateURL(m.UserInfoURL) {
+		return false
+	}
+	if m.LogoutURL != "" && !ValidateURL(m.LogoutURL) {
+		return false
+	}
+	if m.ProfilePageURL != "" && !ValidateURL(m.ProfilePageURL) {
+		return false
+	}
+	return true
+}
+
 func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request) {
 	var m CreateAuthProviderRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !router.validateCreateAuthProviderRequest(&m) {
 		SendBadRequest(w)
 		return
 	}
@@ -131,7 +156,20 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
+
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, m.Name)
+	if err == nil && existingAuthProvider != nil && existingAuthProvider.ID != e.ID {
+		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
+		return
+	}
+
 	eNew := router.copyFromRestModel(&m)
+
+	// keep existing client secret
+	if eNew.ClientSecret == "" {
+		eNew.ClientSecret = e.ClientSecret
+	}
+
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
 	eNew.ReadOnly = e.ReadOnly
@@ -188,19 +226,33 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !router.validateCreateAuthProviderRequest(&m) || m.ClientSecret == "" {
+		SendBadRequest(w)
+		return
+	}
+
 	user := GetRequestUser(r)
-	e := router.copyFromRestModel(&m)
-	e.OrganizationID = user.OrganizationID
-	e.ReadOnly = false
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !CanAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
+
+	e := router.copyFromRestModel(&m)
+	e.OrganizationID = user.OrganizationID
+	e.ReadOnly = false
+
 	featureAuthProviders, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingFeatureAuthProviders.Name)
 	if !featureAuthProviders {
 		SendPaymentRequired(w)
 		return
 	}
+
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, e.Name)
+	if err == nil && existingAuthProvider != nil {
+		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
+		return
+	}
+
 	if err := GetAuthProviderRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -234,7 +286,6 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	m.ClientSecret = e.ClientSecret
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle

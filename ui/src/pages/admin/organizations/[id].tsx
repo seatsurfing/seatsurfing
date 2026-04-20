@@ -197,7 +197,7 @@ class EditOrganization extends React.Component<Props, State> {
       );
     }
 
-    const languages = ["de", "en", "he"];
+    const languages = ["de", "en"];
 
     let adminSection = <></>;
     if (!this.entity.id) {
@@ -265,6 +265,8 @@ class EditOrganization extends React.Component<Props, State> {
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
                 autoFocus={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -303,6 +305,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -318,6 +322,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -331,6 +337,7 @@ class EditOrganization extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+                maxLength={128}
               />
             </Col>
           </Form.Group>

@@ -341,7 +341,7 @@ The `options` object contains the standard WebAuthn `PublicKeyCredentialCreation
 - `rp`: `{ id, name }`
 - `user`: `{ id, name, displayName }`
 - `challenge`: random challenge
-- `pubKeyCredParams`: `[{type: "public-key", alg: -7}, {type: "public-key", alg: -257}]` (ES256> + RS256)
+- `pubKeyCredParams`: `[{type: "public-key", alg: -7}, {type: "public-key", alg: -257}]` (ES256 + RS256)
 - `authenticatorSelection`: `{ residentKey: "required", userVerification: "required" }`
 - `attestation`: `"none"` (no attestation needed for passkeys)
 - `excludeCredentials`: list of the user's already-registered credential IDs (prevents re-registration).

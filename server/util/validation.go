@@ -8,7 +8,19 @@ import (
 )
 
 var colorHexRegex = regexp.MustCompile(`^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$`)
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+var domainRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)+$`)
+var humanNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.]+$`)
+var orgNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.&,+()/#@!_<>]+$`)
+var validOrgLanguages = map[string]bool{"de": true, "en": true}
+
+func ValidateEmail(s string) bool {
+	if len([]rune(s)) > 254 {
+		return false
+	}
+	return emailRegex.MatchString(s)
+}
 
 func ValidatePassword(s string) bool {
 	l := len([]rune(s))
@@ -45,6 +57,33 @@ func ValidateColorHex(s string) bool {
 
 func ValidateGUID(s string) bool {
 	return guidRegex.MatchString(s)
+}
+
+func ValidateDomain(s string) bool {
+	if len(s) > 253 {
+		return false
+	}
+	return domainRegex.MatchString(s)
+}
+
+func IsValidOrgLanguage(s string) bool {
+	return validOrgLanguages[s]
+}
+
+func IsValidHumanName(s string) bool {
+	l := len([]rune(s))
+	if l < 2 || l > 64 {
+		return false
+	}
+	return humanNameRegex.MatchString(s)
+}
+
+func IsValidOrgName(s string) bool {
+	l := len([]rune(s))
+	if l < 2 || l > 64 {
+		return false
+	}
+	return orgNameRegex.MatchString(s)
 }
 
 func ValidateNumber(s string, min, max int) bool {

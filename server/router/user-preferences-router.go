@@ -17,9 +17,9 @@ type UserPreferencesRouter struct {
 }
 
 type ListCaldavCalendarsRequest struct {
-	URL      string `json:"url" validate:"required,url"`
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	URL      string `json:"url" validate:"required,url,max=256"`
+	Username string `json:"username" validate:"required,max=256"`
+	Password string `json:"password" validate:"required,max=256"`
 }
 
 type ListCaldavCalendarsResponse struct {
@@ -43,6 +43,10 @@ func (router *UserPreferencesRouter) caldavListCalendars(w http.ResponseWriter, 
 	}
 	var m ListCaldavCalendarsRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !ValidateURL(m.URL) {
 		SendBadRequest(w)
 		return
 	}
@@ -168,6 +172,9 @@ func (router *UserPreferencesRouter) doSetOne(userID, name, value string) error 
 }
 
 func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
+	if len(name) > 50 {
+		return false
+	}
 	if name == PreferenceEnterTime.Name ||
 		name == PreferenceWorkdayStart.Name ||
 		name == PreferenceWorkdayEnd.Name ||

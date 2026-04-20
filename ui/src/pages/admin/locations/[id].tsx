@@ -44,6 +44,7 @@ import Loading from "@/components/Loading";
 import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
+import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 
 interface SpaceState {
   id: string;
@@ -59,6 +60,7 @@ interface SpaceState {
   rotation: number;
   requireSubject: boolean;
   enabled: boolean;
+  kioskEnabled: boolean;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -270,6 +272,7 @@ class EditLocation extends React.Component<Props, State> {
         space.rotation = Math.round(item.rotation);
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
+        space.kioskEnabled = item.kioskEnabled;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -448,6 +451,7 @@ class EditLocation extends React.Component<Props, State> {
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
+      kioskEnabled: e ? e.kioskEnabled : false,
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -707,6 +711,7 @@ class EditLocation extends React.Component<Props, State> {
         <td>{space.name}</td>
         <td>{RendererUtils.state(space.enabled)}</td>
         <td>{RendererUtils.state(space.requireSubject)}</td>
+        <td>{RendererUtils.state(space.kioskEnabled)}</td>
         <td>
           {RendererUtils.state(space.approvers && space.approvers?.length > 0)}
         </td>
@@ -1009,6 +1014,73 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
+            <Form.Group
+              as={Row}
+              hidden={
+                !RuntimeConfig.INFOS.featureKioskMode ||
+                !RuntimeConfig.INFOS.kioskModeEnabled
+              }
+            >
+              <Form.Label column sm="4" htmlFor="space-kiosk-enabled">
+                {this.props.t("kioskMode")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Check
+                  type="checkbox"
+                  id="space-kiosk-enabled"
+                  label={this.props.t("yes")}
+                  checked={this.getSelectedSpace()?.kioskEnabled}
+                  onChange={(e: any) => {
+                    const spaces = this.state.spaces;
+                    const idx = this.state.selectedSpace!;
+                    const space = { ...spaces[idx] };
+                    space.kioskEnabled = e.target.checked;
+                    space.changed = true;
+                    spaces[idx] = space;
+                    this.setState({ spaces: spaces, changed: true });
+                  }}
+                />
+                {this.getSelectedSpace()?.kioskEnabled &&
+                  this.getSelectedSpace()?.id && (
+                    <Form.Text as="div" className="text-muted">
+                      {(() => {
+                        const spaceId = this.getSelectedSpace()!.id;
+                        const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=color&lang=en&secret=YOUR_SECRET_KEY`;
+                        const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=mono&lang=en&secret=YOUR_SECRET_KEY`;
+                        return (
+                          <>
+                            <div className="mt-1">
+                              <a
+                                href={colorUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {this.props.t("kioskModeColorUrl")}
+                              </a>{" "}
+                              <CopyToClipboardButton
+                                text={colorUrl}
+                                small={true}
+                              />
+                              <a
+                                style={{ marginLeft: "20px" }}
+                                href={monoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {this.props.t("kioskModeMonoUrl")}
+                              </a>{" "}
+                              <CopyToClipboardButton
+                                text={monoUrl}
+                                small={true}
+                              />
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </Form.Text>
+                  )}
+              </Col>
+            </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4" htmlFor="search-approvers-input">
                 {this.props.t("approvers")}
@@ -1226,6 +1298,7 @@ class EditLocation extends React.Component<Props, State> {
       t("name"),
       t("enabled"),
       t("requireSubject"),
+      t("kioskMode"),
       t("approvers"),
       t("allowBookers"),
       t("bookingLink"),
@@ -1234,6 +1307,7 @@ class EditLocation extends React.Component<Props, State> {
       space.name,
       RendererUtils.stateXls(space.enabled, t),
       RendererUtils.stateXls(space.requireSubject, t),
+      RendererUtils.stateXls(space.kioskEnabled, t),
       RendererUtils.stateXls(space.approvers && space.approvers?.length > 0, t),
       RendererUtils.stateXls(
         space.allowBookers && space.allowBookers?.length > 0,
@@ -1437,8 +1511,15 @@ class EditLocation extends React.Component<Props, State> {
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
-                <th>{this.props.t("approvers")}</th>
-                <th>{this.props.t("allowBookers")}</th>
+                <th>
+                  {this.props.t("kioskMode")} <PremiumFeatureIcon />
+                </th>
+                <th>
+                  {this.props.t("approvers")} <PremiumFeatureIcon />
+                </th>
+                <th>
+                  {this.props.t("allowBookers")} <PremiumFeatureIcon />
+                </th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>

@@ -31,6 +31,8 @@ interface RuntimeUserInfos {
   pluginWelcomeScreens: any[];
   featureGroups: boolean;
   featureAuthProviders: boolean;
+  featureKioskMode: boolean;
+  kioskModeEnabled: boolean;
   cloudHosted: boolean;
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
@@ -80,6 +82,8 @@ export default class RuntimeConfig {
       pluginWelcomeScreens: [],
       featureGroups: false,
       featureAuthProviders: false,
+      featureKioskMode: false,
+      kioskModeEnabled: false,
       cloudHosted: false,
       subscriptionActive: false,
       orgPrimaryDomain: "",
@@ -184,6 +188,10 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.featureAuthProviders = s.value
               ? JSON.parse(s.value)
               : [];
+          if (s.name === "feature_kiosk_mode")
+            RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
+          if (s.name === "kiosk_mode_enabled")
+            RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
           if (s.name === "cloud_hosted")
             RuntimeConfig.INFOS.cloudHosted = s.value
               ? JSON.parse(s.value)

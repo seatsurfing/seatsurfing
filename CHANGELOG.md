@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.85.1](https://github.com/seatsurfing/seatsurfing/compare/v1.85.0...v1.85.1) (2026-04-19)
+
+
+### Bug Fixes
+
+* do not show existing client secret when editing auth provider ([#2021](https://github.com/seatsurfing/seatsurfing/issues/2021)) ([0136788](https://github.com/seatsurfing/seatsurfing/commit/0136788a9370caf6a353151b222bcfa9c7919eb9))
+* fix unique name check when updating existing auth provider ([#2020](https://github.com/seatsurfing/seatsurfing/issues/2020)) ([77084e5](https://github.com/seatsurfing/seatsurfing/commit/77084e5eb0e3efa7a0d46baaa0247941422eccb2))
+
+## [1.85.0](https://github.com/seatsurfing/seatsurfing/compare/v1.84.1...v1.85.0) (2026-04-19)
+
+
+### Features
+
+* kiosk mode ([#2012](https://github.com/seatsurfing/seatsurfing/issues/2012)) ([0ba8cbf](https://github.com/seatsurfing/seatsurfing/commit/0ba8cbf9a89f8a259a7d68b2dce19ebed1177d60))
+
+
+### Bug Fixes
+
+* make sure auth provider name is unique per organization ([#2016](https://github.com/seatsurfing/seatsurfing/issues/2016)) ([d9c7baf](https://github.com/seatsurfing/seatsurfing/commit/d9c7bafa15dd762a6cadb5bd1e27c48a4e718abd))
+* move template buttons for auth providers to top ([#2018](https://github.com/seatsurfing/seatsurfing/issues/2018)) ([6d17df3](https://github.com/seatsurfing/seatsurfing/commit/6d17df3c8cafc38ced484f4c442734c62f9230e4))
+
+## [1.84.1](https://github.com/seatsurfing/seatsurfing/compare/v1.84.0...v1.84.1) (2026-04-17)
+
+
+### Bug Fixes
+
+* add addition server-side validation for auth-provider router ([#1996](https://github.com/seatsurfing/seatsurfing/issues/1996)) ([5d61606](https://github.com/seatsurfing/seatsurfing/commit/5d61606727288cad660c626829b9c76202d9f005))
+* add addition validation in user-preferences-router ([#2000](https://github.com/seatsurfing/seatsurfing/issues/2000)) ([c4adef4](https://github.com/seatsurfing/seatsurfing/commit/c4adef4be4ec47d31b80dc4b401e13d28e86fd68))
+* add additional validation in space-router ([#1999](https://github.com/seatsurfing/seatsurfing/issues/1999)) ([4f1fd1e](https://github.com/seatsurfing/seatsurfing/commit/4f1fd1e9808d7241e393d1579d257da403d0f5b3))
+* add additional validation to confluence-router ([#2006](https://github.com/seatsurfing/seatsurfing/issues/2006)) ([f470084](https://github.com/seatsurfing/seatsurfing/commit/f4700840e91f22f9a4d5e0e8f9d4cf057c753f03))
+* add additional validation to group router ([#2005](https://github.com/seatsurfing/seatsurfing/issues/2005)) ([a6b6247](https://github.com/seatsurfing/seatsurfing/commit/a6b62474f76761b34a3c4af4e7fa8f899bd6065b))
+* add additional validations for organization-router ([#1998](https://github.com/seatsurfing/seatsurfing/issues/1998)) ([aa8c454](https://github.com/seatsurfing/seatsurfing/commit/aa8c454416a07856ce4abe9bfc36c692763e769c))
+* add limit for max bookings for recurring bookings ([#2004](https://github.com/seatsurfing/seatsurfing/issues/2004)) ([7cd1295](https://github.com/seatsurfing/seatsurfing/commit/7cd1295fa0db3470a107602f9a0a3b9d6aab3be2))
+* **deps:** bump github.com/go-webauthn/webauthn from 0.16.3 to 0.16.4 in /server in the minor-and-patch group ([#2003](https://github.com/seatsurfing/seatsurfing/issues/2003)) ([67e631c](https://github.com/seatsurfing/seatsurfing/commit/67e631ccba4733c5499e02a3fbdba6d3c448738e))
+* **deps:** bump golang.org/x/crypto from 0.49.0 to 0.50.0 in /server in the minor-and-patch group ([#1992](https://github.com/seatsurfing/seatsurfing/issues/1992)) ([ec491c2](https://github.com/seatsurfing/seatsurfing/commit/ec491c21a8ebdcfb3e1e8528e305437119196f42))
+* **deps:** bump react-tooltip from 5.30.0 to 5.30.1 in /ui in the production-dependencies group across 1 directory ([#2001](https://github.com/seatsurfing/seatsurfing/issues/2001)) ([fdfef4f](https://github.com/seatsurfing/seatsurfing/commit/fdfef4f2603ac4e1f0acac0b6265caf5a2ecb4b1))
+* **deps:** bump react-zoom-pan-pinch from 3.7.0 to 4.0.3 in /ui ([#1988](https://github.com/seatsurfing/seatsurfing/issues/1988)) ([7399d73](https://github.com/seatsurfing/seatsurfing/commit/7399d735ac4b2e24b5ecd91d849da2c41ca8cb70))
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#1991](https://github.com/seatsurfing/seatsurfing/issues/1991)) ([cd33e41](https://github.com/seatsurfing/seatsurfing/commit/cd33e4151335c22fc8d26841c5b96f277ac76720))
+* **deps:** bump vite from 7.3.1 to 8.0.6 in /ui ([#1960](https://github.com/seatsurfing/seatsurfing/issues/1960)) ([d27d9fa](https://github.com/seatsurfing/seatsurfing/commit/d27d9fa4850db8061691fa49d593e8bb20b97d3b))
+* fix panic auth-router when extracting user info ([#2008](https://github.com/seatsurfing/seatsurfing/issues/2008)) ([f15a7be](https://github.com/seatsurfing/seatsurfing/commit/f15a7be1cfe48b4c11b949c23d59faadd7d0cbc2))
+* limit search keyword length to 64 characters ([#1995](https://github.com/seatsurfing/seatsurfing/issues/1995)) ([8bfc123](https://github.com/seatsurfing/seatsurfing/commit/8bfc1234b860309371f0b9aa1ae2e0d115143443))
+* only allow relative URLs for plugins ([#2009](https://github.com/seatsurfing/seatsurfing/issues/2009)) ([81de633](https://github.com/seatsurfing/seatsurfing/commit/81de633a396bafd19b9c39e05017b90ac7ef49df))
+* remove "he" from org language settings ([#1997](https://github.com/seatsurfing/seatsurfing/issues/1997)) ([a056c7d](https://github.com/seatsurfing/seatsurfing/commit/a056c7d2601107446d49402c949f420d074fd852))
+* remove invalid CSPs ([#2011](https://github.com/seatsurfing/seatsurfing/issues/2011)) ([9d11fa6](https://github.com/seatsurfing/seatsurfing/commit/9d11fa625f4f627971a1152fa35de10c279f2825))
+* use sandbox attributes for IDP profile page ([#2010](https://github.com/seatsurfing/seatsurfing/issues/2010)) ([f0e7419](https://github.com/seatsurfing/seatsurfing/commit/f0e7419365bcdd6cbafac5dc4bdce5c392a893b6))
+
 ## [1.84.0](https://github.com/seatsurfing/seatsurfing/compare/v1.83.0...v1.84.0) (2026-04-14)
 
 

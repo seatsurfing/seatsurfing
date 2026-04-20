@@ -123,8 +123,8 @@ func (router *ConfluenceRouter) getUserEmailServer(org *Organization, claims *Co
 	userAccountID := ""
 	desiredDomain := ""
 	if claims.UserName != "" {
-		mailparts := strings.Split(claims.UserName, "@")
-		if len(mailparts) == 2 {
+		if ValidateEmail(claims.UserName) {
+			mailparts := strings.Split(claims.UserName, "@")
 			userAccountID = mailparts[0]
 			desiredDomain = mailparts[1]
 		}
@@ -157,5 +157,9 @@ func (router *ConfluenceRouter) getUserEmailServer(org *Organization, claims *Co
 	if domain == "" {
 		domain = otherDomain
 	}
-	return userAccountID + "@" + domain
+	email := userAccountID + "@" + domain
+	if !ValidateEmail(email) {
+		return ""
+	}
+	return email
 }

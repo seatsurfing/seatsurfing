@@ -61,6 +61,9 @@ var (
 	SettingFeatureAuthProviders           SettingName = SettingName{Name: "feature_auth_providers", Type: SettingTypeBool}
 	SettingFeatureRecurringBookings       SettingName = SettingName{Name: "feature_recurring_bookings", Type: SettingTypeBool}
 	SettingEnforceTOTP                    SettingName = SettingName{Name: "enforce_totp", Type: SettingTypeBool}
+	SettingKioskSecret                    SettingName = SettingName{Name: "kiosk_access_secret", Type: SettingTypeString}
+	SettingKioskModeEnabled               SettingName = SettingName{Name: "kiosk_mode_enabled", Type: SettingTypeBool}
+	SettingFeatureKioskMode               SettingName = SettingName{Name: "feature_kiosk_mode", Type: SettingTypeBool}
 	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
 )
 
@@ -260,6 +263,8 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingFeatureNoUserLimit.Name+"', '0'), "+
 		"($1, '"+SettingFeatureCustomDomains.Name+"', '0'), "+
 		"($1, '"+SettingFeatureGroups.Name+"', '0'), "+
+		"($1, '"+SettingFeatureKioskMode.Name+"', '0'), "+
+		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
 		"($1, '"+SettingNoAdminRestrictions.Name+"', '0'), "+
@@ -286,6 +291,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingBookingRetentionDays.Name+"', '365'), "+
 		"($1, '"+SettingSubjectDefault.Name+"', '"+strconv.Itoa(SettingSubjectDefaultOptional)+"'), "+
 		"($1, '"+SettingEnforceTOTP.Name+"', '0'), "+
+		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
 		"($1, '"+SettingHideReports.Name+"', '0') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)

@@ -21,13 +21,14 @@ type SpaceAttributeValueRequest struct {
 
 type CreateSpaceRequest struct {
 	Name                  string                       `json:"name" validate:"required,max=128"`
-	X                     uint                         `json:"x"`
-	Y                     uint                         `json:"y"`
-	Width                 uint                         `json:"width"`
-	Height                uint                         `json:"height"`
-	Rotation              uint                         `json:"rotation"`
+	X                     uint                         `json:"x" validate:"max=100000"`
+	Y                     uint                         `json:"y" validate:"max=100000"`
+	Width                 uint                         `json:"width" validate:"max=5000"`
+	Height                uint                         `json:"height" validate:"max=5000"`
+	Rotation              uint                         `json:"rotation" validate:"max=359"`
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
+	KioskEnabled          bool                         `json:"kioskEnabled"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
@@ -341,6 +342,10 @@ func (router *SpaceRouter) IsUserAllowedToBookLocation(allowedBookers []*Locatio
 func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	var m SpaceBulkUpdateRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if len(m.Creates)+len(m.Updates)+len(m.DeleteIDs) > 64 {
 		SendBadRequest(w)
 		return
 	}
@@ -923,6 +928,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Rotation = m.Rotation
 	e.RequireSubject = m.RequireSubject
 	e.Enabled = m.Enabled
+	e.KioskEnabled = m.KioskEnabled
 	return e
 }
 
@@ -938,6 +944,7 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.Rotation = e.Rotation
 	m.RequireSubject = e.RequireSubject
 	m.Enabled = e.Enabled
+	m.KioskEnabled = e.KioskEnabled
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {
