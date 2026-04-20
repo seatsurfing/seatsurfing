@@ -3,6 +3,7 @@ import Head from "next/head";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
+import Formatting from "@/util/Formatting";
 
 interface KioskBooking {
   id: string;
@@ -259,7 +260,14 @@ export default function KioskPage() {
 
               {data.nextBooking && (
                 <div className="kiosk-card">
-                  <div className="kiosk-card-label">{t("kioskNext")}</div>
+                  <div className="kiosk-card-label">
+                    {t("kioskNext")} (
+                    {Formatting.getDateOffsetText(
+                      new Date(data.nextBooking.enter),
+                      new Date(data.nextBooking.leave),
+                    )}
+                    )
+                  </div>
                   <div className="kiosk-card-time">
                     {formatTime(data.nextBooking.enter, data.timezone)}
                     &nbsp;&ndash;&nbsp;
