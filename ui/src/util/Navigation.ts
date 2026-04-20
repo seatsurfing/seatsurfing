@@ -1,3 +1,5 @@
+import CONSTANT from "@/util/Contant";
+
 export default class Navigation {
   // API
   static readonly PATH_API_USER_PREFERENCES = "/preference/";
@@ -51,5 +53,13 @@ export default class Navigation {
 
   static locationAbsolute(locationId: string): string {
     return `${window.location.origin}/ui/search/?lid=${encodeURIComponent(locationId)}`;
+  }
+
+  // ----------
+  // KIOSK MODE
+  // ----------
+
+  static kioskUrl(spaceId: string, variant: "color" | "mono"): string {
+    return `${window.location.origin}/ui/kiosk/${encodeURIComponent(spaceId)}/?variant=${encodeURIComponent(variant)}&lang=en&secret=${encodeURIComponent(CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER)}`;
   }
 }

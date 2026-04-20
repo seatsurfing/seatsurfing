@@ -1045,8 +1045,8 @@ class EditLocation extends React.Component<Props, State> {
                     <Form.Text as="div" className="text-muted">
                       {(() => {
                         const spaceId = this.getSelectedSpace()!.id;
-                        const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=color&lang=en&secret=YOUR_SECRET_KEY`;
-                        const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=mono&lang=en&secret=YOUR_SECRET_KEY`;
+                        const colorUrl = Navigation.kioskUrl(spaceId, "color");
+                        const monoUrl = Navigation.kioskUrl(spaceId, "mono");
                         return (
                           <>
                             <div className="mt-1">
