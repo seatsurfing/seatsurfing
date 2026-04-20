@@ -45,7 +45,6 @@ import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
-import CONSTANT from "@/util/Contant";
 
 interface SpaceState {
   id: string;
@@ -1046,8 +1045,8 @@ class EditLocation extends React.Component<Props, State> {
                     <Form.Text as="div" className="text-muted">
                       {(() => {
                         const spaceId = this.getSelectedSpace()!.id;
-                        const colorUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=color&lang=en&secret=${CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER}`;
-                        const monoUrl = `${window.location.origin}/ui/kiosk/${spaceId}/?variant=mono&lang=en&secret=${CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER}`;
+                        const colorUrl = Navigation.kioskUrl(spaceId, "color");
+                        const monoUrl = Navigation.kioskUrl(spaceId, "mono");
                         return (
                           <>
                             <div className="mt-1">
