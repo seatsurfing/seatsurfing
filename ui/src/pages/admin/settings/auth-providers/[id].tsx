@@ -153,6 +153,7 @@ class EditAuthProvider extends React.Component<Props, State> {
 
     try {
       await this.entity.save();
+      this.entity.clientSecret = "";
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
       );
