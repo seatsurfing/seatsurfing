@@ -71,6 +71,7 @@ interface State {
   allowRecurringBookings: boolean;
   newUserDefaultMailNotification: boolean;
   enforceTOTP: boolean;
+  hideReports: boolean;
 }
 
 interface Props {
@@ -125,6 +126,7 @@ class Settings extends React.Component<Props, State> {
       allowRecurringBookings: true,
       newUserDefaultMailNotification: false,
       enforceTOTP: false,
+      hideReports: false,
     };
   }
 
@@ -248,6 +250,7 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
+        if (s.name === "hide_reports") state.hideReports = s.value === "1";
       });
       if (state.dailyBasisBooking && state.maxBookingDurationHours % 24 !== 0) {
         state.maxBookingDurationHours +=
@@ -353,6 +356,7 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings("enforce_totp", this.state.enforceTOTP ? "1" : "0"),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
+      new OrgSettings("hide_reports", this.state.hideReports ? "1" : "0"),
     ];
     OrgSettings.setAll(payload)
       .then(() => {
