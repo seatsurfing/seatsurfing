@@ -26,6 +26,7 @@ import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -499,7 +500,7 @@ class EditAuthProvider extends React.Component<Props, State> {
                 <InputGroup>
                   <Form.Control
                     type="text"
-                    value="••••••••••••••••"
+                    value={RendererUtils.SECRET_PLACEHOLDER}
                     readOnly={true}
                   />
                   <Button
