@@ -10,6 +10,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 func TestAuthProvidersEmptyResult(t *testing.T) {
@@ -124,7 +125,8 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected auth provider to exist")
 	}
-	CheckTestString(t, "test2_2", dbEntity.ClientSecret)
+	ClientSecretDecrypted, _ := DecryptString(dbEntity.ClientSecret)
+	CheckTestString(t, "test2_2", ClientSecretDecrypted)
 
 	// 4. Delete
 	req = NewHTTPRequest("DELETE", "/auth-provider/"+id, loginResponse.UserID, nil)
