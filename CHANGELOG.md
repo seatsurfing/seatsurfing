@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.86.1](https://github.com/seatsurfing/seatsurfing/compare/v1.86.0...v1.86.1) (2026-04-20)
+
+
+### Bug Fixes
+
+* fix encrypting auth provider client secrets ([#2032](https://github.com/seatsurfing/seatsurfing/issues/2032)) ([6a78008](https://github.com/seatsurfing/seatsurfing/commit/6a780084faffcac10a51d609a2a1eb2db3bb9c35))
+
 ## [1.86.0](https://github.com/seatsurfing/seatsurfing/compare/v1.85.1...v1.86.0) (2026-04-20)
 
 
