@@ -120,6 +120,16 @@ func SetEmailLogCallback(callback EmailLogCallback) {
 	emailLogCallback = callback
 }
 
+// GlobalEmailFooterProvider is an optional function that returns the footer text for a given language from the database.
+// If it returns ("", nil), the file-based fallback is used.
+type GlobalEmailFooterProvider func(language string) (string, error)
+
+var globalEmailFooterProvider GlobalEmailFooterProvider
+
+func SetGlobalEmailFooterProvider(p GlobalEmailFooterProvider) {
+	globalEmailFooterProvider = p
+}
+
 var SendMailMockContent = ""
 
 type MailButton struct {
@@ -205,7 +215,7 @@ func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
 	s := string(data)
 	var jsonContent MailTemplate
 	if err := json.Unmarshal(jsonTemplate, &jsonContent); err != nil {
-		return nil, "", fmt.Errorf("error unmarshalling json template: %v", err)
+		return nil, "", fmt.Errorf("error unmarshaling json template: %v", err)
 	}
 	s = strings.ReplaceAll(s, "{{headline}}", html.EscapeString(jsonContent.Headline))
 	body := ""
@@ -316,17 +326,27 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		MimeType:  "image/png",
 		ContentID: "seatsurfing-logo",
 	})
-	footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
-	if err != nil {
-		return fmt.Errorf("error getting footer template path: %v", err)
+	var footerJSON []byte
+	if globalEmailFooterProvider != nil {
+		if dbFooter, err := globalEmailFooterProvider(language); err != nil {
+			log.Printf("Failed to get email footer from database for language '%s': %v\n", language, err)
+		} else if dbFooter != "" {
+			footerJSON = []byte(dbFooter)
+		}
 	}
-	footerData, err := os.ReadFile(footerFile)
-	if err != nil {
-		return fmt.Errorf("error reading footer template file: %v", err)
+	if footerJSON == nil {
+		footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
+		if err != nil {
+			return fmt.Errorf("error getting footer template path: %v", err)
+		}
+		footerJSON, err = os.ReadFile(footerFile)
+		if err != nil {
+			return fmt.Errorf("error reading footer template file: %v", err)
+		}
 	}
 	var jsonFooter []string
-	if err := json.Unmarshal(footerData, &jsonFooter); err != nil {
-		return fmt.Errorf("error unmarshalling footer json: %v", err)
+	if err := json.Unmarshal(footerJSON, &jsonFooter); err != nil {
+		return fmt.Errorf("error unmarshaling footer json: %v", err)
 	}
 	footer := ""
 	for _, paragraph := range jsonFooter {

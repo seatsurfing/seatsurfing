@@ -49,6 +49,10 @@ func (a *App) InitializeDatabases() {
 	SetEmailLogCallback(func(subject, recipient, organizationID string) error {
 		return GetMailLogRepository().LogEmail(subject, recipient, organizationID)
 	})
+	// Set up email footer provider: DB value takes precedence over file fallback
+	SetGlobalEmailFooterProvider(func(language string) (string, error) {
+		return GetSettingsRepository().GetGlobalStringLocalized(SettingEmailFooterPrefix, language)
+	})
 }
 
 func (a *App) InitializePlugins() {

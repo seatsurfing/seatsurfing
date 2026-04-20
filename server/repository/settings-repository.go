@@ -30,6 +30,7 @@ const (
 var (
 	SettingInstallID                      SettingName = SettingName{Name: "install_id", Type: SettingTypeString}
 	SettingDatabaseVersion                SettingName = SettingName{Name: "db_version", Type: SettingTypeInt}
+	SettingEmailFooterPrefix              SettingName = SettingName{Name: "email_footer_", Type: SettingTypeString}
 	SettingAllowAnyUser                   SettingName = SettingName{Name: "allow_any_user", Type: SettingTypeBool}
 	SettingConfluenceServerSharedSecret   SettingName = SettingName{Name: "confluence_server_shared_secret", Type: SettingTypeString}
 	SettingConfluenceAnonymous            SettingName = SettingName{Name: "confluence_anonymous", Type: SettingTypeBool}
@@ -195,6 +196,10 @@ func (r *SettingsRepository) GetGlobalString(name string) (string, error) {
 		return "", err
 	}
 	return res, nil
+}
+
+func (r *SettingsRepository) GetGlobalStringLocalized(prefix SettingName, language string) (string, error) {
+	return r.GetGlobalString(prefix.Name + language)
 }
 
 func (r *SettingsRepository) GetGlobalInt(name string) (int, error) {
