@@ -41,6 +41,7 @@ interface RuntimeUserInfos {
   dateFormat: string;
   totpEnabled: boolean;
   enforceTOTP: boolean;
+  hideReports: boolean;
   hasPasskeys: boolean;
   isPrimaryDomain: boolean;
   targetUtilizationHoursPerWeek: number;
@@ -89,6 +90,7 @@ export default class RuntimeConfig {
       dateFormat: "Y-m-d",
       totpEnabled: false,
       enforceTOTP: false,
+      hideReports: false,
       hasPasskeys: false,
       isPrimaryDomain: false,
       targetUtilizationHoursPerWeek: 0,
@@ -198,6 +200,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
           if (s.name === "enforce_totp")
             RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
+          if (s.name === "hide_reports")
+            RuntimeConfig.INFOS.hideReports = s.value === "1";
           if (s.name === "target_utilization_hours_per_week")
             RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
               s.value,
