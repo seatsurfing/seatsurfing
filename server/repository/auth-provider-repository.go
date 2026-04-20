@@ -87,15 +87,12 @@ func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 	}
-	if curVersion < 41 {
+	if curVersion < 42 {
 		r.encryptExistingClientSecrets()
 	}
 }
 
 func (r *AuthProviderRepository) encryptExistingClientSecrets() {
-	if !CanCrypt() {
-		return
-	}
 	rows, err := GetDatabase().DB().Query("SELECT id, client_secret FROM auth_providers")
 	if err != nil {
 		panic(err)
