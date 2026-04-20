@@ -9,17 +9,22 @@ export default class Validation {
     return /^https?:\/\//i.test(url);
   }
 
-  static generatePassword(length: number = 32): string {
+  static generatePassword(
+    length: number = 32,
+    excludeSpecial: boolean = false,
+  ): string {
     const lower = "abcdefghijklmnopqrstuvwxyz";
     const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const digits = "0123456789";
     const special = "!@#$%^&*()-_=+[]{}|;:,.<>?";
-    const all = lower + upper + digits + special;
+    const all = lower + upper + digits + (excludeSpecial ? "" : special);
     const required = [
       lower.charAt(Math.floor(Math.random() * lower.length)),
       upper.charAt(Math.floor(Math.random() * upper.length)),
       digits.charAt(Math.floor(Math.random() * digits.length)),
-      special.charAt(Math.floor(Math.random() * special.length)),
+      ...(excludeSpecial
+        ? []
+        : [special.charAt(Math.floor(Math.random() * special.length))]),
     ];
     const rest = Array.from({ length: length - required.length }, () =>
       all.charAt(Math.floor(Math.random() * all.length)),

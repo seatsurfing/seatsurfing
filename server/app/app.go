@@ -124,6 +124,7 @@ func (a *App) InitializeRouter() {
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
+	routers["/kiosk/"] = &KioskRouter{}
 	for _, plg := range plugin.GetPlugins() {
 		for route, router := range (*plg).GetPublicRoutes() {
 			routers[route] = router
@@ -222,6 +223,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureKioskMode.Name, "1")
 	}
 }
 

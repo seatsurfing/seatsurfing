@@ -24,7 +24,11 @@ class PremiumFeatureIcon extends React.Component<Props, State> {
       return (
         <DiamondIcon
           className={combinedClassName}
-          style={{ marginLeft: "5px", ...this.props.style }}
+          style={{
+            marginLeft: "5px",
+            verticalAlign: "middle",
+            ...this.props.style,
+          }}
           color="#007bff"
         />
       );
