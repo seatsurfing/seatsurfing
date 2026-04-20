@@ -49,7 +49,7 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         working-directory: ./e2e
-        run: UI_URL="http://localhost:8080" npx playwright test
+        run: UI_URL="http://localhost:8080" CRYPT_KEY="rC8REJftxMcdhzTvu9Tk6RqgygBRctZC" npx playwright test
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
