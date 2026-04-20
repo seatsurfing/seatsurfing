@@ -26,6 +26,7 @@ import Ajax from "@/util/Ajax";
 import RedirectUtil from "@/util/RedirectUtil";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -152,6 +153,7 @@ class EditAuthProvider extends React.Component<Props, State> {
 
     try {
       await this.entity.save();
+      this.entity.clientSecret = "";
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
       );
@@ -499,7 +501,7 @@ class EditAuthProvider extends React.Component<Props, State> {
                 <InputGroup>
                   <Form.Control
                     type="text"
-                    value="••••••••••••••••"
+                    value={RendererUtils.SECRET_PLACEHOLDER}
                     readOnly={true}
                   />
                   <Button

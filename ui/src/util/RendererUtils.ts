@@ -38,4 +38,6 @@ export default class RendererUtils {
   }
 
   static capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  static SECRET_PLACEHOLDER = "••••••••••••••••";
 }

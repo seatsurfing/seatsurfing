@@ -2,6 +2,8 @@ package repository
 
 import (
 	"sync"
+
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type AuthProviderRepository struct {
@@ -82,6 +84,41 @@ func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
 			"ADD COLUMN IF NOT EXISTS userinfo_firstname_field VARCHAR NOT NULL DEFAULT '', " +
 			"ADD COLUMN IF NOT EXISTS userinfo_lastname_field VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 41 {
+		r.encryptExistingClientSecrets()
+	}
+}
+
+func (r *AuthProviderRepository) encryptExistingClientSecrets() {
+	if !CanCrypt() {
+		return
+	}
+	rows, err := GetDatabase().DB().Query("SELECT id, client_secret FROM auth_providers")
+	if err != nil {
+		panic(err)
+	}
+	type record struct {
+		id     string
+		secret string
+	}
+	var records []record
+	for rows.Next() {
+		var rec record
+		if err := rows.Scan(&rec.id, &rec.secret); err != nil {
+			panic(err)
+		}
+		records = append(records, rec)
+	}
+	rows.Close()
+	for _, rec := range records {
+		encrypted, err := EncryptString(rec.secret)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE auth_providers SET client_secret = $1 WHERE id = $2", encrypted, rec.id); err != nil {
 			panic(err)
 		}
 	}

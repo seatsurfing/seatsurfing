@@ -10,6 +10,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 func TestAuthProvidersEmptyResult(t *testing.T) {
@@ -124,7 +125,8 @@ func TestAuthProvidersCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected auth provider to exist")
 	}
-	CheckTestString(t, "test2_2", dbEntity.ClientSecret)
+	ClientSecretDecrypted, _ := DecryptString(dbEntity.ClientSecret)
+	CheckTestString(t, "test2_2", ClientSecretDecrypted)
 
 	// 4. Delete
 	req = NewHTTPRequest("DELETE", "/auth-provider/"+id, loginResponse.UserID, nil)
@@ -245,7 +247,9 @@ func TestAuthProvidersUpdateKeepsExistingClientSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected auth provider to exist")
 	}
-	CheckTestString(t, "original-secret", e.ClientSecret)
+
+	DecryptedClientSecret, _ := DecryptString(e.ClientSecret)
+	CheckTestString(t, "original-secret", DecryptedClientSecret)
 	CheckTestString(t, "Test_2", e.Name)
 }
 
@@ -274,7 +278,8 @@ func TestAuthProvidersUpdateChangesClientSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected auth provider to exist")
 	}
-	CheckTestString(t, "new-secret", e.ClientSecret)
+	ClientSecretDecrypted, _ := DecryptString(e.ClientSecret)
+	CheckTestString(t, "new-secret", ClientSecretDecrypted)
 }
 
 func TestAuthProviderDeletionProtection(t *testing.T) {

@@ -1,8 +1,9 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
+import CONSTANT from "@/util/Contant";
 import Formatting from "@/util/Formatting";
 
 interface KioskBooking {
@@ -81,11 +82,16 @@ export default function KioskPage() {
     }
   }, []);
 
-  // Store kiosk secret from URL param into localStorage, then strip from URL
+  // Store kiosk secret from URL param into localStorage, then strip from URL.
+  // If the URL still contains the placeholder value, leave it in place and show
+  // an instruction instead so the admin knows to substitute the real secret.
   useEffect(() => {
     if (!router.isReady) return;
     const secretFromUrl = router.query.secret as string | undefined;
     if (secretFromUrl) {
+      if (secretFromUrl === CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER) {
+        return;
+      }
       try {
         localStorage.setItem(
           KIOSK_SECRET_KEY + "_" + (spaceId ?? ""),
