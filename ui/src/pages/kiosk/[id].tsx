@@ -266,7 +266,14 @@ export default function KioskPage() {
 
               {data.nextBooking && (
                 <div className="kiosk-card">
-                  <div className="kiosk-card-label"> {t("kioskNext")} </div>
+                  <div className="kiosk-card-label">
+                    {t("kioskNext")} (
+                    {Formatting.getDateOffsetText(
+                      new Date(data.nextBooking.enter),
+                      new Date(data.nextBooking.leave),
+                    )}
+                    )
+                  </div>
                   <div className="kiosk-card-time">
                     {formatTime(data.nextBooking.enter, data.timezone)}
                     &nbsp;&ndash;&nbsp;
