@@ -5,6 +5,7 @@ import { useTranslation } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
 import CONSTANT from "@/util/Contant";
 import Formatting from "@/util/Formatting";
+import BrowserUtil from "@/util/BrowserUtil";
 
 interface KioskBooking {
   id: string;
@@ -58,6 +59,14 @@ export default function KioskPage() {
     }
   });
 
+  const getSecretCacheKey = (): string => {
+    return `${KIOSK_SECRET_KEY}_${spaceId ?? ""}`;
+  };
+
+  const getSecretFromUrl = (): string => {
+    return router.query.secret as string;
+  };
+
   const { t } = useTranslation();
 
   const [data, setData] = useState<KioskData | null>(null);
@@ -87,19 +96,14 @@ export default function KioskPage() {
   // an instruction instead so the admin knows to substitute the real secret.
   useEffect(() => {
     if (!router.isReady) return;
-    const secretFromUrl = router.query.secret as string | undefined;
+    const secretFromUrl = getSecretFromUrl();
     if (secretFromUrl) {
       if (secretFromUrl === CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER) {
         return;
       }
-      try {
-        localStorage.setItem(
-          KIOSK_SECRET_KEY + "_" + (spaceId ?? ""),
-          secretFromUrl,
-        );
-      } catch {
-        // localStorage may not be available
-      }
+
+      BrowserUtil.tryLocalStorageSetItem(getSecretCacheKey(), secretFromUrl);
+
       // Remove secret from URL without reloading
       const { secret, ...rest } = router.query;
       void secret; // intentionally consumed
@@ -110,13 +114,12 @@ export default function KioskPage() {
   }, [router.isReady, router.query.secret]);
 
   const getSecret = useCallback((): string => {
-    try {
-      return (
-        localStorage.getItem(KIOSK_SECRET_KEY + "_" + (spaceId ?? "")) ?? ""
-      );
-    } catch {
+    // do not use secret from local storage if placeholder is present in URL
+    if (getSecretFromUrl() === CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER) {
       return "";
     }
+
+    return BrowserUtil.tryLocalStorageGetItem(getSecretCacheKey(), "");
   }, [spaceId]);
 
   const fetchData = useCallback(async () => {
