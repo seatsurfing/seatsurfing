@@ -11,13 +11,6 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/config"
 )
 
-func CanCrypt() bool {
-	if GetConfig().CryptKey == "" || len(GetConfig().CryptKey) != 32 {
-		return false
-	}
-	return true
-}
-
 func EncryptString(s string) (string, error) {
 	aes, err := aes.NewCipher([]byte(GetConfig().CryptKey))
 	if err != nil {
