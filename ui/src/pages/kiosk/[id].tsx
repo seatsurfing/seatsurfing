@@ -179,7 +179,10 @@ export default function KioskPage() {
   return (
     <>
       <Head>
-        <title>{data?.spaceName ?? t("kioskMode")}</title>
+        <title>
+          {data?.locationName ? `${data?.locationName} > ` : ""}
+          {data?.spaceName ?? t("kioskMode")}
+        </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <style>{`
