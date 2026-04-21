@@ -206,10 +206,6 @@ func (router *UserRouter) listPasskeys(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		SendInternalServerError(w)
-		return
-	}
 	user := GetRequestUser(r)
 	if user == nil {
 		SendUnauthorized(w)
@@ -299,10 +295,6 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 }
 
 func (router *UserRouter) finishPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		SendInternalServerError(w)
-		return
-	}
 	user := GetRequestUser(r)
 	if user == nil {
 		SendUnauthorized(w)
@@ -467,10 +459,6 @@ func (router *UserRouter) deletePasskey(w http.ResponseWriter, r *http.Request) 
 
 func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Request) {
 	// Encryption must be available to securely store the challenge (Finding #1)
-	if !CanCrypt() {
-		SendInternalServerError(w)
-		return
-	}
 	var m BeginPasskeyLoginRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
