@@ -89,7 +89,7 @@
   "confluenceClientIdStep4": "Kopiere die folgende ID:",
   "confluenceClientIdStep5": "Füge diese ID als „Confluence Client ID“ ein und speichere die Einstellungen.",
   "confluenceClientIdStep6": "Lade diese Seite neu.",
-  "confluenceServerSharedSecret": "Confluence Shared Secret",
+  "confluenceServerSharedSecret": "Confluence shared Secret",
   "connect": "Verbinden",
   "createAccount": "Kostenlosen Account erstellen",
   "customLogoUrl": "Logo URL",
