@@ -40,7 +40,14 @@ import {
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
   UserCheck as IconUserCheck,
+  ArrowLeft as IconArrowLeft,
+  ArrowRight as IconArrowRight,
+  Trello as IconTrello,
+  MapPin as IconLocationPin,
 } from "react-feather";
+import { Calendar, momentLocalizer, ToolbarProps } from "react-big-calendar";
+import moment from "moment-timezone";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
 import {
   TransformWrapper,
@@ -122,6 +129,11 @@ interface State {
 
   selectionMultiDay: boolean;
   selectionAllDay: boolean;
+
+  showSpaceCalendar: boolean;
+  spaceCalendarDate: Date;
+  spaceCalendarBookings: Booking[];
+  spaceCalendarLoading: boolean;
 }
 
 interface Props {
@@ -218,6 +230,11 @@ class Search extends React.Component<Props, State> {
 
       selectionAllDay: false,
       selectionMultiDay: false,
+
+      showSpaceCalendar: false,
+      spaceCalendarDate: new Date(),
+      spaceCalendarBookings: [],
+      spaceCalendarLoading: false,
     };
   }
 
@@ -999,6 +1016,30 @@ class Search extends React.Component<Props, State> {
           errorText: ErrorText.getTextForAppCode(code, this.props.t),
         });
       });
+  };
+
+  loadSpaceCalendarBookings = (date: Date) => {
+    const space = this.state.selectedSpace;
+    if (!space) return;
+
+    const weekStart = moment(date).clone().startOf("week").toDate();
+    const weekEnd = moment(date).clone().endOf("week").toDate();
+
+    this.setState({ spaceCalendarLoading: true });
+    Space.listAvailability(space.locationId, weekStart, weekEnd).then((spaces) => {
+      const found = spaces.find((s) => s.id === space.id);
+      const bookings = found ? Booking.createFromRawArray(found.rawBookings) : [];
+      this.setState({ spaceCalendarBookings: bookings, spaceCalendarLoading: false });
+    }).catch(() => {
+      this.setState({ spaceCalendarLoading: false });
+    });
+  };
+
+  openSpaceCalendar = () => {
+    const today = new Date();
+    this.setState({ showSpaceCalendar: true, spaceCalendarDate: today }, () => {
+      this.loadSpaceCalendarBookings(today);
+    });
   };
 
   getLocation = (): Location | undefined => {
@@ -2543,10 +2584,141 @@ class Search extends React.Component<Props, State> {
           >
             {this.props.t("back")}
           </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              this.setState({ showBookingNames: false });
+              this.openSpaceCalendar();
+            }}
+          >
+            <IconCalendar className="feather" style={{ marginRight: "5px" }} />
+            {this.props.t("calendar")}
+          </Button>
           {gotoBooking}
         </Modal.Footer>
       </Modal>
     );
+
+    type CalEvent = {
+      start: Date;
+      end: Date;
+      title: string;
+      booking: Booking;
+    };
+
+    const spaceCalendarEvents: CalEvent[] = this.state.spaceCalendarBookings.map((b) => ({
+      start: b.enter,
+      end: b.leave,
+      title: b.user.email + (b.subject ? ` – ${b.subject}` : ""),
+      booking: b,
+    }));
+
+    const SpaceCalCustomEvent = ({ event }: { event: CalEvent }) => {
+      if (event.booking.leave.getTime() - event.booking.enter.getTime() <= 60 * 60 * 1000) {
+        return null;
+      }
+      return (
+        <div style={{ fontSize: "12px" }}>
+          <IconLocationPin style={{ width: "12px", height: "12px" }} />{" "}
+          {event.booking.user.email}
+          {event.booking.subject && (
+            <>
+              <br />
+              <strong>{event.booking.subject}</strong>
+            </>
+          )}
+        </div>
+      );
+    };
+
+    const SpaceCalCustomToolbar = (toolbar: ToolbarProps<CalEvent, object>) => {
+      const weekStart = moment(toolbar.date).clone().startOf("week");
+      const weekEnd = moment(toolbar.date).clone().endOf("week");
+      const fmt = Formatting.getFormatterDate();
+      return (
+        <div className="custom-toolbar" style={{ marginBottom: "5px", textAlign: "left" }}>
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => toolbar.onNavigate("TODAY")}
+          >
+            <IconTrello className="feather" /> {this.props.t("today")}
+          </Button>{" "}
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => toolbar.onNavigate("PREV")}
+          >
+            <IconArrowLeft className="feather" />
+          </Button>{" "}
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => toolbar.onNavigate("NEXT")}
+          >
+            <IconArrowRight className="feather" />
+          </Button>{" "}
+          <span style={{ float: "right" }}>
+            {fmt.format(weekStart.toDate())} – {fmt.format(weekEnd.toDate())}
+          </span>
+        </div>
+      );
+    };
+
+    moment.tz.setDefault("UTC");
+    moment.locale(Formatting.Language);
+    const spaceCalLocalizer = momentLocalizer(moment);
+
+    const spaceCalendarModal = (
+      <Modal
+        show={this.state.showSpaceCalendar}
+        onHide={() => this.setState({ showSpaceCalendar: false })}
+        size="xl"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {this.state.selectedSpace?.name} – {this.props.t("calendar")}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ minHeight: "500px" }}>
+          {this.state.spaceCalendarLoading ? (
+            <Loading visible={true} />
+          ) : (
+            <Calendar
+              showMultiDayTimes={true}
+              getNow={() => DateUtil.getNowFakeUTC()}
+              localizer={spaceCalLocalizer}
+              events={spaceCalendarEvents}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: "60vh", width: "100%" }}
+              defaultView="week"
+              views={["week"]}
+              date={this.state.spaceCalendarDate}
+              onNavigate={(newDate: Date) => {
+                this.setState({ spaceCalendarDate: newDate }, () => {
+                  this.loadSpaceCalendarBookings(newDate);
+                });
+              }}
+              culture={Formatting.Language}
+              components={{
+                toolbar: SpaceCalCustomToolbar,
+                event: SpaceCalCustomEvent,
+              }}
+            />
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => this.setState({ showSpaceCalendar: false })}
+          >
+            {this.props.t("back")}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+
     const successModal = (
       <Modal
         show={this.state.showSuccess}
@@ -2627,6 +2799,7 @@ class Search extends React.Component<Props, State> {
         {searchModal}
         {confirmModal}
         {bookingNamesModal}
+        {spaceCalendarModal}
         {successModal}
         {errorModal}
         {listOrMap}
