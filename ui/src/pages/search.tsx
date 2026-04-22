@@ -806,7 +806,9 @@ class Search extends React.Component<Props, State> {
         className={className}
         data-tooltip-id="my-tooltip"
         data-tooltip-content={
-          item.rawBookings[0] ? item.rawBookings[0].userEmail : "Free"
+          item.rawBookings[0]
+            ? item.rawBookings[0].userEmail
+            : this.props.t("free")
         }
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}
