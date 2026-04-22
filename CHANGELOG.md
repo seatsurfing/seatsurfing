@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.86.2](https://github.com/seatsurfing/seatsurfing/compare/v1.86.1...v1.86.2) (2026-04-21)
+
+
+### Bug Fixes
+
+* add location name to title in kiosk mode ([#2039](https://github.com/seatsurfing/seatsurfing/issues/2039)) ([d424848](https://github.com/seatsurfing/seatsurfing/commit/d4248483f9c155456384ea7196e4b2a44a2b3b4d))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.73 to 1.0.74 in /server in the minor-and-patch group ([#2034](https://github.com/seatsurfing/seatsurfing/issues/2034)) ([8fa8524](https://github.com/seatsurfing/seatsurfing/commit/8fa8524f67c080f6ca30b1e8766a565d5726012e))
+* do not use secret from local storage if secret placeholder is present in URL ([#2040](https://github.com/seatsurfing/seatsurfing/issues/2040)) ([3306418](https://github.com/seatsurfing/seatsurfing/commit/330641809fb382ec40340d4502f4aa5efc3309be))
+* minor text fixes ([#2038](https://github.com/seatsurfing/seatsurfing/issues/2038)) ([96a0cfe](https://github.com/seatsurfing/seatsurfing/commit/96a0cfef4488d541ad161ce7a020c10e9a87c4a2))
+
 ## [1.86.1](https://github.com/seatsurfing/seatsurfing/compare/v1.86.0...v1.86.1) (2026-04-20)
 
 
