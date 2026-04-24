@@ -1,3 +1,5 @@
+import RuntimeConfig from "@/components/RuntimeConfig";
+
 export default class DateUtil {
   static MS_PER_MINUTE = 1000 * 60;
   static MS_PER_HOUR = DateUtil.MS_PER_MINUTE * 60;
@@ -233,5 +235,23 @@ export default class DateUtil {
 
   static getNowFakeUTC(): Date {
     return this.convertToFakeUTCDate(new Date());
+  }
+
+  /**
+   * calculates the "next free enter time" for a booking based on a leave date which is
+   *  - next day if "dailyBasisBooking" is active, or
+   *  - +1 minute otherwise
+   *
+   * @param leave Leave date of the last booking
+   * @returns new date for "next free enter time"
+   */
+  static getNextFreeEnterTime(leave: Date): Date {
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      const nextDay = new Date(leave);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      nextDay.setUTCHours(0, 0, 0, 0);
+      return nextDay;
+    }
+    return new Date(leave.getTime() + DateUtil.MS_PER_MINUTE);
   }
 }
