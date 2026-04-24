@@ -799,15 +799,16 @@ class Search extends React.Component<Props, State> {
     const className =
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
+    const tooltipHtml = item.rawBookings[0]
+      ? `<div class="text-center">${item.rawBookings[0].userEmail}<br/>${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(item.rawBookings[0].leave)) })}</div>`
+      : this.props.t("free");
     return (
       <div
         key={item.id}
         style={boxStyle}
         className={className}
         data-tooltip-id="my-tooltip"
-        data-tooltip-content={
-          item.rawBookings[0] ? item.rawBookings[0].userEmail : "Free"
-        }
+        data-tooltip-html={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}
       >
