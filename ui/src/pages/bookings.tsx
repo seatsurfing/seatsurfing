@@ -333,7 +333,7 @@ class Bookings extends React.Component<Props, State> {
               alignItems: "center",
             }}
           >
-            {formatter.format(weekStart.toDate())} -{" "}
+            {formatter.format(weekStart.toDate())} –{" "}
             {formatter.format(weekEnd.toDate())}
           </span>
         </div>
