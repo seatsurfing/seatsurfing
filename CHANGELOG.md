@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.87.0](https://github.com/seatsurfing/seatsurfing/compare/v1.86.2...v1.87.0) (2026-04-25)
+
+
+### Features
+
+* add "free from" to booking space tooltip ([#2050](https://github.com/seatsurfing/seatsurfing/issues/2050)) ([064ef84](https://github.com/seatsurfing/seatsurfing/commit/064ef849b67811ea37c3e91054bc6035202f3dd5))
+
+
+### Bug Fixes
+
+* **deps:** bump next from 16.2.3 to 16.2.4 in /ui in the production-dependencies group across 1 directory ([#2046](https://github.com/seatsurfing/seatsurfing/issues/2046)) ([4411bdf](https://github.com/seatsurfing/seatsurfing/commit/4411bdf0d947cd0b6160493382140d5565046c4f))
+* fix dash in my bookings calender ([#2055](https://github.com/seatsurfing/seatsurfing/issues/2055)) ([ff8cb27](https://github.com/seatsurfing/seatsurfing/commit/ff8cb277eb811be1bfaa4fcaf11140fd09aa7dec))
+* fix space tooltip on search map ([#2054](https://github.com/seatsurfing/seatsurfing/issues/2054)) ([acbe0b9](https://github.com/seatsurfing/seatsurfing/commit/acbe0b90fe9ec4c95da80d75671acce75f680810))
+* ignore "sql: no rows in result set" error if mail footer is not in DB ([#2053](https://github.com/seatsurfing/seatsurfing/issues/2053)) ([360087a](https://github.com/seatsurfing/seatsurfing/commit/360087a83e8592d694816afd8e7787858a643d67))
+* remove unnecessary spaces when logging database name ([#2042](https://github.com/seatsurfing/seatsurfing/issues/2042)) ([cd3c89d](https://github.com/seatsurfing/seatsurfing/commit/cd3c89da4966cd6dcb465d97aeed8cbdc2d791e4))
+
 ## [1.86.2](https://github.com/seatsurfing/seatsurfing/compare/v1.86.1...v1.86.2) (2026-04-21)
 
 
