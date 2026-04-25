@@ -1775,8 +1775,8 @@ class Search extends React.Component<Props, State> {
                   </button>
                 </div>
                 <TransformComponent contentClass="border border-3">
-                  <Tooltip id="space-tooltip" />
                   <div style={floorPlanStyle}>{spaces}</div>
+                  <Tooltip id="space-tooltip" />
                 </TransformComponent>
               </>
             )}
