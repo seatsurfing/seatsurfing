@@ -808,12 +808,11 @@ class Search extends React.Component<Props, State> {
         key={item.id}
         style={boxStyle}
         className={className}
-        data-tooltip-id="my-tooltip"
+        data-tooltip-id="space-tooltip"
         data-tooltip-html={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}
       >
-        <Tooltip id="my-tooltip" />
         {item.approvalRequired && (
           <IconUserCheck size={16} className="position-absolute top-0 end-0" />
         )}
@@ -1778,6 +1777,7 @@ class Search extends React.Component<Props, State> {
                 <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>{spaces}</div>
                 </TransformComponent>
+                <Tooltip id="space-tooltip" />
               </>
             )}
           </TransformWrapper>
