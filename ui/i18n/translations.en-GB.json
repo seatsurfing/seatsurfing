@@ -437,5 +437,7 @@
   "kioskModeAvailable": "Kiosk mode available",
   "kioskModeAvailableHint": "Enables the use of Seatsurfing in a kiosk mode, e.g. for display on a screen outside the meeting room. Activation is done per space/room in the respective settings.",
   "free": "free",
-  "freeFrom": "free from {{time}}"
+  "freeFrom": "free from {{time}}",
+  "close": "Close",
+  "event": "Event"
 }

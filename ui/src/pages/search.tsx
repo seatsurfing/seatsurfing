@@ -2487,7 +2487,7 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="danger"
@@ -2543,7 +2543,7 @@ class Search extends React.Component<Props, State> {
             variant={myBooking ? "secondary" : "primary"}
             onClick={() => this.setState({ showBookingNames: false })}
           >
-            {this.props.t("back")}
+            {this.props.t("close")}
           </Button>
           {gotoBooking}
         </Modal.Footer>
@@ -2584,7 +2584,7 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="secondary"
