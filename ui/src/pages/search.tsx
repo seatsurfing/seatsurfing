@@ -68,6 +68,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import IconTextButton from "@/components/IconTextButton";
 import DateUtil from "@/util/DateUtil";
 import BrowserUtil from "@/util/BrowserUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   earliestEnterDate: Date;
@@ -800,19 +801,18 @@ class Search extends React.Component<Props, State> {
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
     const tooltipHtml = item.rawBookings[0]
-      ? `<div class="text-center">${item.rawBookings[0].userEmail}<br/>${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(item.rawBookings[0].leave)) })}</div>`
+      ? `<div class="text-center">${RendererUtils.suffixIfDefined(item.rawBookings[0].userEmail, "<br/>")}${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(item.rawBookings[0].leave))) })}</div>`
       : this.props.t("free");
     return (
       <div
         key={item.id}
         style={boxStyle}
         className={className}
-        data-tooltip-id="my-tooltip"
+        data-tooltip-id="space-tooltip"
         data-tooltip-html={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}
       >
-        <Tooltip id="my-tooltip" />
         {item.approvalRequired && (
           <IconUserCheck size={16} className="position-absolute top-0 end-0" />
         )}
@@ -1775,6 +1775,7 @@ class Search extends React.Component<Props, State> {
                   </button>
                 </div>
                 <TransformComponent contentClass="border border-3">
+                  <Tooltip id="space-tooltip" />
                   <div style={floorPlanStyle}>{spaces}</div>
                 </TransformComponent>
               </>
