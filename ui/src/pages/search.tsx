@@ -134,6 +134,7 @@ interface State {
   spaceCalendarDate: Date;
   spaceCalendarBookings: Booking[];
   spaceCalendarLoading: boolean;
+  spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
 }
 
 interface Props {
@@ -235,6 +236,7 @@ class Search extends React.Component<Props, State> {
       spaceCalendarDate: new Date(),
       spaceCalendarBookings: [],
       spaceCalendarLoading: false,
+      spaceCalendarReturnTo: "showBookingNames",
     };
   }
 
@@ -1042,11 +1044,20 @@ class Search extends React.Component<Props, State> {
       });
   };
 
-  openSpaceCalendar = () => {
+  openSpaceCalendar = (
+    returnTo: "showBookingNames" | "showConfirm" = "showBookingNames",
+  ) => {
     const today = new Date();
-    this.setState({ showSpaceCalendar: true, spaceCalendarDate: today }, () => {
-      this.loadSpaceCalendarBookings(today);
-    });
+    this.setState(
+      {
+        showSpaceCalendar: true,
+        spaceCalendarDate: today,
+        spaceCalendarReturnTo: returnTo,
+      },
+      () => {
+        this.loadSpaceCalendarBookings(today);
+      },
+    );
   };
 
   getLocation = (): Location | undefined => {
@@ -2437,6 +2448,20 @@ class Search extends React.Component<Props, State> {
               <IconRefresh className="feather" />
             </Button>
             <Button
+              variant="secondary"
+              onClick={() => {
+                this.setState({ showConfirm: false });
+                this.openSpaceCalendar("showConfirm");
+              }}
+              disabled={this.state.confirmingBooking}
+            >
+              <IconCalendar
+                className="feather"
+                style={{ marginRight: "5px" }}
+              />
+              {this.props.t("calendar")}
+            </Button>
+            <Button
               type="submit"
               variant="primary"
               disabled={
@@ -2730,8 +2755,8 @@ class Search extends React.Component<Props, State> {
             onClick={() =>
               this.setState({
                 showSpaceCalendar: false,
-                showBookingNames: true,
-              })
+                [this.state.spaceCalendarReturnTo]: true,
+              } as any)
             }
           >
             {this.props.t("back")}
