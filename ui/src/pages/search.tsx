@@ -1047,15 +1047,15 @@ class Search extends React.Component<Props, State> {
   openSpaceCalendar = (
     returnTo: "showBookingNames" | "showConfirm" = "showBookingNames",
   ) => {
-    const today = new Date();
+    const date = this.state.enter ?? new Date();
     this.setState(
       {
         showSpaceCalendar: true,
-        spaceCalendarDate: today,
+        spaceCalendarDate: date,
         spaceCalendarReturnTo: returnTo,
       },
       () => {
-        this.loadSpaceCalendarBookings(today);
+        this.loadSpaceCalendarBookings(date);
       },
     );
   };
