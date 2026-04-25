@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.87.1](https://github.com/seatsurfing/seatsurfing/compare/v1.87.0...v1.87.1) (2026-04-25)
+
+
+### Bug Fixes
+
+* fix space tooltip is behind space box ([#2057](https://github.com/seatsurfing/seatsurfing/issues/2057)) ([6fb0da3](https://github.com/seatsurfing/seatsurfing/commit/6fb0da3a1625d1b15288a3026fd313f711e0c15c))
+
 ## [1.87.0](https://github.com/seatsurfing/seatsurfing/compare/v1.86.2...v1.87.0) (2026-04-25)
 
 
