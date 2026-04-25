@@ -2592,7 +2592,7 @@ class Search extends React.Component<Props, State> {
             {this.props.t("back")}
           </Button>
           <Button
-            variant="outline-secondary"
+            variant="secondary"
             onClick={() => {
               this.setState({ showBookingNames: false });
               this.openSpaceCalendar();
