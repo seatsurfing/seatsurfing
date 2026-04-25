@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.87.2](https://github.com/seatsurfing/seatsurfing/compare/v1.87.1...v1.87.2) (2026-04-25)
+
+
+### Bug Fixes
+
+* translate "Event" and change close button label ([#2056](https://github.com/seatsurfing/seatsurfing/issues/2056)) ([335c9f8](https://github.com/seatsurfing/seatsurfing/commit/335c9f8a6e9091bfd4c0afb7d2a708975d7d704a))
+
 ## [1.87.1](https://github.com/seatsurfing/seatsurfing/compare/v1.87.0...v1.87.1) (2026-04-25)
 
 
