@@ -437,5 +437,19 @@
   "kioskModeAvailableHint": "Enables the use of Seatsurfing in a kiosk mode, e.g. for display on a screen outside the meeting room. Activation is done per space/room in the respective settings.",
   "errorAuthProviderNameExists": "The auth provider name already exists.",
   "freeFrom": "free from {{time}}",
-  "free": "free"
+  "free": "free",
+  "exchangeRoomEmail": "Exchange room email",
+  "exchangeSettings": "Exchange Integration",
+  "exchangeTenantId": "Tenant ID",
+  "exchangeClientId": "Client ID",
+  "exchangeClientSecret": "Client Secret",
+  "exchangeSyncErrors": "Sync errors",
+  "exchangeNoErrors": "No sync errors",
+  "exchangeLastError": "Last error",
+  "exchangeIntegration": "Exchange Integration",
+  "exchangeTestConnection": "Test Connection",
+  "exchangeTestSuccess": "Connection successful",
+  "exchangeTestFailed": "Connection failed",
+  "bookingId": "Booking ID",
+  "operation": "Operation"
 }

@@ -17,6 +17,7 @@ import {
   AlertTriangle as IconAlert,
   Check as IconCheck,
   RefreshCw as IconRefresh,
+  Edit2 as IconEdit,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -77,6 +78,22 @@ interface State {
   enforceTOTP: boolean;
   kioskSecret: string;
   kioskModeEnabled: boolean;
+  exchangeEnabled: boolean;
+  exchangeTenantId: string;
+  exchangeClientId: string;
+  exchangeClientSecret: string;
+  exchangeClientSecretEditing: boolean;
+  exchangeHasExistingRecord: boolean;
+  exchangeTestResult: string | null;
+  exchangeTestSuccess: boolean | null;
+  exchangeSaved: boolean;
+  exchangeSyncErrors: Array<{
+    id: string;
+    bookingId: string;
+    operation: string;
+    lastError: string;
+    createdAt: string;
+  }>;
 }
 
 interface Props {
@@ -133,6 +150,16 @@ class Settings extends React.Component<Props, State> {
       enforceTOTP: false,
       kioskSecret: "",
       kioskModeEnabled: false,
+      exchangeEnabled: false,
+      exchangeTenantId: "",
+      exchangeClientId: "",
+      exchangeClientSecret: "",
+      exchangeClientSecretEditing: true,
+      exchangeHasExistingRecord: false,
+      exchangeTestResult: null,
+      exchangeTestSuccess: null,
+      exchangeSaved: false,
+      exchangeSyncErrors: [],
     };
   }
 
@@ -147,6 +174,7 @@ class Settings extends React.Component<Props, State> {
       this.loadAuthProviders(),
       this.loadTimezones(),
       this.checkUpdates(),
+      this.loadExchangeSettings(),
     ];
     Promise.all(promises).then(() => {
       this.setState({ loading: false });
@@ -271,6 +299,76 @@ class Settings extends React.Component<Props, State> {
         ...state,
       });
     });
+  };
+
+  loadExchangeSettings = async (): Promise<void> => {
+    try {
+      const [settingsResult, errorsResult] = await Promise.all([
+        Ajax.get("/setting/exchange/"),
+        Ajax.get("/setting/exchange/errors/"),
+      ]);
+      const s = settingsResult.json;
+      const hasRecord = s.tenantId !== "" || s.clientId !== "" || s.enabled;
+      this.setState({
+        exchangeEnabled: s.enabled || false,
+        exchangeTenantId: s.tenantId || "",
+        exchangeClientId: s.clientId || "",
+        exchangeClientSecretEditing: !hasRecord,
+        exchangeHasExistingRecord: hasRecord,
+        exchangeSyncErrors: errorsResult.json || [],
+      });
+    } catch {
+      // ignore – exchange may not be configured yet
+    }
+  };
+
+  saveExchangeSettings = async (e: any) => {
+    e.preventDefault();
+    const payload: any = {
+      enabled: this.state.exchangeEnabled,
+      tenantId: this.state.exchangeTenantId,
+      clientId: this.state.exchangeClientId,
+    };
+    if (this.state.exchangeClientSecretEditing) {
+      payload.clientSecret = this.state.exchangeClientSecret;
+    }
+    try {
+      await Ajax.putData("/setting/exchange/", payload);
+      this.setState({
+        exchangeSaved: true,
+        exchangeClientSecretEditing: false,
+        exchangeHasExistingRecord: true,
+      });
+    } catch {
+      this.setState({ error: true });
+    }
+  };
+
+  testExchangeConnection = async () => {
+    this.setState({ exchangeTestResult: null, exchangeTestSuccess: null });
+    try {
+      await Ajax.postData("/setting/exchange/test", {});
+      this.setState({
+        exchangeTestResult: this.props.t("exchangeTestSuccess"),
+        exchangeTestSuccess: true,
+      });
+    } catch {
+      this.setState({
+        exchangeTestResult: this.props.t("exchangeTestFailed"),
+        exchangeTestSuccess: false,
+      });
+    }
+  };
+
+  retryExchangeError = async (id: string) => {
+    try {
+      await Ajax.postData(`/setting/exchange/errors/${id}/retry`, {});
+      this.setState((prev) => ({
+        exchangeSyncErrors: prev.exchangeSyncErrors.filter((e) => e.id !== id),
+      }));
+    } catch {
+      // ignore
+    }
   };
 
   generateKioskSecret = () => {
@@ -1309,6 +1407,209 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           {authProviderTable}
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>
+              {this.props.t("exchangeIntegration")}
+              <PremiumFeatureIcon />
+            </h4>
+          </div>
+          {this.state.exchangeSaved && (
+            <Alert variant="success">{this.props.t("entryUpdated")}</Alert>
+          )}
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-exchangeEnabled"
+                label={this.props.t("enabled")}
+                checked={
+                  this.state.exchangeEnabled &&
+                  RuntimeConfig.INFOS.featureExchangeIntegration
+                }
+                disabled={!RuntimeConfig.INFOS.featureExchangeIntegration}
+                onChange={(e: any) =>
+                  this.setState({ exchangeEnabled: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("exchangeTenantId")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={
+                  this.state.exchangeEnabled &&
+                  RuntimeConfig.INFOS.featureExchangeIntegration
+                    ? this.state.exchangeTenantId
+                    : ""
+                }
+                disabled={
+                  !RuntimeConfig.INFOS.featureExchangeIntegration ||
+                  !this.state.exchangeEnabled
+                }
+                onChange={(e: any) =>
+                  this.setState({ exchangeTenantId: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("exchangeClientId")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                type="text"
+                value={
+                  this.state.exchangeEnabled &&
+                  RuntimeConfig.INFOS.featureExchangeIntegration
+                    ? this.state.exchangeClientId
+                    : ""
+                }
+                disabled={
+                  !RuntimeConfig.INFOS.featureExchangeIntegration ||
+                  !this.state.exchangeEnabled
+                }
+                onChange={(e: any) =>
+                  this.setState({ exchangeClientId: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("exchangeClientSecret")}
+            </Form.Label>
+            <Col sm="4">
+              {!this.state.exchangeClientSecretEditing &&
+              this.state.exchangeEnabled &&
+              RuntimeConfig.INFOS.featureExchangeIntegration ? (
+                <InputGroup>
+                  <Form.Control
+                    type="text"
+                    readOnly
+                    value={RendererUtils.SECRET_PLACEHOLDER}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() =>
+                      this.setState({
+                        exchangeClientSecretEditing: true,
+                        exchangeClientSecret: "",
+                      })
+                    }
+                  >
+                    <IconEdit className="feather" />
+                  </Button>
+                </InputGroup>
+              ) : (
+                <Form.Control
+                  type="text"
+                  value={
+                    this.state.exchangeEnabled &&
+                    RuntimeConfig.INFOS.featureExchangeIntegration
+                      ? this.state.exchangeClientSecret
+                      : ""
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featureExchangeIntegration ||
+                    !this.state.exchangeEnabled
+                  }
+                  autoFocus={
+                    this.state.exchangeHasExistingRecord &&
+                    this.state.exchangeEnabled &&
+                    RuntimeConfig.INFOS.featureExchangeIntegration
+                  }
+                  pattern="[^\s]+"
+                  onChange={(e: any) =>
+                    this.setState({ exchangeClientSecret: e.target.value })
+                  }
+                />
+              )}
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="4" className="offset-sm-2">
+              <Button
+                variant="outline-secondary"
+                className="me-2"
+                disabled={
+                  !RuntimeConfig.INFOS.featureExchangeIntegration ||
+                  !this.state.exchangeEnabled
+                }
+                onClick={this.saveExchangeSettings}
+              >
+                <IconSave className="feather" /> {this.props.t("save")}
+              </Button>
+              <Button
+                variant="outline-secondary"
+                disabled={
+                  !RuntimeConfig.INFOS.featureExchangeIntegration ||
+                  !this.state.exchangeEnabled
+                }
+                onClick={this.testExchangeConnection}
+              >
+                {this.props.t("exchangeTestConnection")}
+              </Button>
+            </Col>
+          </Form.Group>
+          {this.state.exchangeTestResult !== null && (
+            <Form.Group as={Row}>
+              <Col sm="4" className="offset-sm-2">
+                <Alert
+                  variant={
+                    this.state.exchangeTestSuccess ? "success" : "danger"
+                  }
+                >
+                  {this.state.exchangeTestResult}
+                </Alert>
+              </Col>
+            </Form.Group>
+          )}
+          {this.state.exchangeSyncErrors.length > 0 && (
+            <>
+              <h5 className="mt-3">{this.props.t("exchangeSyncErrors")}</h5>
+              <Table striped bordered hover size="sm">
+                <thead>
+                  <tr>
+                    <th>{this.props.t("bookingId")}</th>
+                    <th>{this.props.t("operation")}</th>
+                    <th>{this.props.t("exchangeLastError")}</th>
+                    <th>{this.props.t("created")}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.state.exchangeSyncErrors.map((err) => (
+                    <tr key={err.id}>
+                      <td>
+                        <small>{err.bookingId}</small>
+                      </td>
+                      <td>{err.operation}</td>
+                      <td>
+                        <small>{err.lastError}</small>
+                      </td>
+                      <td>
+                        <small>{err.createdAt}</small>
+                      </td>
+                      <td>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => this.retryExchangeError(err.id)}
+                        >
+                          <IconRefresh className="feather" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </>
+          )}
           {dangerZone}
         </Form>
       </FullLayout>

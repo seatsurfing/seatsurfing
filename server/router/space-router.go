@@ -98,6 +98,8 @@ func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
 	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
 	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("GET")
+	s.HandleFunc("/{id}/exchangemapping", router.getExchangeMapping).Methods("GET")
+	s.HandleFunc("/{id}/exchangemapping", router.setExchangeMapping).Methods("PUT")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -985,4 +987,72 @@ func (router *SpaceRouter) appendAttributesToRestModel(m *GetSpaceResponse, attr
 			}
 		}
 	}
+}
+
+type GetExchangeSpaceMappingResponse struct {
+	RoomEmail string `json:"roomEmail"`
+}
+
+type SetExchangeSpaceMappingRequest struct {
+	RoomEmail string `json:"roomEmail"`
+}
+
+func (router *SpaceRouter) getExchangeMapping(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(e.LocationID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	mapping, err := GetExchangeSpaceMappingRepository().GetBySpaceID(e.ID)
+	if err != nil {
+		SendJSON(w, &GetExchangeSpaceMappingResponse{RoomEmail: ""})
+		return
+	}
+	SendJSON(w, &GetExchangeSpaceMappingResponse{RoomEmail: mapping.RoomEmail})
+}
+
+func (router *SpaceRouter) setExchangeMapping(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(e.LocationID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	var m SetExchangeSpaceMappingRequest
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		SendBadRequest(w)
+		return
+	}
+	if m.RoomEmail == "" {
+		GetExchangeSpaceMappingRepository().Delete(e.ID)
+	} else {
+		mapping := &ExchangeSpaceMapping{SpaceID: e.ID, RoomEmail: m.RoomEmail}
+		if err := GetExchangeSpaceMappingRepository().Upsert(mapping); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+	}
+	SendUpdated(w)
 }

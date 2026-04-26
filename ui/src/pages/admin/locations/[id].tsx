@@ -66,6 +66,7 @@ interface SpaceState {
   enabledAttributes: string[];
   approvers: any[] | undefined;
   allowBookers: any[] | undefined;
+  exchangeRoomEmail: string;
 }
 
 interface State {
@@ -362,6 +363,7 @@ class EditLocation extends React.Component<Props, State> {
           .then(() => {
             this.saveSpaces()
               .then(() => {
+                this.saveExchangeMappingsForSpaces().catch(() => {});
                 if (this.state.files && this.state.files.length > 0) {
                   this.entity
                     .setMap(this.state.files.item(0) as File)
@@ -434,6 +436,38 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
+  loadExchangeMappingForSpace = async (spaceIdx: number): Promise<void> => {
+    const space = this.state.spaces[spaceIdx];
+    if (!space || !space.id) return;
+    try {
+      const result = await Ajax.get(
+        `/location/${this.entity.id}/space/${space.id}/exchangemapping`,
+      );
+      const roomEmail: string = result.json?.roomEmail || "";
+      const spaces = this.state.spaces;
+      const updated = { ...spaces[spaceIdx], exchangeRoomEmail: roomEmail };
+      spaces[spaceIdx] = updated;
+      this.setState({ spaces });
+    } catch {
+      // ignore
+    }
+  };
+
+  saveExchangeMappingsForSpaces = async (): Promise<void> => {
+    const promises: Promise<any>[] = [];
+    for (const space of this.state.spaces) {
+      if (space.id && space.exchangeRoomEmail !== undefined) {
+        promises.push(
+          Ajax.putData(
+            `/location/${this.entity.id}/space/${space.id}/exchangemapping`,
+            { roomEmail: space.exchangeRoomEmail },
+          ).catch(() => {}),
+        );
+      }
+    }
+    await Promise.all(promises);
+  };
+
   newSpaceState = (e?: Space): SpaceState => {
     const res: SpaceState = {
       id: e ? e.id : "",
@@ -463,6 +497,7 @@ class EditLocation extends React.Component<Props, State> {
         e && e.allowedBookerGroupIds
           ? this.groups.filter((g) => e.allowedBookerGroupIds.includes(g.id))
           : [],
+      exchangeRoomEmail: "",
     };
     if (e) {
       e.attributes.forEach((a) => {
@@ -545,8 +580,10 @@ class EditLocation extends React.Component<Props, State> {
     const now: number = new Date().getTime();
     const diff: number = now - this.state.selectedSpaceMouseDownTimestamp;
     if (diff <= 300) {
-      this.setState({
-        showEditSpaceDetailsModal: true,
+      this.loadExchangeMappingForSpace(i).then(() => {
+        this.setState({
+          showEditSpaceDetailsModal: true,
+        });
       });
       return;
     }
@@ -564,8 +601,10 @@ class EditLocation extends React.Component<Props, State> {
 
   editSpaceDetails = () => {
     if (this.state.selectedSpace != null) {
-      this.setState({
-        showEditSpaceDetailsModal: true,
+      this.loadExchangeMappingForSpace(this.state.selectedSpace).then(() => {
+        this.setState({
+          showEditSpaceDetailsModal: true,
+        });
       });
     }
   };
@@ -1156,6 +1195,33 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             {this.getSpaceAttributeRows()}
+            <Form.Group
+              as={Row}
+              hidden={
+                !RuntimeConfig.INFOS.featureExchangeIntegration ||
+                !RuntimeConfig.INFOS.exchangeIntegrationEnabled
+              }
+            >
+              <Form.Label column sm="4" htmlFor="space-exchange-room-email">
+                {this.props.t("exchangeRoomEmail")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Control
+                  id="space-exchange-room-email"
+                  type="email"
+                  value={this.getSelectedSpace()?.exchangeRoomEmail || ""}
+                  placeholder="room@contoso.com"
+                  onChange={(e: any) => {
+                    const spaces = this.state.spaces;
+                    const idx = this.state.selectedSpace!;
+                    const space = { ...spaces[idx] };
+                    space.exchangeRoomEmail = e.target.value;
+                    spaces[idx] = space;
+                    this.setState({ spaces });
+                  }}
+                />
+              </Col>
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>

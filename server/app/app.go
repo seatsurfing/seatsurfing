@@ -124,6 +124,7 @@ func (a *App) InitializeRouter() {
 	routers["/stats/"] = &StatsRouter{}
 	routers["/search/"] = &SearchRouter{}
 	routers["/setting/"] = &SettingsRouter{}
+	routers["/setting/exchange/"] = &ExchangeRouter{}
 	routers["/space-attribute/"] = &SpaceAttributeRouter{}
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
@@ -228,6 +229,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureKioskMode.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureExchangeIntegration.Name, "1")
 	}
 }
 
@@ -264,6 +266,7 @@ func (a *App) onTimerTick() {
 	for _, plg := range plugin.GetPlugins() {
 		(*plg).OnTimer()
 	}
+	go GetExchangeSyncWorker().ProcessPendingJobs()
 	// Check domain accessibility once per hour
 	if time.Now().Minute() == 0 {
 		go a.CheckDomainAccessibilityTimer()

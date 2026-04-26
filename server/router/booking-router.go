@@ -1303,6 +1303,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
 	router.updateCalDavEvent(e)
+	enqueueExchangeUpdate(e)
 	router.sendMailNotification(e, BookingMailNotificationUpdated)
 }
 
@@ -1312,6 +1313,7 @@ func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 		router.sendMailNotification(e, BookingMailNotificationDeclined)
 	} else {
 		router.createCalDavEvent(e)
+		enqueueExchangeCreate(e)
 		router.sendMailNotification(e, BookingMailNotificationApproved)
 	}
 }
@@ -1319,6 +1321,7 @@ func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 func (router *BookingRouter) onBookingCreated(e *Booking) {
 	if e.Approved {
 		router.createCalDavEvent(e)
+		enqueueExchangeCreate(e)
 		router.sendMailNotification(e, BookingMailNotificationCreated)
 	} else {
 		// Booking requires approval - notify approvers
@@ -1422,6 +1425,8 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 }
 
 func (router *BookingRouter) onBookingDeleted(e *Booking, sendNotification bool) {
+	// Enqueue Exchange delete before the booking row may be removed
+	enqueueExchangeDelete(e)
 	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
 	if err == nil {
 		if e.CalDavID != "" {

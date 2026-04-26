@@ -287,6 +287,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureGroups.Name ||
 		name == SettingFeatureAuthProviders.Name ||
 		name == SettingFeatureKioskMode.Name ||
+		name == SettingFeatureExchangeIntegration.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||

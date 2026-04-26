@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type SettingsRepository struct {
@@ -65,6 +66,11 @@ var (
 	SettingKioskSecret                    SettingName = SettingName{Name: "kiosk_access_secret", Type: SettingTypeString}
 	SettingKioskModeEnabled               SettingName = SettingName{Name: "kiosk_mode_enabled", Type: SettingTypeBool}
 	SettingFeatureKioskMode               SettingName = SettingName{Name: "feature_kiosk_mode", Type: SettingTypeBool}
+	SettingFeatureExchangeIntegration     SettingName = SettingName{Name: "feature_exchange_integration", Type: SettingTypeBool}
+	SettingExchangeEnabled                SettingName = SettingName{Name: "exchange_enabled", Type: SettingTypeBool}
+	SettingExchangeTenantID               SettingName = SettingName{Name: "exchange_tenant_id", Type: SettingTypeString}
+	SettingExchangeClientID               SettingName = SettingName{Name: "exchange_client_id", Type: SettingTypeString}
+	SettingExchangeClientSecret           SettingName = SettingName{Name: "exchange_client_secret", Type: SettingTypeString}
 )
 
 var settingsRepository *SettingsRepository
@@ -268,6 +274,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingFeatureCustomDomains.Name+"', '0'), "+
 		"($1, '"+SettingFeatureGroups.Name+"', '0'), "+
 		"($1, '"+SettingFeatureKioskMode.Name+"', '0'), "+
+		"($1, '"+SettingFeatureExchangeIntegration.Name+"', '0'), "+
 		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
@@ -317,4 +324,67 @@ func (r *SettingsRepository) DeleteAll(organizationID string) error {
 
 func (r *SettingsRepository) GetNullUUID() string {
 	return "00000000-0000-0000-0000-000000000000"
+}
+
+// ExchangeSettings holds the Exchange integration credentials for an org.
+type ExchangeSettings struct {
+	Enabled      bool
+	TenantID     string
+	ClientID     string
+	ClientSecret string // plaintext in memory, encrypted in DB
+}
+
+// GetExchangeSettings reads the four Exchange settings for an org and returns
+// them as a single struct. ClientSecret is transparently decrypted.
+func (r *SettingsRepository) GetExchangeSettings(orgID string) (*ExchangeSettings, error) {
+	enabled, _ := r.GetBool(orgID, SettingExchangeEnabled.Name)
+	tenantID, _ := r.Get(orgID, SettingExchangeTenantID.Name)
+	clientID, _ := r.Get(orgID, SettingExchangeClientID.Name)
+	encSecret, _ := r.Get(orgID, SettingExchangeClientSecret.Name)
+
+	var clientSecret string
+	if encSecret != "" {
+		var err error
+		clientSecret, err = DecryptString(encSecret)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &ExchangeSettings{
+		Enabled:      enabled,
+		TenantID:     tenantID,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+	}, nil
+}
+
+// SetExchangeSettings writes the Exchange credentials for an org. If
+// ClientSecret is empty the existing encrypted secret is preserved.
+func (r *SettingsRepository) SetExchangeSettings(orgID string, s *ExchangeSettings) error {
+	if err := r.Set(orgID, SettingExchangeEnabled.Name, boolToSetting(s.Enabled)); err != nil {
+		return err
+	}
+	if err := r.Set(orgID, SettingExchangeTenantID.Name, s.TenantID); err != nil {
+		return err
+	}
+	if err := r.Set(orgID, SettingExchangeClientID.Name, s.ClientID); err != nil {
+		return err
+	}
+	if s.ClientSecret != "" {
+		enc, err := EncryptString(s.ClientSecret)
+		if err != nil {
+			return err
+		}
+		if err := r.Set(orgID, SettingExchangeClientSecret.Name, enc); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func boolToSetting(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
 }
