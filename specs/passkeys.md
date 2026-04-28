@@ -484,7 +484,6 @@ No user identification is needed at this stage (discoverable credentials).
 
 **Prerequisites and protection:**
 
-- `CanCrypt()` must return `true` (i.e., `CRYPT_KEY` must be configured). If not, the endpoint returns `500 Internal Server Error` immediately.
 - The endpoint is **rate-limited** to **10 requests per minute per client IP** (using `ulule/limiter` with an in-memory store). Clients that exceed the limit receive `429 Too Many Requests`. The client IP is extracted with `X-Forwarded-For` support for deployments behind a reverse proxy.
 
 ---

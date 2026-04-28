@@ -13,6 +13,11 @@ export default class RendererUtils {
     return `${prefix}${s}${suffix}`;
   }
 
+  static suffixIfDefined(s: string, suffix: string) {
+    if (!s) return "";
+    return `${s}${suffix}`;
+  }
+
   static decodeHtmlEntities(text: string): string {
     const textarea = document.createElement("textarea");
     textarea.innerHTML = text;
@@ -38,4 +43,6 @@ export default class RendererUtils {
   }
 
   static capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  static SECRET_PLACEHOLDER = "••••••••••••••••";
 }

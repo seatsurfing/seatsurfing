@@ -32,7 +32,7 @@ func (db *Database) Open() {
 	if u, err := url.Parse(GetConfig().PostgresURL); err == nil {
 		dbName = strings.TrimPrefix(u.Path, "/")
 	}
-	log.Println("Connecting to database ", dbName, " …")
+	log.Println("Connecting to database", dbName, "…")
 	conn, err := sql.Open("postgres", GetConfig().PostgresURL)
 	if err != nil {
 		panic(err)

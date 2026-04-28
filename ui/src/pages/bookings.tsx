@@ -17,7 +17,6 @@ import {
 import { NextRouter } from "next/router";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
-import RuntimeConfig from "@/components/RuntimeConfig";
 import ErrorText from "@/types/ErrorText";
 import { getIcal } from "@/components/Ical";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -334,7 +333,7 @@ class Bookings extends React.Component<Props, State> {
               alignItems: "center",
             }}
           >
-            {formatter.format(weekStart.toDate())} -{" "}
+            {formatter.format(weekStart.toDate())} –{" "}
             {formatter.format(weekEnd.toDate())}
           </span>
         </div>

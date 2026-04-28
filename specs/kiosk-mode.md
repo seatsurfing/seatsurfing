@@ -167,7 +167,7 @@ The kiosk section is hidden entirely when `feature_kiosk_mode` is `false` or whe
 Extend the admin Settings page with a new kiosk access section:
 
 - `Enable kiosk mode` toggle (`kiosk_mode_enabled`) to activate or deactivate kiosk access organization-wide
-- `Kiosk access secret` input; displays `(configured)` when a hash is already stored, empty otherwise
+- `Kiosk access secret` input; displays `••••••••••••••••` when a hash is already stored, empty otherwise
 - `Generate random secret` button to produce a cryptographically random alphanumeric secret
 - `Save secret` action to set or replace the organization-wide kiosk secret
 - Warning that replacing the secret invalidates all existing kiosk sessions in the organization

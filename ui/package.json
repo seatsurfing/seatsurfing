@@ -8,7 +8,7 @@
     "bootstrap": "5.3.8",
     "excellentexport": "3.9.11",
     "moment-timezone": "0.6.1",
-    "next": "16.2.3",
+    "next": "16.2.4",
     "next-export-i18n": "2.4.3",
     "react": "19.2.5",
     "react-big-calendar": "1.19.4",
@@ -40,9 +40,9 @@
     "@types/node": "25.6.0",
     "@types/react-big-calendar": "1.16.3",
     "eslint": "10.2.0",
-    "eslint-config-next": "16.2.3",
+    "eslint-config-next": "16.2.4",
     "jsdom": "29.0.2",
-    "prettier": "3.8.2",
+    "prettier": "3.8.3",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "4.1.4"
   }

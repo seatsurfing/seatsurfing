@@ -89,7 +89,7 @@
   "confluenceClientIdStep4": "Kopiere die folgende ID:",
   "confluenceClientIdStep5": "Füge diese ID als „Confluence Client ID“ ein und speichere die Einstellungen.",
   "confluenceClientIdStep6": "Lade diese Seite neu.",
-  "confluenceServerSharedSecret": "Confluence Shared Secret",
+  "confluenceServerSharedSecret": "Confluence shared Secret",
   "connect": "Verbinden",
   "createAccount": "Kostenlosen Account erstellen",
   "customLogoUrl": "Logo URL",
@@ -439,6 +439,10 @@
   "kioskModeAvailable": "Kiosk-Modus verfügbar",
   "kioskModeAvailableHint": "Ermöglicht die Nutzung von Seatsurfing in einem Kiosk-Modus, z.B. für die Anzeige auf einem Bildschirm außerhalb des Besprechungsraums. Die Aktivierung erfolgt pro Platz/Raum in den jeweiligen Einstellungen.",
   "errorAuthProviderNameExists": "The Auth Provider Name existiert bereits.",
+  "freeFrom": "frei ab {{time}}",
+  "free": "frei",
+  "close": "Schließen",
+  "event": "Event",
   "hideReports": "Auswertungsdashboard deaktivieren",
   "reportSettings": "Auswertungen"
 }

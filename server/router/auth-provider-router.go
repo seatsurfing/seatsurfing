@@ -163,12 +163,18 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	eNew := router.copyFromRestModel(&m)
-
-	// keep existing client secret
-	if eNew.ClientSecret == "" {
-		eNew.ClientSecret = e.ClientSecret
+	// keep existing client secret if no new secret was set or encrypt the new one
+	if m.ClientSecret == "" {
+		m.ClientSecret = e.ClientSecret
+	} else {
+		ClientSecretEncrypted, err := EncryptString(m.ClientSecret)
+		if err != nil {
+			log.Println("Error encrypting client secret")
+		}
+		m.ClientSecret = ClientSecretEncrypted
 	}
+
+	eNew := router.copyFromRestModel(&m)
 
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
@@ -237,6 +243,13 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// encrypt client secret
+	ClientSecretEncrypted, err := EncryptString(m.ClientSecret)
+	if err != nil {
+		log.Println("Error encrypting client secret")
+	}
+	m.ClientSecret = ClientSecretEncrypted
+
 	e := router.copyFromRestModel(&m)
 	e.OrganizationID = user.OrganizationID
 	e.ReadOnly = false
@@ -286,6 +299,7 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
+	e.ClientSecret = "" // client secret is not exposed to the client
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle

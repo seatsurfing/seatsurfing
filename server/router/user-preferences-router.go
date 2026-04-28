@@ -36,11 +36,6 @@ func (router *UserPreferencesRouter) SetupRoutes(s *mux.Router) {
 }
 
 func (router *UserPreferencesRouter) caldavListCalendars(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		log.Println("Error: CalDAV integration requires a valid crypt key (CRYPT_KEY).")
-		SendInternalServerError(w)
-		return
-	}
 	var m ListCaldavCalendarsRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)

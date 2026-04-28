@@ -36,6 +36,7 @@ import OrgSettings from "@/types/Settings";
 import RedirectUtil from "@/util/RedirectUtil";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import Validation from "@/util/Validation";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   allowAnyUser: boolean;
@@ -258,7 +259,8 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "kiosk_mode_enabled")
           state.kioskModeEnabled = s.value === "1";
         if (s.name === "kiosk_access_secret")
-          state.kioskSecret = s.value === "1" ? "(configured)" : "";
+          state.kioskSecret =
+            s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
         if (s.name === "hide_reports") state.hideReports = s.value === "1";
@@ -283,7 +285,7 @@ class Settings extends React.Component<Props, State> {
     OrgSettings.setOne("kiosk_access_secret", this.state.kioskSecret)
       .then(() => {
         this.setState({
-          kioskSecret: "(configured)",
+          kioskSecret: RendererUtils.SECRET_PLACEHOLDER,
         });
       })
       .catch(() => {
@@ -1271,7 +1273,7 @@ class Settings extends React.Component<Props, State> {
                   text={this.state.kioskSecret}
                   disabled={
                     !this.state.kioskSecret ||
-                    this.state.kioskSecret === "(configured)"
+                    this.state.kioskSecret === RendererUtils.SECRET_PLACEHOLDER
                   }
                 />
               </InputGroup>
@@ -1283,7 +1285,7 @@ class Settings extends React.Component<Props, State> {
                 disabled={
                   !RuntimeConfig.INFOS.featureKioskMode ||
                   !this.state.kioskSecret ||
-                  this.state.kioskSecret === "(configured)"
+                  this.state.kioskSecret === RendererUtils.SECRET_PLACEHOLDER
                 }
               >
                 {this.props.t("save")}

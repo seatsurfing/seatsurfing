@@ -5,17 +5,11 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"io"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
 )
-
-func CanCrypt() bool {
-	if GetConfig().CryptKey == "" || len(GetConfig().CryptKey) != 32 {
-		return false
-	}
-	return true
-}
 
 func EncryptString(s string) (string, error) {
 	aes, err := aes.NewCipher([]byte(GetConfig().CryptKey))
@@ -46,6 +40,9 @@ func DecryptString(s string) (string, error) {
 		return "", err
 	}
 	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return "", fmt.Errorf("ciphertext too short")
+	}
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	plaintext, err := gcm.Open(nil, []byte(nonce), []byte(ciphertext), nil)
 	if err != nil {

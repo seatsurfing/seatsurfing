@@ -1,5 +1,62 @@
 # Changelog
 
+## [1.87.1](https://github.com/seatsurfing/seatsurfing/compare/v1.87.0...v1.87.1) (2026-04-25)
+
+
+### Bug Fixes
+
+* fix space tooltip is behind space box ([#2057](https://github.com/seatsurfing/seatsurfing/issues/2057)) ([6fb0da3](https://github.com/seatsurfing/seatsurfing/commit/6fb0da3a1625d1b15288a3026fd313f711e0c15c))
+
+## [1.87.0](https://github.com/seatsurfing/seatsurfing/compare/v1.86.2...v1.87.0) (2026-04-25)
+
+
+### Features
+
+* add "free from" to booking space tooltip ([#2050](https://github.com/seatsurfing/seatsurfing/issues/2050)) ([064ef84](https://github.com/seatsurfing/seatsurfing/commit/064ef849b67811ea37c3e91054bc6035202f3dd5))
+
+
+### Bug Fixes
+
+* **deps:** bump next from 16.2.3 to 16.2.4 in /ui in the production-dependencies group across 1 directory ([#2046](https://github.com/seatsurfing/seatsurfing/issues/2046)) ([4411bdf](https://github.com/seatsurfing/seatsurfing/commit/4411bdf0d947cd0b6160493382140d5565046c4f))
+* fix dash in my bookings calender ([#2055](https://github.com/seatsurfing/seatsurfing/issues/2055)) ([ff8cb27](https://github.com/seatsurfing/seatsurfing/commit/ff8cb277eb811be1bfaa4fcaf11140fd09aa7dec))
+* fix space tooltip on search map ([#2054](https://github.com/seatsurfing/seatsurfing/issues/2054)) ([acbe0b9](https://github.com/seatsurfing/seatsurfing/commit/acbe0b90fe9ec4c95da80d75671acce75f680810))
+* ignore "sql: no rows in result set" error if mail footer is not in DB ([#2053](https://github.com/seatsurfing/seatsurfing/issues/2053)) ([360087a](https://github.com/seatsurfing/seatsurfing/commit/360087a83e8592d694816afd8e7787858a643d67))
+* remove unnecessary spaces when logging database name ([#2042](https://github.com/seatsurfing/seatsurfing/issues/2042)) ([cd3c89d](https://github.com/seatsurfing/seatsurfing/commit/cd3c89da4966cd6dcb465d97aeed8cbdc2d791e4))
+
+## [1.86.2](https://github.com/seatsurfing/seatsurfing/compare/v1.86.1...v1.86.2) (2026-04-21)
+
+
+### Bug Fixes
+
+* add location name to title in kiosk mode ([#2039](https://github.com/seatsurfing/seatsurfing/issues/2039)) ([d424848](https://github.com/seatsurfing/seatsurfing/commit/d4248483f9c155456384ea7196e4b2a44a2b3b4d))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.73 to 1.0.74 in /server in the minor-and-patch group ([#2034](https://github.com/seatsurfing/seatsurfing/issues/2034)) ([8fa8524](https://github.com/seatsurfing/seatsurfing/commit/8fa8524f67c080f6ca30b1e8766a565d5726012e))
+* do not use secret from local storage if secret placeholder is present in URL ([#2040](https://github.com/seatsurfing/seatsurfing/issues/2040)) ([3306418](https://github.com/seatsurfing/seatsurfing/commit/330641809fb382ec40340d4502f4aa5efc3309be))
+* minor text fixes ([#2038](https://github.com/seatsurfing/seatsurfing/issues/2038)) ([96a0cfe](https://github.com/seatsurfing/seatsurfing/commit/96a0cfef4488d541ad161ce7a020c10e9a87c4a2))
+
+## [1.86.1](https://github.com/seatsurfing/seatsurfing/compare/v1.86.0...v1.86.1) (2026-04-20)
+
+
+### Bug Fixes
+
+* fix encrypting auth provider client secrets ([#2032](https://github.com/seatsurfing/seatsurfing/issues/2032)) ([6a78008](https://github.com/seatsurfing/seatsurfing/commit/6a780084faffcac10a51d609a2a1eb2db3bb9c35))
+
+## [1.86.0](https://github.com/seatsurfing/seatsurfing/compare/v1.85.1...v1.86.0) (2026-04-20)
+
+
+### Features
+
+* add global setting for email footer ([#2029](https://github.com/seatsurfing/seatsurfing/issues/2029)) ([be1197b](https://github.com/seatsurfing/seatsurfing/commit/be1197b0f352ecbb99b130c0d928f2383703130f))
+
+
+### Bug Fixes
+
+* do not remove secret placeholder from URL in kiosk mode ([#2027](https://github.com/seatsurfing/seatsurfing/issues/2027)) ([7dddfe7](https://github.com/seatsurfing/seatsurfing/commit/7dddfe759a6582e4ebeab855a1a1ceeb0067568f))
+* do not send changed client secret for auth provider multiple times ([#2025](https://github.com/seatsurfing/seatsurfing/issues/2025)) ([8ecd363](https://github.com/seatsurfing/seatsurfing/commit/8ecd3635ed53923aaf0a4d364c536c4cbc4b5cb4))
+* show date offset for next booking in kiosk mode ([#2028](https://github.com/seatsurfing/seatsurfing/issues/2028)) ([47e0fd4](https://github.com/seatsurfing/seatsurfing/commit/47e0fd48ba1d81bdbd492848b4cd716e94f29cd8))
+* store auth provider client secret encrypted ([#2019](https://github.com/seatsurfing/seatsurfing/issues/2019)) ([dd7b199](https://github.com/seatsurfing/seatsurfing/commit/dd7b19973e8f574420877f093fc3498445215cc4))
+* update warning if CRYPT_KEY is missing or invalid ([#2026](https://github.com/seatsurfing/seatsurfing/issues/2026)) ([6894fde](https://github.com/seatsurfing/seatsurfing/commit/6894fde909a5813d5a50d90f08330cc1326b1a39))
+* use ****** as secret placeholder for kiosk mode secret ([#2030](https://github.com/seatsurfing/seatsurfing/issues/2030)) ([b5453d3](https://github.com/seatsurfing/seatsurfing/commit/b5453d3b6a411c3b4a9d1841a8c90a4a569ec357))
+
 ## [1.85.1](https://github.com/seatsurfing/seatsurfing/compare/v1.85.0...v1.85.1) (2026-04-19)
 
 

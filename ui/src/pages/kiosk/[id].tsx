@@ -1,8 +1,11 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
+import CONSTANT from "@/util/Contant";
+import Formatting from "@/util/Formatting";
+import BrowserUtil from "@/util/BrowserUtil";
 
 interface KioskBooking {
   id: string;
@@ -56,6 +59,14 @@ export default function KioskPage() {
     }
   });
 
+  const getSecretCacheKey = (): string => {
+    return `${KIOSK_SECRET_KEY}_${spaceId ?? ""}`;
+  };
+
+  const getSecretFromUrl = (): string => {
+    return router.query.secret as string;
+  };
+
   const { t } = useTranslation();
 
   const [data, setData] = useState<KioskData | null>(null);
@@ -80,19 +91,19 @@ export default function KioskPage() {
     }
   }, []);
 
-  // Store kiosk secret from URL param into localStorage, then strip from URL
+  // Store kiosk secret from URL param into localStorage, then strip from URL.
+  // If the URL still contains the placeholder value, leave it in place and show
+  // an instruction instead so the admin knows to substitute the real secret.
   useEffect(() => {
     if (!router.isReady) return;
-    const secretFromUrl = router.query.secret as string | undefined;
+    const secretFromUrl = getSecretFromUrl();
     if (secretFromUrl) {
-      try {
-        localStorage.setItem(
-          KIOSK_SECRET_KEY + "_" + (spaceId ?? ""),
-          secretFromUrl,
-        );
-      } catch {
-        // localStorage may not be available
+      if (secretFromUrl === CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER) {
+        return;
       }
+
+      BrowserUtil.tryLocalStorageSetItem(getSecretCacheKey(), secretFromUrl);
+
       // Remove secret from URL without reloading
       const { secret, ...rest } = router.query;
       void secret; // intentionally consumed
@@ -103,13 +114,12 @@ export default function KioskPage() {
   }, [router.isReady, router.query.secret]);
 
   const getSecret = useCallback((): string => {
-    try {
-      return (
-        localStorage.getItem(KIOSK_SECRET_KEY + "_" + (spaceId ?? "")) ?? ""
-      );
-    } catch {
+    // do not use secret from local storage if placeholder is present in URL
+    if (getSecretFromUrl() === CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER) {
       return "";
     }
+
+    return BrowserUtil.tryLocalStorageGetItem(getSecretCacheKey(), "");
   }, [spaceId]);
 
   const fetchData = useCallback(async () => {
@@ -172,7 +182,10 @@ export default function KioskPage() {
   return (
     <>
       <Head>
-        <title>{data?.spaceName ?? t("kioskMode")}</title>
+        <title>
+          {data?.locationName ? `${data?.locationName} > ` : ""}
+          {data?.spaceName ?? t("kioskMode")}
+        </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <style>{`
@@ -259,7 +272,14 @@ export default function KioskPage() {
 
               {data.nextBooking && (
                 <div className="kiosk-card">
-                  <div className="kiosk-card-label">{t("kioskNext")}</div>
+                  <div className="kiosk-card-label">
+                    {t("kioskNext")} (
+                    {Formatting.getDateOffsetText(
+                      new Date(data.nextBooking.enter),
+                      new Date(data.nextBooking.leave),
+                    )}
+                    )
+                  </div>
                   <div className="kiosk-card-time">
                     {formatTime(data.nextBooking.enter, data.timezone)}
                     &nbsp;&ndash;&nbsp;
