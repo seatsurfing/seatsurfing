@@ -7,7 +7,7 @@ require (
 	github.com/emersion/go-ical v0.0.0-20250609112844-439c63cef608
 	github.com/emersion/go-webdav v0.7.0
 	github.com/go-playground/validator v9.31.0+incompatible
-	github.com/go-webauthn/webauthn v0.16.4
+	github.com/go-webauthn/webauthn v0.16.5
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
@@ -37,7 +37,7 @@ require (
 	github.com/rustyoz/Mtransform v0.0.0-20250628105438-00796a985d0a // indirect
 	github.com/rustyoz/genericlexer v0.0.0-20250522144106-d3cfee480384 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
-	github.com/tinylib/msgp v1.6.3 // indirect
+	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
