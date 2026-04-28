@@ -155,6 +155,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingTargetUtilizationHoursPerWeek.Name,
 		SettingFeatureKioskMode.Name,
 		SettingKioskModeEnabled.Name,
+		SettingHideReports.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
