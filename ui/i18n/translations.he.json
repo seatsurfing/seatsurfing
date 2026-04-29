@@ -441,5 +441,7 @@
   "freeFrom": "free from {{time}}",
   "free": "free",
   "close": "Close",
-  "event": "Event"
+  "event": "Event",
+  "hideReports": "Disable user-related reports",
+  "reportSettings": "Report settings"
 }
