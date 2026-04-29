@@ -442,5 +442,7 @@
   "freeFrom": "frei ab {{time}}",
   "free": "frei",
   "close": "Schließen",
-  "event": "Event"
+  "event": "Event",
+  "hideReports": "Auswertungsdashboard deaktivieren",
+  "reportSettings": "Auswertungen"
 }

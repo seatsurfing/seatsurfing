@@ -18,6 +18,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import DateTimePicker from "@/components/DateTimePicker";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   loading: boolean;
@@ -58,6 +59,10 @@ class ReportAnalysis extends React.Component<Props, State> {
   componentDidMount = () => {
     if (!Ajax.hasAccessToken()) {
       RedirectUtil.toLogin(this.props.router);
+      return;
+    }
+    if (RuntimeConfig.INFOS.hideReports) {
+      this.props.router.push("/404");
       return;
     }
     Location.list().then((locations) => (this.locations = locations));
