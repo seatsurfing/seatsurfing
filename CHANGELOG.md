@@ -5,8 +5,8 @@
 
 ### Features
 
-* add admin "hide reports dashboard" option ([#2024](https://github.com/seatsurfing/seatsurfing/issues/2024)) ([05066dd](https://github.com/seatsurfing/seatsurfing/commit/05066dd020a0c421df26922c6d31d8aa3cd62214))
-* add admin "hide utilization statistics" option ([#2072](https://github.com/seatsurfing/seatsurfing/issues/2072)) ([eb71de3](https://github.com/seatsurfing/seatsurfing/commit/eb71de3eb69c3ab948b67f2d49abe6c3ba0d5f04))
+* add admin "disable user-related reports" option ([#2024](https://github.com/seatsurfing/seatsurfing/issues/2024)) ([05066dd](https://github.com/seatsurfing/seatsurfing/commit/05066dd020a0c421df26922c6d31d8aa3cd62214))
+* add admin "disable utilization statistics" option ([#2072](https://github.com/seatsurfing/seatsurfing/issues/2072)) ([eb71de3](https://github.com/seatsurfing/seatsurfing/commit/eb71de3eb69c3ab948b67f2d49abe6c3ba0d5f04))
 
 
 ### Bug Fixes
