@@ -443,6 +443,6 @@
   "free": "frei",
   "close": "Schließen",
   "event": "Event",
-  "hideReports": "Auswertungsdashboard deaktivieren",
+  "hideReports": "Benutzer-bezogene Auswertungen deaktivieren",
   "reportSettings": "Auswertungen"
 }
