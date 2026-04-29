@@ -311,6 +311,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingHideReports.Name ||
+		name == SettingHideStats.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
@@ -346,6 +347,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingHideReports.Name ||
+		name == SettingHideStats.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
@@ -433,6 +435,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingHideReports.Name {
 		return SettingHideReports.Type
+	}
+	if name == SettingHideStats.Name {
+		return SettingHideStats.Type
 	}
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type

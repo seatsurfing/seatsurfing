@@ -444,5 +444,7 @@
   "close": "Schließen",
   "event": "Event",
   "hideReports": "Benutzer-bezogene Auswertungen deaktivieren",
-  "reportSettings": "Auswertungen"
+  "hideStats": "Auslastungsstatistiken deaktivieren",
+  "reportSettings": "Auswertungen",
+  "statsHiddenByAdmin": "Die Auslastungsstatistiken wurden vom Administrator deaktiviert."
 }

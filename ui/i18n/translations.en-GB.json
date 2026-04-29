@@ -441,5 +441,7 @@
   "close": "Close",
   "event": "Event",
   "hideReports": "Disable user-related reports",
-  "reportSettings": "Report settings"
+  "hideStats": "Disable utilization statistics",
+  "reportSettings": "Report settings",
+  "statsHiddenByAdmin": "Utilization statistics are disabled by your administrator."
 }
