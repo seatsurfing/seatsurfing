@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.88.1](https://github.com/seatsurfing/seatsurfing/compare/v1.88.0...v1.88.1) (2026-04-30)
+
+
+### Bug Fixes
+
+* fix infinite redirect when stats dashboard disabled ([#2074](https://github.com/seatsurfing/seatsurfing/issues/2074)) ([16cfaae](https://github.com/seatsurfing/seatsurfing/commit/16cfaaee393864ab345b8030007ed367db5714e5))
+
 ## [1.88.0](https://github.com/seatsurfing/seatsurfing/compare/v1.87.1...v1.88.0) (2026-04-29)
 
 
