@@ -74,6 +74,8 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
 		SettingFeatureKioskMode.Name,
+		SettingHideReports.Name,
+		SettingHideStats.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
