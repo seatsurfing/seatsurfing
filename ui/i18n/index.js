@@ -12,6 +12,7 @@ const pl = require("./translations.pl.json");
 const pt = require("./translations.pt.json");
 const ro = require("./translations.ro.json");
 const es = require("./translations.es.json");
+const zh_tw = require("./translations.zh-TW.json");
 
 const i18n = {
   translations: {
@@ -29,8 +30,9 @@ const i18n = {
     pt,
     ro,
     es,
+    "zh-TW": zh_tw,
   },
-  defaultLang: "en-GB",
+  defaultLang: "zh-TW",
   useBrowserDefault: true,
   languageDataStore: "localStorage",
 };

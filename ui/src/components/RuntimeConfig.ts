@@ -280,7 +280,7 @@ export default class RuntimeConfig {
         return curLang;
       }
     }
-    return "en-GB";
+    return "zh-TW";
   }
 
   static getAvailableLanguages(): string[] {
@@ -299,6 +299,7 @@ export default class RuntimeConfig {
       "pt",
       "ro",
       "es",
+      "zh-TW",
     ];
   }
 
