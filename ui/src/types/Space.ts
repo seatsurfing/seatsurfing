@@ -109,81 +109,79 @@ export default class Space extends Entity {
   }
 
   getBackendUrl(): string {
-    return "/location/" + this.locationId + "/space/";
+    return `/location/${encodeURIComponent(this.locationId)}/space/`;
   }
 
   async save(): Promise<Space> {
-    return Ajax.saveEntity(this, this.getBackendUrl()).then(() => this);
+    await Ajax.saveEntity(this, this.getBackendUrl());
+    return this;
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    await Ajax.delete(`${this.getBackendUrl()}${encodeURIComponent(this.id)}`);
   }
 
   async getApprovers(): Promise<Group[]> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/approver").then(
-      (result) => {
-        const list: Group[] = [];
-        (result.json as []).forEach((item) => {
-          const e: Group = new Group();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
+    const result = await Ajax.get(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/approver`,
     );
+    const list: Group[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Group = new Group();
+      e.deserialize(item);
+      list.push(e);
+    });
+    return list;
   }
 
   async addApprovers(groupIds: string[]): Promise<void> {
-    return Ajax.putData(
-      this.getBackendUrl() + this.id + "/approver",
+    await Ajax.putData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/approver`,
       groupIds,
-    ).then(() => undefined);
+    );
   }
 
   async removeApprovers(groupIds: string[]): Promise<void> {
-    return Ajax.postData(
-      this.getBackendUrl() + this.id + "/approver/remove",
+    await Ajax.postData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/approver/remove`,
       groupIds,
-    ).then(() => undefined);
+    );
   }
 
   async getAllowedBookers(): Promise<Group[]> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/allowedbooker").then(
-      (result) => {
-        const list: Group[] = [];
-        (result.json as []).forEach((item) => {
-          const e: Group = new Group();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
+    const result = await Ajax.get(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/allowedbooker`,
     );
+    const list: Group[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Group = new Group();
+      e.deserialize(item);
+      list.push(e);
+    });
+    return list;
   }
 
   async addAllowedBookers(groupIds: string[]): Promise<void> {
-    return Ajax.putData(
-      this.getBackendUrl() + this.id + "/allowedbooker",
+    await Ajax.putData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/allowedbooker`,
       groupIds,
-    ).then(() => undefined);
+    );
   }
 
   async removeAllowedBookers(groupIds: string[]): Promise<void> {
-    return Ajax.postData(
-      this.getBackendUrl() + this.id + "/allowedbooker/remove",
+    await Ajax.postData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/allowedbooker/remove`,
       groupIds,
-    ).then(() => undefined);
+    );
   }
 
   static async get(locationId: string, id: string): Promise<Space> {
-    return Ajax.get("/location/" + locationId + "/space/" + id).then(
-      (result) => {
-        const e: Space = new Space();
-        e.deserialize(result.json);
-        return e;
-      },
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(id)}`,
     );
+    const e = new Space();
+    e.deserialize(result.json);
+    return e;
   }
 
   private static deserializeList(json: []): Space[] {
@@ -195,9 +193,10 @@ export default class Space extends Entity {
   }
 
   static async list(locationId: string): Promise<Space[]> {
-    return Ajax.get("/location/" + locationId + "/space/").then((result) =>
-      Space.deserializeList(result.json as []),
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/`,
     );
+    return Space.deserializeList(result.json as []);
   }
 
   static async listAvailability(
@@ -241,13 +240,12 @@ export default class Space extends Entity {
       updates: updates,
       deleteIds: deleteIds,
     };
-    return Ajax.postData(
-      "/location/" + locationId + "/space/bulk",
+    const result = await Ajax.postData(
+      `/location/${encodeURIComponent(locationId)}/space/bulk`,
       payload,
-    ).then((result) => {
-      const e = new BulkUpdateResponse();
-      e.deserialize(result);
-      return e;
-    });
+    );
+    const e = new BulkUpdateResponse();
+    e.deserialize(result);
+    return e;
   }
 }
