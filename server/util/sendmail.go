@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"crypto/tls"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -328,7 +329,7 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 	})
 	var footerJSON []byte
 	if globalEmailFooterProvider != nil {
-		if dbFooter, err := globalEmailFooterProvider(language); err != nil {
+		if dbFooter, err := globalEmailFooterProvider(language); err != nil && !errors.Is(err, sql.ErrNoRows) {
 			log.Printf("Failed to get email footer from database for language '%s': %v\n", language, err)
 		} else if dbFooter != "" {
 			footerJSON = []byte(dbFooter)

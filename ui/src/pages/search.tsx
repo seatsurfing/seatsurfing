@@ -75,6 +75,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import IconTextButton from "@/components/IconTextButton";
 import DateUtil from "@/util/DateUtil";
 import BrowserUtil from "@/util/BrowserUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   earliestEnterDate: Date;
@@ -816,19 +817,19 @@ class Search extends React.Component<Props, State> {
     const className =
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
+    const tooltipHtml = item.rawBookings[0]
+      ? `<div class="text-center">${RendererUtils.suffixIfDefined(item.rawBookings[0].userEmail, "<br/>")}${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(item.rawBookings[0].leave))) })}</div>`
+      : this.props.t("free");
     return (
       <div
         key={item.id}
         style={boxStyle}
         className={className}
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={
-          item.rawBookings[0] ? item.rawBookings[0].userEmail : "Free"
-        }
+        data-tooltip-id="space-tooltip"
+        data-tooltip-html={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}
       >
-        <Tooltip id="my-tooltip" />
         {item.approvalRequired && (
           <IconUserCheck size={16} className="position-absolute top-0 end-0" />
         )}
@@ -1816,6 +1817,7 @@ class Search extends React.Component<Props, State> {
                 </div>
                 <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>{spaces}</div>
+                  <Tooltip id="space-tooltip" />
                 </TransformComponent>
               </>
             )}
@@ -2526,7 +2528,7 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="danger"
@@ -2582,7 +2584,7 @@ class Search extends React.Component<Props, State> {
             variant={myBooking ? "secondary" : "primary"}
             onClick={() => this.setState({ showBookingNames: false })}
           >
-            {this.props.t("back")}
+            {this.props.t("close")}
           </Button>
           <Button
             variant="outline-secondary"
@@ -2754,7 +2756,7 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="secondary"

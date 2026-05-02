@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.88.1](https://github.com/seatsurfing/seatsurfing/compare/v1.88.0...v1.88.1) (2026-04-30)
+
+
+### Bug Fixes
+
+* fix infinite redirect when stats dashboard disabled ([#2074](https://github.com/seatsurfing/seatsurfing/issues/2074)) ([16cfaae](https://github.com/seatsurfing/seatsurfing/commit/16cfaaee393864ab345b8030007ed367db5714e5))
+
+## [1.88.0](https://github.com/seatsurfing/seatsurfing/compare/v1.87.1...v1.88.0) (2026-04-29)
+
+
+### Features
+
+* add admin "disable user-related reports" option ([#2024](https://github.com/seatsurfing/seatsurfing/issues/2024)) ([05066dd](https://github.com/seatsurfing/seatsurfing/commit/05066dd020a0c421df26922c6d31d8aa3cd62214))
+* add admin "disable utilization statistics" option ([#2072](https://github.com/seatsurfing/seatsurfing/issues/2072)) ([eb71de3](https://github.com/seatsurfing/seatsurfing/commit/eb71de3eb69c3ab948b67f2d49abe6c3ba0d5f04))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/go-webauthn/webauthn from 0.16.4 to 0.16.5 in /server in the minor-and-patch group ([#2066](https://github.com/seatsurfing/seatsurfing/issues/2066)) ([fd03d40](https://github.com/seatsurfing/seatsurfing/commit/fd03d409ddbafffc39db175055ad42970fed56fe))
+* **deps:** bump github.com/go-webauthn/webauthn from 0.16.5 to 0.17.0 in /server in the minor-and-patch group ([#2070](https://github.com/seatsurfing/seatsurfing/issues/2070)) ([95e31b4](https://github.com/seatsurfing/seatsurfing/commit/95e31b4ee44d1598f11945d2a429fbf0fb273487))
+* improve hide reports feature ([#2071](https://github.com/seatsurfing/seatsurfing/issues/2071)) ([11d7d20](https://github.com/seatsurfing/seatsurfing/commit/11d7d204581247bc382e2896d0a7499cd4bd7b16))
+* translate "Event" and change close button label ([#2056](https://github.com/seatsurfing/seatsurfing/issues/2056)) ([335c9f8](https://github.com/seatsurfing/seatsurfing/commit/335c9f8a6e9091bfd4c0afb7d2a708975d7d704a))
+
+## [1.87.1](https://github.com/seatsurfing/seatsurfing/compare/v1.87.0...v1.87.1) (2026-04-25)
+
+
+### Bug Fixes
+
+* fix space tooltip is behind space box ([#2057](https://github.com/seatsurfing/seatsurfing/issues/2057)) ([6fb0da3](https://github.com/seatsurfing/seatsurfing/commit/6fb0da3a1625d1b15288a3026fd313f711e0c15c))
+
+## [1.87.0](https://github.com/seatsurfing/seatsurfing/compare/v1.86.2...v1.87.0) (2026-04-25)
+
+
+### Features
+
+* add "free from" to booking space tooltip ([#2050](https://github.com/seatsurfing/seatsurfing/issues/2050)) ([064ef84](https://github.com/seatsurfing/seatsurfing/commit/064ef849b67811ea37c3e91054bc6035202f3dd5))
+
+
+### Bug Fixes
+
+* **deps:** bump next from 16.2.3 to 16.2.4 in /ui in the production-dependencies group across 1 directory ([#2046](https://github.com/seatsurfing/seatsurfing/issues/2046)) ([4411bdf](https://github.com/seatsurfing/seatsurfing/commit/4411bdf0d947cd0b6160493382140d5565046c4f))
+* fix dash in my bookings calender ([#2055](https://github.com/seatsurfing/seatsurfing/issues/2055)) ([ff8cb27](https://github.com/seatsurfing/seatsurfing/commit/ff8cb277eb811be1bfaa4fcaf11140fd09aa7dec))
+* fix space tooltip on search map ([#2054](https://github.com/seatsurfing/seatsurfing/issues/2054)) ([acbe0b9](https://github.com/seatsurfing/seatsurfing/commit/acbe0b90fe9ec4c95da80d75671acce75f680810))
+* ignore "sql: no rows in result set" error if mail footer is not in DB ([#2053](https://github.com/seatsurfing/seatsurfing/issues/2053)) ([360087a](https://github.com/seatsurfing/seatsurfing/commit/360087a83e8592d694816afd8e7787858a643d67))
+* remove unnecessary spaces when logging database name ([#2042](https://github.com/seatsurfing/seatsurfing/issues/2042)) ([cd3c89d](https://github.com/seatsurfing/seatsurfing/commit/cd3c89da4966cd6dcb465d97aeed8cbdc2d791e4))
+
 ## [1.86.2](https://github.com/seatsurfing/seatsurfing/compare/v1.86.1...v1.86.2) (2026-04-21)
 
 

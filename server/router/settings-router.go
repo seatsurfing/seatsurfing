@@ -292,6 +292,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin ||
 		name == SettingEnforceTOTP.Name ||
+		name == SettingHideReports.Name ||
+		name == SettingHideStats.Name ||
 		name == SettingAllowRecurringBookings.Name {
 		return true
 	}
@@ -344,6 +346,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingAllowRecurringBookings.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingEnforceTOTP.Name ||
+		name == SettingHideReports.Name ||
+		name == SettingHideStats.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
@@ -428,6 +432,12 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingEnforceTOTP.Name {
 		return SettingEnforceTOTP.Type
+	}
+	if name == SettingHideReports.Name {
+		return SettingHideReports.Type
+	}
+	if name == SettingHideStats.Name {
+		return SettingHideStats.Type
 	}
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type

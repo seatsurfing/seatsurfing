@@ -337,22 +337,24 @@ class SideBar extends React.Component<Props, State> {
                 <PremiumFeatureIcon className="d-none d-md-inline" />
               </Nav.Link>
             </li>
-            <li className="nav-item">
-              <Nav.Link
-                as={Link}
-                eventKey="/admin/report/analysis"
-                href="/admin/report/analysis"
-              >
-                <this.SidebarIcon
-                  icon={IconAnalysis}
-                  title={this.props.t("analysis")}
-                />
-                <span className="d-none d-md-inline">
-                  {" "}
-                  {this.props.t("analysis")}
-                </span>
-              </Nav.Link>
-            </li>
+            {!RuntimeConfig.INFOS.hideReports && (
+              <li className="nav-item">
+                <Nav.Link
+                  as={Link}
+                  eventKey="/admin/report/analysis"
+                  href="/admin/report/analysis"
+                >
+                  <this.SidebarIcon
+                    icon={IconAnalysis}
+                    title={this.props.t("analysis")}
+                  />
+                  <span className="d-none d-md-inline">
+                    {" "}
+                    {this.props.t("analysis")}
+                  </span>
+                </Nav.Link>
+              </li>
+            )}
             {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
               if (item.visibility !== "spaceadmin") {
                 return;

@@ -77,6 +77,8 @@ interface State {
   enforceTOTP: boolean;
   kioskSecret: string;
   kioskModeEnabled: boolean;
+  hideReports: boolean;
+  hideStats: boolean;
 }
 
 interface Props {
@@ -133,6 +135,8 @@ class Settings extends React.Component<Props, State> {
       enforceTOTP: false,
       kioskSecret: "",
       kioskModeEnabled: false,
+      hideReports: false,
+      hideStats: false,
     };
   }
 
@@ -261,6 +265,8 @@ class Settings extends React.Component<Props, State> {
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
+        if (s.name === "hide_reports") state.hideReports = s.value === "1";
+        if (s.name === "hide_stats") state.hideStats = s.value === "1";
       });
       if (state.dailyBasisBooking && state.maxBookingDurationHours % 24 !== 0) {
         state.maxBookingDurationHours +=
@@ -387,6 +393,8 @@ class Settings extends React.Component<Props, State> {
         "kiosk_mode_enabled",
         this.state.kioskModeEnabled ? "1" : "0",
       ),
+      new OrgSettings("hide_reports", this.state.hideReports ? "1" : "0"),
+      new OrgSettings("hide_stats", this.state.hideStats ? "1" : "0"),
     ];
     OrgSettings.setAll(payload)
       .then(() => {
@@ -1201,6 +1209,35 @@ class Settings extends React.Component<Props, State> {
                   {this.props.t("addDomain")}
                 </Button>
               </InputGroup>
+            </Col>
+          </Form.Group>
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>{this.props.t("reportSettings")}</h4>
+          </div>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-hideReports"
+                label={this.props.t("hideReports")}
+                checked={this.state.hideReports}
+                onChange={(e: any) =>
+                  this.setState({ hideReports: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-hideStats"
+                label={this.props.t("hideStats")}
+                checked={this.state.hideStats}
+                onChange={(e: any) =>
+                  this.setState({ hideStats: e.target.checked })
+                }
+              />
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

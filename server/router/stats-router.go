@@ -69,6 +69,11 @@ func (router *StatsRouter) getLoad(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	hideStats, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideStats.Name)
+	if hideStats {
+		SendNotFound(w)
+		return
+	}
 
 	locationId := r.URL.Query().Get("location")
 	var location *Location = nil
@@ -101,6 +106,11 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	if !CanSpaceAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
+		return
+	}
+	hideStats, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideStats.Name)
+	if hideStats {
+		SendNotFound(w)
 		return
 	}
 
