@@ -1021,7 +1021,7 @@ class Search extends React.Component<Props, State> {
       });
   };
 
-  loadSpaceCalendarBookings = (date: Date) => {
+  loadSpaceCalendarBookings = async (date: Date) => {
     const space = this.state.selectedSpace;
     if (!space) return;
 
@@ -1029,20 +1029,19 @@ class Search extends React.Component<Props, State> {
     const weekEnd = DateUtil.getWeekEnd(date);
 
     this.setState({ spaceCalendarLoading: true });
-    Space.listAvailability(space.locationId, weekStart, weekEnd)
-      .then((spaces) => {
-        const found = spaces.find((s) => s.id === space.id);
-        const bookings = found
-          ? Booking.createFromRawArray(found.rawBookings)
-          : [];
-        this.setState({
-          spaceCalendarBookings: bookings,
-          spaceCalendarLoading: false,
-        });
-      })
-      .catch(() => {
-        this.setState({ spaceCalendarLoading: false });
+    try {
+      const spaces = await Space.listAvailability(space.locationId, weekStart, weekEnd);
+      const found = spaces.find((s) => s.id === space.id);
+      const bookings = found
+        ? Booking.createFromRawArray(found.rawBookings)
+        : [];
+      this.setState({
+        spaceCalendarBookings: bookings,
+        spaceCalendarLoading: false,
       });
+    } catch {
+      this.setState({ spaceCalendarLoading: false });
+    }
   };
 
   openSpaceCalendar = (
