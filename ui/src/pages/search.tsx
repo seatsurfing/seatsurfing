@@ -135,6 +135,7 @@ interface State {
   spaceCalendarDate: Date;
   spaceCalendarBookings: Booking[];
   spaceCalendarLoading: boolean;
+  spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
 }
 
 interface Props {
@@ -236,6 +237,7 @@ class Search extends React.Component<Props, State> {
       spaceCalendarDate: new Date(),
       spaceCalendarBookings: [],
       spaceCalendarLoading: false,
+      spaceCalendarReturnTo: "showBookingNames",
     };
   }
 
@@ -1027,20 +1029,36 @@ class Search extends React.Component<Props, State> {
     const weekEnd = moment(date).clone().endOf("week").toDate();
 
     this.setState({ spaceCalendarLoading: true });
-    Space.listAvailability(space.locationId, weekStart, weekEnd).then((spaces) => {
-      const found = spaces.find((s) => s.id === space.id);
-      const bookings = found ? Booking.createFromRawArray(found.rawBookings) : [];
-      this.setState({ spaceCalendarBookings: bookings, spaceCalendarLoading: false });
-    }).catch(() => {
-      this.setState({ spaceCalendarLoading: false });
-    });
+    Space.listAvailability(space.locationId, weekStart, weekEnd)
+      .then((spaces) => {
+        const found = spaces.find((s) => s.id === space.id);
+        const bookings = found
+          ? Booking.createFromRawArray(found.rawBookings)
+          : [];
+        this.setState({
+          spaceCalendarBookings: bookings,
+          spaceCalendarLoading: false,
+        });
+      })
+      .catch(() => {
+        this.setState({ spaceCalendarLoading: false });
+      });
   };
 
-  openSpaceCalendar = () => {
-    const today = new Date();
-    this.setState({ showSpaceCalendar: true, spaceCalendarDate: today }, () => {
-      this.loadSpaceCalendarBookings(today);
-    });
+  openSpaceCalendar = (
+    returnTo: "showBookingNames" | "showConfirm" = "showBookingNames",
+  ) => {
+    const date = this.state.enter ?? new Date();
+    this.setState(
+      {
+        showSpaceCalendar: true,
+        spaceCalendarDate: date,
+        spaceCalendarReturnTo: returnTo,
+      },
+      () => {
+        this.loadSpaceCalendarBookings(date);
+      },
+    );
   };
 
   getLocation = (): Location | undefined => {
@@ -2432,6 +2450,20 @@ class Search extends React.Component<Props, State> {
               <IconRefresh className="feather" />
             </Button>
             <Button
+              variant="secondary"
+              onClick={() => {
+                this.setState({ showConfirm: false });
+                this.openSpaceCalendar("showConfirm");
+              }}
+              disabled={this.state.confirmingBooking}
+            >
+              <IconCalendar
+                className="feather"
+                style={{ marginRight: "5px" }}
+              />
+              {this.props.t("calendar")}
+            </Button>
+            <Button
               type="submit"
               variant="primary"
               disabled={
@@ -2587,7 +2619,7 @@ class Search extends React.Component<Props, State> {
             {this.props.t("close")}
           </Button>
           <Button
-            variant="outline-secondary"
+            variant="secondary"
             onClick={() => {
               this.setState({ showBookingNames: false });
               this.openSpaceCalendar();
@@ -2608,15 +2640,19 @@ class Search extends React.Component<Props, State> {
       booking: Booking;
     };
 
-    const spaceCalendarEvents: CalEvent[] = this.state.spaceCalendarBookings.map((b) => ({
-      start: b.enter,
-      end: b.leave,
-      title: b.user.email + (b.subject ? ` – ${b.subject}` : ""),
-      booking: b,
-    }));
+    const spaceCalendarEvents: CalEvent[] =
+      this.state.spaceCalendarBookings.map((b) => ({
+        start: b.enter,
+        end: b.leave,
+        title: b.user.email + (b.subject ? ` – ${b.subject}` : ""),
+        booking: b,
+      }));
 
     const SpaceCalCustomEvent = ({ event }: { event: CalEvent }) => {
-      if (event.booking.leave.getTime() - event.booking.enter.getTime() <= 60 * 60 * 1000) {
+      if (
+        event.booking.leave.getTime() - event.booking.enter.getTime() <=
+        60 * 60 * 1000
+      ) {
         return null;
       }
       return (
@@ -2638,7 +2674,10 @@ class Search extends React.Component<Props, State> {
       const weekEnd = moment(toolbar.date).clone().endOf("week");
       const fmt = Formatting.getFormatterDate();
       return (
-        <div className="custom-toolbar" style={{ marginBottom: "5px", textAlign: "left" }}>
+        <div
+          className="custom-toolbar"
+          style={{ marginBottom: "5px", textAlign: "left" }}
+        >
           <Button
             size="sm"
             variant="outline-secondary"
@@ -2707,13 +2746,20 @@ class Search extends React.Component<Props, State> {
                 toolbar: SpaceCalCustomToolbar,
                 event: SpaceCalCustomEvent,
               }}
+              step={180}
+              timeslots={1}
             />
           )}
         </Modal.Body>
         <Modal.Footer>
           <Button
             variant="secondary"
-            onClick={() => this.setState({ showSpaceCalendar: false })}
+            onClick={() =>
+              this.setState({
+                showSpaceCalendar: false,
+                [this.state.spaceCalendarReturnTo]: true,
+              } as any)
+            }
           >
             {this.props.t("back")}
           </Button>
