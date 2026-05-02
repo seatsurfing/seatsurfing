@@ -1025,8 +1025,8 @@ class Search extends React.Component<Props, State> {
     const space = this.state.selectedSpace;
     if (!space) return;
 
-    const weekStart = moment(date).clone().startOf("week").toDate();
-    const weekEnd = moment(date).clone().endOf("week").toDate();
+    const weekStart = DateUtil.getWeekStart(date);
+    const weekEnd = DateUtil.getWeekEnd(date);
 
     this.setState({ spaceCalendarLoading: true });
     Space.listAvailability(space.locationId, weekStart, weekEnd)
