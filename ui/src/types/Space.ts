@@ -204,30 +204,40 @@ export default class Space extends Entity {
     leave: Date,
     attributes?: SearchAttribute[],
   ): Promise<Space[]> {
-    let params =
-      "enter=" +
-      encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString());
-    params +=
-      "&leave=" +
-      encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString());
+    let params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}`;
+    params += `&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
     if (attributes && attributes.length > 0) {
-      params +=
-        "&attributes=" +
-        encodeURIComponent(
-          JSON.stringify(attributes.map((a) => a.serialize())),
-        );
+      params += `&attributes=${encodeURIComponent(JSON.stringify(attributes.map((a) => a.serialize())))}`;
     }
-    return Ajax.get(
-      "/location/" + locationId + "/space/availability?" + params,
-    ).then((result) => {
-      const list: Space[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Space = new Space();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/availability?${params}`,
+    );
+    const list: Space[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Space = new Space();
+      e.deserialize(item);
+      list.push(e);
     });
+    return list;
+  }
+
+  static async listSingleAvailability(
+    locationId: string,
+    spaceId: string,
+    enter: Date,
+    leave: Date,
+  ): Promise<Space[]> {
+    const params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(spaceId)}/availability?${params}`,
+    );
+    const list: Space[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Space = new Space();
+      e.deserialize(item);
+      list.push(e);
+    });
+    return list;
   }
 
   static async bulkUpdate(
