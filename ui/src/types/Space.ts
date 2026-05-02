@@ -186,16 +186,18 @@ export default class Space extends Entity {
     );
   }
 
-  static async list(locationId: string): Promise<Space[]> {
-    return Ajax.get("/location/" + locationId + "/space/").then((result) => {
-      const list: Space[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Space = new Space();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
+  private static deserializeList(json: []): Space[] {
+    return json.map((item) => {
+      const e = new Space();
+      e.deserialize(item);
+      return e;
     });
+  }
+
+  static async list(locationId: string): Promise<Space[]> {
+    return Ajax.get("/location/" + locationId + "/space/").then((result) =>
+      Space.deserializeList(result.json as []),
+    );
   }
 
   static async listAvailability(
@@ -212,13 +214,7 @@ export default class Space extends Entity {
     const result = await Ajax.get(
       `/location/${encodeURIComponent(locationId)}/space/availability?${params}`,
     );
-    const list: Space[] = [];
-    (result.json as []).forEach((item) => {
-      const e: Space = new Space();
-      e.deserialize(item);
-      list.push(e);
-    });
-    return list;
+    return Space.deserializeList(result.json as []);
   }
 
   static async listSingleAvailability(
@@ -231,13 +227,7 @@ export default class Space extends Entity {
     const result = await Ajax.get(
       `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(spaceId)}/availability?${params}`,
     );
-    const list: Space[] = [];
-    (result.json as []).forEach((item) => {
-      const e: Space = new Space();
-      e.deserialize(item);
-      list.push(e);
-    });
-    return list;
+    return Space.deserializeList(result.json as []);
   }
 
   static async bulkUpdate(
