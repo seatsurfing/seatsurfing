@@ -75,6 +75,8 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingEnforceTOTP.Name,
 		SettingFeatureKioskMode.Name,
 		SettingFeatureExchangeIntegration.Name,
+		SettingHideReports.Name,
+		SettingHideStats.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -157,6 +159,8 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingFeatureKioskMode.Name,
 		SettingFeatureExchangeIntegration.Name,
 		SettingKioskModeEnabled.Name,
+		SettingHideReports.Name,
+		SettingHideStats.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

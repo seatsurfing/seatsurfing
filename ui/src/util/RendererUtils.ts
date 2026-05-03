@@ -13,6 +13,11 @@ export default class RendererUtils {
     return `${prefix}${s}${suffix}`;
   }
 
+  static suffixIfDefined(s: string, suffix: string) {
+    if (!s) return "";
+    return `${s}${suffix}`;
+  }
+
   static decodeHtmlEntities(text: string): string {
     const textarea = document.createElement("textarea");
     textarea.innerHTML = text;

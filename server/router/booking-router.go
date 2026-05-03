@@ -771,6 +771,11 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 		SendForbidden(w)
 		return
 	}
+	hideReports, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideReports.Name)
+	if hideReports {
+		SendNotFound(w)
+		return
+	}
 	start, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("start"))
 	if err != nil {
 		SendBadRequest(w)

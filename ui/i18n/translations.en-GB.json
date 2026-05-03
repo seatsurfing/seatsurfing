@@ -451,5 +451,11 @@
   "exchangeTestSuccess": "Connection successful",
   "exchangeTestFailed": "Connection failed",
   "bookingId": "Booking ID",
-  "operation": "Operation"
+  "operation": "Operation",
+  "close": "Close",
+  "event": "Event",
+  "hideReports": "Disable user-related reports",
+  "hideStats": "Disable utilization statistics",
+  "reportSettings": "Report settings",
+  "statsHiddenByAdmin": "Utilization statistics are disabled by your administrator."
 }

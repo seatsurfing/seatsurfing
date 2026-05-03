@@ -141,6 +141,10 @@ class Dashboard extends React.Component<Props, State> {
   loadItems = async (): Promise<void> => {
     const self = this;
     return new Promise<void>(function (resolve, reject) {
+      if (RuntimeConfig.INFOS.hideStats) {
+        resolve();
+        return;
+      }
       Stats.get()
         .then((stats) => {
           self.setState({ stats: stats });
@@ -153,6 +157,10 @@ class Dashboard extends React.Component<Props, State> {
   updateLoad = async (locationId: string): Promise<void> => {
     const self = this;
     return new Promise<void>(function (resolve, reject) {
+      if (RuntimeConfig.INFOS.hideStats) {
+        resolve();
+        return;
+      }
       StatsLoad.get(locationId)
         .then((statsLoad) => {
           const stats = self.state.stats ?? ({} as any);
@@ -277,132 +285,143 @@ class Dashboard extends React.Component<Props, State> {
 
     const yesterdayDateString = DateUtil.getDateString(-1);
 
+    let statsContent = <></>;
+    if (RuntimeConfig.INFOS.hideStats) {
+      statsContent = <p>{this.props.t("statsHiddenByAdmin")}</p>;
+    } else {
+      statsContent = (
+        <>
+          <Row className="mb-4">
+            {this.renderStatsCard(
+              this.state.stats?.numUsers,
+              this.props.t("users"),
+              this.state.orgAdmin ? Navigation.adminUsers() : "",
+            )}
+            {this.renderStatsCard(
+              this.state.stats?.numLocations,
+              this.props.t("areas"),
+              Navigation.adminLocations(),
+            )}
+            {this.renderStatsCard(
+              this.state.stats?.numSpaces,
+              this.props.t("spaces"),
+              Navigation.adminLocations(),
+            )}
+            {this.renderStatsCard(
+              this.state.stats?.numBookings,
+              this.props.t("bookings"),
+              Navigation.adminBookings(
+                "enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
+              ),
+            )}
+          </Row>
+          <Row className="mb-4">
+            {this.renderStatsCard(
+              this.state.stats?.numBookingsCurrent,
+              this.props.t("current"),
+              Navigation.adminBookings("filter=current"),
+            )}
+            {this.renderStatsCard(
+              this.state.stats?.numBookingsToday,
+              this.props.t("today"),
+              Navigation.adminBookings("filter=today"),
+            )}
+            {this.renderStatsCard(
+              this.state.stats?.numBookingsYesterday,
+              this.props.t("yesterday"),
+              Navigation.adminBookings(
+                `enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
+              ),
+            )}
+            {this.renderStatsCard(
+              this.state.stats?.numBookingsThisWeek,
+              this.props.t("thisWeek"),
+              Navigation.adminBookings(
+                `enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
+              ),
+            )}
+          </Row>
+          <Row className="mb-4">
+            <Col sm="12" xl="8">
+              <Card>
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <Card.Title className="mb-0 d-flex align-items-center gap-2">
+                      {this.props.t("utilization")}
+                      <OverlayTrigger
+                        placement="right"
+                        overlay={
+                          <Tooltip>
+                            {this.props.t("targetUtilizationHoursPerWeek")}:{" "}
+                            {RuntimeConfig.INFOS.targetUtilizationHoursPerWeek}{" "}
+                            {this.props.t("hours")}
+                          </Tooltip>
+                        }
+                      >
+                        <Info
+                          size={16}
+                          style={{ cursor: "pointer", color: "#6c757d" }}
+                        />
+                      </OverlayTrigger>
+                    </Card.Title>
+                    <Dropdown>
+                      <Dropdown.Toggle variant="outline-secondary" size="sm">
+                        {this.state.selectedLocationId
+                          ? this.locations.find(
+                              (e) => e.id == this.state.selectedLocationId,
+                            )?.name
+                          : this.props.t("allAreas")}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu align="end">
+                        <Dropdown.Item
+                          onClick={() => {
+                            this.updateLoad("");
+                          }}
+                        >
+                          {this.props.t("allAreas")}
+                        </Dropdown.Item>
+                        {this.locations.map((location) => (
+                          <Dropdown.Item
+                            onClick={() => {
+                              this.updateLoad(location.id);
+                            }}
+                          >
+                            {location.name}
+                          </Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </div>
+
+                  {this.renderProgressBar(
+                    this.state.stats?.spaceLoadNextWeek,
+                    this.props.t("nextWeek"),
+                  )}
+                  {this.renderProgressBar(
+                    this.state.stats?.spaceLoadThisWeek,
+                    this.props.t("thisWeek"),
+                  )}
+                  {this.renderProgressBar(
+                    this.state.stats?.spaceLoadLastWeek,
+                    this.props.t("lastWeek"),
+                  )}
+                  {this.renderProgressBar(
+                    this.state.stats?.spaceLoadLastMonth,
+                    this.props.t("lastMonth"),
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      );
+    }
+
     return (
       <FullLayout headline="Dashboard">
         {cloudUpgradeHint}
         {updateHint}
-        <Row className="mb-4">
-          {this.renderStatsCard(
-            this.state.stats?.numUsers,
-            this.props.t("users"),
-            this.state.orgAdmin ? Navigation.adminUsers() : "",
-          )}
-          {this.renderStatsCard(
-            this.state.stats?.numLocations,
-            this.props.t("areas"),
-            Navigation.adminLocations(),
-          )}
-          {this.renderStatsCard(
-            this.state.stats?.numSpaces,
-            this.props.t("spaces"),
-            Navigation.adminLocations(),
-          )}
-          {this.renderStatsCard(
-            this.state.stats?.numBookings,
-            this.props.t("bookings"),
-            Navigation.adminBookings(
-              "enter=2000-01-01T00:00&leave=2999-12-31T23:59&filter=enter_leave",
-            ),
-          )}
-        </Row>
-        <Row className="mb-4">
-          {this.renderStatsCard(
-            this.state.stats?.numBookingsCurrent,
-            this.props.t("current"),
-            Navigation.adminBookings("filter=current"),
-          )}
-          {this.renderStatsCard(
-            this.state.stats?.numBookingsToday,
-            this.props.t("today"),
-            Navigation.adminBookings("filter=today"),
-          )}
-          {this.renderStatsCard(
-            this.state.stats?.numBookingsYesterday,
-            this.props.t("yesterday"),
-            Navigation.adminBookings(
-              `enter=${yesterdayDateString}T00:00&leave=${yesterdayDateString}T23:59&filter=enter_leave`,
-            ),
-          )}
-          {this.renderStatsCard(
-            this.state.stats?.numBookingsThisWeek,
-            this.props.t("thisWeek"),
-            Navigation.adminBookings(
-              `enter=${DateUtil.getThisWeekMondayDateString()}T00:00&leave=${DateUtil.getThisWeekSundayDateString()}T23:59&filter=enter_leave`,
-            ),
-          )}
-        </Row>
-        <Row className="mb-4">
-          <Col sm="12" xl="8">
-            <Card>
-              <Card.Body>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <Card.Title className="mb-0 d-flex align-items-center gap-2">
-                    {this.props.t("utilization")}
-                    <OverlayTrigger
-                      placement="right"
-                      overlay={
-                        <Tooltip>
-                          {this.props.t("targetUtilizationHoursPerWeek")}:{" "}
-                          {RuntimeConfig.INFOS.targetUtilizationHoursPerWeek}{" "}
-                          {this.props.t("hours")}
-                        </Tooltip>
-                      }
-                    >
-                      <Info
-                        size={16}
-                        style={{ cursor: "pointer", color: "#6c757d" }}
-                      />
-                    </OverlayTrigger>
-                  </Card.Title>
-                  <Dropdown>
-                    <Dropdown.Toggle variant="outline-secondary" size="sm">
-                      {this.state.selectedLocationId
-                        ? this.locations.find(
-                            (e) => e.id == this.state.selectedLocationId,
-                          )?.name
-                        : this.props.t("allAreas")}
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu align="end">
-                      <Dropdown.Item
-                        onClick={() => {
-                          this.updateLoad("");
-                        }}
-                      >
-                        {this.props.t("allAreas")}
-                      </Dropdown.Item>
-                      {this.locations.map((location) => (
-                        <Dropdown.Item
-                          onClick={() => {
-                            this.updateLoad(location.id);
-                          }}
-                        >
-                          {location.name}
-                        </Dropdown.Item>
-                      ))}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </div>
-
-                {this.renderProgressBar(
-                  this.state.stats?.spaceLoadNextWeek,
-                  this.props.t("nextWeek"),
-                )}
-                {this.renderProgressBar(
-                  this.state.stats?.spaceLoadThisWeek,
-                  this.props.t("thisWeek"),
-                )}
-                {this.renderProgressBar(
-                  this.state.stats?.spaceLoadLastWeek,
-                  this.props.t("lastWeek"),
-                )}
-                {this.renderProgressBar(
-                  this.state.stats?.spaceLoadLastMonth,
-                  this.props.t("lastMonth"),
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+        {statsContent}
       </FullLayout>
     );
   }

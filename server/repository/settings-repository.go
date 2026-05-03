@@ -71,6 +71,8 @@ var (
 	SettingExchangeTenantID               SettingName = SettingName{Name: "exchange_tenant_id", Type: SettingTypeString}
 	SettingExchangeClientID               SettingName = SettingName{Name: "exchange_client_id", Type: SettingTypeString}
 	SettingExchangeClientSecret           SettingName = SettingName{Name: "exchange_client_secret", Type: SettingTypeString}
+	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
+	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
 )
 
 var settingsRepository *SettingsRepository
@@ -302,7 +304,9 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingBookingRetentionDays.Name+"', '365'), "+
 		"($1, '"+SettingSubjectDefault.Name+"', '"+strconv.Itoa(SettingSubjectDefaultOptional)+"'), "+
 		"($1, '"+SettingEnforceTOTP.Name+"', '0'), "+
-		"($1, '"+SettingKioskModeEnabled.Name+"', '0') "+
+		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
+		"($1, '"+SettingHideReports.Name+"', '0'), "+
+		"($1, '"+SettingHideStats.Name+"', '0') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)
 	return err

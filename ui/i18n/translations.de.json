@@ -454,5 +454,11 @@
   "exchangeTestSuccess": "Verbindung erfolgreich",
   "exchangeTestFailed": "Verbindung fehlgeschlagen",
   "bookingId": "Buchungs-ID",
-  "operation": "Vorgang"
+  "operation": "Vorgang",
+  "close": "Schließen",
+  "event": "Event",
+  "hideReports": "Benutzer-bezogene Auswertungen deaktivieren",
+  "hideStats": "Auslastungsstatistiken deaktivieren",
+  "reportSettings": "Auswertungen",
+  "statsHiddenByAdmin": "Die Auslastungsstatistiken wurden vom Administrator deaktiviert."
 }
