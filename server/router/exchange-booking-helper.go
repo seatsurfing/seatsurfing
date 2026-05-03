@@ -40,6 +40,16 @@ func enqueueExchangeSync(booking *Booking, operation string, exchangeEventID str
 		return
 	}
 
+	subject := booking.Subject
+	if subject == "" {
+		showNames, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingShowNames.Name)
+		if showNames {
+			subject = user.GetDisplayName()
+		} else {
+			subject = "Seatsurfing Booking"
+		}
+	}
+
 	payload := ExchangeSyncPayload{
 		OrgID:           location.OrganizationID,
 		BookingID:       booking.ID,
@@ -53,6 +63,7 @@ func enqueueExchangeSync(booking *Booking, operation string, exchangeEventID str
 		UserLastname:    user.Lastname,
 		SpaceName:       space.Name,
 		LocationName:    location.Name,
+		Subject:         subject,
 	}
 
 	payloadJSON, err := json.Marshal(payload)

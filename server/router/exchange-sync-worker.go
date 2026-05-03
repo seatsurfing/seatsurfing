@@ -40,6 +40,7 @@ type ExchangeSyncPayload struct {
 	UserLastname    string    `json:"userLastname"`
 	SpaceName       string    `json:"spaceName"`
 	LocationName    string    `json:"locationName"`
+	Subject         string    `json:"subject"`
 }
 
 // ExchangeSyncWorker processes pending Exchange sync jobs.
@@ -225,18 +226,19 @@ func (w *ExchangeSyncWorker) buildEventBody(payload *ExchangeSyncPayload) ([]byt
 	localEnter := payload.Enter.In(loc)
 	localLeave := payload.Leave.In(loc)
 
-	displayName := payload.UserFirstname + " " + payload.UserLastname
 	startStr := localEnter.Format("2006-01-02T15:04:05")
 	endStr := localLeave.Format("2006-01-02T15:04:05")
-	timeRangeStr := localEnter.Format("15:04") + "–" + localLeave.Format("15:04") + " (" + tz + ")"
+	//timeRangeStr := localEnter.Format("15:04") + "–" + localLeave.Format("15:04") + " (" + tz + ")"
 
 	event := map[string]interface{}{
-		"subject": "[Seatsurfing] Booking: " + displayName,
-		"body": map[string]string{
-			"contentType": "HTML",
-			"content": fmt.Sprintf("<p>Booked by: <b>%s</b><br>Space: %s, %s<br>Time: %s</p>",
-				displayName, payload.SpaceName, payload.LocationName, timeRangeStr),
-		},
+		"subject": payload.Subject,
+		/*
+			"body": map[string]string{
+				"contentType": "HTML",
+				"content": fmt.Sprintf("<p>Booked by: <b>%s</b><br>Space: %s, %s<br>Time: %s</p>",
+					displayName, payload.SpaceName, payload.LocationName, timeRangeStr),
+			},
+		*/
 		"start": map[string]string{
 			"dateTime": startStr,
 			"timeZone": tz,
@@ -246,6 +248,7 @@ func (w *ExchangeSyncWorker) buildEventBody(payload *ExchangeSyncPayload) ([]byt
 			"timeZone": tz,
 		},
 		"showAs":            "busy",
+		"sensitivity":       "normal",
 		"isReminderOn":      false,
 		"responseRequested": false,
 	}
