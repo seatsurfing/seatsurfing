@@ -1029,10 +1029,16 @@ class Search extends React.Component<Props, State> {
 
     this.setState({ spaceCalendarLoading: true });
     try {
-      const spaces = await Space.listSingleAvailability(space.locationId, space.id, weekStart, weekEnd);
-      const bookings = spaces.length > 0
-        ? Booking.createFromRawArray(spaces[0].rawBookings)
-        : [];
+      const spaces = await Space.listSingleAvailability(
+        space.locationId,
+        space.id,
+        weekStart,
+        weekEnd,
+      );
+      const bookings =
+        spaces.length > 0
+          ? Booking.createFromRawArray(spaces[0].rawBookings)
+          : [];
       this.setState({
         spaceCalendarBookings: bookings,
         spaceCalendarLoading: false,
