@@ -465,7 +465,7 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
-      exchangeRoomEmail: e ? e.roomEmail ?? "" : "",
+      exchangeRoomEmail: e ? (e.roomEmail ?? "") : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],

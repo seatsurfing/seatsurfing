@@ -295,10 +295,8 @@ class Settings extends React.Component<Props, State> {
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
         if (s.name === "exchange_enabled")
           state.exchangeEnabled = s.value === "1";
-        if (s.name === "exchange_tenant_id")
-          state.exchangeTenantId = s.value;
-        if (s.name === "exchange_client_id")
-          state.exchangeClientId = s.value;
+        if (s.name === "exchange_tenant_id") state.exchangeTenantId = s.value;
+        if (s.name === "exchange_client_id") state.exchangeClientId = s.value;
         if (s.name === "exchange_client_secret") {
           const hasSecret = s.value === "1";
           state.exchangeHasExistingRecord = hasSecret;
@@ -332,13 +330,19 @@ class Settings extends React.Component<Props, State> {
   saveExchangeSettings = async (e: any) => {
     e.preventDefault();
     const payload = [
-      new OrgSettings("exchange_enabled", this.state.exchangeEnabled ? "1" : "0"),
+      new OrgSettings(
+        "exchange_enabled",
+        this.state.exchangeEnabled ? "1" : "0",
+      ),
       new OrgSettings("exchange_tenant_id", this.state.exchangeTenantId),
       new OrgSettings("exchange_client_id", this.state.exchangeClientId),
     ];
     if (this.state.exchangeClientSecretEditing) {
       payload.push(
-        new OrgSettings("exchange_client_secret", this.state.exchangeClientSecret),
+        new OrgSettings(
+          "exchange_client_secret",
+          this.state.exchangeClientSecret,
+        ),
       );
     }
     try {
@@ -1471,7 +1475,10 @@ class Settings extends React.Component<Props, State> {
                 }
                 disabled={!RuntimeConfig.INFOS.featureExchangeIntegration}
                 onChange={(e: any) =>
-                  this.setState({ exchangeEnabled: e.target.checked, exchangeUnsavedChanges: true })
+                  this.setState({
+                    exchangeEnabled: e.target.checked,
+                    exchangeUnsavedChanges: true,
+                  })
                 }
               />
             </Col>
@@ -1494,7 +1501,10 @@ class Settings extends React.Component<Props, State> {
                   !this.state.exchangeEnabled
                 }
                 onChange={(e: any) =>
-                  this.setState({ exchangeTenantId: e.target.value, exchangeUnsavedChanges: true })
+                  this.setState({
+                    exchangeTenantId: e.target.value,
+                    exchangeUnsavedChanges: true,
+                  })
                 }
               />
             </Col>
@@ -1517,7 +1527,10 @@ class Settings extends React.Component<Props, State> {
                   !this.state.exchangeEnabled
                 }
                 onChange={(e: any) =>
-                  this.setState({ exchangeClientId: e.target.value, exchangeUnsavedChanges: true })
+                  this.setState({
+                    exchangeClientId: e.target.value,
+                    exchangeUnsavedChanges: true,
+                  })
                 }
               />
             </Col>
@@ -1569,7 +1582,10 @@ class Settings extends React.Component<Props, State> {
                   }
                   pattern="[^\s]+"
                   onChange={(e: any) =>
-                    this.setState({ exchangeClientSecret: e.target.value, exchangeUnsavedChanges: true })
+                    this.setState({
+                      exchangeClientSecret: e.target.value,
+                      exchangeUnsavedChanges: true,
+                    })
                   }
                 />
               )}
