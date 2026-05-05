@@ -210,7 +210,6 @@ func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {
 	if block == nil {
 		return nil, errors.New("failed to parse PEM block containing the key")
 	}
-
 	return x509.ParsePKCS1PrivateKey(block.Bytes)
 }
 
