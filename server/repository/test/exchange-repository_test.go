@@ -80,37 +80,25 @@ func TestExchangeOrgSettingsDelete(t *testing.T) {
 	CheckTestString(t, "", got.ClientID)
 }
 
-func TestExchangeSpaceMappingUpsertAndGet(t *testing.T) {
+func TestExchangeSpaceRoomEmailOnSpace(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("exchange-space.com")
 	_, space := CreateTestLocationAndSpace(org)
 
-	mapping := &ExchangeSpaceMapping{
-		SpaceID:   space.ID,
-		RoomEmail: "room@contoso.com",
-	}
-	err := GetExchangeSpaceMappingRepository().Upsert(mapping)
+	// Room email should be empty initially
+	got, err := GetSpaceRepository().GetOne(space.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestString(t, "", got.RoomEmail)
+
+	// Update room email via space update
+	got.RoomEmail = "room@contoso.com"
+	err = GetSpaceRepository().Update(got)
 	CheckTestBool(t, true, err == nil)
 
-	got, err := GetExchangeSpaceMappingRepository().GetBySpaceID(space.ID)
+	// Verify persisted
+	got2, err := GetSpaceRepository().GetOne(space.ID)
 	CheckTestBool(t, true, err == nil)
-	CheckTestString(t, space.ID, got.SpaceID)
-	CheckTestString(t, "room@contoso.com", got.RoomEmail)
-}
-
-func TestExchangeSpaceMappingDelete(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("exchange-space-del.com")
-	_, space := CreateTestLocationAndSpace(org)
-
-	mapping := &ExchangeSpaceMapping{SpaceID: space.ID, RoomEmail: "room@contoso.com"}
-	GetExchangeSpaceMappingRepository().Upsert(mapping)
-
-	err := GetExchangeSpaceMappingRepository().Delete(space.ID)
-	CheckTestBool(t, true, err == nil)
-
-	_, err = GetExchangeSpaceMappingRepository().GetBySpaceID(space.ID)
-	CheckTestBool(t, false, err == nil)
+	CheckTestString(t, "room@contoso.com", got2.RoomEmail)
 }
 
 func TestExchangeBookingMappingCreateAndGet(t *testing.T) {

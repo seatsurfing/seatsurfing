@@ -87,6 +87,7 @@ interface State {
   exchangeTestResult: string | null;
   exchangeTestSuccess: boolean | null;
   exchangeSaved: boolean;
+  exchangeUnsavedChanges: boolean;
   exchangeSyncErrors: Array<{
     id: string;
     bookingId: string;
@@ -161,6 +162,7 @@ class Settings extends React.Component<Props, State> {
       exchangeTestResult: null,
       exchangeTestSuccess: null,
       exchangeSaved: false,
+      exchangeUnsavedChanges: false,
       exchangeSyncErrors: [],
       hideReports: false,
       hideStats: false,
@@ -178,7 +180,7 @@ class Settings extends React.Component<Props, State> {
       this.loadAuthProviders(),
       this.loadTimezones(),
       this.checkUpdates(),
-      this.loadExchangeSettings(),
+      this.loadExchangeErrors(),
     ];
     Promise.all(promises).then(() => {
       this.setState({ loading: false });
@@ -291,6 +293,17 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "kiosk_access_secret")
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
+        if (s.name === "exchange_enabled")
+          state.exchangeEnabled = s.value === "1";
+        if (s.name === "exchange_tenant_id")
+          state.exchangeTenantId = s.value;
+        if (s.name === "exchange_client_id")
+          state.exchangeClientId = s.value;
+        if (s.name === "exchange_client_secret") {
+          const hasSecret = s.value === "1";
+          state.exchangeHasExistingRecord = hasSecret;
+          state.exchangeClientSecretEditing = !hasSecret;
+        }
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
         if (s.name === "hide_reports") state.hideReports = s.value === "1";
@@ -307,22 +320,10 @@ class Settings extends React.Component<Props, State> {
     });
   };
 
-  loadExchangeSettings = async (): Promise<void> => {
+  loadExchangeErrors = async (): Promise<void> => {
     try {
-      const [settingsResult, errorsResult] = await Promise.all([
-        Ajax.get("/setting/exchange/"),
-        Ajax.get("/setting/exchange/errors/"),
-      ]);
-      const s = settingsResult.json;
-      const hasRecord = s.tenantId !== "" || s.clientId !== "" || s.enabled;
-      this.setState({
-        exchangeEnabled: s.enabled || false,
-        exchangeTenantId: s.tenantId || "",
-        exchangeClientId: s.clientId || "",
-        exchangeClientSecretEditing: !hasRecord,
-        exchangeHasExistingRecord: hasRecord,
-        exchangeSyncErrors: errorsResult.json || [],
-      });
+      const result = await Ajax.get("/setting/exchange/errors/");
+      this.setState({ exchangeSyncErrors: result.json || [] });
     } catch {
       // ignore – exchange may not be configured yet
     }
@@ -330,20 +331,25 @@ class Settings extends React.Component<Props, State> {
 
   saveExchangeSettings = async (e: any) => {
     e.preventDefault();
-    const payload: any = {
-      enabled: this.state.exchangeEnabled,
-      tenantId: this.state.exchangeTenantId,
-      clientId: this.state.exchangeClientId,
-    };
+    const payload = [
+      new OrgSettings("exchange_enabled", this.state.exchangeEnabled ? "1" : "0"),
+      new OrgSettings("exchange_tenant_id", this.state.exchangeTenantId),
+      new OrgSettings("exchange_client_id", this.state.exchangeClientId),
+    ];
     if (this.state.exchangeClientSecretEditing) {
-      payload.clientSecret = this.state.exchangeClientSecret;
+      payload.push(
+        new OrgSettings("exchange_client_secret", this.state.exchangeClientSecret),
+      );
     }
     try {
-      await Ajax.putData("/setting/exchange/", payload);
+      await OrgSettings.setAll(payload);
+      RuntimeConfig.INFOS.exchangeIntegrationEnabled =
+        this.state.exchangeEnabled;
       this.setState({
         exchangeSaved: true,
         exchangeClientSecretEditing: false,
         exchangeHasExistingRecord: true,
+        exchangeUnsavedChanges: false,
       });
     } catch {
       this.setState({ error: true });
@@ -1465,7 +1471,7 @@ class Settings extends React.Component<Props, State> {
                 }
                 disabled={!RuntimeConfig.INFOS.featureExchangeIntegration}
                 onChange={(e: any) =>
-                  this.setState({ exchangeEnabled: e.target.checked })
+                  this.setState({ exchangeEnabled: e.target.checked, exchangeUnsavedChanges: true })
                 }
               />
             </Col>
@@ -1488,7 +1494,7 @@ class Settings extends React.Component<Props, State> {
                   !this.state.exchangeEnabled
                 }
                 onChange={(e: any) =>
-                  this.setState({ exchangeTenantId: e.target.value })
+                  this.setState({ exchangeTenantId: e.target.value, exchangeUnsavedChanges: true })
                 }
               />
             </Col>
@@ -1511,7 +1517,7 @@ class Settings extends React.Component<Props, State> {
                   !this.state.exchangeEnabled
                 }
                 onChange={(e: any) =>
-                  this.setState({ exchangeClientId: e.target.value })
+                  this.setState({ exchangeClientId: e.target.value, exchangeUnsavedChanges: true })
                 }
               />
             </Col>
@@ -1536,6 +1542,7 @@ class Settings extends React.Component<Props, State> {
                       this.setState({
                         exchangeClientSecretEditing: true,
                         exchangeClientSecret: "",
+                        exchangeUnsavedChanges: true,
                       })
                     }
                   >
@@ -1562,7 +1569,7 @@ class Settings extends React.Component<Props, State> {
                   }
                   pattern="[^\s]+"
                   onChange={(e: any) =>
-                    this.setState({ exchangeClientSecret: e.target.value })
+                    this.setState({ exchangeClientSecret: e.target.value, exchangeUnsavedChanges: true })
                   }
                 />
               )}
@@ -1573,10 +1580,7 @@ class Settings extends React.Component<Props, State> {
               <Button
                 variant="outline-secondary"
                 className="me-2"
-                disabled={
-                  !RuntimeConfig.INFOS.featureExchangeIntegration ||
-                  !this.state.exchangeEnabled
-                }
+                disabled={!RuntimeConfig.INFOS.featureExchangeIntegration}
                 onClick={this.saveExchangeSettings}
               >
                 <IconSave className="feather" /> {this.props.t("save")}
@@ -1585,7 +1589,8 @@ class Settings extends React.Component<Props, State> {
                 variant="outline-secondary"
                 disabled={
                   !RuntimeConfig.INFOS.featureExchangeIntegration ||
-                  !this.state.exchangeEnabled
+                  !this.state.exchangeEnabled ||
+                  this.state.exchangeUnsavedChanges
                 }
                 onClick={this.testExchangeConnection}
               >

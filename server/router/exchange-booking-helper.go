@@ -24,9 +24,8 @@ func enqueueExchangeSync(booking *Booking, operation string, exchangeEventID str
 		return
 	}
 
-	// Check space mapping
-	mapping, err := GetExchangeSpaceMappingRepository().GetBySpaceID(space.ID)
-	if err != nil || mapping == nil || mapping.RoomEmail == "" {
+	// Check space room email mapping
+	if space.RoomEmail == "" {
 		return
 	}
 
@@ -54,7 +53,7 @@ func enqueueExchangeSync(booking *Booking, operation string, exchangeEventID str
 		OrgID:           location.OrganizationID,
 		BookingID:       booking.ID,
 		Operation:       operation,
-		RoomEmail:       mapping.RoomEmail,
+		RoomEmail:       space.RoomEmail,
 		ExchangeEventID: exchangeEventID,
 		Enter:           booking.Enter.UTC(),
 		Leave:           booking.Leave.UTC(),

@@ -274,6 +274,7 @@ class EditLocation extends React.Component<Props, State> {
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
         space.kioskEnabled = item.kioskEnabled;
+        space.roomEmail = item.exchangeRoomEmail ?? "";
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -437,35 +438,13 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   loadExchangeMappingForSpace = async (spaceIdx: number): Promise<void> => {
-    const space = this.state.spaces[spaceIdx];
-    if (!space || !space.id) return;
-    try {
-      const result = await Ajax.get(
-        `/location/${this.entity.id}/space/${space.id}/exchangemapping`,
-      );
-      const roomEmail: string = result.json?.roomEmail || "";
-      const spaces = this.state.spaces;
-      const updated = { ...spaces[spaceIdx], exchangeRoomEmail: roomEmail };
-      spaces[spaceIdx] = updated;
-      this.setState({ spaces });
-    } catch {
-      // ignore
-    }
+    // Room email is now part of the space payload; no separate request needed.
+    return Promise.resolve();
   };
 
   saveExchangeMappingsForSpaces = async (): Promise<void> => {
-    const promises: Promise<any>[] = [];
-    for (const space of this.state.spaces) {
-      if (space.id && space.exchangeRoomEmail !== undefined) {
-        promises.push(
-          Ajax.putData(
-            `/location/${this.entity.id}/space/${space.id}/exchangemapping`,
-            { roomEmail: space.exchangeRoomEmail },
-          ).catch(() => {}),
-        );
-      }
-    }
-    await Promise.all(promises);
+    // Room email is now part of the space payload; no separate request needed.
+    return Promise.resolve();
   };
 
   newSpaceState = (e?: Space): SpaceState => {
@@ -486,6 +465,7 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
+      exchangeRoomEmail: e ? e.roomEmail ?? "" : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -497,7 +477,6 @@ class EditLocation extends React.Component<Props, State> {
         e && e.allowedBookerGroupIds
           ? this.groups.filter((g) => e.allowedBookerGroupIds.includes(g.id))
           : [],
-      exchangeRoomEmail: "",
     };
     if (e) {
       e.attributes.forEach((a) => {
