@@ -10,9 +10,6 @@ import {
   MapPin as IconLocation,
   Clock as IconPending,
   RefreshCw as IconRecurring,
-  Trello as IconTrello,
-  ArrowLeft as IconArrowLeft,
-  ArrowRight as IconArrowRight,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import NavBar from "@/components/NavBar";
@@ -26,7 +23,8 @@ import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
-import { Calendar, momentLocalizer, ToolbarProps } from "react-big-calendar";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
@@ -281,64 +279,9 @@ class Bookings extends React.Component<Props, State> {
       );
     };
 
-    const CustomToolbar = (toolbar: ToolbarProps<Event, object>) => {
-      const goToBack = () => {
-        toolbar.onNavigate("PREV");
-      };
-
-      const goToNext = () => {
-        toolbar.onNavigate("NEXT");
-      };
-
-      const goToToday = () => {
-        toolbar.onNavigate("TODAY");
-      };
-
-      const weekStart = moment(toolbar.date).clone().startOf("week");
-      const weekEnd = moment(toolbar.date).clone().endOf("week");
-      const formatter = Formatting.getFormatterDate();
-
-      return (
-        <div
-          className="custom-toolbar"
-          style={{ marginBottom: "5px", textAlign: "left" }}
-        >
-          <Link
-            href="#"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={goToToday}
-          >
-            <IconTrello className="feather" /> {this.props.t("today")}
-          </Link>{" "}
-          <Link
-            href="#"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={goToBack}
-          >
-            <IconArrowLeft className="feather" />
-          </Link>{" "}
-          <Link
-            href="#"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={goToNext}
-          >
-            <IconArrowRight className="feather" />
-          </Link>{" "}
-          <span
-            className="toolbar-label"
-            style={{
-              display: "flex",
-              float: "right",
-              height: "100%",
-              alignItems: "center",
-            }}
-          >
-            {formatter.format(weekStart.toDate())} –{" "}
-            {formatter.format(weekEnd.toDate())}
-          </span>
-        </div>
-      );
-    };
+    const toolbar = (props: object) => (
+      <CustomToolbar toolbar={props as any} t={this.props.t} />
+    );
 
     moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
@@ -439,7 +382,7 @@ class Bookings extends React.Component<Props, State> {
                 return {};
               }}
               components={{
-                toolbar: CustomToolbar,
+                toolbar,
                 event: CustomEvent,
               }}
               scrollToTime={DateUtil.convertToFakeUTCDate(

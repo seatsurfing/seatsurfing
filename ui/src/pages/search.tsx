@@ -40,12 +40,10 @@ import {
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
   UserCheck as IconUserCheck,
-  ArrowLeft as IconArrowLeft,
-  ArrowRight as IconArrowRight,
-  Trello as IconTrello,
   MapPin as IconLocationPin,
 } from "react-feather";
-import { Calendar, momentLocalizer, ToolbarProps } from "react-big-calendar";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
@@ -56,6 +54,7 @@ import {
   ReactZoomPanPinchContentRef,
 } from "react-zoom-pan-pinch";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import CalendarButton from "@/components/button/CalendarButton";
 import SpaceAttributeValue from "@/types/SpaceAttributeValue";
 import SearchAttribute from "@/types/SearchAttribute";
 import Buddy from "@/types/Buddy";
@@ -2447,20 +2446,13 @@ class Search extends React.Component<Props, State> {
             >
               <IconRefresh className="feather" />
             </Button>
-            <Button
-              variant="secondary"
+            <CalendarButton
               onClick={() => {
                 this.setState({ showConfirm: false });
                 this.openSpaceCalendar("showConfirm");
               }}
               disabled={this.state.confirmingBooking}
-            >
-              <IconCalendar
-                className="feather"
-                style={{ marginRight: "5px" }}
-              />
-              {this.props.t("calendar")}
-            </Button>
+            />
             <Button
               type="submit"
               variant="primary"
@@ -2616,16 +2608,12 @@ class Search extends React.Component<Props, State> {
           >
             {this.props.t("close")}
           </Button>
-          <Button
-            variant="secondary"
+          <CalendarButton
             onClick={() => {
               this.setState({ showBookingNames: false });
               this.openSpaceCalendar();
             }}
-          >
-            <IconCalendar className="feather" style={{ marginRight: "5px" }} />
-            {this.props.t("calendar")}
-          </Button>
+          />
           {gotoBooking}
         </Modal.Footer>
       </Modal>
@@ -2667,42 +2655,9 @@ class Search extends React.Component<Props, State> {
       );
     };
 
-    const SpaceCalCustomToolbar = (toolbar: ToolbarProps<CalEvent, object>) => {
-      const weekStart = moment(toolbar.date).clone().startOf("week");
-      const weekEnd = moment(toolbar.date).clone().endOf("week");
-      const fmt = Formatting.getFormatterDate();
-      return (
-        <div
-          className="custom-toolbar"
-          style={{ marginBottom: "5px", textAlign: "left" }}
-        >
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            onClick={() => toolbar.onNavigate("TODAY")}
-          >
-            <IconTrello className="feather" /> {this.props.t("today")}
-          </Button>{" "}
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            onClick={() => toolbar.onNavigate("PREV")}
-          >
-            <IconArrowLeft className="feather" />
-          </Button>{" "}
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            onClick={() => toolbar.onNavigate("NEXT")}
-          >
-            <IconArrowRight className="feather" />
-          </Button>{" "}
-          <span style={{ float: "right" }}>
-            {fmt.format(weekStart.toDate())} – {fmt.format(weekEnd.toDate())}
-          </span>
-        </div>
-      );
-    };
+    const spaceCalToolbar = (props: object) => (
+      <CustomToolbar toolbar={props as any} t={this.props.t} />
+    );
 
     moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
@@ -2741,7 +2696,7 @@ class Search extends React.Component<Props, State> {
               }}
               culture={Formatting.Language}
               components={{
-                toolbar: SpaceCalCustomToolbar,
+                toolbar: spaceCalToolbar,
                 event: SpaceCalCustomEvent,
               }}
               step={180}
