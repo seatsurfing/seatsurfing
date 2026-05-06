@@ -2608,12 +2608,6 @@ class Search extends React.Component<Props, State> {
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant={myBooking ? "secondary" : "primary"}
-            onClick={() => this.setState({ showBookingNames: false })}
-          >
-            {this.props.t("close")}
-          </Button>
           <CalendarButton
             onClick={() => {
               this.setState({ showBookingNames: false });
