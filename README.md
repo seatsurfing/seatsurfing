@@ -80,10 +80,10 @@ networks:
   sql:
 ```
 
-This starts...
+This starts …
 
-- a PostgreSQL database with data stored on Docker volume "db"
-- a Seatsurfing instance with port 8080 exposed
+- … a PostgreSQL database with data stored on Docker volume "db"
+- … a Seatsurfing instance with port 8080 exposed
 
 The Seatsurfing Booking UI is accessible at :8080/ui/search/ and the Seatsurfing Admin UI instance at :8080/ui/admin/.
 
