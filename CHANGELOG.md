@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.89.0](https://github.com/seatsurfing/seatsurfing/compare/v1.88.1...v1.89.0) (2026-05-06)
+
+
+### Features
+
+* add space calendar view ([#2063](https://github.com/seatsurfing/seatsurfing/issues/2063)) ([1b1f9d2](https://github.com/seatsurfing/seatsurfing/commit/1b1f9d23e3582c39d99fc8e6b0fa9b901e06202d))
+
+
+### Bug Fixes
+
+* **deps:** bump moment-timezone from 0.6.1 to 0.6.2 in /ui in the production-dependencies group across 1 directory ([#2081](https://github.com/seatsurfing/seatsurfing/issues/2081)) ([ec37a23](https://github.com/seatsurfing/seatsurfing/commit/ec37a2337c62d12ec3543b478399f91d6940666b))
+* improve startup warnings ([#2086](https://github.com/seatsurfing/seatsurfing/issues/2086)) ([5af0c70](https://github.com/seatsurfing/seatsurfing/commit/5af0c7055f61882c7308cc898365650824cfccd8))
+
 ## [1.88.1](https://github.com/seatsurfing/seatsurfing/compare/v1.88.0...v1.88.1) (2026-04-30)
 
 
