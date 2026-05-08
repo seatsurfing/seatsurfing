@@ -118,6 +118,7 @@ type AuthPreflightResponse struct {
 	RequirePassword      bool                             `json:"requirePassword"`
 	DisablePasswordLogin bool                             `json:"disablePasswordLogin"`
 	Domain               string                           `json:"domain"`
+	CustomLogoURL        string                           `json:"customLogoUrl"`
 }
 
 type AuthPasswordRequest struct {
@@ -1271,6 +1272,9 @@ func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPre
 		m.ID = e.ID
 		m.Name = e.Name
 		res.AuthProviders = append(res.AuthProviders, m)
+	}
+	if customLogoURL, err := GetSettingsRepository().Get(org.ID, SettingCustomLogoUrl.Name); err == nil {
+		res.CustomLogoURL = customLogoURL
 	}
 	return res
 }
