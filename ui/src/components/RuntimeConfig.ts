@@ -32,9 +32,7 @@ interface RuntimeUserInfos {
   featureGroups: boolean;
   featureAuthProviders: boolean;
   featureKioskMode: boolean;
-  featureExchangeIntegration: boolean;
   kioskModeEnabled: boolean;
-  exchangeIntegrationEnabled: boolean;
   cloudHosted: boolean;
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
@@ -86,9 +84,7 @@ export default class RuntimeConfig {
       featureGroups: false,
       featureAuthProviders: false,
       featureKioskMode: false,
-      featureExchangeIntegration: false,
       kioskModeEnabled: false,
-      exchangeIntegrationEnabled: false,
       cloudHosted: false,
       subscriptionActive: false,
       orgPrimaryDomain: "",
@@ -196,8 +192,6 @@ export default class RuntimeConfig {
               : [];
           if (s.name === "feature_kiosk_mode")
             RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
-          if (s.name === "feature_exchange_integration")
-            RuntimeConfig.INFOS.featureExchangeIntegration = s.value === "1";
           if (s.name === "kiosk_mode_enabled")
             RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
           if (s.name === "cloud_hosted")
@@ -274,16 +268,7 @@ export default class RuntimeConfig {
       RuntimeConfig.INFOS.isPrimaryDomain = user.isPrimaryDomain;
       RuntimeConfig.setDetails(user.email, user.id);
       return RuntimeConfig.loadSettings().then(() => {
-        return RuntimeConfig.loadUserPreferences().then(() => {
-          return Ajax.get("/setting/exchange/")
-            .then((res) => {
-              RuntimeConfig.INFOS.exchangeIntegrationEnabled =
-                res.json?.enabled === true;
-            })
-            .catch(() => {
-              RuntimeConfig.INFOS.exchangeIntegrationEnabled = false;
-            });
-        });
+        return RuntimeConfig.loadUserPreferences();
       });
     });
   };

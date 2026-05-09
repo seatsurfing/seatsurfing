@@ -36,8 +36,6 @@ var DatabaseTables = [...]string{
 	"bookings",
 	"buddies",
 	"debug_time_issues",
-	"exchange_booking_mapping",
-	"exchange_sync_queue",
 	"groups",
 	"location_allowed_bookers",
 	"locations",

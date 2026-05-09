@@ -31,24 +31,6 @@ func TestSettingsForbidden(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 
-	req = NewHTTPRequest("GET", "/setting/"+SettingExchangeEnabled.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-
-	req = NewHTTPRequest("GET", "/setting/"+SettingExchangeClientSecret.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-
-	payload = `{"value": "1"}`
-	req = NewHTTPRequest("PUT", "/setting/"+SettingExchangeEnabled.Name, loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-
-	payload = `{"value": "s"}`
-	req = NewHTTPRequest("PUT", "/setting/"+SettingExchangeClientSecret.Name, loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-
 	req = NewHTTPRequest("GET", "/setting/", loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -92,7 +74,6 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
 		SettingFeatureKioskMode.Name,
-		SettingFeatureExchangeIntegration.Name,
 		SettingHideReports.Name,
 		SettingHideStats.Name,
 	}
@@ -101,10 +82,6 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingAllowAnyUser.Name,
 		SettingConfluenceServerSharedSecret.Name,
 		SettingConfluenceAnonymous.Name,
-		SettingExchangeEnabled.Name,
-		SettingExchangeTenantID.Name,
-		SettingExchangeClientID.Name,
-		SettingExchangeClientSecret.Name,
 	}
 
 	for _, name := range allowedSettings {
@@ -141,12 +118,6 @@ func TestSettingsReadAdmin(t *testing.T) {
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
-
-	// Pre-seed exchange settings so they exist in the DB and all GETs return 200.
-	GetSettingsRepository().Set(org.ID, SettingExchangeEnabled.Name, "0")
-	GetSettingsRepository().Set(org.ID, SettingExchangeTenantID.Name, "tid")
-	GetSettingsRepository().Set(org.ID, SettingExchangeClientID.Name, "cid")
-	GetSettingsRepository().Set(org.ID, SettingExchangeClientSecret.Name, "encrypted-placeholder")
 
 	allowedSettings := []string{
 		SettingDisableBuddies.Name,
@@ -185,14 +156,9 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingEnforceTOTP.Name,
 		SettingTargetUtilizationHoursPerWeek.Name,
 		SettingFeatureKioskMode.Name,
-		SettingFeatureExchangeIntegration.Name,
 		SettingKioskModeEnabled.Name,
 		SettingHideReports.Name,
 		SettingHideStats.Name,
-		SettingExchangeEnabled.Name,
-		SettingExchangeTenantID.Name,
-		SettingExchangeClientID.Name,
-		SettingExchangeClientSecret.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -225,77 +191,6 @@ func TestSettingsReadAdmin(t *testing.T) {
 		}
 	}
 	CheckTestInt(t, len(allowedSettings), found)
-}
-
-func TestSettingsExchangeCRUD(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
-
-	// Write exchange settings via standard settings endpoint
-	for _, pair := range [][2]string{
-		{SettingExchangeEnabled.Name, "1"},
-		{SettingExchangeTenantID.Name, "my-tenant"},
-		{SettingExchangeClientID.Name, "my-client"},
-	} {
-		payload := `{"value":"` + pair[1] + `"}`
-		req := NewHTTPRequest("PUT", "/setting/"+pair[0], loginResponse.UserID, bytes.NewBufferString(payload))
-		res := ExecuteTestRequest(req)
-		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-	}
-
-	// Write client secret
-	payload := `{"value":"my-secret"}`
-	req := NewHTTPRequest("PUT", "/setting/"+SettingExchangeClientSecret.Name, loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-
-	// Read back exchange_enabled
-	req = NewHTTPRequest("GET", "/setting/"+SettingExchangeEnabled.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var enabledVal string
-	json.Unmarshal(res.Body.Bytes(), &enabledVal)
-	CheckTestString(t, "1", enabledVal)
-
-	// Read back exchange_tenant_id
-	req = NewHTTPRequest("GET", "/setting/"+SettingExchangeTenantID.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var tenantVal string
-	json.Unmarshal(res.Body.Bytes(), &tenantVal)
-	CheckTestString(t, "my-tenant", tenantVal)
-
-	// Secret must be masked: "1" when set, never the real value
-	req = NewHTTPRequest("GET", "/setting/"+SettingExchangeClientSecret.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var secretVal string
-	json.Unmarshal(res.Body.Bytes(), &secretVal)
-	CheckTestString(t, "1", secretVal)
-
-	// Writing empty secret preserves the existing one
-	payload = `{"value":""}`
-	req = NewHTTPRequest("PUT", "/setting/"+SettingExchangeClientSecret.Name, loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-
-	stored, err := GetSettingsRepository().GetExchangeSettings(org.ID)
-	if err != nil {
-		t.Fatal("Failed to get exchange settings from repo:", err)
-	}
-	if stored.ClientSecret != "my-secret" {
-		t.Fatalf("Expected preserved secret 'my-secret', got '%s'", stored.ClientSecret)
-	}
-
-	// Secret indicator still "1" after no-op empty write
-	req = NewHTTPRequest("GET", "/setting/"+SettingExchangeClientSecret.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var secretVal2 string
-	json.Unmarshal(res.Body.Bytes(), &secretVal2)
-	CheckTestString(t, "1", secretVal2)
 }
 
 func TestSettingsCRUD(t *testing.T) {

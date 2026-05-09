@@ -108,16 +108,6 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
-	// Exchange client secret: return "1" if set, "" if not – never expose the encrypted value.
-	if vars["name"] == SettingExchangeClientSecret.Name {
-		v, err := GetSettingsRepository().Get(user.OrganizationID, SettingExchangeClientSecret.Name)
-		if err != nil || v == "" {
-			SendJSON(w, "")
-		} else {
-			SendJSON(w, "1")
-		}
-		return
-	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
 	if err != nil {
 		log.Println(err)
@@ -257,26 +247,6 @@ func (router *SettingsRouter) doSetOne(organizationID, name, value string) error
 		}
 		return GetSettingsRepository().Set(organizationID, name, string(hash))
 	}
-	// Exchange client secret: encrypt before storing; empty value preserves existing.
-	if name == SettingExchangeClientSecret.Name {
-		GetExchangeSyncWorker().InvalidateTokenCache(organizationID)
-		if value == "" {
-			return nil
-		}
-		encrypted, err := EncryptString(value)
-		if err != nil {
-			return err
-		}
-		return GetSettingsRepository().Set(organizationID, name, encrypted)
-	}
-	// Invalidate Exchange token cache when any Exchange credential changes.
-	if name == SettingExchangeEnabled.Name || name == SettingExchangeTenantID.Name || name == SettingExchangeClientID.Name {
-		if err := GetSettingsRepository().Set(organizationID, name, value); err != nil {
-			return err
-		}
-		GetExchangeSyncWorker().InvalidateTokenCache(organizationID)
-		return nil
-	}
 	return GetSettingsRepository().Set(organizationID, name, value)
 }
 
@@ -285,11 +255,6 @@ func (router *SettingsRouter) copyToRestModel(e *OrgSetting) *GetSettingsRespons
 	m.Name = e.Name
 	// Never expose the kiosk secret hash; return "1" to indicate a secret is configured.
 	if e.Name == SettingKioskSecret.Name {
-		if e.Value != "" {
-			m.Value = "1"
-		}
-	} else if e.Name == SettingExchangeClientSecret.Name {
-		// Never expose the encrypted Exchange client secret; return "1" if set.
 		if e.Value != "" {
 			m.Value = "1"
 		}
@@ -322,7 +287,6 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureGroups.Name ||
 		name == SettingFeatureAuthProviders.Name ||
 		name == SettingFeatureKioskMode.Name ||
-		name == SettingFeatureExchangeIntegration.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
@@ -351,11 +315,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
-		name == SettingKioskModeEnabled.Name ||
-		name == SettingExchangeEnabled.Name ||
-		name == SettingExchangeTenantID.Name ||
-		name == SettingExchangeClientID.Name ||
-		name == SettingExchangeClientSecret.Name {
+		name == SettingKioskModeEnabled.Name {
 		return true
 	}
 	return false
@@ -391,11 +351,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingSubjectDefault.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
-		name == SettingKioskModeEnabled.Name ||
-		name == SettingExchangeEnabled.Name ||
-		name == SettingExchangeTenantID.Name ||
-		name == SettingExchangeClientID.Name ||
-		name == SettingExchangeClientSecret.Name {
+		name == SettingKioskModeEnabled.Name {
 		return true
 	}
 	return false
@@ -491,18 +447,6 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingKioskModeEnabled.Name {
 		return SettingKioskModeEnabled.Type
-	}
-	if name == SettingExchangeEnabled.Name {
-		return SettingExchangeEnabled.Type
-	}
-	if name == SettingExchangeTenantID.Name {
-		return SettingExchangeTenantID.Type
-	}
-	if name == SettingExchangeClientID.Name {
-		return SettingExchangeClientID.Type
-	}
-	if name == SettingExchangeClientSecret.Name {
-		return SettingExchangeClientSecret.Type
 	}
 	return 0
 }

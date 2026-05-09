@@ -11,7 +11,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 44
+	targetVersion := 42
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
@@ -38,8 +38,6 @@ func RunDBSchemaUpdates() {
 		GetMailLogRepository(),
 		GetSessionRepository(),
 		GetPasskeyRepository(),
-		GetExchangeSyncQueueRepository(),
-		GetExchangeBookingMappingRepository(),
 	}
 	for _, plg := range plugin.GetPlugins() {
 		repositories = append(repositories, (*plg).GetRepositories()...)

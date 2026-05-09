@@ -66,7 +66,6 @@ interface SpaceState {
   enabledAttributes: string[];
   approvers: any[] | undefined;
   allowBookers: any[] | undefined;
-  exchangeRoomEmail: string;
 }
 
 interface State {
@@ -274,7 +273,6 @@ class EditLocation extends React.Component<Props, State> {
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
         space.kioskEnabled = item.kioskEnabled;
-        space.roomEmail = item.exchangeRoomEmail ?? "";
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -364,7 +362,6 @@ class EditLocation extends React.Component<Props, State> {
           .then(() => {
             this.saveSpaces()
               .then(() => {
-                this.saveExchangeMappingsForSpaces().catch(() => {});
                 if (this.state.files && this.state.files.length > 0) {
                   this.entity
                     .setMap(this.state.files.item(0) as File)
@@ -437,16 +434,6 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
-  loadExchangeMappingForSpace = async (spaceIdx: number): Promise<void> => {
-    // Room email is now part of the space payload; no separate request needed.
-    return Promise.resolve();
-  };
-
-  saveExchangeMappingsForSpaces = async (): Promise<void> => {
-    // Room email is now part of the space payload; no separate request needed.
-    return Promise.resolve();
-  };
-
   newSpaceState = (e?: Space): SpaceState => {
     const res: SpaceState = {
       id: e ? e.id : "",
@@ -465,7 +452,6 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
-      exchangeRoomEmail: e ? (e.roomEmail ?? "") : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -559,10 +545,8 @@ class EditLocation extends React.Component<Props, State> {
     const now: number = new Date().getTime();
     const diff: number = now - this.state.selectedSpaceMouseDownTimestamp;
     if (diff <= 300) {
-      this.loadExchangeMappingForSpace(i).then(() => {
-        this.setState({
-          showEditSpaceDetailsModal: true,
-        });
+      this.setState({
+        showEditSpaceDetailsModal: true,
       });
       return;
     }
@@ -580,10 +564,8 @@ class EditLocation extends React.Component<Props, State> {
 
   editSpaceDetails = () => {
     if (this.state.selectedSpace != null) {
-      this.loadExchangeMappingForSpace(this.state.selectedSpace).then(() => {
-        this.setState({
-          showEditSpaceDetailsModal: true,
-        });
+      this.setState({
+        showEditSpaceDetailsModal: true,
       });
     }
   };
@@ -1174,33 +1156,6 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             {this.getSpaceAttributeRows()}
-            <Form.Group
-              as={Row}
-              hidden={
-                !RuntimeConfig.INFOS.featureExchangeIntegration ||
-                !RuntimeConfig.INFOS.exchangeIntegrationEnabled
-              }
-            >
-              <Form.Label column sm="4" htmlFor="space-exchange-room-email">
-                {this.props.t("exchangeRoomEmail")}
-              </Form.Label>
-              <Col sm="8">
-                <Form.Control
-                  id="space-exchange-room-email"
-                  type="email"
-                  value={this.getSelectedSpace()?.exchangeRoomEmail || ""}
-                  placeholder="room@contoso.com"
-                  onChange={(e: any) => {
-                    const spaces = this.state.spaces;
-                    const idx = this.state.selectedSpace!;
-                    const space = { ...spaces[idx] };
-                    space.exchangeRoomEmail = e.target.value;
-                    spaces[idx] = space;
-                    this.setState({ spaces });
-                  }}
-                />
-              </Col>
-            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
