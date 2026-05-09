@@ -17,7 +17,6 @@ import {
   AlertTriangle as IconAlert,
   Check as IconCheck,
   RefreshCw as IconRefresh,
-  Edit2 as IconEdit,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
