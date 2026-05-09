@@ -233,6 +233,20 @@ export default class DateUtil {
     return nextDay;
   }
 
+  static getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    d.setDate(d.getDate() - d.getDay());
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  static getWeekEnd(date: Date): Date {
+    const d = new Date(date);
+    d.setDate(d.getDate() + (6 - d.getDay()));
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }
+
   static getNowFakeUTC(): Date {
     return this.convertToFakeUTCDate(new Date());
   }
