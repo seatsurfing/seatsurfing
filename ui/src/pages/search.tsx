@@ -279,7 +279,12 @@ class Search extends React.Component<Props, State> {
                     attributeValues: attributes,
                     loading: false,
                   },
-                  () => this.centerMap(),
+                  () => {
+                    // v4 centerOnInit is unreliable because TransformComponent may mount
+                    // before map data is loaded, causing centering with 0-size content.
+                    // Instead, center explicitly after data is loaded and React has painted.
+                    requestAnimationFrame(() => this.centerMap());
+                  },
                 );
                 if (sidParam) {
                   const space = this.data.find((item) => item.id == sidParam);
@@ -1783,7 +1788,7 @@ class Search extends React.Component<Props, State> {
             minScale={0.2}
             maxScale={5}
           >
-            {({ zoomIn, zoomOut, resetTransform }) => (
+            {({ zoomIn, zoomOut }) => (
               <>
                 {window.innerWidth >= 768 && (
                   <div
@@ -1829,7 +1834,7 @@ class Search extends React.Component<Props, State> {
                     <RemoveIcon />
                   </button>
                   <button
-                    onClick={() => resetTransform()}
+                    onClick={() => this.centerMap()}
                     aria-label="Reset zoom"
                     className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
@@ -2820,12 +2825,17 @@ class Search extends React.Component<Props, State> {
   };
 
   centerMap = () => {
-    // v4 centerOnInit is unreliable because TransformComponent may mount
-    // before map data is loaded, causing centering with 0-size content.
-    // Instead, center explicitly after data is loaded and React has painted.
-    requestAnimationFrame(() => {
-      this.transformWrapperRef.current?.centerView(0.8, 0);
-    });
+    const ref = this.transformWrapperRef.current;
+    if (!ref) return;
+    const wrapper = ref.instance.wrapperComponent;
+    const content = ref.instance.contentComponent;
+    if (wrapper && content) {
+      const scale = Math.min(
+        wrapper.offsetWidth / content.offsetWidth,
+        wrapper.offsetHeight / content.offsetHeight,
+      );
+      ref.centerView(scale, 0);
+    }
   };
 }
 
