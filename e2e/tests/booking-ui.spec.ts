@@ -15,9 +15,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("crud booking", async ({ page }) => {
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByRole("combobox").selectOption({ label: "Sample Floor" });
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByText("Desk 1", { exact: true }).click();
   await expect(
     page.getByRole("dialog").getByText("Book a space"),
@@ -28,7 +28,7 @@ test("crud booking", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("button", { name: "My bookings" }).click();
   await expect(page).toHaveURL(/bookings\/$/);
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByLabel("Calendar", { exact: true }).click(); // switch to list view
   await page
     .getByText(/Sample Floor/)
