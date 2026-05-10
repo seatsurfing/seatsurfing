@@ -31,6 +31,13 @@ jobs:
           POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
           CRYPT_KEY: rC8REJftxMcdhzTvu9Tk6RqgygBRctZC
           CGO_ENABLED: 0
+      - name: Run app tests
+        working-directory: ./server/app/test
+        run: go test -cover -v
+        env:
+          POSTGRES_URL: postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable
+          CRYPT_KEY: rC8REJftxMcdhzTvu9Tk6RqgygBRctZC
+          CGO_ENABLED: 0
       - name: Run repository tests
         working-directory: ./server/repository/test
         run: go test -cover -v
