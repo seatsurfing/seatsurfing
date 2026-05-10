@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -1308,6 +1309,9 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
 	router.updateCalDavEvent(e)
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnBookingUpdated(e.ID)
+	}
 	router.sendMailNotification(e, BookingMailNotificationUpdated)
 }
 
@@ -1317,6 +1321,9 @@ func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 		router.sendMailNotification(e, BookingMailNotificationDeclined)
 	} else {
 		router.createCalDavEvent(e)
+		for _, plg := range plugin.GetPlugins() {
+			(*plg).OnBookingCreated(e.ID)
+		}
 		router.sendMailNotification(e, BookingMailNotificationApproved)
 	}
 }
@@ -1324,6 +1331,9 @@ func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 func (router *BookingRouter) onBookingCreated(e *Booking) {
 	if e.Approved {
 		router.createCalDavEvent(e)
+		for _, plg := range plugin.GetPlugins() {
+			(*plg).OnBookingCreated(e.ID)
+		}
 		router.sendMailNotification(e, BookingMailNotificationCreated)
 	} else {
 		// Booking requires approval - notify approvers
@@ -1427,6 +1437,9 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 }
 
 func (router *BookingRouter) onBookingDeleted(e *Booking, sendNotification bool) {
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnBookingDeleted(e.ID)
+	}
 	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
 	if err == nil {
 		if e.CalDavID != "" {
