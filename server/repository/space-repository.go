@@ -260,6 +260,13 @@ func (r *SpaceRepository) Delete(e *Space) error {
 	return err
 }
 
+func (r *SpaceRepository) GetCountAll() (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
+		"FROM spaces").Scan(&res)
+	return res, err
+}
+
 func (r *SpaceRepository) GetCount(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(spaces.id) "+

@@ -235,6 +235,13 @@ func (r *LocationRepository) DeleteAll(organizationID string) error {
 	return err
 }
 
+func (r *LocationRepository) GetCountAll() (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
+		"FROM locations").Scan(&res)
+	return res, err
+}
+
 func (r *LocationRepository) GetCount(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+

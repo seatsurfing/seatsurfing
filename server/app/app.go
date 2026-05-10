@@ -268,6 +268,10 @@ func (a *App) onTimerTick() {
 	if time.Now().Minute() == 0 {
 		go a.CheckDomainAccessibilityTimer()
 	}
+	// Update install stats once per hour
+	if time.Now().Minute() == 0 {
+		go a.UpdateInstallStats()
+	}
 }
 
 func (a *App) InitializeTimers() {
@@ -281,6 +285,18 @@ func (a *App) InitializeTimers() {
 			a.onTimerTick()
 		}
 	}()
+}
+
+func (a *App) UpdateInstallStats() {
+	if GetConfig().DisableAnonymousUsageStats {
+		return
+	}
+	stats := &InstallStats{}
+	stats.NumLocations, _ = GetLocationRepository().GetCountAll()
+	stats.NumUsers, _ = GetUserRepository().GetCountAll()
+	stats.NumBookings, _ = GetBookingRepository().GetCountAll()
+	stats.NumSpaces, _ = GetSpaceRepository().GetCountAll()
+	SetInstallStats(stats)
 }
 
 func (a *App) CheckDomainAccessibilityTimer() {

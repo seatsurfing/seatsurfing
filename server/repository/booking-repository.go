@@ -417,6 +417,13 @@ func (r *BookingRepository) Delete(e *BookingDetails) error {
 	return nil
 }
 
+func (r *BookingRepository) GetCountAll() (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
+		"FROM bookings").Scan(&res)
+	return res, err
+}
+
 func (r *BookingRepository) GetCount(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+

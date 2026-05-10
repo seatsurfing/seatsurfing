@@ -464,6 +464,13 @@ func (r *UserRepository) DeleteAll(organizationID string) error {
 	return err
 }
 
+func (r *UserRepository) GetCountAll() (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
+		"FROM users").Scan(&res)
+	return res, err
+}
+
 func (r *UserRepository) GetCount(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+

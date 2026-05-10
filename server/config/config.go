@@ -60,7 +60,8 @@ type Config struct {
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
 	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
-	MaxPasskeysPerUser                  int // Maximum number of passkeys a single user may register
+	MaxPasskeysPerUser                  int  // Maximum number of passkeys a single user may register
+	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
 }
 
 var _configInstance *Config
@@ -188,6 +189,7 @@ func (c *Config) ReadConfig() {
 		log.Println("⚠️ Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
 		c.MaxPasskeysPerUser = 10
 	}
+	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
