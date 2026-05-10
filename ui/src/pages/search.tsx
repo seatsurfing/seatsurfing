@@ -2440,13 +2440,6 @@ class Search extends React.Component<Props, State> {
           </Modal.Body>
           <Modal.Footer hidden={this.state.showRecurringOptions}>
             <Button
-              variant="secondary"
-              onClick={() => this.setState({ showConfirm: false })}
-              disabled={this.state.confirmingBooking}
-            >
-              {this.props.t("cancel")}
-            </Button>
-            <Button
               variant={this.state.recurrence.active ? "primary" : "secondary"}
               onClick={() => this.setState({ showRecurringOptions: true })}
               hidden={
@@ -2548,6 +2541,9 @@ class Search extends React.Component<Props, State> {
     );
     let gotoBooking;
     if (myBooking) {
+      const confirmMessage = this.props.t("confirmCancelBooking", {
+        enter: formatter.format(myBooking.enter),
+      });
       gotoBooking = (
         <>
           <Button
@@ -2565,7 +2561,16 @@ class Search extends React.Component<Props, State> {
           </Button>
           <Button
             variant="danger"
-            onClick={() => this.cancelBooking(myBooking)}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  RendererUtils.decodeHtmlEntities(confirmMessage),
+                )
+              ) {
+                return;
+              }
+              this.cancelBooking(myBooking);
+            }}
             disabled={this.state.confirmingBooking}
           >
             {this.props.t("cancelBooking")}
