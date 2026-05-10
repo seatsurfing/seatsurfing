@@ -275,6 +275,7 @@ func (a *App) onTimerTick() {
 }
 
 func (a *App) InitializeTimers() {
+	a.UpdateInstallStats()
 	a.onTimerTick()
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	GetUpdateChecker().InitializeVersionUpdateTimer(installID)
