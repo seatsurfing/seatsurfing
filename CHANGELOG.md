@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.90.0](https://github.com/seatsurfing/seatsurfing/compare/v1.89.0...v1.90.0) (2026-05-10)
+
+
+### Features
+
+* add booking crud api hooks ([#2064](https://github.com/seatsurfing/seatsurfing/issues/2064)) ([08e9cfa](https://github.com/seatsurfing/seatsurfing/commit/08e9cfa474d604f7890109b0cde8218d58cbc1b6))
+* add confirmation dialog when canceling booking ([#2091](https://github.com/seatsurfing/seatsurfing/issues/2091)) ([21cf0a3](https://github.com/seatsurfing/seatsurfing/commit/21cf0a3a3debbfb975e14f965e971282ecc88f98))
+
+
+### Bug Fixes
+
+* anonymous usage stats ([#2104](https://github.com/seatsurfing/seatsurfing/issues/2104)) ([fd38cb1](https://github.com/seatsurfing/seatsurfing/commit/fd38cb14e0e92a75adb316f5d50faae037ff9d22))
+* do not reset zoom when creating or deleting booking ([#2098](https://github.com/seatsurfing/seatsurfing/issues/2098)) ([12cfeb9](https://github.com/seatsurfing/seatsurfing/commit/12cfeb99bae69dc30de6ba20fe75daac4cba8e19))
+* fix react error "&lt;div&gt; cannot be a descendant of &lt;p&gt;" ([#2101](https://github.com/seatsurfing/seatsurfing/issues/2101)) ([ef63ea1](https://github.com/seatsurfing/seatsurfing/commit/ef63ea19c9c5f6c26895c12b6ba03c2096fc6ceb))
+* minor typo fix for loading text ([#2092](https://github.com/seatsurfing/seatsurfing/issues/2092)) ([9dca950](https://github.com/seatsurfing/seatsurfing/commit/9dca950917e6067e6afb6011bb9fec2da76022dd))
+* optimize centering map ([#2099](https://github.com/seatsurfing/seatsurfing/issues/2099)) ([49d0649](https://github.com/seatsurfing/seatsurfing/commit/49d0649c31147ccaaa773e2e2c57a8aa9fe6be00))
+
 ## [1.89.0](https://github.com/seatsurfing/seatsurfing/compare/v1.88.1...v1.89.0) (2026-05-06)
 
 
