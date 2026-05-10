@@ -1,9 +1,10 @@
-package util
+package test
 
 import (
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 const testCryptKey = "12345678901234567890123456789012" // 32 bytes

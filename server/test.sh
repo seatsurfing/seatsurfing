@@ -4,6 +4,10 @@ cd util/test
 go test -v -cover
 cd ../..
 
+cd app/test
+go test -v -cover
+cd ../..
+
 cd repository/test
 go test -v -cover
 cd ../..
