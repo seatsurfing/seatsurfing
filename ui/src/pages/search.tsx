@@ -2592,7 +2592,7 @@ class Search extends React.Component<Props, State> {
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
-          <p
+          <div
             hidden={!myBooking || !isRecurring}
             style={{ marginTop: "15px", marginBottom: "0" }}
           >
@@ -2605,7 +2605,7 @@ class Search extends React.Component<Props, State> {
               checked={this.state.cancelSeries}
               label={this.props.t("cancelAllUpcomingBookings")}
             />
-          </p>
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <CalendarButton
