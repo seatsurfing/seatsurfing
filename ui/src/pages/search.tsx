@@ -2810,13 +2810,10 @@ class Search extends React.Component<Props, State> {
     );
   }
 
-  refreshPage = () => {
-    this.setState({
-      loading: true,
-    });
-    this.loadMap(this.state.locationId).then(() => {
-      this.setState({ loading: false }, () => this.centerMap());
-    });
+  refreshPage = async () => {
+    this.setState({ loading: true });
+    await this.loadMap(this.state.locationId);
+    this.setState({ loading: false });
   };
 
   centerMap = () => {
