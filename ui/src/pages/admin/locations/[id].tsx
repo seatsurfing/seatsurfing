@@ -117,6 +117,7 @@ class EditLocation extends React.Component<Props, State> {
   typeaheadApprovers: any = null;
   typeaheadAllowBookers: any = null;
   typeaheadLocationAllowBookers: any = null;
+  editSpaceFormRef = React.createRef<HTMLFormElement>();
 
   constructor(props: any) {
     super(props);
@@ -632,11 +633,11 @@ class EditLocation extends React.Component<Props, State> {
           this.onSpaceSelect(i);
           this.checkDoubleClickSpace(i);
         }}
-        onDragStop={(e, d) => {
+        onDragStop={(_e, d) => {
           this.setSpacePosition(i, d.x, d.y);
           this.onSpaceSelect(i);
         }}
-        onResizeStop={(e, d, ref) => {
+        onResizeStop={(_e, _d, ref) => {
           this.setSpaceDimensions(i, ref.style.width, ref.style.height);
         }}
         className={className}
@@ -649,6 +650,11 @@ class EditLocation extends React.Component<Props, State> {
           value={this.state.spaces[i].name}
           onChange={(e) => {
             this.setSpaceName(i, e.target.value);
+          }}
+          onBlur={(e) => {
+            if (!e.target.value.trim()) {
+              this.setSpaceName(i, this.props.t("unnamed"));
+            }
           }}
         />
       </Rnd>
@@ -953,6 +959,7 @@ class EditLocation extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>
           <Form
+            ref={this.editSpaceFormRef}
             onSubmit={(e) => {
               e.preventDefault();
             }}
@@ -970,6 +977,7 @@ class EditLocation extends React.Component<Props, State> {
                     this.setSpaceName(this.state.selectedSpace!, e.target.value)
                   }
                   required={true}
+                  pattern=".*\S.*"
                 />
               </Col>
             </Form.Group>
@@ -1161,7 +1169,10 @@ class EditLocation extends React.Component<Props, State> {
         <Modal.Footer>
           <Button
             variant="primary"
-            onClick={() => this.setState({ showEditSpaceDetailsModal: false })}
+            onClick={() => {
+              if (!this.editSpaceFormRef.current?.reportValidity()) return;
+              this.setState({ showEditSpaceDetailsModal: false });
+            }}
           >
             {this.props.t("ok")}
           </Button>
@@ -1550,6 +1561,7 @@ class EditLocation extends React.Component<Props, State> {
                 value={this.state.name}
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
+                pattern=".*\S.*"
               />
             </Col>
           </Form.Group>
