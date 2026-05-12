@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.91.0](https://github.com/seatsurfing/seatsurfing/compare/v1.90.0...v1.91.0) (2026-05-12)
+
+
+### Features
+
+* add translation for zh-TW ([#2100](https://github.com/seatsurfing/seatsurfing/issues/2100)) ([61a9b90](https://github.com/seatsurfing/seatsurfing/commit/61a9b909de4b0c82e5c77f5eb79cedf44b3548ee))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/go-webauthn/webauthn from 0.17.0 to 0.17.2 in /server in the minor-and-patch group ([#2106](https://github.com/seatsurfing/seatsurfing/issues/2106)) ([d576d39](https://github.com/seatsurfing/seatsurfing/commit/d576d399c974d53e773e518656ae1d0eebf1ed9a))
+* **deps:** bump next from 16.2.4 to 16.2.6 in /ui ([#2105](https://github.com/seatsurfing/seatsurfing/issues/2105)) ([9f24882](https://github.com/seatsurfing/seatsurfing/commit/9f2488248ff2ff747edb0d3021c07024ede1cc28))
+
 ## [1.90.0](https://github.com/seatsurfing/seatsurfing/compare/v1.89.0...v1.90.0) (2026-05-10)
 
 
