@@ -27,6 +27,7 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
+import UrlInput from "@/components/form/UrlInput";
 import Domain from "@/types/Domain";
 import Organization from "@/types/Organization";
 import AuthProvider from "@/types/AuthProvider";
@@ -793,9 +794,9 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("customLogoUrl")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
+              <UrlInput
                 id="input-customLogoUrl"
-                type="url"
+                placeholder="https://…"
                 value={this.state.customLogoUrl}
                 onChange={(e: any) =>
                   this.setState({ customLogoUrl: e.target.value })

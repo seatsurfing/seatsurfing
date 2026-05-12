@@ -18,6 +18,7 @@ import Validation from "@/util/Validation";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
 import SaveButton from "@/components/SaveButton";
+import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
 
@@ -900,9 +901,9 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label htmlFor="caldavUrl">
                   {this.props.t("caldavUrl")}
                 </Form.Label>
-                <Form.Control
+                <UrlInput
                   id="caldavUrl"
-                  type="url"
+                  placeholder="https://…"
                   value={this.state.caldavUrl}
                   onChange={(e: any) =>
                     this.setState({
