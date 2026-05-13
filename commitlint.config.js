@@ -12,16 +12,17 @@ module.exports = {
   extends: ["@commitlint/config-conventional"],
   rules: {
     "header-max-length": [2, "always", 150],
-    "scope-enum": ({ type, scope }) => {
-      if (OPTIONAL_SCOPE_TYPES.includes(type) && !scope) return [true];
-      return [
-        ALLOWED_SCOPES.includes(scope),
-        `scope must be one of: ${ALLOWED_SCOPES.join(", ")}`,
-      ];
+    "scope-enum": async ({ type, scope }) => {
+      if (OPTIONAL_SCOPE_TYPES.includes(type) && !scope) {
+        return [0, "always", ALLOWED_SCOPES];
+      }
+      return [2, "always", ALLOWED_SCOPES];
     },
-    "scope-empty": ({ type, scope }) => {
-      if (OPTIONAL_SCOPE_TYPES.includes(type)) return [true];
-      return [!!scope, "scope must not be empty"];
+    "scope-empty": async ({ type }) => {
+      if (OPTIONAL_SCOPE_TYPES.includes(type)) {
+        return [0, "never"];
+      }
+      return [2, "never"];
     },
   },
 };
