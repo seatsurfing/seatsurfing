@@ -27,6 +27,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import RendererUtils from "@/util/RendererUtils";
+import UrlInput from "@/components/form/UrlInput";
 
 interface State {
   loading: boolean;
@@ -415,9 +416,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Auth URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.authUrl}
                 onChange={(e: any) =>
                   this.setState({ authUrl: e.target.value })
@@ -431,9 +430,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Token URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.tokenUrl}
                 onChange={(e: any) =>
                   this.setState({ tokenUrl: e.target.value })
@@ -538,9 +535,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Userinfo URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.userInfoUrl}
                 onChange={(e: any) =>
                   this.setState({ userInfoUrl: e.target.value })
@@ -600,9 +595,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Logout URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.logoutUrl}
                 onChange={(e: any) =>
                   this.setState({ logoutUrl: e.target.value })
@@ -615,9 +608,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Profile Page URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.profilePageUrl}
                 onChange={(e: any) =>
                   this.setState({ profilePageUrl: e.target.value })
