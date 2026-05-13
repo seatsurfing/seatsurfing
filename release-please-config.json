@@ -1,4 +1,19 @@
 {
   "bootstrap-sha": "76e4976a8aaf926f74a57cecc82c905519b23f4c",
-  "release-type": "simple"
+  "release-type": "simple",
+  "changelog-sections": [
+    { "type": "feat", "scope": "booking-ui", "section": "Booking UI" },
+    { "type": "fix", "scope": "booking-ui", "section": "Booking UI" },
+    { "type": "feat", "scope": "admin-ui", "section": "Admin UI" },
+    { "type": "fix", "scope": "admin-ui", "section": "Admin UI" },
+    { "type": "feat", "scope": "core", "section": "Core" },
+    { "type": "fix", "scope": "core", "section": "Core" },
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "chore", "section": "Miscellaneous" },
+    { "type": "refactor", "section": "Miscellaneous" }
+  ]
 }
