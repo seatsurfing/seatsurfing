@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.91.1](https://github.com/seatsurfing/seatsurfing/compare/v1.91.0...v1.91.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* fix loading text ([#2113](https://github.com/seatsurfing/seatsurfing/issues/2113)) ([80efe5d](https://github.com/seatsurfing/seatsurfing/commit/80efe5d07bebb7e079fb57d3d21575040ba72abd))
+* improve validation for URL input fields ([#2110](https://github.com/seatsurfing/seatsurfing/issues/2110)) ([bc39328](https://github.com/seatsurfing/seatsurfing/commit/bc39328cf18ab0f54143ebe12e0de5dc9ed3d59d))
+* prevent entering empty space name ([#2112](https://github.com/seatsurfing/seatsurfing/issues/2112)) ([a7fb24f](https://github.com/seatsurfing/seatsurfing/commit/a7fb24f34639ea3f9d111394408193164c926087))
+* update react-tooltip to 6.0.0 ([#2111](https://github.com/seatsurfing/seatsurfing/issues/2111)) ([0ae4749](https://github.com/seatsurfing/seatsurfing/commit/0ae4749e314df8c6cd2a3afa8a027c52c63db6d0))
+
 ## [1.91.0](https://github.com/seatsurfing/seatsurfing/compare/v1.90.0...v1.91.0) (2026-05-12)
 
 
