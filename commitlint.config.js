@@ -5,7 +5,7 @@ module.exports = {
     "scope-enum": [
       2,
       "always",
-      ["booking-ui", "admin-ui", "core", "deps", "deps-dev", "i18n"],
+      ["booking-ui", "admin-ui", "server", "deps", "deps-dev", "i18n"],
     ],
   },
 };
