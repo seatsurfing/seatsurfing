@@ -1,5 +1,12 @@
 const OPTIONAL_SCOPE_TYPES = ["ci", "refactor"];
-const ALLOWED_SCOPES = ["booking-ui", "admin-ui", "server", "deps", "deps-dev", "i18n"];
+const ALLOWED_SCOPES = [
+  "booking-ui",
+  "admin-ui",
+  "server",
+  "deps",
+  "deps-dev",
+  "i18n",
+];
 
 module.exports = {
   extends: ["@commitlint/config-conventional"],
