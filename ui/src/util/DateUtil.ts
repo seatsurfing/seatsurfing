@@ -1,4 +1,7 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
+import UserPreference, {
+  PreferenceEnterTimeType,
+} from "@/types/UserPreference";
 
 export default class DateUtil {
   static MS_PER_MINUTE = 1000 * 60;
@@ -92,8 +95,16 @@ export default class DateUtil {
     );
   }
 
+  static isInFuture(date: Date): boolean {
+    return this.convertToUTC(date) > new Date();
+  }
+
   static isInPast(date: Date): boolean {
     return this.convertToUTC(date) < new Date();
+  }
+
+  static isToday(date: Date): boolean {
+    return this.isSameDay(date, new Date());
   }
 
   /**
@@ -267,5 +278,64 @@ export default class DateUtil {
       return nextDay;
     }
     return new Date(leave.getTime() + DateUtil.MS_PER_MINUTE);
+  }
+
+  /**
+   * Calculates the next enter and leave time based on the user's
+   * preferred (workday) times and the org's global (booking) settings
+   *
+   * @returns default enter and leave time for a new booking
+   */
+  static getNextPreferredEnterAndLeaveTime(
+    prefEnterTime: PreferenceEnterTimeType,
+    prefWorkdayStart: number,
+    prefWorkdayEnd: number,
+    prefWorkdays: number[],
+    dailyBasisBooking: boolean,
+  ): { enter: Date; leave: Date } {
+    let enter = new Date();
+    if (prefEnterTime === UserPreference.PreferenceEnterTime.Now) {
+      enter.setHours(enter.getHours() + 1, 0, 0);
+      if (enter.getHours() < prefWorkdayStart) {
+        enter.setHours(prefWorkdayStart, 0, 0, 0);
+      }
+      if (enter.getHours() >= prefWorkdayEnd) {
+        enter.setDate(enter.getDate() + 1);
+        enter.setHours(prefWorkdayStart, 0, 0, 0);
+      }
+    } else if (prefEnterTime === UserPreference.PreferenceEnterTime.NextDay) {
+      enter.setDate(enter.getDate() + 1);
+      enter.setHours(prefWorkdayStart, 0, 0, 0);
+    } else if (
+      prefEnterTime === UserPreference.PreferenceEnterTime.NextWorkday
+    ) {
+      enter.setDate(enter.getDate() + 1);
+      let add = 0;
+      let nextDayFound = false;
+      let lookFor = enter.getDay();
+      while (!nextDayFound) {
+        if (prefWorkdays.includes(lookFor) || add > 7) {
+          nextDayFound = true;
+        } else {
+          add++;
+          lookFor++;
+          if (lookFor > 6) {
+            lookFor = 0;
+          }
+        }
+      }
+      enter.setDate(enter.getDate() + add);
+      enter.setHours(prefWorkdayStart, 0, 0, 0);
+    }
+
+    let leave = new Date(enter);
+    leave.setHours(prefWorkdayEnd, 0, 0);
+
+    if (dailyBasisBooking) {
+      enter = DateUtil.setHoursToMin(enter);
+      leave = DateUtil.setHoursToMax(leave);
+    }
+
+    return { enter, leave };
   }
 }

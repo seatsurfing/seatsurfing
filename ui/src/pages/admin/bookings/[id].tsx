@@ -69,9 +69,6 @@ interface Props {
 }
 
 class EditBooking extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
   entity: Booking = new Booking();
   authProviders: { [key: string]: string } = {};
   dailyBasisBooking: boolean;
@@ -200,50 +197,15 @@ class EditBooking extends React.Component<Props, State> {
 
   initDates = () => {
     if (!this.isNewBooking) return;
-    const enter = new Date();
-    if (this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (
-      this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNextDay
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
 
-    const leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      this.dailyBasisBooking,
+    );
 
-    if (this.dailyBasisBooking) {
-      enter.setHours(0, 0, 0, 0);
-      leave.setHours(23, 59, 59, 0);
-    }
     this.setState({
       enter,
       leave,
@@ -355,7 +317,7 @@ class EditBooking extends React.Component<Props, State> {
     });
   };
 
-  //TODO: modify to init according to selcted user
+  //TODO: modify to init according to selected user
   // initCurrentBookingCount = () => {
   //     Booking.list().then(list => {
   //         this.curBookingCount = list.length;
