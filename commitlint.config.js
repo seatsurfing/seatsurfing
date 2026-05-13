@@ -10,19 +10,31 @@ const ALLOWED_SCOPES = [
 
 module.exports = {
   extends: ["@commitlint/config-conventional"],
+  plugins: [
+    {
+      rules: {
+        "conditional-scope": (parsed) => {
+          const { type, scope } = parsed;
+          if (OPTIONAL_SCOPE_TYPES.includes(type)) {
+            if (!scope) return [true];
+            return [
+              ALLOWED_SCOPES.includes(scope),
+              `scope must be one of: ${ALLOWED_SCOPES.join(", ")}`,
+            ];
+          }
+          if (!scope) return [false, "scope must not be empty"];
+          return [
+            ALLOWED_SCOPES.includes(scope),
+            `scope must be one of: ${ALLOWED_SCOPES.join(", ")}`,
+          ];
+        },
+      },
+    },
+  ],
   rules: {
     "header-max-length": [2, "always", 150],
-    "scope-enum": async ({ type, scope }) => {
-      if (OPTIONAL_SCOPE_TYPES.includes(type) && !scope) {
-        return [0, "always", ALLOWED_SCOPES];
-      }
-      return [2, "always", ALLOWED_SCOPES];
-    },
-    "scope-empty": async ({ type }) => {
-      if (OPTIONAL_SCOPE_TYPES.includes(type)) {
-        return [0, "never"];
-      }
-      return [2, "never"];
-    },
+    "scope-enum": [0],
+    "scope-empty": [0],
+    "conditional-scope": [2, "always"],
   },
 };
