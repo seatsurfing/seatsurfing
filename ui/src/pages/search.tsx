@@ -832,7 +832,7 @@ class Search extends React.Component<Props, State> {
         style={boxStyle}
         className={className}
         data-tooltip-id="space-tooltip"
-        data-tooltip-html={tooltipHtml}
+        data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
         title={this.getBookersList(bookings)}
       >
@@ -1843,7 +1843,19 @@ class Search extends React.Component<Props, State> {
                 </div>
                 <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>{spaces}</div>
-                  <Tooltip id="space-tooltip" />
+                  <Tooltip
+                    id="space-tooltip"
+                    render={({ activeAnchor }) => (
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            activeAnchor?.getAttribute(
+                              "data-tooltip-html-content",
+                            ) ?? "",
+                        }}
+                      />
+                    )}
+                  />
                 </TransformComponent>
               </>
             )}
