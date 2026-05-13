@@ -40,8 +40,8 @@ type UpdateSpaceRequest struct {
 }
 
 type SpaceBulkUpdateRequest struct {
-	Creates   []CreateSpaceRequest `json:"creates"`
-	Updates   []UpdateSpaceRequest `json:"updates"`
+	Creates   []CreateSpaceRequest `json:"creates" validate:"dive"`
+	Updates   []UpdateSpaceRequest `json:"updates" validate:"dive"`
 	DeleteIDs []string             `json:"deleteIds"`
 }
 
