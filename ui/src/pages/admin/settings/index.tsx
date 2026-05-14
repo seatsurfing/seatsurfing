@@ -642,6 +642,7 @@ class Settings extends React.Component<Props, State> {
             variant="secondary"
             size="sm"
             hidden={domain.primary}
+            disabled={!domain.active}
             onClick={() => this.setPrimaryDomain(domain.domain)}
           >
             Primary
