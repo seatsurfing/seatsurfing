@@ -2,7 +2,16 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import Navigation from "@/util/Navigation";
 
+export type PreferenceEnterTimeType =
+  (typeof UserPreference.PreferenceEnterTime)[keyof typeof UserPreference.PreferenceEnterTime];
+
 export default class UserPreference extends Entity {
+  static readonly PreferenceEnterTime = {
+    Now: 1,
+    NextDay: 2,
+    NextWorkday: 3,
+  };
+
   static readonly PREF_ENTER_TIME = "enter_time";
   static readonly PREF_WORKDAY_START = "workday_start";
   static readonly PREF_WORKDAY_END = "workday_end";

@@ -143,10 +143,6 @@ interface Props {
 }
 
 class Search extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
-
   data: Space[];
   locations: Location[];
   mapData: any;
@@ -157,6 +153,7 @@ class Search extends React.Component<Props, State> {
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
 
+  // time set *before* allDay option was selected
   resetEnterTime: Date | undefined;
   resetLeaveTime: Date | undefined;
 
@@ -385,48 +382,13 @@ class Search extends React.Component<Props, State> {
   };
 
   initDates = () => {
-    let enter = new Date();
-    if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (this.state.prefEnterTime === Search.PreferenceEnterTimeNextDay) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === Search.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
-
-    let leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enter = DateUtil.setHoursToMin(enter);
-      leave = DateUtil.setHoursToMax(leave);
-    }
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      RuntimeConfig.INFOS.dailyBasisBooking,
+    );
 
     this.setState({
       earliestEnterDate: enter,
@@ -630,27 +592,17 @@ class Search extends React.Component<Props, State> {
     );
   };
 
+  /**
+   *
+   * @param enter new enter time or null if enter time should remain unchanged
+   * @param leave new leave time or null if enter time should remain unchanged
+   */
   updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
-    const dateChangedCb = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
-          this.setState({ loading: false });
-        } else {
-          const promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
-      });
-    };
-
     if (enter === null && leave === null) return;
 
     let newEnter, newLeave;
 
+    // enter and leave change
     if (enter !== null && leave !== null) {
       if (
         DateUtil.equal(enter, this.state.enter) &&
@@ -659,12 +611,16 @@ class Search extends React.Component<Props, State> {
         return;
       newEnter = enter;
       newLeave = leave;
+
+      // only enter change
     } else if (enter !== null) {
       if (DateUtil.equal(enter, this.state.enter)) return;
       newEnter = enter;
       const diff = this.state.leave.getTime() - this.state.enter.getTime();
       newLeave = new Date();
       newLeave.setTime(enter.getTime() + diff);
+
+      // only leave change
     } else if (leave !== null) {
       if (DateUtil.equal(leave, this.state.leave)) return;
       newLeave = leave;
@@ -682,7 +638,22 @@ class Search extends React.Component<Props, State> {
       leave: stateLeave,
     };
 
-    this.setState(state, () => dateChangedCb());
+    const dateChangedCallback = () => {
+      this.updateCanSearch().then(() => {
+        if (!this.state.canSearch) {
+          this.setState({ loading: false });
+        } else {
+          const promises = [
+            this.initCurrentBookingCount(),
+            this.loadSpaces(this.state.locationId),
+          ];
+          Promise.all(promises).then(() => {
+            this.setState({ loading: false });
+          });
+        }
+      });
+    };
+    this.setState(state, () => dateChangedCallback());
   };
 
   changeLocation = (id: string) => {
