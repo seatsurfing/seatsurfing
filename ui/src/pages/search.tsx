@@ -143,10 +143,6 @@ interface Props {
 }
 
 class Search extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
-
   data: Space[];
   locations: Location[];
   mapData: any;
@@ -157,8 +153,11 @@ class Search extends React.Component<Props, State> {
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
 
+  // time set *before* allDay option was selected
   resetEnterTime: Date | undefined;
   resetLeaveTime: Date | undefined;
+
+  updateEnterTimeToPrefWorkdayStart: boolean = false;
 
   constructor(props: any) {
     super(props);
@@ -385,48 +384,17 @@ class Search extends React.Component<Props, State> {
   };
 
   initDates = () => {
-    let enter = new Date();
-    if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (this.state.prefEnterTime === Search.PreferenceEnterTimeNextDay) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === Search.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      RuntimeConfig.INFOS.dailyBasisBooking,
+    );
 
-    let leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enter = DateUtil.setHoursToMin(enter);
-      leave = DateUtil.setHoursToMax(leave);
-    }
+    // init enter time is not preferred enter time (-> we may need to update the enter time later)
+    if (enter.getHours() !== this.state.prefEnterTime)
+      this.updateEnterTimeToPrefWorkdayStart = true;
 
     this.setState({
       earliestEnterDate: enter,
@@ -630,8 +598,69 @@ class Search extends React.Component<Props, State> {
     );
   };
 
+  /**
+   *
+   * @param enter new enter time or null if enter time should remain unchanged
+   * @param leave new leave time or null if enter time should remain unchanged
+   */
   updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
-    const dateChangedCb = () => {
+    if (enter === null && leave === null) return;
+
+    let newEnter, newLeave;
+
+    // enter and leave change
+    if (enter !== null && leave !== null) {
+      if (
+        DateUtil.equal(enter, this.state.enter) &&
+        DateUtil.equal(leave, this.state.leave)
+      )
+        return;
+      newEnter = enter;
+      newLeave = leave;
+
+      // only enter change
+    } else if (enter !== null) {
+      if (DateUtil.equal(enter, this.state.enter)) return;
+      newEnter = enter;
+      const diff = this.state.leave.getTime() - this.state.enter.getTime();
+      newLeave = new Date();
+      newLeave.setTime(enter.getTime() + diff);
+
+      // only leave change
+    } else if (leave !== null) {
+      if (DateUtil.equal(leave, this.state.leave)) return;
+      newLeave = leave;
+    }
+
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
+      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
+    } else if (this.updateEnterTimeToPrefWorkdayStart) {
+      if (
+        newEnter &&
+        DateUtil.isSameTime(newEnter, this.state.enter) &&
+        !DateUtil.isSameDay(newEnter, this.state.enter)
+      ) {
+        // enter date changed and enter time remains unchanged but -> set enter time to preferred time
+        newEnter.setHours(this.state.prefWorkdayStart);
+        this.updateEnterTimeToPrefWorkdayStart = false;
+      } else if (
+        (newEnter && !DateUtil.isSameTime(newEnter, this.state.enter)) ||
+        (newLeave && !DateUtil.isSameTime(newLeave, this.state.leave))
+      ) {
+        // user changed time -> no longer reset time to preferred time
+        this.updateEnterTimeToPrefWorkdayStart = false;
+      }
+    }
+
+    const stateEnter = newEnter ?? this.state.enter;
+    const stateLeave = newLeave ?? this.state.leave;
+    const state = {
+      enter: stateEnter,
+      leave: stateLeave,
+    };
+
+    const dateChangedCallback = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
           this.setState({ loading: false });
@@ -646,43 +675,7 @@ class Search extends React.Component<Props, State> {
         }
       });
     };
-
-    if (enter === null && leave === null) return;
-
-    let newEnter, newLeave;
-
-    if (enter !== null && leave !== null) {
-      if (
-        DateUtil.equal(enter, this.state.enter) &&
-        DateUtil.equal(leave, this.state.leave)
-      )
-        return;
-      newEnter = enter;
-      newLeave = leave;
-    } else if (enter !== null) {
-      if (DateUtil.equal(enter, this.state.enter)) return;
-      newEnter = enter;
-      const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      newLeave = new Date();
-      newLeave.setTime(enter.getTime() + diff);
-    } else if (leave !== null) {
-      if (DateUtil.equal(leave, this.state.leave)) return;
-      newLeave = leave;
-    }
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
-      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
-    }
-
-    const stateEnter = newEnter ?? this.state.enter;
-    const stateLeave = newLeave ?? this.state.leave;
-    const state = {
-      enter: stateEnter,
-      leave: stateLeave,
-    };
-
-    this.setState(state, () => dateChangedCb());
+    this.setState(state, () => dateChangedCallback());
   };
 
   changeLocation = (id: string) => {
