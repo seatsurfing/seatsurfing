@@ -6,6 +6,7 @@ const ALLOWED_SCOPES = [
   "deps",
   "deps-dev",
   "i18n",
+  "main",
 ];
 
 module.exports = {
@@ -15,6 +16,10 @@ module.exports = {
       rules: {
         "conditional-scope": (parsed) => {
           const { type, scope } = parsed;
+
+          // allow release-please PR title
+          if (type === "chore" && scope === "main") return [true, ""];
+
           if (OPTIONAL_SCOPE_TYPES.includes(type)) {
             if (!scope) return [true];
             return [
