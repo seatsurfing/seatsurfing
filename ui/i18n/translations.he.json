@@ -445,5 +445,7 @@
   "hideReports": "Disable user-related reports",
   "reportSettings": "Report settings",
   "hideStats": "Disable utilization statistics",
-  "statsHiddenByAdmin": "Utilization statistics are disabled by your administrator."
+  "statsHiddenByAdmin": "Utilization statistics are disabled by your administrator.",
+  "workingHoursHintOnlyDaily": "Bookings are only possible on a daily basis.",
+  "workingHoursHintExceedsMaxDuration": "The working hours exceeds max. booking duration of {{num}} hours."
 }

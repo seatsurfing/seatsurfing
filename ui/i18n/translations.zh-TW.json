@@ -443,5 +443,7 @@
   "hideReports": "停用使用者相關報告",
   "hideStats": "禁用利用率統計",
   "reportSettings": "報告設定",
-  "statsHiddenByAdmin": "使用率統計資料已被您的管理員停用。"
+  "statsHiddenByAdmin": "使用率統計資料已被您的管理員停用。",
+  "workingHoursHintOnlyDaily": "Bookings are only possible on a daily basis.",
+  "workingHoursHintExceedsMaxDuration": "The working hours exceeds max. booking duration of {{num}} hours."
 }
