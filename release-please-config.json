@@ -1,6 +1,7 @@
 {
   "bootstrap-sha": "76e4976a8aaf926f74a57cecc82c905519b23f4c",
   "release-type": "simple",
+  "include-component-in-tag": false,
   "changelog-sections": [
     { "type": "feat", "scope": "booking-ui", "section": "Booking UI" },
     { "type": "fix", "scope": "booking-ui", "section": "Booking UI" },
