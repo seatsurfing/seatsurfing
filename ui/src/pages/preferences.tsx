@@ -609,6 +609,20 @@ class Preferences extends React.Component<Props, State> {
                     style={{ display: "inline", width: "40%" }}
                   />
                 </div>
+                {!RuntimeConfig.INFOS.dailyBasisBooking &&
+                  this.state.workdayEnd - this.state.workdayStart >
+                    RuntimeConfig.INFOS.maxBookingDurationHours && (
+                    <Form.Text muted>
+                      {this.props.t("workingHoursHintExceedsMaxDuration", {
+                        num: RuntimeConfig.INFOS.maxBookingDurationHours,
+                      })}
+                    </Form.Text>
+                  )}
+                {RuntimeConfig.INFOS.dailyBasisBooking && (
+                  <Form.Text muted>
+                    {this.props.t("workingHoursHintOnlyDaily")}
+                  </Form.Text>
+                )}
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>

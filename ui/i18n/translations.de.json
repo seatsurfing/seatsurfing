@@ -446,5 +446,7 @@
   "hideReports": "Benutzer-bezogene Auswertungen deaktivieren",
   "hideStats": "Auslastungsstatistiken deaktivieren",
   "reportSettings": "Auswertungen",
-  "statsHiddenByAdmin": "Die Auslastungsstatistiken wurden vom Administrator deaktiviert."
+  "statsHiddenByAdmin": "Die Auslastungsstatistiken wurden vom Administrator deaktiviert.",
+  "workingHoursHintOnlyDaily": "Buchungen sind nur tageweise möglich.",
+  "workingHoursHintExceedsMaxDuration": "Die Bürozeiten überschreiten die maximale Buchungsdauer von {{num}} Stunden."
 }
