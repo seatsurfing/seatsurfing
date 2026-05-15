@@ -342,9 +342,14 @@ func (router *OrganizationRouter) setPrimaryDomain(w http.ResponseWriter, r *htt
 		SendForbidden(w)
 		return
 	}
-	if _, err = GetOrganizationRepository().GetDomain(e, vars["domain"]); err != nil {
+	domain, err := GetOrganizationRepository().GetDomain(e, vars["domain"])
+	if err != nil {
 		log.Println(err)
 		SendNotFound(w)
+		return
+	}
+	if !domain.Active {
+		SendBadRequest(w)
 		return
 	}
 	GetOrganizationRepository().SetPrimaryDomain(e, vars["domain"])
