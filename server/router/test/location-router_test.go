@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -150,18 +150,9 @@ func TestLocationsList(t *testing.T) {
 }
 
 func TestLocationsUpload(t *testing.T) {
-	reqPlan, _ := http.NewRequest("GET", "https://upload.wikimedia.org/wikipedia/commons/7/70/Claybury_Asylum%2C_first_floor_plan._Wellcome_L0023316.jpg", nil)
-	reqPlan.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0")
-	reqPlan.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	c := http.DefaultClient
-	resp, err := c.Do(reqPlan)
+	data, err := os.ReadFile("../../res/floorplan.jpg")
 	if err != nil {
 		t.Fatal("Could not load example image")
-	}
-	CheckTestResponseCode(t, http.StatusOK, resp.StatusCode)
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal("Could not read body from example image")
 	}
 
 	ClearTestDB()
@@ -188,8 +179,8 @@ func TestLocationsUpload(t *testing.T) {
 	var resBody *GetLocationResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestString(t, "jpeg", resBody.MapMimeType)
-	CheckTestUint(t, 4895, resBody.MapWidth)
-	CheckTestUint(t, 3504, resBody.MapHeight)
+	CheckTestUint(t, 2047, resBody.MapWidth)
+	CheckTestUint(t, 802, resBody.MapHeight)
 
 	// Retrieve
 	req = NewHTTPRequest("GET", "/location/"+id+"/map", loginResponse.UserID, nil)
