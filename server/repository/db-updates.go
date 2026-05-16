@@ -32,7 +32,6 @@ func RunDBSchemaUpdates() {
 		GetSettingsRepository(),
 		GetRecurringBookingRepository(),
 		GetRefreshTokenRepository(),
-		GetDebugTimeIssuesRepository(),
 		GetSpaceAttributeRepository(),
 		GetSpaceAttributeValueRepository(),
 		GetMailLogRepository(),
@@ -45,6 +44,13 @@ func RunDBSchemaUpdates() {
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)
 	}
+
+	if curVersion < 43 {
+		if _, err := GetDatabase().DB().Exec("DROP TABLE IF EXISTS debug_time_issues"); err != nil {
+			panic(err)
+		}
+	}
+
 	GetSettingsRepository().SetGlobal(SettingDatabaseVersion.Name, strconv.Itoa(targetVersion))
 	SetGlobalInstallID()
 }

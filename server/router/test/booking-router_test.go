@@ -2997,31 +2997,3 @@ func TestBookingsPresenceReportInvalidRange(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
-
-func TestBookingsDebugTimeIssues(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserInOrg(org)
-
-	payload := "{\"time\": \"2030-09-01T08:30:00Z\"}"
-	req := NewHTTPRequest("POST", "/booking/debugtimeissues/", user.ID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody *DebugTimeIssuesResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	if resBody == nil {
-		t.Fatal("Expected debug time issues response body")
-	}
-}
-
-func TestBookingsDebugTimeIssuesBadRequest(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserInOrg(org)
-
-	// Missing required time field → 400
-	payload := "{}"
-	req := NewHTTPRequest("POST", "/booking/debugtimeissues/", user.ID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
-}

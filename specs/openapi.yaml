@@ -301,32 +301,6 @@ components:
           type: string
           format: email
 
-    DebugTimeIssuesRequest:
-      type: object
-      required: [time]
-      properties:
-        time:
-          type: string
-          format: date-time
-
-    DebugTimeIssuesResponse:
-      type: object
-      properties:
-        tz:
-          type: string
-        error:
-          type: string
-        receivedTime:
-          type: string
-        receivedTimeTransformed:
-          type: string
-        dbTime:
-          type: string
-          format: date-time
-        result:
-          type: string
-          format: date-time
-
     # --- Recurring Bookings ---
     CreateRecurringBookingRequest:
       type: object
@@ -2171,29 +2145,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-
-  /booking/debugtimeissues/:
-    post:
-      tags: [Bookings]
-      summary: Debug timezone issues
-      description: Diagnostic endpoint for debugging timezone-related issues. No authentication required (whitelisted route).
-      operationId: debugTimeIssues
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DebugTimeIssuesRequest"
-      responses:
-        "200":
-          description: Debug information
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DebugTimeIssuesResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
 
   # ===========================
   # Recurring Bookings
