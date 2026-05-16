@@ -46,10 +46,10 @@ if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 
 Service account roles:
 
-| Constant                | Value | Allowed methods |
-| ----------------------- | ----- | --------------- |
-| `UserRoleServiceAccountRO` | 21 | GET only        |
-| `UserRoleServiceAccountRW` | 22 | All methods     |
+| Constant                   | Value | Allowed methods |
+| -------------------------- | ----- | --------------- |
+| `UserRoleServiceAccountRO` | 21    | GET only        |
+| `UserRoleServiceAccountRW` | 22    | All methods     |
 
 The existing `isServiceAccountRole(role int) bool` helper in `user-router.go` identifies both.
 
@@ -75,6 +75,7 @@ This migration must be added to `server/repository/db-updates.go` under a new sc
 **`EncryptString`** (AES-256-GCM with a random nonce, used in this codebase for OAuth client secrets) is also ruled out. It has the same nonce-randomness problem as bcrypt: the same plaintext produces a different ciphertext on every call, so it cannot serve as an index key either. More importantly, `EncryptString` is reversible — it exists precisely so fields like client secrets can be recovered in plaintext when they must be forwarded to an external service. An API token is never recovered after initial issuance; the server only needs to answer "does the presented token match the stored value?" Storing a recoverable form of the token is a security regression: if both the database and the `CRYPT_KEY` config value are compromised, all tokens become usable by an attacker.
 
 **SHA-256** is correct here because:
+
 1. API tokens are server-generated 32-byte cryptographically random values (256 bits of entropy). Rainbow tables or brute-force are computationally infeasible regardless of hash algorithm.
 2. SHA-256 is deterministic, so `sha256hex(presentedToken)` can be compared against a single indexed column in O(1).
 3. A compromised database reveals only hashes. Without the original tokens (which only the token holders know), the hashes are useless to an attacker — no `CRYPT_KEY` is involved.
@@ -151,6 +152,7 @@ Generate a new API token for a service account user.
 **Request body**: none.
 
 **Behavior**:
+
 1. Load the target user. If not found or not in the caller's org → 404.
 2. If the target user's role is not `UserRoleServiceAccountRO` or `UserRoleServiceAccountRW` → 400 (only service accounts may have API tokens).
 3. Generate 32 cryptographically random bytes via `crypto/rand`. Encode as a 64-character lowercase hex string → `rawToken`.
@@ -175,6 +177,7 @@ Revoke the API token for a service account user.
 **Authorization**: Same as POST above.
 
 **Behavior**:
+
 1. Load the target user. If not found or not in caller's org → 404.
 2. If the target user is not a service account → 400.
 3. Set `users.api_token = NULL` for the target user.
