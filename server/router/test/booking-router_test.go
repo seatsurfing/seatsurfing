@@ -3025,3 +3025,54 @@ func TestBookingsDebugTimeIssuesBadRequest(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
+
+func TestBookingsApproveLeaveInPastMoreThan24h(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+
+	group := CreateTestGroup(org, adminUser)
+	_, space := CreateTestLocationAndSpace(org)
+	if err := GetSpaceRepository().AddApprovers(space, []string{group.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	booking := CreateTestBooking9To5(adminUser, space, -2)
+
+	// Approve must fail because leave is more than 24h in the past
+	req := NewHTTPRequest("POST", "/booking/"+booking.ID+"/approve", adminUser.ID, bytes.NewBufferString(`{"approved": true}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestBookingsApproveLeaveWithin24hInPast(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(adminUser.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+
+	group := CreateTestGroup(org, adminUser)
+	_, space := CreateTestLocationAndSpace(org)
+	if err := GetSpaceRepository().AddApprovers(space, []string{group.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Leave is 12h in the past — within the 24h window, approval must succeed
+	booking := &Booking{
+		UserID:  loginResponse.UserID,
+		SpaceID: space.ID,
+		Enter:   time.Now().Add(-13 * time.Hour).UTC(),
+		Leave:   time.Now().Add(-12 * time.Hour).UTC(),
+	}
+	if err := GetBookingRepository().Create(booking); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequest("POST", "/booking/"+booking.ID+"/approve", adminUser.ID, bytes.NewBufferString(`{"approved": true}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}

@@ -143,6 +143,12 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendBadRequest(w)
 		return
 	}
+
+	if e.Leave.Before(time.Now().Add(-24 * time.Hour)) {
+		SendBadRequest(w)
+		return
+	}
+
 	if e.Approved {
 		SendUpdated(w)
 		return
