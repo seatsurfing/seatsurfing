@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.91.2](https://github.com/seatsurfing/seatsurfing/compare/v1.91.1...v1.91.2) (2026-05-16)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** improve handling of duration for daily based booking option ([#2124](https://github.com/seatsurfing/seatsurfing/issues/2124)) ([a9f6d2e](https://github.com/seatsurfing/seatsurfing/commit/a9f6d2efdd58dcb4b2546ffee9a06ebbfb32d66a))
+* **admin-ui:** only allow setting verified domains as primary ([#2119](https://github.com/seatsurfing/seatsurfing/issues/2119)) ([6cb785f](https://github.com/seatsurfing/seatsurfing/commit/6cb785fb86ffc4dab51ce8dbe903fdec1318c61a))
+* **booking-ui:** add hints for workday hours ([#2123](https://github.com/seatsurfing/seatsurfing/issues/2123)) ([f47a4e3](https://github.com/seatsurfing/seatsurfing/commit/f47a4e36a803a01b019d97b9c69bd08d809cb11e))
+* **server:** domain verification incorrectly uses port 80 instead of 443 ([#2118](https://github.com/seatsurfing/seatsurfing/issues/2118)) ([0ef82e2](https://github.com/seatsurfing/seatsurfing/commit/0ef82e208799a243668069c98e7e883201579e1c))
+
+
+### 🔧 Refactoring
+
+* extract method getNextPreferredEnterAndLeaveTime() ([#2116](https://github.com/seatsurfing/seatsurfing/issues/2116)) ([34aabe5](https://github.com/seatsurfing/seatsurfing/commit/34aabe5f6b5a3bf404075f56924820d65594289e))
+
 ## [1.91.1](https://github.com/seatsurfing/seatsurfing/compare/v1.91.0...v1.91.1) (2026-05-13)
 
 
