@@ -353,8 +353,16 @@ class Dashboard extends React.Component<Props, State> {
                         overlay={
                           <Tooltip>
                             {this.props.t("targetUtilizationHoursPerWeek")}:{" "}
-                            {RuntimeConfig.INFOS.targetUtilizationHoursPerWeek}{" "}
-                            {this.props.t("hours")}
+                            {RuntimeConfig.INFOS.dailyBasisBooking
+                              ? DateUtil.hoursToDay(
+                                  RuntimeConfig.INFOS
+                                    .targetUtilizationHoursPerWeek,
+                                )
+                              : RuntimeConfig.INFOS
+                                  .targetUtilizationHoursPerWeek}{" "}
+                            {RuntimeConfig.INFOS.dailyBasisBooking
+                              ? this.props.t("days")
+                              : this.props.t("hours")}
                           </Tooltip>
                         }
                       >

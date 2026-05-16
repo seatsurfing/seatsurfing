@@ -262,6 +262,10 @@ export default class DateUtil {
     return this.convertToFakeUTCDate(new Date());
   }
 
+  static hoursToDay(hours: number) {
+    return Math.floor(hours / 24);
+  }
+
   /**
    * calculates the "next free enter time" for a booking based on a leave date which is
    *  - next day if "dailyBasisBooking" is active, or
