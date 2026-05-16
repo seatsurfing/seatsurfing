@@ -2,7 +2,10 @@ package router
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"image/png"
 	"log"
 	"net/http"
@@ -144,6 +147,9 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/{id}/passkeys", router.adminResetPasskeys).Methods("DELETE")
 	s.HandleFunc("/{id}/totp", router.adminResetTotp).Methods("DELETE")
+	s.HandleFunc("/{id}/api-token", router.getApiToken).Methods("GET")
+	s.HandleFunc("/{id}/api-token", router.generateApiToken).Methods("POST")
+	s.HandleFunc("/{id}/api-token", router.revokeApiToken).Methods("DELETE")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -902,4 +908,106 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 		m.AuthProviderID = string(e.AuthProviderID)
 	}
 	return m
+}
+
+type GenerateApiTokenResponse struct {
+	Token string `json:"token"`
+}
+
+type GetApiTokenStatusResponse struct {
+	Configured bool `json:"configured"`
+}
+
+func (router *UserRouter) getApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	res := &GetApiTokenStatusResponse{
+		Configured: e.ApiToken != "",
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	rawBytes := make([]byte, 32)
+	if _, err := rand.Read(rawBytes); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	rawToken := hex.EncodeToString(rawBytes)
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := hex.EncodeToString(hash[:])
+	if err := GetUserRepository().SetApiToken(e.ID, NullString(tokenHash)); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := &GenerateApiTokenResponse{
+		Token: rawToken,
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetUserRepository().SetApiToken(e.ID, NullString("")); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

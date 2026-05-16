@@ -448,5 +448,12 @@
   "reportSettings": "Auswertungen",
   "statsHiddenByAdmin": "Die Auslastungsstatistiken wurden vom Administrator deaktiviert.",
   "workingHoursHintOnlyDaily": "Buchungen sind nur tageweise möglich.",
-  "workingHoursHintExceedsMaxDuration": "Die Bürozeiten überschreiten die maximale Buchungsdauer von {{num}} Stunden."
+  "workingHoursHintExceedsMaxDuration": "Die Bürozeiten überschreiten die maximale Buchungsdauer von {{num}} Stunden.",
+  "apiToken": "API-Token",
+  "apiTokenConfigured": "Konfiguriert",
+  "apiTokenNotConfigured": "Nicht konfiguriert",
+  "generateApiToken": "Token generieren",
+  "revokeApiToken": "Token widerrufen",
+  "apiTokenOnceWarning": "Kopieren Sie den Token jetzt – er wird nicht noch einmal angezeigt.",
+  "confirmRevokeApiToken": "API-Token widerrufen? Der Token wird sofort ungültig."
 }
