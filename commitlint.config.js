@@ -1,4 +1,4 @@
-const OPTIONAL_SCOPE_TYPES = ["ci", "refactor"];
+const OPTIONAL_SCOPE_TYPES = ["ci", "refactor", "test"];
 const ALLOWED_SCOPES = [
   "booking-ui",
   "admin-ui",
