@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.92.0](https://github.com/seatsurfing/seatsurfing/compare/v1.91.2...v1.92.0) (2026-05-16)
+
+
+### ✨ Features
+
+* **server:** support api tokens for service accounts ([#2135](https://github.com/seatsurfing/seatsurfing/issues/2135)) ([3edc3a3](https://github.com/seatsurfing/seatsurfing/commit/3edc3a3032e5c109eae344439f852e9789b030ad))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** do not allow approval for bookings older than 24h ([#2132](https://github.com/seatsurfing/seatsurfing/issues/2132)) ([ac77e57](https://github.com/seatsurfing/seatsurfing/commit/ac77e5752ef490d41d0f0ce79a38acc6b3a4229d))
+* **admin-ui:** target utilization respects dailyBasisBooking option ([#2130](https://github.com/seatsurfing/seatsurfing/issues/2130)) ([52f0435](https://github.com/seatsurfing/seatsurfing/commit/52f0435ef7ef831e0f234b8c15a02b84f4e07a7f))
+* **server:** remove DebugTimeIssues functionality ([#2134](https://github.com/seatsurfing/seatsurfing/issues/2134)) ([72aaffd](https://github.com/seatsurfing/seatsurfing/commit/72aaffd59f84d1a6c01db2a41f9aca2abeb40742))
+
 ## [1.91.2](https://github.com/seatsurfing/seatsurfing/compare/v1.91.1...v1.91.2) (2026-05-16)
 
 
