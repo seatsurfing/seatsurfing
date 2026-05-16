@@ -369,7 +369,7 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "max_booking_duration_hours",
         (
-          Math.round(this.state.maxBookingDuration) *
+          Math.max(Math.round(this.state.maxBookingDuration), 1) *
           (this.state.dailyBasisBooking ? 24 : 1)
         ).toString(),
       ),
@@ -391,7 +391,7 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "target_utilization_hours_per_week",
         (
-          Math.round(this.state.targetUtilizationHoursPerWeek) *
+          Math.max(Math.round(this.state.targetUtilizationHoursPerWeek), 1) *
           (this.state.dailyBasisBooking ? 24 : 1)
         ).toString(),
       ),
@@ -1044,7 +1044,7 @@ class Settings extends React.Component<Props, State> {
                 <Form.Control
                   id="input-maxBookingDuration"
                   type="number"
-                  value={Math.round(this.state.maxBookingDuration)}
+                  value={Math.max(Math.round(this.state.maxBookingDuration), 1)}
                   onChange={(e: any) =>
                     this.setState({ maxBookingDuration: e.target.value })
                   }
@@ -1072,7 +1072,10 @@ class Settings extends React.Component<Props, State> {
                 <Form.Control
                   id="input-targetUtilizationHoursPerWeek"
                   type="number"
-                  value={Math.round(this.state.targetUtilizationHoursPerWeek)}
+                  value={Math.max(
+                    Math.round(this.state.targetUtilizationHoursPerWeek),
+                    1,
+                  )}
                   onChange={(e: any) =>
                     this.setState({
                       targetUtilizationHoursPerWeek: e.target.value,
