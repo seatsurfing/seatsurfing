@@ -747,6 +747,7 @@ func (r *BookingRepository) GetBookingsRequiringApproval(approverUserID string) 
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
 		"INNER JOIN users ON bookings.user_id = users.id "+
 		"WHERE bookings.approved = false AND "+
+		"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "+
 		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		")) "+
@@ -772,6 +773,7 @@ func (r *BookingRepository) GetBookingsCountRequiringApproval(approverUserID str
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(1) "+
 		"FROM bookings "+
 		"WHERE approved = false AND "+
+		"leave_time >= NOW() - INTERVAL '24 hours' AND "+
 		"space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		"))", approverUserID).Scan(&count)
