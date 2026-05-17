@@ -21,14 +21,15 @@ type GetLoadResponse struct {
 }
 
 type GetStatsResponse struct {
-	NumUsers             int `json:"numUsers"`
-	NumBookings          int `json:"numBookings"`
-	NumLocations         int `json:"numLocations"`
-	NumSpaces            int `json:"numSpaces"`
-	NumBookingsCurrent   int `json:"numBookingsCurrent"`
-	NumBookingsToday     int `json:"numBookingsToday"`
-	NumBookingsYesterday int `json:"numBookingsYesterday"`
-	NumBookingsThisWeek  int `json:"numBookingsThisWeek"`
+	NumUsers              int    `json:"numUsers"`
+	NumBookings           int    `json:"numBookings"`
+	NumLocations          int    `json:"numLocations"`
+	NumSpaces             int    `json:"numSpaces"`
+	NumBookingsCurrent    int    `json:"numBookingsCurrent"`
+	NumBookingsToday      int    `json:"numBookingsToday"`
+	NumBookingsYesterday  int    `json:"numBookingsYesterday"`
+	NumBookingsThisWeek   int    `json:"numBookingsThisWeek"`
+	BookingsByWeekday     [7]int `json:"bookingsByWeekday"`
 	GetLoadResponse
 }
 
@@ -135,5 +136,6 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave, nil)
 	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave, nil)
 	m.SpaceLoadLastMonth, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastMonthEnter, lastMonthLeave, nil)
+	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID)
 	SendJSON(w, m)
 }

@@ -455,5 +455,6 @@
   "generateApiToken": "Token generieren",
   "revokeApiToken": "Token widerrufen",
   "apiTokenOnceWarning": "Kopieren Sie den Token jetzt – er wird nicht noch einmal angezeigt.",
-  "confirmRevokeApiToken": "API-Token widerrufen? Der Token wird sofort ungültig."
+  "confirmRevokeApiToken": "API-Token widerrufen? Der Token wird sofort ungültig.",
+  "bookingsByWeekday": "Buchungen pro Wochentag"
 }

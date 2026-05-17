@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { NextRouter } from "next/router";
+import WeekdayChart from "@/components/WeekdayChart";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -199,6 +200,19 @@ class Dashboard extends React.Component<Props, State> {
     );
   };
 
+  renderWeekdayChart = (bookingsByWeekday: number[]) => {
+    const labels = bookingsByWeekday.map((_, index) =>
+      this.props.t(`workday-${index}`),
+    );
+    return (
+      <WeekdayChart
+        data={bookingsByWeekday}
+        labels={labels}
+        title={this.props.t("bookingsByWeekday")}
+      />
+    );
+  };
+
   renderProgressBar = (num: number | undefined, title: string) => {
     if (!num) {
       num = 0;
@@ -341,6 +355,9 @@ class Dashboard extends React.Component<Props, State> {
               ),
             )}
           </Row>
+          {this.renderWeekdayChart(
+            this.state.stats?.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0],
+          )}
           <Row className="mb-4">
             <Col sm="12" xl="8">
               <Card>

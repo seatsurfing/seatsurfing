@@ -462,6 +462,31 @@ func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leav
 	return res, err
 }
 
+func (r *BookingRepository) GetCountByWeekday(organizationID string) ([7]int, error) {
+	var res [7]int
+	rows, err := GetDatabase().DB().Query("SELECT EXTRACT(DOW FROM enter_time)::int AS dow, COUNT(*) "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
+		"INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE locations.organization_id = $1 "+
+		"GROUP BY dow",
+		organizationID)
+	if err != nil {
+		return res, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var dow, count int
+		if err := rows.Scan(&dow, &count); err != nil {
+			return res, err
+		}
+		if dow >= 0 && dow <= 6 {
+			res[dow] = count
+		}
+	}
+	return res, rows.Err()
+}
+
 func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
 	query := "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60), 0) " +
 		"FROM bookings " +
