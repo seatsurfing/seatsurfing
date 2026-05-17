@@ -78,6 +78,9 @@ func GetConfig() *Config {
 func (c *Config) ReadConfig() {
 	log.Println("Reading config …")
 	c.Development = (c.getEnv("DEV", "0") == "1")
+	if c.Development {
+		log.Println("ℹ️  Development mode is enabled, do not use this in production environments!")
+	}
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
 	c.StaticUiPath = strings.TrimSuffix(c.getEnv("STATIC_UI_PATH", "/app/ui"), "/") + "/"
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")
@@ -85,15 +88,15 @@ func (c *Config) ReadConfig() {
 	privateKeyFile := c.getEnv("JWT_PRIVATE_KEY", "")
 	privateKey, err := c.loadPrivateKey(privateKeyFile)
 	if privateKeyFile != "" && err != nil {
-		log.Println("⚠️ Warning: Loading private key failed", err)
+		log.Println("⚠️  Warning: Loading private key failed", err)
 	}
 	publicKeyFile := c.getEnv("JWT_PUBLIC_KEY", "")
 	publicKey, err := c.loadPublicKey(publicKeyFile)
 	if publicKeyFile != "" && err != nil {
-		log.Println("⚠️ Warning: Loading public key failed", err)
+		log.Println("⚠️  Warning: Loading public key failed", err)
 	}
 	if publicKey == nil || privateKey == nil {
-		log.Println("⚠️ Warning: No valid JWT_PRIVATE_KEY or JWT_PUBLIC_KEY set. Generating a temporary random private/public key pair …")
+		log.Println("⚠️  Warning: No valid JWT_PRIVATE_KEY or JWT_PUBLIC_KEY set. Generating a temporary random private/public key pair …")
 		privkey, _ := rsa.GenerateKey(rand.Reader, 2048)
 		c.JwtPrivateKey = privkey
 		c.JwtPublicKey = &privkey.PublicKey
@@ -111,7 +114,7 @@ func (c *Config) ReadConfig() {
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
 	c.SMTPAuthMethod = strings.ToUpper(c.getEnv("SMTP_AUTH_METHOD", "PLAIN"))
 	if c.SMTPAuthMethod != "PLAIN" && c.SMTPAuthMethod != "LOGIN" {
-		log.Println("⚠️ Warning: Invalid SMTP_AUTH_METHOD set. Only 'PLAIN' and 'LOGIN' are allowed. Defaulting to 'PLAIN'.")
+		log.Println("⚠️  Warning: Invalid SMTP_AUTH_METHOD set. Only 'PLAIN' and 'LOGIN' are allowed. Defaulting to 'PLAIN'.")
 		c.SMTPAuthMethod = "PLAIN"
 	}
 	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@localhost")
@@ -121,7 +124,7 @@ func (c *Config) ReadConfig() {
 	}
 	c.MailService = strings.ToLower(c.getEnv("MAIL_SERVICE", "smtp"))
 	if c.MailService != "smtp" && c.MailService != "acs" {
-		log.Println("⚠️ Warning: Invalid MAIL_SERVICE set. Only 'smtp' and 'acs' are allowed. Defaulting to 'smtp'.")
+		log.Println("⚠️  Warning: Invalid MAIL_SERVICE set. Only 'smtp' and 'acs' are allowed. Defaulting to 'smtp'.")
 		c.MailService = "smtp"
 	}
 	c.ACSHost = c.getEnv("ACS_HOST", "")
@@ -132,7 +135,7 @@ func (c *Config) ReadConfig() {
 	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "Sea!surf1ng")
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")
 	if !c.IsValidLanguageCode(c.InitOrgLanguage) {
-		log.Println("⚠️ Warning: Invalid INIT_ORG_LANGUAGE set. Defaulting to 'en'.")
+		log.Println("⚠️  Warning: Invalid INIT_ORG_LANGUAGE set. Defaulting to 'en'.")
 		c.InitOrgLanguage = "en"
 	}
 	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "localhost")
@@ -151,7 +154,7 @@ func (c *Config) ReadConfig() {
 	c.PublicPort = c.getEnvInt("PUBLIC_PORT", 443)
 	c.CacheType = c.getEnv("CACHE_TYPE", "default")
 	if c.CacheType != "valkey" && c.CacheType != "default" {
-		log.Println("⚠️ Warning: Invalid CACHE_TYPE set. Only 'valkey' and 'default' are allowed. Defaulting to 'default'.")
+		log.Println("⚠️  Warning: Invalid CACHE_TYPE set. Only 'valkey' and 'default' are allowed. Defaulting to 'default'.")
 		c.CacheType = "default"
 	}
 	c.ValkeyHosts = strings.Split(c.getEnv("VALKEY_HOSTS", "127.0.0.1:6379"), ",")
@@ -175,31 +178,31 @@ func (c *Config) ReadConfig() {
 	c.RateLimitPeriod = c.getEnv("RATE_LIMIT_PERIOD", "1-M")
 	rxRateLimitPeriod := regexp.MustCompile(`^[0-9]+\-[SMHD]$`)
 	if !rxRateLimitPeriod.MatchString(c.RateLimitPeriod) {
-		log.Println("⚠️ Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
+		log.Println("⚠️  Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
 		c.RateLimitPeriod = "1-M"
 	}
 	c.MaxSessionsPerUser = c.getEnvInt("MAX_SESSIONS_PER_USER", 10)
 	if c.MaxSessionsPerUser < 1 {
-		log.Println("⚠️ Warning: MAX_SESSIONS_PER_USER must be at least 1. Defaulting to 10.")
+		log.Println("⚠️  Warning: MAX_SESSIONS_PER_USER must be at least 1. Defaulting to 10.")
 		c.MaxSessionsPerUser = 10
 	}
 	c.WebAuthnRPDisplayName = c.getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Seatsurfing")
 	c.MaxPasskeysPerUser = c.getEnvInt("MAX_PASSKEYS_PER_USER", 10)
 	if c.MaxPasskeysPerUser < 1 {
-		log.Println("⚠️ Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
+		log.Println("⚠️  Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
 		c.MaxPasskeysPerUser = 10
 	}
 	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
-		log.Println("⚠️ Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
+		log.Println("⚠️  Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
 	}
 	if c.getEnv("BOOKING_UI_BACKEND", "") != "" {
-		log.Println("⚠️ Warning: BOOKING_UI_BACKEND is deprecated. The Booking UI now uses the same backend as the Admin UI. Please remove this environment variable.")
+		log.Println("⚠️  Warning: BOOKING_UI_BACKEND is deprecated. The Booking UI now uses the same backend as the Admin UI. Please remove this environment variable.")
 	}
 	if c.getEnv("DISABLE_UI_PROXY", "") != "" {
-		log.Println("⚠️ Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
+		log.Println("⚠️  Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
 	}
 }
 
