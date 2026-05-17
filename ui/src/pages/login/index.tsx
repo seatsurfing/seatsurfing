@@ -419,13 +419,13 @@ class Login extends React.Component<Props, State> {
 
     const copyrightFooter = (
       <div className="copyright-footer">
-        &copy; Seatsurfing &#183;{" "}
+        &copy;&nbsp;
         <a
           href="https://seatsurfing.io"
           target="_blank"
           rel="noopener noreferrer"
         >
-          https://seatsurfing.io
+          Seatsurfing
         </a>
         <LanguageSelector />
       </div>
