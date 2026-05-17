@@ -13,6 +13,7 @@ export default class Stats {
   spaceLoadThisWeek: number;
   spaceLoadLastWeek: number;
   spaceLoadLastMonth: number;
+  bookingsByWeekday: number[];
 
   constructor() {
     this.numUsers = 0;
@@ -27,6 +28,7 @@ export default class Stats {
     this.spaceLoadThisWeek = 0;
     this.spaceLoadLastWeek = 0;
     this.spaceLoadLastMonth = 0;
+    this.bookingsByWeekday = [0, 0, 0, 0, 0, 0, 0];
   }
 
   deserialize(input: any): void {
@@ -42,6 +44,7 @@ export default class Stats {
     this.spaceLoadThisWeek = input.spaceLoadThisWeek;
     this.spaceLoadLastWeek = input.spaceLoadLastWeek;
     this.spaceLoadLastMonth = input.spaceLoadLastMonth;
+    this.bookingsByWeekday = input.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0];
   }
 
   static async get(): Promise<Stats> {

@@ -6,6 +6,7 @@
     "@types/react-dom": "19.2.3",
     "async-mutex": "0.5.0",
     "bootstrap": "5.3.8",
+    "chart.js": "4.5.1",
     "excellentexport": "3.9.11",
     "moment-timezone": "0.6.2",
     "next": "16.2.6",
