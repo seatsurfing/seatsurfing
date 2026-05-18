@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.93.0](https://github.com/seatsurfing/seatsurfing/compare/v1.92.0...v1.93.0) (2026-05-17)
+
+
+### ✨ Features
+
+* **admin-ui:** add "booking per day" chart ([#2145](https://github.com/seatsurfing/seatsurfing/issues/2145)) ([22fdfdf](https://github.com/seatsurfing/seatsurfing/commit/22fdfdff2506c3d71ca9b516a5a974bcb4e0dde9))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** footer on login page overlaps with language selector ([#2140](https://github.com/seatsurfing/seatsurfing/issues/2140)) ([15f6eb7](https://github.com/seatsurfing/seatsurfing/commit/15f6eb70078e03673c7b638087ce346613bdd7a8))
+* **server:** add info if development mode is active ([#2142](https://github.com/seatsurfing/seatsurfing/issues/2142)) ([064ecf4](https://github.com/seatsurfing/seatsurfing/commit/064ecf4009e276ea1b8031f2d1078532f40aed13))
+
 ## [1.92.0](https://github.com/seatsurfing/seatsurfing/compare/v1.91.2...v1.92.0) (2026-05-16)
 
 
