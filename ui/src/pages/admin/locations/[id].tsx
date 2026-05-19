@@ -435,10 +435,23 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
+  newSpaceName(): string {
+    const base = this.props.t("unnamed");
+    const existingNames = new Set(this.state.spaces.map((s) => s.name));
+    if (!existingNames.has(base)) {
+      return base;
+    }
+    let i = 1;
+    while (existingNames.has(`${base} ${i}`)) {
+      i++;
+    }
+    return `${base} ${i}`;
+  }
+
   newSpaceState = (e?: Space): SpaceState => {
     const res: SpaceState = {
       id: e ? e.id : "",
-      name: e ? e.name : this.props.t("unnamed"),
+      name: e ? e.name : this.newSpaceName(),
       x: e ? e.x : 10,
       y: e ? e.y : 10,
       width: e ? e.width + "px" : "100px",
@@ -653,7 +666,7 @@ class EditLocation extends React.Component<Props, State> {
           }}
           onBlur={(e) => {
             if (!e.target.value.trim()) {
-              this.setSpaceName(i, this.props.t("unnamed"));
+              this.setSpaceName(i, this.newSpaceName());
             }
           }}
         />
