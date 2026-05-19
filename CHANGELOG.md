@@ -1,5 +1,56 @@
 # Changelog
 
+## [1.93.1](https://github.com/seatsurfing/seatsurfing/compare/v1.93.0...v1.93.1) (2026-05-19)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `c83f022` to `f2df870` ([#2149](https://github.com/seatsurfing/seatsurfing/issues/2149)) ([65b8a45](https://github.com/seatsurfing/seatsurfing/commit/65b8a45875d05336faf5c53f6d74c2ce10a0c0b1))
+* **deps:** bump the minor-and-patch group in /server with 2 updates ([#2150](https://github.com/seatsurfing/seatsurfing/issues/2150)) ([54195f6](https://github.com/seatsurfing/seatsurfing/commit/54195f638714c2717fd7ab58cd1153d61c3c9ec9))
+* **server:** add static time transparency property information to CalDav events ([#2147](https://github.com/seatsurfing/seatsurfing/issues/2147)) ([87f088f](https://github.com/seatsurfing/seatsurfing/commit/87f088fb0b95a2c5a5d15f6bae80170d0ae4f198))
+
+## [1.93.0](https://github.com/seatsurfing/seatsurfing/compare/v1.92.0...v1.93.0) (2026-05-17)
+
+
+### ✨ Features
+
+* **admin-ui:** add "booking per day" chart ([#2145](https://github.com/seatsurfing/seatsurfing/issues/2145)) ([22fdfdf](https://github.com/seatsurfing/seatsurfing/commit/22fdfdff2506c3d71ca9b516a5a974bcb4e0dde9))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** footer on login page overlaps with language selector ([#2140](https://github.com/seatsurfing/seatsurfing/issues/2140)) ([15f6eb7](https://github.com/seatsurfing/seatsurfing/commit/15f6eb70078e03673c7b638087ce346613bdd7a8))
+* **server:** add info if development mode is active ([#2142](https://github.com/seatsurfing/seatsurfing/issues/2142)) ([064ecf4](https://github.com/seatsurfing/seatsurfing/commit/064ecf4009e276ea1b8031f2d1078532f40aed13))
+
+## [1.92.0](https://github.com/seatsurfing/seatsurfing/compare/v1.91.2...v1.92.0) (2026-05-16)
+
+
+### ✨ Features
+
+* **server:** support api tokens for service accounts ([#2135](https://github.com/seatsurfing/seatsurfing/issues/2135)) ([3edc3a3](https://github.com/seatsurfing/seatsurfing/commit/3edc3a3032e5c109eae344439f852e9789b030ad))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** do not allow approval for bookings older than 24h ([#2132](https://github.com/seatsurfing/seatsurfing/issues/2132)) ([ac77e57](https://github.com/seatsurfing/seatsurfing/commit/ac77e5752ef490d41d0f0ce79a38acc6b3a4229d))
+* **admin-ui:** target utilization respects dailyBasisBooking option ([#2130](https://github.com/seatsurfing/seatsurfing/issues/2130)) ([52f0435](https://github.com/seatsurfing/seatsurfing/commit/52f0435ef7ef831e0f234b8c15a02b84f4e07a7f))
+* **server:** remove DebugTimeIssues functionality ([#2134](https://github.com/seatsurfing/seatsurfing/issues/2134)) ([72aaffd](https://github.com/seatsurfing/seatsurfing/commit/72aaffd59f84d1a6c01db2a41f9aca2abeb40742))
+
+## [1.91.2](https://github.com/seatsurfing/seatsurfing/compare/v1.91.1...v1.91.2) (2026-05-16)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** improve handling of duration for daily based booking option ([#2124](https://github.com/seatsurfing/seatsurfing/issues/2124)) ([a9f6d2e](https://github.com/seatsurfing/seatsurfing/commit/a9f6d2efdd58dcb4b2546ffee9a06ebbfb32d66a))
+* **admin-ui:** only allow setting verified domains as primary ([#2119](https://github.com/seatsurfing/seatsurfing/issues/2119)) ([6cb785f](https://github.com/seatsurfing/seatsurfing/commit/6cb785fb86ffc4dab51ce8dbe903fdec1318c61a))
+* **booking-ui:** add hints for workday hours ([#2123](https://github.com/seatsurfing/seatsurfing/issues/2123)) ([f47a4e3](https://github.com/seatsurfing/seatsurfing/commit/f47a4e36a803a01b019d97b9c69bd08d809cb11e))
+* **server:** domain verification incorrectly uses port 80 instead of 443 ([#2118](https://github.com/seatsurfing/seatsurfing/issues/2118)) ([0ef82e2](https://github.com/seatsurfing/seatsurfing/commit/0ef82e208799a243668069c98e7e883201579e1c))
+
+
+### 🔧 Refactoring
+
+* extract method getNextPreferredEnterAndLeaveTime() ([#2116](https://github.com/seatsurfing/seatsurfing/issues/2116)) ([34aabe5](https://github.com/seatsurfing/seatsurfing/commit/34aabe5f6b5a3bf404075f56924820d65594289e))
+
 ## [1.91.1](https://github.com/seatsurfing/seatsurfing/compare/v1.91.0...v1.91.1) (2026-05-13)
 
 

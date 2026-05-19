@@ -130,6 +130,7 @@ func (c *CalDAVClient) GetCaldavEvent(events []*CalDAVEvent) *ical.Calendar {
 		event.Props.SetText(ical.PropLocation, e.Location)
 		event.Props.Del(ical.PropDuration)
 		event.Props.SetText(ical.PropUID, e.ID)
+		event.Props.SetText(ical.PropTransparency, "TRANSPARENT")
 		cal.Children = append(cal.Children, event.Component)
 	}
 

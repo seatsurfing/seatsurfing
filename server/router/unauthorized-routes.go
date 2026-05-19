@@ -14,7 +14,6 @@ var unauthorizedRoutes = []string{
 	"/admin/",
 	"/ui/",
 	"/confluence",
-	"/booking/debugtimeissues/",
 	"/robots.txt",
 	"/healthcheck/",
 	"/kiosk/",

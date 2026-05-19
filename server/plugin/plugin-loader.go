@@ -37,17 +37,17 @@ func AddPlugin(plg *api.SeatsurfingPlugin) {
 func loadPlugin(f os.DirEntry) {
 	plg, err := plugin.Open(filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name()))
 	if err != nil {
-		log.Println("⚠️ Warning: Failed to load plugin", f.Name(), err)
+		log.Println("⚠️  Warning: Failed to load plugin", f.Name(), err)
 		return
 	}
 	v, err := plg.Lookup("Plugin")
 	if err != nil {
-		log.Println("⚠️ Warning: Failed to lookup Plugin in", f.Name(), err)
+		log.Println("⚠️  Warning: Failed to lookup Plugin in", f.Name(), err)
 		return
 	}
 	castV, ok := v.(api.SeatsurfingPlugin)
 	if !ok {
-		log.Println("⚠️ Warning: Failed to cast Plugin in", f.Name(), err)
+		log.Println("⚠️  Warning: Failed to cast Plugin in", f.Name(), err)
 		return
 	}
 	log.Println("Loaded plugin", f.Name())

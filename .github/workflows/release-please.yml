@@ -16,7 +16,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@v3.1.1
         id: app-token
         with:
           app-id: ${{ secrets.SEATY_BOT_APP_ID }}
@@ -24,8 +24,8 @@ jobs:
       - uses: googleapis/release-please-action@v5.0.0
         id: release
         with:
-          release-type: simple
           token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
   call-release-workflow:
     if: ${{ needs.release-please.outputs.release_created && startsWith(github.event.head_commit.message, 'chore(main)')  }}
     needs: release-please

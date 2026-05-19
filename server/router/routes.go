@@ -2,6 +2,8 @@ package router
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -294,35 +296,63 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 
 	var handleServiceAccountAuth = func(w http.ResponseWriter, r *http.Request) bool {
 		username, password, ok := r.BasicAuth()
-		if !ok {
+		if ok {
+			if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+				return false
+			}
+			organizationId := username[:36]
+			email := username[37:]
+			user, err := GetUserRepository().GetByEmail(organizationId, email)
+			if err != nil || user == nil {
+				return false
+			}
+			if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
+				return false
+			}
+			if user.HashedPassword == "" {
+				return false
+			}
+			if user.Disabled {
+				return false
+			}
+			if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
+				return false
+			}
+			if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
+				return false
+			}
+			ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+			// Note: service accounts do not have sessions, so we do not set session ID in context
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return true
+		}
+
+		// Try Bearer token auth for service accounts
+		authHeader := r.Header.Get("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
 			return false
 		}
-		if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+		bearerValue := strings.TrimPrefix(authHeader, "Bearer ")
+		// JWTs start with "eyJ" — handled by handleTokenAuth, not here
+		if strings.HasPrefix(bearerValue, "eyJ") {
 			return false
 		}
-		organizationId := username[:36]
-		email := username[37:]
-		user, err := GetUserRepository().GetByEmail(organizationId, email)
+		hash := sha256.Sum256([]byte(bearerValue))
+		tokenHash := hex.EncodeToString(hash[:])
+		user, err := GetUserRepository().GetByApiToken(tokenHash)
 		if err != nil || user == nil {
 			return false
 		}
 		if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
 			return false
 		}
-		if user.HashedPassword == "" {
-			return false
-		}
 		if user.Disabled {
-			return false
-		}
-		if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
 			return false
 		}
 		if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
-		// Note: service accounts do not have sessions, so we do not set session ID in context
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}

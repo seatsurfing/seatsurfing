@@ -37,17 +37,36 @@ func IsValidTXTRecord(domain, uuid string) bool {
 }
 
 func IsDomainAccessible(domain, orgID string) (bool, error) {
-	if err := isDomainAccessible("https", domain, 443, orgID); err == nil {
+	cfg := GetConfig()
+	var lastErr error
+
+	// Try with the configured public scheme and port first
+	if lastErr = isDomainAccessible(cfg.PublicScheme, domain, cfg.PublicPort, orgID); lastErr == nil {
 		return true, nil
 	}
-	httpPort := 80
-	if GetConfig().Development {
-		httpPort, _ = strconv.Atoi(GetConfig().PublicListenAddr[strings.Index(GetConfig().PublicListenAddr, ":")+1:])
+
+	// Fall back to https/443 if not already tried above
+	if !(cfg.PublicScheme == "https" && cfg.PublicPort == 443) {
+		if lastErr = isDomainAccessible("https", domain, 443, orgID); lastErr == nil {
+			return true, nil
+		}
 	}
-	if err := isDomainAccessible("http", domain, httpPort, orgID); err != nil {
-		return false, err
+
+	// Fall back to http only when the configured public scheme is not https,
+	// to avoid redirect loops caused by ingress controllers redirecting http→https.
+	if cfg.PublicScheme != "https" {
+		httpPort := 80
+		if cfg.Development {
+			httpPort, _ = strconv.Atoi(cfg.PublicListenAddr[strings.Index(cfg.PublicListenAddr, ":")+1:])
+		}
+		if !(cfg.PublicScheme == "http" && cfg.PublicPort == httpPort) {
+			if lastErr = isDomainAccessible("http", domain, httpPort, orgID); lastErr == nil {
+				return true, nil
+			}
+		}
 	}
-	return true, nil
+
+	return false, lastErr
 }
 
 func isDomainAccessible(scheme, domain string, port int, orgID string) error {

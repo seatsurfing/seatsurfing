@@ -32,6 +32,12 @@ tmux split-window -v -f -t "$SESSION:0"
 
 CONSOLE_CMD="\
 cd '$SCRIPT_DIR' \
+&& add-missing-translations() { \
+  tmux send-keys -t '$SESSION:0.0' C-c '' Enter \
+  && sleep 1 \
+  && tmux send-keys -t '$SESSION:0.0' \"cd '$SCRIPT_DIR/ui' && ./add-missing-translations.sh && npm run dev\" Enter; \
+} \
+&& export -f add-missing-translations \
 && restartServer() { \
   tmux send-keys -t '$SESSION:0.2' C-c '' Enter \
   && sleep 1 \

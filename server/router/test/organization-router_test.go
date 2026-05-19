@@ -664,7 +664,17 @@ func TestOrganizationsPrimaryDomain(t *testing.T) {
 	CheckTestBool(t, false, resBody[1].Primary)
 	CheckTestBool(t, false, resBody[2].Primary)
 
-	// Set domain 2 as primary
+	// Set domain 2 as primary - should fail because it's not active
+	req = NewHTTPRequest("POST", "/organization/"+org.ID+"/domain/test2.com/primary", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Mark domain 2 as active
+	if err := GetOrganizationRepository().ActivateDomain(org, "test2.com"); err != nil {
+		t.Fatalf("Failed to get domain: %v", err)
+	}
+
+	// Set domain 2 as primary - should succeed
 	req = NewHTTPRequest("POST", "/organization/"+org.ID+"/domain/test2.com/primary", loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)

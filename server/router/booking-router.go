@@ -75,19 +75,6 @@ type GetPresenceReportResult struct {
 	Presences [][]int            `json:"presences"`
 }
 
-type DebugTimeIssuesRequest struct {
-	Time time.Time `json:"time" validate:"required"`
-}
-
-type DebugTimeIssuesResponse struct {
-	Timezone                string    `json:"tz"`
-	Error                   string    `json:"error"`
-	ReceivedTime            string    `json:"receivedTime"`
-	ReceivedTimeTransformed string    `json:"receivedTimeTransformed"`
-	Database                time.Time `json:"dbTime"`
-	Result                  time.Time `json:"result"`
-}
-
 type GetPendingApprovalsCountResponse struct {
 	Count int `json:"count"`
 }
@@ -106,7 +93,6 @@ type CaldavConfig struct {
 func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/pendingapprovals/count", router.getPendingApprovalsCount).Methods("GET")
 	s.HandleFunc("/pendingapprovals/", router.getPendingApprovals).Methods("GET")
-	s.HandleFunc("/debugtimeissues/", router.debugTimeIssues).Methods("POST")
 	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("GET")
 	s.HandleFunc("/filter/", router.getFiltered).Methods("GET")
 	s.HandleFunc("/current/", router.getCurrent).Methods("GET")
@@ -143,6 +129,12 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendBadRequest(w)
 		return
 	}
+
+	if e.Leave.Before(time.Now().Add(-24 * time.Hour)) {
+		SendBadRequest(w)
+		return
+	}
+
 	if e.Approved {
 		SendUpdated(w)
 		return
@@ -202,57 +194,6 @@ func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.
 		m := router.copyToRestModel(e)
 		res = append(res, m)
 	}
-	SendJSON(w, res)
-}
-
-func (router *BookingRouter) debugTimeIssues(w http.ResponseWriter, r *http.Request) {
-	var m DebugTimeIssuesRequest
-	if UnmarshalValidateBody(r, &m) != nil {
-		SendBadRequest(w)
-		return
-	}
-	tz := "America/Los_Angeles"
-	res := &DebugTimeIssuesResponse{
-		Timezone:     tz,
-		ReceivedTime: m.Time.String(),
-		Error:        "No error",
-	}
-	_, err := time.LoadLocation(tz)
-	if err != nil {
-		res.Error = "Could not load timezone: " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	timeNew, err := AttachTimezoneInformationTz(m.Time, tz)
-	if err != nil {
-		res.Error = "Could not attach timezone information (incoming): " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	res.ReceivedTimeTransformed = timeNew.String()
-	e := &DebugTimeIssueItem{
-		Created: timeNew,
-	}
-	if err := GetDebugTimeIssuesRepository().Create(e); err != nil {
-		res.Error = "Could not create database record: " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	defer GetDebugTimeIssuesRepository().Delete(e)
-	e2, err := GetDebugTimeIssuesRepository().GetOne(e.ID)
-	if err != nil {
-		res.Error = "Could not load database record: " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	res.Database = e2.Created
-	timeToSend, err := AttachTimezoneInformationTz(e2.Created, tz)
-	if err != nil {
-		res.Error = "Could not attach timezone information (outgoing): " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	res.Result = timeToSend
 	SendJSON(w, res)
 }
 

@@ -54,8 +54,8 @@ interface State {
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
   maxHoursPartiallyBookedEnabled: boolean;
-  maxBookingDurationHours: number;
-  minBookingDurationHours: number;
+  maxBookingDuration: number;
+  minBookingDuration: number;
   targetUtilizationHoursPerWeek: number;
   dailyBasisBooking: boolean;
   noAdminRestrictions: boolean;
@@ -104,8 +104,8 @@ class Settings extends React.Component<Props, State> {
       customLogoUrl: "",
       maxBookingsPerUser: 0,
       maxConcurrentBookingsPerUser: 0,
-      maxBookingDurationHours: 0,
-      minBookingDurationHours: 0,
+      maxBookingDuration: 0,
+      minBookingDuration: 0,
       targetUtilizationHoursPerWeek: 0,
       maxDaysInAdvance: 0,
       bookingRetentionEnabled: false,
@@ -208,7 +208,7 @@ class Settings extends React.Component<Props, State> {
 
   loadSettings = async (): Promise<void> => {
     return OrgSettings.list().then((settings) => {
-      let state: any = {};
+      const state: any = {};
       settings.forEach((s) => {
         if (s.name === "allow_any_user") state.allowAnyUser = s.value === "1";
         if (s.name === "default_timezone") state.defaultTimezone = s.value;
@@ -229,16 +229,16 @@ class Settings extends React.Component<Props, State> {
           state.enableMaxHoursBeforeDelete = window.parseInt(s.value);
         if (s.name === "max_hours_before_delete")
           state.maxHoursBeforeDelete = window.parseInt(s.value);
+        if (s.name === "daily_basis_booking")
+          state.dailyBasisBooking = s.value === "1";
         if (s.name === "max_booking_duration_hours")
-          state.maxBookingDurationHours = window.parseInt(s.value);
+          state.maxBookingDuration = window.parseInt(s.value);
         if (s.name === "min_booking_duration_hours")
-          state.minBookingDurationHours = window.parseInt(s.value);
+          state.minBookingDuration = window.parseInt(s.value);
         if (s.name === "target_utilization_hours_per_week")
           state.targetUtilizationHoursPerWeek = window.parseInt(s.value);
         if (s.name === "subject_default")
           state.subjectDefault = window.parseInt(s.value);
-        if (s.name === "daily_basis_booking")
-          state.dailyBasisBooking = s.value === "1";
         if (s.name === "no_admin_restrictions")
           state.noAdminRestrictions = s.value === "1";
         if (s.name === "show_names") state.showNames = s.value === "1";
@@ -269,10 +269,16 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "hide_reports") state.hideReports = s.value === "1";
         if (s.name === "hide_stats") state.hideStats = s.value === "1";
       });
-      if (state.dailyBasisBooking && state.maxBookingDurationHours % 24 !== 0) {
-        state.maxBookingDurationHours +=
-          24 - (state.maxBookingDurationHours % 24);
-      }
+
+      const convert = (value: number): number => {
+        return state.dailyBasisBooking ? value / 24 : value;
+      };
+      state.minBookingDuration = convert(state.minBookingDuration);
+      state.maxBookingDuration = convert(state.maxBookingDuration);
+      state.targetUtilizationHoursPerWeek = convert(
+        state.targetUtilizationHoursPerWeek,
+      );
+
       this.setState({
         ...this.state,
         ...state,
@@ -310,7 +316,7 @@ class Settings extends React.Component<Props, State> {
       saved: false,
       error: false,
     });
-    let payload = [
+    const payload = [
       new OrgSettings("allow_any_user", this.state.allowAnyUser ? "1" : "0"),
       new OrgSettings("default_timezone", this.state.defaultTimezone),
       new OrgSettings(
@@ -362,7 +368,10 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings(
         "max_booking_duration_hours",
-        this.state.maxBookingDurationHours.toString(),
+        (
+          Math.max(Math.round(this.state.maxBookingDuration), 1) *
+          (this.state.dailyBasisBooking ? 24 : 1)
+        ).toString(),
       ),
       new OrgSettings(
         "max_hours_partially_booked_enabled",
@@ -374,11 +383,17 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings(
         "min_booking_duration_hours",
-        this.state.minBookingDurationHours.toString(),
+        (
+          Math.round(this.state.minBookingDuration) *
+          (this.state.dailyBasisBooking ? 24 : 1)
+        ).toString(),
       ),
       new OrgSettings(
         "target_utilization_hours_per_week",
-        this.state.targetUtilizationHoursPerWeek.toString(),
+        (
+          Math.max(Math.round(this.state.targetUtilizationHoursPerWeek), 1) *
+          (this.state.dailyBasisBooking ? 24 : 1)
+        ).toString(),
       ),
       new OrgSettings(
         "allow_recurring_bookings",
@@ -554,14 +569,15 @@ class Settings extends React.Component<Props, State> {
   };
 
   onDailyBasisBookingChange = (enabled: boolean) => {
-    let maxBookingDurationHours: number = Number(
-      this.state.maxBookingDurationHours,
-    );
-    if (enabled && maxBookingDurationHours % 24 !== 0) {
-      maxBookingDurationHours += 24 - (maxBookingDurationHours % 24);
-    }
+    const convert = (value: number): number => {
+      return enabled ? value / 24 : value * 24;
+    };
     this.setState({
-      maxBookingDurationHours: maxBookingDurationHours,
+      minBookingDuration: convert(this.state.minBookingDuration),
+      maxBookingDuration: convert(this.state.maxBookingDuration),
+      targetUtilizationHoursPerWeek: convert(
+        this.state.targetUtilizationHoursPerWeek,
+      ),
       dailyBasisBooking: enabled,
     });
   };
@@ -642,6 +658,7 @@ class Settings extends React.Component<Props, State> {
             variant="secondary"
             size="sm"
             hidden={domain.primary}
+            disabled={!domain.active}
             onClick={() => this.setPrimaryDomain(domain.domain)}
           >
             Primary
@@ -995,42 +1012,50 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxBookingDurationHours">
-              {this.props.t("maxBookingDurationHours")}
+            <Form.Label column sm="2" htmlFor="input-minBookingDuration">
+              {this.props.t("minBookingDuration")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
-                  id="input-maxBookingDurationHours"
+                  id="input-minBookingDuration"
                   type="number"
-                  value={this.state.maxBookingDurationHours}
+                  value={Math.round(this.state.minBookingDuration)}
                   onChange={(e: any) =>
-                    this.setState({ maxBookingDurationHours: e.target.value })
+                    this.setState({ minBookingDuration: e.target.value })
                   }
                   min="0"
                   max="9999"
                 />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                <InputGroup.Text>
+                  {this.state.dailyBasisBooking
+                    ? this.props.t("days")
+                    : this.props.t("hours")}
+                </InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-minBookingDurationHours">
-              {this.props.t("minBookingDurationHours")}
+            <Form.Label column sm="2" htmlFor="input-maxBookingDuration">
+              {this.props.t("maxBookingDuration")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
-                  id="input-minBookingDurationHours"
+                  id="input-maxBookingDuration"
                   type="number"
-                  value={this.state.minBookingDurationHours}
+                  value={Math.max(Math.round(this.state.maxBookingDuration), 1)}
                   onChange={(e: any) =>
-                    this.setState({ minBookingDurationHours: e.target.value })
+                    this.setState({ maxBookingDuration: e.target.value })
                   }
                   min="0"
                   max="9999"
                 />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                <InputGroup.Text>
+                  {this.state.dailyBasisBooking
+                    ? this.props.t("days")
+                    : this.props.t("hours")}
+                </InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>
@@ -1047,7 +1072,10 @@ class Settings extends React.Component<Props, State> {
                 <Form.Control
                   id="input-targetUtilizationHoursPerWeek"
                   type="number"
-                  value={this.state.targetUtilizationHoursPerWeek}
+                  value={Math.max(
+                    Math.round(this.state.targetUtilizationHoursPerWeek),
+                    1,
+                  )}
                   onChange={(e: any) =>
                     this.setState({
                       targetUtilizationHoursPerWeek: e.target.value,
@@ -1056,7 +1084,11 @@ class Settings extends React.Component<Props, State> {
                   min="0"
                   max="168"
                 />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                <InputGroup.Text>
+                  {this.state.dailyBasisBooking
+                    ? this.props.t("days")
+                    : this.props.t("hours")}
+                </InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>

@@ -1,5 +1,13 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert, InputGroup } from "react-bootstrap";
+import {
+  Form,
+  Col,
+  Row,
+  Button,
+  Alert,
+  InputGroup,
+  Modal,
+} from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
@@ -45,6 +53,9 @@ interface State {
   role: number;
   totpEnabled: boolean;
   hasPasskeys: boolean;
+  apiTokenConfigured: boolean;
+  showApiTokenModal: boolean;
+  generatedToken: string;
 }
 
 interface Props {
@@ -82,6 +93,9 @@ class EditUser extends React.Component<Props, State> {
       role: User.UserRoleUser,
       totpEnabled: false,
       hasPasskeys: false,
+      apiTokenConfigured: false,
+      showApiTokenModal: false,
+      generatedToken: "",
     };
   }
 
@@ -113,7 +127,7 @@ class EditUser extends React.Component<Props, State> {
     if (id && typeof id === "string" && id !== "add") {
       promises.push(User.get(id));
     }
-    Promise.all(promises).then((values) => {
+    Promise.all(promises).then(async (values) => {
       this.usersMax = values[0] === "1" ? 1000000 : 10;
       this.usersCur = values[1];
       this.adminUserRole = values[2][0].role;
@@ -130,6 +144,12 @@ class EditUser extends React.Component<Props, State> {
         } else if (user.requirePassword) {
           authMethod = "password";
         }
+        const isServiceAccount =
+          user.role === User.UserRoleServiceAccountRO ||
+          user.role === User.UserRoleServiceAccountRW;
+        const apiTokenConfigured = isServiceAccount
+          ? await User.getApiTokenStatus(user.id).catch(() => false)
+          : false;
         this.setState({
           email: user.email,
           originalEmail: user.email,
@@ -141,6 +161,7 @@ class EditUser extends React.Component<Props, State> {
           role: user.role,
           totpEnabled: user.totpEnabled,
           hasPasskeys: user.hasPasskeys,
+          apiTokenConfigured,
         });
       }
       this.setState({
@@ -244,6 +265,24 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ role: role, changePassword });
     if (changePassword) {
       this.generatePassword();
+    }
+  };
+
+  generateApiToken = () => {
+    User.generateApiToken(this.entity.id).then((token) => {
+      this.setState({
+        apiTokenConfigured: true,
+        showApiTokenModal: true,
+        generatedToken: token,
+      });
+    });
+  };
+
+  revokeApiToken = () => {
+    if (window.confirm(this.props.t("confirmRevokeApiToken"))) {
+      User.revokeApiToken(this.entity.id).then(() => {
+        this.setState({ apiTokenConfigured: false });
+      });
     }
   };
 
@@ -701,7 +740,79 @@ class EditUser extends React.Component<Props, State> {
               )}
             </Col>
           </Form.Group>
+
+          {/* API Token section — only shown for existing service accounts */}
+          {this.entity.id && this.isServiceAccount(this.state.role) && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("apiToken")}
+              </Form.Label>
+              <Col sm="4" className="d-flex gap-2 align-items-center">
+                <span
+                  className={
+                    this.state.apiTokenConfigured
+                      ? "text-success"
+                      : "text-secondary"
+                  }
+                >
+                  {this.state.apiTokenConfigured
+                    ? this.props.t("apiTokenConfigured")
+                    : this.props.t("apiTokenNotConfigured")}
+                </span>
+                <Button
+                  className="btn-sm"
+                  variant="outline-secondary"
+                  onClick={this.generateApiToken}
+                >
+                  {this.props.t("generateApiToken")}
+                </Button>
+                {this.state.apiTokenConfigured && (
+                  <Button
+                    className="btn-sm"
+                    variant="outline-danger"
+                    onClick={this.revokeApiToken}
+                  >
+                    {this.props.t("revokeApiToken")}
+                  </Button>
+                )}
+              </Col>
+            </Form.Group>
+          )}
         </Form>
+
+        <Modal
+          show={this.state.showApiTokenModal}
+          onHide={() =>
+            this.setState({ showApiTokenModal: false, generatedToken: "" })
+          }
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>{this.props.t("apiToken")}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Alert variant="warning">
+              {this.props.t("apiTokenOnceWarning")}
+            </Alert>
+            <InputGroup>
+              <Form.Control
+                type="text"
+                readOnly
+                value={this.state.generatedToken}
+              />
+              <CopyToClipboardButton text={this.state.generatedToken} />
+            </InputGroup>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                this.setState({ showApiTokenModal: false, generatedToken: "" })
+              }
+            >
+              {this.props.t("close")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </FullLayout>
     );
   }

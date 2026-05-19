@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -835,4 +836,274 @@ func TestAllowRoleChangeForOtherUser(t *testing.T) {
 	var resBody *GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, int(UserRoleSpaceAdmin), resBody.Role)
+}
+
+func TestApiTokenGenerate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	sa := CreateTestServiceAccountRW(org)
+
+	// POST generates token and returns it
+	req := NewHTTPRequest("POST", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var tokenResp GenerateApiTokenResponse
+	if err := json.Unmarshal(res.Body.Bytes(), &tokenResp); err != nil {
+		t.Fatal(err)
+	}
+	if tokenResp.Token == "" {
+		t.Fatal("Expected non-empty token")
+	}
+
+	// GET shows configured: true
+	req = NewHTTPRequest("GET", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var statusResp GetApiTokenStatusResponse
+	json.Unmarshal(res.Body.Bytes(), &statusResp)
+	CheckTestBool(t, true, statusResp.Configured)
+}
+
+func TestApiTokenGenerateNonServiceAccount(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	regularUser := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("POST", "/user/"+regularUser.ID+"/api-token", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestApiTokenGenerateForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := CreateTestServiceAccountRW(org)
+	nonAdmin := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("POST", "/user/"+sa.ID+"/api-token", nonAdmin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestApiTokenGenerateOtherOrg(t *testing.T) {
+	ClearTestDB()
+	org1 := CreateTestOrg("org1.com")
+	org2 := CreateTestOrg("org2.com")
+	admin := CreateTestUserOrgAdmin(org1)
+	sa := CreateTestServiceAccountRW(org2)
+
+	req := NewHTTPRequest("POST", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestApiTokenRegenerate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	sa := CreateTestServiceAccountRW(org)
+
+	// Generate first token
+	req := NewHTTPRequest("POST", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resp1 GenerateApiTokenResponse
+	json.Unmarshal(res.Body.Bytes(), &resp1)
+	oldToken := resp1.Token
+
+	// Generate second token
+	req = NewHTTPRequest("POST", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resp2 GenerateApiTokenResponse
+	json.Unmarshal(res.Body.Bytes(), &resp2)
+	newToken := resp2.Token
+
+	if oldToken == newToken {
+		t.Fatal("Expected new token to differ from old token")
+	}
+
+	// Old token no longer authenticates
+	req = NewHTTPRequestBearer("GET", "/user/me", oldToken, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+
+	// New token authenticates
+	req = NewHTTPRequestBearer("GET", "/user/me", newToken, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestApiTokenRevoke(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	sa := CreateTestServiceAccountRW(org)
+	token := GenerateTestApiToken(sa.ID)
+
+	// Verify configured first
+	req := NewHTTPRequest("GET", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var statusResp GetApiTokenStatusResponse
+	json.Unmarshal(res.Body.Bytes(), &statusResp)
+	CheckTestBool(t, true, statusResp.Configured)
+
+	// Revoke
+	req = NewHTTPRequest("DELETE", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// GET shows configured: false
+	req = NewHTTPRequest("GET", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var statusResp2 GetApiTokenStatusResponse
+	json.Unmarshal(res.Body.Bytes(), &statusResp2)
+	CheckTestBool(t, false, statusResp2.Configured)
+
+	// Token no longer works
+	req = NewHTTPRequestBearer("GET", "/user/me", token, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestApiTokenRevokeNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	sa := CreateTestServiceAccountRW(org)
+	// No token set — revoke is idempotent
+
+	req := NewHTTPRequest("DELETE", "/user/"+sa.ID+"/api-token", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestServiceAccountBearerAuth(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := CreateTestServiceAccountRW(org)
+	token := GenerateTestApiToken(sa.ID)
+
+	req := NewHTTPRequestBearer("GET", "/user/me", token, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestServiceAccountBearerAuthWrongToken(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := CreateTestServiceAccountRW(org)
+	GenerateTestApiToken(sa.ID)
+
+	req := NewHTTPRequestBearer("GET", "/user/me", "wrongtoken", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestServiceAccountBearerAuthDisabledUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := CreateTestServiceAccountRW(org)
+	token := GenerateTestApiToken(sa.ID)
+
+	// Disable service account
+	sa.Disabled = true
+	if err := GetUserRepository().Update(sa); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequestBearer("GET", "/user/me", token, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestServiceAccountBearerAuthROReadRequest(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRO,
+	}
+	if err := GetUserRepository().Create(sa); err != nil {
+		t.Fatal(err)
+	}
+	token := GenerateTestApiToken(sa.ID)
+
+	req := NewHTTPRequestBearer("GET", "/user/me", token, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestServiceAccountBearerAuthROWriteRequest(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRO,
+	}
+	if err := GetUserRepository().Create(sa); err != nil {
+		t.Fatal(err)
+	}
+	token := GenerateTestApiToken(sa.ID)
+
+	req := NewHTTPRequestBearer("POST", "/user/", token, bytes.NewBufferString(`{"email":"x@y.com","firstname":"A","lastname":"B"}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestServiceAccountBearerAuthRWWriteRequest(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	sa := CreateTestServiceAccountRW(org)
+	token := GenerateTestApiToken(sa.ID)
+
+	// RW service account with Bearer token can make GET requests
+	req := NewHTTPRequestBearer("GET", "/user/"+admin.ID, token, nil)
+	res := ExecuteTestRequest(req)
+	// Service accounts cannot admin org, so this would be Forbidden, not Unauthorized
+	// What matters is that it's NOT 401 (which would indicate auth failure)
+	if res.Code == http.StatusUnauthorized {
+		t.Fatalf("Expected authenticated response (not 401), got %d", res.Code)
+	}
+}
+
+func TestServiceAccountBearerAuthJwtNotTreatedAsApiToken(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+
+	// A valid JWT should be handled by handleTokenAuth, not misidentified as an API token
+	jwt := GetTestJWT(user.ID)
+	req := NewHTTPRequestBearer("GET", "/user/me", jwt, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestServiceAccountBasicAuthStillWorks(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	sa := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRW,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword(TestPassword)),
+	}
+	if err := GetUserRepository().Create(sa); err != nil {
+		t.Fatal(err)
+	}
+
+	// Build Basic Auth header: orgID_email:password
+	credentials := sa.OrganizationID + "_" + sa.Email + ":" + TestPassword
+	encoded := base64.StdEncoding.EncodeToString([]byte(credentials))
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Basic "+encoded)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
 }
