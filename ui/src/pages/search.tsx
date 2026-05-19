@@ -988,7 +988,7 @@ class Search extends React.Component<Props, State> {
         const code: number = AjaxError.getAppErrorCode(e);
         this.setState({
           loading: false,
-          showError: true,
+          showError: code != 0,
           errorText: ErrorText.getTextForAppCode(code, this.props.t),
         });
       });

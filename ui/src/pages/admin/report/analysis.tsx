@@ -72,7 +72,7 @@ class ReportAnalysis extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const end = new Date(this.state.end);
     end.setHours(23, 59, 59);
     let params =
@@ -84,15 +84,14 @@ class ReportAnalysis extends React.Component<Props, State> {
       "&end=" +
       encodeURIComponent(DateUtil.convertToFakeUTCDate(end).toISOString());
     params += "&locationId=" + encodeURIComponent(this.state.locationId);
-    Ajax.get("/booking/report/presence/?" + params)
-      .then((res) => {
-        this.data = res.json;
-        this.setState({ loading: false });
-      })
-      .catch((e: any) => {
-        const errorCode: number = AjaxError.getAppErrorCode(e);
-        this.setState({ loading: false, errorCode, error: true });
-      });
+    try {
+      const res = await Ajax.get("/booking/report/presence/?" + params);
+      this.data = res.json;
+      this.setState({ loading: false });
+    } catch (e: any) {
+      const errorCode: number = AjaxError.getAppErrorCode(e);
+      this.setState({ loading: false, errorCode, error: errorCode != 0 });
+    }
   };
 
   getRows = () => {
