@@ -21,6 +21,7 @@ import SaveButton from "@/components/SaveButton";
 import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
+import { PreferencesTab } from "@/util/Navigation";
 
 interface State {
   loading: boolean;
@@ -114,7 +115,7 @@ class Preferences extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    const tabParam = this.props.router.query.tab;
+    const tabParam = this.props.router.query.tab as PreferencesTab;
     if (tabParam === "security") {
       this.setState({ activeTab: "tab-security" });
     }
