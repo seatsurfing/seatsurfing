@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.93.1](https://github.com/seatsurfing/seatsurfing/compare/v1.93.0...v1.93.1) (2026-05-19)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `c83f022` to `f2df870` ([#2149](https://github.com/seatsurfing/seatsurfing/issues/2149)) ([65b8a45](https://github.com/seatsurfing/seatsurfing/commit/65b8a45875d05336faf5c53f6d74c2ce10a0c0b1))
+* **deps:** bump the minor-and-patch group in /server with 2 updates ([#2150](https://github.com/seatsurfing/seatsurfing/issues/2150)) ([54195f6](https://github.com/seatsurfing/seatsurfing/commit/54195f638714c2717fd7ab58cd1153d61c3c9ec9))
+* **server:** add static time transparency property information to CalDav events ([#2147](https://github.com/seatsurfing/seatsurfing/issues/2147)) ([87f088f](https://github.com/seatsurfing/seatsurfing/commit/87f088fb0b95a2c5a5d15f6bae80170d0ae4f198))
+
 ## [1.93.0](https://github.com/seatsurfing/seatsurfing/compare/v1.92.0...v1.93.0) (2026-05-17)
 
 
