@@ -1816,6 +1816,7 @@ class Search extends React.Component<Props, State> {
                   <div style={floorPlanStyle}>{spaces}</div>
                   <Tooltip
                     id="space-tooltip"
+                    float={true}
                     render={({ activeAnchor }) => (
                       <span
                         dangerouslySetInnerHTML={{
