@@ -435,23 +435,22 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
-  newSpaceName(): string {
-    const base = this.props.t("unnamed");
+  newSpaceName(baseName:string ): string {
     const existingNames = new Set(this.state.spaces.map((s) => s.name));
-    if (!existingNames.has(base)) {
-      return base;
+    if (!existingNames.has(baseName)) {
+      return baseName;
     }
-    let i = 1;
-    while (existingNames.has(`${base} ${i}`)) {
+    let i = 2;
+    while (existingNames.has(`${baseName} (#${i})`)) {
       i++;
     }
-    return `${base} ${i}`;
+    return `${baseName} (#${i})`;
   }
 
   newSpaceState = (e?: Space): SpaceState => {
     const res: SpaceState = {
       id: e ? e.id : "",
-      name: e ? e.name : this.newSpaceName(),
+      name: e ? e.name : this.newSpaceName(this.props.t("unnamed")),
       x: e ? e.x : 10,
       y: e ? e.y : 10,
       width: e ? e.width + "px" : "100px",
@@ -589,6 +588,7 @@ class EditLocation extends React.Component<Props, State> {
       const spaces = this.state.spaces;
       const space = { ...spaces[this.state.selectedSpace] };
       const newSpace: SpaceState = Object.assign({}, space);
+      newSpace.name = this.newSpaceName(newSpace.name)
       newSpace.id = "";
       newSpace.x += 20;
       newSpace.y += 20;
@@ -666,7 +666,7 @@ class EditLocation extends React.Component<Props, State> {
           }}
           onBlur={(e) => {
             if (!e.target.value.trim()) {
-              this.setSpaceName(i, this.newSpaceName());
+              this.setSpaceName(i, this.newSpaceName(this.props.t("unnamed")));
             }
           }}
         />
