@@ -435,7 +435,7 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
-  newSpaceName(baseName:string ): string {
+  newSpaceName(baseName: string): string {
     const existingNames = new Set(this.state.spaces.map((s) => s.name));
     if (!existingNames.has(baseName)) {
       return baseName;
@@ -588,7 +588,7 @@ class EditLocation extends React.Component<Props, State> {
       const spaces = this.state.spaces;
       const space = { ...spaces[this.state.selectedSpace] };
       const newSpace: SpaceState = Object.assign({}, space);
-      newSpace.name = this.newSpaceName(newSpace.name)
+      newSpace.name = this.newSpaceName(newSpace.name);
       newSpace.id = "";
       newSpace.x += 20;
       newSpace.y += 20;
