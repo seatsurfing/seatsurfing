@@ -780,7 +780,7 @@ class Search extends React.Component<Props, State> {
       top: item.y,
       width: item.width,
       height: item.height,
-      transform: "rotate: " + item.rotation + "deg",
+      transform: `rotate(${item.rotation}deg)`,
       cursor:
         (item.enabled && item.allowed && item.available) ||
         (bookings && bookings.length > 0)
