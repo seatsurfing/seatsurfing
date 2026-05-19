@@ -23,7 +23,10 @@ class SessionExpiredModal extends React.Component<Props> {
         <Modal.Footer>
           <Button
             variant="primary"
-            onClick={() => { this.props.onHide(); RedirectUtil.toLogin(Router); }}
+            onClick={() => {
+              this.props.onHide();
+              RedirectUtil.toLogin(Router);
+            }}
           >
             {this.props.t("sessionExpiredLogin")}
           </Button>
