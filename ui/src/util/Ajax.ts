@@ -65,24 +65,27 @@ export default class Ajax {
         return Ajax.getAjaxResult({}, response);
       }
     } else {
-      if (response.status === 401) {
-        Ajax.onUnauthorized?.();
-      } else if (response.status == 500) {
-        Ajax.onServerError?.();
+      let appCode = 0;
+      try {
+        appCode = parseInt(
+          response.headers.get(this.HEADER_X_ERROR_CODE) ?? "0",
+        );
+      } catch {}
+
+      // global error handlers if appCode is not defined
+      if (appCode === 0) {
+        if (response.status === 401) {
+          Ajax.onUnauthorized?.();
+        } else if (response.status == 500) {
+          Ajax.onServerError?.();
+        }
       }
-      const appCode = response.headers.get(this.HEADER_X_ERROR_CODE);
+
       try {
         const body = await response.text();
-        throw new AjaxError(
-          response.status,
-          appCode ? parseInt(appCode) : 0,
-          undefined,
-          body,
-        );
-      } catch (err) {
-        if (err instanceof AjaxError) throw err;
-        throw new AjaxError(response.status, appCode ? parseInt(appCode) : 0);
-      }
+        throw new AjaxError(response.status, appCode, body);
+      } catch {}
+      throw new AjaxError(response.status, appCode);
     }
   }
 

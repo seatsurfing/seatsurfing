@@ -913,7 +913,7 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  onConfirmBooking = (e: any) => {
+  onConfirmBooking = async (e: any) => {
     if (e) {
       e.preventDefault();
     }
@@ -947,26 +947,24 @@ class Search extends React.Component<Props, State> {
       }
       booking.space = this.state.selectedSpace;
     }
-    booking
-      .save()
-      .then(() => {
-        this.setState({
-          createdBookingId: booking.id,
-          confirmingBooking: false,
-          showConfirm: false,
-          showSuccess: true,
-          subject: "",
-        });
-      })
-      .catch((e: any) => {
-        const code = AjaxError.getAppErrorCode(e);
-        this.setState({
-          confirmingBooking: false,
-          showConfirm: false,
-          showError: true,
-          errorText: ErrorText.getTextForAppCode(code, this.props.t),
-        });
+    try {
+      await booking.save();
+      this.setState({
+        createdBookingId: booking.id,
+        confirmingBooking: false,
+        showConfirm: false,
+        showSuccess: true,
+        subject: "",
       });
+    } catch (e: any) {
+      const code = AjaxError.getAppErrorCode(e);
+      this.setState({
+        confirmingBooking: false,
+        showConfirm: false,
+        showError: code != 0,
+        errorText: ErrorText.getTextForAppCode(code, this.props.t),
+      });
+    }
   };
 
   onAddBuddy = (buddyUser: User) => {
