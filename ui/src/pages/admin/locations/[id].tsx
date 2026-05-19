@@ -169,7 +169,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
         }}
         onRotateEnd={({ lastEvent }) => {
           if (lastEvent) {
-            onRotateEnd(index, Math.round(lastEvent.rotation));
+            onRotateEnd(index, ((Math.round(lastEvent.rotation) % 360) + 360) % 360);
           }
         }}
       />}
