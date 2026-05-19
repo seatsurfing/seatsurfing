@@ -62,6 +62,13 @@ interface Props {
   t: TranslationFunc;
 }
 
+const TAB_MAP: Record<PreferencesTab, string> = {
+  booking: "tab-bookings",
+  style: "tab-style",
+  security: "tab-security",
+  integration: "tab-integrations",
+};
+
 const COLOR_BOOKED: string = "#ff453a";
 const COLOR_NOT_BOOKED: string = "#30d158";
 const COLOR_SELF_BOOKED: string = "#b825de";
@@ -116,8 +123,8 @@ class Preferences extends React.Component<Props, State> {
       return;
     }
     const tabParam = this.props.router.query.tab as PreferencesTab;
-    if (tabParam === "security") {
-      this.setState({ activeTab: "tab-security" });
+    if (tabParam && TAB_MAP[tabParam]) {
+      this.setState({ activeTab: TAB_MAP[tabParam] });
     }
     const promises = [
       this.loadPreferences(),
@@ -508,8 +515,15 @@ class Preferences extends React.Component<Props, State> {
               variant="underline"
               activeKey={this.state.activeTab}
               onSelect={(key) => {
-                if (key)
+                if (key) {
                   this.setState({ activeTab: key, error: false, saved: false });
+                  const tabParam = Object.entries(TAB_MAP).find(([, v]) => v === key)?.[0] as PreferencesTab;
+                  this.props.router.replace(
+                    { query: { ...this.props.router.query, tab: tabParam } },
+                    undefined,
+                    { shallow: true },
+                  );
+                }
               }}
             >
               <Nav.Item>
