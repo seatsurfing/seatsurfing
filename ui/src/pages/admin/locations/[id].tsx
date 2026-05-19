@@ -131,7 +131,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
         />
       </div>
-      <Moveable
+      {isSelected && <Moveable
         target={targetRef}
         draggable={true}
         resizable={true}
@@ -172,7 +172,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
             onRotateEnd(index, Math.round(lastEvent.rotation));
           }
         }}
-      />
+      />}
     </>
   );
 };
