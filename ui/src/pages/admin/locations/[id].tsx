@@ -556,7 +556,7 @@ class EditLocation extends React.Component<Props, State> {
       orgHeight: e ? e.height : 100,
       orgX: e ? e.x : 10,
       orgY: e ? e.y : 10,
-      rotation: 0,
+      rotation: e ? e.rotation : 0,
       requireSubject: e
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
