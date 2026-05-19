@@ -169,7 +169,7 @@ class EditAuthProvider extends React.Component<Props, State> {
         code = e.appErrorCode;
       }
       this.setState({
-        error: true,
+        error: code != 0,
         errorText: code ? ErrorText.getTextForAppCode(code, this.props.t) : "",
       });
     }
