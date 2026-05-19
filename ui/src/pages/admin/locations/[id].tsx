@@ -1555,7 +1555,7 @@ class EditLocation extends React.Component<Props, State> {
             </div>
           </div>
           <div className="mapScrollContainer">
-            <div style={floorPlanStyle}>{spaces}</div>
+            <div style={floorPlanStyle} onClick={(e) => { if (e.target === e.currentTarget) this.setState({ selectedSpace: null }); }}>{spaces}</div>
           </div>
         </>
       );
