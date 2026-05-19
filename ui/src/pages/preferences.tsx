@@ -517,7 +517,9 @@ class Preferences extends React.Component<Props, State> {
               onSelect={(key) => {
                 if (key) {
                   this.setState({ activeTab: key, error: false, saved: false });
-                  const tabParam = Object.entries(TAB_MAP).find(([, v]) => v === key)?.[0] as PreferencesTab;
+                  const tabParam = Object.entries(TAB_MAP).find(
+                    ([, v]) => v === key,
+                  )?.[0] as PreferencesTab;
                   this.props.router.replace(
                     { query: { ...this.props.router.query, tab: tabParam } },
                     undefined,
