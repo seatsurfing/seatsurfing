@@ -124,36 +124,43 @@ export default function KioskPage() {
 
   const fetchData = useCallback(async () => {
     if (!spaceId) return;
+    if (!/^[A-Za-z0-9_-]+$/.test(spaceId)) {
+      setError(t("kioskNotFound"));
+      return;
+    }
     const secret = getSecret();
     if (!secret) {
       setError(t("kioskSecretMissing"));
       return;
     }
-    const backendUrl = Ajax.URL ? Ajax.URL : "";
-    const url = `${backendUrl}/kiosk/${spaceId}/status`;
+    const backendUrl = Ajax.URL ?? "";
+    const url = `${backendUrl}/kiosk/${decodeURIComponent(spaceId)}/status`;
+
+    let res;
     try {
-      const res = await fetch(url, {
+      res = await fetch(url, {
         headers: { Authorization: "Bearer " + secret },
       });
-      if (res.status === 401) {
-        setError(t("kioskAuthError"));
-        return;
-      }
-      if (res.status === 404) {
-        setError(t("kioskNotFound"));
-        return;
-      }
-      if (!res.ok) {
-        setError(t("kioskFetchError"));
-        return;
-      }
-      const json: KioskData = await res.json();
-      setData(json);
-      setLastRefresh(new Date());
-      setError(null);
     } catch {
       setError(t("kioskFetchError"));
+      return;
     }
+    if (res.status === 401) {
+      setError(t("kioskAuthError"));
+      return;
+    }
+    if (res.status === 404) {
+      setError(t("kioskNotFound"));
+      return;
+    }
+    if (!res.ok) {
+      setError(t("kioskFetchError"));
+      return;
+    }
+    const json: KioskData = await res.json();
+    setData(json);
+    setLastRefresh(new Date());
+    setError(null);
   }, [spaceId, getSecret, t]);
 
   // Initial load and periodic refresh
