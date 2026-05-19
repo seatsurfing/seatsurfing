@@ -157,7 +157,8 @@ class Search extends React.Component<Props, State> {
   resetEnterTime: Date | undefined;
   resetLeaveTime: Date | undefined;
 
-  updateEnterTimeToPrefWorkdayStart: boolean = false;
+  // whether to auto update the enter time (stopped after first manual time change)
+  autoUpdateEnterTimeToPrefWorkdayStart: boolean = true;
 
   constructor(props: any) {
     super(props);
@@ -391,10 +392,6 @@ class Search extends React.Component<Props, State> {
       this.state.prefWorkdays,
       RuntimeConfig.INFOS.dailyBasisBooking,
     );
-
-    // init enter time is not preferred enter time (-> we may need to update the enter time later)
-    if (enter.getHours() !== this.state.prefEnterTime)
-      this.updateEnterTimeToPrefWorkdayStart = true;
 
     this.setState({
       earliestEnterDate: enter,
@@ -635,21 +632,26 @@ class Search extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
       if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
-    } else if (this.updateEnterTimeToPrefWorkdayStart) {
+    } else if (this.autoUpdateEnterTimeToPrefWorkdayStart) {
       if (
         newEnter &&
         DateUtil.isSameTime(newEnter, this.state.enter) &&
         !DateUtil.isSameDay(newEnter, this.state.enter)
       ) {
-        // enter date changed and enter time remains unchanged but -> set enter time to preferred time
-        newEnter.setHours(this.state.prefWorkdayStart);
-        this.updateEnterTimeToPrefWorkdayStart = false;
+        // enter date changed and enter time remains unchanged but -> set enter time to preferred time or next possible time
+        if (DateUtil.isAfterToday(newEnter)) {
+          newEnter.setHours(this.state.prefWorkdayStart);
+        } else {
+          newEnter.setHours(
+            Math.max(this.state.prefWorkdayStart, new Date().getHours() + 1),
+          );
+        }
       } else if (
         (newEnter && !DateUtil.isSameTime(newEnter, this.state.enter)) ||
         (newLeave && !DateUtil.isSameTime(newLeave, this.state.leave))
       ) {
-        // user changed time -> no longer reset time to preferred time
-        this.updateEnterTimeToPrefWorkdayStart = false;
+        // user changed time -> no longer auto update time to preferred time
+        this.autoUpdateEnterTimeToPrefWorkdayStart = false;
       }
     }
 

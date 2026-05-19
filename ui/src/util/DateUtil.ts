@@ -99,6 +99,10 @@ export default class DateUtil {
     return this.convertToUTC(date) > new Date();
   }
 
+  static isAfterToday(date: Date): boolean {
+    return this.isInFuture(date) && !this.isToday(date);
+  }
+
   static isInPast(date: Date): boolean {
     return this.convertToUTC(date) < new Date();
   }
