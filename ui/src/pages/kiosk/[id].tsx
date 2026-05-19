@@ -124,7 +124,7 @@ export default function KioskPage() {
 
   const fetchData = useCallback(async () => {
     if (!spaceId) return;
-    if (!/^[A-Za-z0-9_-]+$/.test(spaceId)) {
+    if (!/^[a-z0-9-]+$/.test(spaceId)) {
       setError(t("kioskNotFound"));
       return;
     }
