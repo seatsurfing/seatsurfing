@@ -15,6 +15,8 @@ interface AjaxResult {
 export default class Ajax {
   static URL: string = "";
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
+  static onUnauthorized: (() => void) | null = null;
+  static onServerError: (() => void) | null = null;
 
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
@@ -34,8 +36,7 @@ export default class Ajax {
     url: string,
     data?: any,
   ): Promise<AjaxResult> {
-    url = Ajax.getBackendUrl() + url;
-
+    // refresh access token (if required)
     const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
     if (refreshToken) {
       try {
@@ -53,6 +54,7 @@ export default class Ajax {
       data,
     );
 
+    url = Ajax.getBackendUrl() + url;
     const response = await fetch(url, options);
 
     if (response.status >= 200 && response.status <= 299) {
@@ -63,6 +65,11 @@ export default class Ajax {
         return Ajax.getAjaxResult({}, response);
       }
     } else {
+      if (response.status === 401) {
+        Ajax.onUnauthorized?.();
+      } else if (response.status == 500) {
+        Ajax.onServerError?.();
+      }
       const appCode = response.headers.get(this.HEADER_X_ERROR_CODE);
       try {
         const body = await response.text();
@@ -143,7 +150,7 @@ export default class Ajax {
     return !!credentials.accessToken;
   }
 
-  static getAjaxResult(json: any, response: Response): AjaxResult {
+  private static getAjaxResult(json: any, response: Response): AjaxResult {
     const objectId =
       response.headers.get(this.HEADER_X_OBJECT_ID) != null
         ? String(response.headers.get(this.HEADER_X_OBJECT_ID))

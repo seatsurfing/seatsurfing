@@ -22,6 +22,8 @@ import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
 import TotpSetupModal from "@/components/TotpSetupModal";
 import MfaEncouragementModal from "@/components/MfaEncouragementModal";
+import SessionExpiredModal from "@/components/SessionExpiredModal";
+import ServerErrorModal from "@/components/ServerErrorModal";
 import User from "@/types/User";
 import Router from "next/router";
 
@@ -29,6 +31,8 @@ interface State {
   isLoading: boolean;
   showTotpEnforcement: boolean;
   showMfaEncouragement: boolean;
+  showSessionExpired: boolean;
+  showServerError: boolean;
   totpQrCode: string;
   totpStateId: string;
   enforceTOTP: boolean;
@@ -48,6 +52,8 @@ class App extends React.Component<Props, State> {
       isLoading: true,
       showTotpEnforcement: false,
       showMfaEncouragement: false,
+      showSessionExpired: false,
+      showServerError: false,
       totpQrCode: "",
       totpStateId: "",
       enforceTOTP: false,
@@ -64,6 +70,9 @@ class App extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    Ajax.onUnauthorized = () => this.setState({ showSessionExpired: true });
+    Ajax.onServerError = () => this.setState({ showServerError: true });
+
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
         this.setState(
@@ -85,6 +94,8 @@ class App extends React.Component<Props, State> {
   }
 
   componentWillUnmount() {
+    Ajax.onUnauthorized = null;
+    Ajax.onServerError = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
   }
 
@@ -305,6 +316,14 @@ class App extends React.Component<Props, State> {
             onSetup={this.onMfaEncouragementSetup}
           />
         )}
+        <SessionExpiredModal
+          show={this.state.showSessionExpired}
+          onHide={() => this.setState({ showSessionExpired: false })}
+        />
+        <ServerErrorModal
+          show={this.state.showServerError}
+          onHide={() => this.setState({ showServerError: false })}
+        />
         <Component {...pageProps} />
       </>
     );
