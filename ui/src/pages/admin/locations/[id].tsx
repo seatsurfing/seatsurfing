@@ -75,7 +75,13 @@ interface SpaceRectProps {
   onSelect: (i: number) => void;
   onDoubleClick: (i: number) => void;
   onDragEnd: (i: number, x: number, y: number) => void;
-  onResizeEnd: (i: number, x: number, y: number, width: string, height: string) => void;
+  onResizeEnd: (
+    i: number,
+    x: number,
+    y: number,
+    width: string,
+    height: string,
+  ) => void;
   onRotateEnd: (i: number, rotation: number) => void;
   onNameChange: (i: number, name: string) => void;
   unnamedLabel: string;
@@ -131,48 +137,57 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
         />
       </div>
-      {isSelected && <Moveable
-        target={targetRef}
-        draggable={true}
-        resizable={true}
-        rotatable={true}
-        origin={false}
-        onDrag={({ target, left, top }) => {
-          target.style.left = `${left}px`;
-          target.style.top = `${top}px`;
-        }}
-        onDragEnd={({ lastEvent }) => {
-          if (lastEvent) {
-            onDragEnd(index, Math.round(lastEvent.left), Math.round(lastEvent.top));
-          }
-          onSelect(index);
-        }}
-        onResize={({ target, width, height, drag }) => {
-          target.style.width = `${width}px`;
-          target.style.height = `${height}px`;
-          target.style.left = `${drag.left}px`;
-          target.style.top = `${drag.top}px`;
-        }}
-        onResizeEnd={({ lastEvent }) => {
-          if (lastEvent) {
-            onResizeEnd(
-              index,
-              Math.round(lastEvent.drag.left),
-              Math.round(lastEvent.drag.top),
-              `${Math.round(lastEvent.width)}px`,
-              `${Math.round(lastEvent.height)}px`,
-            );
-          }
-        }}
-        onRotate={({ target, transform }) => {
-          target.style.transform = transform;
-        }}
-        onRotateEnd={({ lastEvent }) => {
-          if (lastEvent) {
-            onRotateEnd(index, ((Math.round(lastEvent.rotation) % 360) + 360) % 360);
-          }
-        }}
-      />}
+      {isSelected && (
+        <Moveable
+          target={targetRef}
+          draggable={true}
+          resizable={true}
+          rotatable={true}
+          origin={false}
+          onDrag={({ target, left, top }) => {
+            target.style.left = `${left}px`;
+            target.style.top = `${top}px`;
+          }}
+          onDragEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              onDragEnd(
+                index,
+                Math.round(lastEvent.left),
+                Math.round(lastEvent.top),
+              );
+            }
+            onSelect(index);
+          }}
+          onResize={({ target, width, height, drag }) => {
+            target.style.width = `${width}px`;
+            target.style.height = `${height}px`;
+            target.style.left = `${drag.left}px`;
+            target.style.top = `${drag.top}px`;
+          }}
+          onResizeEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              onResizeEnd(
+                index,
+                Math.round(lastEvent.drag.left),
+                Math.round(lastEvent.drag.top),
+                `${Math.round(lastEvent.width)}px`,
+                `${Math.round(lastEvent.height)}px`,
+              );
+            }
+          }}
+          onRotate={({ target, transform }) => {
+            target.style.transform = transform;
+          }}
+          onRotateEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              onRotateEnd(
+                index,
+                ((Math.round(lastEvent.rotation) % 360) + 360) % 360,
+              );
+            }
+          }}
+        />
+      )}
     </>
   );
 };
@@ -623,7 +638,13 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ spaces: spaces, changed: true });
   };
 
-  setSpacePositionAndDimensions = (i: number, x: number, y: number, width: string, height: string) => {
+  setSpacePositionAndDimensions = (
+    i: number,
+    x: number,
+    y: number,
+    width: string,
+    height: string,
+  ) => {
     const spaces = this.state.spaces;
     const space = { ...spaces[i] };
     space.x = x;
@@ -1555,7 +1576,15 @@ class EditLocation extends React.Component<Props, State> {
             </div>
           </div>
           <div className="mapScrollContainer">
-            <div style={floorPlanStyle} onClick={(e) => { if (e.target === e.currentTarget) this.setState({ selectedSpace: null }); }}>{spaces}</div>
+            <div
+              style={floorPlanStyle}
+              onClick={(e) => {
+                if (e.target === e.currentTarget)
+                  this.setState({ selectedSpace: null });
+              }}
+            >
+              {spaces}
+            </div>
           </div>
         </>
       );
