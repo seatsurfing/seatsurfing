@@ -41,7 +41,7 @@ cd '$SCRIPT_DIR' \
 && prettierFormat() { \
   tmux send-keys -t '$SESSION:0.0' C-c '' Enter \
   && sleep 1 \
-  && tmux send-keys -t '$SESSION:0.0' \"cd '$SCRIPT_DIR/ui' && npm run prettier:format\" Enter; \
+  && tmux send-keys -t '$SESSION:0.0' \"cd '$SCRIPT_DIR/ui' && npm run prettier:format && npm run dev\" Enter; \
 } \
 && export -f prettierFormat \
 && restartServer() { \
