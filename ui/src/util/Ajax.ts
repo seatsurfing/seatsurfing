@@ -29,74 +29,54 @@ export default class Ajax {
     return url;
   }
 
-  static async query(
+  private static async query(
     method: string,
     url: string,
     data?: any,
   ): Promise<AjaxResult> {
     url = Ajax.getBackendUrl() + url;
-    const xHeaderCode = this.HEADER_X_ERROR_CODE;
-    return new Promise<AjaxResult>(function (resolve, reject) {
-      const performRequest = async () => {
-        const credentials: AjaxCredentials =
-          Ajax.PERSISTER.readCredentialsFromLocalStorage();
-        const options: RequestInit = Ajax.getFetchOptions(
-          method,
-          credentials.accessToken,
-          data,
-        );
-        fetch(url, options)
-          .then((response) => {
-            if (response.status >= 200 && response.status <= 299) {
-              response
-                .json()
-                .then((json) => {
-                  resolve(Ajax.getAjaxResult(json, response));
-                })
-                .catch(() => {
-                  resolve(Ajax.getAjaxResult({}, response));
-                });
-            } else {
-              const appCode = response.headers.get(xHeaderCode);
-              response
-                .text()
-                .then((body) => {
-                  reject(
-                    new AjaxError(
-                      response.status,
-                      appCode ? parseInt(appCode) : 0,
-                      undefined,
-                      body,
-                    ),
-                  );
-                })
-                .catch(() => {
-                  reject(
-                    new AjaxError(
-                      response.status,
-                      appCode ? parseInt(appCode) : 0,
-                    ),
-                  );
-                });
-            }
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      };
-      const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
-      if (refreshToken) {
-        Ajax.refreshAccessToken(refreshToken)
-          .then(() => {
-            performRequest();
-          })
-          .catch(() => {
-            reject(new AjaxError(401, 0));
-          });
-      } else {
-        performRequest();
+
+    const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
+    if (refreshToken) {
+      try {
+        await Ajax.refreshAccessToken(refreshToken);
+      } catch {
+        throw new AjaxError(401, 0);
       }
-    });
+    }
+
+    const credentials: AjaxCredentials =
+      Ajax.PERSISTER.readCredentialsFromLocalStorage();
+    const options: RequestInit = Ajax.getFetchOptions(
+      method,
+      credentials.accessToken,
+      data,
+    );
+
+    const response = await fetch(url, options);
+
+    if (response.status >= 200 && response.status <= 299) {
+      try {
+        const json = await response.json();
+        return Ajax.getAjaxResult(json, response);
+      } catch {
+        return Ajax.getAjaxResult({}, response);
+      }
+    } else {
+      const appCode = response.headers.get(this.HEADER_X_ERROR_CODE);
+      try {
+        const body = await response.text();
+        throw new AjaxError(
+          response.status,
+          appCode ? parseInt(appCode) : 0,
+          undefined,
+          body,
+        );
+      } catch (err) {
+        if (err instanceof AjaxError) throw err;
+        throw new AjaxError(response.status, appCode ? parseInt(appCode) : 0);
+      }
+    }
   }
 
   static async refreshAccessToken(refreshToken: string): Promise<void> {
