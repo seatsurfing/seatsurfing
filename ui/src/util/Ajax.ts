@@ -17,6 +17,7 @@ export default class Ajax {
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
   static onUnauthorized: (() => void) | null = null;
   static onServerError: (() => void) | null = null;
+  static onNotFound: (() => void) | null = null;
 
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
@@ -76,7 +77,9 @@ export default class Ajax {
       if (appCode === 0) {
         if (response.status === 401) {
           Ajax.onUnauthorized?.();
-        } else if (response.status == 500) {
+        } else if (response.status === 404) {
+          Ajax.onNotFound?.();
+        } else if (response.status === 500) {
           Ajax.onServerError?.();
         }
       }
