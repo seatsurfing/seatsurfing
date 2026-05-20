@@ -99,6 +99,10 @@ export default class DateUtil {
     return this.convertToUTC(date) > new Date();
   }
 
+  static isAfterToday(date: Date): boolean {
+    return this.isInFuture(date) && !this.isToday(date);
+  }
+
   static isInPast(date: Date): boolean {
     return this.convertToUTC(date) < new Date();
   }
@@ -228,6 +232,18 @@ export default class DateUtil {
     );
   }
 
+  /**
+   * @param date1 Date1 to compare
+   * @param date2 Date2 to compare
+   * @returns true, if both dates have the same time (hours and minutes)
+   */
+  static isSameTime(date1: Date, date2: Date): boolean {
+    return (
+      date1.getHours() === date2.getHours() &&
+      date1.getMinutes() === date2.getMinutes()
+    );
+  }
+
   static equal(date1: Date, date2: Date): boolean {
     return date1.getTime() === date2.getTime();
   }
@@ -301,9 +317,11 @@ export default class DateUtil {
     if (prefEnterTime === UserPreference.PreferenceEnterTime.Now) {
       enter.setHours(enter.getHours() + 1, 0, 0);
       if (enter.getHours() < prefWorkdayStart) {
+        // preferred start time works for today
         enter.setHours(prefWorkdayStart, 0, 0, 0);
       }
       if (enter.getHours() >= prefWorkdayEnd) {
+        // todays next start time is after preferred end date -> switch to next day
         enter.setDate(enter.getDate() + 1);
         enter.setHours(prefWorkdayStart, 0, 0, 0);
       }

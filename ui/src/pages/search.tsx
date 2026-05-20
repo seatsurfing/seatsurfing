@@ -157,6 +157,9 @@ class Search extends React.Component<Props, State> {
   resetEnterTime: Date | undefined;
   resetLeaveTime: Date | undefined;
 
+  // whether to auto update the enter time (stopped after first manual time change)
+  autoUpdateEnterTimeToPrefWorkdayStart: boolean = true;
+
   constructor(props: any) {
     super(props);
     this.data = [];
@@ -629,6 +632,27 @@ class Search extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
       if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
+    } else if (this.autoUpdateEnterTimeToPrefWorkdayStart) {
+      if (
+        newEnter &&
+        DateUtil.isSameTime(newEnter, this.state.enter) &&
+        !DateUtil.isSameDay(newEnter, this.state.enter)
+      ) {
+        // enter date changed and enter time remains unchanged but -> set enter time to preferred time or next possible time
+        if (DateUtil.isAfterToday(newEnter)) {
+          newEnter.setHours(this.state.prefWorkdayStart);
+        } else {
+          newEnter.setHours(
+            Math.max(this.state.prefWorkdayStart, new Date().getHours() + 1),
+          );
+        }
+      } else if (
+        (newEnter && !DateUtil.isSameTime(newEnter, this.state.enter)) ||
+        (newLeave && !DateUtil.isSameTime(newLeave, this.state.leave))
+      ) {
+        // user changed time -> no longer auto update time to preferred time
+        this.autoUpdateEnterTimeToPrefWorkdayStart = false;
+      }
     }
 
     const stateEnter = newEnter ?? this.state.enter;

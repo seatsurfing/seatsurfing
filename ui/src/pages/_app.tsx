@@ -19,6 +19,7 @@ import Loading from "@/components/Loading";
 import Head from "next/head";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
+import Navigation from "@/util/Navigation";
 import Formatting from "@/util/Formatting";
 import TotpSetupModal from "@/components/TotpSetupModal";
 import MfaEncouragementModal from "@/components/MfaEncouragementModal";
@@ -239,7 +240,7 @@ class App extends React.Component<Props, State> {
       // ignore
     }
     this.setState({ showMfaEncouragement: false });
-    Router.push("/preferences?tab=security");
+    Router.push(Navigation.preferences("security"));
   };
 
   onTotpEnforcementSuccess = () => {
