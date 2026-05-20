@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.94.0](https://github.com/seatsurfing/seatsurfing/compare/v1.93.1...v1.94.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **admin-ui:** add option to rotate spaces ([#2154](https://github.com/seatsurfing/seatsurfing/issues/2154)) ([00e580a](https://github.com/seatsurfing/seatsurfing/commit/00e580accb88a756ded1ead030e3148027eaf166))
+* **booking-ui:** add global error handling for HTTP status codes 401, 404 and 500 ([#2157](https://github.com/seatsurfing/seatsurfing/issues/2157)) ([73a3534](https://github.com/seatsurfing/seatsurfing/commit/73a3534a09daa25a8a732aefdacf21ac935322fd))
+* **booking-ui:** reflect selected preferences tab in URL ([#2156](https://github.com/seatsurfing/seatsurfing/issues/2156)) ([5364797](https://github.com/seatsurfing/seatsurfing/commit/5364797b0f9f9c1d99fa9e0a68e6453bd0a17cc7))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add suffix to new space names ([#2153](https://github.com/seatsurfing/seatsurfing/issues/2153)) ([37d71cc](https://github.com/seatsurfing/seatsurfing/commit/37d71ccac79a58844130a74d09856d6c09c57b2d))
+* **booking-ui:** auto update enter time on enter date change ([#2117](https://github.com/seatsurfing/seatsurfing/issues/2117)) ([ba15576](https://github.com/seatsurfing/seatsurfing/commit/ba155765979de8d1672e24feb791be3dd4c888b4))
+* **booking-ui:** improve error handling in Kiosk mode ([#2152](https://github.com/seatsurfing/seatsurfing/issues/2152)) ([7ea37aa](https://github.com/seatsurfing/seatsurfing/commit/7ea37aa5292eedfae6bfee02061211f9a9bfe912))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.74 to 1.0.75 in /server in the minor-and-patch group ([#2158](https://github.com/seatsurfing/seatsurfing/issues/2158)) ([c93fb25](https://github.com/seatsurfing/seatsurfing/commit/c93fb25dfc647c1bb9059882a162eccdf28220b0))
+
 ## [1.93.1](https://github.com/seatsurfing/seatsurfing/compare/v1.93.0...v1.93.1) (2026-05-19)
 
 
