@@ -937,7 +937,7 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  onConfirmBooking = (e: any) => {
+  onConfirmBooking = async (e: any) => {
     if (e) {
       e.preventDefault();
     }
@@ -971,26 +971,24 @@ class Search extends React.Component<Props, State> {
       }
       booking.space = this.state.selectedSpace;
     }
-    booking
-      .save()
-      .then(() => {
-        this.setState({
-          createdBookingId: booking.id,
-          confirmingBooking: false,
-          showConfirm: false,
-          showSuccess: true,
-          subject: "",
-        });
-      })
-      .catch((e: any) => {
-        const code = AjaxError.getAppErrorCode(e);
-        this.setState({
-          confirmingBooking: false,
-          showConfirm: false,
-          showError: true,
-          errorText: ErrorText.getTextForAppCode(code, this.props.t),
-        });
+    try {
+      await booking.save();
+      this.setState({
+        createdBookingId: booking.id,
+        confirmingBooking: false,
+        showConfirm: false,
+        showSuccess: true,
+        subject: "",
       });
+    } catch (e: any) {
+      const code = AjaxError.getAppErrorCode(e);
+      this.setState({
+        confirmingBooking: false,
+        showConfirm: false,
+        showError: code != 0,
+        errorText: ErrorText.getTextForAppCode(code, this.props.t),
+      });
+    }
   };
 
   onAddBuddy = (buddyUser: User) => {
@@ -1014,7 +1012,7 @@ class Search extends React.Component<Props, State> {
         const code: number = AjaxError.getAppErrorCode(e);
         this.setState({
           loading: false,
-          showError: true,
+          showError: code != 0,
           errorText: ErrorText.getTextForAppCode(code, this.props.t),
         });
       });
@@ -1471,40 +1469,28 @@ class Search extends React.Component<Props, State> {
     this.setState({
       confirmingBooking: true,
     });
-    let deleteItem: any;
-    deleteItem = item;
+    let deleteItem: any = item;
     if (this.state.cancelSeries && item.isRecurring()) {
       deleteItem = await RecurringBooking.get(item.recurringId);
     }
-    deleteItem.delete().then(
-      () => {
-        this.setState(
-          {
-            selectedSpace: null,
-            confirmingBooking: false,
-            showBookingNames: false,
-          },
-          this.refreshPage,
+    const resetState = {
+      selectedSpace: null,
+      confirmingBooking: false,
+      showBookingNames: false,
+    };
+    try {
+      await deleteItem.delete();
+      this.setState(resetState, this.refreshPage);
+    } catch (reason: any) {
+      if (reason instanceof AjaxError && reason.appErrorCode != 0) {
+        window.alert(
+          ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
         );
-      },
-      (reason: any) => {
-        if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
-          window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
-          );
-        } else {
-          window.alert(this.props.t("errorDeleteBooking"));
-        }
-        this.setState(
-          {
-            selectedSpace: null,
-            confirmingBooking: false,
-            showBookingNames: false,
-          },
-          this.refreshPage,
-        );
-      },
-    );
+        this.setState(resetState, this.refreshPage);
+      } else {
+        this.setState(resetState);
+      }
+    }
   };
 
   getRecurrenceObject = (): RecurringBooking => {

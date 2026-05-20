@@ -15,6 +15,9 @@ interface AjaxResult {
 export default class Ajax {
   static URL: string = "";
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
+  static onUnauthorized: (() => void) | null = null;
+  static onServerError: (() => void) | null = null;
+  static onNotFound: (() => void) | null = null;
 
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
@@ -29,74 +32,64 @@ export default class Ajax {
     return url;
   }
 
-  static async query(
+  private static async query(
     method: string,
     url: string,
     data?: any,
   ): Promise<AjaxResult> {
-    url = Ajax.getBackendUrl() + url;
-    const xHeaderCode = this.HEADER_X_ERROR_CODE;
-    return new Promise<AjaxResult>(function (resolve, reject) {
-      const performRequest = async () => {
-        const credentials: AjaxCredentials =
-          Ajax.PERSISTER.readCredentialsFromLocalStorage();
-        const options: RequestInit = Ajax.getFetchOptions(
-          method,
-          credentials.accessToken,
-          data,
-        );
-        fetch(url, options)
-          .then((response) => {
-            if (response.status >= 200 && response.status <= 299) {
-              response
-                .json()
-                .then((json) => {
-                  resolve(Ajax.getAjaxResult(json, response));
-                })
-                .catch(() => {
-                  resolve(Ajax.getAjaxResult({}, response));
-                });
-            } else {
-              const appCode = response.headers.get(xHeaderCode);
-              response
-                .text()
-                .then((body) => {
-                  reject(
-                    new AjaxError(
-                      response.status,
-                      appCode ? parseInt(appCode) : 0,
-                      undefined,
-                      body,
-                    ),
-                  );
-                })
-                .catch(() => {
-                  reject(
-                    new AjaxError(
-                      response.status,
-                      appCode ? parseInt(appCode) : 0,
-                    ),
-                  );
-                });
-            }
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      };
-      const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
-      if (refreshToken) {
-        Ajax.refreshAccessToken(refreshToken)
-          .then(() => {
-            performRequest();
-          })
-          .catch(() => {
-            reject(new AjaxError(401, 0));
-          });
-      } else {
-        performRequest();
+    // refresh access token (if required)
+    const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
+    if (refreshToken) {
+      try {
+        await Ajax.refreshAccessToken(refreshToken);
+      } catch {
+        throw new AjaxError(401, 0);
       }
-    });
+    }
+
+    const credentials: AjaxCredentials =
+      Ajax.PERSISTER.readCredentialsFromLocalStorage();
+    const options: RequestInit = Ajax.getFetchOptions(
+      method,
+      credentials.accessToken,
+      data,
+    );
+
+    url = Ajax.getBackendUrl() + url;
+    const response = await fetch(url, options);
+
+    if (response.status >= 200 && response.status <= 299) {
+      try {
+        const json = await response.json();
+        return Ajax.getAjaxResult(json, response);
+      } catch {
+        return Ajax.getAjaxResult({}, response);
+      }
+    } else {
+      let appCode = 0;
+      try {
+        appCode = parseInt(
+          response.headers.get(this.HEADER_X_ERROR_CODE) ?? "0",
+        );
+      } catch {}
+
+      // global error handlers if appCode is not defined
+      if (appCode === 0) {
+        if (response.status === 401) {
+          Ajax.onUnauthorized?.();
+        } else if (response.status === 404) {
+          Ajax.onNotFound?.();
+        } else if (response.status === 500) {
+          Ajax.onServerError?.();
+        }
+      }
+
+      try {
+        const body = await response.text();
+        throw new AjaxError(response.status, appCode, body);
+      } catch {}
+      throw new AjaxError(response.status, appCode);
+    }
   }
 
   static async refreshAccessToken(refreshToken: string): Promise<void> {
@@ -163,7 +156,7 @@ export default class Ajax {
     return !!credentials.accessToken;
   }
 
-  static getAjaxResult(json: any, response: Response): AjaxResult {
+  private static getAjaxResult(json: any, response: Response): AjaxResult {
     const objectId =
       response.headers.get(this.HEADER_X_OBJECT_ID) != null
         ? String(response.headers.get(this.HEADER_X_OBJECT_ID))

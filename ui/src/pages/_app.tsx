@@ -23,6 +23,9 @@ import Navigation from "@/util/Navigation";
 import Formatting from "@/util/Formatting";
 import TotpSetupModal from "@/components/TotpSetupModal";
 import MfaEncouragementModal from "@/components/MfaEncouragementModal";
+import SessionExpiredModal from "@/components/SessionExpiredModal";
+import ServerErrorModal from "@/components/ServerErrorModal";
+import NotFoundModal from "@/components/NotFoundModal";
 import User from "@/types/User";
 import Router from "next/router";
 
@@ -30,6 +33,9 @@ interface State {
   isLoading: boolean;
   showTotpEnforcement: boolean;
   showMfaEncouragement: boolean;
+  showSessionExpired: boolean;
+  showServerError: boolean;
+  showNotFound: boolean;
   totpQrCode: string;
   totpStateId: string;
   enforceTOTP: boolean;
@@ -49,6 +55,9 @@ class App extends React.Component<Props, State> {
       isLoading: true,
       showTotpEnforcement: false,
       showMfaEncouragement: false,
+      showSessionExpired: false,
+      showServerError: false,
+      showNotFound: false,
       totpQrCode: "",
       totpStateId: "",
       enforceTOTP: false,
@@ -65,6 +74,10 @@ class App extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    Ajax.onUnauthorized = () => this.setState({ showSessionExpired: true });
+    Ajax.onServerError = () => this.setState({ showServerError: true });
+    Ajax.onNotFound = () => this.setState({ showNotFound: true });
+
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
         this.setState(
@@ -86,6 +99,9 @@ class App extends React.Component<Props, State> {
   }
 
   componentWillUnmount() {
+    Ajax.onUnauthorized = null;
+    Ajax.onServerError = null;
+    Ajax.onNotFound = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
   }
 
@@ -306,6 +322,18 @@ class App extends React.Component<Props, State> {
             onSetup={this.onMfaEncouragementSetup}
           />
         )}
+        <SessionExpiredModal
+          show={this.state.showSessionExpired}
+          onHide={() => this.setState({ showSessionExpired: false })}
+        />
+        <ServerErrorModal
+          show={this.state.showServerError}
+          onHide={() => this.setState({ showServerError: false })}
+        />
+        <NotFoundModal
+          show={this.state.showNotFound}
+          onHide={() => this.setState({ showNotFound: false })}
+        />
         <Component {...pageProps} />
       </>
     );
