@@ -21,7 +21,7 @@ import {
   Download as IconDownload,
   Tag as IconTag,
 } from "react-feather";
-import { Rnd } from "react-rnd";
+import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -67,6 +67,132 @@ interface SpaceState {
   approvers: any[] | undefined;
   allowBookers: any[] | undefined;
 }
+
+interface SpaceRectProps {
+  space: SpaceState;
+  index: number;
+  isSelected: boolean;
+  onSelect: (i: number) => void;
+  onDoubleClick: (i: number) => void;
+  onDragEnd: (i: number, x: number, y: number) => void;
+  onResizeEnd: (
+    i: number,
+    x: number,
+    y: number,
+    width: string,
+    height: string,
+  ) => void;
+  onRotateEnd: (i: number, rotation: number) => void;
+  onNameChange: (i: number, name: string) => void;
+  unnamedLabel: string;
+  newSpaceName: (baseName: string) => string;
+}
+
+const SpaceRect: React.FC<SpaceRectProps> = ({
+  space,
+  index,
+  isSelected,
+  onSelect,
+  onDoubleClick,
+  onDragEnd,
+  onResizeEnd,
+  onRotateEnd,
+  onNameChange,
+  unnamedLabel,
+  newSpaceName,
+}) => {
+  const targetRef = React.useRef<HTMLDivElement>(null);
+  const width = parseInt(space.width.replace(/^\D+/g, ""));
+  const height = parseInt(space.height.replace(/^\D+/g, ""));
+  let className = "space-dragger";
+  if (width < height) className += " space-dragger-vertical";
+  if (isSelected) className += " space-dragger-selected";
+
+  return (
+    <>
+      <div
+        ref={targetRef}
+        style={{
+          position: "absolute",
+          left: space.x,
+          top: space.y,
+          width: space.width,
+          height: space.height,
+          transform: `rotate(${space.rotation}deg)`,
+        }}
+        className={className}
+        onMouseDown={() => {
+          onSelect(index);
+          onDoubleClick(index);
+        }}
+      >
+        {space.approvers && space.approvers.length > 0 && <SpaceApprovalIcon />}
+        <input
+          type="text"
+          id={`spaceName${index}`}
+          value={space.name}
+          onChange={(e) => onNameChange(index, e.target.value)}
+          onBlur={(e) => {
+            if (!e.target.value.trim()) {
+              onNameChange(index, newSpaceName(unnamedLabel));
+            }
+          }}
+        />
+      </div>
+      {isSelected && (
+        <Moveable
+          target={targetRef}
+          draggable={true}
+          resizable={true}
+          rotatable={true}
+          origin={false}
+          onDrag={({ target, left, top }) => {
+            target.style.left = `${left}px`;
+            target.style.top = `${top}px`;
+          }}
+          onDragEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              onDragEnd(
+                index,
+                Math.round(lastEvent.left),
+                Math.round(lastEvent.top),
+              );
+            }
+            onSelect(index);
+          }}
+          onResize={({ target, width, height, drag }) => {
+            target.style.width = `${width}px`;
+            target.style.height = `${height}px`;
+            target.style.left = `${drag.left}px`;
+            target.style.top = `${drag.top}px`;
+          }}
+          onResizeEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              onResizeEnd(
+                index,
+                Math.round(lastEvent.drag.left),
+                Math.round(lastEvent.drag.top),
+                `${Math.round(lastEvent.width)}px`,
+                `${Math.round(lastEvent.height)}px`,
+              );
+            }
+          }}
+          onRotate={({ target, transform }) => {
+            target.style.transform = transform;
+          }}
+          onRotateEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              onRotateEnd(
+                index,
+                ((Math.round(lastEvent.rotation) % 360) + 360) % 360,
+              );
+            }
+          }}
+        />
+      )}
+    </>
+  );
+};
 
 interface State {
   loading: boolean;
@@ -459,7 +585,7 @@ class EditLocation extends React.Component<Props, State> {
       orgHeight: e ? e.height : 100,
       orgX: e ? e.x : 10,
       orgY: e ? e.y : 10,
-      rotation: 0,
+      rotation: e ? e.rotation : 0,
       requireSubject: e
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
@@ -510,6 +636,33 @@ class EditLocation extends React.Component<Props, State> {
   setSpaceDimensions = (i: number, width: string, height: string) => {
     const spaces = this.state.spaces;
     const space = { ...spaces[i] };
+    space.width = width;
+    space.height = height;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceRotation = (i: number, rotation: number) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.rotation = rotation;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpacePositionAndDimensions = (
+    i: number,
+    x: number,
+    y: number,
+    width: string,
+    height: string,
+  ) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.x = x;
+    space.y = y;
     space.width = width;
     space.height = height;
     space.changed = true;
@@ -623,54 +776,21 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   renderRect = (i: number) => {
-    const size = {
-      width: this.state.spaces[i].width,
-      height: this.state.spaces[i].height,
-    };
-    const position = { x: this.state.spaces[i].x, y: this.state.spaces[i].y };
-    const width = parseInt(this.state.spaces[i].width.replace(/^\D+/g, ""));
-    const height = parseInt(this.state.spaces[i].height.replace(/^\D+/g, ""));
-    let className = "space-dragger";
-    if (width < height) {
-      className += " space-dragger-vertical";
-    }
-    if (i === this.state.selectedSpace) {
-      className += " space-dragger-selected";
-    }
     return (
-      <Rnd
+      <SpaceRect
         key={i}
-        size={size}
-        position={position}
-        onMouseDown={() => {
-          this.onSpaceSelect(i);
-          this.checkDoubleClickSpace(i);
-        }}
-        onDragStop={(_e, d) => {
-          this.setSpacePosition(i, d.x, d.y);
-          this.onSpaceSelect(i);
-        }}
-        onResizeStop={(_e, _d, ref) => {
-          this.setSpaceDimensions(i, ref.style.width, ref.style.height);
-        }}
-        className={className}
-      >
-        {this.state.spaces[i].approvers &&
-          this.state.spaces[i].approvers.length > 0 && <SpaceApprovalIcon />}
-        <input
-          type="text"
-          id={`spaceName${i}`}
-          value={this.state.spaces[i].name}
-          onChange={(e) => {
-            this.setSpaceName(i, e.target.value);
-          }}
-          onBlur={(e) => {
-            if (!e.target.value.trim()) {
-              this.setSpaceName(i, this.newSpaceName(this.props.t("unnamed")));
-            }
-          }}
-        />
-      </Rnd>
+        space={this.state.spaces[i]}
+        index={i}
+        isSelected={i === this.state.selectedSpace}
+        onSelect={this.onSpaceSelect}
+        onDoubleClick={this.checkDoubleClickSpace}
+        onDragEnd={this.setSpacePosition}
+        onResizeEnd={this.setSpacePositionAndDimensions}
+        onRotateEnd={this.setSpaceRotation}
+        onNameChange={this.setSpaceName}
+        unnamedLabel={this.props.t("unnamed")}
+        newSpaceName={this.newSpaceName}
+      />
     );
   };
 
@@ -1472,7 +1592,15 @@ class EditLocation extends React.Component<Props, State> {
             </div>
           </div>
           <div className="mapScrollContainer">
-            <div style={floorPlanStyle}>{spaces}</div>
+            <div
+              style={floorPlanStyle}
+              onClick={(e) => {
+                if (e.target === e.currentTarget)
+                  this.setState({ selectedSpace: null });
+              }}
+            >
+              {spaces}
+            </div>
           </div>
         </>
       );
