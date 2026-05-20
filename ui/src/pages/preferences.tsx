@@ -21,6 +21,7 @@ import SaveButton from "@/components/SaveButton";
 import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
+import { PreferencesTab } from "@/util/Navigation";
 
 interface State {
   loading: boolean;
@@ -60,6 +61,13 @@ interface Props {
   router: NextRouter;
   t: TranslationFunc;
 }
+
+const TAB_MAP: Record<PreferencesTab, string> = {
+  booking: "tab-bookings",
+  style: "tab-style",
+  security: "tab-security",
+  integration: "tab-integrations",
+};
 
 const COLOR_BOOKED: string = "#ff453a";
 const COLOR_NOT_BOOKED: string = "#30d158";
@@ -114,9 +122,9 @@ class Preferences extends React.Component<Props, State> {
       RedirectUtil.toLogin(this.props.router);
       return;
     }
-    const tabParam = this.props.router.query.tab;
-    if (tabParam === "security") {
-      this.setState({ activeTab: "tab-security" });
+    const tabParam = this.props.router.query.tab as PreferencesTab;
+    if (tabParam && TAB_MAP[tabParam]) {
+      this.setState({ activeTab: TAB_MAP[tabParam] });
     }
     const promises = [
       this.loadPreferences(),
@@ -507,8 +515,17 @@ class Preferences extends React.Component<Props, State> {
               variant="underline"
               activeKey={this.state.activeTab}
               onSelect={(key) => {
-                if (key)
+                if (key) {
                   this.setState({ activeTab: key, error: false, saved: false });
+                  const tabParam = Object.entries(TAB_MAP).find(
+                    ([, v]) => v === key,
+                  )?.[0] as PreferencesTab;
+                  this.props.router.replace(
+                    { query: { ...this.props.router.query, tab: tabParam } },
+                    undefined,
+                    { shallow: true },
+                  );
+                }
               }}
             >
               <Nav.Item>
