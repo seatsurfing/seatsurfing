@@ -248,6 +248,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 	for _, b := range bookings {
 		bookingReq := &CreateBookingRequest{
 			SpaceID: b.SpaceID,
+			Subject: b.Subject,
 			BookingRequest: BookingRequest{
 				Enter: b.Enter,
 				Leave: b.Leave,

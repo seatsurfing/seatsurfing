@@ -446,6 +446,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
+		Subject: m.Subject,
 		BookingRequest: BookingRequest{
 			Enter: eNew.Enter,
 			Leave: eNew.Leave,
@@ -627,6 +628,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
+		Subject: m.Subject,
 		BookingRequest: BookingRequest{
 			Enter: e.Enter,
 			Leave: e.Leave,
@@ -880,6 +882,9 @@ func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, u
 }
 
 func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, location *Location, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
+	if !IsValidBookingSubject(m.Subject) {
+		return false, ResponseCodeBookingInvalidSubject
+	}
 	isUpdate := bookingID != ""
 	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration
