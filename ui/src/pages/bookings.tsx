@@ -213,8 +213,6 @@ class Bookings extends React.Component<Props, State> {
 
     const formatter = Formatting.getBookingDateFormatter();
 
-    const CustomEvent = createCustomEvent(this.props.t);
-
     const toolbar = (props: object) => (
       <CustomToolbar toolbar={props as any} t={this.props.t} />
     );
@@ -320,7 +318,7 @@ class Bookings extends React.Component<Props, State> {
               }}
               components={{
                 toolbar,
-                event: CustomEvent,
+                event: createCustomEvent(),
               }}
               scrollToTime={DateUtil.convertToFakeUTCDate(
                 DateUtil.getTodayTime(this.workdayStartHour, 0, 0),

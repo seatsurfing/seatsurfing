@@ -11,6 +11,8 @@ export type CalendarEvent = {
   spaceName: string;
   locationName: string;
   bookingId: string;
+  email: string;
+  mode: CalendarEventMode;
 };
 
 export type CalendarEventMode = "user" | "space";
@@ -18,31 +20,36 @@ export type CalendarEventMode = "user" | "space";
 export const bookingToCalendarEvent = (
   booking: Booking,
   mode: CalendarEventMode,
-  t?: TranslationFunc,
+  t: TranslationFunc,
 ): CalendarEvent => {
   let title: string;
   if (mode === "space") {
-    title =
-      booking.user.email + (booking.subject ? ` – ${booking.subject}` : "");
+    title = booking.user.email;
+    if (booking.subject) {
+      title = title ? `${title} – ${booking.subject}` : booking.subject;
+    }
   } else {
     title = `${booking.space.location.name} (${booking.space.name})`;
     if (booking.subject) {
       title += `, ${booking.subject}`;
     }
-    if (booking.isRecurring() && t) {
-      title += ` (${t("recurring")})`;
-    }
+  }
+  const recurring = booking.isRecurring();
+  if (recurring) {
+    title += (title ? " " : "") + `(${t("recurring")})`;
   }
 
   return {
-    title,
+    title, // used as HTML tooltip
     enter: booking.enter,
     leave: booking.leave,
     approved: booking.approved,
-    recurring: booking.isRecurring(),
+    recurring,
     subject: booking.subject,
     spaceName: booking.space.name,
     locationName: booking.space.location.name,
     bookingId: booking.id,
+    email: booking.user.email,
+    mode,
   };
 };

@@ -3,7 +3,6 @@ import {
   MapPin as IconLocation,
   RefreshCw as IconRecurring,
 } from "react-feather";
-import { TranslationFunc } from "@/components/withTranslation";
 export { bookingToCalendarEvent } from "./CalendarEvent";
 import type { CalendarEvent } from "./CalendarEvent";
 export type { CalendarEvent };
@@ -11,8 +10,13 @@ export type { CalendarEvent };
 const WIDTH_THRESHOLD = 100;
 
 const createCustomEvent =
-  (t: TranslationFunc) =>
+  () =>
   ({ event }: { event: CalendarEvent }) => {
+    // show no information for events < 1 hr
+    if (event.leave.getTime() - event.enter.getTime() <= 60 * 60 * 1000) {
+      return null;
+    }
+
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDetails, setShowDetails] = useState(true);
 
@@ -25,11 +29,6 @@ const createCustomEvent =
       observer.observe(el);
       return () => observer.disconnect();
     }, []);
-
-    // show no information for events < 1 hr
-    if (event.leave.getTime() - event.enter.getTime() <= 60 * 60 * 1000) {
-      return null;
-    }
 
     let recurringIcon = <></>;
     if (event.recurring) {
@@ -47,7 +46,7 @@ const createCustomEvent =
         <p hidden={!event.subject}>
           <strong>{event.subject}</strong>
         </p>
-        {showDetails && (
+        {showDetails && event.mode == "user" && (
           <>
             <IconLocation
               className="feather"
@@ -55,6 +54,9 @@ const createCustomEvent =
             />{" "}
             {event.locationName}, {event.spaceName}
           </>
+        )}
+        {showDetails && event.mode == "space" && event.email && (
+          <>{event.email}</>
         )}
       </div>
     );

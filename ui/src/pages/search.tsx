@@ -2627,9 +2627,9 @@ class Search extends React.Component<Props, State> {
     );
 
     const spaceCalendarEvents: CalendarEvent[] =
-      this.state.spaceCalendarBookings.map((b) => bookingToCalendarEvent(b, "space"));
-
-    const SpaceCalCustomEvent = createCustomEvent(this.props.t);
+      this.state.spaceCalendarBookings.map((b) =>
+        bookingToCalendarEvent(b, "space", this.props.t),
+      );
 
     const spaceCalToolbar = (props: object) => (
       <CustomToolbar toolbar={props as any} t={this.props.t} />
@@ -2692,7 +2692,7 @@ class Search extends React.Component<Props, State> {
                 culture={Formatting.Language}
                 components={{
                   toolbar: spaceCalToolbar,
-                  event: SpaceCalCustomEvent,
+                  event: createCustomEvent(),
                 }}
                 step={180}
                 timeslots={1}
