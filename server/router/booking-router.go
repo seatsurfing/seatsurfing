@@ -446,6 +446,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
+		Subject: m.Subject,
 		BookingRequest: BookingRequest{
 			Enter: eNew.Enter,
 			Leave: eNew.Leave,
@@ -627,6 +628,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
+		Subject: m.Subject,
 		BookingRequest: BookingRequest{
 			Enter: e.Enter,
 			Leave: e.Leave,
