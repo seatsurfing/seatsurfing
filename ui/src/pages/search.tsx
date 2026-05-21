@@ -2677,7 +2677,7 @@ class Search extends React.Component<Props, State> {
           } as any)
         }
         size="xl"
-        fullscreen="md-down"
+        fullscreen="lg-down"
       >
         <Modal.Header closeButton>
           <Modal.Title>
