@@ -720,8 +720,8 @@ class Search extends React.Component<Props, State> {
         () => this.resetRecurrence(),
       );
     } else {
-      let bookings = Booking.createFromRawArray(item.rawBookings);
-      if (!item.available && bookings && bookings.length > 0) {
+      const bookings = Booking.createFromRawArray(item.rawBookings);
+      if (!item.available && bookings?.length > 0) {
         this.setState({
           showBookingNames: true,
           selectedSpace: item,
