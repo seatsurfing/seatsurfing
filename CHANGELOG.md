@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.95.0](https://github.com/seatsurfing/seatsurfing/compare/v1.94.0...v1.95.0) (2026-05-21)
+
+
+### ✨ Features
+
+* **server:** add booking approved info in availability response ([#2165](https://github.com/seatsurfing/seatsurfing/issues/2165)) ([80a6409](https://github.com/seatsurfing/seatsurfing/commit/80a64094d9ca65fe0b2d6f80e8d3a3e00402c6d2))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** remove HTML title attribute from space ([#2164](https://github.com/seatsurfing/seatsurfing/issues/2164)) ([9b6c4b2](https://github.com/seatsurfing/seatsurfing/commit/9b6c4b26d37c2e4d4ac60391b09ca6a91ad95c74))
+* **deps:** bump library/golang from 1.26.1-bookworm to 1.26.3-bookworm ([#2160](https://github.com/seatsurfing/seatsurfing/issues/2160)) ([161cedf](https://github.com/seatsurfing/seatsurfing/commit/161cedf81e7e69ff0956d58dd4767fafecabc34b))
+* **main:** update to TypeScript 6 ([#2163](https://github.com/seatsurfing/seatsurfing/issues/2163)) ([1e02efd](https://github.com/seatsurfing/seatsurfing/commit/1e02efd254916f24b24e6ccc5cb4dbccfe21c1d5))
+* **server:** add additional JSON validation ([#2167](https://github.com/seatsurfing/seatsurfing/issues/2167)) ([8ae4468](https://github.com/seatsurfing/seatsurfing/commit/8ae44689140b38944e06105e0bbe4c898c184487))
+* **server:** do not allow @@@ in booking subject ([#2166](https://github.com/seatsurfing/seatsurfing/issues/2166)) ([55b0612](https://github.com/seatsurfing/seatsurfing/commit/55b0612d0aa855f04f3e7d9f04e27dbe6eb4521a))
+
+
+### 🔧 Refactoring
+
+* extract method UpdateChecker.check() ([#2162](https://github.com/seatsurfing/seatsurfing/issues/2162)) ([8b6cf7e](https://github.com/seatsurfing/seatsurfing/commit/8b6cf7e7fe1a88d609c2c2ec5d998384af918bc3))
+
 ## [1.94.0](https://github.com/seatsurfing/seatsurfing/compare/v1.93.1...v1.94.0) (2026-05-20)
 
 
