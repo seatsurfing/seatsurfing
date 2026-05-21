@@ -15,8 +15,8 @@ type SpaceRouter struct {
 }
 
 type SpaceAttributeValueRequest struct {
-	AttributeID string `json:"attributeId"`
-	Value       string `json:"value"`
+	AttributeID string `json:"attributeId" validate:"required,uuid"`
+	Value       string `json:"value" validate:"max=256"`
 }
 
 type CreateSpaceRequest struct {
@@ -29,9 +29,9 @@ type CreateSpaceRequest struct {
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
 	KioskEnabled          bool                         `json:"kioskEnabled"`
-	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
-	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
-	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
+	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
+	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
+	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 }
 
 type UpdateSpaceRequest struct {
@@ -86,7 +86,7 @@ type GetSpaceAvailabilityRequest struct {
 	Enter      time.Time         `json:"enter"`
 	Leave      time.Time         `json:"leave"`
 	SpaceID    string            `json:"spaceId"`
-	Attributes []SearchAttribute `json:"attributes"`
+	Attributes []SearchAttribute `json:"attributes" validate:"dive"`
 }
 
 func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
