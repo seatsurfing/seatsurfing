@@ -40,10 +40,12 @@ import {
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
   UserCheck as IconUserCheck,
-  MapPin as IconLocationPin,
 } from "react-feather";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
+import createCustomEvent, {
+  CalendarEvent,
+} from "@/components/calendar/CustomEvent";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
@@ -2623,14 +2625,7 @@ class Search extends React.Component<Props, State> {
       </Modal>
     );
 
-    type CalEvent = {
-      start: Date;
-      end: Date;
-      title: string;
-      booking: Booking;
-    };
-
-    const spaceCalendarEvents: CalEvent[] =
+    const spaceCalendarEvents: CalendarEvent[] =
       this.state.spaceCalendarBookings.map((b) => ({
         start: b.enter,
         end: b.leave,
@@ -2638,26 +2633,7 @@ class Search extends React.Component<Props, State> {
         booking: b,
       }));
 
-    const SpaceCalCustomEvent = ({ event }: { event: CalEvent }) => {
-      if (
-        event.booking.leave.getTime() - event.booking.enter.getTime() <=
-        60 * 60 * 1000
-      ) {
-        return null;
-      }
-      return (
-        <div style={{ fontSize: "12px" }}>
-          <IconLocationPin style={{ width: "12px", height: "12px" }} />{" "}
-          {event.booking.user.email}
-          {event.booking.subject && (
-            <>
-              <br />
-              <strong>{event.booking.subject}</strong>
-            </>
-          )}
-        </div>
-      );
-    };
+    const SpaceCalCustomEvent = createCustomEvent(this.props.t);
 
     const spaceCalToolbar = (props: object) => (
       <CustomToolbar toolbar={props as any} t={this.props.t} />
@@ -2706,6 +2682,12 @@ class Search extends React.Component<Props, State> {
                 style={{ height: "100%", width: "100%" }}
                 defaultView="week"
                 views={["week"]}
+                eventPropGetter={(event: CalendarEvent) => {
+                  if (event.booking.approved === false) {
+                    return { style: { opacity: 0.5 } };
+                  }
+                  return {};
+                }}
                 date={this.state.spaceCalendarDate}
                 onNavigate={(newDate: Date) => {
                   this.setState({ spaceCalendarDate: newDate }, () => {
