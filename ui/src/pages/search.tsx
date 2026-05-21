@@ -2684,34 +2684,43 @@ class Search extends React.Component<Props, State> {
             {this.state.selectedSpace?.name} – {this.props.t("calendar")}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ minHeight: "500px" }}>
+        <Modal.Body
+          style={{
+            height: "calc(100vh - 210px)",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
           {this.state.spaceCalendarLoading ? (
             <Loading visible={true} />
           ) : (
-            <Calendar
-              showMultiDayTimes={true}
-              getNow={() => DateUtil.getNowFakeUTC()}
-              localizer={spaceCalLocalizer}
-              events={spaceCalendarEvents}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: "60vh", width: "100%" }}
-              defaultView="week"
-              views={["week"]}
-              date={this.state.spaceCalendarDate}
-              onNavigate={(newDate: Date) => {
-                this.setState({ spaceCalendarDate: newDate }, () => {
-                  this.loadSpaceCalendarBookings(newDate);
-                });
-              }}
-              culture={Formatting.Language}
-              components={{
-                toolbar: spaceCalToolbar,
-                event: SpaceCalCustomEvent,
-              }}
-              step={180}
-              timeslots={1}
-            />
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <Calendar
+                showMultiDayTimes={true}
+                getNow={() => DateUtil.getNowFakeUTC()}
+                localizer={spaceCalLocalizer}
+                events={spaceCalendarEvents}
+                startAccessor="start"
+                endAccessor="end"
+                style={{ height: "100%", width: "100%" }}
+                defaultView="week"
+                views={["week"]}
+                date={this.state.spaceCalendarDate}
+                onNavigate={(newDate: Date) => {
+                  this.setState({ spaceCalendarDate: newDate }, () => {
+                    this.loadSpaceCalendarBookings(newDate);
+                  });
+                }}
+                culture={Formatting.Language}
+                components={{
+                  toolbar: spaceCalToolbar,
+                  event: SpaceCalCustomEvent,
+                }}
+                step={180}
+                timeslots={1}
+              />
+            </div>
           )}
         </Modal.Body>
         <Modal.Footer>
