@@ -216,8 +216,6 @@ class Bookings extends React.Component<Props, State> {
       }
 
       calendarEvents.push({
-        start: item.enter,
-        end: item.leave,
         title, // used in tooltip
         booking: item,
       });
@@ -300,8 +298,8 @@ class Bookings extends React.Component<Props, State> {
               getNow={() => DateUtil.getNowFakeUTC()}
               localizer={calendarLocalizer}
               events={calendarEvents}
-              startAccessor="start"
-              endAccessor="end"
+              startAccessor={(event: CalendarEvent) => event.booking.enter}
+              endAccessor={(event: CalendarEvent) => event.booking.leave}
               style={{
                 height: "calc(100vh - 160px)",
                 width: "100%",

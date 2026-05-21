@@ -2617,8 +2617,6 @@ class Search extends React.Component<Props, State> {
 
     const spaceCalendarEvents: CalendarEvent[] =
       this.state.spaceCalendarBookings.map((b) => ({
-        start: b.enter,
-        end: b.leave,
         title: b.user.email + (b.subject ? ` – ${b.subject}` : ""),
         booking: b,
       }));
@@ -2667,8 +2665,8 @@ class Search extends React.Component<Props, State> {
                 getNow={() => DateUtil.getNowFakeUTC()}
                 localizer={spaceCalLocalizer}
                 events={spaceCalendarEvents}
-                startAccessor="start"
-                endAccessor="end"
+                startAccessor={(event: CalendarEvent) => event.booking.enter}
+                endAccessor={(event: CalendarEvent) => event.booking.leave}
                 style={{ height: "100%", width: "100%" }}
                 defaultView="week"
                 views={["week"]}

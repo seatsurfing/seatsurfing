@@ -7,8 +7,6 @@ import { TranslationFunc } from "@/components/withTranslation";
 import Booking from "@/types/Booking";
 
 export type CalendarEvent = {
-  start: Date;
-  end: Date;
   title: string;
   booking: Booking;
 };
