@@ -27,6 +27,7 @@ import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
 import RedirectUtil from "@/util/RedirectUtil";
 import Navigation from "@/util/Navigation";
+import UpdateChecker from "@/util/UpdateChecker";
 
 interface State {
   loading: boolean;
@@ -82,32 +83,10 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   checkUpdates = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve) {
-      if (RuntimeConfig.INFOS.cloudHosted) {
-        resolve();
-        return;
-      }
-      Ajax.get("/uc/")
-        .then((res) => {
-          self.setState(
-            {
-              latestVersion: res.json,
-            },
-            () => resolve(),
-          );
-        })
-        .catch(() => {
-          console.warn("Could not check for updates.");
-          const res = { version: "", updateAvailable: false };
-          self.setState(
-            {
-              latestVersion: res,
-            },
-            () => resolve(),
-          );
-        });
-    });
+    if (RuntimeConfig.INFOS.cloudHosted) {
+      return;
+    }
+    this.setState({ latestVersion: await UpdateChecker.check() });
   };
 
   getUserInfo = async (): Promise<void> => {

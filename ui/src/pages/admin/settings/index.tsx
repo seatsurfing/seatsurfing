@@ -38,6 +38,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
+import UpdateChecker from "@/util/UpdateChecker";
 
 interface State {
   allowAnyUser: boolean;
@@ -172,32 +173,10 @@ class Settings extends React.Component<Props, State> {
   };
 
   checkUpdates = async (): Promise<void> => {
-    let self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.cloudHosted) {
-        resolve();
-        return;
-      }
-      Ajax.get("/uc/")
-        .then((res) => {
-          self.setState(
-            {
-              latestVersion: res.json,
-            },
-            () => resolve(),
-          );
-        })
-        .catch(() => {
-          console.warn("Could not check for updates.");
-          let res = { version: "", updateAvailable: false };
-          self.setState(
-            {
-              latestVersion: res,
-            },
-            () => resolve(),
-          );
-        });
-    });
+    if (RuntimeConfig.INFOS.cloudHosted) {
+      return;
+    }
+    this.setState({ latestVersion: await UpdateChecker.check() });
   };
 
   loadAuthProviders = async (): Promise<void> => {
