@@ -880,6 +880,9 @@ func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, u
 }
 
 func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, location *Location, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
+	if !IsValidBookingSubject(m.Subject) {
+		return false, ResponseCodeBookingInvalidSubject
+	}
 	isUpdate := bookingID != ""
 	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration

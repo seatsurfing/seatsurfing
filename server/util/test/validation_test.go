@@ -99,6 +99,33 @@ func TestInvalidHumanNames(t *testing.T) {
 	}
 }
 
+func TestValidBookingSubjects(t *testing.T) {
+	inputs := []string{
+		"",
+		"Meeting",
+		"Team Sync",
+		"abc",
+		"Interview with @@candidate",
+		"Subject with two @ chars @@",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, IsValidBookingSubject(input), true)
+	}
+}
+
+func TestInvalidBookingSubjects(t *testing.T) {
+	inputs := []string{
+		"a",
+		"ab",
+		"@@@",
+		"prefix@@@suffix",
+		"meeting @@@",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, IsValidBookingSubject(input), false)
+	}
+}
+
 func TestValidOrgNames(t *testing.T) {
 	inputs := []string{
 		"Acme Corp",

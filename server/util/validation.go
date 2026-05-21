@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -95,4 +96,11 @@ func ValidateNumber(s string, min, max int) bool {
 		return false
 	}
 	return n >= min && n <= max
+}
+
+func IsValidBookingSubject(s string) bool {
+	if len(s) > 0 && len(s) < 3 {
+		return false
+	}
+	return !strings.Contains(s, "@@@")
 }
