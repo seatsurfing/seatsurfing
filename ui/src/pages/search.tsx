@@ -45,7 +45,7 @@ import {
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
-  bookingToSpaceCalendarEvent,
+  bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
 import moment from "moment-timezone";
@@ -2627,7 +2627,7 @@ class Search extends React.Component<Props, State> {
     );
 
     const spaceCalendarEvents: CalendarEvent[] =
-      this.state.spaceCalendarBookings.map(bookingToSpaceCalendarEvent);
+      this.state.spaceCalendarBookings.map((b) => bookingToCalendarEvent(b, "space"));
 
     const SpaceCalCustomEvent = createCustomEvent(this.props.t);
 
@@ -2672,13 +2672,13 @@ class Search extends React.Component<Props, State> {
                 getNow={() => DateUtil.getNowFakeUTC()}
                 localizer={spaceCalLocalizer}
                 events={spaceCalendarEvents}
-                startAccessor={(event: CalendarEvent) => event.booking.enter}
-                endAccessor={(event: CalendarEvent) => event.booking.leave}
+                startAccessor={(event: CalendarEvent) => event.enter}
+                endAccessor={(event: CalendarEvent) => event.leave}
                 style={{ height: "100%", width: "100%" }}
                 defaultView="week"
                 views={["week"]}
                 eventPropGetter={(event: CalendarEvent) => {
-                  if (event.booking.approved === false) {
+                  if (event.approved === false) {
                     return { style: { opacity: 0.5 } };
                   }
                   return {};

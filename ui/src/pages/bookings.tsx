@@ -208,7 +208,7 @@ class Bookings extends React.Component<Props, State> {
 
     const calendarEvents: CalendarEvent[] = [];
     for (const item of this.data) {
-      calendarEvents.push(bookingToCalendarEvent(item, this.props.t));
+      calendarEvents.push(bookingToCalendarEvent(item, "user", this.props.t));
     }
 
     const formatter = Formatting.getBookingDateFormatter();
@@ -288,8 +288,8 @@ class Bookings extends React.Component<Props, State> {
               getNow={() => DateUtil.getNowFakeUTC()}
               localizer={calendarLocalizer}
               events={calendarEvents}
-              startAccessor={(event: CalendarEvent) => event.booking.enter}
-              endAccessor={(event: CalendarEvent) => event.booking.leave}
+              startAccessor={(event: CalendarEvent) => event.enter}
+              endAccessor={(event: CalendarEvent) => event.leave}
               style={{
                 height: "calc(100vh - 160px)",
                 width: "100%",
@@ -306,13 +306,14 @@ class Bookings extends React.Component<Props, State> {
                 }
               }}
               onSelectEvent={(e) => {
-                this.onItemPress(e.booking);
+                const booking = this.data.find((b) => b.id === e.bookingId);
+                if (booking) this.onItemPress(booking);
               }}
               culture={Formatting.Language}
               length={7}
               views={["week"]}
               eventPropGetter={(event: CalendarEvent) => {
-                if (event.booking.approved === false) {
+                if (event.approved === false) {
                   return { style: { opacity: 0.5 } };
                 }
                 return {};

@@ -4,35 +4,9 @@ import {
   RefreshCw as IconRecurring,
 } from "react-feather";
 import { TranslationFunc } from "@/components/withTranslation";
-import Booking from "@/types/Booking";
-
-export const bookingToCalendarEvent = (
-  booking: Booking,
-  t: TranslationFunc,
-): CalendarEvent => {
-  let title = `${booking.space.location.name} (${booking.space.name})`;
-  if (booking.subject) {
-    title += `, ${booking.subject}`;
-  }
-  if (booking.isRecurring()) {
-    title += ` (${t("recurring")})`;
-  }
-
-  return {
-    title, // used in tooltip
-    booking,
-  };
-};
-
-export const bookingToSpaceCalendarEvent = (booking: Booking): CalendarEvent => ({
-  title: booking.user.email + (booking.subject ? ` – ${booking.subject}` : ""),
-  booking,
-});
-
-export type CalendarEvent = {
-  title: string;
-  booking: Booking;
-};
+export { bookingToCalendarEvent } from "./CalendarEvent";
+import type { CalendarEvent } from "./CalendarEvent";
+export type { CalendarEvent };
 
 const WIDTH_THRESHOLD = 100;
 
@@ -53,15 +27,12 @@ const createCustomEvent =
     }, []);
 
     // show no information for events < 1 hr
-    if (
-      event.booking.leave.getTime() - event.booking.enter.getTime() <=
-      60 * 60 * 1000
-    ) {
+    if (event.leave.getTime() - event.enter.getTime() <= 60 * 60 * 1000) {
       return null;
     }
 
     let recurringIcon = <></>;
-    if (event.booking.isRecurring()) {
+    if (event.recurring) {
       recurringIcon = (
         <IconRecurring
           className="feather recurring-booking-icon"
@@ -73,8 +44,8 @@ const createCustomEvent =
     return (
       <div ref={containerRef} style={{ fontSize: "12px" }}>
         {recurringIcon}
-        <p hidden={!event.booking.subject}>
-          <strong>{event.booking.subject}</strong>
+        <p hidden={!event.subject}>
+          <strong>{event.subject}</strong>
         </p>
         {showDetails && (
           <>
@@ -82,7 +53,7 @@ const createCustomEvent =
               className="feather"
               style={{ width: "12px", height: "12px" }}
             />{" "}
-            {event.booking.space.location.name}, {event.booking.space.name}
+            {event.locationName}, {event.spaceName}
           </>
         )}
       </div>
