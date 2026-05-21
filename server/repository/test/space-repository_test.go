@@ -3,10 +3,36 @@ package test
 import (
 	"slices"
 	"testing"
+	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
+
+func TestSpaceGetAllInTimeApprovedField(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	location, space := CreateTestLocationAndSpace(org)
+
+	base := time.Now().Add(1 * time.Hour)
+	queryStart := base.Add(-1 * time.Hour)
+	queryEnd := base.Add(3 * time.Hour)
+
+	// bookings ordered by enter_time ASC: b1 first, b2 second
+	b1 := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: base, Leave: base.Add(1 * time.Hour), Approved: true}
+	GetBookingRepository().Create(b1)
+	b2 := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: base.Add(1 * time.Hour), Leave: base.Add(2 * time.Hour), Approved: false}
+	GetBookingRepository().Create(b2)
+
+	res, err := GetSpaceRepository().GetAllInTime(location.ID, queryStart, queryEnd)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(res))
+	CheckTestInt(t, 2, len(res[0].Bookings))
+	CheckTestBool(t, true, res[0].Bookings[0].Approved)
+	CheckTestBool(t, false, res[0].Bookings[1].Approved)
+}
 
 func TestSpacesCount(t *testing.T) {
 	ClearTestDB()

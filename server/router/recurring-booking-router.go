@@ -26,7 +26,7 @@ type CreateRecurringBookingRequest struct {
 	End      time.Time      `json:"end" validate:"required"`
 	Cadence  Cadence        `json:"cadence" validate:"required,min=1,max=2"`
 	Cycle    int            `json:"cycle" validate:"required,min=1"`
-	Weekdays []time.Weekday `json:"weekdays"`
+	Weekdays []time.Weekday `json:"weekdays" validate:"dive,min=0,max=6"`
 }
 
 type CreateRecurringBookingResponse struct {
@@ -248,6 +248,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 	for _, b := range bookings {
 		bookingReq := &CreateBookingRequest{
 			SpaceID: b.SpaceID,
+			Subject: b.Subject,
 			BookingRequest: BookingRequest{
 				Enter: b.Enter,
 				Leave: b.Leave,

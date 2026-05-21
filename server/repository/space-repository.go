@@ -35,6 +35,7 @@ type SpaceAvailabilityBookingEntry struct {
 	Enter       time.Time
 	Leave       time.Time
 	Subject     string
+	Approved    bool
 }
 
 type SpaceAvailability struct {
@@ -151,7 +152,7 @@ func (r *SpaceRepository) GetAllInTime(locationID string, enter, leave time.Time
 		")"
 	rows, err := GetDatabase().DB().Query("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, "+
 		"NOT EXISTS(SELECT id FROM bookings WHERE "+subQueryWhere+"), "+
-		"ARRAY(SELECT CONCAT(users.id, '@@@', users.email, '@@@', bookings.enter_time, '@@@', bookings.leave_time, '@@@', bookings.id, '@@@', bookings.subject, '@@@', bookings.recurring_id) FROM bookings INNER JOIN users ON users.id = bookings.user_id WHERE "+subQueryWhere+" ORDER BY bookings.enter_time ASC) "+
+		"ARRAY(SELECT CONCAT(users.id, '@@@', users.email, '@@@', bookings.enter_time, '@@@', bookings.leave_time, '@@@', bookings.id, '@@@', bookings.subject, '@@@', bookings.recurring_id, '@@@', bookings.approved::text) FROM bookings INNER JOIN users ON users.id = bookings.user_id WHERE "+subQueryWhere+" ORDER BY bookings.enter_time ASC) "+
 		"FROM spaces "+
 		"WHERE location_id = $3 "+
 		"ORDER BY name", enter, leave, locationID)
@@ -176,6 +177,7 @@ func (r *SpaceRepository) GetAllInTime(locationID string, enter, leave time.Time
 				Leave:       leave,
 				Subject:     tokens[5],
 				RecurringID: tokens[6],
+				Approved:    tokens[7] == "true",
 			}
 			e.Bookings = append(e.Bookings, entry)
 		}

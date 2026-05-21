@@ -9,6 +9,7 @@ export default class Navigation {
   static readonly PATH_API_AUTH_ORG = "/auth/org/";
   static readonly PATH_API_AUTH_SINGLE_ORG = "/auth/singleorg";
   static readonly PATH_API_SEARCH = "/search";
+  static readonly PATH_API_UC = "/uc";
 
   // Pages
   static readonly PATH_PAGE_SEARCH: string = "/search";

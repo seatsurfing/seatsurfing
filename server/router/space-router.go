@@ -15,8 +15,8 @@ type SpaceRouter struct {
 }
 
 type SpaceAttributeValueRequest struct {
-	AttributeID string `json:"attributeId"`
-	Value       string `json:"value"`
+	AttributeID string `json:"attributeId" validate:"required,uuid"`
+	Value       string `json:"value" validate:"max=256"`
 }
 
 type CreateSpaceRequest struct {
@@ -29,9 +29,9 @@ type CreateSpaceRequest struct {
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
 	KioskEnabled          bool                         `json:"kioskEnabled"`
-	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
-	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
-	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
+	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
+	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
+	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 }
 
 type UpdateSpaceRequest struct {
@@ -72,6 +72,7 @@ type GetSpaceAvailabilityBookingsResponse struct {
 	Enter       time.Time `json:"enter"`
 	Leave       time.Time `json:"leave"`
 	Subject     string    `json:"subject"`
+	Approved    bool      `json:"approved"`
 }
 
 type GetSpaceAvailabilityResponse struct {
@@ -85,11 +86,15 @@ type GetSpaceAvailabilityRequest struct {
 	Enter      time.Time         `json:"enter"`
 	Leave      time.Time         `json:"leave"`
 	SpaceID    string            `json:"spaceId"`
-	Attributes []SearchAttribute `json:"attributes"`
+	Attributes []SearchAttribute `json:"attributes" validate:"dive"`
 }
 
 func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
+
+	// Availability
 	s.HandleFunc("/availability", router.getAvailability).Methods("GET")
+	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("GET")
+
 	s.HandleFunc("/bulk", router.bulkUpdate).Methods("POST")
 	s.HandleFunc("/{id}/approver/remove", router.removeApprovers).Methods("POST")
 	s.HandleFunc("/{id}/approver", router.getApprovers).Methods("GET")
@@ -97,7 +102,6 @@ func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/allowedbooker/remove", router.removeAllowedBookers).Methods("POST")
 	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
 	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
-	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -293,6 +297,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 					Enter:       enter,
 					Leave:       leave,
 					Subject:     booking.Subject,
+					Approved:    booking.Approved,
 				}
 				m.Bookings = append(m.Bookings, entry)
 			}
