@@ -2670,8 +2670,14 @@ class Search extends React.Component<Props, State> {
     const spaceCalendarModal = (
       <Modal
         show={this.state.showSpaceCalendar}
-        onHide={() => this.setState({ showSpaceCalendar: false })}
+        onHide={() =>
+          this.setState({
+            showSpaceCalendar: false,
+            [this.state.spaceCalendarReturnTo]: true,
+          } as any)
+        }
         size="xl"
+        fullscreen="md-down"
       >
         <Modal.Header closeButton>
           <Modal.Title>
