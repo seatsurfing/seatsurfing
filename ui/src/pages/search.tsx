@@ -787,15 +787,6 @@ class Search extends React.Component<Props, State> {
       : this.state.prefBookedColor;
   };
 
-  getBookersList = (bookings: Booking[]) => {
-    if (!bookings.length) return "";
-    let str = "";
-    bookings.forEach((b) => {
-      str += (str ? ", " : "") + b.user.email;
-    });
-    return str;
-  };
-
   renderItem = (item: Space) => {
     const bookings = Booking.createFromRawArray(item.rawBookings);
     const boxStyle: React.CSSProperties = {
@@ -829,7 +820,6 @@ class Search extends React.Component<Props, State> {
         data-tooltip-id="space-tooltip"
         data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
-        title={this.getBookersList(bookings)}
       >
         {item.approvalRequired && (
           <IconUserCheck size={16} className="position-absolute top-0 end-0" />
