@@ -25,6 +25,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
+  bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
 import moment from "moment-timezone";
@@ -207,18 +208,7 @@ class Bookings extends React.Component<Props, State> {
 
     const calendarEvents: CalendarEvent[] = [];
     for (const item of this.data) {
-      let title = `${item.space.location.name} (${item.space.name})`;
-      if (item.subject) {
-        title += `, ${item.subject}`;
-      }
-      if (item.isRecurring()) {
-        title += ` (${this.props.t("recurring")})`;
-      }
-
-      calendarEvents.push({
-        title, // used in tooltip
-        booking: item,
-      });
+      calendarEvents.push(bookingToCalendarEvent(item, this.props.t));
     }
 
     const formatter = Formatting.getBookingDateFormatter();

@@ -45,6 +45,7 @@ import {
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
+  bookingToSpaceCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
 import moment from "moment-timezone";
@@ -2626,10 +2627,7 @@ class Search extends React.Component<Props, State> {
     );
 
     const spaceCalendarEvents: CalendarEvent[] =
-      this.state.spaceCalendarBookings.map((b) => ({
-        title: b.user.email + (b.subject ? ` – ${b.subject}` : ""),
-        booking: b,
-      }));
+      this.state.spaceCalendarBookings.map(bookingToSpaceCalendarEvent);
 
     const SpaceCalCustomEvent = createCustomEvent(this.props.t);
 
