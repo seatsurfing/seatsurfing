@@ -33,7 +33,7 @@ type CreateLocationRequest struct {
 	Timezone              string   `json:"timezone" validate:"max=32"`
 	Enabled               bool     `json:"enabled"`
 	MapScale              float64  `json:"mapScale"`
-	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds"`
+	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 }
 
 type GetLocationResponse struct {
@@ -65,7 +65,7 @@ type GetSpaceAttributeValueResponse struct {
 type SearchLocationRequest struct {
 	Enter      time.Time         `json:"enter" validate:"required"`
 	Leave      time.Time         `json:"leave" validate:"required"`
-	Attributes []SearchAttribute `json:"attributes"`
+	Attributes []SearchAttribute `json:"attributes" validate:"dive"`
 }
 
 const (

@@ -11,9 +11,9 @@ import (
 )
 
 type SearchAttribute struct {
-	AttributeID string `json:"attributeId"`
-	Comparator  string `json:"comparator"`
-	Value       string `json:"value"`
+	AttributeID string `json:"attributeId" validate:"omitempty,uuid"`
+	Comparator  string `json:"comparator" validate:"omitempty,oneof=eq neq contains ncontains gt gte lt lte"`
+	Value       string `json:"value" validate:"max=256"`
 }
 
 func MatchesSearchAttributes(entityID string, m *[]SearchAttribute, attributeValues []*SpaceAttributeValue) bool {
