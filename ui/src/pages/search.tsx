@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-bootstrap";
 import Loading from "../components/Loading";
+import FullWidthModal from "../components/FullWidthModal";
 import {
   IoFilter as FilterIcon,
   IoInformation as InfoIcon,
@@ -2641,7 +2642,7 @@ class Search extends React.Component<Props, State> {
     const spaceCalLocalizer = momentLocalizer(moment);
 
     const spaceCalendarModal = (
-      <Modal
+      <FullWidthModal
         show={this.state.showSpaceCalendar}
         onHide={() =>
           this.setState({
@@ -2649,8 +2650,7 @@ class Search extends React.Component<Props, State> {
             [this.state.spaceCalendarReturnTo]: true,
           } as any)
         }
-        size="xl"
-        fullscreen="lg-down"
+        maxWidth={1400}
       >
         <Modal.Header closeButton>
           <Modal.Title>
@@ -2715,7 +2715,7 @@ class Search extends React.Component<Props, State> {
             {this.props.t("back")}
           </Button>
         </Modal.Footer>
-      </Modal>
+      </FullWidthModal>
     );
 
     const successModal = (
