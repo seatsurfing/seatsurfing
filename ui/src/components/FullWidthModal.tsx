@@ -32,7 +32,7 @@ const FullWidthModal: React.FC<Props> = ({
           </ModalDialog>
         );
       },
-    [maxWidthValue]
+    [maxWidthValue],
   );
 
   return (
