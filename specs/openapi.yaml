@@ -630,6 +630,8 @@ components:
           format: date-time
         subject:
           type: string
+        approved:
+          type: boolean
 
     SpaceBulkUpdateRequest:
       type: object
