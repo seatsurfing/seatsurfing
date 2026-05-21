@@ -20,6 +20,7 @@ const createCustomEvent =
     const containerRef = useRef<HTMLDivElement>(null);
     const [showDetails, setShowDetails] = useState(true);
 
+    // dynamically show/hide information based on calender entry width
     useEffect(() => {
       const el = containerRef.current;
       if (!el) return;
