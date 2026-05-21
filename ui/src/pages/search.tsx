@@ -1025,10 +1025,19 @@ class Search extends React.Component<Props, State> {
         weekStart,
         weekEnd,
       );
-      const bookings =
+      const bookings = (
         spaces.length > 0
           ? Booking.createFromRawArray(spaces[0].rawBookings)
-          : [];
+          : []
+      ).map((e) => {
+        // populate data for calender view
+        e.space.name = space.name;
+        e.space.location.name =
+          this.locations.find((e) => e.id === this.state.locationId)?.name ??
+          "";
+        return e;
+      });
+
       this.setState({
         spaceCalendarBookings: bookings,
         spaceCalendarLoading: false,
