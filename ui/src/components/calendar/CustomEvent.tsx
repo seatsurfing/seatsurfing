@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   MapPin as IconLocation,
   Clock as IconPending,
@@ -11,9 +12,24 @@ export type CalendarEvent = {
   booking: Booking;
 };
 
+const WIDTH_THRESHOLD = 100;
+
 const createCustomEvent =
   (t: TranslationFunc) =>
   ({ event }: { event: CalendarEvent }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [showDetails, setShowDetails] = useState(true);
+
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      const observer = new ResizeObserver((entries) => {
+        setShowDetails(entries[0].contentRect.width >= WIDTH_THRESHOLD);
+      });
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, []);
+
     // show no information for events < 1 hr
     if (
       event.booking.leave.getTime() - event.booking.enter.getTime() <=
@@ -23,7 +39,7 @@ const createCustomEvent =
     }
 
     let pending = <></>;
-    if (event.booking.approved === false) {
+    if (showDetails && event.booking.approved === false) {
       pending = (
         <>
           <IconPending
@@ -47,18 +63,21 @@ const createCustomEvent =
     }
 
     return (
-      <div style={{ fontSize: "12px" }}>
+      <div ref={containerRef} style={{ fontSize: "12px" }}>
         {recurringIcon}
         <p hidden={!event.booking.subject}>
           <strong>{event.booking.subject}</strong>
         </p>
         {pending}
-        <IconLocation
-          className="feather"
-          style={{ width: "12px", height: "12px" }}
-        />{" "}
-        {event.booking.space.location.name}, {event.booking.space.name}
-        <br />
+        {showDetails && (
+          <>
+            <IconLocation
+              className="feather"
+              style={{ width: "12px", height: "12px" }}
+            />{" "}
+            {event.booking.space.location.name}, {event.booking.space.name}
+          </>
+        )}
       </div>
     );
   };
