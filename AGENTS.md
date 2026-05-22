@@ -8,13 +8,13 @@ This document defines coding patterns, conventions, and guardrails for AI agents
 
 Seatsurfing is a desk booking / hot-desking web application. The repo is a monorepo with:
 
-| Directory | Language | Purpose |
-|-----------|----------|---------|
-| `server/` | Go 1.25+ | Backend API server (PostgreSQL, Gorilla Mux) |
-| `ui/` | TypeScript / React 19 / Next.js 16 | Frontend SPA (static export, served under `/ui`) |
-| `e2e/` | TypeScript / Playwright | End-to-end browser tests |
-| `specs/` | Markdown | Feature specifications |
-| `healthcheck/` | Go | Container health check binary |
+| Directory      | Language                           | Purpose                                          |
+| -------------- | ---------------------------------- | ------------------------------------------------ |
+| `server/`      | Go 1.25+                           | Backend API server (PostgreSQL, Gorilla Mux)     |
+| `ui/`          | TypeScript / React 19 / Next.js 16 | Frontend SPA (static export, served under `/ui`) |
+| `e2e/`         | TypeScript / Playwright            | End-to-end browser tests                         |
+| `specs/`       | Markdown                           | Feature specifications                           |
+| `healthcheck/` | Go                                 | Container health check binary                    |
 
 ---
 
@@ -46,17 +46,17 @@ server/
 
 ### Naming Conventions
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Repository file | `<entity>-repository.go` | `booking-repository.go` |
-| Router file | `<entity>-router.go` | `booking-router.go` |
-| Repository test | `<entity>-repository_test.go` in `repository/test/` | `booking-repository_test.go` |
-| Router test | `<entity>-router_test.go` in `router/test/` | `booking-router_test.go` |
-| Struct type | PascalCase, singular | `Booking`, `User`, `Space` |
-| Repository singleton | `Get<Entity>Repository()` | `GetBookingRepository()` |
-| Test function | `Test<Entity><Scenario>` | `TestBookingsCRUD` |
-| Test helper | `CreateTest<Entity>(...)` | `CreateTestOrg("test.com")` |
-| Assertion helper | `CheckTest<Type>(t, expected, actual)` | `CheckTestString(t, "foo", val)` |
+| Element              | Convention                                          | Example                          |
+| -------------------- | --------------------------------------------------- | -------------------------------- |
+| Repository file      | `<entity>-repository.go`                            | `booking-repository.go`          |
+| Router file          | `<entity>-router.go`                                | `booking-router.go`              |
+| Repository test      | `<entity>-repository_test.go` in `repository/test/` | `booking-repository_test.go`     |
+| Router test          | `<entity>-router_test.go` in `router/test/`         | `booking-router_test.go`         |
+| Struct type          | PascalCase, singular                                | `Booking`, `User`, `Space`       |
+| Repository singleton | `Get<Entity>Repository()`                           | `GetBookingRepository()`         |
+| Test function        | `Test<Entity><Scenario>`                            | `TestBookingsCRUD`               |
+| Test helper          | `CreateTest<Entity>(...)`                           | `CreateTestOrg("test.com")`      |
+| Assertion helper     | `CheckTest<Type>(t, expected, actual)`              | `CheckTestString(t, "foo", val)` |
 
 ### Singleton Pattern
 
@@ -145,19 +145,19 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 
 Always use the existing response helpers. Never write raw status codes:
 
-| Function | HTTP Status | Use When |
-|----------|------------|----------|
-| `SendJSON(w, &obj)` | 200 | Returning data |
-| `SendCreated(w, id)` | 201 | Entity created (sets `X-Object-ID` header) |
-| `SendUpdated(w)` | 204 | Entity updated |
-| `SendBadRequest(w)` | 400 | Invalid input |
-| `SendBadRequestCode(w, code)` | 400 | Invalid input with error code in `X-Error-Code` |
-| `SendUnauthorized(w)` | 401 | Auth failure |
-| `SendForbidden(w)` | 403 | Permission denied |
-| `SendNotFound(w)` | 404 | Entity not found |
-| `SendAlreadyExists(w)` | 409 | Duplicate/conflict |
-| `SendTooManyRequests(w)` | 429 | Rate limit hit |
-| `SendInternalServerError(w)` | 500 | Unexpected error |
+| Function                      | HTTP Status | Use When                                        |
+| ----------------------------- | ----------- | ----------------------------------------------- |
+| `SendJSON(w, &obj)`           | 200         | Returning data                                  |
+| `SendCreated(w, id)`          | 201         | Entity created (sets `X-Object-ID` header)      |
+| `SendUpdated(w)`              | 204         | Entity updated                                  |
+| `SendBadRequest(w)`           | 400         | Invalid input                                   |
+| `SendBadRequestCode(w, code)` | 400         | Invalid input with error code in `X-Error-Code` |
+| `SendUnauthorized(w)`         | 401         | Auth failure                                    |
+| `SendForbidden(w)`            | 403         | Permission denied                               |
+| `SendNotFound(w)`             | 404         | Entity not found                                |
+| `SendAlreadyExists(w)`        | 409         | Duplicate/conflict                              |
+| `SendTooManyRequests(w)`      | 429         | Rate limit hit                                  |
+| `SendInternalServerError(w)`  | 500         | Unexpected error                                |
 
 #### Custom Error Codes
 
@@ -188,6 +188,7 @@ The middleware order is: `SecurityHeaderMiddleware` â†’ `VerifyAuthMiddleware` â
 ### Configuration
 
 All configuration is via environment variables, read once at startup in `config/config.go`. The `Config` struct uses `sync.Once`. Helper methods:
+
 - `getEnv(key, defaultValue string) string`
 - `getEnvInt(key string, defaultValue int) int`
 - `getEnvBool(key string, defaultValue bool) bool`
@@ -289,14 +290,14 @@ export default withTranslation(MyPage as any);
 
 ### File Naming
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Page component | feature name, lowercase | `bookings.tsx`, `search.tsx` |
-| Admin page | `pages/admin/<feature>/index.tsx` or `[id].tsx` | `pages/admin/users/[id].tsx` |
-| Reusable component | PascalCase | `NavBar.tsx`, `SaveButton.tsx` |
-| CSS file | PascalCase or feature name in `src/styles/` | `NavBar.css`, `Booking.css` |
-| Entity/type | PascalCase in `src/types/` | `User.ts`, `Booking.ts` |
-| Utility | PascalCase in `src/util/` | `Ajax.ts`, `DateUtil.ts` |
+| Element            | Convention                                      | Example                        |
+| ------------------ | ----------------------------------------------- | ------------------------------ |
+| Page component     | feature name, lowercase                         | `bookings.tsx`, `search.tsx`   |
+| Admin page         | `pages/admin/<feature>/index.tsx` or `[id].tsx` | `pages/admin/users/[id].tsx`   |
+| Reusable component | PascalCase                                      | `NavBar.tsx`, `SaveButton.tsx` |
+| CSS file           | PascalCase or feature name in `src/styles/`     | `NavBar.css`, `Booking.css`    |
+| Entity/type        | PascalCase in `src/types/`                      | `User.ts`, `Booking.ts`        |
+| Utility            | PascalCase in `src/util/`                       | `Ajax.ts`, `DateUtil.ts`       |
 
 ---
 
@@ -320,19 +321,19 @@ export default withTranslation(MyPage as any);
 
 #### Test Helpers (in `testutil/`)
 
-| Helper | Purpose |
-|--------|---------|
-| `CreateTestOrg(domain)` | Creates an org with domain |
-| `CreateTestUserInOrg(org)` | Creates a regular user in org |
-| `CreateTestUserOrgAdmin(org)` | Creates an org admin |
-| `CreateTestUserSuperAdmin()` | Creates a super admin |
-| `CreateTestLocationAndSpace(org)` | Creates a location + space |
-| `CreateTestBooking9To5(user, space, dayOffset)` | Creates a 9-5 booking |
-| `CreateTestGroup(org, user)` | Creates a group with member |
-| `NewHTTPRequest(method, url, userID, body)` | Creates authenticated HTTP request |
-| `ExecuteTestRequest(req)` | Executes request against the router |
-| `ClearTestDB()` | Truncates all tables |
-| `LoginTestUser(userID)` | Creates test login response |
+| Helper                                          | Purpose                             |
+| ----------------------------------------------- | ----------------------------------- |
+| `CreateTestOrg(domain)`                         | Creates an org with domain          |
+| `CreateTestUserInOrg(org)`                      | Creates a regular user in org       |
+| `CreateTestUserOrgAdmin(org)`                   | Creates an org admin                |
+| `CreateTestUserSuperAdmin()`                    | Creates a super admin               |
+| `CreateTestLocationAndSpace(org)`               | Creates a location + space          |
+| `CreateTestBooking9To5(user, space, dayOffset)` | Creates a 9-5 booking               |
+| `CreateTestGroup(org, user)`                    | Creates a group with member         |
+| `NewHTTPRequest(method, url, userID, body)`     | Creates authenticated HTTP request  |
+| `ExecuteTestRequest(req)`                       | Executes request against the router |
+| `ClearTestDB()`                                 | Truncates all tables                |
+| `LoginTestUser(userID)`                         | Creates test login response         |
 
 #### Assertion Helpers
 
