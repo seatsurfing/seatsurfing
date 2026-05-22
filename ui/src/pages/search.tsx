@@ -2657,7 +2657,8 @@ class Search extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body
           style={{
-            height: "calc(100vh - 210px)",
+            flex: 1,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",

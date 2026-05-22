@@ -9,6 +9,7 @@ interface Props extends Omit<ModalProps, "size" | "fullscreen" | "dialogAs"> {
 
 const FullWidthModal: React.FC<Props> = ({
   maxWidth = 1200,
+  contentClassName,
   children,
   ...modalProps
 }) => {
@@ -26,6 +27,7 @@ const FullWidthModal: React.FC<Props> = ({
               width: "calc(100% - 1rem)",
               maxWidth: maxWidthValue,
               margin: "0.5rem auto",
+              height: "calc(100vh - 1rem)",
             }}
           >
             {dc}
@@ -35,8 +37,16 @@ const FullWidthModal: React.FC<Props> = ({
     [maxWidthValue],
   );
 
+  const combinedContentClassName = ["h-100", contentClassName]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <Modal {...modalProps} dialogAs={DialogComponent}>
+    <Modal
+      {...modalProps}
+      contentClassName={combinedContentClassName}
+      dialogAs={DialogComponent}
+    >
       {children}
     </Modal>
   );
