@@ -139,6 +139,7 @@ interface State {
   spaceCalendarBookings: Booking[];
   spaceCalendarLoading: boolean;
   spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
+  windowWidth: number;
 }
 
 interface Props {
@@ -241,10 +242,16 @@ class Search extends React.Component<Props, State> {
       spaceCalendarBookings: [],
       spaceCalendarLoading: false,
       spaceCalendarReturnTo: "showBookingNames",
+      windowWidth: typeof window !== "undefined" ? window.innerWidth : 1024,
     };
   }
 
+  onWindowResize = () => {
+    this.setState({ windowWidth: window.innerWidth });
+  };
+
   componentDidMount = () => {
+    window.addEventListener("resize", this.onWindowResize);
     if (!Ajax.hasAccessToken()) {
       this.props.router.push({
         pathname: "/login",
@@ -253,6 +260,10 @@ class Search extends React.Component<Props, State> {
       return;
     }
     this.loadItems();
+  };
+
+  componentWillUnmount = () => {
+    window.removeEventListener("resize", this.onWindowResize);
   };
 
   loadItems = () => {
@@ -2675,8 +2686,13 @@ class Search extends React.Component<Props, State> {
                 startAccessor={(event: CalendarEvent) => event.enter}
                 endAccessor={(event: CalendarEvent) => event.leave}
                 style={{ height: "100%", width: "100%" }}
-                defaultView="week"
-                views={["week"]}
+                view={
+                  this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
+                    ? "day"
+                    : "week"
+                }
+                onView={() => {}}
+                views={["week", "day"]}
                 eventPropGetter={(event: CalendarEvent) => {
                   if (event.approved === false) {
                     return { style: { opacity: 0.5 } };
