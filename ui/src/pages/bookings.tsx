@@ -1,7 +1,6 @@
 import React from "react";
 import Loading from "../components/Loading";
 import { Button, Form, ListGroup, Modal } from "react-bootstrap";
-import Link from "next/link";
 import {
   Loader as IconLoad,
   Calendar as IconCalendar,
@@ -25,6 +24,10 @@ import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
+import createCustomEvent, {
+  bookingToCalendarEvent,
+  CalendarEvent,
+} from "@/components/calendar/CustomEvent";
 import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
@@ -203,81 +206,12 @@ class Bookings extends React.Component<Props, State> {
       );
     }
 
-    type Event = {
-      start: Date;
-      end: Date;
-      title: string;
-      booking: Booking;
-    };
-
-    const calendarEvents: Event[] = [];
+    const calendarEvents: CalendarEvent[] = [];
     for (const item of this.data) {
-      let title = `${item.space.location.name} (${item.space.name})`;
-      if (item.subject) {
-        title += `, ${item.subject}`;
-      }
-      if (item.isRecurring()) {
-        title += ` (${this.props.t("recurring")})`;
-      }
-
-      calendarEvents.push({
-        start: item.enter,
-        end: item.leave,
-        title, // used in tooltip
-        booking: item,
-      });
+      calendarEvents.push(bookingToCalendarEvent(item, "user", this.props.t));
     }
 
     const formatter = Formatting.getBookingDateFormatter();
-
-    const CustomEvent = ({ event }: { event: Event }) => {
-      // show no information for events < 1 hr
-      if (
-        event.booking.leave.getTime() - event.booking.enter.getTime() <=
-        60 * 60 * 1000
-      ) {
-        return null;
-      }
-
-      let pending = <></>;
-      if (event.booking.approved === false) {
-        pending = (
-          <>
-            <IconPending
-              className="feather"
-              style={{ width: "12px", height: "12px" }}
-            />
-            &nbsp;{this.props.t("approval")}: {this.props.t("pending")}
-            <br />
-          </>
-        );
-      }
-      let recurringIcon = <></>;
-      if (event.booking.isRecurring()) {
-        recurringIcon = (
-          <IconRecurring
-            className="feather recurring-booking-icon"
-            style={{ width: "12px", height: "12px", top: "4px", right: "4px" }}
-          />
-        );
-      }
-
-      return (
-        <div style={{ fontSize: "12px" }}>
-          {recurringIcon}
-          <p hidden={!event.booking.subject}>
-            <strong>{event.booking.subject}</strong>
-          </p>
-          {pending}
-          <IconLocation
-            className="feather"
-            style={{ width: "12px", height: "12px" }}
-          />{" "}
-          {event.booking.space.location.name}, {event.booking.space.name}
-          <br />
-        </div>
-      );
-    };
 
     const toolbar = (props: object) => (
       <CustomToolbar toolbar={props as any} t={this.props.t} />
@@ -352,8 +286,8 @@ class Bookings extends React.Component<Props, State> {
               getNow={() => DateUtil.getNowFakeUTC()}
               localizer={calendarLocalizer}
               events={calendarEvents}
-              startAccessor="start"
-              endAccessor="end"
+              startAccessor={(event: CalendarEvent) => event.enter}
+              endAccessor={(event: CalendarEvent) => event.leave}
               style={{
                 height: "calc(100vh - 160px)",
                 width: "100%",
@@ -370,20 +304,21 @@ class Bookings extends React.Component<Props, State> {
                 }
               }}
               onSelectEvent={(e) => {
-                this.onItemPress(e.booking);
+                const booking = this.data.find((b) => b.id === e.bookingId);
+                if (booking) this.onItemPress(booking);
               }}
               culture={Formatting.Language}
               length={7}
               views={["week"]}
-              eventPropGetter={(event: Event) => {
-                if (event.booking.approved === false) {
+              eventPropGetter={(event: CalendarEvent) => {
+                if (event.approved === false) {
                   return { style: { opacity: 0.5 } };
                 }
                 return {};
               }}
               components={{
                 toolbar,
-                event: CustomEvent,
+                event: createCustomEvent(),
               }}
               scrollToTime={DateUtil.convertToFakeUTCDate(
                 DateUtil.getTodayTime(this.workdayStartHour, 0, 0),
