@@ -19,6 +19,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t }) => {
   const weekStart = moment(toolbar.date).clone().startOf("week");
   const weekEnd = moment(toolbar.date).clone().endOf("week");
   const formatter = Formatting.getFormatterDate();
+  const isDayView = toolbar.view === "day";
 
   return (
     <div
@@ -55,8 +56,9 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t }) => {
           alignItems: "center",
         }}
       >
-        {formatter.format(weekStart.toDate())} –{" "}
-        {formatter.format(weekEnd.toDate())}
+        {isDayView
+          ? formatter.format(toolbar.date)
+          : `${formatter.format(weekStart.toDate())} – ${formatter.format(weekEnd.toDate())}`}
       </span>
     </div>
   );
