@@ -2686,7 +2686,7 @@ class Search extends React.Component<Props, State> {
                 startAccessor={(event: CalendarEvent) => event.enter}
                 endAccessor={(event: CalendarEvent) => event.leave}
                 style={{ height: "100%", width: "100%" }}
-                view={this.state.windowWidth < 576 ? "day" : "week"}
+                view={this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL ? "day" : "week"}
                 onView={() => {}}
                 views={["week", "day"]}
                 eventPropGetter={(event: CalendarEvent) => {
