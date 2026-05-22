@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.96.0](https://github.com/seatsurfing/seatsurfing/compare/v1.95.0...v1.96.0) (2026-05-22)
+
+
+### ✨ Features
+
+* **booking-ui:** optimize room calendar on small viewports ([#2168](https://github.com/seatsurfing/seatsurfing/issues/2168)) ([ff3eee0](https://github.com/seatsurfing/seatsurfing/commit/ff3eee066ca8b3b0334384d66411325fa15178ab))
+
 ## [1.95.0](https://github.com/seatsurfing/seatsurfing/compare/v1.94.0...v1.95.0) (2026-05-21)
 
 
