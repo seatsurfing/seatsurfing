@@ -134,7 +134,7 @@
   "enter": "Beginn",
   "entryCreated": "Eintrag wurde erstellt.",
   "entryUpdated": "Eingaben gespeichert.",
-  "entryUpdatedReloadRequired": "Die Eingaben wurden erfolgreich gespeichert. Zur Übernahme ist eine Neuladen der Seite nötig.",
+  "entryUpdatedReloadRequired": "Die Eingaben wurden erfolgreich gespeichert. Zur Übernahme ist ein Neuladen der Seite nötig.",
   "errorSlotConflict": "Es gibt bereits eine Buchung im gewählten Zeitraum.",
   "errorAddDomain": "Fehler beim Hinzufügen der Domain.",
   "errorBookingLimit": "Das Limit von {{num}} Buchungen wurde erreicht.",
