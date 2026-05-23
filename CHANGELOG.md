@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.97.0](https://github.com/seatsurfing/seatsurfing/compare/v1.96.0...v1.97.0) (2026-05-23)
+
+
+### ✨ Features
+
+* **booking-ui:** show space calendar day view on small viewport and optimize modal height ([#2174](https://github.com/seatsurfing/seatsurfing/issues/2174)) ([5c120e6](https://github.com/seatsurfing/seatsurfing/commit/5c120e6157dbcf9f5f7692bbcde2dea63065bfbc))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump the production-dependencies group across 1 directory with 3 updates ([#2171](https://github.com/seatsurfing/seatsurfing/issues/2171)) ([6c104b6](https://github.com/seatsurfing/seatsurfing/commit/6c104b69d925ffd4c072054946853127ca5c34b2))
+* **server:** use system dns instead of config nameserver when performing accessibility checks ([#2178](https://github.com/seatsurfing/seatsurfing/issues/2178)) ([9fb3af6](https://github.com/seatsurfing/seatsurfing/commit/9fb3af6ce3706eb42353e105505dd67435c5ecd0))
+
 ## [1.96.0](https://github.com/seatsurfing/seatsurfing/compare/v1.95.0...v1.96.0) (2026-05-22)
 
 
