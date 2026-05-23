@@ -464,5 +464,5 @@
   "revokeApiToken": "Revoke token",
   "apiTokenOnceWarning": "Copy the token now — it will not be shown again.",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
-  "bookingsByWeekday": "Bookings by Weekday"
+  "bookingsByWeekday": "Bookings by weekday"
 }
