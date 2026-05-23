@@ -1358,8 +1358,10 @@ class Settings extends React.Component<Props, State> {
           onHide={() => {
             window.location.reload();
           }}
+          backdrop="static"
+          keyboard={false}
         >
-          <Modal.Header closeButton>
+          <Modal.Header>
             <Modal.Title>{this.props.t("settings")}</Modal.Title>
           </Modal.Header>
           <Modal.Body>{this.props.t("entryUpdatedReloadRequired")}</Modal.Body>
