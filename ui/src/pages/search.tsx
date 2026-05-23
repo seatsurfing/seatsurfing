@@ -247,7 +247,7 @@ class Search extends React.Component<Props, State> {
   }
 
   onWindowResize = () => {
-    this.setState({ windowWidth: window.innerWidth });
+    this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
   };
 
   componentDidMount = () => {
