@@ -78,7 +78,7 @@ func isDomainAccessible(scheme, domain string, port int, orgID string) error {
 	if err != nil {
 		return err
 	}
-	client := GetHTTPClientWithCustomDNS(true)
+	client := GetHTTPClientInsecureSkipVerify()
 	res, err := client.Do(req)
 	if err != nil {
 		return err
