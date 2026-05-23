@@ -68,7 +68,6 @@ interface State {
   disableBuddies: boolean;
   loading: boolean;
   submitting: boolean;
-  saved: boolean;
   showSavedModal: boolean;
   error: boolean;
   newDomain: string;
@@ -127,7 +126,6 @@ class Settings extends React.Component<Props, State> {
       disableBuddies: false,
       loading: true,
       submitting: false,
-      saved: false,
       showSavedModal: false,
       error: false,
       newDomain: "",
@@ -295,7 +293,6 @@ class Settings extends React.Component<Props, State> {
     e.preventDefault();
     this.setState({
       submitting: true,
-      saved: false,
       error: false,
     });
     const payload = [
@@ -398,7 +395,6 @@ class Settings extends React.Component<Props, State> {
       await OrgSettings.setAll(payload);
       this.setState({
         submitting: false,
-        saved: true,
         showSavedModal: true,
       });
     } catch {
