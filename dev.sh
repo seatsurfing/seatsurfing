@@ -11,6 +11,11 @@ if [[ "$*" == *"--install"* ]]; then
     (cd "$SCRIPT_DIR/ui" && npm ci)
 fi
 
+if [[ "$*" == *"--clearDatabase"* ]]; then
+    docker exec postgres-seatsurfing psql -U postgres -c 'DROP DATABASE IF EXISTS seatsurfing;'
+    docker exec postgres-seatsurfing psql -U postgres -c 'CREATE DATABASE seatsurfing;'
+fi
+
 SESSION="seatsurfing-dev"
 
 tmux new-session -d -s "$SESSION" -x 220 -y 50
