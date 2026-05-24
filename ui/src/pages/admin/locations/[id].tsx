@@ -1881,6 +1881,7 @@ class EditLocation extends React.Component<Props, State> {
                     variant="outline-primary"
                     onClick={() => this.setState({ showDesignerModal: true })}
                   >
+                    <IconEdit className="feather" />{" "}
                     {this.props.t("editFloorPlan")}
                   </Button>
                   <Modal

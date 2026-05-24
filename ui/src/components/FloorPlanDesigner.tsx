@@ -1,5 +1,10 @@
 import React from "react";
 import { Button, Dropdown } from "react-bootstrap";
+import {
+  Move as IconMove,
+  PenTool as IconDraw,
+  Trash2 as IconDelete,
+} from "react-feather";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 
 // Element types and their default sizes
@@ -989,7 +994,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
                 })
               }
             >
-              {t("selectMove")}
+              <IconMove className="feather" /> {t("selectMove")}
             </Button>
             <Button
               size="sm"
@@ -1001,7 +1006,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
                 })
               }
             >
-              {t("drawWall")}
+              <IconDraw className="feather" /> {t("drawWall")}
             </Button>
           </div>
           <Dropdown as="span" className="me-2">
@@ -1040,7 +1045,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
             disabled={!selectedId}
             onClick={this.deleteSelected}
           >
-            {t("deleteSelected")}
+            <IconDelete className="feather" /> {t("deleteSelected")}
           </Button>
         </div>
 

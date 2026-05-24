@@ -47,7 +47,7 @@
   flex-wrap: nowrap;
 }
 
-.floor-plan-designer svg {
+.floor-plan-designer .mapScrollContainer svg {
   border: 1px solid #dee2e6;
   border-radius: 4px;
   background: #fff;
