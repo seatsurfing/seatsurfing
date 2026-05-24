@@ -24,16 +24,28 @@ class CloudHint extends React.Component<Props, State> {
         <Col sm="8">
           <Alert variant="info">
             <p>💎 {this.props.t("cloudHint")}</p>
-            <p>
-              🚀{" "}
-              <a
-                href="https://seatsurfing.io/sign-up?paid"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {this.props.t("cloudHintLink")}
-              </a>
-            </p>
+            <Row>
+              <Col sm="6">
+                🚀{" "}
+                <a
+                  href="https://seatsurfing.io/sign-up?paid"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {this.props.t("cloudHintLink")}
+                </a>
+              </Col>
+              <Col sm="6">
+                ❤️{" "}
+                <a
+                  href="https://github.com/sponsors/seatsurfing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {this.props.t("sponsorLink")}
+                </a>
+              </Col>
+            </Row>
           </Alert>
         </Col>
       </Row>
