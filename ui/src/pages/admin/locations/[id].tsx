@@ -1851,6 +1851,7 @@ class EditLocation extends React.Component<Props, State> {
                 name="mapType"
                 label={this.props.t("designFloorPlan")}
                 checked={this.state.mapType === "designed"}
+                style={{ marginBottom: "10px" }}
                 onChange={() =>
                   this.setState({
                     mapType: "designed",
@@ -1878,7 +1879,6 @@ class EditLocation extends React.Component<Props, State> {
                 <>
                   <Button
                     variant="outline-primary"
-                    size="sm"
                     onClick={() => this.setState({ showDesignerModal: true })}
                   >
                     {this.props.t("editFloorPlan")}
