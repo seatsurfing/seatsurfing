@@ -295,7 +295,10 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     return { x: svgPt.x, y: svgPt.y };
   }
 
-  getSVGCoordsFromClient(clientX: number, clientY: number): { x: number; y: number } {
+  getSVGCoordsFromClient(
+    clientX: number,
+    clientY: number,
+  ): { x: number; y: number } {
     const svg = this.svgRef.current;
     if (!svg) return { x: 0, y: 0 };
     const pt = svg.createSVGPoint();
