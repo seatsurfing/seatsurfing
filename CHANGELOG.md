@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.99.0](https://github.com/seatsurfing/seatsurfing/compare/v1.98.0...v1.99.0) (2026-05-24)
+
+
+### ✨ Features
+
+* **admin-ui:** add space shape ([#2191](https://github.com/seatsurfing/seatsurfing/issues/2191)) ([3ec414e](https://github.com/seatsurfing/seatsurfing/commit/3ec414e8d3b878b65484d16b72042ef71972f49f))
+* **admin-ui:** floor plan designer ([#2192](https://github.com/seatsurfing/seatsurfing/issues/2192)) ([aaf0a99](https://github.com/seatsurfing/seatsurfing/commit/aaf0a9958083728e887ec60575f59fc2791ec495))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add sponsor link ([#2189](https://github.com/seatsurfing/seatsurfing/issues/2189)) ([a2bde84](https://github.com/seatsurfing/seatsurfing/commit/a2bde84252adf2bc141508e95e46e4d3c23b2978))
+
 ## [1.98.0](https://github.com/seatsurfing/seatsurfing/compare/v1.97.0...v1.98.0) (2026-05-24)
 
 
