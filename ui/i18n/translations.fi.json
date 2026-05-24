@@ -462,5 +462,7 @@
   "revokeApiToken": "Revoke token",
   "apiTokenOnceWarning": "Copy the token now — it will not be shown again.",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
-  "bookingsByWeekday": "Bookings by weekday"
+  "bookingsByWeekday": "Bookings by weekday",
+  "cloudHint": "Seatsurfing is also available as a cloud-hosted solution: Leverage Microsoft Teams integration, Microsoft Exchange synchronization, SCIM 2.0 server, 24/7 support, and more. Consider upgrading to Seatsurfing Professional to unlock these features and support our work on the open-source edition.",
+  "cloudHintLink": "Learn more about Seatsurfing Professional"
 }
