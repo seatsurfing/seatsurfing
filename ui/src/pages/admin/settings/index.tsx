@@ -174,9 +174,7 @@ class Settings extends React.Component<Props, State> {
   };
 
   checkUpdates = async (): Promise<void> => {
-    if (RuntimeConfig.INFOS.cloudHosted) {
-      return;
-    }
+    if (RuntimeConfig.INFOS.cloudHosted) return;
     this.setState({ latestVersion: await UpdateChecker.check() });
   };
 
@@ -701,41 +699,33 @@ class Settings extends React.Component<Props, State> {
         <IconSave className="feather" /> {this.props.t("save")}
       </Button>
     );
+
     let updateHint = (
       <span className="form-control-plaintext">
         {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
       </span>
     );
-    const domain = window.location.host.split(":").shift();
-    if (
-      this.state.latestVersion &&
-      !(
-        domain?.endsWith(".seatsurfing.app") ||
-        domain?.endsWith(".seatsurfing.io")
-      )
-    ) {
-      if (this.state.latestVersion.updateAvailable) {
-        updateHint = (
-          <span className="form-control-plaintext">
-            {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
-            &nbsp;(
-            <a
-              href="https://github.com/seatsurfing/seatsurfing/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              upgrade to {this.state.latestVersion.version}
-            </a>
-            )
-          </span>
-        );
-      } else {
-        updateHint = (
-          <span className="form-control-plaintext">
-            {process.env.NEXT_PUBLIC_PRODUCT_VERSION} (up to date)
-          </span>
-        );
-      }
+    if (this.state.latestVersion?.updateAvailable) {
+      updateHint = (
+        <span className="form-control-plaintext">
+          {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
+          &nbsp;(
+          <a
+            href="https://github.com/seatsurfing/seatsurfing/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            upgrade to {this.state.latestVersion.version}
+          </a>
+          )
+        </span>
+      );
+    } else if (this.state.latestVersion) {
+      updateHint = (
+        <span className="form-control-plaintext">
+          {process.env.NEXT_PUBLIC_PRODUCT_VERSION} (up to date)
+        </span>
+      );
     }
 
     return (
