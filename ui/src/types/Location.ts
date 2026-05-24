@@ -95,15 +95,17 @@ export default class Location extends Entity {
   }
 
   async getFloorPlanDesign(): Promise<string> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/floorplan-design").then(
-      (result) => result.json.designData as string,
+    const result = await Ajax.get(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/floorplan-design",
     );
+    return result.json.designData as string;
   }
 
   async setFloorPlanDesign(designData: string): Promise<void> {
-    return Ajax.postData(this.getBackendUrl() + this.id + "/floorplan-design", {
-      designData,
-    }).then(() => undefined);
+    await Ajax.postData(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/floorplan-design",
+      { designData },
+    );
   }
 
   async getAttributes(): Promise<SpaceAttributeValue[]> {
