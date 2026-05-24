@@ -125,6 +125,29 @@ function snapPoint(
   return { x, y, snapped: false };
 }
 
+/**
+ * When ortho is active, snap the free axis to the nearest wall endpoint
+ * coordinate along that axis (1-D check). Returns the snapped value or null.
+ */
+function snapAxisValue(
+  value: number,
+  axis: "x" | "y",
+  elements: FloorPlanElementDef[],
+  excludeId: string | null,
+  threshold = SNAP_THRESHOLD,
+): number | null {
+  for (const el of elements) {
+    if (el.id === excludeId) continue;
+    if (el.type === "wall") {
+      const v1 = axis === "x" ? el.x1 : el.y1;
+      const v2 = axis === "x" ? el.x2 : el.y2;
+      if (Math.abs(value - v1) <= threshold) return v1;
+      if (Math.abs(value - v2) <= threshold) return v2;
+    }
+  }
+  return null;
+}
+
 const WALL_SNAP_THRESHOLD = 20;
 
 function closestPointOnSegment(
@@ -163,12 +186,28 @@ function snapEntityToWall(
     const pt = closestPointOnSegment(cx, cy, el.x1, el.y1, el.x2, el.y2);
     if (pt.dist < bestDist) {
       bestDist = pt.dist;
-      const wallAngle =
-        Math.atan2(el.y2 - el.y1, el.x2 - el.x1) * (180 / Math.PI);
+      const wallAngleRad = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
+      const wallAngleDeg = wallAngleRad * (180 / Math.PI);
+      let entityX: number;
+      let entityY: number;
+      if (entityType === "door") {
+        // The door panel is the top edge (y = el.y) of the bounding box.
+        // After rotate(wallAngleDeg, cx, cy) the panel sits on the wall.
+        // Panel center is (0, -height/2) relative to entity center; rotate it
+        // to find where the entity center must be so the panel lands on pt.
+        const panelCx = pt.x - (height / 2) * Math.sin(wallAngleRad);
+        const panelCy = pt.y + (height / 2) * Math.cos(wallAngleRad);
+        entityX = panelCx - width / 2;
+        entityY = panelCy - height / 2;
+      } else {
+        // Window: center of bounding box on the wall.
+        entityX = pt.x - width / 2;
+        entityY = pt.y - height / 2;
+      }
       bestResult = {
-        x: pt.x - width / 2,
-        y: pt.y - height / 2,
-        rotation: wallAngle,
+        x: entityX,
+        y: entityY,
+        rotation: wallAngleDeg,
       };
     }
   }
@@ -273,6 +312,8 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     if (snap.snapped) return { x: snap.x, y: snap.y, snapped: true };
     // 2. Apply ortho constraint when a wallStart exists
     let constrained = { x: rawPos.x, y: rawPos.y };
+    let yFixed = false; // horizontal draw — Y locked, X free
+    let xFixed = false; // vertical draw   — X locked, Y free
     if (this.state.wallStart) {
       const dx = rawPos.x - this.state.wallStart.x;
       const dy = rawPos.y - this.state.wallStart.y;
@@ -282,12 +323,14 @@ class FloorPlanDesigner extends React.Component<Props, State> {
         const ORTHO_THRESHOLD = 15;
         if (angleDeg < ORTHO_THRESHOLD) {
           constrained = { x: rawPos.x, y: this.state.wallStart.y };
+          yFixed = true;
         } else if (angleDeg > 90 - ORTHO_THRESHOLD) {
           constrained = { x: this.state.wallStart.x, y: rawPos.y };
+          xFixed = true;
         }
       }
     }
-    // 3. Second endpoint snap on ortho-constrained position (enables closing rectangles)
+    // 3. Second 2-D endpoint snap on ortho-constrained position (closes rectangles)
     if (constrained.x !== rawPos.x || constrained.y !== rawPos.y) {
       const snap2 = snapPoint(
         constrained.x,
@@ -296,6 +339,30 @@ class FloorPlanDesigner extends React.Component<Props, State> {
         excludeId,
       );
       if (snap2.snapped) return { x: snap2.x, y: snap2.y, snapped: true };
+    }
+    // 4. Axis snap: snap the free axis to a nearby wall-endpoint coordinate.
+    //    Enables aligning parallel walls (e.g. drawing the 3rd wall of a rectangle
+    //    so its endpoint lines up with the first wall's endpoint).
+    if (yFixed) {
+      const snappedX = snapAxisValue(
+        constrained.x,
+        "x",
+        this.state.elements,
+        excludeId,
+      );
+      if (snappedX !== null) {
+        return { x: snappedX, y: constrained.y, snapped: true };
+      }
+    } else if (xFixed) {
+      const snappedY = snapAxisValue(
+        constrained.y,
+        "y",
+        this.state.elements,
+        excludeId,
+      );
+      if (snappedY !== null) {
+        return { x: constrained.x, y: snappedY, snapped: true };
+      }
     }
     return { x: constrained.x, y: constrained.y, snapped: false };
   }
@@ -355,7 +422,10 @@ class FloorPlanDesigner extends React.Component<Props, State> {
             const startRotation = startEl.y!;
             const currentAngle = Math.atan2(pos.y - cy, pos.x - cx);
             const deltaAngle = (currentAngle - startAngle) * (180 / Math.PI);
-            return { ...el, rotation: startRotation + deltaAngle };
+            let newRotation = startRotation + deltaAngle;
+            const snapped = Math.round(newRotation / 90) * 90;
+            if (Math.abs(newRotation - snapped) < 10) newRotation = snapped;
+            return { ...el, rotation: newRotation };
           } else if (handle === "body") {
             const newX = startEl.x! + dx;
             const newY = startEl.y! + dy;

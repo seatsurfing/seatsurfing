@@ -1879,6 +1879,7 @@ class EditLocation extends React.Component<Props, State> {
                     onHide={() => this.setState({ showDesignerModal: false })}
                     dialogClassName="fpd-modal-dialog"
                     backdrop="static"
+                    keyboard={false}
                   >
                     <Modal.Header closeButton>
                       <Modal.Title>{this.props.t("designFloorPlan")}</Modal.Title>
