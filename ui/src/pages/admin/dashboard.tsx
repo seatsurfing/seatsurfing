@@ -28,6 +28,7 @@ import DateUtil from "@/util/DateUtil";
 import RedirectUtil from "@/util/RedirectUtil";
 import Navigation from "@/util/Navigation";
 import UpdateChecker from "@/util/UpdateChecker";
+import CloudHint from "@/components/CloudHint";
 
 interface State {
   loading: boolean;
@@ -425,6 +426,7 @@ class Dashboard extends React.Component<Props, State> {
       <FullLayout headline="Dashboard">
         {cloudUpgradeHint}
         {updateHint}
+        <CloudHint />
         {statsContent}
       </FullLayout>
     );

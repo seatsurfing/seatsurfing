@@ -10,6 +10,7 @@ import {
   Popover,
   OverlayTrigger,
   Badge,
+  Modal,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
@@ -67,7 +68,7 @@ interface State {
   disableBuddies: boolean;
   loading: boolean;
   submitting: boolean;
-  saved: boolean;
+  showSavedModal: boolean;
   error: boolean;
   newDomain: string;
   domains: Domain[];
@@ -125,7 +126,7 @@ class Settings extends React.Component<Props, State> {
       disableBuddies: false,
       loading: true,
       submitting: false,
-      saved: false,
+      showSavedModal: false,
       error: false,
       newDomain: "",
       domains: [],
@@ -286,11 +287,10 @@ class Settings extends React.Component<Props, State> {
     });
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
-      saved: false,
       error: false,
     });
     const payload = [
@@ -389,28 +389,18 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings("hide_reports", this.state.hideReports ? "1" : "0"),
       new OrgSettings("hide_stats", this.state.hideStats ? "1" : "0"),
     ];
-    OrgSettings.setAll(payload)
-      .then(() => {
-        RuntimeConfig.loadSettings()
-          .then(() => {
-            this.setState({
-              submitting: false,
-              saved: true,
-            });
-          })
-          .catch(() => {
-            this.setState({
-              submitting: false,
-              error: true,
-            });
-          });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
+    try {
+      await OrgSettings.setAll(payload);
+      this.setState({
+        submitting: false,
+        showSavedModal: true,
       });
+    } catch {
+      this.setState({
+        submitting: false,
+        error: true,
+      });
+    }
   };
 
   onAuthProviderSelect = (e: AuthProvider) => {
@@ -693,14 +683,13 @@ class Settings extends React.Component<Props, State> {
       );
     }
 
-    let hint = <></>;
-    if (this.state.saved) {
-      hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
-    } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
-    }
+    const hint = this.state.error ? (
+      <Alert variant="danger">{this.props.t("errorSave")}</Alert>
+    ) : (
+      <></>
+    );
 
-    let buttonSave = (
+    const buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -720,7 +709,7 @@ class Settings extends React.Component<Props, State> {
       updateHint = (
         <span className="form-control-plaintext">
           {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
-          &nbsp; (
+          &nbsp;(
           <a
             href="https://github.com/seatsurfing/seatsurfing/releases"
             target="_blank"
@@ -1350,6 +1339,29 @@ class Settings extends React.Component<Props, State> {
           {authProviderTable}
           {dangerZone}
         </Form>
+        <Modal
+          show={this.state.showSavedModal}
+          onHide={() => {
+            window.location.reload();
+          }}
+          backdrop="static"
+          keyboard={false}
+        >
+          <Modal.Header>
+            <Modal.Title>{this.props.t("settings")}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{this.props.t("entryUpdatedReloadRequired")}</Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="primary"
+              onClick={() => {
+                window.location.reload();
+              }}
+            >
+              {this.props.t("reload")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </FullLayout>
     );
   }

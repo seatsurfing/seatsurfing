@@ -134,6 +134,7 @@
   "enter": "Beginn",
   "entryCreated": "Eintrag wurde erstellt.",
   "entryUpdated": "Eingaben gespeichert.",
+  "entryUpdatedReloadRequired": "Die Eingaben wurden erfolgreich gespeichert. Zur Übernahme ist ein Neuladen der Seite nötig.",
   "errorSlotConflict": "Es gibt bereits eine Buchung im gewählten Zeitraum.",
   "errorAddDomain": "Fehler beim Hinzufügen der Domain.",
   "errorBookingLimit": "Das Limit von {{num}} Buchungen wurde erreicht.",
@@ -417,7 +418,7 @@
   "serverErrorClose": "Schließen",
   "notFoundTitle": "Nicht gefunden",
   "notFoundBody": "Die angeforderte Ressource wurde nicht gefunden.",
-  "notFoundReload": "Neu laden",
+  "reload": "Neu laden",
   "multiDay": "Mehrere Tage",
   "allDay": "Ganztags",
   "time": "Zeit",
@@ -477,5 +478,8 @@
   "selectMove": "Select / Move",
   "uploadFile": "Upload file",
   "fullWindowMode": "Full window",
-  "editFloorPlan": "Edit floor plan"
+  "editFloorPlan": "Edit floor plan",
+  "cloudHint": "Seatsurfing ist auch als Cloud-Lösung verfügbar: Nutze die Integration mit Microsoft Teams, die Synchronisation mit Microsoft Exchange, den SCIM 2.0-Server, 24/7-Support und mehr. Upgrade auf Seatsurfing Professional, um diese Funktionen freizuschalten und unsere Arbeit an der Open-Source-Version zu unterstützen.",
+  "cloudHintLink": "Erfahre mehr über Seatsurfing Professional",
+  "sponsorLink": "Unterstütze uns als Sponsor"
 }

@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.98.0](https://github.com/seatsurfing/seatsurfing/compare/v1.97.0...v1.98.0) (2026-05-24)
+
+
+### ✨ Features
+
+* **admin-ui:** add modal to reload page after saving org settings ([#2182](https://github.com/seatsurfing/seatsurfing/issues/2182)) ([4445f4e](https://github.com/seatsurfing/seatsurfing/commit/4445f4e3d75675e5a064664fd107a6bd2ec4f3c3))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** display cloud solution hint ([#2188](https://github.com/seatsurfing/seatsurfing/issues/2188)) ([6e7999c](https://github.com/seatsurfing/seatsurfing/commit/6e7999cd7f8c5c4c396795f25366b4c0b558ceaa))
+* **admin-ui:** typo fix in dashboard headline ([#2179](https://github.com/seatsurfing/seatsurfing/issues/2179)) ([1da0c69](https://github.com/seatsurfing/seatsurfing/commit/1da0c69425dea6e92f2b972fc93164aadcb8843b))
+* **booking-ui:** center map when resizing browser ([#2180](https://github.com/seatsurfing/seatsurfing/issues/2180)) ([b037763](https://github.com/seatsurfing/seatsurfing/commit/b037763e4951ab6bd79ab7651db7389ba62593ae))
+
+
+### 🔧 Refactoring
+
+* refactor update hint in org settings ([#2183](https://github.com/seatsurfing/seatsurfing/issues/2183)) ([c4be8ff](https://github.com/seatsurfing/seatsurfing/commit/c4be8ff583e253521ceb9efed3326a90dea844cb))
+
 ## [1.97.0](https://github.com/seatsurfing/seatsurfing/compare/v1.96.0...v1.97.0) (2026-05-23)
 
 

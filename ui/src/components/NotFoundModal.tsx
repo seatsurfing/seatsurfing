@@ -25,7 +25,7 @@ class NotFoundModal extends React.Component<Props> {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary" onClick={() => window.location.reload()}>
-            {this.props.t("notFoundReload")}
+            {this.props.t("reload")}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -134,6 +134,7 @@
   "enter": "輸入",
   "entryCreated": "記錄已建立。",
   "entryUpdated": "記錄已儲存。",
+  "entryUpdatedReloadRequired": "The entries have been saved successfully. A page reload is required to apply the changes.",
   "errorSlotConflict": "所選日期範圍內已有另一預訂。",
   "errorAddDomain": "新增域時發生錯誤。",
   "errorBookingLimit": "您已達到 {{num}} 的預訂限額。",
@@ -415,7 +416,7 @@
   "serverErrorClose": "Close",
   "notFoundTitle": "Not found",
   "notFoundBody": "The requested resource was not found.",
-  "notFoundReload": "Reload",
+  "reload": "Reload",
   "multiDay": "多日",
   "allDay": "全天",
   "time": "時間",
@@ -474,5 +475,8 @@
   "selectMove": "Select / Move",
   "uploadFile": "Upload file",
   "fullWindowMode": "Full window",
-  "editFloorPlan": "Edit floor plan"
+  "editFloorPlan": "Edit floor plan",
+  "cloudHint": "Seatsurfing is also available as a cloud-hosted solution: Leverage Microsoft Teams integration, Microsoft Exchange synchronization, SCIM 2.0 server, 24/7 support, and more. Consider upgrading to Seatsurfing Professional to unlock these features and support our work on the open-source edition.",
+  "cloudHintLink": "Learn more about Seatsurfing Professional",
+  "sponsorLink": "Support us by becoming a sponsor"
 }
