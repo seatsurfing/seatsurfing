@@ -47,6 +47,7 @@ import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
+import FloorPlanDesigner from "@/components/FloorPlanDesigner";
 
 interface SpaceState {
   id: string;
@@ -214,6 +215,8 @@ interface State {
   mapScaleOnLoad: number;
   fileLabel: string;
   files: FileList | null;
+  mapType: "upload" | "designed";
+  designData: string;
   spaces: SpaceState[];
   selectedSpace: number | null;
   deleteIds: string[];
@@ -231,6 +234,7 @@ interface State {
   typeaheadLocationAllowBookersOptions: GroupSearchResult[];
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
+  showDesignerModal: boolean;
 }
 
 interface Props {
@@ -268,6 +272,8 @@ class EditLocation extends React.Component<Props, State> {
       mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
       files: null,
+      mapType: "upload",
+      designData: "",
       spaces: [],
       selectedSpace: null,
       deleteIds: [],
@@ -285,6 +291,7 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadLocationAllowBookersOptions: [],
       typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
+      showDesignerModal: false,
     };
   }
 
@@ -332,27 +339,37 @@ class EditLocation extends React.Component<Props, State> {
             });
             return this.entity.getMap().then((mapData) => {
               this.mapData = mapData;
-              return SpaceAttribute.list().then((attributes) => {
-                return this.entity.getAttributes().then((attributeValues) => {
-                  this.setState({
-                    name: location.name,
-                    description: location.description,
-                    limitConcurrentBookings: location.maxConcurrentBookings > 0,
-                    maxConcurrentBookings: location.maxConcurrentBookings,
-                    timezone: location.timezone,
-                    enabled: location.enabled,
-                    mapScale: location.mapScale,
-                    mapScaleOnLoad: location.mapScale,
-                    attributeValues: attributeValues,
-                    availableAttributes: attributes,
-                    locationAllowBookers:
-                      location.allowedBookerGroupIds &&
-                      location.allowedBookerGroupIds
-                        ? this.groups.filter((g) =>
-                            location.allowedBookerGroupIds.includes(g.id),
-                          )
-                        : [],
-                    loading: false,
+              const loadDesign =
+                location.mapType === "designed"
+                  ? this.entity.getFloorPlanDesign()
+                  : Promise.resolve("");
+              return loadDesign.then((designData) => {
+                return SpaceAttribute.list().then((attributes) => {
+                  return this.entity.getAttributes().then((attributeValues) => {
+                    this.setState({
+                      name: location.name,
+                      description: location.description,
+                      limitConcurrentBookings:
+                        location.maxConcurrentBookings > 0,
+                      maxConcurrentBookings: location.maxConcurrentBookings,
+                      timezone: location.timezone,
+                      enabled: location.enabled,
+                      mapScale: location.mapScale,
+                      mapScaleOnLoad: location.mapScale,
+                      mapType:
+                        location.mapType === "designed" ? "designed" : "upload",
+                      designData: designData || "",
+                      attributeValues: attributeValues,
+                      availableAttributes: attributes,
+                      locationAllowBookers:
+                        location.allowedBookerGroupIds &&
+                        location.allowedBookerGroupIds
+                          ? this.groups.filter((g) =>
+                              location.allowedBookerGroupIds.includes(g.id),
+                            )
+                          : [],
+                      loading: false,
+                    });
                   });
                 });
               });
@@ -484,6 +501,7 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
     this.entity.mapScale = this.state.mapScale;
+    this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
       ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
       : [];
@@ -494,7 +512,30 @@ class EditLocation extends React.Component<Props, State> {
           .then(() => {
             this.saveSpaces()
               .then(() => {
-                if (this.state.files && this.state.files.length > 0) {
+                if (this.state.mapType === "designed") {
+                  this.entity
+                    .setFloorPlanDesign(this.state.designData)
+                    .then(() => {
+                      this.loadData(this.entity.id);
+                      this.props.router.push(
+                        "/admin/locations/" + this.entity.id,
+                      );
+                      this.setState({
+                        spaces: this.state.spaces.map((s) => {
+                          s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                          s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                          s.orgX = s.x;
+                          s.orgY = s.y;
+                          return s;
+                        }),
+                        saved: true,
+                        changed: false,
+                        submitting: false,
+                        mapScaleOnLoad: this.state.mapScale,
+                      });
+                    })
+                    .catch(() => onError());
+                } else if (this.state.files && this.state.files.length > 0) {
                   this.entity
                     .setMap(this.state.files.item(0) as File)
                     .then(() => {
@@ -1852,19 +1893,76 @@ class EditLocation extends React.Component<Props, State> {
               {this.props.t("floorplan")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
-                id="location-floorplan"
-                type="file"
-                accept="image/png, image/jpeg, image/gif, image/svg+xml"
-                onChange={(e: any) =>
+              <Form.Check
+                type="radio"
+                id="map-type-upload"
+                name="mapType"
+                label={this.props.t("uploadFile")}
+                checked={this.state.mapType === "upload"}
+                onChange={() => this.setState({ mapType: "upload" })}
+              />
+              <Form.Check
+                type="radio"
+                id="map-type-designed"
+                name="mapType"
+                label={this.props.t("designFloorPlan")}
+                checked={this.state.mapType === "designed"}
+                style={{ marginBottom: "10px" }}
+                onChange={() =>
                   this.setState({
-                    files: e.target.files,
-                    fileLabel: e.target.files.item(0).name,
-                    mapScale: 1.0,
+                    mapType: "designed",
+                    files: null,
+                    fileLabel: "",
                   })
                 }
-                required={!this.entity.id}
               />
+              {this.state.mapType === "upload" && (
+                <Form.Control
+                  id="location-floorplan"
+                  type="file"
+                  accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                  onChange={(e: any) =>
+                    this.setState({
+                      files: e.target.files,
+                      fileLabel: e.target.files.item(0).name,
+                      mapScale: 1.0,
+                    })
+                  }
+                  required={!this.entity.id && this.state.mapType === "upload"}
+                />
+              )}
+              {this.state.mapType === "designed" && (
+                <>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => this.setState({ showDesignerModal: true })}
+                  >
+                    <IconEdit className="feather" />{" "}
+                    {this.props.t("editFloorPlan")}
+                  </Button>
+                  <Modal
+                    show={this.state.showDesignerModal}
+                    onHide={() => this.setState({ showDesignerModal: false })}
+                    dialogClassName="fpd-modal-dialog"
+                    backdrop="static"
+                    keyboard={false}
+                  >
+                    <Modal.Header closeButton>
+                      <Modal.Title>
+                        {this.props.t("designFloorPlan")}
+                      </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <FloorPlanDesigner
+                        designData={this.state.designData}
+                        onChange={(designData: string) =>
+                          this.setState({ designData, changed: true })
+                        }
+                      />
+                    </Modal.Body>
+                  </Modal>
+                </>
+              )}
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1876,7 +1974,11 @@ class EditLocation extends React.Component<Props, State> {
                 <Form.Control
                   id="location-scale"
                   type="number"
-                  disabled={!this.entity.id || this.state.files !== null}
+                  disabled={
+                    !this.entity.id ||
+                    this.state.files !== null ||
+                    this.state.mapType === "designed"
+                  }
                   placeholder={this.props.t("scale")}
                   min={1}
                   max={1000}

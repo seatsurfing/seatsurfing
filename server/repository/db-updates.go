@@ -37,6 +37,7 @@ func RunDBSchemaUpdates() {
 		GetMailLogRepository(),
 		GetSessionRepository(),
 		GetPasskeyRepository(),
+		GetLocationFloorPlanRepository(),
 	}
 	for _, plg := range plugin.GetPlugins() {
 		repositories = append(repositories, (*plg).GetRepositories()...)
