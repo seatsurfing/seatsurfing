@@ -103,10 +103,10 @@ The current `targetVersion` in `server/repository/db-updates.go` is **43**. All 
 
 Distinguishes how the floor plan was created:
 
-| Value        | Meaning                                         |
-|--------------|-------------------------------------------------|
+| Value        | Meaning                                                      |
+| ------------ | ------------------------------------------------------------ |
 | `''` (empty) | Uploaded image file — existing behavior, backward compatible |
-| `'designed'` | Created by the floor plan designer              |
+| `'designed'` | Created by the floor plan designer                           |
 
 ```sql
 -- Migration at version 44
@@ -186,13 +186,13 @@ CREATE INDEX IF NOT EXISTS idx_location_floor_plans_org ON location_floor_plans(
 
 **Element types and default sizes (logical pixels):**
 
-| Type      | Geometry fields                              | Default size  | Notes                                           |
-|-----------|----------------------------------------------|---------------|-------------------------------------------------|
-| `wall`    | `x1, y1, x2, y2, thickness`                  | thickness = 8 | Defined by two endpoints, not a bounding box    |
-| `plant`   | `x, y, width, height, rotation`              | 32 × 32       | Center is `(x + width/2, y + height/2)`         |
-| `window`  | `x, y, width, height, rotation`              | 60 × 8        |                                                 |
-| `door`    | `x, y, width, height, rotation`              | 40 × 40       | Quarter-circle arc indicates swing direction    |
-| `toilet`  | `x, y, width, height, rotation`              | 40 × 40       |                                                 |
+| Type     | Geometry fields                 | Default size  | Notes                                        |
+| -------- | ------------------------------- | ------------- | -------------------------------------------- |
+| `wall`   | `x1, y1, x2, y2, thickness`     | thickness = 8 | Defined by two endpoints, not a bounding box |
+| `plant`  | `x, y, width, height, rotation` | 32 × 32       | Center is `(x + width/2, y + height/2)`      |
+| `window` | `x, y, width, height, rotation` | 60 × 8        |                                              |
+| `door`   | `x, y, width, height, rotation` | 40 × 40       | Quarter-circle arc indicates swing direction |
+| `toilet` | `x, y, width, height, rotation` | 40 × 40       |                                              |
 
 All coordinate values are numbers (integers or floats). `rotation` is degrees clockwise.
 
@@ -325,9 +325,9 @@ async setFloorPlanDesign(designData: string): Promise<void> {
 
 ```ts
 interface State {
-    // ... existing fields ...
-    mapType: 'upload' | 'designed';
-    designData: string;
+  // ... existing fields ...
+  mapType: "upload" | "designed";
+  designData: string;
 }
 ```
 
@@ -342,6 +342,7 @@ After loading the location entity, if `entity.mapType === 'designed'`, call `ent
 Replace the existing single `<Form.Control type="file" ...>` field with:
 
 1. Two radio buttons for the source mode:
+
    ```tsx
    <Form.Check
      type="radio" id="map-type-upload" name="mapType"
@@ -377,8 +378,8 @@ The `floorPlan` section (rendered below the form when `this.entity.id` exists) c
 
 ```ts
 interface Props {
-    designData: string;      // JSON string; '' for a new/empty canvas
-    onChange: (designData: string) => void;
+  designData: string; // JSON string; '' for a new/empty canvas
+  onChange: (designData: string) => void;
 }
 ```
 
@@ -388,12 +389,12 @@ On every mutation it serializes the elements array back to a JSON string and cal
 
 #### Toolbar (above canvas)
 
-| Control                           | Action                                              |
-|-----------------------------------|-----------------------------------------------------|
-| "Select / Move" button            | Sets active mode to `select`                        |
-| "Draw Wall" button                | Sets active mode to `draw-wall`                     |
-| "Add entity" dropdown             | Items: Plant, Window, Door, Toilet — sets mode to `add-entity:<type>` |
-| "Delete selected" button          | Removes the selected element; disabled when nothing selected |
+| Control                  | Action                                                                |
+| ------------------------ | --------------------------------------------------------------------- |
+| "Select / Move" button   | Sets active mode to `select`                                          |
+| "Draw Wall" button       | Sets active mode to `draw-wall`                                       |
+| "Add entity" dropdown    | Items: Plant, Window, Door, Toilet — sets mode to `add-entity:<type>` |
+| "Delete selected" button | Removes the selected element; disabled when nothing selected          |
 
 #### Canvas
 
@@ -437,12 +438,12 @@ A snap target is highlighted with a blue filled circle (radius 6 px) rendered ab
 
 #### SVG element rendering
 
-| Element  | SVG representation                                                                 |
-|----------|------------------------------------------------------------------------------------|
+| Element  | SVG representation                                                                |
+| -------- | --------------------------------------------------------------------------------- |
 | `wall`   | `<line x1 y1 x2 y2 stroke="#555" strokeWidth={thickness} strokeLinecap="round"/>` |
-| `plant`  | `<ellipse>` in `#4caf50` with a slightly darker stroke                             |
+| `plant`  | `<ellipse>` in `#4caf50` with a slightly darker stroke                            |
 | `window` | `<rect>` in `#90caf9`, thin stroke `#1565c0`                                      |
-| `door`   | `<path>` — a right-angle triangle plus quarter-circle arc in `#ffcc80`             |
+| `door`   | `<path>` — a right-angle triangle plus quarter-circle arc in `#ffcc80`            |
 | `toilet` | `<rect>` (tank) plus `<ellipse>` (seat) in `#eeeeee` with a gray stroke           |
 
 Selected element: wrapped in an `<g>` with a dashed blue `<rect>` outline and resize handle circles at corners.
@@ -455,18 +456,18 @@ Contains styles for the toolbar, canvas container, snap indicator, and selection
 
 Add to `i18n/translations.en-GB.json` (then run `./add-missing-translations.sh`):
 
-| Key                    | English value                                |
-|------------------------|----------------------------------------------|
-| `uploadFile`           | `Upload file`                                |
-| `designFloorPlan`      | `Design floor plan`                          |
-| `drawWall`             | `Draw wall`                                  |
-| `addEntity`            | `Add entity`                                 |
-| `selectMove`           | `Select / Move`                              |
-| `deleteSelected`       | `Delete selected`                            |
-| `entityPlant`          | `Plant`                                      |
-| `entityWindow`         | `Window`                                     |
-| `entityDoor`           | `Door`                                       |
-| `entityToilet`         | `Toilet`                                     |
+| Key               | English value       |
+| ----------------- | ------------------- |
+| `uploadFile`      | `Upload file`       |
+| `designFloorPlan` | `Design floor plan` |
+| `drawWall`        | `Draw wall`         |
+| `addEntity`       | `Add entity`        |
+| `selectMove`      | `Select / Move`     |
+| `deleteSelected`  | `Delete selected`   |
+| `entityPlant`     | `Plant`             |
+| `entityWindow`    | `Window`            |
+| `entityDoor`      | `Door`              |
+| `entityToilet`    | `Toilet`            |
 
 ---
 

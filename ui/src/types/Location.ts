@@ -101,10 +101,9 @@ export default class Location extends Entity {
   }
 
   async setFloorPlanDesign(designData: string): Promise<void> {
-    return Ajax.postData(
-      this.getBackendUrl() + this.id + "/floorplan-design",
-      { designData },
-    ).then(() => undefined);
+    return Ajax.postData(this.getBackendUrl() + this.id + "/floorplan-design", {
+      designData,
+    }).then(() => undefined);
   }
 
   async getAttributes(): Promise<SpaceAttributeValue[]> {

@@ -69,9 +69,14 @@ interface State {
   // drag/resize state
   dragging: boolean;
   dragStartMouse: { x: number; y: number } | null;
-  dragStartElement:
-    | { x: number; y: number; x1?: number; y1?: number; x2?: number; y2?: number }
-    | null;
+  dragStartElement: {
+    x: number;
+    y: number;
+    x1?: number;
+    y1?: number;
+    x2?: number;
+    y2?: number;
+  } | null;
   dragHandle: string | null; // 'body' | 'ep1' | 'ep2' | 'nw' | 'ne' | 'se' | 'sw'
   orthoConstrained: boolean;
 }
@@ -95,12 +100,7 @@ function serializeDesign(elements: FloorPlanElementDef[]): string {
   return JSON.stringify(design);
 }
 
-function distance(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-): number {
+function distance(x1: number, y1: number, x2: number, y2: number): number {
   return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
 }
 
@@ -379,7 +379,11 @@ class FloorPlanDesigner extends React.Component<Props, State> {
   handleSVGMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const pos = this.getSVGCoords(e);
 
-    if (this.state.dragging && this.state.dragStartMouse && this.state.dragStartElement) {
+    if (
+      this.state.dragging &&
+      this.state.dragStartMouse &&
+      this.state.dragStartElement
+    ) {
       const dx = pos.x - this.state.dragStartMouse.x;
       const dy = pos.y - this.state.dragStartMouse.y;
       const handle = this.state.dragHandle;
@@ -542,7 +546,12 @@ class FloorPlanDesigner extends React.Component<Props, State> {
           thickness: DEFAULT_WALL_THICKNESS,
         };
         const elements = [...this.state.elements, newWall];
-        this.setState({ elements, wallStart: pt, snapTarget: null, orthoConstrained: false });
+        this.setState({
+          elements,
+          wallStart: pt,
+          snapTarget: null,
+          orthoConstrained: false,
+        });
         this.notifyChange(elements);
       }
       return;
@@ -550,10 +559,10 @@ class FloorPlanDesigner extends React.Component<Props, State> {
 
     const modeStr = this.state.mode as string;
     if (modeStr.startsWith("add-entity:")) {
-      const entityType = modeStr.replace(
-        "add-entity:",
-        "",
-      ) as Exclude<ElementType, "wall">;
+      const entityType = modeStr.replace("add-entity:", "") as Exclude<
+        ElementType,
+        "wall"
+      >;
       const defaults = ELEMENT_DEFAULTS[entityType];
       const wallSnap = snapEntityToWall(
         entityType,
@@ -581,7 +590,12 @@ class FloorPlanDesigner extends React.Component<Props, State> {
   handleSVGContextMenu = (e: React.MouseEvent<SVGSVGElement>) => {
     e.preventDefault();
     if (this.state.mode === "draw-wall") {
-      this.setState({ wallStart: null, mousePos: null, snapTarget: null, orthoConstrained: false });
+      this.setState({
+        wallStart: null,
+        mousePos: null,
+        snapTarget: null,
+        orthoConstrained: false,
+      });
     }
   };
 
@@ -627,11 +641,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     this.notifyChange(elements);
   };
 
-  startDrag = (
-    e: React.MouseEvent,
-    elementId: string,
-    handle: string,
-  ) => {
+  startDrag = (e: React.MouseEvent, elementId: string, handle: string) => {
     e.stopPropagation();
     const pos = this.getSVGCoords(e as React.MouseEvent<SVGSVGElement>);
     const el = this.state.elements.find((x) => x.id === elementId);
@@ -886,8 +896,15 @@ class FloorPlanDesigner extends React.Component<Props, State> {
 
   render() {
     const { t } = this.props;
-    const { elements, mode, wallStart, mousePos, snapTarget, selectedId, orthoConstrained } =
-      this.state;
+    const {
+      elements,
+      mode,
+      wallStart,
+      mousePos,
+      snapTarget,
+      selectedId,
+      orthoConstrained,
+    } = this.state;
 
     const extraPoints: { x: number; y: number }[] = [];
     if (mode === "draw-wall" && wallStart) extraPoints.push(wallStart);
