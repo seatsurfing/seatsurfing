@@ -11,7 +11,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 43
+	targetVersion := 44
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
@@ -37,6 +37,7 @@ func RunDBSchemaUpdates() {
 		GetMailLogRepository(),
 		GetSessionRepository(),
 		GetPasskeyRepository(),
+		GetLocationFloorPlanRepository(),
 	}
 	for _, plg := range plugin.GetPlugins() {
 		repositories = append(repositories, (*plg).GetRepositories()...)
@@ -47,6 +48,12 @@ func RunDBSchemaUpdates() {
 
 	if curVersion < 43 {
 		if _, err := GetDatabase().DB().Exec("DROP TABLE IF EXISTS debug_time_issues"); err != nil {
+			panic(err)
+		}
+	}
+
+	if curVersion < 44 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations ADD COLUMN IF NOT EXISTS map_type VARCHAR NOT NULL DEFAULT ''"); err != nil {
 			panic(err)
 		}
 	}

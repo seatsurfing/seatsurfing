@@ -12,6 +12,7 @@ import "@/styles/Settings.css";
 import "@/styles/SideBar.css";
 import "@/styles/FullLayout.css";
 import "@/styles/Booking.css";
+import "@/styles/FloorPlanDesigner.css";
 import type { AppProps } from "next/app";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import React from "react";

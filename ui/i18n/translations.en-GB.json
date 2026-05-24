@@ -462,5 +462,16 @@
   "revokeApiToken": "Revoke token",
   "apiTokenOnceWarning": "Copy the token now — it will not be shown again.",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
-  "bookingsByWeekday": "Bookings by weekday"
+  "bookingsByWeekday": "Bookings by weekday",
+  "uploadFile": "Upload file",
+  "designFloorPlan": "Design floor plan",
+  "drawWall": "Draw wall",
+  "addEntity": "Add entity",
+  "selectMove": "Select / Move",
+  "deleteSelected": "Delete selected",
+  "fullWindowMode": "Full window",
+  "entityPlant": "Plant",
+  "entityWindow": "Window",
+  "entityDoor": "Door",
+  "entityToilet": "Toilet"
 }

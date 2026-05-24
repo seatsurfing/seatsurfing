@@ -12,6 +12,7 @@ export default class Location extends Entity {
   mapHeight: number;
   mapMimeType: string;
   mapScale: number;
+  mapType: string;
   allowedBookerGroupIds: string[];
 
   constructor() {
@@ -25,6 +26,7 @@ export default class Location extends Entity {
     this.mapHeight = 0;
     this.mapMimeType = "";
     this.mapScale = 1.0;
+    this.mapType = "";
     this.allowedBookerGroupIds = [];
   }
 
@@ -36,6 +38,7 @@ export default class Location extends Entity {
       timezone: this.timezone,
       enabled: this.enabled,
       mapScale: this.mapScale,
+      mapType: this.mapType,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
     });
   }
@@ -51,6 +54,7 @@ export default class Location extends Entity {
     this.mapHeight = input.mapHeight;
     this.mapMimeType = input.mapMimeType;
     this.mapScale = input.mapScale;
+    this.mapType = input.mapType || "";
     if (input.allowedBookerGroupIds) {
       this.allowedBookerGroupIds = input.allowedBookerGroupIds;
     }
@@ -88,6 +92,19 @@ export default class Location extends Entity {
     return Ajax.postData(this.getBackendUrl() + this.id + "/map", file).then(
       () => undefined,
     );
+  }
+
+  async getFloorPlanDesign(): Promise<string> {
+    return Ajax.get(this.getBackendUrl() + this.id + "/floorplan-design").then(
+      (result) => result.json.designData as string,
+    );
+  }
+
+  async setFloorPlanDesign(designData: string): Promise<void> {
+    return Ajax.postData(
+      this.getBackendUrl() + this.id + "/floorplan-design",
+      { designData },
+    ).then(() => undefined);
   }
 
   async getAttributes(): Promise<SpaceAttributeValue[]> {

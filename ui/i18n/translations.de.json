@@ -465,5 +465,16 @@
   "revokeApiToken": "Token widerrufen",
   "apiTokenOnceWarning": "Kopieren Sie den Token jetzt – er wird nicht noch einmal angezeigt.",
   "confirmRevokeApiToken": "API-Token widerrufen? Der Token wird sofort ungültig.",
-  "bookingsByWeekday": "Buchungen pro Wochentag"
+  "bookingsByWeekday": "Buchungen pro Wochentag",
+  "addEntity": "Add entity",
+  "deleteSelected": "Delete selected",
+  "designFloorPlan": "Design floor plan",
+  "drawWall": "Draw wall",
+  "entityDoor": "Door",
+  "entityPlant": "Plant",
+  "entityToilet": "Toilet",
+  "entityWindow": "Window",
+  "selectMove": "Select / Move",
+  "uploadFile": "Upload file",
+  "fullWindowMode": "Full window"
 }

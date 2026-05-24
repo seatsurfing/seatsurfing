@@ -455,3 +455,122 @@ func TestLocationsPostMapForbidden(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
+func TestLocationFloorPlanDesignCRUD(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create location
+	payload := `{"name": "Location FP"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// GET floorplan-design on new location → 200 with empty designData
+	req = NewHTTPRequest("GET", "/location/"+id+"/floorplan-design", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var getResp GetFloorPlanDesignResponse
+	json.Unmarshal(res.Body.Bytes(), &getResp)
+	CheckTestString(t, "", getResp.DesignData)
+
+	// POST floorplan-design with invalid JSON → 400
+	invalidPayload := `{"designData": "not-json"}`
+	req = NewHTTPRequest("POST", "/location/"+id+"/floorplan-design", loginResponse.UserID, bytes.NewBufferString(invalidPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// POST floorplan-design with valid JSON → 204
+	designData := `{"version":1,"elements":[]}`
+	validPayload := `{"designData": "{\"version\":1,\"elements\":[]}"}`
+	req = NewHTTPRequest("POST", "/location/"+id+"/floorplan-design", loginResponse.UserID, bytes.NewBufferString(validPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// GET floorplan-design → should return stored design
+	req = NewHTTPRequest("GET", "/location/"+id+"/floorplan-design", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &getResp)
+	CheckTestString(t, designData, getResp.DesignData)
+}
+
+func TestLocationFloorPlanDesignForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	regularUser := CreateTestUserInOrg(org)
+
+	// Create location as admin
+	payload := `{"name": "Location FP"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Regular user can GET (CanAccessOrg)
+	req = NewHTTPRequest("GET", "/location/"+id+"/floorplan-design", regularUser.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Regular user cannot POST (CanSpaceAdminOrg required)
+	validPayload := `{"designData": "{\"version\":1,\"elements\":[]}"}`
+	req = NewHTTPRequest("POST", "/location/"+id+"/floorplan-design", regularUser.ID, bytes.NewBufferString(validPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestLocationMapTypeDesigned(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create location with mapType=designed
+	payload := `{"name": "FP Location", "mapType": "designed", "enabled": true}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Read back: mapType should be "designed"
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var locResp GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &locResp)
+	CheckTestString(t, "designed", locResp.MapType)
+
+	// Save a floor plan design
+	designData := `{"version":1,"elements":[{"id":"w1","type":"wall","x1":0,"y1":0,"x2":200,"y2":0,"thickness":8}]}`
+	designPayload := `{"designData": "{\"version\":1,\"elements\":[{\"id\":\"w1\",\"type\":\"wall\",\"x1\":0,\"y1\":0,\"x2\":200,\"y2\":0,\"thickness\":8}]}"}`
+	req = NewHTTPRequest("POST", "/location/"+id+"/floorplan-design", loginResponse.UserID, bytes.NewBufferString(designPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// Verify stored design
+	req = NewHTTPRequest("GET", "/location/"+id+"/floorplan-design", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var getResp GetFloorPlanDesignResponse
+	json.Unmarshal(res.Body.Bytes(), &getResp)
+	CheckTestString(t, designData, getResp.DesignData)
+
+	// GET map → should return SVG
+	req = NewHTTPRequest("GET", "/location/"+id+"/map", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var mapResp GetMapResponse
+	json.Unmarshal(res.Body.Bytes(), &mapResp)
+	CheckTestString(t, "svg+xml", mapResp.MimeType)
+	CheckTestBool(t, true, mapResp.Width > 0)
+	CheckTestBool(t, true, mapResp.Height > 0)
+
+	// Decode and verify it's valid SVG
+	svgData, err := base64.StdEncoding.DecodeString(mapResp.Data)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, len(svgData) > 0)
+	CheckTestBool(t, true, string(svgData[:4]) == "<svg")
+}

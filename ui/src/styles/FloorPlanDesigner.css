@@ -1,0 +1,42 @@
+.floor-plan-designer {
+  width: 100%;
+}
+
+.fpd-fullwindow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+}
+
+.fpd-fullwindow .mapScrollContainer {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.fpd-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.fpd-toolbar .btn-group {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.floor-plan-designer svg {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #fff;
+}

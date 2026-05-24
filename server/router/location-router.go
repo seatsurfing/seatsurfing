@@ -33,6 +33,7 @@ type CreateLocationRequest struct {
 	Timezone              string   `json:"timezone" validate:"max=32"`
 	Enabled               bool     `json:"enabled"`
 	MapScale              float64  `json:"mapScale"`
+	MapType               string   `json:"mapType" validate:"omitempty,oneof='' designed"`
 	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 }
 
@@ -43,6 +44,14 @@ type GetLocationResponse struct {
 	MapHeight      uint   `json:"mapHeight"`
 	MapMimeType    string `json:"mapMimeType"`
 	CreateLocationRequest
+}
+
+type GetFloorPlanDesignResponse struct {
+	DesignData string `json:"designData"`
+}
+
+type SetFloorPlanDesignRequest struct {
+	DesignData string `json:"designData" validate:"required"`
 }
 
 type GetMapResponse struct {
@@ -82,6 +91,8 @@ func (router *LocationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/attribute/{attributeId}", router.deleteAttribute).Methods("DELETE")
 	s.HandleFunc("/{id}/map", router.getMap).Methods("GET")
 	s.HandleFunc("/{id}/map", router.setMap).Methods("POST")
+	s.HandleFunc("/{id}/floorplan-design", router.getFloorPlanDesign).Methods("GET")
+	s.HandleFunc("/{id}/floorplan-design", router.setFloorPlanDesign).Methods("POST")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -383,6 +394,7 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
@@ -390,6 +402,14 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
+	}
+	// When transitioning from designed to uploaded, clear stale map data
+	if previousMapType == "designed" && eNew.MapType == "" {
+		if err := GetLocationRepository().ClearMapData(eNew); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
 	}
 
 	err = GetLocationRepository().ReplaceAllowedBookers(eNew, m.AllowedBookerGroupIDs)
@@ -470,6 +490,29 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.MapType == "designed" {
+		plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
+		if err != nil {
+			log.Println(err)
+			SendNotFound(w)
+			return
+		}
+		svgData, width, height, err := renderFloorPlanSVG(plan.DesignData)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		res := &GetMapResponse{
+			Width:    width,
+			Height:   height,
+			MimeType: "svg+xml",
+			Scale:    1.0,
+			Data:     base64.StdEncoding.EncodeToString(svgData),
+		}
+		SendJSON(w, res)
+		return
+	}
 	locationMap, err := GetLocationRepository().GetMap(e)
 	if err != nil {
 		log.Println(err)
@@ -484,6 +527,63 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		Data:     base64.StdEncoding.EncodeToString(locationMap.Data),
 	}
 	SendJSON(w, res)
+}
+
+func (router *LocationRouter) getFloorPlanDesign(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetLocationRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanAccessOrg(user, e.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
+	if err != nil {
+		// No design record exists yet — return empty design
+		SendJSON(w, &GetFloorPlanDesignResponse{DesignData: ""})
+		return
+	}
+	SendJSON(w, &GetFloorPlanDesignResponse{DesignData: plan.DesignData})
+}
+
+func (router *LocationRouter) setFloorPlanDesign(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetLocationRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	var m SetFloorPlanDesignRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !json.Valid([]byte(m.DesignData)) {
+		SendBadRequest(w)
+		return
+	}
+	plan := &LocationFloorPlan{
+		LocationID:     e.ID,
+		OrganizationID: e.OrganizationID,
+		DesignData:     m.DesignData,
+	}
+	if err := GetLocationFloorPlanRepository().SetDesign(plan); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
 }
 
 func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
@@ -570,6 +670,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Timezone = m.Timezone
 	e.Enabled = m.Enabled
 	e.MapScale = m.MapScale
+	e.MapType = m.MapType
 	return e
 }
 
@@ -582,6 +683,7 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.MapWidth = e.MapWidth
 	m.MapHeight = e.MapHeight
 	m.MapScale = e.MapScale
+	m.MapType = e.MapType
 	m.Description = e.Description
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
