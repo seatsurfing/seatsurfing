@@ -33,7 +33,7 @@ type CreateLocationRequest struct {
 	Timezone              string   `json:"timezone" validate:"max=32"`
 	Enabled               bool     `json:"enabled"`
 	MapScale              float64  `json:"mapScale"`
-	MapType               string   `json:"mapType" validate:"omitempty,oneof='' designed"`
+	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
 	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 }
 
