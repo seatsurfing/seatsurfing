@@ -468,5 +468,6 @@
   "confirmRevokeApiToken": "API-Token widerrufen? Der Token wird sofort ungültig.",
   "bookingsByWeekday": "Buchungen pro Wochentag",
   "cloudHint": "Seatsurfing ist auch als Cloud-Lösung verfügbar: Nutze die Integration mit Microsoft Teams, die Synchronisation mit Microsoft Exchange, den SCIM 2.0-Server, 24/7-Support und mehr. Upgrade auf Seatsurfing Professional, um diese Funktionen freizuschalten und unsere Arbeit an der Open-Source-Version zu unterstützen.",
-  "cloudHintLink": "Erfahre mehr über Seatsurfing Professional"
+  "cloudHintLink": "Erfahre mehr über Seatsurfing Professional",
+  "sponsorLink": "Unterstütze uns als Sponsor"
 }
