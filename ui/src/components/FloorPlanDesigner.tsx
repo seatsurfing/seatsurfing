@@ -1103,7 +1103,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
                 y1={wallStart.y}
                 x2={mousePos.x}
                 y2={mousePos.y}
-                stroke={orthoConstrained ? "#4caf50" : "#2196f3"}
+                stroke="#2196f3"
                 strokeWidth={DEFAULT_WALL_THICKNESS}
                 strokeLinecap="round"
                 strokeDasharray="8,4"
