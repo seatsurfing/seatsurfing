@@ -1851,7 +1851,13 @@ class EditLocation extends React.Component<Props, State> {
                 name="mapType"
                 label={this.props.t("designFloorPlan")}
                 checked={this.state.mapType === "designed"}
-                onChange={() => this.setState({ mapType: "designed" })}
+                onChange={() =>
+                  this.setState({
+                    mapType: "designed",
+                    files: null,
+                    fileLabel: "",
+                  })
+                }
               />
               {this.state.mapType === "upload" && (
                 <Form.Control
