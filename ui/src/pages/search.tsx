@@ -817,6 +817,7 @@ class Search extends React.Component<Props, State> {
           ? "pointer"
           : "default",
       backgroundColor: this.getAvailabilityStyle(item, bookings),
+      borderRadius: item.shape === "circle" ? "50%" : undefined,
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",

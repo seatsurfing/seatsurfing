@@ -20,6 +20,8 @@ import {
   Loader as IconLoad,
   Download as IconDownload,
   Tag as IconTag,
+  Square as IconSquare,
+  Circle as IconCircle,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -61,6 +63,7 @@ interface SpaceState {
   requireSubject: boolean;
   enabled: boolean;
   kioskEnabled: boolean;
+  shape: string;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -106,6 +109,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   const height = parseInt(space.height.replace(/^\D+/g, ""));
   let className = "space-dragger";
   if (width < height) className += " space-dragger-vertical";
+  if (space.shape === "circle") className += " space-dragger-circle";
   if (isSelected) className += " space-dragger-selected";
 
   return (
@@ -400,6 +404,7 @@ class EditLocation extends React.Component<Props, State> {
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
         space.kioskEnabled = item.kioskEnabled;
+        space.shape = item.shape;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -591,6 +596,7 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
+      shape: e ? e.shape : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -638,6 +644,15 @@ class EditLocation extends React.Component<Props, State> {
     const space = { ...spaces[i] };
     space.width = width;
     space.height = height;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceShape = (i: number, shape: string) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.shape = shape;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -1541,6 +1556,7 @@ class EditLocation extends React.Component<Props, State> {
       let buttonEditSpaceDetails = <></>;
       let buttonCopySpace = <></>;
       let buttonDeleteSpace = <></>;
+      let buttonShapeSelector = <></>;
       if (this.state.selectedSpace != null) {
         buttonEditSpaceDetails = (
           <Button
@@ -1569,6 +1585,45 @@ class EditLocation extends React.Component<Props, State> {
             <IconDelete className="feather" /> {this.props.t("deleteSpace")}
           </Button>
         );
+        const selectedShape = this.getSelectedSpace()?.shape ?? "";
+        buttonShapeSelector = (
+          <Dropdown>
+            <Dropdown.Toggle
+              className="btn-sm"
+              variant="outline-secondary"
+              id="dropdown-shape"
+            >
+              {selectedShape === "circle" ? (
+                <>
+                  <IconCircle className="feather" />{" "}
+                  {this.props.t("shapeCircle")}
+                </>
+              ) : (
+                <>
+                  <IconSquare className="feather" /> {this.props.t("shapeRect")}
+                </>
+              )}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item
+                active={selectedShape !== "circle"}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "")
+                }
+              >
+                <IconSquare className="feather" /> {this.props.t("shapeRect")}
+              </Dropdown.Item>
+              <Dropdown.Item
+                active={selectedShape === "circle"}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "circle")
+                }
+              >
+                <IconCircle className="feather" /> {this.props.t("shapeCircle")}
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        );
       }
       floorPlan = (
         <>
@@ -1579,7 +1634,8 @@ class EditLocation extends React.Component<Props, State> {
             <h4>{this.props.t("floorplan")}</h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
-                {buttonEditSpaceDetails} {buttonCopySpace} {buttonDeleteSpace}
+                {buttonEditSpaceDetails} {buttonShapeSelector} {buttonCopySpace}{" "}
+                {buttonDeleteSpace}
                 <Button
                   className="btn-sm"
                   variant="outline-secondary"
