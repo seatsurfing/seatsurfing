@@ -1594,21 +1594,30 @@ class EditLocation extends React.Component<Props, State> {
               id="dropdown-shape"
             >
               {selectedShape === "circle" ? (
-                <><IconCircle className="feather" /> {this.props.t("shapeCircle")}</>
+                <>
+                  <IconCircle className="feather" />{" "}
+                  {this.props.t("shapeCircle")}
+                </>
               ) : (
-                <><IconSquare className="feather" /> {this.props.t("shapeRect")}</>
+                <>
+                  <IconSquare className="feather" /> {this.props.t("shapeRect")}
+                </>
               )}
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <Dropdown.Item
                 active={selectedShape !== "circle"}
-                onClick={() => this.setSpaceShape(this.state.selectedSpace!, "")}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "")
+                }
               >
                 <IconSquare className="feather" /> {this.props.t("shapeRect")}
               </Dropdown.Item>
               <Dropdown.Item
                 active={selectedShape === "circle"}
-                onClick={() => this.setSpaceShape(this.state.selectedSpace!, "circle")}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "circle")
+                }
               >
                 <IconCircle className="feather" /> {this.props.t("shapeCircle")}
               </Dropdown.Item>
@@ -1625,7 +1634,8 @@ class EditLocation extends React.Component<Props, State> {
             <h4>{this.props.t("floorplan")}</h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
-                {buttonEditSpaceDetails} {buttonShapeSelector} {buttonCopySpace} {buttonDeleteSpace}
+                {buttonEditSpaceDetails} {buttonShapeSelector} {buttonCopySpace}{" "}
+                {buttonDeleteSpace}
                 <Button
                   className="btn-sm"
                   variant="outline-secondary"
