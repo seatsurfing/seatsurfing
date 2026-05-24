@@ -2,24 +2,36 @@
   width: 100%;
 }
 
-.fpd-fullwindow {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  padding: 12px;
-  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+/* Near-fullscreen modal for the floor plan designer */
+.fpd-modal-dialog {
+  max-width: 95vw;
+  margin: 2.5vh auto;
 }
 
-.fpd-fullwindow .mapScrollContainer {
+.fpd-modal-dialog .modal-content {
+  height: 90vh;
+}
+
+.fpd-modal-dialog .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.fpd-modal-dialog .modal-body .floor-plan-designer {
   flex: 1;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  padding: 12px;
+  width: auto;
+}
+
+.fpd-modal-dialog .modal-body .mapScrollContainer {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .fpd-toolbar {

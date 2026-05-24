@@ -73,7 +73,6 @@ interface State {
     | { x: number; y: number; x1?: number; y1?: number; x2?: number; y2?: number }
     | null;
   dragHandle: string | null; // 'body' | 'ep1' | 'ep2' | 'nw' | 'ne' | 'se' | 'sw'
-  fullWindow: boolean;
   orthoConstrained: boolean;
 }
 
@@ -126,13 +125,68 @@ function snapPoint(
   return { x, y, snapped: false };
 }
 
-function computeViewBox(elements: FloorPlanElementDef[]): {
+const WALL_SNAP_THRESHOLD = 20;
+
+function closestPointOnSegment(
+  px: number,
+  py: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): { x: number; y: number; dist: number } {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) {
+    return { x: x1, y: y1, dist: distance(px, py, x1, y1) };
+  }
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
+  const nearX = x1 + t * dx;
+  const nearY = y1 + t * dy;
+  return { x: nearX, y: nearY, dist: distance(px, py, nearX, nearY) };
+}
+
+function snapEntityToWall(
+  entityType: string,
+  cx: number,
+  cy: number,
+  width: number,
+  height: number,
+  elements: FloorPlanElementDef[],
+): { x: number; y: number; rotation: number } | null {
+  if (entityType !== "door" && entityType !== "window") return null;
+  let bestDist = WALL_SNAP_THRESHOLD;
+  let bestResult: { x: number; y: number; rotation: number } | null = null;
+  for (const el of elements) {
+    if (el.type !== "wall") continue;
+    const pt = closestPointOnSegment(cx, cy, el.x1, el.y1, el.x2, el.y2);
+    if (pt.dist < bestDist) {
+      bestDist = pt.dist;
+      const wallAngle =
+        Math.atan2(el.y2 - el.y1, el.x2 - el.x1) * (180 / Math.PI);
+      bestResult = {
+        x: pt.x - width / 2,
+        y: pt.y - height / 2,
+        rotation: wallAngle,
+      };
+    }
+  }
+  return bestResult;
+}
+
+function computeViewBox(
+  elements: FloorPlanElementDef[],
+  extraPoints?: { x: number; y: number }[],
+): {
   x: number;
   y: number;
   w: number;
   h: number;
 } {
-  if (elements.length === 0) {
+  const hasContent =
+    elements.length > 0 || (extraPoints && extraPoints.length > 0);
+  if (!hasContent) {
     return { x: 0, y: 0, w: MIN_CANVAS_W, h: MIN_CANVAS_H };
   }
   let minX = Infinity,
@@ -151,6 +205,17 @@ function computeViewBox(elements: FloorPlanElementDef[]): {
       maxX = Math.max(maxX, el.x + el.width);
       maxY = Math.max(maxY, el.y + el.height);
     }
+  }
+  if (extraPoints) {
+    for (const pt of extraPoints) {
+      minX = Math.min(minX, pt.x);
+      minY = Math.min(minY, pt.y);
+      maxX = Math.max(maxX, pt.x);
+      maxY = Math.max(maxY, pt.y);
+    }
+  }
+  if (minX === Infinity) {
+    return { x: 0, y: 0, w: MIN_CANVAS_W, h: MIN_CANVAS_H };
   }
   const x = minX - PADDING;
   const y = minY - PADDING;
@@ -175,7 +240,6 @@ class FloorPlanDesigner extends React.Component<Props, State> {
       dragStartMouse: null,
       dragStartElement: null,
       dragHandle: null,
-      fullWindow: false,
       orthoConstrained: false,
     };
   }
@@ -204,8 +268,11 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     rawPos: { x: number; y: number },
     excludeId: string | null,
   ): { x: number; y: number; snapped: boolean } {
+    // 1. Endpoint snap on raw position
     const snap = snapPoint(rawPos.x, rawPos.y, this.state.elements, excludeId);
     if (snap.snapped) return { x: snap.x, y: snap.y, snapped: true };
+    // 2. Apply ortho constraint when a wallStart exists
+    let constrained = { x: rawPos.x, y: rawPos.y };
     if (this.state.wallStart) {
       const dx = rawPos.x - this.state.wallStart.x;
       const dy = rawPos.y - this.state.wallStart.y;
@@ -214,14 +281,23 @@ class FloorPlanDesigner extends React.Component<Props, State> {
           Math.atan2(Math.abs(dy), Math.abs(dx)) * (180 / Math.PI);
         const ORTHO_THRESHOLD = 15;
         if (angleDeg < ORTHO_THRESHOLD) {
-          return { x: rawPos.x, y: this.state.wallStart.y, snapped: false };
-        }
-        if (angleDeg > 90 - ORTHO_THRESHOLD) {
-          return { x: this.state.wallStart.x, y: rawPos.y, snapped: false };
+          constrained = { x: rawPos.x, y: this.state.wallStart.y };
+        } else if (angleDeg > 90 - ORTHO_THRESHOLD) {
+          constrained = { x: this.state.wallStart.x, y: rawPos.y };
         }
       }
     }
-    return { x: rawPos.x, y: rawPos.y, snapped: false };
+    // 3. Second endpoint snap on ortho-constrained position (enables closing rectangles)
+    if (constrained.x !== rawPos.x || constrained.y !== rawPos.y) {
+      const snap2 = snapPoint(
+        constrained.x,
+        constrained.y,
+        this.state.elements,
+        excludeId,
+      );
+      if (snap2.snapped) return { x: snap2.x, y: snap2.y, snapped: true };
+    }
+    return { x: constrained.x, y: constrained.y, snapped: false };
   }
 
   handleSVGClick = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -272,8 +348,34 @@ class FloorPlanDesigner extends React.Component<Props, State> {
           }
         } else {
           // Entity element
-          if (handle === "body") {
-            return { ...el, x: startEl.x! + dx, y: startEl.y! + dy };
+          if (handle === "rotate") {
+            const cx = startEl.x1!;
+            const cy = startEl.y1!;
+            const startAngle = startEl.x!;
+            const startRotation = startEl.y!;
+            const currentAngle = Math.atan2(pos.y - cy, pos.x - cx);
+            const deltaAngle = (currentAngle - startAngle) * (180 / Math.PI);
+            return { ...el, rotation: startRotation + deltaAngle };
+          } else if (handle === "body") {
+            const newX = startEl.x! + dx;
+            const newY = startEl.y! + dy;
+            const wallSnap = snapEntityToWall(
+              el.type,
+              newX + el.width / 2,
+              newY + el.height / 2,
+              el.width,
+              el.height,
+              this.state.elements,
+            );
+            if (wallSnap) {
+              return {
+                ...el,
+                x: wallSnap.x,
+                y: wallSnap.y,
+                rotation: wallSnap.rotation,
+              };
+            }
+            return { ...el, x: newX, y: newY };
           } else if (handle === "se") {
             return {
               ...el,
@@ -383,14 +485,22 @@ class FloorPlanDesigner extends React.Component<Props, State> {
         "",
       ) as Exclude<ElementType, "wall">;
       const defaults = ELEMENT_DEFAULTS[entityType];
+      const wallSnap = snapEntityToWall(
+        entityType,
+        pos.x,
+        pos.y,
+        defaults.width,
+        defaults.height,
+        this.state.elements,
+      );
       const newEl: EntityElement = {
         id: generateId(),
         type: entityType,
-        x: pos.x - defaults.width / 2,
-        y: pos.y - defaults.height / 2,
+        x: wallSnap ? wallSnap.x : pos.x - defaults.width / 2,
+        y: wallSnap ? wallSnap.y : pos.y - defaults.height / 2,
         width: defaults.width,
         height: defaults.height,
-        rotation: 0,
+        rotation: wallSnap ? wallSnap.rotation : 0,
       };
       const elements = [...this.state.elements, newEl];
       this.setState({ elements, mode: "select", selectedId: newEl.id });
@@ -406,14 +516,26 @@ class FloorPlanDesigner extends React.Component<Props, State> {
   };
 
   handleKeyDown = (e: KeyboardEvent) => {
+    const activeTag = (document.activeElement?.tagName ?? "").toLowerCase();
+    const isEditing =
+      activeTag === "input" ||
+      activeTag === "textarea" ||
+      activeTag === "select";
     if (e.key === "Escape") {
       if (this.state.mode === "draw-wall" && this.state.wallStart) {
-        this.setState({ wallStart: null, mousePos: null, snapTarget: null, orthoConstrained: false });
-      } else if (this.state.fullWindow) {
-        this.setState({ fullWindow: false });
+        this.setState({
+          wallStart: null,
+          mousePos: null,
+          snapTarget: null,
+          orthoConstrained: false,
+        });
       }
     }
-    if (e.key === "Delete" && this.state.selectedId) {
+    if (
+      (e.key === "Delete" || e.key === "Backspace") &&
+      !isEditing &&
+      this.state.selectedId
+    ) {
       this.deleteSelected();
     }
   };
@@ -455,6 +577,31 @@ class FloorPlanDesigner extends React.Component<Props, State> {
       dragStartMouse: pos,
       dragStartElement: startEl,
       dragHandle: handle,
+      selectedId: elementId,
+    });
+  };
+
+  startRotateHandle = (e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    const pos = this.getSVGCoords(e as React.MouseEvent<SVGSVGElement>);
+    const el = this.state.elements.find((x) => x.id === elementId);
+    if (!el || el.type === "wall") return;
+    const cx = el.x + el.width / 2;
+    const cy = el.y + el.height / 2;
+    const startAngle = Math.atan2(pos.y - cy, pos.x - cx);
+    this.setState({
+      dragging: true,
+      dragStartMouse: pos,
+      // Encode: x=startAngle(rad), y=startRotation(deg), x1/y1=entity center
+      dragStartElement: {
+        x: startAngle,
+        y: el.rotation,
+        x1: cx,
+        y1: cy,
+        x2: 0,
+        y2: 0,
+      },
+      dragHandle: "rotate",
       selectedId: elementId,
     });
   };
@@ -614,6 +761,26 @@ class FloorPlanDesigner extends React.Component<Props, State> {
         {shape}
         {isSelected && (
           <>
+            {/* Rotation handle */}
+            <line
+              x1={cx}
+              y1={el.y - 3}
+              x2={cx}
+              y2={el.y - 20}
+              stroke="#2196f3"
+              strokeWidth={1.5}
+              pointerEvents="none"
+            />
+            <circle
+              cx={cx}
+              cy={el.y - 26}
+              r={6}
+              fill="white"
+              stroke="#2196f3"
+              strokeWidth={2}
+              style={{ cursor: "crosshair" }}
+              onMouseDown={(e) => this.startRotateHandle(e, el.id)}
+            />
             <rect
               x={el.x - 3}
               y={el.y - 3}
@@ -649,16 +816,22 @@ class FloorPlanDesigner extends React.Component<Props, State> {
 
   render() {
     const { t } = this.props;
-    const { elements, mode, wallStart, mousePos, snapTarget, selectedId, fullWindow, orthoConstrained } =
+    const { elements, mode, wallStart, mousePos, snapTarget, selectedId, orthoConstrained } =
       this.state;
 
-    const vb = computeViewBox(elements);
+    const extraPoints: { x: number; y: number }[] = [];
+    if (mode === "draw-wall" && wallStart) extraPoints.push(wallStart);
+    if (mode === "draw-wall" && mousePos) extraPoints.push(mousePos);
+    const vb = computeViewBox(
+      elements,
+      extraPoints.length > 0 ? extraPoints : undefined,
+    );
     const viewBox = `${vb.x} ${vb.y} ${vb.w} ${vb.h}`;
     const modeStr = mode as string;
     const isAddEntity = modeStr.startsWith("add-entity:");
 
     return (
-      <div className={`floor-plan-designer${fullWindow ? " fpd-fullwindow" : ""}`}>
+      <div className="floor-plan-designer">
         {/* Toolbar */}
         <div className="fpd-toolbar mb-2">
           <div className="btn-group me-2">
@@ -726,14 +899,6 @@ class FloorPlanDesigner extends React.Component<Props, State> {
             onClick={this.deleteSelected}
           >
             {t("deleteSelected")}
-          </Button>
-          <Button
-            size="sm"
-            variant={fullWindow ? "secondary" : "outline-secondary"}
-            className="ms-auto"
-            onClick={() => this.setState({ fullWindow: !fullWindow })}
-          >
-            {t("fullWindowMode")}
           </Button>
         </div>
 

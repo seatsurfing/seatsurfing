@@ -473,5 +473,6 @@
   "entityWindow": "Window",
   "selectMove": "Select / Move",
   "uploadFile": "Upload file",
-  "fullWindowMode": "Full window"
+  "fullWindowMode": "Full window",
+  "editFloorPlan": "Edit floor plan"
 }

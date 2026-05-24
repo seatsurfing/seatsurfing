@@ -230,6 +230,7 @@ interface State {
   typeaheadLocationAllowBookersOptions: GroupSearchResult[];
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
+  showDesignerModal: boolean;
 }
 
 interface Props {
@@ -286,6 +287,7 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadLocationAllowBookersOptions: [],
       typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
+      showDesignerModal: false,
     };
   }
 
@@ -1864,10 +1866,33 @@ class EditLocation extends React.Component<Props, State> {
                 />
               )}
               {this.state.mapType === 'designed' && (
-                <FloorPlanDesigner
-                  designData={this.state.designData}
-                  onChange={(designData: string) => this.setState({ designData, changed: true })}
-                />
+                <>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => this.setState({ showDesignerModal: true })}
+                  >
+                    {this.props.t("editFloorPlan")}
+                  </Button>
+                  <Modal
+                    show={this.state.showDesignerModal}
+                    onHide={() => this.setState({ showDesignerModal: false })}
+                    dialogClassName="fpd-modal-dialog"
+                    backdrop="static"
+                  >
+                    <Modal.Header closeButton>
+                      <Modal.Title>{this.props.t("designFloorPlan")}</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <FloorPlanDesigner
+                        designData={this.state.designData}
+                        onChange={(designData: string) =>
+                          this.setState({ designData, changed: true })
+                        }
+                      />
+                    </Modal.Body>
+                  </Modal>
+                </>
               )}
             </Col>
           </Form.Group>
