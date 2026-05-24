@@ -595,6 +595,23 @@ func (router *LocationRouter) setFloorPlanDesign(w http.ResponseWriter, r *http.
 		SendInternalServerError(w)
 		return
 	}
+	// Render the SVG to compute dimensions and persist them on the location so
+	// that map_width / map_height / map_mimetype are kept in sync.
+	_, width, height, err := renderFloorPlanSVG(m.DesignData)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	e.MapWidth = width
+	e.MapHeight = height
+	e.MapMimeType = "svg+xml"
+	e.MapScale = 1.0
+	if err := GetLocationRepository().SetMapMeta(e); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	SendUpdated(w)
 }
 

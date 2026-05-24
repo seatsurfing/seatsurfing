@@ -281,6 +281,17 @@ func (r *LocationRepository) SetMap(e *Location, locationMap *LocationMap) error
 	return err
 }
 
+func (r *LocationRepository) SetMapMeta(e *Location) error {
+	_, err := GetDatabase().DB().Exec("UPDATE locations SET "+
+		"map_mimetype = $1, "+
+		"map_width = $2, "+
+		"map_height = $3, "+
+		"map_scale = $4 "+
+		"WHERE id = $5",
+		e.MapMimeType, e.MapWidth, e.MapHeight, e.MapScale, e.ID)
+	return err
+}
+
 func (r *LocationRepository) GetMap(location *Location) (*LocationMap, error) {
 	e := &LocationMap{}
 	err := GetDatabase().DB().QueryRow("SELECT map_mimetype, map_data, map_width, map_height, map_scale "+
