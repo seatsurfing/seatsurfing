@@ -25,11 +25,11 @@ func GetLocationFloorPlanRepository() *LocationFloorPlanRepository {
 			"organization_id uuid NOT NULL, " +
 			"design_data TEXT NOT NULL DEFAULT '{}')")
 		if err != nil {
-			log.Println(err)
+			log.Panicf("failed to create location_floor_plans table: %v", err)
 		}
 		_, err = GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_location_floor_plans_org ON location_floor_plans(organization_id)")
 		if err != nil {
-			log.Println(err)
+			log.Panicf("failed to create idx_location_floor_plans_org index: %v", err)
 		}
 	})
 	return locationFloorPlanRepository
