@@ -29,6 +29,7 @@ type CreateSpaceRequest struct {
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
 	KioskEnabled          bool                         `json:"kioskEnabled"`
+	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
@@ -274,6 +275,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 			m.Rotation = e.Rotation
 			m.RequireSubject = e.RequireSubject
 			m.Enabled = e.Enabled
+			m.Shape = e.Shape
 			m.Available = e.Available
 			m.IsAllowed = isAllowedToBookLocation && router.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups)
 			m.IsApprovalRequired = router.IsApprovalRequired(&e.Space, approvers)
@@ -934,6 +936,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.RequireSubject = m.RequireSubject
 	e.Enabled = m.Enabled
 	e.KioskEnabled = m.KioskEnabled
+	e.Shape = m.Shape
 	return e
 }
 
@@ -950,6 +953,7 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.RequireSubject = e.RequireSubject
 	m.Enabled = e.Enabled
 	m.KioskEnabled = e.KioskEnabled
+	m.Shape = e.Shape
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {

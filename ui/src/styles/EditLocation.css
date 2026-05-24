@@ -38,6 +38,10 @@
   outline: none;
 }
 
+.space-dragger-circle {
+  border-radius: 50%;
+}
+
 .space-dragger-selected {
   background-color: hsl(215, 55%, 45%);
 }
