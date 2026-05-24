@@ -52,12 +52,6 @@ func RunDBSchemaUpdates() {
 		}
 	}
 
-	if curVersion < 44 {
-		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations ADD COLUMN IF NOT EXISTS map_type VARCHAR NOT NULL DEFAULT ''"); err != nil {
-			panic(err)
-		}
-	}
-
 	GetSettingsRepository().SetGlobal(SettingDatabaseVersion.Name, strconv.Itoa(targetVersion))
 	SetGlobalInstallID()
 }

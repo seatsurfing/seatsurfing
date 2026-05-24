@@ -8,6 +8,8 @@ import (
 )
 
 const floorPlanPadding = 40.0
+const floorPlanMinW = 400.0
+const floorPlanMinH = 300.0
 
 type floorPlanDesign struct {
 	Version  int                `json:"version"`
@@ -42,8 +44,8 @@ func renderFloorPlanSVG(designData string) ([]byte, uint, uint, error) {
 	bounds := computeBounds(design.Elements)
 	viewX := bounds.minX - floorPlanPadding
 	viewY := bounds.minY - floorPlanPadding
-	viewW := bounds.maxX - bounds.minX + 2*floorPlanPadding
-	viewH := bounds.maxY - bounds.minY + 2*floorPlanPadding
+	viewW := math.Max(bounds.maxX-bounds.minX+2*floorPlanPadding, floorPlanMinW)
+	viewH := math.Max(bounds.maxY-bounds.minY+2*floorPlanPadding, floorPlanMinH)
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(

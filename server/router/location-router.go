@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"image"
@@ -398,18 +399,20 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
-	if err := GetLocationRepository().Update(eNew); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	// When transitioning from designed to uploaded, clear stale map data
+	// Clear stale floor plan data before flipping map_type so that a failure
+	// here does not leave the location in an inconsistent state (map_type
+	// already updated but stale map data still present).
 	if previousMapType == "designed" && eNew.MapType == "" {
 		if err := GetLocationRepository().ClearMapData(eNew); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
 		}
+	}
+	if err := GetLocationRepository().Update(eNew); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
 	}
 
 	err = GetLocationRepository().ReplaceAllowedBookers(eNew, m.AllowedBookerGroupIDs)
@@ -491,13 +494,18 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if e.MapType == "designed" {
+		var designData string
 		plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
-		if err != nil {
+		if err == sql.ErrNoRows {
+			designData = `{"elements":[]}`
+		} else if err != nil {
 			log.Println(err)
-			SendNotFound(w)
+			SendInternalServerError(w)
 			return
+		} else {
+			designData = plan.DesignData
 		}
-		svgData, width, height, err := renderFloorPlanSVG(plan.DesignData)
+		svgData, width, height, err := renderFloorPlanSVG(designData)
 		if err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
@@ -543,9 +551,13 @@ func (router *LocationRouter) getFloorPlanDesign(w http.ResponseWriter, r *http.
 		return
 	}
 	plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
-	if err != nil {
+	if err == sql.ErrNoRows {
 		// No design record exists yet — return empty design
 		SendJSON(w, &GetFloorPlanDesignResponse{DesignData: ""})
+		return
+	} else if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
 		return
 	}
 	SendJSON(w, &GetFloorPlanDesignResponse{DesignData: plan.DesignData})

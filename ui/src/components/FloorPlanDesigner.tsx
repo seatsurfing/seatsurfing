@@ -295,6 +295,18 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     return { x: svgPt.x, y: svgPt.y };
   }
 
+  getSVGCoordsFromClient(clientX: number, clientY: number): { x: number; y: number } {
+    const svg = this.svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return { x: 0, y: 0 };
+    const svgPt = pt.matrixTransform(ctm.inverse());
+    return { x: svgPt.x, y: svgPt.y };
+  }
+
   notifyChange = (elements: FloorPlanElementDef[]) => {
     this.props.onChange(serializeDesign(elements));
   };
@@ -377,118 +389,11 @@ class FloorPlanDesigner extends React.Component<Props, State> {
   };
 
   handleSVGMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const pos = this.getSVGCoords(e);
+    // Drag moves are handled by the window-level listener to support
+    // the cursor leaving the SVG while dragging.
+    if (this.state.dragging) return;
 
-    if (
-      this.state.dragging &&
-      this.state.dragStartMouse &&
-      this.state.dragStartElement
-    ) {
-      const dx = pos.x - this.state.dragStartMouse.x;
-      const dy = pos.y - this.state.dragStartMouse.y;
-      const handle = this.state.dragHandle;
-      const startEl = this.state.dragStartElement;
-      const elements = this.state.elements.map((el) => {
-        if (el.id !== this.state.selectedId) return el;
-        if (el.type === "wall") {
-          if (handle === "ep1") {
-            const snapped = snapPoint(
-              startEl.x1! + dx,
-              startEl.y1! + dy,
-              this.state.elements,
-              el.id,
-            );
-            return { ...el, x1: snapped.x, y1: snapped.y };
-          } else if (handle === "ep2") {
-            const snapped = snapPoint(
-              startEl.x2! + dx,
-              startEl.y2! + dy,
-              this.state.elements,
-              el.id,
-            );
-            return { ...el, x2: snapped.x, y2: snapped.y };
-          } else {
-            // body drag
-            return {
-              ...el,
-              x1: startEl.x1! + dx,
-              y1: startEl.y1! + dy,
-              x2: startEl.x2! + dx,
-              y2: startEl.y2! + dy,
-            };
-          }
-        } else {
-          // Entity element
-          if (handle === "rotate") {
-            const cx = startEl.x1!;
-            const cy = startEl.y1!;
-            const startAngle = startEl.x!;
-            const startRotation = startEl.y!;
-            const currentAngle = Math.atan2(pos.y - cy, pos.x - cx);
-            const deltaAngle = (currentAngle - startAngle) * (180 / Math.PI);
-            let newRotation = startRotation + deltaAngle;
-            const snapped = Math.round(newRotation / 90) * 90;
-            if (Math.abs(newRotation - snapped) < 10) newRotation = snapped;
-            return { ...el, rotation: newRotation };
-          } else if (handle === "body") {
-            const newX = startEl.x! + dx;
-            const newY = startEl.y! + dy;
-            const wallSnap = snapEntityToWall(
-              el.type,
-              newX + el.width / 2,
-              newY + el.height / 2,
-              el.width,
-              el.height,
-              this.state.elements,
-            );
-            if (wallSnap) {
-              return {
-                ...el,
-                x: wallSnap.x,
-                y: wallSnap.y,
-                rotation: wallSnap.rotation,
-              };
-            }
-            return { ...el, x: newX, y: newY };
-          } else if (handle === "se") {
-            return {
-              ...el,
-              width: Math.max(10, startEl.x2! + dx),
-              height: Math.max(10, startEl.y2! + dy),
-            };
-          } else if (handle === "sw") {
-            const newW = Math.max(10, startEl.x2! - dx);
-            return {
-              ...el,
-              x: startEl.x! + (startEl.x2! - newW),
-              width: newW,
-              height: Math.max(10, startEl.y2! + dy),
-            };
-          } else if (handle === "ne") {
-            const newH = Math.max(10, startEl.y2! - dy);
-            return {
-              ...el,
-              y: startEl.y! + (startEl.y2! - newH),
-              width: Math.max(10, startEl.x2! + dx),
-              height: newH,
-            };
-          } else if (handle === "nw") {
-            const newW = Math.max(10, startEl.x2! - dx);
-            const newH = Math.max(10, startEl.y2! - dy);
-            return {
-              ...el,
-              x: startEl.x! + (startEl.x2! - newW),
-              y: startEl.y! + (startEl.y2! - newH),
-              width: newW,
-              height: newH,
-            };
-          }
-        }
-        return el;
-      });
-      this.setState({ elements });
-      return;
-    }
+    const pos = this.getSVGCoords(e);
 
     // Update mouse position for wall preview / snap indicator
     if (this.state.mode === "draw-wall") {
@@ -507,22 +412,157 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     }
   };
 
+  applyDragMove = (pos: { x: number; y: number }) => {
+    if (
+      !this.state.dragging ||
+      !this.state.dragStartMouse ||
+      !this.state.dragStartElement
+    )
+      return;
+    const dx = pos.x - this.state.dragStartMouse.x;
+    const dy = pos.y - this.state.dragStartMouse.y;
+    const handle = this.state.dragHandle;
+    const startEl = this.state.dragStartElement;
+    const elements = this.state.elements.map((el) => {
+      if (el.id !== this.state.selectedId) return el;
+      if (el.type === "wall") {
+        if (handle === "ep1") {
+          const snapped = snapPoint(
+            startEl.x1! + dx,
+            startEl.y1! + dy,
+            this.state.elements,
+            el.id,
+          );
+          return { ...el, x1: snapped.x, y1: snapped.y };
+        } else if (handle === "ep2") {
+          const snapped = snapPoint(
+            startEl.x2! + dx,
+            startEl.y2! + dy,
+            this.state.elements,
+            el.id,
+          );
+          return { ...el, x2: snapped.x, y2: snapped.y };
+        } else {
+          // body drag
+          return {
+            ...el,
+            x1: startEl.x1! + dx,
+            y1: startEl.y1! + dy,
+            x2: startEl.x2! + dx,
+            y2: startEl.y2! + dy,
+          };
+        }
+      } else {
+        // Entity element
+        if (handle === "rotate") {
+          const cx = startEl.x1!;
+          const cy = startEl.y1!;
+          const startAngle = startEl.x!;
+          const startRotation = startEl.y!;
+          const currentAngle = Math.atan2(pos.y - cy, pos.x - cx);
+          const deltaAngle = (currentAngle - startAngle) * (180 / Math.PI);
+          let newRotation = startRotation + deltaAngle;
+          const snapped = Math.round(newRotation / 90) * 90;
+          if (Math.abs(newRotation - snapped) < 10) newRotation = snapped;
+          return { ...el, rotation: newRotation };
+        } else if (handle === "body") {
+          const newX = startEl.x! + dx;
+          const newY = startEl.y! + dy;
+          const wallSnap = snapEntityToWall(
+            el.type,
+            newX + el.width / 2,
+            newY + el.height / 2,
+            el.width,
+            el.height,
+            this.state.elements,
+          );
+          if (wallSnap) {
+            return {
+              ...el,
+              x: wallSnap.x,
+              y: wallSnap.y,
+              rotation: wallSnap.rotation,
+            };
+          }
+          return { ...el, x: newX, y: newY };
+        } else if (handle === "se") {
+          return {
+            ...el,
+            width: Math.max(10, startEl.x2! + dx),
+            height: Math.max(10, startEl.y2! + dy),
+          };
+        } else if (handle === "sw") {
+          const newW = Math.max(10, startEl.x2! - dx);
+          return {
+            ...el,
+            x: startEl.x! + (startEl.x2! - newW),
+            width: newW,
+            height: Math.max(10, startEl.y2! + dy),
+          };
+        } else if (handle === "ne") {
+          const newH = Math.max(10, startEl.y2! - dy);
+          return {
+            ...el,
+            y: startEl.y! + (startEl.y2! - newH),
+            width: Math.max(10, startEl.x2! + dx),
+            height: newH,
+          };
+        } else if (handle === "nw") {
+          const newW = Math.max(10, startEl.x2! - dx);
+          const newH = Math.max(10, startEl.y2! - dy);
+          return {
+            ...el,
+            x: startEl.x! + (startEl.x2! - newW),
+            y: startEl.y! + (startEl.y2! - newH),
+            width: newW,
+            height: newH,
+          };
+        }
+      }
+      return el;
+    });
+    this.setState({ elements });
+  };
+
+  finalizeDrag = () => {
+    if (!this.state.dragging) return;
+    const elements = [...this.state.elements];
+    this.setState({
+      dragging: false,
+      dragStartMouse: null,
+      dragStartElement: null,
+      dragHandle: null,
+    });
+    this.notifyChange(elements);
+    this.detachWindowDragListeners();
+  };
+
+  attachWindowDragListeners = () => {
+    window.addEventListener("mousemove", this.handleWindowMouseMove);
+    window.addEventListener("mouseup", this.handleWindowMouseUp);
+  };
+
+  detachWindowDragListeners = () => {
+    window.removeEventListener("mousemove", this.handleWindowMouseMove);
+    window.removeEventListener("mouseup", this.handleWindowMouseUp);
+  };
+
+  handleWindowMouseMove = (e: MouseEvent) => {
+    const pos = this.getSVGCoordsFromClient(e.clientX, e.clientY);
+    this.applyDragMove(pos);
+  };
+
+  handleWindowMouseUp = () => {
+    this.finalizeDrag();
+  };
+
   handleSVGMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (this.state.mode !== "select") return;
     // Only start drag if clicking on an element handle
   };
 
   handleSVGMouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (this.state.dragging) {
-      const elements = [...this.state.elements];
-      this.setState({
-        dragging: false,
-        dragStartMouse: null,
-        dragStartElement: null,
-        dragHandle: null,
-      });
-      this.notifyChange(elements);
-    }
+    this.finalizeDrag();
   };
 
   handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -628,8 +668,18 @@ class FloorPlanDesigner extends React.Component<Props, State> {
     window.addEventListener("keydown", this.handleKeyDown);
   }
 
+  componentDidUpdate(prevProps: Props) {
+    if (
+      prevProps.designData !== this.props.designData &&
+      !this.state.dragging
+    ) {
+      this.setState({ elements: parseDesign(this.props.designData) });
+    }
+  }
+
   componentWillUnmount() {
     window.removeEventListener("keydown", this.handleKeyDown);
+    this.detachWindowDragListeners();
   }
 
   deleteSelected = () => {
@@ -659,6 +709,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
       dragHandle: handle,
       selectedId: elementId,
     });
+    this.attachWindowDragListeners();
   };
 
   startRotateHandle = (e: React.MouseEvent, elementId: string) => {
@@ -684,6 +735,7 @@ class FloorPlanDesigner extends React.Component<Props, State> {
       dragHandle: "rotate",
       selectedId: elementId,
     });
+    this.attachWindowDragListeners();
   };
 
   renderWall = (el: WallElement) => {

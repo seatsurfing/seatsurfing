@@ -101,6 +101,11 @@ func (r *LocationRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 44 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations ADD COLUMN IF NOT EXISTS map_type VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *LocationRepository) Create(e *Location) error {

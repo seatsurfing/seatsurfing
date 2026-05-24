@@ -36,6 +36,17 @@ func GetLocationFloorPlanRepository() *LocationFloorPlanRepository {
 }
 
 func (r *LocationFloorPlanRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+	if curVersion < 44 {
+		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS location_floor_plans (" +
+			"location_id uuid PRIMARY KEY REFERENCES locations(id) ON DELETE CASCADE, " +
+			"organization_id uuid NOT NULL, " +
+			"design_data TEXT NOT NULL DEFAULT '{}')"); err != nil {
+			log.Panicf("failed to create location_floor_plans table: %v", err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_location_floor_plans_org ON location_floor_plans(organization_id)"); err != nil {
+			log.Panicf("failed to create idx_location_floor_plans_org index: %v", err)
+		}
+	}
 }
 
 func (r *LocationFloorPlanRepository) GetDesign(locationID string) (*LocationFloorPlan, error) {
