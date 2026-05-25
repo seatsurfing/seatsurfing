@@ -51,14 +51,43 @@ export default class Space extends Entity {
     this.approvalRequired = false;
   }
 
+  normalizePosition(): { x: number; y: number; width: number; height: number; rotation: number } {
+    const { x, y, width: w, height: h, rotation } = this;
+    const r = ((rotation % 360) + 360) % 360;
+
+    // Representation A: current (x, y), size (w, h), rotation r
+    // Representation B: same visual center, swapped dimensions, rotation r+90
+    // Both are visually identical (same center, same shape, just described differently).
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    const xB = cx - h / 2;
+    const yB = cy - w / 2;
+    const rB = (r + 90) % 360;
+
+    const aOk = x >= 0 && y >= 0;
+    const bOk = xB >= 0 && yB >= 0;
+
+    if (aOk) return { x: Math.round(x), y: Math.round(y), width: w, height: h, rotation: r };
+    if (bOk) return { x: Math.round(xB), y: Math.round(yB), width: h, height: w, rotation: rB };
+
+    // For arbitrary angles where neither representation gives non-negative coords,
+    // clamp as last resort — the space may shift slightly on screen.
+    const useB = xB + yB > x + y;
+    return useB
+      ? { x: Math.max(0, Math.round(xB)), y: Math.max(0, Math.round(yB)), width: h, height: w, rotation: rB }
+      : { x: Math.max(0, Math.round(x)), y: Math.max(0, Math.round(y)), width: w, height: h, rotation: r };
+  }
+
   serialize(): Object {
+    const { x, y, width, height, rotation } = this.normalizePosition();
     return Object.assign(super.serialize(), {
+      id: this.id,
       name: this.name,
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      rotation: this.rotation,
+      x,
+      y,
+      width,
+      height,
+      rotation,
       requireSubject: this.requireSubject,
       enabled: this.enabled,
       kioskEnabled: this.kioskEnabled,
@@ -240,8 +269,8 @@ export default class Space extends Entity {
     deleteIds: string[],
   ): Promise<BulkUpdateResponse> {
     const payload = {
-      creates: creates,
-      updates: updates,
+      creates: creates.map((s) => s.serialize()),
+      updates: updates.map((s) => s.serialize()),
       deleteIds: deleteIds,
     };
     const result = await Ajax.postData(
