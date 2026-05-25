@@ -120,7 +120,11 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
     }
   }, [space.x, space.y, space.rotation, isSelected]);
 
-  const clampPosition = (left: number, top: number, rotationDeg: number = space.rotation) => {
+  const clampPosition = (
+    left: number,
+    top: number,
+    rotationDeg: number = space.rotation,
+  ) => {
     const rad = (rotationDeg * Math.PI) / 180;
     const cosA = Math.abs(Math.cos(rad));
     const sinA = Math.abs(Math.sin(rad));
@@ -189,7 +193,11 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           onDragEnd={({ lastEvent }) => {
             if (lastEvent) {
               const clamped = clampPosition(lastEvent.left, lastEvent.top);
-              onDragEnd(index, Math.round(clamped.left), Math.round(clamped.top));
+              onDragEnd(
+                index,
+                Math.round(clamped.left),
+                Math.round(clamped.top),
+              );
             }
             onSelect(index);
           }}
@@ -215,9 +223,15 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
           onRotateEnd={({ lastEvent }) => {
             if (lastEvent) {
-              const newRotation = ((Math.round(lastEvent.rotation) % 360) + 360) % 360;
+              const newRotation =
+                ((Math.round(lastEvent.rotation) % 360) + 360) % 360;
               const clamped = clampPosition(space.x, space.y, newRotation);
-              onRotateEnd(index, newRotation, Math.round(clamped.left), Math.round(clamped.top));
+              onRotateEnd(
+                index,
+                newRotation,
+                Math.round(clamped.left),
+                Math.round(clamped.top),
+              );
             }
           }}
         />
