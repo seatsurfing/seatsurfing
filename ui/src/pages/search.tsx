@@ -1781,8 +1781,9 @@ class Search extends React.Component<Props, State> {
           <TransformWrapper
             ref={this.transformWrapperRef}
             initialScale={0.8}
-            minScale={0.2}
-            maxScale={5}
+            minScale={0.1}
+            maxScale={4}
+            wheel={{ step: 0.003 }}
           >
             {({ zoomIn, zoomOut }) => (
               <>
