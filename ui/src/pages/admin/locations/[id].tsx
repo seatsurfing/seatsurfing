@@ -209,12 +209,37 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
           onResizeEnd={({ lastEvent }) => {
             if (lastEvent) {
+              const newWidth = Math.round(lastEvent.width);
+              const newHeight = Math.round(lastEvent.height);
+              const newLeft = Math.round(lastEvent.drag.left);
+              const newTop = Math.round(lastEvent.drag.top);
+              const rad = (space.rotation * Math.PI) / 180;
+              const cosA = Math.abs(Math.cos(rad));
+              const sinA = Math.abs(Math.sin(rad));
+              const bw = newWidth * cosA + newHeight * sinA;
+              const bh = newWidth * sinA + newHeight * cosA;
+              const isOutside =
+                newLeft < (bw - newWidth) / 2 ||
+                newLeft > mapWidth - (newWidth + bw) / 2 ||
+                newTop < (bh - newHeight) / 2 ||
+                newTop > mapHeight - (newHeight + bh) / 2;
+              if (isOutside) {
+                const target = targetRef.current;
+                if (target) {
+                  target.style.width = space.width;
+                  target.style.height = space.height;
+                  target.style.left = `${space.x}px`;
+                  target.style.top = `${space.y}px`;
+                  moveableRef.current?.updateRect();
+                }
+                return;
+              }
               onResizeEnd(
                 index,
-                Math.round(lastEvent.drag.left),
-                Math.round(lastEvent.drag.top),
-                `${Math.round(lastEvent.width)}px`,
-                `${Math.round(lastEvent.height)}px`,
+                newLeft,
+                newTop,
+                `${newWidth}px`,
+                `${newHeight}px`,
               );
             }
           }}
