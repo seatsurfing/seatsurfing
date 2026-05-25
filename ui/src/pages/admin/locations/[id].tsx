@@ -125,6 +125,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
     top: number,
     rotationDeg: number = space.rotation,
   ) => {
+    if (mapWidth <= 0 || mapHeight <= 0) {
+      return { left, top };
+    }
     const rad = (rotationDeg * Math.PI) / 180;
     const cosA = Math.abs(Math.cos(rad));
     const sinA = Math.abs(Math.sin(rad));
@@ -134,6 +137,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
     const maxLeft = mapWidth - (width + boundingWidth) / 2;
     const minTop = (boundingHeight - height) / 2;
     const maxTop = mapHeight - (height + boundingHeight) / 2;
+    if (maxLeft < minLeft || maxTop < minTop) {
+      return { left, top };
+    }
     return {
       left: Math.min(Math.max(minLeft, left), maxLeft),
       top: Math.min(Math.max(minTop, top), maxTop),
@@ -218,11 +224,19 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
               const sinA = Math.abs(Math.sin(rad));
               const bw = newWidth * cosA + newHeight * sinA;
               const bh = newWidth * sinA + newHeight * cosA;
+              const minResizeLeft = (bw - newWidth) / 2;
+              const maxResizeLeft = mapWidth - (newWidth + bw) / 2;
+              const minResizeTop = (bh - newHeight) / 2;
+              const maxResizeTop = mapHeight - (newHeight + bh) / 2;
               const isOutside =
-                newLeft < (bw - newWidth) / 2 ||
-                newLeft > mapWidth - (newWidth + bw) / 2 ||
-                newTop < (bh - newHeight) / 2 ||
-                newTop > mapHeight - (newHeight + bh) / 2;
+                mapWidth > 0 &&
+                mapHeight > 0 &&
+                maxResizeLeft >= minResizeLeft &&
+                maxResizeTop >= minResizeTop &&
+                (newLeft < minResizeLeft ||
+                  newLeft > maxResizeLeft ||
+                  newTop < minResizeTop ||
+                  newTop > maxResizeTop);
               if (isOutside) {
                 const target = targetRef.current;
                 if (target) {
