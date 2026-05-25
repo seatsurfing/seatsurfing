@@ -612,8 +612,7 @@ class EditLocation extends React.Component<Props, State> {
     const match = baseName.match(/^(.+?) \(#\d+\)$/);
     const extractedBase = match ? match[1].trim() : "";
     const trimmedBaseName = baseName.trim();
-    const base =
-      extractedBase || trimmedBaseName || this.props.t("unnamed");
+    const base = extractedBase || trimmedBaseName || this.props.t("unnamed");
     if (!existingNames.has(base)) {
       return base;
     }
