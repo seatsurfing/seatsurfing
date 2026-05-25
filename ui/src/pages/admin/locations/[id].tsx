@@ -194,7 +194,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
             const clamped = clampPosition(left, top);
             target.style.left = `${clamped.left}px`;
             target.style.top = `${clamped.top}px`;
-            moveableRef.current?.updateRect();
+            if (clamped.left !== left || clamped.top !== top) {
+              moveableRef.current?.updateRect();
+            }
           }}
           onDragEnd={({ lastEvent }) => {
             if (lastEvent) {
