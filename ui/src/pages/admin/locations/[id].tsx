@@ -266,13 +266,33 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
             if (lastEvent) {
               const newRotation =
                 ((Math.round(lastEvent.rotation) % 360) + 360) % 360;
-              const clamped = clampPosition(space.x, space.y, newRotation);
-              onRotateEnd(
-                index,
-                newRotation,
-                Math.round(clamped.left),
-                Math.round(clamped.top),
-              );
+              const rad = (newRotation * Math.PI) / 180;
+              const cosA = Math.abs(Math.cos(rad));
+              const sinA = Math.abs(Math.sin(rad));
+              const boundingWidth = width * cosA + height * sinA;
+              const boundingHeight = width * sinA + height * cosA;
+              const minLeft = (boundingWidth - width) / 2;
+              const maxLeft = mapWidth - (width + boundingWidth) / 2;
+              const minTop = (boundingHeight - height) / 2;
+              const maxTop = mapHeight - (height + boundingHeight) / 2;
+              const wouldBeOutside =
+                mapWidth > 0 &&
+                mapHeight > 0 &&
+                (maxLeft < minLeft ||
+                  maxTop < minTop ||
+                  space.x < minLeft ||
+                  space.x > maxLeft ||
+                  space.y < minTop ||
+                  space.y > maxTop);
+              if (wouldBeOutside) {
+                const target = targetRef.current;
+                if (target) {
+                  target.style.transform = `rotate(${space.rotation}deg)`;
+                  moveableRef.current?.updateRect();
+                }
+                return;
+              }
+              onRotateEnd(index, newRotation, space.x, space.y);
             }
           }}
         />
