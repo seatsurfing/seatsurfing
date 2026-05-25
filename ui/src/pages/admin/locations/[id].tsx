@@ -609,14 +609,16 @@ class EditLocation extends React.Component<Props, State> {
 
   newSpaceName(baseName: string): string {
     const existingNames = new Set(this.state.spaces.map((s) => s.name));
-    if (!existingNames.has(baseName)) {
-      return baseName;
+    const match = baseName.match(/^(.*) \(#\d+\)$/);
+    const base = match ? match[1] : baseName;
+    if (!existingNames.has(base)) {
+      return base;
     }
     let i = 2;
-    while (existingNames.has(`${baseName} (#${i})`)) {
+    while (existingNames.has(`${base} (#${i})`)) {
       i++;
     }
-    return `${baseName} (#${i})`;
+    return `${base} (#${i})`;
   }
 
   newSpaceState = (e?: Space): SpaceState => {
