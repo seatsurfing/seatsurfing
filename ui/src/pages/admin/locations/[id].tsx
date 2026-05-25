@@ -1628,7 +1628,7 @@ class EditLocation extends React.Component<Props, State> {
         );
         const selectedShape = this.getSelectedSpace()?.shape ?? "";
         buttonShapeSelector = (
-          <Dropdown>
+          <Dropdown as="div" className="btn-group">
             <Dropdown.Toggle
               className="btn-sm"
               variant="outline-secondary"
