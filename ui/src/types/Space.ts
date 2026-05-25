@@ -51,7 +51,13 @@ export default class Space extends Entity {
     this.approvalRequired = false;
   }
 
-  normalizePosition(): { x: number; y: number; width: number; height: number; rotation: number } {
+  normalizePosition(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotation: number;
+  } {
     const { x, y, width: w, height: h, rotation } = this;
     const r = ((rotation % 360) + 360) % 360;
 
@@ -67,15 +73,41 @@ export default class Space extends Entity {
     const aOk = x >= 0 && y >= 0;
     const bOk = xB >= 0 && yB >= 0;
 
-    if (aOk) return { x: Math.round(x), y: Math.round(y), width: w, height: h, rotation: r };
-    if (bOk) return { x: Math.round(xB), y: Math.round(yB), width: h, height: w, rotation: rB };
+    if (aOk)
+      return {
+        x: Math.round(x),
+        y: Math.round(y),
+        width: w,
+        height: h,
+        rotation: r,
+      };
+    if (bOk)
+      return {
+        x: Math.round(xB),
+        y: Math.round(yB),
+        width: h,
+        height: w,
+        rotation: rB,
+      };
 
     // For arbitrary angles where neither representation gives non-negative coords,
     // clamp as last resort — the space may shift slightly on screen.
     const useB = xB + yB > x + y;
     return useB
-      ? { x: Math.max(0, Math.round(xB)), y: Math.max(0, Math.round(yB)), width: h, height: w, rotation: rB }
-      : { x: Math.max(0, Math.round(x)), y: Math.max(0, Math.round(y)), width: w, height: h, rotation: r };
+      ? {
+          x: Math.max(0, Math.round(xB)),
+          y: Math.max(0, Math.round(yB)),
+          width: h,
+          height: w,
+          rotation: rB,
+        }
+      : {
+          x: Math.max(0, Math.round(x)),
+          y: Math.max(0, Math.round(y)),
+          width: w,
+          height: h,
+          rotation: r,
+        };
   }
 
   serialize(): Object {
