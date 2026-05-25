@@ -124,6 +124,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           width: space.width,
           height: space.height,
           transform: `rotate(${space.rotation}deg)`,
+          zIndex: isSelected ? 1 : undefined,
         }}
         className={className}
         onMouseDown={() => {
