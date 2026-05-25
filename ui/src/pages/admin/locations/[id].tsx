@@ -86,10 +86,12 @@ interface SpaceRectProps {
     width: string,
     height: string,
   ) => void;
-  onRotateEnd: (i: number, rotation: number) => void;
+  onRotateEnd: (i: number, rotation: number, x: number, y: number) => void;
   onNameChange: (i: number, name: string) => void;
   unnamedLabel: string;
   newSpaceName: (baseName: string) => string;
+  mapWidth: number;
+  mapHeight: number;
 }
 
 const SpaceRect: React.FC<SpaceRectProps> = ({
@@ -104,10 +106,36 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   onNameChange,
   unnamedLabel,
   newSpaceName,
+  mapWidth,
+  mapHeight,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
+  const moveableRef = React.useRef<Moveable>(null);
   const width = parseInt(space.width.replace(/^\D+/g, ""));
   const height = parseInt(space.height.replace(/^\D+/g, ""));
+
+  React.useEffect(() => {
+    if (isSelected) {
+      moveableRef.current?.updateRect();
+    }
+  }, [space.x, space.y, space.rotation, isSelected]);
+
+  const clampPosition = (left: number, top: number, rotationDeg: number = space.rotation) => {
+    const rad = (rotationDeg * Math.PI) / 180;
+    const cosA = Math.abs(Math.cos(rad));
+    const sinA = Math.abs(Math.sin(rad));
+    const boundingWidth = width * cosA + height * sinA;
+    const boundingHeight = width * sinA + height * cosA;
+    const minLeft = (boundingWidth - width) / 2;
+    const maxLeft = mapWidth - (width + boundingWidth) / 2;
+    const minTop = (boundingHeight - height) / 2;
+    const maxTop = mapHeight - (height + boundingHeight) / 2;
+    return {
+      left: Math.min(Math.max(minLeft, left), maxLeft),
+      top: Math.min(Math.max(minTop, top), maxTop),
+    };
+  };
+
   let className = "space-dragger";
   if (width < height) className += " space-dragger-vertical";
   if (space.shape === "circle") className += " space-dragger-circle";
@@ -146,22 +174,22 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
       </div>
       {isSelected && (
         <Moveable
+          ref={moveableRef}
           target={targetRef}
           draggable={true}
           resizable={true}
           rotatable={true}
           origin={false}
           onDrag={({ target, left, top }) => {
-            target.style.left = `${left}px`;
-            target.style.top = `${top}px`;
+            const clamped = clampPosition(left, top);
+            target.style.left = `${clamped.left}px`;
+            target.style.top = `${clamped.top}px`;
+            moveableRef.current?.updateRect();
           }}
           onDragEnd={({ lastEvent }) => {
             if (lastEvent) {
-              onDragEnd(
-                index,
-                Math.round(lastEvent.left),
-                Math.round(lastEvent.top),
-              );
+              const clamped = clampPosition(lastEvent.left, lastEvent.top);
+              onDragEnd(index, Math.round(clamped.left), Math.round(clamped.top));
             }
             onSelect(index);
           }}
@@ -187,10 +215,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
           onRotateEnd={({ lastEvent }) => {
             if (lastEvent) {
-              onRotateEnd(
-                index,
-                ((Math.round(lastEvent.rotation) % 360) + 360) % 360,
-              );
+              const newRotation = ((Math.round(lastEvent.rotation) % 360) + 360) % 360;
+              const clamped = clampPosition(space.x, space.y, newRotation);
+              onRotateEnd(index, newRotation, Math.round(clamped.left), Math.round(clamped.top));
             }
           }}
         />
@@ -699,10 +726,12 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ spaces: spaces, changed: true });
   };
 
-  setSpaceRotation = (i: number, rotation: number) => {
+  setSpaceRotation = (i: number, rotation: number, x: number, y: number) => {
     const spaces = this.state.spaces;
     const space = { ...spaces[i] };
     space.rotation = rotation;
+    space.x = x;
+    space.y = y;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -846,6 +875,8 @@ class EditLocation extends React.Component<Props, State> {
         onNameChange={this.setSpaceName}
         unnamedLabel={this.props.t("unnamed")}
         newSpaceName={this.newSpaceName}
+        mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
+        mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
       />
     );
   };
