@@ -4,6 +4,7 @@ export type PreferencesTab = "security" | "style" | "booking" | "integration";
 
 export default class Navigation {
   // API
+  static readonly PATH_API_SETTINGS = "/setting/";
   static readonly PATH_API_USER_PREFERENCES = "/preference/";
   static readonly PATH_API_AUTH_INIT_PW_RESET = "/auth/initpwreset";
   static readonly PATH_API_AUTH_ORG = "/auth/org/";
