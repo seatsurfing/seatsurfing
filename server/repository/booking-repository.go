@@ -444,8 +444,8 @@ func (r *BookingRepository) GetCountCurrent(organizationID string) (int, error) 
 		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
 		"INNER JOIN locations ON locations.id = spaces.location_id "+
 		"WHERE locations.organization_id = $1 "+
-		"AND enter_time <= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), (SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), 'UTC')) "+
-		"AND leave_time >= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), (SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), 'UTC'))",
+		"AND enter_time <= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC')) "+
+		"AND leave_time >= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC'))",
 		organizationID).Scan(&res)
 	return res, err
 }
