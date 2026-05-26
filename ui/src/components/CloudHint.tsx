@@ -7,6 +7,7 @@ interface State {}
 
 interface Props {
   t: TranslationFunc;
+  lang: string;
 }
 
 class CloudHint extends React.Component<Props, State> {
@@ -19,23 +20,34 @@ class CloudHint extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.cloudHosted) {
       return <></>;
     }
+    const langPrefix = this.props.lang === "de" ? "/de" : "";
     return (
       <Row className="mb-4">
-        <Col sm="8">
+        <Col sm="12" xl="8">
           <Alert variant="info">
             <p>💎 {this.props.t("cloudHint")}</p>
             <Row>
-              <Col sm="6">
+              <Col sm="4">
                 🚀{" "}
                 <a
-                  href="https://seatsurfing.io/sign-up?paid"
+                  href={`https://seatsurfing.io${langPrefix}/sign-up?paid`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   {this.props.t("cloudHintLink")}
                 </a>
               </Col>
-              <Col sm="6">
+              <Col sm="4">
+                ✨{" "}
+                <a
+                  href={`https://seatsurfing.io${langPrefix}/features`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {this.props.t("featuresLink")}
+                </a>
+              </Col>
+              <Col sm="4">
                 ❤️{" "}
                 <a
                   href="https://github.com/sponsors/seatsurfing"
