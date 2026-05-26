@@ -333,7 +333,8 @@ func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingDefaultTimezone.Name, "Europe/Berlin")
 	_, space := CreateTestLocationAndSpace(org)
 
-	loc, _ := time.LoadLocation("Europe/Berlin")
+	loc, err := time.LoadLocation("Europe/Berlin")
+	CheckTestBool(t, true, err == nil)
 	now := time.Now().In(loc)
 	twoHoursAgo := now.Add(-2 * time.Hour)
 	twoHoursLater := now.Add(2 * time.Hour)
