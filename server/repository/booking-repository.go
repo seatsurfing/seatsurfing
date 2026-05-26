@@ -303,8 +303,8 @@ func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail 
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
 		"INNER JOIN users ON bookings.user_id = users.id " +
 		"WHERE locations.organization_id = $1 " +
-		"AND enter_time <= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), (SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), 'UTC')) " +
-		"AND leave_time >= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), (SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), 'UTC'))"
+		"AND enter_time <= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC')) " +
+		"AND leave_time >= (NOW() AT TIME ZONE COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC'))"
 	args := []interface{}{organizationID}
 	if userEmail != "" {
 		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
