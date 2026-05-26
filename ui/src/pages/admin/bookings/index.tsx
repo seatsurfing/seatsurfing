@@ -89,9 +89,9 @@ class Bookings extends React.Component<Props, State> {
       filterOption:
         this.props.router.query["filter"] === "today"
           ? "today"
-          : this.props.router.query["filter"] === "current"
-            ? "current"
-            : "enter_leave",
+          : this.props.router.query["filter"] === "enter_leave"
+            ? "enter_leave"
+            : "current",
       typeaheadOptions: [],
       typeaheadLoading: false,
       filterLocation: this.props.router.query["location"] as string,
@@ -142,8 +142,13 @@ class Bookings extends React.Component<Props, State> {
     const startOfToday = DateUtil.getTodayStart();
     const endOfToday = DateUtil.getTodayEnd();
 
-    this.data = await (this.state.filterOption === "current"
-      ? Booking.listCurrent(this.state.filterUser, this.state.filterLocation)
+    this.data = await (this.state.filterOption === "enter_leave"
+      ? Booking.listFiltered(
+          this.state.start,
+          end,
+          this.state.filterUser,
+          this.state.filterLocation,
+        )
       : this.state.filterOption === "today"
         ? Booking.listFiltered(
             startOfToday,
@@ -151,9 +156,7 @@ class Bookings extends React.Component<Props, State> {
             this.state.filterUser,
             this.state.filterLocation,
           )
-        : Booking.listFiltered(
-            this.state.start,
-            end,
+        : Booking.listCurrent(
             this.state.filterUser,
             this.state.filterLocation,
           ));
@@ -165,10 +168,7 @@ class Bookings extends React.Component<Props, State> {
       this.state.filterOption === "enter_leave"
         ? DateUtil.formatToDateTimeString(this.state.end)
         : null,
-      this.state.filterOption === "current" ||
-        this.state.filterOption === "today"
-        ? this.state.filterOption
-        : null,
+      this.state.filterOption,
       this.state.filterUser,
       this.state.filterLocation,
     );
