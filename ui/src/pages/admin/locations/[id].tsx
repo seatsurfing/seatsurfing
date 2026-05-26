@@ -86,10 +86,12 @@ interface SpaceRectProps {
     width: string,
     height: string,
   ) => void;
-  onRotateEnd: (i: number, rotation: number) => void;
+  onRotateEnd: (i: number, rotation: number, x: number, y: number) => void;
   onNameChange: (i: number, name: string) => void;
   unnamedLabel: string;
   newSpaceName: (baseName: string) => string;
+  mapWidth: number;
+  mapHeight: number;
 }
 
 const SpaceRect: React.FC<SpaceRectProps> = ({
@@ -104,10 +106,46 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   onNameChange,
   unnamedLabel,
   newSpaceName,
+  mapWidth,
+  mapHeight,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
+  const moveableRef = React.useRef<Moveable>(null);
   const width = parseInt(space.width.replace(/^\D+/g, ""));
   const height = parseInt(space.height.replace(/^\D+/g, ""));
+
+  React.useEffect(() => {
+    if (isSelected) {
+      moveableRef.current?.updateRect();
+    }
+  }, [space.x, space.y, space.rotation, isSelected]);
+
+  const clampPosition = (
+    left: number,
+    top: number,
+    rotationDeg: number = space.rotation,
+  ) => {
+    if (mapWidth <= 0 || mapHeight <= 0) {
+      return { left, top };
+    }
+    const rad = (rotationDeg * Math.PI) / 180;
+    const cosA = Math.abs(Math.cos(rad));
+    const sinA = Math.abs(Math.sin(rad));
+    const boundingWidth = width * cosA + height * sinA;
+    const boundingHeight = width * sinA + height * cosA;
+    const minLeft = (boundingWidth - width) / 2;
+    const maxLeft = mapWidth - (width + boundingWidth) / 2;
+    const minTop = (boundingHeight - height) / 2;
+    const maxTop = mapHeight - (height + boundingHeight) / 2;
+    if (maxLeft < minLeft || maxTop < minTop) {
+      return { left, top };
+    }
+    return {
+      left: Math.min(Math.max(minLeft, left), maxLeft),
+      top: Math.min(Math.max(minTop, top), maxTop),
+    };
+  };
+
   let className = "space-dragger";
   if (width < height) className += " space-dragger-vertical";
   if (space.shape === "circle") className += " space-dragger-circle";
@@ -147,21 +185,27 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
       </div>
       {isSelected && (
         <Moveable
+          ref={moveableRef}
           target={targetRef}
           draggable={true}
           resizable={true}
           rotatable={true}
           origin={false}
           onDrag={({ target, left, top }) => {
-            target.style.left = `${left}px`;
-            target.style.top = `${top}px`;
+            const clamped = clampPosition(left, top);
+            target.style.left = `${clamped.left}px`;
+            target.style.top = `${clamped.top}px`;
+            if (clamped.left !== left || clamped.top !== top) {
+              moveableRef.current?.updateRect();
+            }
           }}
           onDragEnd={({ lastEvent }) => {
             if (lastEvent) {
+              const clamped = clampPosition(lastEvent.left, lastEvent.top);
               onDragEnd(
                 index,
-                Math.round(lastEvent.left),
-                Math.round(lastEvent.top),
+                Math.round(clamped.left),
+                Math.round(clamped.top),
               );
             }
             onSelect(index);
@@ -174,12 +218,45 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
           onResizeEnd={({ lastEvent }) => {
             if (lastEvent) {
+              const newWidth = Math.round(lastEvent.width);
+              const newHeight = Math.round(lastEvent.height);
+              const newLeft = Math.round(lastEvent.drag.left);
+              const newTop = Math.round(lastEvent.drag.top);
+              const rad = (space.rotation * Math.PI) / 180;
+              const cosA = Math.abs(Math.cos(rad));
+              const sinA = Math.abs(Math.sin(rad));
+              const bw = newWidth * cosA + newHeight * sinA;
+              const bh = newWidth * sinA + newHeight * cosA;
+              const minResizeLeft = (bw - newWidth) / 2;
+              const maxResizeLeft = mapWidth - (newWidth + bw) / 2;
+              const minResizeTop = (bh - newHeight) / 2;
+              const maxResizeTop = mapHeight - (newHeight + bh) / 2;
+              const isOutside =
+                mapWidth > 0 &&
+                mapHeight > 0 &&
+                maxResizeLeft >= minResizeLeft &&
+                maxResizeTop >= minResizeTop &&
+                (newLeft < minResizeLeft ||
+                  newLeft > maxResizeLeft ||
+                  newTop < minResizeTop ||
+                  newTop > maxResizeTop);
+              if (isOutside) {
+                const target = targetRef.current;
+                if (target) {
+                  target.style.width = space.width;
+                  target.style.height = space.height;
+                  target.style.left = `${space.x}px`;
+                  target.style.top = `${space.y}px`;
+                  moveableRef.current?.updateRect();
+                }
+                return;
+              }
               onResizeEnd(
                 index,
-                Math.round(lastEvent.drag.left),
-                Math.round(lastEvent.drag.top),
-                `${Math.round(lastEvent.width)}px`,
-                `${Math.round(lastEvent.height)}px`,
+                newLeft,
+                newTop,
+                `${newWidth}px`,
+                `${newHeight}px`,
               );
             }
           }}
@@ -188,10 +265,35 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
           onRotateEnd={({ lastEvent }) => {
             if (lastEvent) {
-              onRotateEnd(
-                index,
-                ((Math.round(lastEvent.rotation) % 360) + 360) % 360,
-              );
+              const newRotation =
+                ((Math.round(lastEvent.rotation) % 360) + 360) % 360;
+              const rad = (newRotation * Math.PI) / 180;
+              const cosA = Math.abs(Math.cos(rad));
+              const sinA = Math.abs(Math.sin(rad));
+              const boundingWidth = width * cosA + height * sinA;
+              const boundingHeight = width * sinA + height * cosA;
+              const minLeft = (boundingWidth - width) / 2;
+              const maxLeft = mapWidth - (width + boundingWidth) / 2;
+              const minTop = (boundingHeight - height) / 2;
+              const maxTop = mapHeight - (height + boundingHeight) / 2;
+              const wouldBeOutside =
+                mapWidth > 0 &&
+                mapHeight > 0 &&
+                (maxLeft < minLeft ||
+                  maxTop < minTop ||
+                  space.x < minLeft ||
+                  space.x > maxLeft ||
+                  space.y < minTop ||
+                  space.y > maxTop);
+              if (wouldBeOutside) {
+                const target = targetRef.current;
+                if (target) {
+                  target.style.transform = `rotate(${space.rotation}deg)`;
+                  moveableRef.current?.updateRect();
+                }
+                return;
+              }
+              onRotateEnd(index, newRotation, space.x, space.y);
             }
           }}
         />
@@ -700,10 +802,12 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ spaces: spaces, changed: true });
   };
 
-  setSpaceRotation = (i: number, rotation: number) => {
+  setSpaceRotation = (i: number, rotation: number, x: number, y: number) => {
     const spaces = this.state.spaces;
     const space = { ...spaces[i] };
     space.rotation = rotation;
+    space.x = x;
+    space.y = y;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -847,6 +951,8 @@ class EditLocation extends React.Component<Props, State> {
         onNameChange={this.setSpaceName}
         unnamedLabel={this.props.t("unnamed")}
         newSpaceName={this.newSpaceName}
+        mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
+        mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
       />
     );
   };
