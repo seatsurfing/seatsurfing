@@ -580,11 +580,8 @@ func TestBookingRepositoryCurrentWithDefaultTimezone(t *testing.T) {
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
 
-	// CreateTestOrg seeds default_timezone = 'Europe/Berlin'; location has no tz.
-	location := &Location{OrganizationID: org.ID, Enabled: true}
-	GetLocationRepository().Create(location)
-	space := &Space{LocationID: location.ID, Enabled: true}
-	GetSpaceRepository().Create(space)
+	GetSettingsRepository().Set(org.ID, SettingDefaultTimezone.Name, "Europe/Berlin")
+	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(30 * time.Minute)
 	leave := time.Now().UTC().Add(4 * time.Hour)
