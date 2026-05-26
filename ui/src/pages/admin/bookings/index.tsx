@@ -25,7 +25,6 @@ import AjaxError from "@/util/AjaxError";
 import RedirectUtil from "@/util/RedirectUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
-import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
 
@@ -113,23 +112,16 @@ class Bookings extends React.Component<Props, State> {
   };
 
   updateUrlParams = (
-    enter: string,
-    leave: string,
+    enter: string | null,
+    leave: string | null,
     filter: string | null,
     filterUser: string | null,
     filterLocation: string | null,
   ) => {
     const currentPath = this.props.router.pathname;
-    const {
-      filter: _,
-      user: __,
-      location: ___,
-      ...queryWithoutFilter
-    } = this.props.router.query;
     const currentQuery = {
-      ...queryWithoutFilter,
-      enter,
-      leave,
+      ...(enter !== null && { enter }),
+      ...(leave !== null && { leave }),
       ...(filter !== null && { filter }),
       ...(filterUser && { user: filterUser }),
       ...(filterLocation && { location: filterLocation }),
@@ -145,46 +137,41 @@ class Bookings extends React.Component<Props, State> {
     );
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
-
     const startOfToday = DateUtil.getTodayStart();
     const endOfToday = DateUtil.getTodayEnd();
 
-    const bookings =
-      this.state.filterOption === "enter_leave"
+    this.data = await (this.state.filterOption === "enter_leave"
+      ? Booking.listFiltered(
+          this.state.start,
+          end,
+          this.state.filterUser,
+          this.state.filterLocation,
+        )
+      : this.state.filterOption === "today"
         ? Booking.listFiltered(
-            this.state.start,
-            end,
+            startOfToday,
+            endOfToday,
             this.state.filterUser,
             this.state.filterLocation,
           )
-        : this.state.filterOption === "today"
-          ? Booking.listFiltered(
-              startOfToday,
-              endOfToday,
-              this.state.filterUser,
-              this.state.filterLocation,
-            )
-          : Booking.listCurrent(
-              this.state.filterUser,
-              this.state.filterLocation,
-            );
-
-    bookings.then((list) => {
-      this.data = list;
-      this.setState({ loading: false });
-      this.updateUrlParams(
-        DateUtil.formatToDateTimeString(this.state.start),
-        DateUtil.formatToDateTimeString(this.state.end),
-        this.state.filterOption === "enter_leave" ||
-          this.state.filterOption === "today"
-          ? this.state.filterOption
-          : null,
-        this.state.filterUser,
-        this.state.filterLocation,
-      );
-    });
+        : Booking.listCurrent(
+            this.state.filterUser,
+            this.state.filterLocation,
+          ));
+    this.setState({ loading: false });
+    this.updateUrlParams(
+      this.state.filterOption === "enter_leave"
+        ? DateUtil.formatToDateTimeString(this.state.start)
+        : null,
+      this.state.filterOption === "enter_leave"
+        ? DateUtil.formatToDateTimeString(this.state.end)
+        : null,
+      this.state.filterOption,
+      this.state.filterUser,
+      this.state.filterLocation,
+    );
   };
 
   cancelBooking = (booking: Booking) => {
@@ -223,12 +210,11 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadSettings = async (): Promise<void> => {
-    return OrgSettings.list().then((settings) => {
-      settings.forEach((s) => {
-        if (s.name === "max_hours_before_delete") {
-          this.maxHoursBeforeDelete = window.parseInt(s.value);
-        }
-      });
+    const settings = await OrgSettings.list();
+    settings.forEach((s) => {
+      if (s.name === "max_hours_before_delete") {
+        this.maxHoursBeforeDelete = window.parseInt(s.value);
+      }
     });
   };
 
