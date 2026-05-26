@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.99.1](https://github.com/seatsurfing/seatsurfing/compare/v1.99.0...v1.99.1) (2026-05-26)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** clamp spaces to map ([#2196](https://github.com/seatsurfing/seatsurfing/issues/2196)) ([d8fe9c0](https://github.com/seatsurfing/seatsurfing/commit/d8fe9c0a2ef4b55e5c34a08f4dcaec8897ca9441))
+* **admin-ui:** fix button group layout for shape button ([#2198](https://github.com/seatsurfing/seatsurfing/issues/2198)) ([a65a460](https://github.com/seatsurfing/seatsurfing/commit/a65a460aa3b836465000beb881f2954a43e9cd1a))
+* **admin-ui:** improve new space names when duplicating spaces ([#2199](https://github.com/seatsurfing/seatsurfing/issues/2199)) ([37d0ff2](https://github.com/seatsurfing/seatsurfing/commit/37d0ff2ab1fe1dba96a874160a4b090eec6b324e))
+* **admin-ui:** move selected space to foreground ([#2200](https://github.com/seatsurfing/seatsurfing/issues/2200)) ([4f5145e](https://github.com/seatsurfing/seatsurfing/commit/4f5145eed8786010fe89bb2b3cc71aa068f17ea6))
+* **booking-ui:** optimize wheel zoom in booking UI ([#2195](https://github.com/seatsurfing/seatsurfing/issues/2195)) ([84d733a](https://github.com/seatsurfing/seatsurfing/commit/84d733a57431aafbaecee663aa3eaeae00f41b64))
+
 ## [1.99.0](https://github.com/seatsurfing/seatsurfing/compare/v1.98.0...v1.99.0) (2026-05-24)
 
 
