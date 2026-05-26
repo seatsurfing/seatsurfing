@@ -9,6 +9,7 @@ import { act } from "react";
 
 vi.mock("next-export-i18n", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+  useSelectedLanguage: () => ({ lang: "en" }),
 }));
 
 vi.mock("react-bootstrap", () => {
