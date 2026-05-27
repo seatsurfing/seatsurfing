@@ -43,7 +43,7 @@ export default class Ajax {
       try {
         await Ajax.refreshAccessToken(refreshToken);
       } catch {
-        throw new AjaxError(401, 0);
+        throw Ajax.handleGlobalError(401);
       }
     }
 
@@ -56,7 +56,14 @@ export default class Ajax {
     );
 
     url = Ajax.getBackendUrl() + url;
-    const response = await fetch(url, options);
+
+    let response: Response;
+    try {
+      response = await fetch(url, options);
+    } catch {
+      // Network error (backend unreachable, timeout, etc.)
+      throw Ajax.handleGlobalError(0);
+    }
 
     if (response.status >= 200 && response.status <= 299) {
       try {
@@ -74,18 +81,8 @@ export default class Ajax {
       } catch {}
 
       // global error handlers if appCode is not defined
-      // Return a never-settling promise to halt the caller's chain
       if (appCode === 0) {
-        if (response.status === 401 && Ajax.onUnauthorized) {
-          Ajax.onUnauthorized();
-          return new Promise<AjaxResult>(() => {});
-        } else if (response.status === 404 && Ajax.onNotFound) {
-          Ajax.onNotFound();
-          return new Promise<AjaxResult>(() => {});
-        } else if (response.status === 500 && Ajax.onServerError) {
-          Ajax.onServerError();
-          return new Promise<AjaxResult>(() => {});
-        }
+        throw Ajax.handleGlobalError(response.status);
       }
 
       let body: string | undefined;
@@ -94,6 +91,24 @@ export default class Ajax {
       } catch {}
       throw new AjaxError(response.status, appCode, body);
     }
+  }
+
+  private static handleGlobalError(httpStatus: number): AjaxError {
+    if (httpStatus === 401) {
+      // Only trigger the modal if credentials still exist (first 401).
+      // Clear them immediately so subsequent in-flight 401s are silent.
+      const hadCredentials = Ajax.hasAccessToken();
+      Ajax.PERSISTER.deleteCredentialsFromStorage();
+      if (hadCredentials) {
+        Ajax.onUnauthorized?.();
+      }
+    } else if (httpStatus === 404) {
+      Ajax.onNotFound?.();
+    } else {
+      // 500, network errors (0), and any other unexpected status
+      Ajax.onServerError?.();
+    }
+    return new AjaxError(httpStatus, 0, undefined, true);
   }
 
   static async refreshAccessToken(refreshToken: string): Promise<void> {
