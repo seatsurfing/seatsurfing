@@ -122,6 +122,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   }, [space.x, space.y, space.rotation, isSelected]);
 
   React.useEffect(() => {
+    if (!isSelected) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && !e.ctrlKey) setRotateThrottle(15);
       else if (e.ctrlKey && !e.shiftKey) setRotateThrottle(45);
@@ -136,8 +137,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      setRotateThrottle(0);
     };
-  }, []);
+  }, [isSelected]);
 
   const clampPosition = (
     left: number,
