@@ -93,6 +93,7 @@ interface SpaceRectProps {
   newSpaceName: (baseName: string) => string;
   mapWidth: number;
   mapHeight: number;
+  snapToGrid: boolean;
 }
 
 const SpaceRect: React.FC<SpaceRectProps> = ({
@@ -109,6 +110,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   newSpaceName,
   mapWidth,
   mapHeight,
+  snapToGrid,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
   const moveableRef = React.useRef<Moveable>(null);
@@ -192,6 +194,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           resizable={true}
           rotatable={true}
           origin={false}
+          snappable={snapToGrid}
+          snapGridWidth={snapToGrid ? 50 : undefined}
+          snapGridHeight={snapToGrid ? 50 : undefined}
           onDrag={({ target, left, top }) => {
             const clamped = clampPosition(left, top);
             target.style.left = `${clamped.left}px`;
@@ -960,6 +965,7 @@ class EditLocation extends React.Component<Props, State> {
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
+        snapToGrid={this.state.showGrid}
       />
     );
   };
