@@ -170,18 +170,32 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           onDoubleClick(index);
         }}
       >
-        {space.approvers && space.approvers.length > 0 && <SpaceApprovalIcon />}
-        <input
-          type="text"
-          id={`spaceName${index}`}
-          value={space.name}
-          onChange={(e) => onNameChange(index, e.target.value)}
-          onBlur={(e) => {
-            if (!e.target.value.trim()) {
-              onNameChange(index, newSpaceName(unnamedLabel));
-            }
+        <div
+          style={{
+            transform: `rotate(${-space.rotation}deg)`,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: "100%",
           }}
-        />
+        >
+          {space.approvers && space.approvers.length > 0 && (
+            <SpaceApprovalIcon />
+          )}
+          <input
+            type="text"
+            id={`spaceName${index}`}
+            value={space.name}
+            onChange={(e) => onNameChange(index, e.target.value)}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) {
+                onNameChange(index, newSpaceName(unnamedLabel));
+              }
+            }}
+          />
+        </div>
       </div>
       {isSelected && (
         <Moveable
