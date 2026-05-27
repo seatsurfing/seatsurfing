@@ -74,21 +74,25 @@ export default class Ajax {
       } catch {}
 
       // global error handlers if appCode is not defined
+      // Return a never-settling promise to halt the caller's chain
       if (appCode === 0) {
-        if (response.status === 401) {
-          Ajax.onUnauthorized?.();
-        } else if (response.status === 404) {
-          Ajax.onNotFound?.();
-        } else if (response.status === 500) {
-          Ajax.onServerError?.();
+        if (response.status === 401 && Ajax.onUnauthorized) {
+          Ajax.onUnauthorized();
+          return new Promise<AjaxResult>(() => {});
+        } else if (response.status === 404 && Ajax.onNotFound) {
+          Ajax.onNotFound();
+          return new Promise<AjaxResult>(() => {});
+        } else if (response.status === 500 && Ajax.onServerError) {
+          Ajax.onServerError();
+          return new Promise<AjaxResult>(() => {});
         }
       }
 
+      let body: string | undefined;
       try {
-        const body = await response.text();
-        throw new AjaxError(response.status, appCode, body);
+        body = await response.text();
       } catch {}
-      throw new AjaxError(response.status, appCode);
+      throw new AjaxError(response.status, appCode, body);
     }
   }
 
