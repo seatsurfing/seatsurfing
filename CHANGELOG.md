@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.99.2](https://github.com/seatsurfing/seatsurfing/compare/v1.99.1...v1.99.2) (2026-05-27)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** fix keeping query parameter when searching for current bookings ([#2205](https://github.com/seatsurfing/seatsurfing/issues/2205)) ([791b633](https://github.com/seatsurfing/seatsurfing/commit/791b633c859a00e09366aba5ace3b1991a9418e5))
+* **admin-ui:** optimize Seatsurfing SaaS hint ([#2202](https://github.com/seatsurfing/seatsurfing/issues/2202)) ([99e65fc](https://github.com/seatsurfing/seatsurfing/commit/99e65fc2c7dc454a4d9757210268ce29169b279e))
+* **deps:** bump react-tooltip from 6.0.3 to 6.0.4 in /ui in the production-dependencies group across 1 directory ([#2209](https://github.com/seatsurfing/seatsurfing/issues/2209)) ([2c33d97](https://github.com/seatsurfing/seatsurfing/commit/2c33d973b79cccc67d846e590489703272677f8c))
+
+
+### 🔧 Refactoring
+
+* refactor Settings.ts ([#2203](https://github.com/seatsurfing/seatsurfing/issues/2203)) ([53c9c26](https://github.com/seatsurfing/seatsurfing/commit/53c9c26e5a8f83bd8868eff3996a5ac3ebdcaafb))
+
 ## [1.99.1](https://github.com/seatsurfing/seatsurfing/compare/v1.99.0...v1.99.1) (2026-05-26)
 
 
