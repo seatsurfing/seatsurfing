@@ -122,7 +122,10 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   }, [space.x, space.y, space.rotation, isSelected]);
 
   React.useEffect(() => {
-    if (!isSelected) return;
+    if (!isSelected) {
+      setRotateThrottle(0);
+      return;
+    }
     const getThrottle = (e: KeyboardEvent) => {
       if (e.ctrlKey) return 45;
       if (e.shiftKey) return 15;
@@ -137,7 +140,6 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
-      setRotateThrottle(0);
     };
   }, [isSelected]);
 
