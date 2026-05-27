@@ -1815,7 +1815,7 @@ class EditLocation extends React.Component<Props, State> {
                       : "outline-secondary"
                   }
                   onClick={() =>
-                    this.setState(prev => ({ showGrid: !prev.showGrid }))
+                    this.setState((prev) => ({ showGrid: !prev.showGrid }))
                   }
                 >
                   <IconGrid className="feather" /> {this.props.t("showGrid")}
