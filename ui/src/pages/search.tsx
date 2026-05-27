@@ -40,8 +40,8 @@ import {
   Loader as IconLoad,
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
-  UserCheck as IconUserCheck,
 } from "react-feather";
+import SpaceApprovalIcon from "../components/SpaceApprovalIcon";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
@@ -838,7 +838,7 @@ class Search extends React.Component<Props, State> {
         onClick={() => this.onSpaceSelect(item)}
       >
         {item.approvalRequired && (
-          <IconUserCheck size={16} className="position-absolute top-0 end-0" />
+          <SpaceApprovalIcon />
         )}
         <p style={textStyle}>{item.name}</p>
       </div>
