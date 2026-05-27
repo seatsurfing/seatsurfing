@@ -2,7 +2,7 @@
 
 ## Set up development environment
 
-1. Make sure Node.js 22 or later is installed:
+1. Make sure Node.js 24 or later is installed:
 
    ```shell
    node -v

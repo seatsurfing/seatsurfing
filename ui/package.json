@@ -34,7 +34,7 @@
     "test": "vitest"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "homepage": "/ui/",
   "devDependencies": {
