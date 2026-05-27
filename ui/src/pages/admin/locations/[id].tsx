@@ -1801,15 +1801,13 @@ class EditLocation extends React.Component<Props, State> {
                 </Button>
                 <Button
                   className="btn-sm"
-                  variant={
-                    this.state.showGrid ? "secondary" : "outline-secondary"
-                  }
+                  variant={this.state.showGrid ? "outline-primary" : "outline-secondary"}
                   onClick={() =>
                     this.setState({ showGrid: !this.state.showGrid })
                   }
                 >
                   <IconGrid className="feather" /> {this.props.t("showGrid")}
-                </Button>{" "}
+                </Button>
               </div>
             </div>
           </div>
