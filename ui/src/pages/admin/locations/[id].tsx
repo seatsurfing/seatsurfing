@@ -96,6 +96,8 @@ interface SpaceRectProps {
   snapToGrid: boolean;
 }
 
+const GRID_SIZE = 50;
+
 const SpaceRect: React.FC<SpaceRectProps> = ({
   space,
   index,
@@ -195,8 +197,8 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           rotatable={true}
           origin={false}
           snappable={snapToGrid}
-          snapGridWidth={snapToGrid ? 50 : undefined}
-          snapGridHeight={snapToGrid ? 50 : undefined}
+          snapGridWidth={snapToGrid ? GRID_SIZE : undefined}
+          snapGridHeight={snapToGrid ? GRID_SIZE : undefined}
           onDrag={({ target, left, top }) => {
             const clamped = clampPosition(left, top);
             target.style.left = `${clamped.left}px`;
@@ -1839,6 +1841,7 @@ class EditLocation extends React.Component<Props, State> {
                     height: this.mapData
                       ? this.mapData.height * this.state.mapScale
                       : 0,
+                    backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
                   }}
                 />
               )}
