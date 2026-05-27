@@ -5,7 +5,6 @@
 
 .space-dragger {
   background-color: hsl(190, 45%, 60%);
-  border: 1px solid black;
   color: white;
   font-size: 12px;
   display: -ms-flexbox !important;
