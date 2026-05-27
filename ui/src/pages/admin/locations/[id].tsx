@@ -123,20 +123,20 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
 
   React.useEffect(() => {
     if (!isSelected) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.shiftKey && !e.ctrlKey) setRotateThrottle(15);
-      else if (e.ctrlKey && !e.shiftKey) setRotateThrottle(45);
+    const getThrottle = (e: KeyboardEvent) => {
+      if (e.ctrlKey) return 45;
+      if (e.shiftKey) return 15;
+      return 0;
     };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (!e.shiftKey && !e.ctrlKey) setRotateThrottle(0);
-      else if (e.shiftKey) setRotateThrottle(15);
-      else if (e.ctrlKey) setRotateThrottle(45);
+    const onKey = (e: KeyboardEvent) => {
+      const next = getThrottle(e);
+      setRotateThrottle((prev) => (prev !== next ? next : prev));
     };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
       setRotateThrottle(0);
     };
   }, [isSelected]);
