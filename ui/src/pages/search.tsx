@@ -837,9 +837,7 @@ class Search extends React.Component<Props, State> {
         data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
       >
-        {item.approvalRequired && (
-          <SpaceApprovalIcon />
-        )}
+        {item.approvalRequired && <SpaceApprovalIcon />}
         <p style={textStyle}>{item.name}</p>
       </div>
     );
