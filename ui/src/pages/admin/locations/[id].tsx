@@ -346,7 +346,7 @@ interface State {
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
   showDesignerModal: boolean;
-  showGrid: boolean;
+  gridEnabled: boolean;
 }
 
 interface Props {
@@ -404,7 +404,7 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
       showDesignerModal: false,
-      showGrid: false,
+      gridEnabled: false,
     };
   }
 
@@ -967,7 +967,7 @@ class EditLocation extends React.Component<Props, State> {
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
-        snapToGrid={this.state.showGrid}
+        snapToGrid={this.state.gridEnabled}
       />
     );
   };
@@ -1810,12 +1810,14 @@ class EditLocation extends React.Component<Props, State> {
                 <Button
                   className="btn-sm"
                   variant={
-                    this.state.showGrid
+                    this.state.gridEnabled
                       ? "outline-primary"
                       : "outline-secondary"
                   }
                   onClick={() =>
-                    this.setState((prev) => ({ showGrid: !prev.showGrid }))
+                    this.setState((prev) => ({
+                      gridEnabled: !prev.gridEnabled,
+                    }))
                   }
                 >
                   <IconGrid className="feather" /> {this.props.t("showGrid")}
@@ -1831,7 +1833,7 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ selectedSpace: null });
               }}
             >
-              {this.state.showGrid && (
+              {this.state.gridEnabled && (
                 <div
                   className="floorplan-grid-overlay"
                   style={{
