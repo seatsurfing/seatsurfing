@@ -1586,7 +1586,8 @@ func TestBookingsValidBorderAdvanceDate(t *testing.T) {
 	}
 
 	router := &BookingRouter{}
-	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
+	res, code := router.IsValidBookingAdvance(m, org.ID, user)
+	CheckTestInt(t, 0, code)
 	CheckTestBool(t, true, res)
 }
 
