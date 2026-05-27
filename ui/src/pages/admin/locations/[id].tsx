@@ -23,6 +23,23 @@ import {
   Square as IconSquare,
   Circle as IconCircle,
 } from "react-feather";
+
+const IconTrapezoid = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polygon points="7,3 17,3 23,21 1,21" />
+  </svg>
+);
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -149,6 +166,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   let className = "space-dragger";
   if (width < height) className += " space-dragger-vertical";
   if (space.shape === "circle") className += " space-dragger-circle";
+  if (space.shape === "trapezoid") className += " space-dragger-trapezoid";
   if (isSelected) className += " space-dragger-selected";
 
   return (
@@ -1750,6 +1768,11 @@ class EditLocation extends React.Component<Props, State> {
                   <IconCircle className="feather" />{" "}
                   {this.props.t("shapeCircle")}
                 </>
+              ) : selectedShape === "trapezoid" ? (
+                <>
+                  <IconTrapezoid className="feather" />{" "}
+                  {this.props.t("shapeTrapezoid")}
+                </>
               ) : (
                 <>
                   <IconSquare className="feather" /> {this.props.t("shapeRect")}
@@ -1758,7 +1781,7 @@ class EditLocation extends React.Component<Props, State> {
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <Dropdown.Item
-                active={selectedShape !== "circle"}
+                active={selectedShape === ""}
                 onClick={() =>
                   this.setSpaceShape(this.state.selectedSpace!, "")
                 }
@@ -1772,6 +1795,15 @@ class EditLocation extends React.Component<Props, State> {
                 }
               >
                 <IconCircle className="feather" /> {this.props.t("shapeCircle")}
+              </Dropdown.Item>
+              <Dropdown.Item
+                active={selectedShape === "trapezoid"}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "trapezoid")
+                }
+              >
+                <IconTrapezoid className="feather" />{" "}
+                {this.props.t("shapeTrapezoid")}
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

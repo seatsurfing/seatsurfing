@@ -42,6 +42,10 @@
   border-radius: 50%;
 }
 
+.space-dragger-trapezoid {
+  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
 .space-dragger-selected {
   background-color: hsl(215, 55%, 45%);
 }

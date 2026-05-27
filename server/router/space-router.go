@@ -29,7 +29,7 @@ type CreateSpaceRequest struct {
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
 	KioskEnabled          bool                         `json:"kioskEnabled"`
-	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle"`
+	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle trapezoid"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
