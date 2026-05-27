@@ -22,6 +22,7 @@ import {
   Tag as IconTag,
   Square as IconSquare,
   Circle as IconCircle,
+  Grid as IconGrid,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -338,6 +339,7 @@ interface State {
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
   showDesignerModal: boolean;
+  showGrid: boolean;
 }
 
 interface Props {
@@ -395,6 +397,7 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
       showDesignerModal: false,
+      showGrid: false,
     };
   }
 
@@ -1796,6 +1799,17 @@ class EditLocation extends React.Component<Props, State> {
                 >
                   <IconMap className="feather" /> {this.props.t("addSpace")}
                 </Button>
+                <Button
+                  className="btn-sm"
+                  variant={
+                    this.state.showGrid ? "secondary" : "outline-secondary"
+                  }
+                  onClick={() =>
+                    this.setState({ showGrid: !this.state.showGrid })
+                  }
+                >
+                  <IconGrid className="feather" /> {this.props.t("showGrid")}
+                </Button>{" "}
               </div>
             </div>
           </div>
@@ -1807,6 +1821,19 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ selectedSpace: null });
               }}
             >
+              {this.state.showGrid && (
+                <div
+                  className="floorplan-grid-overlay"
+                  style={{
+                    width: this.mapData
+                      ? this.mapData.width * this.state.mapScale
+                      : 0,
+                    height: this.mapData
+                      ? this.mapData.height * this.state.mapScale
+                      : 0,
+                  }}
+                />
+              )}
               {spaces}
             </div>
           </div>

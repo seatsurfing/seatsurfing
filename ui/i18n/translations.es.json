@@ -483,5 +483,6 @@
   "sponsorLink": "Support us as a sponsor",
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
-  "featuresLink": "Compare features"
+  "featuresLink": "Compare features",
+  "showGrid": "Show grid"
 }
