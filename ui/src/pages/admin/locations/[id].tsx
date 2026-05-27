@@ -113,12 +113,31 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   const moveableRef = React.useRef<Moveable>(null);
   const width = parseInt(space.width.replace(/^\D+/g, ""));
   const height = parseInt(space.height.replace(/^\D+/g, ""));
+  const [rotateThrottle, setRotateThrottle] = React.useState(0);
 
   React.useEffect(() => {
     if (isSelected) {
       moveableRef.current?.updateRect();
     }
   }, [space.x, space.y, space.rotation, isSelected]);
+
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.shiftKey && !e.ctrlKey) setRotateThrottle(15);
+      else if (e.ctrlKey && !e.shiftKey) setRotateThrottle(45);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (!e.shiftKey && !e.ctrlKey) setRotateThrottle(0);
+      else if (e.shiftKey) setRotateThrottle(15);
+      else if (e.ctrlKey) setRotateThrottle(45);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
 
   const clampPosition = (
     left: number,
@@ -190,6 +209,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           draggable={true}
           resizable={true}
           rotatable={true}
+          throttleRotate={rotateThrottle}
           origin={false}
           onDrag={({ target, left, top }) => {
             const clamped = clampPosition(left, top);
