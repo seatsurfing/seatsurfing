@@ -23,23 +23,6 @@ import {
   Square as IconSquare,
   Circle as IconCircle,
 } from "react-feather";
-
-const IconTrapezoid = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <polygon points="7,3 17,3 23,21 1,21" />
-  </svg>
-);
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -65,6 +48,23 @@ import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
+
+const IconTrapezoid = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polygon points="7,3 17,3 23,21 1,21" />
+  </svg>
+);
 
 interface SpaceState {
   id: string;
