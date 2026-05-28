@@ -622,6 +622,12 @@ components:
           type: string
           format: email
           description: Only visible if showNames is enabled or it's the user's own booking
+        userFirstname:
+          type: string
+          description: Only visible if showNames is enabled or it's the user's own booking
+        userLastname:
+          type: string
+          description: Only visible if showNames is enabled or it's the user's own booking
         enter:
           type: string
           format: date-time
