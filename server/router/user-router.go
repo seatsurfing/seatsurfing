@@ -637,6 +637,11 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !IsValidHumanName(m.Firstname) || !IsValidHumanName(m.Lastname) {
+		SendBadRequest(w)
+		return
+	}
+
 	if m.Password != "" && !ValidatePassword(m.Password) {
 		SendBadRequest(w)
 		return
@@ -783,6 +788,11 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
+		SendBadRequest(w)
+		return
+	}
+
+	if !IsValidHumanName(m.Firstname) || !IsValidHumanName(m.Lastname) {
 		SendBadRequest(w)
 		return
 	}

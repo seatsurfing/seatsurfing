@@ -93,6 +93,9 @@ func TestInvalidHumanNames(t *testing.T) {
 		"Name\tWithTab",
 		"Name!Exclamation",
 		"Name#Hash",
+		"@@@",
+		"Name@@@Suffix",
+		"prefix@@@",
 	}
 	for _, input := range inputs {
 		CheckTestBool(t, IsValidHumanName(input), false)
