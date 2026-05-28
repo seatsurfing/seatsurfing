@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -545,8 +546,12 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
-	if err != nil {
+	if err == sql.ErrNoRows {
 		SendBadRequest(w)
+		return
+	}
+	if err != nil {
+		SendInternalServerError(w)
 		return
 	}
 
@@ -627,8 +632,12 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	}
 
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
-	if err != nil {
+	if err == sql.ErrNoRows {
 		SendBadRequest(w)
+		return
+	}
+	if err != nil {
+		SendInternalServerError(w)
 		return
 	}
 
