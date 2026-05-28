@@ -66,10 +66,6 @@ class SearchResult extends React.Component<Props, State> {
     this.setState({ loading: false });
   };
 
-  escapeHTML = (s: string): string => {
-    return s;
-  };
-
   renderResults = <T extends { id: string }>(
     items: T[],
     titleKey: string,
@@ -143,9 +139,7 @@ class SearchResult extends React.Component<Props, State> {
 
     const headline = RendererUtils.decodeHtmlEntities(
       this.props.t("searchForX", {
-        keyword: this.escapeHTML(
-          typeof keyword === "string" && keyword ? keyword : "",
-        ),
+        keyword: typeof keyword === "string" && keyword ? keyword : "",
       }),
     );
 
