@@ -1119,6 +1119,9 @@ class Search extends React.Component<Props, State> {
         BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
         this.state.listView ? "1" : "0",
       );
+      if (!this.state.listView) {
+        requestAnimationFrame(() => this.centerMap());
+      }
     });
   };
 
