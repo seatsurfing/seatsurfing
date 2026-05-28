@@ -40,7 +40,6 @@ import {
   Loader as IconLoad,
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
-  UserCheck as IconUserCheck,
 } from "react-feather";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -79,6 +78,7 @@ import IconTextButton from "@/components/IconTextButton";
 import DateUtil from "@/util/DateUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
+import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 
 interface State {
   earliestEnterDate: Date;
@@ -826,6 +826,15 @@ class Search extends React.Component<Props, State> {
     const textStyle: React.CSSProperties = {
       textAlign: "center",
     };
+    const innerStyle: React.CSSProperties = {
+      transform: `rotate(${-item.rotation}deg)`,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      height: "100%",
+    };
     const className =
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
@@ -841,10 +850,10 @@ class Search extends React.Component<Props, State> {
         data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
       >
-        {item.approvalRequired && (
-          <IconUserCheck size={16} className="position-absolute top-0 end-0" />
-        )}
-        <p style={textStyle}>{item.name}</p>
+        <div style={innerStyle}>
+          {item.approvalRequired && <SpaceApprovalIcon />}
+          <p style={textStyle}>{item.name}</p>
+        </div>
       </div>
     );
   };

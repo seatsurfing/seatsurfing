@@ -22,6 +22,7 @@ import {
   Tag as IconTag,
   Square as IconSquare,
   Circle as IconCircle,
+  Grid as IconGrid,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -109,7 +110,10 @@ interface SpaceRectProps {
   newSpaceName: (baseName: string) => string;
   mapWidth: number;
   mapHeight: number;
+  snapToGrid: boolean;
 }
+
+const GRID_SIZE = 50;
 
 const SpaceRect: React.FC<SpaceRectProps> = ({
   space,
@@ -125,17 +129,41 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   newSpaceName,
   mapWidth,
   mapHeight,
+  snapToGrid,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
   const moveableRef = React.useRef<Moveable>(null);
   const width = parseInt(space.width.replace(/^\D+/g, ""));
   const height = parseInt(space.height.replace(/^\D+/g, ""));
+  const [rotateThrottle, setRotateThrottle] = React.useState(0);
 
   React.useEffect(() => {
     if (isSelected) {
       moveableRef.current?.updateRect();
     }
   }, [space.x, space.y, space.rotation, isSelected]);
+
+  React.useEffect(() => {
+    if (!isSelected) {
+      setRotateThrottle(0);
+      return;
+    }
+    const getThrottle = (e: KeyboardEvent) => {
+      if (e.ctrlKey) return 45;
+      if (e.shiftKey) return 15;
+      return 0;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const next = getThrottle(e);
+      setRotateThrottle((prev) => (prev !== next ? next : prev));
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
+    };
+  }, [isSelected]);
 
   const clampPosition = (
     left: number,
@@ -188,18 +216,32 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           onDoubleClick(index);
         }}
       >
-        {space.approvers && space.approvers.length > 0 && <SpaceApprovalIcon />}
-        <input
-          type="text"
-          id={`spaceName${index}`}
-          value={space.name}
-          onChange={(e) => onNameChange(index, e.target.value)}
-          onBlur={(e) => {
-            if (!e.target.value.trim()) {
-              onNameChange(index, newSpaceName(unnamedLabel));
-            }
+        <div
+          style={{
+            transform: `rotate(${-space.rotation}deg)`,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: "100%",
           }}
-        />
+        >
+          {space.approvers && space.approvers.length > 0 && (
+            <SpaceApprovalIcon />
+          )}
+          <input
+            type="text"
+            id={`spaceName${index}`}
+            value={space.name}
+            onChange={(e) => onNameChange(index, e.target.value)}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) {
+                onNameChange(index, newSpaceName(unnamedLabel));
+              }
+            }}
+          />
+        </div>
       </div>
       {isSelected && (
         <Moveable
@@ -208,7 +250,11 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           draggable={true}
           resizable={true}
           rotatable={true}
+          throttleRotate={rotateThrottle}
           origin={false}
+          snappable={snapToGrid}
+          snapGridWidth={snapToGrid ? GRID_SIZE : undefined}
+          snapGridHeight={snapToGrid ? GRID_SIZE : undefined}
           onDrag={({ target, left, top }) => {
             const clamped = clampPosition(left, top);
             target.style.left = `${clamped.left}px`;
@@ -356,6 +402,7 @@ interface State {
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
   showDesignerModal: boolean;
+  gridEnabled: boolean;
 }
 
 interface Props {
@@ -413,6 +460,7 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
       showDesignerModal: false,
+      gridEnabled: false,
     };
   }
 
@@ -975,6 +1023,7 @@ class EditLocation extends React.Component<Props, State> {
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
+        snapToGrid={this.state.gridEnabled}
       />
     );
   };
@@ -1828,6 +1877,21 @@ class EditLocation extends React.Component<Props, State> {
                 >
                   <IconMap className="feather" /> {this.props.t("addSpace")}
                 </Button>
+                <Button
+                  className="btn-sm"
+                  variant={
+                    this.state.gridEnabled
+                      ? "outline-primary"
+                      : "outline-secondary"
+                  }
+                  onClick={() =>
+                    this.setState((prev) => ({
+                      gridEnabled: !prev.gridEnabled,
+                    }))
+                  }
+                >
+                  <IconGrid className="feather" /> {this.props.t("showGrid")}
+                </Button>
               </div>
             </div>
           </div>
@@ -1839,6 +1903,20 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ selectedSpace: null });
               }}
             >
+              {this.state.gridEnabled && (
+                <div
+                  className="floorplan-grid-overlay"
+                  style={{
+                    width: this.mapData
+                      ? this.mapData.width * this.state.mapScale
+                      : 0,
+                    height: this.mapData
+                      ? this.mapData.height * this.state.mapScale
+                      : 0,
+                    backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                  }}
+                />
+              )}
               {spaces}
             </div>
           </div>

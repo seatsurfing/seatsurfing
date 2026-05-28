@@ -482,5 +482,6 @@
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
   "shapeTrapezoid": "梯形",
-  "featuresLink": "Compare features"
+  "featuresLink": "Compare features",
+  "showGrid": "Show grid"
 }

@@ -330,9 +330,12 @@ func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	GetSettingsRepository().Set(org.ID, SettingDefaultTimezone.Name, "Europe/Berlin")
 	_, space := CreateTestLocationAndSpace(org)
 
-	now := time.Now()
+	loc, err := time.LoadLocation("Europe/Berlin")
+	CheckTestBool(t, true, err == nil)
+	now := time.Now().In(loc)
 	twoHoursAgo := now.Add(-2 * time.Hour)
 	twoHoursLater := now.Add(2 * time.Hour)
 
@@ -528,4 +531,76 @@ func TestLoadShouldBe0IfNoSpacesExist(t *testing.T) {
 	load, _ := GetBookingRepository().GetLoad(org.ID, enter, leave, nil)
 
 	CheckTestInt(t, 0, load)
+}
+
+// Tests that a booking starting in the past in the location's local timezone
+// (but appearing to be in the future in UTC) is correctly identified as current.
+// This verifies the timezone-aware NOW() AT TIME ZONE fix using the location's tz column.
+func TestBookingRepositoryCurrentWithLocationTimezone(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	location := &Location{
+		OrganizationID: org.ID,
+		Timezone:       "Europe/Berlin",
+		Enabled:        true,
+	}
+	GetLocationRepository().Create(location)
+	space := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(space)
+
+	// enter_time is UTC+30min stored as wall clock: past in Berlin (UTC+1/+2), future in UTC.
+	// leave_time is UTC+4h: safely in the future for both UTC and Berlin.
+	enter := time.Now().UTC().Add(30 * time.Minute)
+	leave := time.Now().UTC().Add(4 * time.Hour)
+
+	currentBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: enter, Leave: leave}
+	GetBookingRepository().Create(currentBooking)
+
+	// Past booking: ended long before now in every timezone.
+	pastBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(-5 * time.Hour), Leave: time.Now().UTC().Add(-3 * time.Hour)}
+	GetBookingRepository().Create(pastBooking)
+
+	// Future booking: not yet started in any timezone.
+	futureBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(5 * time.Hour), Leave: time.Now().UTC().Add(7 * time.Hour)}
+	GetBookingRepository().Create(futureBooking)
+
+	currentBookings, err := GetBookingRepository().GetAllCurrentByOrg(org.ID, "", "")
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(currentBookings))
+	CheckTestString(t, currentBooking.ID, currentBookings[0].ID)
+
+	count, err := GetBookingRepository().GetCountCurrent(org.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
+}
+
+// Same scenario as TestBookingRepositoryCurrentWithLocationTimezone but the
+// location has no tz set, so the org's default_timezone from settings is used.
+func TestBookingRepositoryCurrentWithDefaultTimezone(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	GetSettingsRepository().Set(org.ID, SettingDefaultTimezone.Name, "Europe/Berlin")
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(30 * time.Minute)
+	leave := time.Now().UTC().Add(4 * time.Hour)
+
+	currentBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: enter, Leave: leave}
+	GetBookingRepository().Create(currentBooking)
+
+	pastBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(-5 * time.Hour), Leave: time.Now().UTC().Add(-3 * time.Hour)}
+	GetBookingRepository().Create(pastBooking)
+
+	currentBookings, err := GetBookingRepository().GetAllCurrentByOrg(org.ID, "", "")
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(currentBookings))
+	CheckTestString(t, currentBooking.ID, currentBookings[0].ID)
+
+	count, err := GetBookingRepository().GetCountCurrent(org.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 }
