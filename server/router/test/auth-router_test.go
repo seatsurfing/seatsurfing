@@ -847,7 +847,7 @@ func TestTotpLoginWithInvalidCode(t *testing.T) {
 	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `", "code": "000000"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestTotpDisable(t *testing.T) {
@@ -949,7 +949,7 @@ func TestTotpReplayAttack(t *testing.T) {
 	// 4. Second login with same code should fail (replay attack prevention)
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 func TestAuthGetOrgDetailsNotFound(t *testing.T) {
 	ClearTestDB()

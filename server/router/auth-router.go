@@ -586,7 +586,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		// Check for replay attack
 		if totpCache.isCodeUsed(user.ID, m.Code) {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
@@ -599,7 +599,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), *TotpOptions)
 		if err != nil || !valid {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
