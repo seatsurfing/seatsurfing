@@ -2190,8 +2190,8 @@ class Search extends React.Component<Props, State> {
                           showBookerNamesOnMap: !this.state.showBookerNamesOnMap,
                         })
                       }
-                      label={this.props.t("showBookerNamesOnMap")}
-                      aria-label={this.props.t("showBookerNamesOnMap")}
+                      label={this.props.t("names")}
+                      aria-label={this.props.t("names")}
                       id="switch-booker-names"
                     />
                   </div>
