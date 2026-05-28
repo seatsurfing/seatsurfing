@@ -34,7 +34,7 @@ class ConfirmSignup extends React.Component<Props, State> {
   loadData = () => {
     const { id } = this.props.router.query;
     if (id) {
-      Ajax.postData("/signup/confirm/" + id, null)
+      Ajax.postData("/signup/confirm/" + id, null, false)
         .then((res) => {
           if (res.status >= 200 && res.status <= 299) {
             this.setState({

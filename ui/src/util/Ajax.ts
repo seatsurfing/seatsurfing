@@ -36,6 +36,7 @@ export default class Ajax {
     method: string,
     url: string,
     data?: any,
+    haltOnGlobalError: boolean = true,
   ): Promise<AjaxResult> {
     // refresh access token (if required)
     const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
@@ -43,7 +44,11 @@ export default class Ajax {
       try {
         await Ajax.refreshAccessToken(refreshToken);
       } catch {
-        throw Ajax.handleGlobalError(401);
+        if (haltOnGlobalError) {
+          Ajax.handleGlobalError(401);
+          return new Promise<AjaxResult>(() => {});
+        }
+        throw new AjaxError(401, 0);
       }
     }
 
@@ -62,7 +67,11 @@ export default class Ajax {
       response = await fetch(url, options);
     } catch {
       // Network error (backend unreachable, timeout, etc.)
-      throw Ajax.handleGlobalError(0);
+      if (haltOnGlobalError) {
+        Ajax.handleGlobalError(0);
+        return new Promise<AjaxResult>(() => {});
+      }
+      throw new AjaxError(0, 0);
     }
 
     if (response.status >= 200 && response.status <= 299) {
@@ -81,8 +90,9 @@ export default class Ajax {
       } catch {}
 
       // global error handlers if appCode is not defined
-      if (appCode === 0) {
-        throw Ajax.handleGlobalError(response.status);
+      if (appCode === 0 && haltOnGlobalError) {
+        Ajax.handleGlobalError(response.status);
+        return new Promise<AjaxResult>(() => {});
       }
 
       let body: string | undefined;
@@ -93,7 +103,7 @@ export default class Ajax {
     }
   }
 
-  private static handleGlobalError(httpStatus: number): AjaxError {
+  private static handleGlobalError(httpStatus: number): void {
     if (httpStatus === 401) {
       // Only trigger the modal if credentials still exist (first 401).
       // Clear them immediately so subsequent in-flight 401s are silent.
@@ -108,7 +118,6 @@ export default class Ajax {
       // 500, network errors (0), and any other unexpected status
       Ajax.onServerError?.();
     }
-    return new AjaxError(httpStatus, 0, undefined, true);
   }
 
   static async refreshAccessToken(refreshToken: string): Promise<void> {
@@ -218,12 +227,20 @@ export default class Ajax {
     return options;
   }
 
-  static async postData(url: string, data?: any): Promise<AjaxResult> {
-    return Ajax.query("POST", url, data);
+  static async postData(
+    url: string,
+    data?: any,
+    haltOnGlobalError: boolean = true,
+  ): Promise<AjaxResult> {
+    return Ajax.query("POST", url, data, haltOnGlobalError);
   }
 
-  static async putData(url: string, data?: any): Promise<AjaxResult> {
-    return Ajax.query("PUT", url, data);
+  static async putData(
+    url: string,
+    data?: any,
+    haltOnGlobalError: boolean = true,
+  ): Promise<AjaxResult> {
+    return Ajax.query("PUT", url, data, haltOnGlobalError);
   }
 
   static async head(url: string, params?: any): Promise<AjaxResult> {
@@ -254,11 +271,17 @@ export default class Ajax {
     }
   }
 
-  static async get(url: string): Promise<AjaxResult> {
-    return Ajax.query("GET", url);
+  static async get(
+    url: string,
+    haltOnGlobalError: boolean = true,
+  ): Promise<AjaxResult> {
+    return Ajax.query("GET", url, undefined, haltOnGlobalError);
   }
 
-  static async delete(url: string): Promise<AjaxResult> {
-    return Ajax.query("DELETE", url);
+  static async delete(
+    url: string,
+    haltOnGlobalError: boolean = true,
+  ): Promise<AjaxResult> {
+    return Ajax.query("DELETE", url, undefined, haltOnGlobalError);
   }
 }

@@ -132,7 +132,7 @@ class Login extends React.Component<Props, State> {
 
   loadOrgDetails = () => {
     const domain = window.location.host.split(":").shift();
-    Ajax.get("/auth/org/" + domain)
+    Ajax.get("/auth/org/" + domain, false)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -143,7 +143,7 @@ class Login extends React.Component<Props, State> {
   };
 
   checkSingleOrg = () => {
-    Ajax.get("/auth/singleorg")
+    Ajax.get("/auth/singleorg", false)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -187,7 +187,7 @@ class Login extends React.Component<Props, State> {
     if (this.state.requirePasskey && this.state.passkeyStateId) {
       payload.passkeyStateId = this.state.passkeyStateId;
     }
-    Ajax.postData("/auth/login", payload)
+    Ajax.postData("/auth/login", payload, false)
       .then((res) => {
         this.onSuccessfulLogin(res.json);
       })
@@ -254,7 +254,7 @@ class Login extends React.Component<Props, State> {
       organizationId: this.org?.id,
       newPassword: this.state.newPassword,
     };
-    Ajax.postData("/auth/updatepw", payload)
+    Ajax.postData("/auth/updatepw", payload, false)
       .then((res) => {
         this.onSuccessfulLogin(res.json);
       })
@@ -297,7 +297,7 @@ class Login extends React.Component<Props, State> {
         passkeyStateId: stateId,
         passkeyCredential: serialized,
       };
-      const res = await Ajax.postData("/auth/login", payload);
+      const res = await Ajax.postData("/auth/login", payload, false);
       await this.onSuccessfulLogin(res.json);
       this.setState({ inPasskeyLogin: false });
     } catch (err: any) {

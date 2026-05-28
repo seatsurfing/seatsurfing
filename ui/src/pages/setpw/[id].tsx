@@ -39,7 +39,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
       return;
     }
     // Validate the invite link
-    Ajax.get("/auth/setpw/" + id)
+    Ajax.get("/auth/setpw/" + id, false)
       .then((res) => {
         if (res.status === 204 || res.status === 200) {
           this.setState({ linkValid: true });
@@ -66,7 +66,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
     let payload = {
       password: this.state.newPassword,
     };
-    Ajax.postData("/auth/setpw/" + id, payload)
+    Ajax.postData("/auth/setpw/" + id, payload, false)
       .then((res) => {
         if (res.status >= 200 && res.status <= 299) {
           this.setState({ loading: false, complete: true, success: true });
