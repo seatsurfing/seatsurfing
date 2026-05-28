@@ -865,7 +865,7 @@ class Search extends React.Component<Props, State> {
     let labelText: string;
     if (showBookerNames && bookedEntry) {
       tooltipHtml = `<div class="text-center">${RendererUtils.escapeHtml(item.name)}<br/>${freeFrom}</div>`;
-      labelText = bookerName ?? item.name;
+      labelText = bookerName || item.name;
     } else {
       tooltipHtml = bookedEntry
         ? `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`
