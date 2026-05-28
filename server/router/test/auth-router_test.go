@@ -538,7 +538,7 @@ func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
 	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestAuthProviderBinding(t *testing.T) {
