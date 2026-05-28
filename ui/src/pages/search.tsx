@@ -818,6 +818,10 @@ class Search extends React.Component<Props, State> {
           : "default",
       backgroundColor: this.getAvailabilityStyle(item, bookings),
       borderRadius: item.shape === "circle" ? "50%" : undefined,
+      clipPath:
+        item.shape === "trapezoid"
+          ? "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)"
+          : undefined,
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",
