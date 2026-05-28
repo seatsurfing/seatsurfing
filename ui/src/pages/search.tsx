@@ -918,7 +918,10 @@ class Search extends React.Component<Props, State> {
               key={booking.user.id}
               className="space-list-item-content space-list-item-text"
             >
-              {RendererUtils.fullname(booking.user.firstname, booking.user.lastname) || booking.user.email}
+              {RendererUtils.fullname(
+                booking.user.firstname,
+                booking.user.lastname,
+              ) || booking.user.email}
             </div>
           ))}
         </div>
