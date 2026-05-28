@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
@@ -733,6 +734,60 @@ func TestSpacesAllowedBookerForbidden(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/location/"+locID+"/space/"+spaceID+"/allowedbooker", user.ID, bytes.NewBufferString(`[]`))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSpacesAvailabilityShowNamesOrgSetting(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	booker := CreateTestUserInOrg(org)
+	booker.Email = "john.doe@seatsurfing.io"
+	booker.Firstname = "John"
+	booker.Lastname = "Doe"
+	GetUserRepository().Update(booker)
+
+	viewer := CreateTestUserInOrg(org)
+	loginViewer := LoginTestUser(viewer.ID)
+
+	location, space := CreateTestLocationAndSpace(org)
+	CreateTestBooking9To5(booker, space, 1)
+
+	now := time.Now()
+	enter := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.Local).UTC().Format(time.RFC3339)
+	leave := time.Date(now.Year(), now.Month(), now.Day()+2, 0, 0, 0, 0, time.Local).UTC().Format(time.RFC3339)
+
+	// ShowNames is off — user properties must be empty when querying as viewer
+	req := NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginViewer.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceAvailabilityResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected array with 1 element")
+	}
+	if len(resBody[0].Bookings) != 1 {
+		t.Fatalf("Expected 1 booking")
+	}
+	CheckTestString(t, "", resBody[0].Bookings[0].UserEmail)
+	CheckTestString(t, "", resBody[0].Bookings[0].UserFirstname)
+	CheckTestString(t, "", resBody[0].Bookings[0].UserLastname)
+
+	// Enable ShowNames — user properties must now be populated when querying as viewer
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginViewer.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected array with 1 element")
+	}
+	if len(resBody[0].Bookings) != 1 {
+		t.Fatalf("Expected 1 booking")
+	}
+	CheckTestString(t, booker.Email, resBody[0].Bookings[0].UserEmail)
+	CheckTestString(t, booker.Firstname, resBody[0].Bookings[0].UserFirstname)
+	CheckTestString(t, booker.Lastname, resBody[0].Bookings[0].UserLastname)
 }
 
 func TestLocationAllowedBookerForbidden(t *testing.T) {
