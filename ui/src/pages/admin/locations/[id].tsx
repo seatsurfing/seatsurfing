@@ -118,12 +118,35 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   const moveableRef = React.useRef<Moveable>(null);
   const width = parseInt(space.width.replace(/^\D+/g, ""));
   const height = parseInt(space.height.replace(/^\D+/g, ""));
+  const [rotateThrottle, setRotateThrottle] = React.useState(0);
 
   React.useEffect(() => {
     if (isSelected) {
       moveableRef.current?.updateRect();
     }
   }, [space.x, space.y, space.rotation, isSelected]);
+
+  React.useEffect(() => {
+    if (!isSelected) {
+      setRotateThrottle(0);
+      return;
+    }
+    const getThrottle = (e: KeyboardEvent) => {
+      if (e.ctrlKey) return 45;
+      if (e.shiftKey) return 15;
+      return 0;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const next = getThrottle(e);
+      setRotateThrottle((prev) => (prev !== next ? next : prev));
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
+    };
+  }, [isSelected]);
 
   const clampPosition = (
     left: number,
@@ -209,6 +232,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           draggable={true}
           resizable={true}
           rotatable={true}
+          throttleRotate={rotateThrottle}
           origin={false}
           snappable={snapToGrid}
           snapGridWidth={snapToGrid ? GRID_SIZE : undefined}
