@@ -283,6 +283,7 @@
   "setApproversHint": "Laat leeg als er geen goedkeuring nodig is.",
   "settings": "Instellingen",
   "showNames": "Toon de namen van boekers (let op de privacy!)",
+  "names": "Names",
   "signin": "Aanmelden",
   "signinAsAt": "Aanmelden als {{user}} bij {{org}}:",
   "signinAt": "Aanmelden bij {{org}}:",

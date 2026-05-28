@@ -304,6 +304,7 @@
   "setApproversHint": "Leer, wenn keine Genehmigung erforderlich ist.",
   "settings": "Einstellungen",
   "showNames": "Namen der Buchenden anzeigen (Datenschutz beachten!)",
+  "names": "Namen",
   "signin": "Anmelden",
   "signinAsAt": "Als {{user}} an {{org}} anmelden:",
   "signinAt": "An {{org}} anmelden:",

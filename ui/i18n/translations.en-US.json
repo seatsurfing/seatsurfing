@@ -292,6 +292,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
   "showNames": "Show bookers' names (mind the privacy!)",
+  "names": "Names",
   "signin": "Sign in",
   "signinAsAt": "Sign in as {{user}} at {{org}}:",
   "signinAt": "Sign in at {{org}}:",

@@ -29,6 +29,7 @@ import {
   IoTime as TimeIcon,
   IoTimerOutline as TimerIcon,
   IoCalendarOutline as CalendarIcon,
+  IoPerson as NamesIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -97,6 +98,7 @@ interface State {
   errorText: string;
   loading: boolean;
   listView: boolean;
+  showBookerNamesOnMap: boolean;
   prefEnterTime: number;
   prefWorkdayStart: number;
   prefWorkdayEnd: number;
@@ -201,6 +203,7 @@ class Search extends React.Component<Props, State> {
           BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
           "0",
         ) === "1")(),
+      showBookerNamesOnMap: false,
       prefEnterTime: 0,
       prefWorkdayStart: 0,
       prefWorkdayEnd: 0,
@@ -838,9 +841,19 @@ class Search extends React.Component<Props, State> {
     const className =
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
-    const tooltipHtml = item.rawBookings[0]
-      ? `<div class="text-center">${RendererUtils.suffixIfDefined(item.rawBookings[0].userEmail, "<br/>")}${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(item.rawBookings[0].leave))) })}</div>`
-      : this.props.t("free");
+    const showBookerNames = this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
+    const bookedEntry = item.rawBookings[0];
+    let tooltipHtml: string;
+    let labelText: string;
+    if (showBookerNames && bookedEntry) {
+      tooltipHtml = `<div class="text-center">${item.name}<br/>${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave))) })}</div>`;
+      labelText = bookedEntry.userEmail ?? item.name;
+    } else {
+      tooltipHtml = bookedEntry
+        ? `<div class="text-center">${RendererUtils.suffixIfDefined(bookedEntry.userEmail, "<br/>")}${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave))) })}</div>`
+        : this.props.t("free");
+      labelText = item.name;
+    }
     return (
       <div
         key={item.id}
@@ -852,7 +865,7 @@ class Search extends React.Component<Props, State> {
       >
         <div style={innerStyle}>
           {item.approvalRequired && <SpaceApprovalIcon />}
-          <p style={textStyle}>{item.name}</p>
+          <p style={textStyle}>{labelText}</p>
         </div>
       </div>
     );
@@ -2146,7 +2159,7 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
-              <div className="ms-2 w-100">
+              <div className={`ms-2 ${RuntimeConfig.INFOS.showNames ? "w-50" : "w-100"}`}>
                 <Form.Check
                   disabled={!this.state.locationId}
                   type="switch"
@@ -2157,6 +2170,33 @@ class Search extends React.Component<Props, State> {
                   id="switch-control"
                 />
               </div>
+              {RuntimeConfig.INFOS.showNames && (
+                <>
+                  <div className="me-2 ms-3">
+                    <NamesIcon
+                      title={this.props.t("showBookerNamesOnMap")}
+                      color={"#555"}
+                      height="20px"
+                      width="20px"
+                    />
+                  </div>
+                  <div className="ms-2 w-50">
+                    <Form.Check
+                      disabled={this.state.listView}
+                      type="switch"
+                      checked={this.state.showBookerNamesOnMap}
+                      onChange={() =>
+                        this.setState({
+                          showBookerNamesOnMap: !this.state.showBookerNamesOnMap,
+                        })
+                      }
+                      label={this.props.t("showBookerNamesOnMap")}
+                      aria-label={this.props.t("showBookerNamesOnMap")}
+                      id="switch-booker-names"
+                    />
+                  </div>
+                </>
+              )}
             </Form.Group>
           </Form>
         </div>

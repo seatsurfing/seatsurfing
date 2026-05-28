@@ -283,6 +283,7 @@
   "setApproversHint": "Deja vacío si no se requiere aprobación.",
   "settings": "Configuración",
   "showNames": "Mostrar nombres de los reservantes (¡cuidado con la privacidad!)",
+  "names": "Names",
   "signin": "Iniciar sesión",
   "signinAsAt": "Iniciar sesión como {{user}} en {{org}}:",
   "signinAt": "Iniciar sesión en {{org}}:",
