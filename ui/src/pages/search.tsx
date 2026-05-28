@@ -2182,7 +2182,11 @@ class Search extends React.Component<Props, State> {
                 />
               </div>
               <div
-                className={`ms-2 ${RuntimeConfig.INFOS.showNames ? "w-50" : "w-100"}`}
+                className={`ms-2 ${
+                  RuntimeConfig.INFOS.showNames && !this.state.listView
+                    ? "w-50"
+                    : "w-100"
+                }`}
               >
                 <Form.Check
                   disabled={!this.state.locationId}
