@@ -546,18 +546,18 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if err != nil {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !CanPasswordLogin(user) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
@@ -628,18 +628,18 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if err != nil {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	// check if password update is allowed
 	if !CanUpdatePassword(user) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
