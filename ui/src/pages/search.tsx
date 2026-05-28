@@ -849,10 +849,12 @@ class Search extends React.Component<Props, State> {
       this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
     const bookedEntry = item.rawBookings[0];
     const bookerName = bookedEntry
-      ? RendererUtils.fullname(
-          bookedEntry.userFirstname,
-          bookedEntry.userLastname,
-        ) || bookedEntry.userEmail
+      ? (RuntimeConfig.INFOS.showNames
+          ? RendererUtils.fullname(
+              bookedEntry.userFirstname,
+              bookedEntry.userLastname,
+            )
+          : "") || bookedEntry.userEmail
       : "";
     const freeFrom = bookedEntry
       ? this.props.t("freeFrom", {
