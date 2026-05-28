@@ -864,11 +864,11 @@ class Search extends React.Component<Props, State> {
     let tooltipHtml: string;
     let labelText: string;
     if (showBookerNames && bookedEntry) {
-      tooltipHtml = `<div class="text-center">${item.name}<br/>${freeFrom}</div>`;
+      tooltipHtml = `<div class="text-center">${RendererUtils.escapeHtml(item.name)}<br/>${freeFrom}</div>`;
       labelText = bookerName ?? item.name;
     } else {
       tooltipHtml = bookedEntry
-        ? `<div class="text-center">${RendererUtils.suffixIfDefined(bookerName ?? "", "<br/>")}${freeFrom}</div>`
+        ? `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`
         : this.props.t("free");
       labelText = item.name;
     }
