@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.100.0](https://github.com/seatsurfing/seatsurfing/compare/v1.99.2...v1.100.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **admin-ui:** add grid option in floorplan editor ([#2217](https://github.com/seatsurfing/seatsurfing/issues/2217)) ([c3f0d95](https://github.com/seatsurfing/seatsurfing/commit/c3f0d95d8eac1339b90be81a08fdff43035d85b1))
+* **admin-ui:** add trapezoid shape for spaces ([#2214](https://github.com/seatsurfing/seatsurfing/issues/2214)) ([ca2d1c9](https://github.com/seatsurfing/seatsurfing/commit/ca2d1c9cb5375da74ac96162939b1bcdb94dca07))
+* **admin-ui:** snap space rotation when strg or shift is pressed ([#2216](https://github.com/seatsurfing/seatsurfing/issues/2216)) ([8562b47](https://github.com/seatsurfing/seatsurfing/commit/8562b479a5c3c46b79bb73e6aacc6389c7e86d21))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** filter current bookings should consider timezone ([#2206](https://github.com/seatsurfing/seatsurfing/issues/2206)) ([5fb3301](https://github.com/seatsurfing/seatsurfing/commit/5fb3301f980f2e5ef3a225629d3721b13f75f607))
+* **booking-ui:** auto rotate space name and icon ([#2215](https://github.com/seatsurfing/seatsurfing/issues/2215)) ([222790d](https://github.com/seatsurfing/seatsurfing/commit/222790db1a0d80b72e635c4594761d6edbbcecf5))
+
 ## [1.99.2](https://github.com/seatsurfing/seatsurfing/compare/v1.99.1...v1.99.2) (2026-05-27)
 
 
