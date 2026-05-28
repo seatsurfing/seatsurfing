@@ -913,17 +913,18 @@ class Search extends React.Component<Props, State> {
       >
         <div className="ms-2 me-auto space-list-item-div">
           <div className="fw-bold space-list-item-content">{item.name}</div>
-          {bookings.map((booking) => (
-            <div
-              key={booking.user.id}
-              className="space-list-item-content space-list-item-text"
-            >
-              {RendererUtils.fullname(
-                booking.user.firstname,
-                booking.user.lastname,
-              ) || booking.user.email}
-            </div>
-          ))}
+          {RuntimeConfig.INFOS.showNames &&
+            bookings.map((booking) => (
+              <div
+                key={booking.user.id}
+                className="space-list-item-content space-list-item-text"
+              >
+                {RendererUtils.fullname(
+                  booking.user.firstname,
+                  booking.user.lastname,
+                ) || booking.user.email}
+              </div>
+            ))}
         </div>
         <span className="badge badge-pill" style={{ backgroundColor: bgColor }}>
           {bookerCount}
