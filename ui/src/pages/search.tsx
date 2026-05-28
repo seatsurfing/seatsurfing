@@ -2194,7 +2194,7 @@ class Search extends React.Component<Props, State> {
                 />
               </div>
               {RuntimeConfig.INFOS.showNames && !this.state.listView && (
-                <>
+                      title={this.props.t("names")}
                   <div className="me-2 ms-3">
                     <NamesIcon
                       title={this.props.t("showBookerNamesOnMap")}
