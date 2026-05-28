@@ -702,7 +702,11 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.HashedPassword = e.HashedPassword
 		eNew.AuthProviderID = e.AuthProviderID
 		eNew.PasswordPending = e.PasswordPending
+		eNew.PasswordUpdateRequired = e.PasswordUpdateRequired
 	}
+
+	eNew.TotpSecret = e.TotpSecret
+	eNew.AtlassianID = e.AtlassianID
 
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {

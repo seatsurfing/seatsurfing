@@ -1107,3 +1107,50 @@ func TestServiceAccountBasicAuthStillWorks(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 }
+
+func TestUserUpdatePreservesSecurityFields(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	// Create user with password — PasswordUpdateRequired gets set to true
+	username := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req := NewHTTPRequest("POST", "/user/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	userID := res.Header().Get("X-Object-Id")
+
+	// Set a TOTP secret directly in the DB
+	createdUser, err := GetUserRepository().GetOne(userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	createdUser.TotpSecret = NullString("SOMEFAKETOTPSECRET")
+	if err := GetUserRepository().Update(createdUser); err != nil {
+		t.Fatal(err)
+	}
+
+	// Update only the name — no auth-method change in the request
+	payload = "{\"email\": \"" + username + "\", \"firstname\": \"Jane\", \"lastname\": \"Doe\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+userID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// TotpEnabled must still be true in the API response
+	req = NewHTTPRequest("GET", "/user/"+userID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.TotpEnabled)
+
+	// TotpSecret and PasswordUpdateRequired must still be set in the DB
+	updatedUser, err := GetUserRepository().GetOne(userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "SOMEFAKETOTPSECRET", string(updatedUser.TotpSecret))
+	CheckTestBool(t, true, updatedUser.PasswordUpdateRequired)
+}
