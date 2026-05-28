@@ -841,16 +841,30 @@ class Search extends React.Component<Props, State> {
     const className =
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
-    const showBookerNames = this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
+    const showBookerNames =
+      this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
     const bookedEntry = item.rawBookings[0];
+    const bookerName = bookedEntry
+      ? RendererUtils.fullname(
+          bookedEntry.userFirstname,
+          bookedEntry.userLastname,
+        ) || bookedEntry.userEmail
+      : "";
+    const freeFrom = bookedEntry
+      ? this.props.t("freeFrom", {
+          time: Formatting.getBookingDateFormatter().format(
+            DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave)),
+          ),
+        })
+      : "";
     let tooltipHtml: string;
     let labelText: string;
     if (showBookerNames && bookedEntry) {
-      tooltipHtml = `<div class="text-center">${item.name}<br/>${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave))) })}</div>`;
-      labelText = bookedEntry.userEmail ?? item.name;
+      tooltipHtml = `<div class="text-center">${item.name}<br/>${freeFrom}</div>`;
+      labelText = bookerName ?? item.name;
     } else {
       tooltipHtml = bookedEntry
-        ? `<div class="text-center">${RendererUtils.suffixIfDefined(bookedEntry.userEmail, "<br/>")}${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave))) })}</div>`
+        ? `<div class="text-center">${RendererUtils.suffixIfDefined(bookerName ?? "", "<br/>")}${freeFrom}</div>`
         : this.props.t("free");
       labelText = item.name;
     }
@@ -2159,7 +2173,9 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
-              <div className={`ms-2 ${RuntimeConfig.INFOS.showNames ? "w-50" : "w-100"}`}>
+              <div
+                className={`ms-2 ${RuntimeConfig.INFOS.showNames ? "w-50" : "w-100"}`}
+              >
                 <Form.Check
                   disabled={!this.state.locationId}
                   type="switch"
@@ -2187,7 +2203,8 @@ class Search extends React.Component<Props, State> {
                       checked={this.state.showBookerNamesOnMap}
                       onChange={() =>
                         this.setState({
-                          showBookerNamesOnMap: !this.state.showBookerNamesOnMap,
+                          showBookerNamesOnMap:
+                            !this.state.showBookerNamesOnMap,
                         })
                       }
                       label={this.props.t("names")}
