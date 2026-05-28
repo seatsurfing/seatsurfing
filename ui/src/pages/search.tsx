@@ -203,7 +203,11 @@ class Search extends React.Component<Props, State> {
           BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
           "0",
         ) === "1")(),
-      showBookerNamesOnMap: false,
+      showBookerNamesOnMap: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+          "0",
+        ) === "1")(),
       prefEnterTime: 0,
       prefWorkdayStart: 0,
       prefWorkdayEnd: 0,
@@ -2201,10 +2205,17 @@ class Search extends React.Component<Props, State> {
                       type="switch"
                       checked={this.state.showBookerNamesOnMap}
                       onChange={() =>
-                        this.setState({
-                          showBookerNamesOnMap:
-                            !this.state.showBookerNamesOnMap,
-                        })
+                        this.setState(
+                          {
+                            showBookerNamesOnMap:
+                              !this.state.showBookerNamesOnMap,
+                          },
+                          () =>
+                            BrowserUtil.tryLocalStorageSetItem(
+                              BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+                              this.state.showBookerNamesOnMap ? "1" : "0",
+                            ),
+                        )
                       }
                       label={this.props.t("names")}
                       aria-label={this.props.t("names")}
