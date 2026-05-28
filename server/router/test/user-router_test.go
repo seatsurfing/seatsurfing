@@ -876,6 +876,46 @@ func TestApiTokenGenerateNonServiceAccount(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
+func TestCreateUserInvalidName(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	invalidNames := []string{"@@@", "A@@@B", "X"}
+	for _, name := range invalidNames {
+		username := uuid.New().String() + "@test.com"
+		payload := "{\"email\": \"" + username + "\", \"firstname\": \"" + name + "\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+		req := NewHTTPRequest("POST", "/user/", admin.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+		payload = "{\"email\": \"" + username + "\", \"firstname\": \"John\", \"lastname\": \"" + name + "\", \"password\": \"" + TestPassword + "\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+		req = NewHTTPRequest("POST", "/user/", admin.ID, bytes.NewBufferString(payload))
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
+func TestUpdateUserInvalidName(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	invalidNames := []string{"@@@", "A@@@B", "X"}
+	for _, name := range invalidNames {
+		payload := "{\"email\": \"" + user.Email + "\", \"firstname\": \"" + name + "\", \"lastname\": \"Doe\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+		req := NewHTTPRequest("PUT", "/user/"+user.ID, admin.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+		payload = "{\"email\": \"" + user.Email + "\", \"firstname\": \"John\", \"lastname\": \"" + name + "\", \"password\": \"\", \"role\": " + strconv.Itoa(int(UserRoleUser)) + "}"
+		req = NewHTTPRequest("PUT", "/user/"+user.ID, admin.ID, bytes.NewBufferString(payload))
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
 func TestApiTokenGenerateForbidden(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
