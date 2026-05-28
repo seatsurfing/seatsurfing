@@ -483,6 +483,8 @@ class EditUser extends React.Component<Props, State> {
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -500,6 +502,8 @@ class EditUser extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
