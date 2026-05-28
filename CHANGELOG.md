@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.101.0](https://github.com/seatsurfing/seatsurfing/compare/v1.100.0...v1.101.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **server:** add booker's first and last name to availability response ([#2221](https://github.com/seatsurfing/seatsurfing/issues/2221)) ([14d0338](https://github.com/seatsurfing/seatsurfing/commit/14d0338d7d59068c2aad308396cd12df94c2596b))
+
+
+### 🐛 Bug Fixes
+
+* **server:** preserve user's security fields when updating user ([#2224](https://github.com/seatsurfing/seatsurfing/issues/2224)) ([1ac3958](https://github.com/seatsurfing/seatsurfing/commit/1ac39583452f1a481590b42234b63b368d36def9))
+* **server:** prevent @@@ in user's first or lastname ([#2222](https://github.com/seatsurfing/seatsurfing/issues/2222)) ([9349272](https://github.com/seatsurfing/seatsurfing/commit/9349272b30a84d85def02b89f3839d6948c83f07))
+
 ## [1.100.0](https://github.com/seatsurfing/seatsurfing/compare/v1.99.2...v1.100.0) (2026-05-28)
 
 
