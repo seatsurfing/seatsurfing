@@ -2186,7 +2186,7 @@ class Search extends React.Component<Props, State> {
                   id="switch-control"
                 />
               </div>
-              {RuntimeConfig.INFOS.showNames && (
+              {RuntimeConfig.INFOS.showNames && !this.state.listView && (
                 <>
                   <div className="me-2 ms-3">
                     <NamesIcon
@@ -2198,7 +2198,6 @@ class Search extends React.Component<Props, State> {
                   </div>
                   <div className="ms-2 w-50">
                     <Form.Check
-                      disabled={this.state.listView}
                       type="switch"
                       checked={this.state.showBookerNamesOnMap}
                       onChange={() =>
