@@ -131,7 +131,7 @@ class EditUser extends React.Component<Props, State> {
           code = e.appErrorCode;
         }
         this.setState({
-          error: code != 0,
+          error: true,
           errorText: code
             ? ErrorText.getTextForAppCode(code, this.props.t)
             : "",

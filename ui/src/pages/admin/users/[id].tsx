@@ -208,7 +208,9 @@ class EditUser extends React.Component<Props, State> {
     this.entity
       .save()
       .then(() => {
-        this.props.router.push("/admin/users/" + this.entity.id);
+        this.props.router.push(
+          `/admin/users/${decodeURIComponent(this.entity.id)}`,
+        );
         this.setState({
           saved: true,
           resendInvitation: false,
@@ -221,10 +223,10 @@ class EditUser extends React.Component<Props, State> {
           code = e.appErrorCode;
         }
         this.setState({
-          error: code != 0,
+          error: true,
           errorText: code
             ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
+            : this.props.t("errorSave"),
         });
       });
   };
