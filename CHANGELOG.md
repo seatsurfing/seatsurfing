@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.102.0](https://github.com/seatsurfing/seatsurfing/compare/v1.101.0...v1.102.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **booking-ui:** add "names" toggle on booking map ([#2223](https://github.com/seatsurfing/seatsurfing/issues/2223)) ([959e1bf](https://github.com/seatsurfing/seatsurfing/commit/959e1bfb426377f01be9e06fe830116262919550))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add min. and max. length check for user name fields ([#2230](https://github.com/seatsurfing/seatsurfing/issues/2230)) ([a70b1e8](https://github.com/seatsurfing/seatsurfing/commit/a70b1e8dd7dc44e5220abb3db7ed904540082170))
+* **admin-ui:** make sure error hint is shown ([#2229](https://github.com/seatsurfing/seatsurfing/issues/2229)) ([8fdb274](https://github.com/seatsurfing/seatsurfing/commit/8fdb27464f2a59cefeef1ceebf8f2ca07c4a3d31))
+* **booking-ui:** centering map when switching back from list view ([#2226](https://github.com/seatsurfing/seatsurfing/issues/2226)) ([1a92546](https://github.com/seatsurfing/seatsurfing/commit/1a925467c9b110bf73a402b3f8eb750b8b2f9007))
+* **booking-ui:** fix building API paths ([#2234](https://github.com/seatsurfing/seatsurfing/issues/2234)) ([2f4ef02](https://github.com/seatsurfing/seatsurfing/commit/2f4ef02a5771cd90a90a269061c27dd36b236383))
+* **main:** do not expose min. password length on public login page ([#2231](https://github.com/seatsurfing/seatsurfing/issues/2231)) ([744d960](https://github.com/seatsurfing/seatsurfing/commit/744d96037688f392934ddf8fae26cd0054b11673))
+* **main:** fix window check in BrowserUtil ([#2227](https://github.com/seatsurfing/seatsurfing/issues/2227)) ([af557ed](https://github.com/seatsurfing/seatsurfing/commit/af557ed99a422795fca7cb3cf5bb14b9fc0d2929))
+* **main:** return status code 400 for invalid login attempts ([#2232](https://github.com/seatsurfing/seatsurfing/issues/2232)) ([a4b4aa8](https://github.com/seatsurfing/seatsurfing/commit/a4b4aa8823b5ef3b8ebb7e37249031300a1787b2))
+
 ## [1.101.0](https://github.com/seatsurfing/seatsurfing/compare/v1.100.0...v1.101.0) (2026-05-28)
 
 
