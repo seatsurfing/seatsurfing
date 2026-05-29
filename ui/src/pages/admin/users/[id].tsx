@@ -208,7 +208,9 @@ class EditUser extends React.Component<Props, State> {
     this.entity
       .save()
       .then(() => {
-        this.props.router.push("/admin/users/" + this.entity.id);
+        this.props.router.push(
+          `/admin/users/${encodeURIComponent(this.entity.id)}`,
+        );
         this.setState({
           saved: true,
           resendInvitation: false,
@@ -221,10 +223,10 @@ class EditUser extends React.Component<Props, State> {
           code = e.appErrorCode;
         }
         this.setState({
-          error: code != 0,
+          error: true,
           errorText: code
             ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
+            : this.props.t("errorSave"),
         });
       });
   };
@@ -319,11 +321,7 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = (
-        <Alert variant="danger">
-          {this.state.errorText ?? this.props.t("errorSave")}
-        </Alert>
-      );
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     const buttonDelete = (

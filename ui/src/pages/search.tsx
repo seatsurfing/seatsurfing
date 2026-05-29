@@ -1041,7 +1041,7 @@ class Search extends React.Component<Props, State> {
       this.setState({
         confirmingBooking: false,
         showConfirm: false,
-        showError: code != 0,
+        showError: true,
         errorText: ErrorText.getTextForAppCode(code, this.props.t),
       });
     }
@@ -1068,7 +1068,7 @@ class Search extends React.Component<Props, State> {
         const code: number = AjaxError.getAppErrorCode(e);
         this.setState({
           loading: false,
-          showError: code != 0,
+          showError: true,
           errorText: ErrorText.getTextForAppCode(code, this.props.t),
         });
       });
