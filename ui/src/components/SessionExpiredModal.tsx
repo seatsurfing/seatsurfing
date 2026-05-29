@@ -10,7 +10,7 @@ interface Props {
 }
 
 class SessionExpiredModal extends React.Component<Props> {
-  static toLogin(router: NextRouter) {
+  toLogin(router: NextRouter) {
     const currentPath = router.asPath;
     router.push(`/login?redir=${encodeURIComponent(currentPath)}`);
   }
@@ -29,7 +29,7 @@ class SessionExpiredModal extends React.Component<Props> {
             variant="primary"
             onClick={() => {
               this.props.onHide();
-              toLogin(Router);
+              this.toLogin(Router);
             }}
           >
             {this.props.t("sessionExpiredLogin")}
