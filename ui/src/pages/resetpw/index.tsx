@@ -41,10 +41,10 @@ class InitPasswordReset extends React.Component<Props, State> {
     try {
       res = await Ajax.get(
         `${Navigation.PATH_API_AUTH_ORG}${encodeURIComponent(domain)}`,
-        false,
+        () => true,
       );
     } catch {
-      res = await Ajax.get(Navigation.PATH_API_AUTH_SINGLE_ORG, false);
+      res = await Ajax.get(Navigation.PATH_API_AUTH_SINGLE_ORG, () => true);
     }
     this.org = new Organization();
     this.org.deserialize(res.json.organization);
@@ -61,7 +61,7 @@ class InitPasswordReset extends React.Component<Props, State> {
       const res = await Ajax.postData(
         Navigation.PATH_API_AUTH_INIT_PW_RESET,
         payload,
-        false,
+        () => true,
       );
       const success = res.status >= 200 && res.status <= 299;
       this.setState({ loading: false, complete: true, success });

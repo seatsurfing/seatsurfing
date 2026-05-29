@@ -31,7 +31,7 @@ class LoginSuccess extends React.Component<Props, State> {
   loadData = () => {
     const { id } = this.props.router.query;
     if (id) {
-      return Ajax.get("/auth/verify/" + id, false)
+      return Ajax.get("/auth/verify/" + id, () => true)
         .then((res) => {
           if (res.json && res.json.accessToken) {
             const credentials: AjaxCredentials = {
