@@ -302,7 +302,10 @@ func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail 
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
 		"INNER JOIN users ON bookings.user_id = users.id " +
-		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()"
+		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz " +
+		"WHERE locations.organization_id = $1 " +
+		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) " +
+		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)"
 	args := []interface{}{organizationID}
 	if userEmail != "" {
 		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
@@ -441,7 +444,10 @@ func (r *BookingRepository) GetCountCurrent(organizationID string) (int, error) 
 		"FROM bookings "+
 		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
 		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()",
+		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz "+
+		"WHERE locations.organization_id = $1 "+
+		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) "+
+		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)",
 		organizationID).Scan(&res)
 	return res, err
 }

@@ -283,6 +283,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "הגדרות",
   "showNames": "הצגת שמות המזמינים (נא להתחשב בפרטיות!)",
+  "names": "Names",
   "signin": "כניסה",
   "signinAsAt": "כניסה בתור {{user}} דרך ארגון {{org}}:",
   "signinAt": "כניסה דרך הארגון {{org}}:",
@@ -482,5 +483,7 @@
   "sponsorLink": "Support us as a sponsor",
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
-  "featuresLink": "Compare features"
+  "shapeTrapezoid": "טרפז",
+  "featuresLink": "Compare features",
+  "showGrid": "Show grid"
 }

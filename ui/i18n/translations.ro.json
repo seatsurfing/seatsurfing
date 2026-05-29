@@ -283,6 +283,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
   "showNames": "Show bookers' names (mind the privacy!)",
+  "names": "Names",
   "signin": "Autentificare",
   "signinAsAt": "Autentificare ca {{user}} la {{org}}:",
   "signinAt": "Autentificare la {{org}}:",
@@ -482,5 +483,7 @@
   "sponsorLink": "Support us as a sponsor",
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
-  "featuresLink": "Compare features"
+  "shapeTrapezoid": "Trapez",
+  "featuresLink": "Compare features",
+  "showGrid": "Show grid"
 }

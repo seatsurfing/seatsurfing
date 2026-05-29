@@ -283,6 +283,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Paramètres",
   "showNames": "Afficher les noms des clients (attention à la vie privée!)",
+  "names": "Names",
   "signin": "Connexion",
   "signinAsAt": "Connectez-vous en tant que {{user}} à {{org}} :",
   "signinAt": "Connectez-vous à {{org}} :",
@@ -482,5 +483,7 @@
   "sponsorLink": "Support us as a sponsor",
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
-  "featuresLink": "Compare features"
+  "shapeTrapezoid": "Trapèze",
+  "featuresLink": "Compare features",
+  "showGrid": "Show grid"
 }

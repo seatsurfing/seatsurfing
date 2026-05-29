@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -545,19 +546,23 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err == sql.ErrNoRows {
+		SendBadRequest(w)
+		return
+	}
 	if err != nil {
-		SendNotFound(w)
+		SendInternalServerError(w)
 		return
 	}
 
 	if !CanPasswordLogin(user) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
@@ -581,7 +586,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		// Check for replay attack
 		if totpCache.isCodeUsed(user.ID, m.Code) {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
@@ -594,7 +599,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), *TotpOptions)
 		if err != nil || !valid {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
@@ -627,19 +632,23 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	}
 
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err == sql.ErrNoRows {
+		SendBadRequest(w)
+		return
+	}
 	if err != nil {
-		SendNotFound(w)
+		SendInternalServerError(w)
 		return
 	}
 
 	// check if password update is allowed
 	if !CanUpdatePassword(user) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 

@@ -60,28 +60,28 @@ func TestAuthPasswordLoginBan(t *testing.T) {
 	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"12345670\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Attempt 2
 	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345679\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Attempt 3
 	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"12345671\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 
 	// Would be successful, but fails cause banned
 	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 }
 
@@ -157,7 +157,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 	CheckTestBool(t, true, strings.Contains(SendMailMockContent, "Hallo "+user.GetSafeRecipientName()+","))
 
-	// Extract Confirm ID from email
+	// Extract confirm ID from email
 	rx := regexp.MustCompile(`/resetpw/([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})?/"`)
 	confirmTokens := rx.FindStringSubmatch(SendMailMockContent)
 	CheckTestInt(t, 2, len(confirmTokens))
@@ -173,7 +173,7 @@ func TestAuthPasswordReset(t *testing.T) {
 	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 
 	// Test login with new password
 	payload = "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPasswordNew + "\", \"organizationId\": \"" + org.ID + "\" }"
@@ -292,7 +292,7 @@ func TestAuthServiceAccountNoLogin(t *testing.T) {
 	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestTokenValid(t *testing.T) {
@@ -538,7 +538,7 @@ func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
 	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestAuthProviderBinding(t *testing.T) {
@@ -847,7 +847,7 @@ func TestTotpLoginWithInvalidCode(t *testing.T) {
 	payload = `{"email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `", "code": "000000"}`
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestTotpDisable(t *testing.T) {
@@ -949,7 +949,7 @@ func TestTotpReplayAttack(t *testing.T) {
 	// 4. Second login with same code should fail (replay attack prevention)
 	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 func TestAuthGetOrgDetailsNotFound(t *testing.T) {
 	ClearTestDB()

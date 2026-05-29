@@ -698,7 +698,6 @@ class Login extends React.Component<Props, State> {
                 }
                 required={true}
                 isInvalid={this.state.invalid}
-                minLength={8}
               />
               <Button variant="primary" type="submit">
                 {this.state.inPasswordSubmit ? (

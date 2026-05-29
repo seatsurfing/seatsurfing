@@ -29,6 +29,7 @@ import {
   IoTime as TimeIcon,
   IoTimerOutline as TimerIcon,
   IoCalendarOutline as CalendarIcon,
+  IoPerson as NamesIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -97,6 +98,7 @@ interface State {
   errorText: string;
   loading: boolean;
   listView: boolean;
+  showBookerNamesOnMap: boolean;
   prefEnterTime: number;
   prefWorkdayStart: number;
   prefWorkdayEnd: number;
@@ -199,6 +201,11 @@ class Search extends React.Component<Props, State> {
       listView: (() =>
         BrowserUtil.tryLocalStorageGetItem(
           BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
+          "0",
+        ) === "1")(),
+      showBookerNamesOnMap: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
           "0",
         ) === "1")(),
       prefEnterTime: 0,
@@ -818,6 +825,10 @@ class Search extends React.Component<Props, State> {
           : "default",
       backgroundColor: this.getAvailabilityStyle(item, bookings),
       borderRadius: item.shape === "circle" ? "50%" : undefined,
+      clipPath:
+        item.shape === "trapezoid"
+          ? "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)"
+          : undefined,
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",
@@ -834,9 +845,35 @@ class Search extends React.Component<Props, State> {
     const className =
       "space space-box" +
       (item.width < item.height ? " space-box-vertical" : "");
-    const tooltipHtml = item.rawBookings[0]
-      ? `<div class="text-center">${RendererUtils.suffixIfDefined(item.rawBookings[0].userEmail, "<br/>")}${this.props.t("freeFrom", { time: Formatting.getBookingDateFormatter().format(DateUtil.getNextFreeEnterTime(new Date(item.rawBookings[0].leave))) })}</div>`
-      : this.props.t("free");
+    const showBookerNames =
+      this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
+    const bookedEntry = item.rawBookings[0];
+    const bookerName = bookedEntry
+      ? (RuntimeConfig.INFOS.showNames
+          ? RendererUtils.fullname(
+              bookedEntry.userFirstname,
+              bookedEntry.userLastname,
+            )
+          : "") || bookedEntry.userEmail
+      : "";
+    const freeFrom = bookedEntry
+      ? this.props.t("freeFrom", {
+          time: Formatting.getBookingDateFormatter().format(
+            DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave)),
+          ),
+        })
+      : "";
+    let tooltipHtml: string;
+    let labelText: string;
+    if (showBookerNames && bookedEntry) {
+      tooltipHtml = `<div class="text-center">${RendererUtils.escapeHtml(item.name)}<br/>${freeFrom}</div>`;
+      labelText = bookerName || item.name;
+    } else {
+      tooltipHtml = bookedEntry
+        ? `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`
+        : this.props.t("free");
+      labelText = item.name;
+    }
     return (
       <div
         key={item.id}
@@ -848,7 +885,7 @@ class Search extends React.Component<Props, State> {
       >
         <div style={innerStyle}>
           {item.approvalRequired && <SpaceApprovalIcon />}
-          <p style={textStyle}>{item.name}</p>
+          <p style={textStyle}>{labelText}</p>
         </div>
       </div>
     );
@@ -878,14 +915,18 @@ class Search extends React.Component<Props, State> {
       >
         <div className="ms-2 me-auto space-list-item-div">
           <div className="fw-bold space-list-item-content">{item.name}</div>
-          {bookings.map((booking) => (
-            <div
-              key={booking.user.id}
-              className="space-list-item-content space-list-item-text"
-            >
-              {booking.user.email}
-            </div>
-          ))}
+          {RuntimeConfig.INFOS.showNames &&
+            bookings.map((booking) => (
+              <div
+                key={booking.user.id}
+                className="space-list-item-content space-list-item-text"
+              >
+                {RendererUtils.fullname(
+                  booking.user.firstname,
+                  booking.user.lastname,
+                ) || booking.user.email}
+              </div>
+            ))}
         </div>
         <span className="badge badge-pill" style={{ backgroundColor: bgColor }}>
           {bookerCount}
@@ -1000,7 +1041,7 @@ class Search extends React.Component<Props, State> {
       this.setState({
         confirmingBooking: false,
         showConfirm: false,
-        showError: code != 0,
+        showError: true,
         errorText: ErrorText.getTextForAppCode(code, this.props.t),
       });
     }
@@ -1027,7 +1068,7 @@ class Search extends React.Component<Props, State> {
         const code: number = AjaxError.getAppErrorCode(e);
         this.setState({
           loading: false,
-          showError: code != 0,
+          showError: true,
           errorText: ErrorText.getTextForAppCode(code, this.props.t),
         });
       });
@@ -1115,6 +1156,9 @@ class Search extends React.Component<Props, State> {
         BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
         this.state.listView ? "1" : "0",
       );
+      if (!this.state.listView) {
+        requestAnimationFrame(() => this.centerMap());
+      }
     });
   };
 
@@ -2142,7 +2186,13 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
-              <div className="ms-2 w-100">
+              <div
+                className={`ms-2 ${
+                  RuntimeConfig.INFOS.showNames && !this.state.listView
+                    ? "w-50"
+                    : "w-100"
+                }`}
+              >
                 <Form.Check
                   disabled={!this.state.locationId}
                   type="switch"
@@ -2153,6 +2203,40 @@ class Search extends React.Component<Props, State> {
                   id="switch-control"
                 />
               </div>
+              {RuntimeConfig.INFOS.showNames && !this.state.listView && (
+                <>
+                  <div className="me-2 ms-3">
+                    <NamesIcon
+                      title={this.props.t("names")}
+                      color={"#555"}
+                      height="20px"
+                      width="20px"
+                    />
+                  </div>
+                  <div className="ms-2 w-50">
+                    <Form.Check
+                      type="switch"
+                      checked={this.state.showBookerNamesOnMap}
+                      onChange={() =>
+                        this.setState(
+                          {
+                            showBookerNamesOnMap:
+                              !this.state.showBookerNamesOnMap,
+                          },
+                          () =>
+                            BrowserUtil.tryLocalStorageSetItem(
+                              BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+                              this.state.showBookerNamesOnMap ? "1" : "0",
+                            ),
+                        )
+                      }
+                      label={this.props.t("names")}
+                      aria-label={this.props.t("names")}
+                      id="switch-booker-names"
+                    />
+                  </div>
+                </>
+              )}
             </Form.Group>
           </Form>
         </div>

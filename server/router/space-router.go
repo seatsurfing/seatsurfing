@@ -29,7 +29,7 @@ type CreateSpaceRequest struct {
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
 	KioskEnabled          bool                         `json:"kioskEnabled"`
-	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle"`
+	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle trapezoid"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
@@ -66,14 +66,16 @@ type GetSpaceResponse struct {
 }
 
 type GetSpaceAvailabilityBookingsResponse struct {
-	BookingID   string    `json:"id"`
-	RecurringID string    `json:"recurringId"`
-	UserID      string    `json:"userId"`
-	UserEmail   string    `json:"userEmail"`
-	Enter       time.Time `json:"enter"`
-	Leave       time.Time `json:"leave"`
-	Subject     string    `json:"subject"`
-	Approved    bool      `json:"approved"`
+	BookingID     string    `json:"id"`
+	RecurringID   string    `json:"recurringId"`
+	UserID        string    `json:"userId"`
+	UserEmail     string    `json:"userEmail"`
+	UserFirstname string    `json:"userFirstname"`
+	UserLastname  string    `json:"userLastname"`
+	Enter         time.Time `json:"enter"`
+	Leave         time.Time `json:"leave"`
+	Subject       string    `json:"subject"`
+	Approved      bool      `json:"approved"`
 }
 
 type GetSpaceAvailabilityResponse struct {
@@ -287,19 +289,25 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 				leave, _ := GetLocationRepository().AttachTimezoneInformation(booking.Leave, location)
 				outUserId := ""
 				outUserEmail := ""
+				outUserFirstname := ""
+				outUserLastname := ""
 				if showName || user.Email == booking.UserEmail {
 					outUserId = booking.UserID
 					outUserEmail = booking.UserEmail
+					outUserFirstname = booking.UserFirstname
+					outUserLastname = booking.UserLastname
 				}
 				entry := &GetSpaceAvailabilityBookingsResponse{
-					BookingID:   booking.BookingID,
-					RecurringID: booking.RecurringID,
-					UserID:      outUserId,
-					UserEmail:   outUserEmail,
-					Enter:       enter,
-					Leave:       leave,
-					Subject:     booking.Subject,
-					Approved:    booking.Approved,
+					BookingID:     booking.BookingID,
+					RecurringID:   booking.RecurringID,
+					UserID:        outUserId,
+					UserEmail:     outUserEmail,
+					UserFirstname: outUserFirstname,
+					UserLastname:  outUserLastname,
+					Enter:         enter,
+					Leave:         leave,
+					Subject:       booking.Subject,
+					Approved:      booking.Approved,
 				}
 				m.Bookings = append(m.Bookings, entry)
 			}

@@ -283,6 +283,7 @@
   "setApproversHint": "Deixe vazio se nenhuma aprovação for necessária.",
   "settings": "Configurações",
   "showNames": "Mostrar nome da pessoa que fez a reserva (cuidado com a privacidade!)",
+  "names": "Names",
   "signin": "Entrar",
   "signinAsAt": "Entrar como {{user}} em {{org}}:",
   "signinAt": "Entrar em {{org}}:",
@@ -482,5 +483,7 @@
   "sponsorLink": "Support us as a sponsor",
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
-  "featuresLink": "Compare features"
+  "shapeTrapezoid": "Trapézio",
+  "featuresLink": "Compare features",
+  "showGrid": "Show grid"
 }

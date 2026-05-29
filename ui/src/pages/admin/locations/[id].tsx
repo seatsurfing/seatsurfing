@@ -22,6 +22,7 @@ import {
   Tag as IconTag,
   Square as IconSquare,
   Circle as IconCircle,
+  Grid as IconGrid,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -48,6 +49,23 @@ import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
+
+const IconTrapezoid = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polygon points="7,3 17,3 23,21 1,21" />
+  </svg>
+);
 
 interface SpaceState {
   id: string;
@@ -92,7 +110,10 @@ interface SpaceRectProps {
   newSpaceName: (baseName: string) => string;
   mapWidth: number;
   mapHeight: number;
+  snapToGrid: boolean;
 }
+
+const GRID_SIZE = 50;
 
 const SpaceRect: React.FC<SpaceRectProps> = ({
   space,
@@ -108,17 +129,41 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   newSpaceName,
   mapWidth,
   mapHeight,
+  snapToGrid,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
   const moveableRef = React.useRef<Moveable>(null);
   const width = parseInt(space.width.replace(/^\D+/g, ""));
   const height = parseInt(space.height.replace(/^\D+/g, ""));
+  const [rotateThrottle, setRotateThrottle] = React.useState(0);
 
   React.useEffect(() => {
     if (isSelected) {
       moveableRef.current?.updateRect();
     }
   }, [space.x, space.y, space.rotation, isSelected]);
+
+  React.useEffect(() => {
+    if (!isSelected) {
+      setRotateThrottle(0);
+      return;
+    }
+    const getThrottle = (e: KeyboardEvent) => {
+      if (e.ctrlKey) return 45;
+      if (e.shiftKey) return 15;
+      return 0;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const next = getThrottle(e);
+      setRotateThrottle((prev) => (prev !== next ? next : prev));
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
+    };
+  }, [isSelected]);
 
   const clampPosition = (
     left: number,
@@ -149,6 +194,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   let className = "space-dragger";
   if (width < height) className += " space-dragger-vertical";
   if (space.shape === "circle") className += " space-dragger-circle";
+  if (space.shape === "trapezoid") className += " space-dragger-trapezoid";
   if (isSelected) className += " space-dragger-selected";
 
   return (
@@ -204,7 +250,11 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           draggable={true}
           resizable={true}
           rotatable={true}
+          throttleRotate={rotateThrottle}
           origin={false}
+          snappable={snapToGrid}
+          snapGridWidth={snapToGrid ? GRID_SIZE : undefined}
+          snapGridHeight={snapToGrid ? GRID_SIZE : undefined}
           onDrag={({ target, left, top }) => {
             const clamped = clampPosition(left, top);
             target.style.left = `${clamped.left}px`;
@@ -352,6 +402,7 @@ interface State {
   typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
   showDesignerModal: boolean;
+  gridEnabled: boolean;
 }
 
 interface Props {
@@ -409,6 +460,7 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
       showDesignerModal: false,
+      gridEnabled: false,
     };
   }
 
@@ -967,6 +1019,7 @@ class EditLocation extends React.Component<Props, State> {
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
+        snapToGrid={this.state.gridEnabled}
       />
     );
   };
@@ -1760,6 +1813,11 @@ class EditLocation extends React.Component<Props, State> {
                   <IconCircle className="feather" />{" "}
                   {this.props.t("shapeCircle")}
                 </>
+              ) : selectedShape === "trapezoid" ? (
+                <>
+                  <IconTrapezoid className="feather" />{" "}
+                  {this.props.t("shapeTrapezoid")}
+                </>
               ) : (
                 <>
                   <IconSquare className="feather" /> {this.props.t("shapeRect")}
@@ -1768,7 +1826,7 @@ class EditLocation extends React.Component<Props, State> {
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <Dropdown.Item
-                active={selectedShape !== "circle"}
+                active={selectedShape === ""}
                 onClick={() =>
                   this.setSpaceShape(this.state.selectedSpace!, "")
                 }
@@ -1782,6 +1840,15 @@ class EditLocation extends React.Component<Props, State> {
                 }
               >
                 <IconCircle className="feather" /> {this.props.t("shapeCircle")}
+              </Dropdown.Item>
+              <Dropdown.Item
+                active={selectedShape === "trapezoid"}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "trapezoid")
+                }
+              >
+                <IconTrapezoid className="feather" />{" "}
+                {this.props.t("shapeTrapezoid")}
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
@@ -1806,6 +1873,21 @@ class EditLocation extends React.Component<Props, State> {
                 >
                   <IconMap className="feather" /> {this.props.t("addSpace")}
                 </Button>
+                <Button
+                  className="btn-sm"
+                  variant={
+                    this.state.gridEnabled
+                      ? "outline-primary"
+                      : "outline-secondary"
+                  }
+                  onClick={() =>
+                    this.setState((prev) => ({
+                      gridEnabled: !prev.gridEnabled,
+                    }))
+                  }
+                >
+                  <IconGrid className="feather" /> {this.props.t("showGrid")}
+                </Button>
               </div>
             </div>
           </div>
@@ -1817,6 +1899,20 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ selectedSpace: null });
               }}
             >
+              {this.state.gridEnabled && (
+                <div
+                  className="floorplan-grid-overlay"
+                  style={{
+                    width: this.mapData
+                      ? this.mapData.width * this.state.mapScale
+                      : 0,
+                    height: this.mapData
+                      ? this.mapData.height * this.state.mapScale
+                      : 0,
+                    backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                  }}
+                />
+              )}
               {spaces}
             </div>
           </div>

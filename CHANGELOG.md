@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.102.0](https://github.com/seatsurfing/seatsurfing/compare/v1.101.0...v1.102.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **booking-ui:** add "names" toggle on booking map ([#2223](https://github.com/seatsurfing/seatsurfing/issues/2223)) ([959e1bf](https://github.com/seatsurfing/seatsurfing/commit/959e1bfb426377f01be9e06fe830116262919550))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add min. and max. length check for user name fields ([#2230](https://github.com/seatsurfing/seatsurfing/issues/2230)) ([a70b1e8](https://github.com/seatsurfing/seatsurfing/commit/a70b1e8dd7dc44e5220abb3db7ed904540082170))
+* **admin-ui:** make sure error hint is shown ([#2229](https://github.com/seatsurfing/seatsurfing/issues/2229)) ([8fdb274](https://github.com/seatsurfing/seatsurfing/commit/8fdb27464f2a59cefeef1ceebf8f2ca07c4a3d31))
+* **booking-ui:** centering map when switching back from list view ([#2226](https://github.com/seatsurfing/seatsurfing/issues/2226)) ([1a92546](https://github.com/seatsurfing/seatsurfing/commit/1a925467c9b110bf73a402b3f8eb750b8b2f9007))
+* **booking-ui:** fix building API paths ([#2234](https://github.com/seatsurfing/seatsurfing/issues/2234)) ([2f4ef02](https://github.com/seatsurfing/seatsurfing/commit/2f4ef02a5771cd90a90a269061c27dd36b236383))
+* **main:** do not expose min. password length on public login page ([#2231](https://github.com/seatsurfing/seatsurfing/issues/2231)) ([744d960](https://github.com/seatsurfing/seatsurfing/commit/744d96037688f392934ddf8fae26cd0054b11673))
+* **main:** fix window check in BrowserUtil ([#2227](https://github.com/seatsurfing/seatsurfing/issues/2227)) ([af557ed](https://github.com/seatsurfing/seatsurfing/commit/af557ed99a422795fca7cb3cf5bb14b9fc0d2929))
+* **main:** return status code 400 for invalid login attempts ([#2232](https://github.com/seatsurfing/seatsurfing/issues/2232)) ([a4b4aa8](https://github.com/seatsurfing/seatsurfing/commit/a4b4aa8823b5ef3b8ebb7e37249031300a1787b2))
+
+## [1.101.0](https://github.com/seatsurfing/seatsurfing/compare/v1.100.0...v1.101.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **server:** add booker's first and last name to availability response ([#2221](https://github.com/seatsurfing/seatsurfing/issues/2221)) ([14d0338](https://github.com/seatsurfing/seatsurfing/commit/14d0338d7d59068c2aad308396cd12df94c2596b))
+
+
+### 🐛 Bug Fixes
+
+* **server:** preserve user's security fields when updating user ([#2224](https://github.com/seatsurfing/seatsurfing/issues/2224)) ([1ac3958](https://github.com/seatsurfing/seatsurfing/commit/1ac39583452f1a481590b42234b63b368d36def9))
+* **server:** prevent @@@ in user's first or lastname ([#2222](https://github.com/seatsurfing/seatsurfing/issues/2222)) ([9349272](https://github.com/seatsurfing/seatsurfing/commit/9349272b30a84d85def02b89f3839d6948c83f07))
+
+## [1.100.0](https://github.com/seatsurfing/seatsurfing/compare/v1.99.2...v1.100.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **admin-ui:** add grid option in floorplan editor ([#2217](https://github.com/seatsurfing/seatsurfing/issues/2217)) ([c3f0d95](https://github.com/seatsurfing/seatsurfing/commit/c3f0d95d8eac1339b90be81a08fdff43035d85b1))
+* **admin-ui:** add trapezoid shape for spaces ([#2214](https://github.com/seatsurfing/seatsurfing/issues/2214)) ([ca2d1c9](https://github.com/seatsurfing/seatsurfing/commit/ca2d1c9cb5375da74ac96162939b1bcdb94dca07))
+* **admin-ui:** snap space rotation when strg or shift is pressed ([#2216](https://github.com/seatsurfing/seatsurfing/issues/2216)) ([8562b47](https://github.com/seatsurfing/seatsurfing/commit/8562b479a5c3c46b79bb73e6aacc6389c7e86d21))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** filter current bookings should consider timezone ([#2206](https://github.com/seatsurfing/seatsurfing/issues/2206)) ([5fb3301](https://github.com/seatsurfing/seatsurfing/commit/5fb3301f980f2e5ef3a225629d3721b13f75f607))
+* **booking-ui:** auto rotate space name and icon ([#2215](https://github.com/seatsurfing/seatsurfing/issues/2215)) ([222790d](https://github.com/seatsurfing/seatsurfing/commit/222790db1a0d80b72e635c4594761d6edbbcecf5))
+
 ## [1.99.2](https://github.com/seatsurfing/seatsurfing/compare/v1.99.1...v1.99.2) (2026-05-27)
 
 

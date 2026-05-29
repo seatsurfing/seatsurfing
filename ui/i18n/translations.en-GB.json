@@ -5,6 +5,7 @@
   "addBuddy": "Add buddy",
   "addDomain": "Add domain",
   "addSpace": "Add space",
+  "showGrid": "Show grid",
   "admin": "Administrator",
   "administration": "Administration",
   "all": "All",
@@ -304,6 +305,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
   "showNames": "Show bookers' names (mind the privacy!)",
+  "names": "Names",
   "signin": "Sign in",
   "signinAsAt": "Sign in as {{user}} at {{org}}:",
   "signinAt": "Sign in at {{org}}:",
@@ -480,5 +482,6 @@
   "featuresLink": "Compare features",
   "sponsorLink": "Support us as a sponsor",
   "shapeRect": "Rectangle",
-  "shapeCircle": "Circle/Oval"
+  "shapeCircle": "Circle/Oval",
+  "shapeTrapezoid": "Trapezoid"
 }
