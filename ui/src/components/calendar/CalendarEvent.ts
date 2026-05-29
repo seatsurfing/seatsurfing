@@ -1,5 +1,6 @@
 import { TranslationFunc } from "@/components/withTranslation";
 import Booking from "@/types/Booking";
+import RendererUtils from "@/util/RendererUtils";
 
 export type CalendarEvent = {
   title: string;
@@ -11,6 +12,8 @@ export type CalendarEvent = {
   spaceName: string;
   locationName: string;
   bookingId: string;
+  firstname: string;
+  lastname: string;
   email: string;
   mode: CalendarEventMode;
 };
@@ -24,7 +27,9 @@ export const bookingToCalendarEvent = (
 ): CalendarEvent => {
   let title: string;
   if (mode === "space") {
-    title = booking.user.email;
+    title =
+      RendererUtils.fullname(booking.user.firstname, booking.user.lastname) ||
+      booking.user.email;
     if (booking.subject) {
       title = title ? `${title} – ${booking.subject}` : booking.subject;
     }
@@ -49,6 +54,8 @@ export const bookingToCalendarEvent = (
     spaceName: booking.space.name,
     locationName: booking.space.location.name,
     bookingId: booking.id,
+    firstname: booking.user.firstname,
+    lastname: booking.user.lastname,
     email: booking.user.email,
     mode,
   };

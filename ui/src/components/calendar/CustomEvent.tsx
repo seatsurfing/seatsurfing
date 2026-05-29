@@ -5,6 +5,7 @@ import {
 } from "react-feather";
 export { bookingToCalendarEvent } from "./CalendarEvent";
 import type { CalendarEvent } from "./CalendarEvent";
+import RendererUtils from "@/util/RendererUtils";
 export type { CalendarEvent };
 
 const WIDTH_THRESHOLD = 100;
@@ -56,9 +57,14 @@ const createCustomEvent =
             {event.locationName}, {event.spaceName}
           </>
         )}
-        {showDetails && event.mode == "space" && event.email && (
-          <>{event.email}</>
-        )}
+        {showDetails &&
+          event.mode == "space" &&
+          (event.firstname || event.lastname || event.email) && (
+            <>
+              {RendererUtils.fullname(event.firstname, event.lastname) ||
+                event.email}
+            </>
+          )}
       </div>
     );
   };
