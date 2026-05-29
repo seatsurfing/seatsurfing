@@ -134,7 +134,7 @@ export default function KioskPage() {
       return;
     }
     const backendUrl = Ajax.URL ?? "";
-    const url = `${backendUrl}/kiosk/${decodeURIComponent(spaceId)}/status`;
+    const url = `${backendUrl}/kiosk/${encodeURIComponent(spaceId)}/status`;
 
     let res;
     try {
