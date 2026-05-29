@@ -14,10 +14,10 @@ class NotFoundModal extends React.Component<Props> {
       <Modal
         show={this.props.show}
         onHide={this.props.onHide}
-        backdrop={true}
-        keyboard={true}
+        backdrop="static"
+        keyboard={false}
       >
-        <Modal.Header closeButton={true}>
+        <Modal.Header>
           <Modal.Title>{this.props.t("notFoundTitle")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>

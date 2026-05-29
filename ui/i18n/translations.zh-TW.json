@@ -413,7 +413,6 @@
   "sessionExpiredLogin": "Login",
   "serverErrorTitle": "Server error",
   "serverErrorBody": "An unexpected server error occurred. Please try again later.",
-  "serverErrorClose": "Close",
   "notFoundTitle": "Not found",
   "notFoundBody": "The requested resource was not found.",
   "reload": "Reload",

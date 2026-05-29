@@ -14,18 +14,18 @@ class ServerErrorModal extends React.Component<Props> {
       <Modal
         show={this.props.show}
         onHide={this.props.onHide}
-        backdrop={true}
-        keyboard={true}
+        backdrop="static"
+        keyboard={false}
       >
-        <Modal.Header closeButton={true}>
+        <Modal.Header>
           <Modal.Title>{this.props.t("serverErrorTitle")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>{this.props.t("serverErrorBody")}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={this.props.onHide}>
-            {this.props.t("serverErrorClose")}
+          <Button variant="primary" onClick={() => window.location.reload()}>
+            {this.props.t("reload")}
           </Button>
         </Modal.Footer>
       </Modal>

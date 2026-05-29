@@ -415,7 +415,6 @@
   "sessionExpiredLogin": "Anmelden",
   "serverErrorTitle": "Serverfehler",
   "serverErrorBody": "Es ist ein unerwarteter Serverfehler aufgetreten. Bitte versuche es später erneut.",
-  "serverErrorClose": "Schließen",
   "notFoundTitle": "Nicht gefunden",
   "notFoundBody": "Die angeforderte Ressource wurde nicht gefunden.",
   "reload": "Neu laden",
