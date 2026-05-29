@@ -209,7 +209,7 @@ class EditUser extends React.Component<Props, State> {
       .save()
       .then(() => {
         this.props.router.push(
-          `/admin/users/${decodeURIComponent(this.entity.id)}`,
+          `/admin/users/${encodeURIComponent(this.entity.id)}`,
         );
         this.setState({
           saved: true,
