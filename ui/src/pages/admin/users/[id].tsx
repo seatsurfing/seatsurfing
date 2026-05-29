@@ -321,11 +321,7 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = (
-        <Alert variant="danger">
-          {this.state.errorText ?? this.props.t("errorSave")}
-        </Alert>
-      );
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     const buttonDelete = (
