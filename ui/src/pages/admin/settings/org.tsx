@@ -14,7 +14,6 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -56,10 +55,6 @@ class EditOrg extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken() || !RuntimeConfig.INFOS.orgAdmin) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 

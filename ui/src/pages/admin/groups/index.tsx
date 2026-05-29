@@ -11,7 +11,6 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Ajax from "@/util/Ajax";
 import Group from "@/types/Group";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   selectedItem: string;
@@ -36,10 +35,6 @@ class Groups extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );

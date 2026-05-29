@@ -10,7 +10,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Location from "@/types/Location";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
@@ -118,10 +118,6 @@ class Preferences extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const tabParam = this.props.router.query.tab as PreferencesTab;
     if (tabParam && TAB_MAP[tabParam]) {
       this.setState({ activeTab: TAB_MAP[tabParam] });

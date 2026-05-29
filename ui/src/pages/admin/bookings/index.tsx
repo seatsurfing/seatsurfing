@@ -22,7 +22,7 @@ import Formatting from "@/util/Formatting";
 import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
 import RendererUtils from "@/util/RendererUtils";
@@ -100,10 +100,6 @@ class Bookings extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     Location.list().then((locations) => (this.locations = locations));
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),

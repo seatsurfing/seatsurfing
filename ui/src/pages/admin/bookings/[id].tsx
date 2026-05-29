@@ -20,7 +20,7 @@ import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import RuntimeConfig from "@/components/RuntimeConfig";
@@ -131,10 +131,6 @@ class EditBooking extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const promises = [
       this.loadData(),
       this.loadSettings(),

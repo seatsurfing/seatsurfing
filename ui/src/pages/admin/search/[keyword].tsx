@@ -8,7 +8,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import Navigation from "@/util/Navigation";
 import RendererUtils from "@/util/RendererUtils";
 
@@ -33,10 +33,6 @@ class SearchResult extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadItems();
   };
 

@@ -23,7 +23,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import AuthProvider from "@/types/AuthProvider";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import RendererUtils from "@/util/RendererUtils";
@@ -91,10 +91,6 @@ class EditAuthProvider extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
