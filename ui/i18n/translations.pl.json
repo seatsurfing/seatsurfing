@@ -283,6 +283,7 @@
   "setApproversHint": "Pozostaw puste, jeśli zatwierdzenie nie jest wymagane.",
   "settings": "Ustawienia",
   "showNames": "Pokazuj nazwiska rezerwujących (pamiętaj o prywatności!)",
+  "names": "Names",
   "signin": "Zaloguj się",
   "signinAsAt": "Zaloguj się jako {{user}} w {{org}}:",
   "signinAt": "Zaloguj się w {{org}}:",

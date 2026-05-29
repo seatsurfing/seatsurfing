@@ -283,6 +283,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Impostazioni",
   "showNames": "Msotra nomi degli utenti che prenotano (attenzione alla privacy !)",
+  "names": "Names",
   "signin": "Accesso",
   "signinAsAt": "Accesso eseguito come {{user}} / {{org}}:",
   "signinAt": "Accesso come {{org}}:",

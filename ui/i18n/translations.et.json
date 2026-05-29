@@ -283,6 +283,7 @@
   "setApproversHint": "Leave empty if no approval is required.",
   "settings": "Settings",
   "showNames": "Show bookers' names (mind the privacy!)",
+  "names": "Names",
   "signin": "Logi sisse",
   "signinAsAt": "Logi sisse kasutajana {{user}} organisatsioonis {{org}}:",
   "signinAt": "Logi sisse organisatsioonis {{org}}:",

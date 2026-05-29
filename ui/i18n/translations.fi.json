@@ -303,6 +303,7 @@
   "setApproversHint": "Jätä tyhjäksi, jos hyväksyntää ei tarvita.",
   "settings": "Asetukset",
   "showNames": "Näytä varaajien nimet (huomioi tietosuoja!)",
+  "names": "Names",
   "signin": "Kirjaudu sisään",
   "signinAsAt": "Kirjaudu käyttäjänä {{user}} organisaatiossa {{org}}:",
   "signinAt": "Kirjaudu organisaatioon {{org}}:",

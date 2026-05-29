@@ -283,6 +283,7 @@
   "setApproversHint": "Deixe vazio se nenhuma aprovação for necessária.",
   "settings": "Configurações",
   "showNames": "Mostrar nome da pessoa que fez a reserva (cuidado com a privacidade!)",
+  "names": "Names",
   "signin": "Entrar",
   "signinAsAt": "Entrar como {{user}} em {{org}}:",
   "signinAt": "Entrar em {{org}}:",

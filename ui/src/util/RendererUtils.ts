@@ -20,6 +20,15 @@ export default class RendererUtils {
     return `${s}${suffix}`;
   }
 
+  static escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   static decodeHtmlEntities(text: string): string {
     const textarea = document.createElement("textarea");
     textarea.innerHTML = text;

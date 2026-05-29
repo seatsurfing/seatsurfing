@@ -304,6 +304,7 @@
   "setApproversHint": "如果不需要批准，則留空。",
   "settings": "設定",
   "showNames": "顯示預訂者的姓名（注意隱私！）",
+  "names": "姓名",
   "signin": "登入",
   "signinAsAt": "以 {{user}} 身分登入 {{org}}：",
   "signinAt": "在 {{org}} 登入：",
