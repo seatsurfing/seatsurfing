@@ -102,13 +102,8 @@ export default class Ajax {
 
   private static handleGlobalError(httpStatus: number): void {
     if (httpStatus === 401) {
-      // Only trigger the modal if credentials still exist (first 401).
-      // Clear them immediately so subsequent in-flight 401s are silent.
-      const hadCredentials = Ajax.hasAccessToken();
       Ajax.PERSISTER.deleteCredentialsFromStorage();
-      if (hadCredentials) {
-        Ajax.onUnauthorized?.();
-      }
+      Ajax.onUnauthorized?.();
     } else if (httpStatus === 404) {
       Ajax.onNotFound?.();
     } else {
