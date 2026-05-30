@@ -640,7 +640,7 @@ class Preferences extends React.Component<Props, State> {
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
-                  {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                  {[1, 2, 3, 4, 5, 6, 0].map((day) => (
                     <Form.Check
                       type="checkbox"
                       key={"workday-" + day}
