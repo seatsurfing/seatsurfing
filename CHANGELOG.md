@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.102.1](https://github.com/seatsurfing/seatsurfing/compare/v1.102.0...v1.102.1) (2026-05-30)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** make Monday always first day of week ([#2237](https://github.com/seatsurfing/seatsurfing/issues/2237)) ([ab17ed4](https://github.com/seatsurfing/seatsurfing/commit/ab17ed4e1cb212a53de66f0d410a448d99b41f03))
+* **booking-ui:** show bookers name in calendar ([#2235](https://github.com/seatsurfing/seatsurfing/issues/2235)) ([11dd310](https://github.com/seatsurfing/seatsurfing/commit/11dd31058cd52cd97a2f57e1b0e588974ff3ce85))
+* **deps:** bump the minor-and-patch group in /server with 2 updates ([#2239](https://github.com/seatsurfing/seatsurfing/issues/2239)) ([a8bf1ad](https://github.com/seatsurfing/seatsurfing/commit/a8bf1ad10c627c45840fa79875a1b1c5afccf748))
+* **main:** improve ui error handling ([#2238](https://github.com/seatsurfing/seatsurfing/issues/2238)) ([b1e96e2](https://github.com/seatsurfing/seatsurfing/commit/b1e96e27483b286e7b7c4908bc608f4d7c577a0c))
+
 ## [1.102.0](https://github.com/seatsurfing/seatsurfing/compare/v1.101.0...v1.102.0) (2026-05-29)
 
 
