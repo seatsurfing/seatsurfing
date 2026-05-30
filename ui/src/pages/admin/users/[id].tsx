@@ -26,7 +26,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import OrgSettings from "@/types/Settings";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import AuthProvider from "@/types/AuthProvider";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
@@ -100,10 +100,6 @@ class EditUser extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 

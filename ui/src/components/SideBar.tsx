@@ -23,7 +23,6 @@ import PremiumFeatureIcon from "./PremiumFeatureIcon";
 import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
-import RedirectUtil from "@/util/RedirectUtil";
 import RendererUtils from "@/util/RendererUtils";
 import Event from "@/util/Event";
 
@@ -47,12 +46,6 @@ class SideBar extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!RuntimeConfig.INFOS.spaceAdmin) {
-      Ajax.PERSISTER.deleteCredentialsFromStorage();
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
-
     this.pollApprovalCount();
     window.addEventListener(
       Event.APPROVAL_COUNT_CHANGED,

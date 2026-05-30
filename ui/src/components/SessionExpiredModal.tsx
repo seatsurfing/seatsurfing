@@ -1,8 +1,7 @@
 import React from "react";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Button, Modal } from "react-bootstrap";
-import Router from "next/router";
-import RedirectUtil from "@/util/RedirectUtil";
+import Router, { NextRouter } from "next/router";
 
 interface Props {
   t: TranslationFunc;
@@ -11,6 +10,11 @@ interface Props {
 }
 
 class SessionExpiredModal extends React.Component<Props> {
+  toLogin(router: NextRouter) {
+    const currentPath = router.asPath;
+    router.push(`/login?redir=${encodeURIComponent(currentPath)}`);
+  }
+
   render() {
     return (
       <Modal show={this.props.show} backdrop="static" keyboard={false}>
@@ -25,7 +29,7 @@ class SessionExpiredModal extends React.Component<Props> {
             variant="primary"
             onClick={() => {
               this.props.onHide();
-              RedirectUtil.toLogin(Router);
+              this.toLogin(Router);
             }}
           >
             {this.props.t("sessionExpiredLogin")}

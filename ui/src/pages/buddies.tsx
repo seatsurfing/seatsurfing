@@ -15,7 +15,6 @@ import Buddy from "@/types/Buddy";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import Formatting from "@/util/Formatting";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -42,10 +41,6 @@ class Buddies extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     if (!RuntimeConfig.INFOS.showNames || RuntimeConfig.INFOS.disableBuddies) {
       this.props.router.push("/search");
       return;

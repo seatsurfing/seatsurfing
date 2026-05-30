@@ -18,7 +18,7 @@ import Booking from "@/types/Booking";
 import UserPreference from "@/types/UserPreference";
 import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import RendererUtils from "@/util/RendererUtils";
 import Event from "@/util/Event";
 
@@ -50,10 +50,6 @@ class Approvals extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );

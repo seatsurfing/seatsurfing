@@ -35,7 +35,7 @@ import AuthProvider from "@/types/AuthProvider";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
@@ -144,11 +144,7 @@ class Settings extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
-    let promises = [
+    const promises = [
       this.loadSettings(),
       this.loadItems(),
       this.loadAuthProviders(),

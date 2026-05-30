@@ -44,7 +44,7 @@ import Space from "@/types/Space";
 import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
@@ -465,10 +465,6 @@ class EditLocation extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const promises = [this.loadData(), this.loadTimezones()];
     Promise.all(promises).then(() => {
       this.setState({

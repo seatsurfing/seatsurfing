@@ -9,7 +9,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import RendererUtils from "@/util/RendererUtils";
 
 interface State {
@@ -35,10 +35,6 @@ class Attributes extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );

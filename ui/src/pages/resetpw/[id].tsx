@@ -40,7 +40,7 @@ class CompletePasswordReset extends React.Component<Props, State> {
     let payload = {
       password: this.state.newPassword,
     };
-    Ajax.postData("/auth/pwreset/" + id, payload)
+    Ajax.postData("/auth/pwreset/" + id, payload, () => true)
       .then((res) => {
         if (res.status >= 200 && res.status <= 299) {
           this.setState({ loading: false, complete: true, success: true });

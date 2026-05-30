@@ -36,6 +36,7 @@ export default class Ajax {
     method: string,
     url: string,
     data?: any,
+    handleError: (status: number, response?: Response) => boolean = () => false,
   ): Promise<AjaxResult> {
     // refresh access token (if required)
     const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
@@ -43,7 +44,11 @@ export default class Ajax {
       try {
         await Ajax.refreshAccessToken(refreshToken);
       } catch {
-        throw new AjaxError(401, 0);
+        if (handleError(401)) {
+          throw new AjaxError(401, 0);
+        }
+        Ajax.handleGlobalError(401);
+        return new Promise<AjaxResult>(() => {});
       }
     }
 
@@ -56,7 +61,15 @@ export default class Ajax {
     );
 
     url = Ajax.getBackendUrl() + url;
-    const response = await fetch(url, options);
+
+    let response: Response;
+    try {
+      response = await fetch(url, options);
+    } catch {
+      // Network error (backend unreachable, timeout, etc.)
+      Ajax.handleGlobalError(0);
+      return new Promise<AjaxResult>(() => {});
+    }
 
     if (response.status >= 200 && response.status <= 299) {
       try {
@@ -74,21 +87,28 @@ export default class Ajax {
       } catch {}
 
       // global error handlers if appCode is not defined
-      if (appCode === 0) {
-        if (response.status === 401) {
-          Ajax.onUnauthorized?.();
-        } else if (response.status === 404) {
-          Ajax.onNotFound?.();
-        } else if (response.status === 500) {
-          Ajax.onServerError?.();
-        }
+      if (appCode === 0 && !handleError(response.status, response)) {
+        Ajax.handleGlobalError(response.status);
+        return new Promise<AjaxResult>(() => {});
       }
 
+      let body: string | undefined;
       try {
-        const body = await response.text();
-        throw new AjaxError(response.status, appCode, body);
+        body = await response.text();
       } catch {}
-      throw new AjaxError(response.status, appCode);
+      throw new AjaxError(response.status, appCode, body);
+    }
+  }
+
+  private static handleGlobalError(httpStatus: number): void {
+    if (httpStatus === 401) {
+      Ajax.PERSISTER.deleteCredentialsFromStorage();
+      Ajax.onUnauthorized?.();
+    } else if (httpStatus === 404) {
+      Ajax.onNotFound?.();
+    } else {
+      // 500, network errors (0), and any other unexpected status
+      Ajax.onServerError?.();
     }
   }
 
@@ -199,12 +219,20 @@ export default class Ajax {
     return options;
   }
 
-  static async postData(url: string, data?: any): Promise<AjaxResult> {
-    return Ajax.query("POST", url, data);
+  static async postData(
+    url: string,
+    data?: any,
+    handleError: (status: number, response?: Response) => boolean = () => false,
+  ): Promise<AjaxResult> {
+    return Ajax.query("POST", url, data, handleError);
   }
 
-  static async putData(url: string, data?: any): Promise<AjaxResult> {
-    return Ajax.query("PUT", url, data);
+  static async putData(
+    url: string,
+    data?: any,
+    handleError: (status: number, response?: Response) => boolean = () => false,
+  ): Promise<AjaxResult> {
+    return Ajax.query("PUT", url, data, handleError);
   }
 
   static async head(url: string, params?: any): Promise<AjaxResult> {
@@ -235,11 +263,17 @@ export default class Ajax {
     }
   }
 
-  static async get(url: string): Promise<AjaxResult> {
-    return Ajax.query("GET", url);
+  static async get(
+    url: string,
+    handleError: (status: number, response?: Response) => boolean = () => false,
+  ): Promise<AjaxResult> {
+    return Ajax.query("GET", url, undefined, handleError);
   }
 
-  static async delete(url: string): Promise<AjaxResult> {
-    return Ajax.query("DELETE", url);
+  static async delete(
+    url: string,
+    handleError: (status: number, response?: Response) => boolean = () => false,
+  ): Promise<AjaxResult> {
+    return Ajax.query("DELETE", url, undefined, handleError);
   }
 }

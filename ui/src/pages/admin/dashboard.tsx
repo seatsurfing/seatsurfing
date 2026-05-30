@@ -25,7 +25,7 @@ import Location from "@/types/Location";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import Navigation from "@/util/Navigation";
 import UpdateChecker from "@/util/UpdateChecker";
 import CloudHint from "@/components/CloudHint";
@@ -63,24 +63,15 @@ class Dashboard extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const promises = [
       this.loadItems(),
       this.loadLocations(),
       this.getUserInfo(),
       this.checkUpdates(),
     ];
-    Promise.all(promises)
-      .then(() => {
-        this.setState({ loading: false });
-      })
-      .catch(() => {
-        RedirectUtil.toLogin(this.props.router);
-        return;
-      });
+    Promise.all(promises).then(() => {
+      this.setState({ loading: false });
+    });
   };
 
   checkUpdates = async (): Promise<void> => {
