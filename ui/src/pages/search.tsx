@@ -2743,6 +2743,7 @@ class Search extends React.Component<Props, State> {
 
     moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
+    moment.updateLocale(moment.locale(), { week: { dow: RuntimeConfig.INFOS.weekStartDay } });
     const spaceCalLocalizer = momentLocalizer(moment);
 
     const spaceCalendarModal = (

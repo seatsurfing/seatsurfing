@@ -41,6 +41,7 @@ interface RuntimeUserInfos {
   subjectDefault: number;
   use24HourTime: boolean;
   dateFormat: string;
+  weekStartDay: number;
   totpEnabled: boolean;
   enforceTOTP: boolean;
   hideReports: boolean;
@@ -93,6 +94,7 @@ export default class RuntimeConfig {
       subjectDefault: 2,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      weekStartDay: 1,
       totpEnabled: false,
       enforceTOTP: false,
       hideReports: false,
@@ -233,6 +235,9 @@ export default class RuntimeConfig {
           }
           if (pref.name === UserPreference.PREF_DATE_FORMAT) {
             RuntimeConfig.INFOS.dateFormat = pref.value;
+          }
+          if (pref.name === UserPreference.PREF_WEEK_START_DAY && typeof window !== "undefined") {
+            RuntimeConfig.INFOS.weekStartDay = window.parseInt(pref.value);
           }
         });
       })
