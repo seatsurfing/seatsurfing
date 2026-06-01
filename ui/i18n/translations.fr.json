@@ -326,6 +326,7 @@
   "workday-4": "Jeudi",
   "workday-5": "Vendredi",
   "workday-6": "Samedi",
+  "weekStartDay": "Premier jour de la semaine",
   "workdays": "Jours ouvrables",
   "workingHours": "Heures de travail",
   "yes": "yes",
