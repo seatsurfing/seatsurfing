@@ -188,7 +188,8 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceMailNotifications.Name ||
 		name == PreferenceApprovalNotifications.Name ||
 		name == Preference24HourTime.Name ||
-		name == PreferenceDateFormat.Name {
+		name == PreferenceDateFormat.Name ||
+		name == PreferenceWeekStartDay.Name {
 		return true
 	}
 	return false
@@ -251,6 +252,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceDateFormat.Name {
 		return PreferenceDateFormat.Type
+	}
+	if name == PreferenceWeekStartDay.Name {
+		return PreferenceWeekStartDay.Type
 	}
 	return 0
 }
@@ -319,6 +323,12 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 		case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
 			return true
 		default:
+			return false
+		}
+	}
+	if name == PreferenceWeekStartDay.Name {
+		i, _ := strconv.Atoi(value)
+		if i < 0 || i > 6 {
 			return false
 		}
 	}
