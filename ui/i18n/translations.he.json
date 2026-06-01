@@ -326,7 +326,7 @@
   "workday-4": "יום חמישי",
   "workday-5": "יום שישי",
   "workday-6": "שבת",
-  "weekStartDay": "יום ראשון בשבוע",
+  "weekStartDay": "First day of week",
   "workdays": "ימי עסקים",
   "workingHours": "שעות עבודה",
   "yes": "yes",

@@ -348,7 +348,7 @@
   "workday-4": "Torstai",
   "workday-5": "Perjantai",
   "workday-6": "Lauantai",
-  "weekStartDay": "Viikon ensimmäinen päivä",
+  "weekStartDay": "First day of week",
   "workdays": "Työpäivät",
   "workingHours": "Työajat",
   "yes": "kyllä",
