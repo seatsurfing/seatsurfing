@@ -190,6 +190,8 @@ class Preferences extends React.Component<Props, State> {
         state.use24HourTime = s.value === "1";
       if (s.name === UserPreference.PREF_DATE_FORMAT)
         state.dateFormat = s.value;
+      if (s.name === UserPreference.PREF_WEEK_START_DAY)
+        state.weekStartDay = parseInt(s.value);
     });
     await new Promise<void>((resolve) =>
       this.setState({ ...this.state, ...state }, resolve),
