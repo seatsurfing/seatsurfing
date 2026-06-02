@@ -227,26 +227,22 @@ export default class RuntimeConfig {
   };
 
   static loadUserPreferences = async (): Promise<void> => {
-    UserPreference.list()
-      .then((list) => {
-        list.forEach((pref) => {
-          if (pref.name === UserPreference.PREF_USE_24_HOUR_TIME) {
-            RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
-          }
-          if (pref.name === UserPreference.PREF_DATE_FORMAT) {
-            RuntimeConfig.INFOS.dateFormat = pref.value;
-          }
-          if (
-            pref.name === UserPreference.PREF_WEEK_START_DAY &&
-            typeof window !== "undefined"
-          ) {
-            RuntimeConfig.INFOS.weekStartDay = window.parseInt(pref.value);
-          }
-        });
-      })
-      .catch(() => {
-        // Nothing to do
+    try {
+      const list = await UserPreference.list();
+      list.forEach((pref) => {
+        if (pref.name === UserPreference.PREF_USE_24_HOUR_TIME) {
+          RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+        }
+        if (pref.name === UserPreference.PREF_DATE_FORMAT) {
+          RuntimeConfig.INFOS.dateFormat = pref.value;
+        }
+        if (pref.name === UserPreference.PREF_WEEK_START_DAY) {
+          RuntimeConfig.INFOS.weekStartDay = parseInt(pref.value);
+        }
       });
+    } catch {
+      // Nothing to do
+    }
   };
 
   static setDetails = (username: string, id: string) => {
