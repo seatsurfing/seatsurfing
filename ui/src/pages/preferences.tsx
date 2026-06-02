@@ -145,7 +145,7 @@ class Preferences extends React.Component<Props, State> {
 
   loadPreferences = async (): Promise<void> => {
     const list = await UserPreference.list();
-    const state: any = {};
+    const state: Partial<State> = {};
     list.forEach((s) => {
       if (typeof window !== "undefined") {
         if (s.name === UserPreference.PREF_ENTER_TIME)
@@ -160,7 +160,9 @@ class Preferences extends React.Component<Props, State> {
         for (let i = 0; i <= 6; i++) {
           state.workdays[i] = false;
         }
-        s.value.split(",").forEach((val) => (state.workdays[val] = true));
+        s.value
+          .split(",")
+          .forEach((val) => (state.workdays![parseInt(val)] = true));
       }
       if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
       if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
@@ -172,7 +174,7 @@ class Preferences extends React.Component<Props, State> {
       if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
         state.buddyBooked = s.value;
       if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
-        state.disallowedColor = s.value;
+        state.disallowed = s.value;
       if (s.name === UserPreference.PREF_LOCATION_ID)
         state.locationId = s.value;
       if (s.name === UserPreference.PREF_CALDAV_URL) state.caldavUrl = s.value;
@@ -188,13 +190,10 @@ class Preferences extends React.Component<Props, State> {
         state.use24HourTime = s.value === "1";
       if (s.name === UserPreference.PREF_DATE_FORMAT)
         state.dateFormat = s.value;
-      if (
-        s.name === UserPreference.PREF_WEEK_START_DAY &&
-        typeof window !== "undefined"
-      )
-        state.weekStartDay = window.parseInt(s.value);
     });
-    await new Promise<void>((resolve) => this.setState(state, resolve));
+    await new Promise<void>((resolve) =>
+      this.setState({ ...this.state, ...state }, resolve),
+    );
   };
 
   loadLocations = async (): Promise<void> => {
