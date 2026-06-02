@@ -236,7 +236,10 @@ export default class RuntimeConfig {
           if (pref.name === UserPreference.PREF_DATE_FORMAT) {
             RuntimeConfig.INFOS.dateFormat = pref.value;
           }
-          if (pref.name === UserPreference.PREF_WEEK_START_DAY && typeof window !== "undefined") {
+          if (
+            pref.name === UserPreference.PREF_WEEK_START_DAY &&
+            typeof window !== "undefined"
+          ) {
             RuntimeConfig.INFOS.weekStartDay = window.parseInt(pref.value);
           }
         });

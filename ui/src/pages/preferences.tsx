@@ -162,8 +162,7 @@ class Preferences extends React.Component<Props, State> {
         }
         s.value.split(",").forEach((val) => (state.workdays[val] = true));
       }
-      if (s.name === UserPreference.PREF_BOOKED_COLOR)
-        state.booked = s.value;
+      if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
       if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
         state.notBooked = s.value;
       if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
@@ -176,8 +175,7 @@ class Preferences extends React.Component<Props, State> {
         state.disallowedColor = s.value;
       if (s.name === UserPreference.PREF_LOCATION_ID)
         state.locationId = s.value;
-      if (s.name === UserPreference.PREF_CALDAV_URL)
-        state.caldavUrl = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_URL) state.caldavUrl = s.value;
       if (s.name === UserPreference.PREF_CALDAV_USER)
         state.caldavUser = s.value;
       if (s.name === UserPreference.PREF_CALDAV_PASS)
@@ -190,12 +188,13 @@ class Preferences extends React.Component<Props, State> {
         state.use24HourTime = s.value === "1";
       if (s.name === UserPreference.PREF_DATE_FORMAT)
         state.dateFormat = s.value;
-      if (s.name === UserPreference.PREF_WEEK_START_DAY && typeof window !== "undefined")
+      if (
+        s.name === UserPreference.PREF_WEEK_START_DAY &&
+        typeof window !== "undefined"
+      )
         state.weekStartDay = window.parseInt(s.value);
     });
-    await new Promise<void>((resolve) =>
-      this.setState({ ...this.state, ...state }, resolve),
-    );
+    await new Promise<void>((resolve) => this.setState(state, resolve));
   };
 
   loadLocations = async (): Promise<void> => {
@@ -319,7 +318,10 @@ class Preferences extends React.Component<Props, State> {
       password: this.state.caldavPass,
     };
     try {
-      const res = await Ajax.postData("/preference/caldav/listCalendars", payload);
+      const res = await Ajax.postData(
+        "/preference/caldav/listCalendars",
+        payload,
+      );
       this.setState({
         caldavCalendarsLoaded: true,
         caldavCalendars: res.json,
@@ -603,7 +605,9 @@ class Preferences extends React.Component<Props, State> {
                   id="weekStartDay"
                   value={this.state.weekStartDay}
                   onChange={(e: any) =>
-                    this.setState({ weekStartDay: window.parseInt(e.target.value) })
+                    this.setState({
+                      weekStartDay: window.parseInt(e.target.value),
+                    })
                   }
                 >
                   {[1, 2, 3, 4, 5, 6, 0].map((day) => (

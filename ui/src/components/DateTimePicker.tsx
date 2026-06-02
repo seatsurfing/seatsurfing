@@ -85,7 +85,10 @@ class DateTimePicker extends React.Component<Props, State> {
           time_24hr: RuntimeConfig.INFOS.use24HourTime,
           minDate: this.props.minDate,
           maxDate: this.props.maxDate,
-          locale: { ...this.state.locale, firstDayOfWeek: RuntimeConfig.INFOS.weekStartDay },
+          locale: {
+            ...this.state.locale,
+            firstDayOfWeek: RuntimeConfig.INFOS.weekStartDay,
+          },
           noCalendar: this.props.noCalendar,
         }}
       />
