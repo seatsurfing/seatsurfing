@@ -167,10 +167,11 @@ class Preferences extends React.Component<Props, State> {
         for (let i = 0; i <= 6; i++) {
           state.workdays[i] = false;
         }
-        s.value.split(",").forEach((val) => (state.workdays![parseInt(val)] = true));
+        s.value
+          .split(",")
+          .forEach((val) => (state.workdays![parseInt(val)] = true));
       }
-      if (s.name === UserPreference.PREF_BOOKED_COLOR)
-        state.booked = s.value;
+      if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
       if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
         state.notBooked = s.value;
       if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
@@ -183,8 +184,7 @@ class Preferences extends React.Component<Props, State> {
         state.disallowed = s.value;
       if (s.name === UserPreference.PREF_LOCATION_ID)
         state.locationId = s.value;
-      if (s.name === UserPreference.PREF_CALDAV_URL)
-        state.caldavUrl = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_URL) state.caldavUrl = s.value;
       if (s.name === UserPreference.PREF_CALDAV_USER)
         state.caldavUser = s.value;
       if (s.name === UserPreference.PREF_CALDAV_PASS)
