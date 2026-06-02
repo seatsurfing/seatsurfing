@@ -151,66 +151,56 @@ class Preferences extends React.Component<Props, State> {
   };
 
   loadPreferences = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      UserPreference.list()
-        .then((list) => {
-          const state: any = {};
-          list.forEach((s) => {
-            if (typeof window !== "undefined") {
-              if (s.name === UserPreference.PREF_ENTER_TIME)
-                state.enterTime = window.parseInt(s.value);
-              if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.workdayStart = window.parseInt(s.value);
-              if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.workdayEnd = window.parseInt(s.value);
-            }
-            if (s.name === UserPreference.PREF_WORKDAYS) {
-              state.workdays = [];
-              for (let i = 0; i <= 6; i++) {
-                state.workdays[i] = false;
-              }
-              s.value.split(",").forEach((val) => (state.workdays[val] = true));
-            }
-            if (s.name === UserPreference.PREF_BOOKED_COLOR)
-              state.booked = s.value;
-            if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
-              state.notBooked = s.value;
-            if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
-              state.selfBooked = s.value;
-            if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
-              state.partiallyBooked = s.value;
-            if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
-              state.buddyBooked = s.value;
-            if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
-              state.disallowedColor = s.value;
-            if (s.name === UserPreference.PREF_LOCATION_ID)
-              state.locationId = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_URL)
-              state.caldavUrl = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_USER)
-              state.caldavUser = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_PASS)
-              state.caldavPass = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_PATH)
-              state.caldavCalendar = s.value;
-            if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
-              state.mailNotifications = s.value === "1";
-            if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
-              state.use24HourTime = s.value === "1";
-            if (s.name === UserPreference.PREF_DATE_FORMAT)
-              state.dateFormat = s.value;
-          });
-          self.setState(
-            {
-              ...self.state,
-              ...state,
-            },
-            () => resolve(),
-          );
-        })
-        .catch((e) => reject(e));
+    const list = await UserPreference.list();
+    const state: Partial<State> = {};
+    list.forEach((s) => {
+      if (typeof window !== "undefined") {
+        if (s.name === UserPreference.PREF_ENTER_TIME)
+          state.enterTime = window.parseInt(s.value);
+        if (s.name === UserPreference.PREF_WORKDAY_START)
+          state.workdayStart = window.parseInt(s.value);
+        if (s.name === UserPreference.PREF_WORKDAY_END)
+          state.workdayEnd = window.parseInt(s.value);
+      }
+      if (s.name === UserPreference.PREF_WORKDAYS) {
+        state.workdays = [];
+        for (let i = 0; i <= 6; i++) {
+          state.workdays[i] = false;
+        }
+        s.value
+          .split(",")
+          .forEach((val) => (state.workdays![parseInt(val)] = true));
+      }
+      if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
+      if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
+        state.notBooked = s.value;
+      if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
+        state.selfBooked = s.value;
+      if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
+        state.partiallyBooked = s.value;
+      if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
+        state.buddyBooked = s.value;
+      if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
+        state.disallowed = s.value;
+      if (s.name === UserPreference.PREF_LOCATION_ID)
+        state.locationId = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_URL) state.caldavUrl = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_USER)
+        state.caldavUser = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_PASS)
+        state.caldavPass = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_PATH)
+        state.caldavCalendar = s.value;
+      if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
+        state.mailNotifications = s.value === "1";
+      if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
+        state.use24HourTime = s.value === "1";
+      if (s.name === UserPreference.PREF_DATE_FORMAT)
+        state.dateFormat = s.value;
     });
+    await new Promise<void>((resolve) =>
+      this.setState({ ...this.state, ...state }, resolve),
+    );
   };
 
   loadLocations = async (): Promise<void> => {
