@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.103.0](https://github.com/seatsurfing/seatsurfing/compare/v1.102.1...v1.103.0) (2026-06-03)
+
+
+### ✨ Features
+
+* **booking-ui:** add user preference "week start day" ([#2244](https://github.com/seatsurfing/seatsurfing/issues/2244)) ([4ffdf38](https://github.com/seatsurfing/seatsurfing/commit/4ffdf387c2d4ad433927192a20f0643e0ce2e2e8))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** fix saving disallowed color ([#2245](https://github.com/seatsurfing/seatsurfing/issues/2245)) ([edb8d1e](https://github.com/seatsurfing/seatsurfing/commit/edb8d1e3fab8fb4cd1f3448166972fc2c6f31550))
+* **deps:** bump library/golang from 1.26.3-bookworm to 1.26.4-bookworm ([#2247](https://github.com/seatsurfing/seatsurfing/issues/2247)) ([9c8cba9](https://github.com/seatsurfing/seatsurfing/commit/9c8cba9fa167949f9d3b3209f600de92653fda2e))
+
 ## [1.102.1](https://github.com/seatsurfing/seatsurfing/compare/v1.102.0...v1.102.1) (2026-05-30)
 
 
