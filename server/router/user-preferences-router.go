@@ -328,7 +328,7 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 	}
 	if name == PreferenceWeekStartDay.Name {
 		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 6 {
+		if i != 0 && i != 1 && i != 6 {
 			return false
 		}
 	}

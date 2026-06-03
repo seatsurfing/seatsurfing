@@ -237,7 +237,8 @@ export default class RuntimeConfig {
           RuntimeConfig.INFOS.dateFormat = pref.value;
         }
         if (pref.name === UserPreference.PREF_WEEK_START_DAY) {
-          RuntimeConfig.INFOS.weekStartDay = parseInt(pref.value);
+          const v = parseInt(pref.value);
+          RuntimeConfig.INFOS.weekStartDay = [0, 1, 6].includes(v) ? v : 1;
         }
       });
     } catch {

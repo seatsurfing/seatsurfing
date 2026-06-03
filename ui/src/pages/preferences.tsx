@@ -190,8 +190,10 @@ class Preferences extends React.Component<Props, State> {
         state.use24HourTime = s.value === "1";
       if (s.name === UserPreference.PREF_DATE_FORMAT)
         state.dateFormat = s.value;
-      if (s.name === UserPreference.PREF_WEEK_START_DAY)
-        state.weekStartDay = parseInt(s.value);
+      if (s.name === UserPreference.PREF_WEEK_START_DAY) {
+        const v = parseInt(s.value);
+        state.weekStartDay = [0, 1, 6].includes(v) ? v : 1;
+      }
     });
     await new Promise<void>((resolve) =>
       this.setState({ ...this.state, ...state }, resolve),
@@ -611,7 +613,7 @@ class Preferences extends React.Component<Props, State> {
                     })
                   }
                 >
-                  {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+                  {[6, 0, 1].map((day) => (
                     <option key={"week-start-" + day} value={day}>
                       {this.props.t("workday-" + day)}
                     </option>
