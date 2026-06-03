@@ -487,5 +487,7 @@
   "shapeRect": "Rechteck",
   "shapeCircle": "Kreis/Oval",
   "shapeTrapezoid": "Trapez",
-  "featuresLink": "Funktionen vergleichen"
+  "featuresLink": "Funktionen vergleichen",
+  "enableExcludeWeekends": "Exclude weekends (no bookings on Saturday or Sunday)",
+  "errorOnWeekend": "Bookings are not allowed on weekends."
 }

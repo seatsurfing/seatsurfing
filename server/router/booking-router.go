@@ -857,6 +857,28 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 	return true, 0
 }
 
+func (router *BookingRouter) IsValidBookingWeekend(m *BookingRequest, orgID string, user *User) (bool, int) {
+	excludeWeekends, _ := GetSettingsRepository().GetBool(orgID, SettingEnableExcludeWeekends.Name)
+	if !excludeWeekends {
+		return true, 0
+	}
+	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
+	if noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
+		return true, 0
+	}
+	// m.Enter and m.Leave carry the location's timezone, so Weekday() reflects the local day.
+	// Reject if any covered day (from the Enter date through the Leave date, inclusive) is a weekend.
+	cur := time.Date(m.Enter.Year(), m.Enter.Month(), m.Enter.Day(), 0, 0, 0, 0, m.Enter.Location())
+	last := time.Date(m.Leave.Year(), m.Leave.Month(), m.Leave.Day(), 0, 0, 0, 0, m.Leave.Location())
+	for !cur.After(last) {
+		if cur.Weekday() == time.Saturday || cur.Weekday() == time.Sunday {
+			return false, ResponseCodeBookingOnWeekend
+		}
+		cur = cur.AddDate(0, 0, 1)
+	}
+	return true, 0
+}
+
 func (router *BookingRouter) IsValidMaxUpcomingBookings(orgID string, user *User, upcomingBookingsMarkup int) bool {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
 	if noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
@@ -890,6 +912,10 @@ func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, loca
 		return false, ResponseCodeBookingInvalidBookingDuration
 	}
 	valid, errorCode := router.IsValidBookingAdvance(&m.BookingRequest, orgID, user)
+	if !valid {
+		return false, errorCode
+	}
+	valid, errorCode = router.IsValidBookingWeekend(&m.BookingRequest, orgID, user)
 	if !valid {
 		return false, errorCode
 	}

@@ -47,6 +47,7 @@ var (
 	SettingMaxHoursPartiallyBooked        SettingName = SettingName{Name: "max_hours_partially_booked", Type: SettingTypeInt}
 	SettingMaxHoursPartiallyBookedEnabled SettingName = SettingName{Name: "max_hours_partially_booked_enabled", Type: SettingTypeBool}
 	SettingDailyBasisBooking              SettingName = SettingName{Name: "daily_basis_booking", Type: SettingTypeBool}
+	SettingEnableExcludeWeekends          SettingName = SettingName{Name: "enable_exclude_weekends", Type: SettingTypeBool}
 	SettingNoAdminRestrictions            SettingName = SettingName{Name: "no_admin_restrictions", Type: SettingTypeBool}
 	SettingCustomLogoUrl                  SettingName = SettingName{Name: "custom_logo_url", Type: SettingTypeString}
 	SettingShowNames                      SettingName = SettingName{Name: "show_names", Type: SettingTypeBool}
@@ -273,6 +274,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
+		"($1, '"+SettingEnableExcludeWeekends.Name+"', '0'), "+
 		"($1, '"+SettingNoAdminRestrictions.Name+"', '0'), "+
 		"($1, '"+SettingCustomLogoUrl.Name+"', ''), "+
 		"($1, '"+SettingShowNames.Name+"', '0'), "+
