@@ -349,6 +349,7 @@
   "workday-4": "星期四",
   "workday-5": "週五",
   "workday-6": "星期六",
+  "weekStartDay": "First day of week",
   "workdays": "工作日",
   "workingHours": "工作時間",
   "yes": "是的",

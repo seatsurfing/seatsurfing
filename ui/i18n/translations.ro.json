@@ -326,6 +326,7 @@
   "workday-4": "Joi",
   "workday-5": "Vineri",
   "workday-6": "Sâmbătă",
+  "weekStartDay": "First day of week",
   "workdays": "Zile lucrătoare",
   "workingHours": "Ore de lucru",
   "yes": "yes",

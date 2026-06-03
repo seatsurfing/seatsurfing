@@ -17,10 +17,10 @@ import ErrorText from "@/types/ErrorText";
 import { getIcal } from "@/components/Ical";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Booking from "@/types/Booking";
-import Ajax from "@/util/Ajax";
 import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -215,6 +215,12 @@ class Bookings extends React.Component<Props, State> {
 
     moment.tz.setDefault("UTC");
     moment.locale(Formatting.Language);
+    const dow = RuntimeConfig.INFOS.weekStartDay;
+    if (moment.localeData().firstDayOfWeek() !== dow) {
+      moment.updateLocale(moment.locale(), {
+        week: { dow },
+      });
+    }
     const calendarLocalizer = momentLocalizer(moment);
 
     return (

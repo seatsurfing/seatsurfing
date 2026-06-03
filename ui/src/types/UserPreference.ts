@@ -30,6 +30,7 @@ export default class UserPreference extends Entity {
   static readonly PREF_MAIL_NOTIFICATIONS = "mail_notifications";
   static readonly PREF_USE_24_HOUR_TIME = "use_24_hour_time";
   static readonly PREF_DATE_FORMAT = "date_format";
+  static readonly PREF_WEEK_START_DAY = "week_start_day";
 
   name: string;
   value: string;

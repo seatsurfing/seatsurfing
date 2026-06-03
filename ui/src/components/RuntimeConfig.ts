@@ -41,6 +41,7 @@ interface RuntimeUserInfos {
   subjectDefault: number;
   use24HourTime: boolean;
   dateFormat: string;
+  weekStartDay: number;
   totpEnabled: boolean;
   enforceTOTP: boolean;
   hideReports: boolean;
@@ -93,6 +94,7 @@ export default class RuntimeConfig {
       subjectDefault: 2,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      weekStartDay: 1,
       totpEnabled: false,
       enforceTOTP: false,
       hideReports: false,
@@ -225,20 +227,23 @@ export default class RuntimeConfig {
   };
 
   static loadUserPreferences = async (): Promise<void> => {
-    UserPreference.list()
-      .then((list) => {
-        list.forEach((pref) => {
-          if (pref.name === UserPreference.PREF_USE_24_HOUR_TIME) {
-            RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
-          }
-          if (pref.name === UserPreference.PREF_DATE_FORMAT) {
-            RuntimeConfig.INFOS.dateFormat = pref.value;
-          }
-        });
-      })
-      .catch(() => {
-        // Nothing to do
+    try {
+      const list = await UserPreference.list();
+      list.forEach((pref) => {
+        if (pref.name === UserPreference.PREF_USE_24_HOUR_TIME) {
+          RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+        }
+        if (pref.name === UserPreference.PREF_DATE_FORMAT) {
+          RuntimeConfig.INFOS.dateFormat = pref.value;
+        }
+        if (pref.name === UserPreference.PREF_WEEK_START_DAY) {
+          const v = parseInt(pref.value);
+          RuntimeConfig.INFOS.weekStartDay = [0, 1, 6].includes(v) ? v : 1;
+        }
       });
+    } catch {
+      // Nothing to do
+    }
   };
 
   static setDetails = (username: string, id: string) => {

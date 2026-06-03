@@ -52,6 +52,7 @@ interface State {
   mailNotifications: boolean;
   use24HourTime: boolean;
   dateFormat: string;
+  weekStartDay: number;
   activeSessions: Session[];
   currentSessionId: string;
   showPasswordChangedModal: boolean;
@@ -111,42 +112,34 @@ class Preferences extends React.Component<Props, State> {
       mailNotifications: false,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      weekStartDay: 1,
       activeSessions: [],
       currentSessionId: "",
       showPasswordChangedModal: false,
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     const tabParam = this.props.router.query.tab as PreferencesTab;
     if (tabParam && TAB_MAP[tabParam]) {
       this.setState({ activeTab: TAB_MAP[tabParam] });
     }
-    const promises = [
+    await Promise.all([
       this.loadPreferences(),
       this.loadLocations(),
       this.loadActiveSessions(),
-    ];
-    Promise.all(promises).then(() => {
-      this.setState({ loading: false });
-    });
+    ]);
+    this.setState({ loading: false });
   };
 
   loadActiveSessions = async (): Promise<void> => {
     const accessTokenPayload = JwtDecoder.getPayload(
       Ajax.PERSISTER.readCredentialsFromLocalStorage().accessToken,
     );
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      Session.list()
-        .then((sessions) => {
-          self.setState({
-            activeSessions: sessions,
-            currentSessionId: accessTokenPayload.sid,
-          });
-          resolve();
-        })
-        .catch((e) => reject(e));
+    const sessions = await Session.list();
+    this.setState({
+      activeSessions: sessions,
+      currentSessionId: accessTokenPayload.sid,
     });
   };
 
@@ -197,6 +190,10 @@ class Preferences extends React.Component<Props, State> {
         state.use24HourTime = s.value === "1";
       if (s.name === UserPreference.PREF_DATE_FORMAT)
         state.dateFormat = s.value;
+      if (s.name === UserPreference.PREF_WEEK_START_DAY) {
+        const v = parseInt(s.value);
+        state.weekStartDay = [0, 1, 6].includes(v) ? v : 1;
+      }
     });
     await new Promise<void>((resolve) =>
       this.setState({ ...this.state, ...state }, resolve),
@@ -204,18 +201,10 @@ class Preferences extends React.Component<Props, State> {
   };
 
   loadLocations = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      Location.list()
-        .then((list) => {
-          self.locations = list;
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    this.locations = await Location.list();
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
@@ -244,22 +233,15 @@ class Preferences extends React.Component<Props, State> {
       ),
       new UserPreference("location_id", this.state.locationId),
       new UserPreference("date_format", this.state.dateFormat),
+      new UserPreference("week_start_day", this.state.weekStartDay.toString()),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        RuntimeConfig.loadUserPreferences().then(() => {
-          this.setState({
-            submitting: false,
-            saved: true,
-          });
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
-      });
+    try {
+      await UserPreference.setAll(payload);
+      await RuntimeConfig.loadUserPreferences();
+      this.setState({ submitting: false, saved: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   onSubmitSecurity = async (e: any) => {
@@ -281,19 +263,13 @@ class Preferences extends React.Component<Props, State> {
     this.setState({ submitting: false, showPasswordChangedModal: true });
   };
 
-  onSubmitColors = (e: any) => {
+  onSubmitColors = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
       saved: false,
       error: false,
       caldavError: false,
-    });
-    const workdays: string[] = [];
-    this.state.workdays.forEach((val, day) => {
-      if (val) {
-        workdays.push(day.toString());
-      }
     });
     const payload = [
       new UserPreference("booked_color", this.state.booked),
@@ -303,19 +279,12 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference("buddy_booked_color", this.state.buddyBooked),
       new UserPreference("disallowed_color", this.state.disallowed),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
-      });
+    try {
+      await UserPreference.setAll(payload);
+      this.setState({ submitting: false, saved: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   resetColors = () => {
@@ -338,7 +307,7 @@ class Preferences extends React.Component<Props, State> {
     });
   };
 
-  connectCalDav = () => {
+  connectCalDav = async () => {
     this.setState({
       submitting: true,
       saved: false,
@@ -351,25 +320,23 @@ class Preferences extends React.Component<Props, State> {
       username: this.state.caldavUser,
       password: this.state.caldavPass,
     };
-    Ajax.postData("/preference/caldav/listCalendars", payload)
-      .then((res) => {
-        this.setState({
-          caldavCalendarsLoaded: true,
-          caldavCalendars: res.json,
-          caldavCalendar:
-            res.json && res.json.length > 0 ? res.json[0].path : "",
-          submitting: false,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          caldavError: true,
-        });
+    try {
+      const res = await Ajax.postData(
+        "/preference/caldav/listCalendars",
+        payload,
+      );
+      this.setState({
+        caldavCalendarsLoaded: true,
+        caldavCalendars: res.json,
+        caldavCalendar: res.json && res.json.length > 0 ? res.json[0].path : "",
+        submitting: false,
       });
+    } catch {
+      this.setState({ submitting: false, caldavError: true });
+    }
   };
 
-  disconnectCalDav = () => {
+  disconnectCalDav = async () => {
     this.setState({
       submitting: true,
       saved: false,
@@ -383,27 +350,23 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference("caldav_pass", ""),
       new UserPreference("caldav_path", ""),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-          caldavUrl: "",
-          caldavUser: "",
-          caldavPass: "",
-          caldavCalendar: "",
-          caldavCalendars: [],
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
+    try {
+      await UserPreference.setAll(payload);
+      this.setState({
+        submitting: false,
+        saved: true,
+        caldavUrl: "",
+        caldavUser: "",
+        caldavPass: "",
+        caldavCalendar: "",
+        caldavCalendars: [],
       });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
-  saveCaldavSettings = (e: any) => {
+  saveCaldavSettings = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
@@ -417,19 +380,12 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference("caldav_pass", this.state.caldavPass),
       new UserPreference("caldav_path", this.state.caldavCalendar),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
-      });
+    try {
+      await UserPreference.setAll(payload);
+      this.setState({ submitting: false, saved: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   renderBookingColor(
@@ -645,6 +601,26 @@ class Preferences extends React.Component<Props, State> {
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
+                <Form.Label htmlFor="weekStartDay">
+                  {this.props.t("weekStartDay")}
+                </Form.Label>
+                <Form.Select
+                  id="weekStartDay"
+                  value={this.state.weekStartDay}
+                  onChange={(e: any) =>
+                    this.setState({
+                      weekStartDay: window.parseInt(e.target.value),
+                    })
+                  }
+                >
+                  {[6, 0, 1].map((day) => (
+                    <option key={"week-start-" + day} value={day}>
+                      {this.props.t("workday-" + day)}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
                 <Form.Label htmlFor="mailNotifications">
                   {this.props.t("mailNotifications")}
                 </Form.Label>
@@ -807,10 +783,9 @@ class Preferences extends React.Component<Props, State> {
               onPasskeyAdded={() => {
                 RuntimeConfig.INFOS.hasPasskeys = true;
               }}
-              onPasskeyDeleted={() => {
-                Passkey.list().then((passkeys) => {
-                  RuntimeConfig.INFOS.hasPasskeys = passkeys.length > 0;
-                });
+              onPasskeyDeleted={async () => {
+                const passkeys = await Passkey.list();
+                RuntimeConfig.INFOS.hasPasskeys = passkeys.length > 0;
               }}
             />
             <div hidden={this.state.activeTab !== "tab-security"}>
@@ -844,12 +819,14 @@ class Preferences extends React.Component<Props, State> {
                           <td>
                             <a
                               href="#"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.preventDefault();
-                                session
-                                  .delete()
-                                  .then(() => this.loadActiveSessions())
-                                  .catch(() => RuntimeConfig.logOut());
+                                try {
+                                  await session.delete();
+                                  await this.loadActiveSessions();
+                                } catch {
+                                  RuntimeConfig.logOut();
+                                }
                               }}
                             >
                               {this.props.t("logout")}
@@ -864,13 +841,16 @@ class Preferences extends React.Component<Props, State> {
                     hidden={this.state.activeSessions?.length <= 1}
                     type="button"
                     variant="secondary"
-                    onClick={() => {
+                    onClick={async () => {
                       const others = this.state.activeSessions.filter(
                         (s) => s.id !== this.state.currentSessionId,
                       );
-                      Promise.all(others.map((s) => s.delete()))
-                        .then(() => this.loadActiveSessions())
-                        .catch(() => RuntimeConfig.logOut());
+                      try {
+                        await Promise.all(others.map((s) => s.delete()));
+                        await this.loadActiveSessions();
+                      } catch {
+                        RuntimeConfig.logOut();
+                      }
                     }}
                   >
                     {this.props.t("logoutOthers")}

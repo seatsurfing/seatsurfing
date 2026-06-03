@@ -41,6 +41,7 @@ var (
 	PreferenceDateFormat            PreferenceName = PreferenceName{Name: "date_format", Type: SettingTypeString}
 	PreferenceApprovalNotifications PreferenceName = PreferenceName{Name: "approval_notifications", Type: SettingTypeBool}
 	Preference24HourTime            PreferenceName = PreferenceName{Name: "use_24_hour_time", Type: SettingTypeBool}
+	PreferenceWeekStartDay          PreferenceName = PreferenceName{Name: "week_start_day", Type: SettingTypeInt}
 )
 
 var (
@@ -154,7 +155,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 		"($1, '"+PreferenceDisallowedColor.Name+"', '#eeeeee'), "+
 		"($1, '"+PreferenceApprovalNotifications.Name+"', '0'), "+
 		"($1, '"+Preference24HourTime.Name+"', '1'), "+
-		"($1, '"+PreferenceDateFormat.Name+"', 'Y-m-d') "+
+		"($1, '"+PreferenceDateFormat.Name+"', 'Y-m-d'), "+
+		"($1, '"+PreferenceWeekStartDay.Name+"', '1') "+
 		"ON CONFLICT (user_id, name) DO NOTHING",
 		userID)
 	return err
