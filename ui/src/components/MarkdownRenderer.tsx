@@ -21,7 +21,14 @@ const MarkdownRenderer: React.FC<Props> = ({ children, inline }) => (
           <>{children}</>
         ),
       img: () => null,
-      ...(inline ? { p: ({ children }) => <>{children}</> } : {}),
+      ...(inline
+        ? {
+            p: ({ children }) => <>{children}</>,
+            ul: ({ children }) => <>{children}</>,
+            ol: ({ children }) => <>{children}</>,
+            li: ({ children }) => <>{children} </>,
+          }
+        : {}),
     }}
   >
     {children}
