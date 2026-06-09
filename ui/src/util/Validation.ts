@@ -6,7 +6,11 @@ export default class Validation {
   static readonly PASSWORD_MIN_LENGTH_SA = 32;
 
   static isAbsoluteUrl(url: string): boolean {
-    return /^https?:\/\//i.test(url);
+    return /^(https?:)?\/\//i.test(url);
+  }
+
+  static isRelativeUrl(url: string): boolean {
+    return /^\/(?!\/)/.test(url);
   }
 
   static generatePassword(
