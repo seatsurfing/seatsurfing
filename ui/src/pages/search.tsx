@@ -844,7 +844,9 @@ class Search extends React.Component<Props, State> {
     };
     const className =
       "space space-box" +
-      (item.width < item.height ? " space-box-vertical" : "");
+      (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
+        ? " space-box-vertical"
+        : "");
     const showBookerNames =
       this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
     const bookedEntry = item.rawBookings[0];

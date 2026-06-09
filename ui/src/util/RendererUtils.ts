@@ -53,6 +53,16 @@ export default class RendererUtils {
     return `${url.slice(0, half)}[…]${url.slice(-half)}`;
   }
 
+  static isSpaceVertical(
+    width: number,
+    height: number,
+    rotation: number,
+  ): boolean {
+    const normalizedRot = ((rotation % 180) + 180) % 180;
+    const dimensionsSwapped = normalizedRot >= 45 && normalizedRot <= 135;
+    return dimensionsSwapped ? width > height : width < height;
+  }
+
   static capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   static SECRET_PLACEHOLDER = "••••••••••••••••";
