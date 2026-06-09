@@ -37,6 +37,7 @@ import NavBar from "@/components/NavBar";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import withReadyRouter from "@/components/withReadyRouter";
 import { Tooltip } from "react-tooltip";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 import {
   Loader as IconLoad,
   Calendar as IconCalendar,
@@ -1165,20 +1166,18 @@ class Search extends React.Component<Props, State> {
   getLocationAttributeRows = () => {
     const location = this.getLocation();
     if (!location) {
-      return <></>;
+      return null;
     }
 
     const createFormRow = (
       label: string,
       value: string,
-      key?: string | number,
+      key: string | number,
     ) => (
-      <Form.Group as={Row} key={key}>
-        <Form.Label column sm="4">
-          {label}:
-        </Form.Label>
+      <Form.Group as={Row} key={key} style={{ marginBottom: "5px" }}>
+        <Col sm="4">{label}:</Col>
         <Col sm="8">
-          <Form.Control plaintext={true} readOnly={true} defaultValue={value} />
+          <MarkdownRenderer inline>{value}</MarkdownRenderer>
         </Col>
       </Form.Group>
     );
@@ -1189,14 +1188,14 @@ class Search extends React.Component<Props, State> {
         (attr) => attr.id === attributeValue.attributeId,
       );
       if (!attribute) {
-        return <></>;
+        return null;
       }
 
       const displayValue =
-        attribute.type === 2
+        attribute.type === SpaceAttribute.TYPE_BOOL
           ? attributeValue.value === "1"
             ? this.props.t("yes")
-            : ""
+            : this.props.t("no")
           : attributeValue.value;
 
       return createFormRow(attribute.label, displayValue, attribute.id);
@@ -1205,7 +1204,9 @@ class Search extends React.Component<Props, State> {
     // timezone
     const timezoneValue =
       location.timezone || RuntimeConfig.INFOS.defaultTimezone;
-    attributeRows.push(createFormRow(this.props.t("timezone"), timezoneValue));
+    attributeRows.push(
+      createFormRow(this.props.t("timezone"), timezoneValue, "timezone"),
+    );
 
     // max. concurrent bookings
     if (location.maxConcurrentBookings) {
@@ -1213,6 +1214,7 @@ class Search extends React.Component<Props, State> {
         createFormRow(
           this.props.t("maxConcurrentBookings"),
           String(location.maxConcurrentBookings),
+          "maxConcurrentBookings",
         ),
       );
     }
@@ -1222,18 +1224,45 @@ class Search extends React.Component<Props, State> {
 
   getSearchFormComparator = (attribute: SpaceAttribute) => {
     const items = [];
-    items.push(<option value=""></option>);
-    if (attribute.type !== 4) {
-      items.push(<option value="eq">=</option>);
-      items.push(<option value="neq">≠</option>);
+    items.push(<option key="empty" value=""></option>);
+    if (attribute.type !== SpaceAttribute.TYPE_SELECT) {
+      items.push(
+        <option key="eq" value="eq">
+          =
+        </option>,
+      );
+      items.push(
+        <option key="neq" value="neq">
+          ≠
+        </option>,
+      );
     }
-    if (attribute.type === 1) {
-      items.push(<option value="gt">&gt;</option>);
-      items.push(<option value="lt">&lt;</option>);
+    if (attribute.type === SpaceAttribute.TYPE_INT) {
+      items.push(
+        <option key="gt" value="gt">
+          &gt;
+        </option>,
+      );
+      items.push(
+        <option key="lt" value="lt">
+          &lt;
+        </option>,
+      );
     }
-    if (attribute.type === 3 || attribute.type === 4) {
-      items.push(<option value="contains">∋</option>);
-      items.push(<option value="ncontains">∌</option>);
+    if (
+      attribute.type === SpaceAttribute.TYPE_STRING ||
+      attribute.type === SpaceAttribute.TYPE_SELECT
+    ) {
+      items.push(
+        <option key="contains" value="contains">
+          ∋
+        </option>,
+      );
+      items.push(
+        <option key="ncontains" value="ncontains">
+          ∌
+        </option>,
+      );
     }
     return items;
   };
@@ -1246,7 +1275,7 @@ class Search extends React.Component<Props, State> {
       type === "location"
         ? this.state.searchAttributesLocation
         : this.state.searchAttributesSpace;
-    if (attribute.type === 1) {
+    if (attribute.type === SpaceAttribute.TYPE_INT) {
       return (
         <Form.Control
           type="number"
@@ -1265,7 +1294,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 2) {
+    } else if (attribute.type === SpaceAttribute.TYPE_BOOL) {
       return (
         <Form.Check
           type="checkbox"
@@ -1289,7 +1318,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 3) {
+    } else if (attribute.type === SpaceAttribute.TYPE_STRING) {
       return (
         <Form.Control
           type="text"
@@ -1307,7 +1336,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 4) {
+    } else if (attribute.type === SpaceAttribute.TYPE_SELECT) {
       let options: any[] = [];
       attribute.selectValues.forEach((v, k) => {
         options.push(
@@ -1415,10 +1444,10 @@ class Search extends React.Component<Props, State> {
     let attributesApplicable = false;
     const searchFormRows = this.availableAttributes.map((attribute) => {
       if (type === "location" && !attribute.locationApplicable) {
-        return <></>;
+        return null;
       }
       if (type === "space" && !attribute.spaceApplicable) {
-        return <></>;
+        return null;
       }
       attributesApplicable = true;
       const key = `${type}-attribute-${attribute.id}`;
@@ -2254,7 +2283,9 @@ class Search extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>
           {this.getLocation()?.description && (
-            <p>{this.getLocation()?.description}</p>
+            <MarkdownRenderer>
+              {this.getLocation()?.description ?? ""}
+            </MarkdownRenderer>
           )}
           {this.getLocationAttributeRows()}
         </Modal.Body>
@@ -2344,10 +2375,11 @@ class Search extends React.Component<Props, State> {
       const attributeType = this.availableAttributes.find(
         (attr) => attr.id === attribute.attributeId,
       )?.type;
-      if (attributeType === 2) {
+      if (attributeType === SpaceAttribute.TYPE_BOOL) {
         confirmModalRows.push({
           label: attributeName,
-          value: attribute.value === "1" ? this.props.t("yes") : <>&mdash;</>,
+          value:
+            attribute.value === "1" ? this.props.t("yes") : this.props.t("no"),
         });
       } else {
         confirmModalRows.push({ label: attributeName, value: attribute.value });
@@ -2377,7 +2409,11 @@ class Search extends React.Component<Props, State> {
                   style={{ marginBottom: "5px" }}
                 >
                   <Col sm="4">{row.label}:</Col>
-                  <Col sm="8">{row.value}</Col>
+                  <Col sm="8">
+                    <MarkdownRenderer inline>
+                      {row.value ?? ""}
+                    </MarkdownRenderer>
+                  </Col>
                 </Row>
               );
             })}

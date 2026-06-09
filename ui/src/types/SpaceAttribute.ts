@@ -2,8 +2,13 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 
 export default class SpaceAttribute extends Entity {
+  static readonly TYPE_INT = 1;
+  static readonly TYPE_BOOL = 2;
+  static readonly TYPE_STRING = 3;
+  static readonly TYPE_SELECT = 4;
+
   label: string;
-  type: number; // 1=number, 2=bool, 3=string, 4=select
+  type: number;
   spaceApplicable: boolean;
   locationApplicable: boolean;
   selectValues: Map<string, string>;

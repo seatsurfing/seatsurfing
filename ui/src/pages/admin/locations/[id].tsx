@@ -2069,9 +2069,11 @@ class EditLocation extends React.Component<Props, State> {
             <Col sm="4">
               <Form.Control
                 id="location-description"
-                type="text"
+                as="textarea"
+                rows={3}
                 placeholder={this.props.t("description")}
                 value={this.state.description}
+                maxLength={512}
                 onChange={(e: any) =>
                   this.setState({ description: e.target.value })
                 }
