@@ -10,12 +10,17 @@ interface Props {
 const MarkdownRenderer: React.FC<Props> = ({ children, inline }) => (
   <Markdown
     remarkPlugins={[remarkGfm]}
+    skipHtml={true}
     components={{
-      a: ({ href, children }) => (
-        <a href={href} target="_blank" rel="noopener noreferrer">
-          {children}
-        </a>
-      ),
+      a: ({ href, children }) =>
+        href ? (
+          <a href={href} target="_blank" rel="noopener noreferrer">
+            {children}
+          </a>
+        ) : (
+          <>{children}</>
+        ),
+      img: () => null,
       ...(inline ? { p: ({ children }) => <>{children}</> } : {}),
     }}
   >
