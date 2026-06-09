@@ -195,7 +195,8 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   };
 
   let className = "space-dragger";
-  if (width < height) className += " space-dragger-vertical";
+  if (RendererUtils.isSpaceVertical(width, height, space.rotation))
+    className += " space-dragger-vertical";
   if (space.shape === "circle") className += " space-dragger-circle";
   if (space.shape === "trapezoid") className += " space-dragger-trapezoid";
   if (isSelected) className += " space-dragger-selected";
