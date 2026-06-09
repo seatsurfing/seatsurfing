@@ -9,7 +9,7 @@
     "chart.js": "4.5.1",
     "excellentexport": "3.9.11",
     "moment-timezone": "0.6.2",
-    "next": "16.2.6",
+    "next": "16.2.7",
     "next-export-i18n": "2.4.3",
     "react": "19.2.7",
     "react-big-calendar": "1.20.0",
@@ -20,7 +20,7 @@
     "react-flatpickr": "4.0.11",
     "react-icons": "5.6.0",
     "react-moveable": "0.56.0",
-    "react-tooltip": "6.0.5",
+    "react-tooltip": "6.0.6",
     "react-zoom-pan-pinch": "4.0.3",
     "typescript": "6.0.3"
   },
