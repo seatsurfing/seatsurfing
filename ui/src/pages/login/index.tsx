@@ -352,9 +352,9 @@ class Login extends React.Component<Props, State> {
   };
 
   getRedirectUrl = () => {
-    // prevent (open) redirect to absolute URLs
+    // only allow relative redirect URLs to prevent (open) redirects
     const redirectUrl = this.props.router.query["redir"] as string;
-    if (!redirectUrl || Validation.isAbsoluteUrl(redirectUrl)) {
+    if (!redirectUrl || !Validation.isRelativeUrl(redirectUrl)) {
       return Navigation.PATH_PAGE_SEARCH;
     }
 
