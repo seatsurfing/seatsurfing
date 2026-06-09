@@ -50,6 +50,7 @@ var (
 	ResponseCodeBookingSubjectRequired           = 1010
 	ResponseCodeBookingInPast                    = 1011
 	ResponseCodeBookingInvalidSubject            = 1012
+	ResponseCodeBookingOnWeekend                 = 1013
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 

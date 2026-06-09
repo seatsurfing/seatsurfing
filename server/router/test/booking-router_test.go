@@ -114,6 +114,70 @@ func TestBookingsCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestBookingsWeekendExclusion(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	loginResponseAdmin := LoginTestUser(adminUser.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	// Create location
+	payload := `{"name": "Location 1", "enabled": true}`
+	req := NewHTTPRequest("POST", "/location/", loginResponseAdmin.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locationID := res.Header().Get("X-Object-Id")
+
+	// Create space
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponseAdmin.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	spaceID := res.Header().Get("X-Object-Id")
+
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Setting disabled by default: Saturday bookings are allowed.
+	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-07T08:30:00Z\", \"leave\": \"2030-09-07T09:30:00Z\", \"subject\": \"Weekend default\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	CheckStringNotEmpty(t, res.Header().Get("X-Object-Id"))
+
+	GetSettingsRepository().Set(org.ID, SettingEnableExcludeWeekends.Name, "1")
+
+	// Regular users cannot book on Saturday when weekend exclusion is enabled.
+	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-07T10:30:00Z\", \"leave\": \"2030-09-07T11:30:00Z\", \"subject\": \"Weekend blocked\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingOnWeekend), res.Header().Get("X-Error-Code"))
+
+	// Weekday bookings are still allowed.
+	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-09T08:30:00Z\", \"leave\": \"2030-09-09T09:30:00Z\", \"subject\": \"Weekday allowed\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	CheckStringNotEmpty(t, res.Header().Get("X-Object-Id"))
+
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "1")
+
+	// Org admins bypass weekend exclusion when no_admin_restrictions is enabled.
+	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-07T12:30:00Z\", \"leave\": \"2030-09-07T13:30:00Z\", \"subject\": \"Admin bypass\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponseAdmin.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	CheckStringNotEmpty(t, res.Header().Get("X-Object-Id"))
+
+	// Regular users still cannot book weekends when the admin bypass is enabled.
+	payload = "{\"spaceId\": \"" + spaceID + "\", \"enter\": \"2030-09-07T14:30:00Z\", \"leave\": \"2030-09-07T15:30:00Z\", \"subject\": \"Weekend still blocked\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingOnWeekend), res.Header().Get("X-Error-Code"))
+}
+
 func TestCannotCreateBookingInDisabledLocation(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

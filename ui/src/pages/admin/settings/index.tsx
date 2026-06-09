@@ -60,6 +60,7 @@ interface State {
   minBookingDuration: number;
   targetUtilizationHoursPerWeek: number;
   dailyBasisBooking: boolean;
+  enableExcludeWeekends: boolean;
   noAdminRestrictions: boolean;
   showNames: boolean;
   allowBookingNonExistUsers: boolean;
@@ -118,6 +119,7 @@ class Settings extends React.Component<Props, State> {
       maxHoursPartiallyBooked: 0,
       maxHoursPartiallyBookedEnabled: false,
       dailyBasisBooking: false,
+      enableExcludeWeekends: false,
       noAdminRestrictions: false,
       showNames: false,
       allowBookingNonExistUsers: false,
@@ -205,6 +207,8 @@ class Settings extends React.Component<Props, State> {
           state.maxHoursBeforeDelete = window.parseInt(s.value);
         if (s.name === "daily_basis_booking")
           state.dailyBasisBooking = s.value === "1";
+        if (s.name === "enable_exclude_weekends")
+          state.enableExcludeWeekends = s.value === "1";
         if (s.name === "max_booking_duration_hours")
           state.maxBookingDuration = window.parseInt(s.value);
         if (s.name === "min_booking_duration_hours")
@@ -300,6 +304,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         "daily_basis_booking",
         this.state.dailyBasisBooking ? "1" : "0",
+      ),
+      new OrgSettings(
+        "enable_exclude_weekends",
+        this.state.enableExcludeWeekends ? "1" : "0",
       ),
       new OrgSettings(
         "no_admin_restrictions",
@@ -961,6 +969,19 @@ class Settings extends React.Component<Props, State> {
                 checked={this.state.dailyBasisBooking}
                 onChange={(e: any) =>
                   this.onDailyBasisBookingChange(e.target.checked)
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-enableExcludeWeekends"
+                label={this.props.t("enableExcludeWeekends")}
+                checked={this.state.enableExcludeWeekends}
+                onChange={(e: any) =>
+                  this.setState({ enableExcludeWeekends: e.target.checked })
                 }
               />
             </Col>

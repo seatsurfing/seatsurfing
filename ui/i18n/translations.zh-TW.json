@@ -484,5 +484,7 @@
   "shapeCircle": "Circle/Oval",
   "shapeTrapezoid": "梯形",
   "featuresLink": "Compare features",
-  "showGrid": "Show grid"
+  "showGrid": "Show grid",
+  "enableExcludeWeekends": "Exclude weekends (no bookings on Saturday or Sunday)",
+  "errorOnWeekend": "Bookings are not allowed on weekends."
 }
