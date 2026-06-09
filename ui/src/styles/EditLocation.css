@@ -47,6 +47,7 @@
 
 .space-dragger-selected {
   background-color: hsl(215, 55%, 45%);
+  cursor: move;
 }
 
 .mapScrollContainer::-webkit-scrollbar {
