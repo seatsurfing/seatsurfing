@@ -486,5 +486,6 @@
   "shapeRect": "Rectangle",
   "shapeCircle": "Circle/Oval",
   "shapeTrapezoid": "Trapezoid",
-  "featuresLink": "Compare features"
+  "featuresLink": "Compare features",
+  "outline": "Outline"
 }

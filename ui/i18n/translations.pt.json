@@ -486,5 +486,6 @@
   "shapeCircle": "Circle/Oval",
   "shapeTrapezoid": "Trapézio",
   "featuresLink": "Compare features",
-  "showGrid": "Show grid"
+  "showGrid": "Show grid",
+  "outline": "Outline"
 }
