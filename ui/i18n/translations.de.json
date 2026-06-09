@@ -487,5 +487,6 @@
   "shapeRect": "Rechteck",
   "shapeCircle": "Kreis/Oval",
   "shapeTrapezoid": "Trapez",
-  "featuresLink": "Funktionen vergleichen"
+  "featuresLink": "Funktionen vergleichen",
+  "outline": "Umrisse"
 }

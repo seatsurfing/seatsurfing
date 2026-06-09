@@ -64,6 +64,24 @@
   z-index: 100 !important; /* place behind modals */
 }
 
+.spaces-outline .space-dragger {
+  background-color: transparent !important;
+  border: 2px solid hsl(190, 45%, 60%);
+  color: #333;
+}
+
+.spaces-outline .space-dragger-selected {
+  border-color: hsl(215, 55%, 45%);
+}
+
+.spaces-outline .space-dragger-trapezoid {
+  border: none;
+}
+
+.spaces-outline .space-dragger input {
+  color: #333;
+}
+
 .floorplan-grid-overlay {
   position: absolute;
   top: 0;

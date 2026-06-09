@@ -23,6 +23,7 @@ import {
   Square as IconSquare,
   Circle as IconCircle,
   Grid as IconGrid,
+  Eye as IconEye,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -111,6 +112,7 @@ interface SpaceRectProps {
   mapWidth: number;
   mapHeight: number;
   snapToGrid: boolean;
+  outline: boolean;
 }
 
 const GRID_SIZE = 50;
@@ -130,6 +132,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   mapWidth,
   mapHeight,
   snapToGrid,
+  outline,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
   const moveableRef = React.useRef<Moveable>(null);
@@ -216,6 +219,28 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           onDoubleClick(index);
         }}
       >
+        {outline && space.shape === "trapezoid" && (
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+            }}
+          >
+            <polygon
+              points="20,0 80,0 100,100 0,100"
+              fill="none"
+              stroke={isSelected ? "hsl(215, 55%, 45%)" : "hsl(190, 45%, 60%)"}
+              strokeWidth="4"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        )}
         <div
           style={{
             transform: `rotate(${-space.rotation}deg)`,
@@ -403,6 +428,7 @@ interface State {
   locationAllowBookers: any[] | undefined;
   showDesignerModal: boolean;
   gridEnabled: boolean;
+  outline: boolean;
 }
 
 interface Props {
@@ -461,6 +487,7 @@ class EditLocation extends React.Component<Props, State> {
       locationAllowBookers: [],
       showDesignerModal: false,
       gridEnabled: false,
+      outline: false,
     };
   }
 
@@ -1020,6 +1047,7 @@ class EditLocation extends React.Component<Props, State> {
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
         snapToGrid={this.state.gridEnabled}
+        outline={this.state.outline}
       />
     );
   };
@@ -1888,12 +1916,26 @@ class EditLocation extends React.Component<Props, State> {
                 >
                   <IconGrid className="feather" /> {this.props.t("showGrid")}
                 </Button>
+                <Button
+                  className="btn-sm"
+                  variant={
+                    this.state.outline ? "outline-primary" : "outline-secondary"
+                  }
+                  onClick={() =>
+                    this.setState((prev) => ({
+                      outline: !prev.outline,
+                    }))
+                  }
+                >
+                  <IconEye className="feather" /> {this.props.t("outline")}
+                </Button>
               </div>
             </div>
           </div>
           <div className="mapScrollContainer">
             <div
               style={floorPlanStyle}
+              className={this.state.outline ? "spaces-outline" : undefined}
               onClick={(e) => {
                 if (e.target === e.currentTarget)
                   this.setState({ selectedSpace: null });
