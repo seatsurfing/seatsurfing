@@ -10,7 +10,7 @@ export default class Validation {
   }
 
   static isRelativeUrl(url: string): boolean {
-    return /^\/(?!\/)/.test(url);
+    return /^\/(?!\/)/.test(url) && !/[\\\u0000-\u001F\u007F]/.test(url);
   }
 
   static generatePassword(

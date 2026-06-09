@@ -12,6 +12,12 @@ describe("Validation", () => {
       expect(Validation.isRelativeUrl("//example.com")).toBe(false);
     });
 
+    it("should return false for backslash/control-character URLs", () => {
+      expect(Validation.isRelativeUrl("/\\example.com")).toBe(false);
+      expect(Validation.isRelativeUrl("/\\\\example.com")).toBe(false);
+      expect(Validation.isRelativeUrl("/\nexample")).toBe(false);
+    });
+
     it("should return false for absolute URLs", () => {
       expect(Validation.isRelativeUrl("http://example.com")).toBe(false);
       expect(Validation.isRelativeUrl("https://example.com")).toBe(false);
