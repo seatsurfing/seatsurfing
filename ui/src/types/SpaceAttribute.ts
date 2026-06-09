@@ -2,10 +2,10 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 
 export default class SpaceAttribute extends Entity {
-  static TYPE_INT = 1;
-  static TYPE_BOOL = 2;
-  static TYPE_STRING = 3;
-  static TYPE_SELECT = 4;
+  static readonly TYPE_INT = 1;
+  static readonly TYPE_BOOL = 2;
+  static readonly TYPE_STRING = 3;
+  static readonly TYPE_SELECT = 4;
 
   label: string;
   type: number;
