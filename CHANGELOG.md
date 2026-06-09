@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.103.1](https://github.com/seatsurfing/seatsurfing/compare/v1.103.0...v1.103.1) (2026-06-09)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump react-tooltip from 6.0.4 to 6.0.5 in /ui in the production-dependencies group across 1 directory ([#2249](https://github.com/seatsurfing/seatsurfing/issues/2249)) ([003aba8](https://github.com/seatsurfing/seatsurfing/commit/003aba8dd1faef3dacec344802bcee629bee3a6c))
+* **deps:** bump the production-dependencies group across 1 directory with 3 updates ([#2254](https://github.com/seatsurfing/seatsurfing/issues/2254)) ([23c810d](https://github.com/seatsurfing/seatsurfing/commit/23c810dda026551abd673f033b04bcc4b1b5cb93))
+* **main:** use Validation.isRelativeUrl() when testing redirectURL aufter login ([#2253](https://github.com/seatsurfing/seatsurfing/issues/2253)) ([3628446](https://github.com/seatsurfing/seatsurfing/commit/36284464a5f019d44bd5439e63de1a72afd25f51))
+
 ## [1.103.0](https://github.com/seatsurfing/seatsurfing/compare/v1.102.1...v1.103.0) (2026-06-03)
 
 
