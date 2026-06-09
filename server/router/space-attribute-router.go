@@ -15,7 +15,7 @@ type SpaceAttributeRouter struct {
 
 type CreateSpaceAttributeRequest struct {
 	Label              string `json:"label" validate:"required,max=256"`
-	Type               int    `json:"type"`
+	Type               int    `json:"type" validate:"oneof=1 2 3"`
 	SpaceApplicable    bool   `json:"spaceApplicable"`
 	LocationApplicable bool   `json:"locationApplicable"`
 }
