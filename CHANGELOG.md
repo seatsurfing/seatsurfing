@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.104.0](https://github.com/seatsurfing/seatsurfing/compare/v1.103.1...v1.104.0) (2026-06-10)
+
+
+### ✨ Features
+
+* **admin-ui:** add outline view to floorplan editor ([#2256](https://github.com/seatsurfing/seatsurfing/issues/2256)) ([248d897](https://github.com/seatsurfing/seatsurfing/commit/248d8978a9823427dc556b01efd2355c003527ea))
+* **main:** allow Markdown for attribute values and location description ([#2259](https://github.com/seatsurfing/seatsurfing/issues/2259)) ([a90da98](https://github.com/seatsurfing/seatsurfing/commit/a90da9806067fc6d84a8e884fb0575e0c8415612))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** show move cursor on floorplan editor ([#2257](https://github.com/seatsurfing/seatsurfing/issues/2257)) ([93d08a6](https://github.com/seatsurfing/seatsurfing/commit/93d08a64a12fcedb9c3ce089898c5ac4672f7468))
+* **booking-ui:** incorrect timezone for ICS events ([#2264](https://github.com/seatsurfing/seatsurfing/issues/2264)) ([5b6b932](https://github.com/seatsurfing/seatsurfing/commit/5b6b93295f72f8641b9117e519b8913bcc2b7b34))
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2261](https://github.com/seatsurfing/seatsurfing/issues/2261)) ([a5c3cca](https://github.com/seatsurfing/seatsurfing/commit/a5c3cca17aabeff1f2ea53a1ca5cdfd2d0274a31))
+* **main:** optimize space label orientation ([#2260](https://github.com/seatsurfing/seatsurfing/issues/2260)) ([fe2ec4d](https://github.com/seatsurfing/seatsurfing/commit/fe2ec4dfd01d7fd491666c60187429c864991f62))
+* **server:** add server-side validation for attribute type ([#2258](https://github.com/seatsurfing/seatsurfing/issues/2258)) ([309bc94](https://github.com/seatsurfing/seatsurfing/commit/309bc94a12d0119fb8c25436f6b2e270b7ba5a3f))
+
 ## [1.103.1](https://github.com/seatsurfing/seatsurfing/compare/v1.103.0...v1.103.1) (2026-06-09)
 
 
