@@ -1,6 +1,8 @@
 export default class Validation {
   static readonly PASSWORD_PATTERN =
     "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$";
+  static readonly HUMAN_NAME_PATTERN = "[\\p{L}\\p{N} \\-'.]+";
+
   static readonly PASSWORD_MIN_LENGTH = 8;
   static readonly PASSWORD_MAX_LENGTH = 64;
   static readonly PASSWORD_MIN_LENGTH_SA = 32;
