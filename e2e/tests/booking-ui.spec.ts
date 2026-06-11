@@ -20,12 +20,10 @@ test("crud booking", async ({ page }) => {
   await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByText("Desk 1", { exact: true }).click();
   await expect(
-    page.getByRole("dialog").getByText("Book a space"),
+    page.getByRole("button", { name: "Confirm booking" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Confirm booking" }).click();
-  await expect(
-    page.getByRole("dialog").getByText("Your booking has been confirmed!"),
-  ).toBeVisible();
+  await expect(page.getByText("Your booking has been confirmed!")).toBeVisible();
   await page.getByRole("button", { name: "My bookings" }).click();
   await expect(page).toHaveURL(/bookings\/$/);
   await expect(page.getByText("Loading …")).not.toBeVisible();
