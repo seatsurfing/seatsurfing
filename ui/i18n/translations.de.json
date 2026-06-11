@@ -421,6 +421,8 @@
   "serverErrorBody": "Es ist ein unerwarteter Serverfehler aufgetreten. Bitte versuche es später erneut.",
   "notFoundTitle": "Nicht gefunden",
   "notFoundBody": "Die angeforderte Ressource wurde nicht gefunden.",
+  "badRequestTitle": "Ungültige Anfrage",
+  "badRequestBody": "Die Anfrage konnte aufgrund ungültiger Eingaben nicht verarbeitet werden.",
   "reload": "Neu laden",
   "multiDay": "Mehrere Tage",
   "allDay": "Ganztags",
