@@ -2384,10 +2384,11 @@ class Search extends React.Component<Props, State> {
       if (attributeType === SpaceAttribute.TYPE_BOOL) {
         confirmModalRows.push({
           label: attributeName,
-          value:
+          value: RendererUtils.capitalize(
             attribute.value === "1"
-              ? RendererUtils.capitalize(this.props.t("yes"))
-              : RendererUtils.capitalize(this.props.t("no")),
+              ? this.props.t("yes")
+              : this.props.t("no"),
+          ),
         });
       } else {
         confirmModalRows.push({ label: attributeName, value: attribute.value });
