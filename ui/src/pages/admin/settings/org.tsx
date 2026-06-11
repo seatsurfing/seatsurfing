@@ -261,6 +261,8 @@ class EditOrg extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
                 pattern={Validation.HUMAN_NAME_PATTERN}
                 title={this.props.t("nameRequirements")}
               />
