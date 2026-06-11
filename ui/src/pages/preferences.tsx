@@ -219,21 +219,21 @@ class Preferences extends React.Component<Props, State> {
       }
     });
     const payload = [
-      new UserPreference("enter_time", this.state.enterTime.toString()),
-      new UserPreference("workday_start", this.state.workdayStart.toString()),
-      new UserPreference("workday_end", this.state.workdayEnd.toString()),
-      new UserPreference("workdays", workdays.join(",")),
+      new UserPreference(UserPreference.PREF_ENTER_TIME, this.state.enterTime.toString()),
+      new UserPreference(UserPreference.PREF_WORKDAY_START, this.state.workdayStart.toString()),
+      new UserPreference(UserPreference.PREF_WORKDAY_END, this.state.workdayEnd.toString()),
+      new UserPreference(UserPreference.PREF_WORKDAYS, workdays.join(",")),
       new UserPreference(
-        "mail_notifications",
+        UserPreference.PREF_MAIL_NOTIFICATIONS,
         this.state.mailNotifications ? "1" : "0",
       ),
       new UserPreference(
-        "use_24_hour_time",
+        UserPreference.PREF_USE_24_HOUR_TIME,
         this.state.use24HourTime ? "1" : "0",
       ),
-      new UserPreference("location_id", this.state.locationId),
-      new UserPreference("date_format", this.state.dateFormat),
-      new UserPreference("week_start_day", this.state.weekStartDay.toString()),
+      new UserPreference(UserPreference.PREF_LOCATION_ID, this.state.locationId),
+      new UserPreference(UserPreference.PREF_DATE_FORMAT, this.state.dateFormat),
+      new UserPreference(UserPreference.PREF_WEEK_START_DAY, this.state.weekStartDay.toString()),
     ];
     try {
       await UserPreference.setAll(payload);
@@ -272,12 +272,12 @@ class Preferences extends React.Component<Props, State> {
       caldavError: false,
     });
     const payload = [
-      new UserPreference("booked_color", this.state.booked),
-      new UserPreference("not_booked_color", this.state.notBooked),
-      new UserPreference("self_booked_color", this.state.selfBooked),
-      new UserPreference("partially_booked_color", this.state.partiallyBooked),
-      new UserPreference("buddy_booked_color", this.state.buddyBooked),
-      new UserPreference("disallowed_color", this.state.disallowed),
+      new UserPreference(UserPreference.PREF_BOOKED_COLOR, this.state.booked),
+      new UserPreference(UserPreference.PREF_NOT_BOOKED_COLOR, this.state.notBooked),
+      new UserPreference(UserPreference.PREF_SELF_BOOKED_COLOR, this.state.selfBooked),
+      new UserPreference(UserPreference.PREF_PARTIALLY_BOOKED_COLOR, this.state.partiallyBooked),
+      new UserPreference(UserPreference.PREF_BUDDY_BOOKED_COLOR, this.state.buddyBooked),
+      new UserPreference(UserPreference.PREF_DISALLOWED_COLOR, this.state.disallowed),
     ];
     try {
       await UserPreference.setAll(payload);
@@ -345,10 +345,10 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
     });
     const payload = [
-      new UserPreference("caldav_url", ""),
-      new UserPreference("caldav_user", ""),
-      new UserPreference("caldav_pass", ""),
-      new UserPreference("caldav_path", ""),
+      new UserPreference(UserPreference.PREF_CALDAV_URL, ""),
+      new UserPreference(UserPreference.PREF_CALDAV_USER, ""),
+      new UserPreference(UserPreference.PREF_CALDAV_PASS, ""),
+      new UserPreference(UserPreference.PREF_CALDAV_PATH, ""),
     ];
     try {
       await UserPreference.setAll(payload);
@@ -375,10 +375,10 @@ class Preferences extends React.Component<Props, State> {
       caldavError: false,
     });
     const payload = [
-      new UserPreference("caldav_url", this.state.caldavUrl),
-      new UserPreference("caldav_user", this.state.caldavUser),
-      new UserPreference("caldav_pass", this.state.caldavPass),
-      new UserPreference("caldav_path", this.state.caldavCalendar),
+      new UserPreference(UserPreference.PREF_CALDAV_URL, this.state.caldavUrl),
+      new UserPreference(UserPreference.PREF_CALDAV_USER, this.state.caldavUser),
+      new UserPreference(UserPreference.PREF_CALDAV_PASS, this.state.caldavPass),
+      new UserPreference(UserPreference.PREF_CALDAV_PATH, this.state.caldavCalendar),
     ];
     try {
       await UserPreference.setAll(payload);
