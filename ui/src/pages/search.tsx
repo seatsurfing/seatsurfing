@@ -963,8 +963,18 @@ class Search extends React.Component<Props, State> {
             {this.props.t("subject")}: {booking.subject}
             <br />
           </span>
-          <span hidden={!booking.user.email}>
-            {this.props.t("user")}: {booking.user.email}
+          <span
+            hidden={
+              !booking.user.firstname &&
+              !booking.user.lastname &&
+              !booking.user.email
+            }
+          >
+            {this.props.t("user")}:{" "}
+            {RendererUtils.fullname(
+              booking.user.firstname,
+              booking.user.lastname,
+            ) ?? booking.user.email}
             <br />
           </span>
           {this.props.t("enter")}:{" "}
