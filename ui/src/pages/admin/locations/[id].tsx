@@ -1298,9 +1298,9 @@ class EditLocation extends React.Component<Props, State> {
         input = (
           <Form.Check
             type="checkbox"
-            id={`space-attr-${a.id}`}
+            id={`space-attr-value-${a.id}`}
             disabled={!this.isSpaceAttributeEnabled(a.id)}
-            label={this.props.t("yes")}
+            label={RendererUtils.capitalize(this.props.t("yes"))}
             checked={this.getSpaceAttributeValue(a.id) === "1"}
             onChange={(e: any) =>
               this.setSpaceAttributeValue(a.id, e.target.checked ? "1" : "0")
@@ -1384,7 +1384,7 @@ class EditLocation extends React.Component<Props, State> {
                 <Form.Check
                   type="checkbox"
                   id="check-requireSubject"
-                  label={this.props.t("yes")}
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
                   checked={this.getSelectedSpace()?.requireSubject}
                   onChange={(e: any) =>
                     this.setSpaceRequireSubject(
@@ -1403,7 +1403,7 @@ class EditLocation extends React.Component<Props, State> {
                 <Form.Check
                   type="checkbox"
                   id="space-enabled"
-                  label={this.props.t("yes")}
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
                   checked={this.getSelectedSpace()?.enabled}
                   onChange={(e: any) =>
                     this.setSpaceEnabled(
@@ -1428,7 +1428,7 @@ class EditLocation extends React.Component<Props, State> {
                 <Form.Check
                   type="checkbox"
                   id="space-kiosk-enabled"
-                  label={this.props.t("yes")}
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
                   checked={this.getSelectedSpace()?.kioskEnabled}
                   onChange={(e: any) => {
                     const spaces = this.state.spaces;
@@ -1643,6 +1643,7 @@ class EditLocation extends React.Component<Props, State> {
           input = (
             <Form.Control
               type="number"
+              id={`loc-attr-${av.attributeId}`}
               min={0}
               value={this.state.attributeValues[idx].value}
               onChange={(e: any) =>
@@ -1654,7 +1655,8 @@ class EditLocation extends React.Component<Props, State> {
           input = (
             <Form.Check
               type="checkbox"
-              label={this.props.t("yes")}
+              id={`loc-attr-${av.attributeId}`}
+              label={RendererUtils.capitalize(this.props.t("yes"))}
               checked={this.state.attributeValues[idx].value === "1"}
               onChange={(e: any) =>
                 this.setAttribute(av.attributeId, e.target.checked ? "1" : "0")
@@ -1665,6 +1667,7 @@ class EditLocation extends React.Component<Props, State> {
           input = (
             <Form.Control
               type="text"
+              id={`loc-attr-${av.attributeId}`}
               value={this.state.attributeValues[idx].value}
               onChange={(e: any) =>
                 this.setAttribute(av.attributeId, e.target.value)
@@ -1674,7 +1677,7 @@ class EditLocation extends React.Component<Props, State> {
         }
         let row = (
           <Form.Group as={Row} key={av.attributeId}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor={`loc-attr-${av.attributeId}`}>
               {a.label}
             </Form.Label>
             <Col sm="4">{input}</Col>
@@ -2113,7 +2116,7 @@ class EditLocation extends React.Component<Props, State> {
               <Form.Check
                 type="checkbox"
                 id="location-enabled"
-                label={this.props.t("yes")}
+                label={RendererUtils.capitalize(this.props.t("yes"))}
                 checked={this.state.enabled}
                 onChange={(e: any) =>
                   this.setState({ enabled: e.target.checked })
@@ -2262,7 +2265,7 @@ class EditLocation extends React.Component<Props, State> {
                 disabled={!RuntimeConfig.INFOS.featureGroups}
                 filterBy={this.filterSearch}
                 id="search-allowbookers"
-                inputProps={{ id: "location-allowed-booker" }}
+                inputProps={{ id: "location-allowed-bookers" }}
                 isLoading={this.state.typeaheadLocationAllowBookersLoading}
                 labelKey="name"
                 multiple={true}
