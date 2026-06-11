@@ -1195,9 +1195,11 @@ class Search extends React.Component<Props, State> {
 
       const displayValue =
         attribute.type === SpaceAttribute.TYPE_BOOL
-          ? attributeValue.value === "1"
-            ? RendererUtils.capitalize(this.props.t("yes"))
-            : this.props.t("no")
+          ? RendererUtils.capitalize(
+              attributeValue.value === "1"
+                ? this.props.t("yes")
+                : this.props.t("no"),
+            )
           : attributeValue.value;
 
       return createFormRow(attribute.label, displayValue, attribute.id);
@@ -2366,9 +2368,11 @@ class Search extends React.Component<Props, State> {
     });
     confirmModalRows.push({
       label: this.props.t("approval"),
-      value: this.state.selectedSpace?.approvalRequired
-        ? RendererUtils.capitalize(this.props.t("yes"))
-        : this.props.t("no"),
+      value: RendererUtils.capitalize(
+        this.state.selectedSpace?.approvalRequired
+          ? this.props.t("yes")
+          : this.props.t("no"),
+      ),
     });
     this.state.selectedSpace?.attributes.forEach((attribute) => {
       const attributeName = this.availableAttributes.find(
@@ -2383,7 +2387,7 @@ class Search extends React.Component<Props, State> {
           value:
             attribute.value === "1"
               ? RendererUtils.capitalize(this.props.t("yes"))
-              : this.props.t("no"),
+              : RendererUtils.capitalize(this.props.t("no")),
         });
       } else {
         confirmModalRows.push({ label: attributeName, value: attribute.value });
