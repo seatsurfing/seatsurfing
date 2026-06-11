@@ -2385,9 +2385,7 @@ class Search extends React.Component<Props, State> {
         confirmModalRows.push({
           label: attributeName,
           value: RendererUtils.capitalize(
-            attribute.value === "1"
-              ? this.props.t("yes")
-              : this.props.t("no"),
+            attribute.value === "1" ? this.props.t("yes") : this.props.t("no"),
           ),
         });
       } else {
