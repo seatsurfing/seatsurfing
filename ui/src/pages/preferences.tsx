@@ -219,9 +219,18 @@ class Preferences extends React.Component<Props, State> {
       }
     });
     const payload = [
-      new UserPreference(UserPreference.PREF_ENTER_TIME, this.state.enterTime.toString()),
-      new UserPreference(UserPreference.PREF_WORKDAY_START, this.state.workdayStart.toString()),
-      new UserPreference(UserPreference.PREF_WORKDAY_END, this.state.workdayEnd.toString()),
+      new UserPreference(
+        UserPreference.PREF_ENTER_TIME,
+        this.state.enterTime.toString(),
+      ),
+      new UserPreference(
+        UserPreference.PREF_WORKDAY_START,
+        this.state.workdayStart.toString(),
+      ),
+      new UserPreference(
+        UserPreference.PREF_WORKDAY_END,
+        this.state.workdayEnd.toString(),
+      ),
       new UserPreference(UserPreference.PREF_WORKDAYS, workdays.join(",")),
       new UserPreference(
         UserPreference.PREF_MAIL_NOTIFICATIONS,
@@ -231,9 +240,18 @@ class Preferences extends React.Component<Props, State> {
         UserPreference.PREF_USE_24_HOUR_TIME,
         this.state.use24HourTime ? "1" : "0",
       ),
-      new UserPreference(UserPreference.PREF_LOCATION_ID, this.state.locationId),
-      new UserPreference(UserPreference.PREF_DATE_FORMAT, this.state.dateFormat),
-      new UserPreference(UserPreference.PREF_WEEK_START_DAY, this.state.weekStartDay.toString()),
+      new UserPreference(
+        UserPreference.PREF_LOCATION_ID,
+        this.state.locationId,
+      ),
+      new UserPreference(
+        UserPreference.PREF_DATE_FORMAT,
+        this.state.dateFormat,
+      ),
+      new UserPreference(
+        UserPreference.PREF_WEEK_START_DAY,
+        this.state.weekStartDay.toString(),
+      ),
     ];
     try {
       await UserPreference.setAll(payload);
@@ -273,11 +291,26 @@ class Preferences extends React.Component<Props, State> {
     });
     const payload = [
       new UserPreference(UserPreference.PREF_BOOKED_COLOR, this.state.booked),
-      new UserPreference(UserPreference.PREF_NOT_BOOKED_COLOR, this.state.notBooked),
-      new UserPreference(UserPreference.PREF_SELF_BOOKED_COLOR, this.state.selfBooked),
-      new UserPreference(UserPreference.PREF_PARTIALLY_BOOKED_COLOR, this.state.partiallyBooked),
-      new UserPreference(UserPreference.PREF_BUDDY_BOOKED_COLOR, this.state.buddyBooked),
-      new UserPreference(UserPreference.PREF_DISALLOWED_COLOR, this.state.disallowed),
+      new UserPreference(
+        UserPreference.PREF_NOT_BOOKED_COLOR,
+        this.state.notBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_SELF_BOOKED_COLOR,
+        this.state.selfBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_PARTIALLY_BOOKED_COLOR,
+        this.state.partiallyBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_BUDDY_BOOKED_COLOR,
+        this.state.buddyBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_DISALLOWED_COLOR,
+        this.state.disallowed,
+      ),
     ];
     try {
       await UserPreference.setAll(payload);
@@ -376,9 +409,18 @@ class Preferences extends React.Component<Props, State> {
     });
     const payload = [
       new UserPreference(UserPreference.PREF_CALDAV_URL, this.state.caldavUrl),
-      new UserPreference(UserPreference.PREF_CALDAV_USER, this.state.caldavUser),
-      new UserPreference(UserPreference.PREF_CALDAV_PASS, this.state.caldavPass),
-      new UserPreference(UserPreference.PREF_CALDAV_PATH, this.state.caldavCalendar),
+      new UserPreference(
+        UserPreference.PREF_CALDAV_USER,
+        this.state.caldavUser,
+      ),
+      new UserPreference(
+        UserPreference.PREF_CALDAV_PASS,
+        this.state.caldavPass,
+      ),
+      new UserPreference(
+        UserPreference.PREF_CALDAV_PATH,
+        this.state.caldavCalendar,
+      ),
     ];
     try {
       await UserPreference.setAll(payload);
