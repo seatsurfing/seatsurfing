@@ -27,6 +27,7 @@ import MfaEncouragementModal from "@/components/MfaEncouragementModal";
 import SessionExpiredModal from "@/components/SessionExpiredModal";
 import ServerErrorModal from "@/components/ServerErrorModal";
 import NotFoundModal from "@/components/NotFoundModal";
+import BadRequestModal from "@/components/BadRequestModal";
 import User from "@/types/User";
 import Router from "next/router";
 
@@ -37,6 +38,7 @@ interface State {
   showSessionExpired: boolean;
   showServerError: boolean;
   showNotFound: boolean;
+  showBadRequest: boolean;
   totpQrCode: string;
   totpStateId: string;
   enforceTOTP: boolean;
@@ -59,6 +61,7 @@ class App extends React.Component<Props, State> {
       showSessionExpired: false,
       showServerError: false,
       showNotFound: false,
+      showBadRequest: false,
       totpQrCode: "",
       totpStateId: "",
       enforceTOTP: false,
@@ -78,6 +81,7 @@ class App extends React.Component<Props, State> {
     Ajax.onUnauthorized = () => this.setState({ showSessionExpired: true });
     Ajax.onServerError = () => this.setState({ showServerError: true });
     Ajax.onNotFound = () => this.setState({ showNotFound: true });
+    Ajax.onBadRequest = () => this.setState({ showBadRequest: true });
 
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
@@ -103,6 +107,7 @@ class App extends React.Component<Props, State> {
     Ajax.onUnauthorized = null;
     Ajax.onServerError = null;
     Ajax.onNotFound = null;
+    Ajax.onBadRequest = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
   }
 
@@ -334,6 +339,10 @@ class App extends React.Component<Props, State> {
         <NotFoundModal
           show={this.state.showNotFound}
           onHide={() => this.setState({ showNotFound: false })}
+        />
+        <BadRequestModal
+          show={this.state.showBadRequest}
+          onHide={() => this.setState({ showBadRequest: false })}
         />
         <Component {...pageProps} />
       </>
