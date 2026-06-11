@@ -287,7 +287,6 @@
   "signin": "Bejelentkezés",
   "signinAsAt": "Bejelentkezés mint {{user}} a(z) {{org}} szervezetbe:",
   "signinAt": "Bejelentkezés a(z) {{org}} szervezetbe:",
-  "signout": "Kijelentkezés",
   "space": "Hely",
   "spaces": "Spaces",
   "subject": "Subject",

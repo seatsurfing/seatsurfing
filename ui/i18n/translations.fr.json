@@ -287,7 +287,6 @@
   "signin": "Connexion",
   "signinAsAt": "Connectez-vous en tant que {{user}} à {{org}} :",
   "signinAt": "Connectez-vous à {{org}} :",
-  "signout": "Se déconnecter",
   "space": "Espace",
   "spaces": "Espaces",
   "subject": "Subject",
