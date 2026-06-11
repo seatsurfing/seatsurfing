@@ -250,6 +250,7 @@
   "organizations": "Organisationen",
   "password": "Kennwort",
   "passwordRequirements": "Das Kennwort muss mindestens 8 Zeichen, einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
+  "nameRequirements": "Der Name darf nur Buchstaben, Ziffern, Leerzeichen, Bindestriche, Apostrophe und Punkte enthalten.",
   "passwordChange": "Kennwort ändern",
   "passwordChanged": "Dein Kennwort wurde erfolgreich geändert.",
   "passwordChangedLoginAgain": "Dein Kennwort wurde erfolgreich geändert. Du musst dich erneut einloggen.",

@@ -479,6 +479,8 @@ class EditUser extends React.Component<Props, State> {
                 required={true}
                 minLength={2}
                 maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
@@ -498,6 +500,8 @@ class EditUser extends React.Component<Props, State> {
                 required={true}
                 minLength={2}
                 maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>

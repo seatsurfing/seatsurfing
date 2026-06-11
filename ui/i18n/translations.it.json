@@ -487,5 +487,6 @@
   "shapeTrapezoid": "Trapezio",
   "featuresLink": "Compare features",
   "showGrid": "Show grid",
-  "outline": "Outline"
+  "outline": "Outline",
+  "nameRequirements": "Name may only contain letters, numbers, spaces, hyphens, apostrophes, and dots."
 }
