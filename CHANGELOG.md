@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.104.1](https://github.com/seatsurfing/seatsurfing/compare/v1.104.0...v1.104.1) (2026-06-12)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add frontend validation for user's firstname and lastname ([#2265](https://github.com/seatsurfing/seatsurfing/issues/2265)) ([96287ae](https://github.com/seatsurfing/seatsurfing/commit/96287aef4041196f065a4f518cede99c647df0fb))
+* **admin-ui:** improve validation and labels in org edit form ([#2272](https://github.com/seatsurfing/seatsurfing/issues/2272)) ([39056e7](https://github.com/seatsurfing/seatsurfing/commit/39056e7c9209f282551eec7a2da2689e84496c6c))
+* **booking-ui:** move logout button to the right ([#2273](https://github.com/seatsurfing/seatsurfing/issues/2273)) ([b9e28c0](https://github.com/seatsurfing/seatsurfing/commit/b9e28c07796a4bda627b38d3c414febf5b895289))
+* **booking-ui:** show user's name in space booked modal if available ([#2266](https://github.com/seatsurfing/seatsurfing/issues/2266)) ([3a0a63f](https://github.com/seatsurfing/seatsurfing/commit/3a0a63fbf15aaa6a488f2df080e0cdb77f711002))
+* **deps:** bump distroless/base-debian13 from `f2df870` to `57c1e4c` ([#2274](https://github.com/seatsurfing/seatsurfing/issues/2274)) ([8a93fb5](https://github.com/seatsurfing/seatsurfing/commit/8a93fb520276afc7c3cdaa16f15bd80e341da707))
+* **deps:** bump react-tooltip from 6.0.6 to 6.0.7 in /ui in the production-dependencies group across 1 directory ([#2275](https://github.com/seatsurfing/seatsurfing/issues/2275)) ([d5186b6](https://github.com/seatsurfing/seatsurfing/commit/d5186b694830e3dc8bb83f0b197f67fc729c88ab))
+* **main:** add "Bad request" AJAX error modal ([#2267](https://github.com/seatsurfing/seatsurfing/issues/2267)) ([a2586c0](https://github.com/seatsurfing/seatsurfing/commit/a2586c0bc5dffae22ee991fb3576536b3557af0a))
+* **main:** capitalize yes/no checkbox labels and fix label click ([#2271](https://github.com/seatsurfing/seatsurfing/issues/2271)) ([086e1a2](https://github.com/seatsurfing/seatsurfing/commit/086e1a26ae2677febecc7fff1a654abd848080f2))
+
+
+### 🔧 Refactoring
+
+* **booking-ui:** replace strings by constants ([#2270](https://github.com/seatsurfing/seatsurfing/issues/2270)) ([a77b387](https://github.com/seatsurfing/seatsurfing/commit/a77b38705af3bc68a5b62b7bdf7ac84f5d92c9e6))
+
 ## [1.104.0](https://github.com/seatsurfing/seatsurfing/compare/v1.103.1...v1.104.0) (2026-06-10)
 
 

@@ -417,6 +417,8 @@
   "serverErrorBody": "An unexpected server error occurred. Please try again later.",
   "notFoundTitle": "Not found",
   "notFoundBody": "The requested resource was not found.",
+  "badRequestTitle": "Bad request",
+  "badRequestBody": "The request could not be processed due to invalid input.",
   "reload": "Reload",
   "multiDay": "Multiple days",
   "allDay": "All day",
