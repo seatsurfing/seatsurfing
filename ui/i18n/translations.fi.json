@@ -307,7 +307,6 @@
   "signin": "Kirjaudu sisään",
   "signinAsAt": "Kirjaudu käyttäjänä {{user}} organisaatiossa {{org}}:",
   "signinAt": "Kirjaudu organisaatioon {{org}}:",
-  "signout": "Kirjaudu ulos",
   "space": "Työpiste",
   "spaces": "Työpisteet",
   "subject": "Varauksen tarkoitus",

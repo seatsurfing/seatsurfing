@@ -308,7 +308,6 @@
   "signin": "登入",
   "signinAsAt": "以 {{user}} 身分登入 {{org}}：",
   "signinAt": "在 {{org}} 登入：",
-  "signout": "登出",
   "space": "空間",
   "spaces": "空間",
   "subject": "主題",
