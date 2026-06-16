@@ -1,8 +1,8 @@
 {
-  "subject": "Your Seatsurfing booking: Updated",
+  "subject": "Reminder: Your Seatsurfing booking tomorrow",
   "headline": "Hello {{recipientName}},",
   "paragraphs": [
-    "Your booking has been updated.",
+    "This is a reminder that you have a booking tomorrow.",
     "Date: {{date}}",
     "Area: {{areaName}}",
     "Space: {{spaceName}}",

@@ -139,12 +139,19 @@ type MailButton struct {
 	Label     string `json:"label"`
 }
 
+type FinalInfo struct {
+	Text  string `json:"text"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
+}
+
 type MailTemplate struct {
 	Subject         string       `json:"subject"`
 	Headline        string       `json:"headline"`
 	Paragraphs      []string     `json:"paragraphs"`
 	Buttons         []MailButton `json:"buttons"`
 	FinalParagraphs []string     `json:"finalParagraphs"`
+	FinalInfo       *FinalInfo   `json:"finalInfo"`
 }
 
 type MailAddress struct {
@@ -229,6 +236,11 @@ func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
 	}
 	for _, paragraph := range jsonContent.FinalParagraphs {
 		body += "<p>" + html.EscapeString(paragraph) + "</p>"
+	}
+	if jsonContent.FinalInfo != nil {
+		anchor := "<a href=\"" + jsonContent.FinalInfo.URL + "\">" + html.EscapeString(jsonContent.FinalInfo.Label) + "</a>"
+		text := strings.ReplaceAll(html.EscapeString(jsonContent.FinalInfo.Text), "{{link}}", anchor)
+		body += "<p class=\"small\">" + text + "</p>"
 	}
 	s = strings.ReplaceAll(s, "{{body}}", body)
 	return &jsonContent, s, nil

@@ -1,0 +1,17 @@
+{
+  "subject": "Erinnerung: Deine Seatsurfing Buchung morgen",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "Dies ist eine Erinnerung an deine Buchung morgen.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Deine Buchungen",
+      "url": "{{orgDomain}}ui/bookings/"
+    }
+  ]
+}
