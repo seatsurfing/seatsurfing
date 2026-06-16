@@ -189,6 +189,8 @@
   "integrations": "Integrations",
   "introIncomingMergeRequests": "You have incoming account merge request. Accept them only if you initiated these.",
   "language": "Language",
+  "language-de": "German",
+  "language-en": "English",
   "lastWeek": "Last week",
   "lastname": "Lastname",
   "leave": "Leave",
