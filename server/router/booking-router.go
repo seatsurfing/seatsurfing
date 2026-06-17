@@ -1251,6 +1251,10 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		log.Println(err)
 		return
 	}
+	now := time.Now().UTC()
+	if err := GetBookingRepository().UpdateLastInfoMailSentAt(e.ID, &now); err != nil {
+		log.Println(err)
+	}
 }
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
