@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -186,6 +187,7 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVPass.Name ||
 		name == PreferenceCalDAVPath.Name ||
 		name == PreferenceMailNotifications.Name ||
+		name == PreferenceMailLanguage.Name ||
 		name == PreferenceApprovalNotifications.Name ||
 		name == Preference24HourTime.Name ||
 		name == PreferenceDateFormat.Name ||
@@ -243,6 +245,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceMailNotifications.Name {
 		return PreferenceMailNotifications.Type
+	}
+	if name == PreferenceMailLanguage.Name {
+		return PreferenceMailLanguage.Type
 	}
 	if name == PreferenceApprovalNotifications.Name {
 		return PreferenceApprovalNotifications.Type
@@ -325,6 +330,12 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 		default:
 			return false
 		}
+	}
+	if name == PreferenceMailLanguage.Name {
+		if value == "" {
+			return true
+		}
+		return GetConfig().IsValidLanguageCode(value)
 	}
 	if name == PreferenceWeekStartDay.Name {
 		i, _ := strconv.Atoi(value)

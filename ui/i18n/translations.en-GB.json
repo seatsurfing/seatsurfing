@@ -200,6 +200,7 @@
   "loginUseUsernamePassword": "Sign in with username and password",
   "logout": "Log out",
   "mailNotifications": "Mail notifications",
+  "mailLanguage": "Mail language",
   "approvalNotifications": "Notify me via email",
   "timeFormat": "Time format",
   "use24HourTime": "Use 24-hour time format",
