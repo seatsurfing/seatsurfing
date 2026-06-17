@@ -699,7 +699,10 @@ class Preferences extends React.Component<Props, State> {
                 >
                   <option value="">
                     ({this.props.t("default")} -{" "}
-                    {this.props.t("language-" + RuntimeConfig.INFOS.orgLanguage)})
+                    {this.props.t(
+                      "language-" + RuntimeConfig.INFOS.orgLanguage,
+                    )}
+                    )
                   </option>
                   {["de", "en"].map((lc) => (
                     <option key={lc} value={lc}>

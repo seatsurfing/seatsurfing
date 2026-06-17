@@ -99,6 +99,10 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		SendJSON(w, sysSettingDisablePasswordLogin.Value)
 		return
 	}
+	if vars["name"] == SysSettingOrgLanguage {
+		SendJSON(w, router.getSysSettingOrgLanguage(user.OrganizationID).Value)
+		return
+	}
 	// Kiosk secret: return "1" if configured, "" if not – never expose the stored hash.
 	if vars["name"] == SettingKioskSecret.Name {
 		v, err := GetSettingsRepository().Get(user.OrganizationID, SettingKioskSecret.Name)
@@ -293,6 +297,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin ||
+		name == SysSettingOrgLanguage ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingHideReports.Name ||
 		name == SettingHideStats.Name ||
