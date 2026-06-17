@@ -448,6 +448,12 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 		log.Println(err)
 		return
 	}
+	now := time.Now().UTC()
+	for _, b := range bookings {
+		if err := GetBookingRepository().UpdateLastInfoMailSentAt(b.ID, &now); err != nil {
+			log.Println(err)
+		}
+	}
 }
 
 func (router *RecurringBookingRouter) copyFromRestModel(m *CreateRecurringBookingRequest, location *Location) (*RecurringBooking, error) {

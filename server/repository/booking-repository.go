@@ -18,16 +18,17 @@ type BookingRepository struct {
 }
 
 type Booking struct {
-	ID           string
-	UserID       string
-	SpaceID      string
-	Enter        time.Time
-	Leave        time.Time
-	CalDavID     string
-	Approved     bool
-	Subject      string
-	RecurringID  NullUUID
-	CreatedAtUTC *time.Time
+	ID                    string
+	UserID                string
+	SpaceID               string
+	Enter                 time.Time
+	Leave                 time.Time
+	CalDavID              string
+	Approved              bool
+	Subject               string
+	RecurringID           NullUUID
+	CreatedAtUTC          *time.Time
+	LastInfoMailSentAtUTC *time.Time
 }
 
 type BookingDetails struct {
@@ -95,6 +96,12 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 27 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
 			"ADD COLUMN IF NOT EXISTS created_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 45 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ADD COLUMN IF NOT EXISTS last_info_mail_sent_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
 	}
@@ -399,6 +406,11 @@ func (r *BookingRepository) Update(e *Booking) error {
 		"recurring_id = $8 "+
 		"WHERE id = $9",
 		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), e.ID)
+	return err
+}
+
+func (r *BookingRepository) UpdateLastInfoMailSentAt(id string, t *time.Time) error {
+	_, err := GetDatabase().DB().Exec("UPDATE bookings SET last_info_mail_sent_at_utc = $1 WHERE id = $2", t, id)
 	return err
 }
 
