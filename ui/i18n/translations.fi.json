@@ -489,5 +489,6 @@
   "outline": "Outline",
   "nameRequirements": "Name may only contain letters, numbers, spaces, hyphens, apostrophes, and dots.",
   "language-de": "German",
-  "language-en": "English"
+  "language-en": "English",
+  "mailLanguage": "Mail language"
 }

@@ -50,6 +50,7 @@ interface State {
   caldavCalendarsLoaded: boolean;
   caldavError: boolean;
   mailNotifications: boolean;
+  mailLanguage: string;
   use24HourTime: boolean;
   dateFormat: string;
   weekStartDay: number;
@@ -110,6 +111,7 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
       caldavError: false,
       mailNotifications: false,
+      mailLanguage: "",
       use24HourTime: true,
       dateFormat: "Y-m-d",
       weekStartDay: 1,
@@ -186,6 +188,8 @@ class Preferences extends React.Component<Props, State> {
         state.caldavCalendar = s.value;
       if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
         state.mailNotifications = s.value === "1";
+      if (s.name === UserPreference.PREF_MAIL_LANGUAGE)
+        state.mailLanguage = s.value;
       if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
         state.use24HourTime = s.value === "1";
       if (s.name === UserPreference.PREF_DATE_FORMAT)
@@ -235,6 +239,10 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference(
         UserPreference.PREF_MAIL_NOTIFICATIONS,
         this.state.mailNotifications ? "1" : "0",
+      ),
+      new UserPreference(
+        UserPreference.PREF_MAIL_LANGUAGE,
+        this.state.mailLanguage,
       ),
       new UserPreference(
         UserPreference.PREF_USE_24_HOUR_TIME,
@@ -677,6 +685,31 @@ class Preferences extends React.Component<Props, State> {
                     }
                   />
                 </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label htmlFor="mailLanguage">
+                  {this.props.t("mailLanguage")}
+                </Form.Label>
+                <Form.Select
+                  id="mailLanguage"
+                  value={this.state.mailLanguage}
+                  onChange={(e: any) =>
+                    this.setState({ mailLanguage: e.target.value })
+                  }
+                >
+                  <option value="">
+                    ({this.props.t("default")} -{" "}
+                    {this.props.t(
+                      "language-" + RuntimeConfig.INFOS.orgLanguage,
+                    )}
+                    )
+                  </option>
+                  {["de", "en"].map((lc) => (
+                    <option key={lc} value={lc}>
+                      {this.props.t("language-" + lc)}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label htmlFor="use24HourTime">

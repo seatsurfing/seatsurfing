@@ -199,6 +199,7 @@
   "loginUseUsernamePassword": "Login mit Benutzername und Passwort",
   "logout": "Abmelden",
   "mailNotifications": "E-Mail-Benachrichtigungen",
+  "mailLanguage": "E-Mail-Sprache",
   "approvalNotifications": "Per E-Mail benachrichtigen",
   "timeFormat": "Zeitformat",
   "use24HourTime": "24-Stunden-Format verwenden",

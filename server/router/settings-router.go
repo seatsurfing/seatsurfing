@@ -49,6 +49,7 @@ var (
 	SysSettingAdminWelcomeScreens  = "_sys_admin_welcome_screens"
 	SysSettingOrgPrimaryDomain     = "_sys_org_primary_domain"
 	SysSettingDisablePasswordLogin = "_sys_disable_password_login"
+	SysSettingOrgLanguage          = "_sys_org_language"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -96,6 +97,10 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	if vars["name"] == SysSettingDisablePasswordLogin {
 		sysSettingDisablePasswordLogin := router.getSysSettingDisablePasswordLogin()
 		SendJSON(w, sysSettingDisablePasswordLogin.Value)
+		return
+	}
+	if vars["name"] == SysSettingOrgLanguage {
+		SendJSON(w, router.getSysSettingOrgLanguage(user.OrganizationID).Value)
 		return
 	}
 	// Kiosk secret: return "1" if configured, "" if not – never expose the stored hash.
@@ -183,6 +188,7 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	}
 	res = append(res, router.getSysSettingVersion())
 	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
+	res = append(res, router.getSysSettingOrgLanguage(user.OrganizationID))
 	res = append(res, router.getSysSettingDisablePasswordLogin())
 	for _, plg := range plugin.GetPlugins() {
 		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
@@ -291,6 +297,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin ||
+		name == SysSettingOrgLanguage ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingHideReports.Name ||
 		name == SettingHideStats.Name ||
@@ -619,5 +626,17 @@ func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSe
 	return &GetSettingsResponse{
 		Name:  SysSettingOrgPrimaryDomain,
 		Value: primaryDomainValue,
+	}
+}
+
+func (router *SettingsRouter) getSysSettingOrgLanguage(orgId string) *GetSettingsResponse {
+	org, _ := GetOrganizationRepository().GetOne(orgId)
+	language := ""
+	if org != nil {
+		language = org.Language
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingOrgLanguage,
+		Value: language,
 	}
 }
