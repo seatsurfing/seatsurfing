@@ -10,13 +10,17 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
+	goPlugin "github.com/hashicorp/go-plugin"
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	"github.com/seatsurfing/seatsurfing/server/plugin"
@@ -27,6 +31,13 @@ import (
 
 var _appInstance *App
 var _appOnce sync.Once
+
+//var registeredPlugins []SeatsurfingPlugin
+
+type PluginInstance struct {
+	Instance SeatsurfingPlugin
+	Client   *goPlugin.Client
+}
 
 func GetApp() *App {
 	_appOnce.Do(func() {
@@ -39,6 +50,7 @@ type App struct {
 	Router           *mux.Router
 	PublicHttpServer *http.Server
 	CleanupTicker    *time.Ticker
+	PluginInstances  []*PluginInstance
 }
 
 func (a *App) InitializeDatabases() {
@@ -53,6 +65,75 @@ func (a *App) InitializeDatabases() {
 	SetGlobalEmailFooterProvider(func(language string) (string, error) {
 		return GetSettingsRepository().GetGlobalStringLocalized(SettingEmailFooterPrefix, language)
 	})
+}
+
+func (a *App) InitializePlugins2() {
+	files, err := os.ReadDir(filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath))
+	if err != nil {
+		return
+	}
+	for _, f := range files {
+		info, err := f.Info()
+		if err != nil {
+			log.Println("Error while reading plugin file info:", err)
+			continue
+		}
+		if !f.IsDir() && info.Mode()&0100 != 0 {
+			a.loadPlugin2(f)
+		}
+	}
+
+}
+
+func (a *App) loadPlugin2(f os.DirEntry) {
+	handshakeConfig := goPlugin.HandshakeConfig{
+		ProtocolVersion:  1,
+		MagicCookieKey:   "SEATSURFING_PLUGIN",
+		MagicCookieValue: "b929e613-f1b6-4cca-9fc0-04cfc007e9c6",
+	}
+	var pluginMap = map[string]goPlugin.Plugin{
+		"seatsurfing": &SeatsurfingPluginImpl{},
+	}
+	//cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, "subscription")
+	log.Println("Loading plugin", f.Name())
+	cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name())
+	client := goPlugin.NewClient(&goPlugin.ClientConfig{
+		HandshakeConfig: handshakeConfig,
+		Plugins:         pluginMap,
+		Cmd:             exec.Command(cmd),
+	})
+	//defer client.Kill()
+	rpcClient, err := client.Client()
+	if err != nil {
+		log.Println("Error initializing plugin client:", err)
+		client.Kill()
+		return
+	}
+	raw, err := rpcClient.Dispense("seatsurfing")
+	if err != nil {
+		log.Println("Error dispensing plugin:", err)
+		client.Kill()
+		return
+	}
+	plg, ok := raw.(SeatsurfingPlugin)
+	if !ok {
+		log.Println("Error asserting plugin type")
+		client.Kill()
+		return
+	}
+	instance := &PluginInstance{
+		Instance: plg,
+		Client:   client,
+	}
+	a.PluginInstances = append(a.PluginInstances, instance)
+}
+
+func (a *App) KillPlugins2() {
+	log.Println("Killing plugins …")
+	for _, plg := range a.PluginInstances {
+		log.Println("Killing plugin", plg.Instance)
+		plg.Client.Kill()
+	}
 }
 
 func (a *App) InitializePlugins() {
@@ -447,7 +528,7 @@ func (a *App) startPublicHttpServer() {
 		Handler:      a.Router,
 	}
 	go func() {
-		if err := a.PublicHttpServer.ListenAndServe(); err != nil {
+		if err := a.PublicHttpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 			os.Exit(-1)
 		}
@@ -458,10 +539,11 @@ func (a *App) startPublicHttpServer() {
 func (a *App) Run() {
 	a.startPublicHttpServer()
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 	log.Println("Shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	a.PublicHttpServer.Shutdown(ctx)
+	a.KillPlugins2()
 }

@@ -14,6 +14,7 @@ func main() {
 	log.Println("Seatsurfing version " + GetProductVersion())
 	db := GetDatabase()
 	a := GetApp()
+	a.InitializePlugins2()
 	a.InitializeDatabases()
 	a.InitializeDefaultOrg()
 	a.InitializeSingleOrgSettings()
