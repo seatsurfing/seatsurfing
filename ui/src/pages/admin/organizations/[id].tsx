@@ -279,7 +279,9 @@ class EditOrganization extends React.Component<Props, State> {
                 required={true}
               >
                 {languages.map((lc) => (
-                  <option key={lc}>{lc}</option>
+                  <option key={lc} value={lc}>
+                    {this.props.t("language-" + lc)}
+                  </option>
                 ))}
               </Form.Select>
             </Col>
