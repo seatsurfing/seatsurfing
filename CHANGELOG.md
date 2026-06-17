@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.106.0](https://github.com/seatsurfing/seatsurfing/compare/v1.105.0...v1.106.0) (2026-06-17)
+
+
+### ✨ Features
+
+* **booking-ui:** add user preference mail language ([#2285](https://github.com/seatsurfing/seatsurfing/issues/2285)) ([d419e28](https://github.com/seatsurfing/seatsurfing/commit/d419e288078e54b50c58447a56b7f7228e705959))
+* **main:** add last booking info sent information ([#2287](https://github.com/seatsurfing/seatsurfing/issues/2287)) ([c579bbf](https://github.com/seatsurfing/seatsurfing/commit/c579bbf8221d9e400ef2de8b9a7ae989865fd3a3))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2289](https://github.com/seatsurfing/seatsurfing/issues/2289)) ([d8b2c66](https://github.com/seatsurfing/seatsurfing/commit/d8b2c66e82f1115f6a32e726d83728b164ab5e11))
+* **main:** add German translation for change mail address email template ([#2288](https://github.com/seatsurfing/seatsurfing/issues/2288)) ([3070cc8](https://github.com/seatsurfing/seatsurfing/commit/3070cc8992e95b2f1ad04b5eba001e7d817dd39b))
+* **main:** make IsValidLanguageCode() case sensitive ([#2286](https://github.com/seatsurfing/seatsurfing/issues/2286)) ([3eeca4b](https://github.com/seatsurfing/seatsurfing/commit/3eeca4b6f2e283bdbaef709888e4376d12e4df82))
+
 ## [1.105.0](https://github.com/seatsurfing/seatsurfing/compare/v1.104.1...v1.105.0) (2026-06-17)
 
 
