@@ -243,7 +243,7 @@ func TestSettingsCRUDMany(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 8, len(resBody))
+	CheckTestInt(t, 9, len(resBody))
 	CheckTestString(t, SettingAllowAnyUser.Name, resBody[0].Name)
 	CheckTestString(t, SettingMaxBookingsPerUser.Name, resBody[1].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody[2].Name)
@@ -291,7 +291,7 @@ func TestSettingsMaxHoursBeforeDelete(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody3 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
-	CheckTestInt(t, 7, len(resBody3))
+	CheckTestInt(t, 8, len(resBody3))
 	CheckTestString(t, SettingMaxHoursBeforeDelete.Name, resBody3[0].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody3[1].Name)
 	CheckTestString(t, SysSettingVersion, resBody3[4].Name)
