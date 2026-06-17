@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.105.0](https://github.com/seatsurfing/seatsurfing/compare/v1.104.1...v1.105.0) (2026-06-17)
+
+
+### ✨ Features
+
+* **booking-ui:** add link to preferences page in booking info mails ([#2280](https://github.com/seatsurfing/seatsurfing/issues/2280)) ([8743aec](https://github.com/seatsurfing/seatsurfing/commit/8743aecdeb7ea8814d96e24f94ce5242e2876cac))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add translation for language selection ([#2284](https://github.com/seatsurfing/seatsurfing/issues/2284)) ([3fd10eb](https://github.com/seatsurfing/seatsurfing/commit/3fd10eb9b5ba63d502bea5fa3aed6609a8a70a15))
+* **deps:** bump golang.org/x/crypto from 0.52.0 to 0.53.0 in /server in the minor-and-patch group ([#2278](https://github.com/seatsurfing/seatsurfing/issues/2278)) ([5abd300](https://github.com/seatsurfing/seatsurfing/commit/5abd30068ce1932156500f0aef87adc07e21cd58))
+* **deps:** bump vite from 8.0.13 to 8.0.16 in /ui ([#2282](https://github.com/seatsurfing/seatsurfing/issues/2282)) ([264c8e3](https://github.com/seatsurfing/seatsurfing/commit/264c8e3a306c2faf56ef53597fa933c9559838c2))
+
 ## [1.104.1](https://github.com/seatsurfing/seatsurfing/compare/v1.104.0...v1.104.1) (2026-06-12)
 
 
