@@ -492,5 +492,7 @@
   "shapeCircle": "Circle/Oval",
   "shapeTrapezoid": "Trapezoid",
   "featuresLink": "Compare features",
-  "outline": "Outline"
+  "outline": "Outline",
+  "mailNotificationsBookingInfo": "Booking information",
+  "mailReminderBookingInfo": "Booking reminders"
 }

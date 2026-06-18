@@ -576,6 +576,185 @@ func TestBookingRepositoryCurrentWithLocationTimezone(t *testing.T) {
 	CheckTestInt(t, 1, count)
 }
 
+func TestGetBookingsDueForReminderIncludesEligibleBooking(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: true,
+	}
+	GetBookingRepository().Create(b)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, len(results))
+	CheckTestString(t, b.ID, results[0].ID)
+	CheckTestString(t, user.Email, results[0].UserEmail)
+}
+
+func TestGetBookingsDueForReminderExcludesNotApproved(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: false,
+	}
+	GetBookingRepository().Create(b)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(results))
+}
+
+func TestGetBookingsDueForReminderExcludesAlreadySent(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: true,
+	}
+	GetBookingRepository().Create(b)
+	sentAt := time.Now().UTC()
+	GetBookingRepository().SetReminderSent(b.ID, &sentAt)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(results))
+}
+
+func TestGetBookingsDueForReminderExcludesTooSoon(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(18 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: true,
+	}
+	GetBookingRepository().Create(b)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(results))
+}
+
+func TestGetBookingsDueForReminderExcludesTooFarInFuture(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(27 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: true,
+	}
+	GetBookingRepository().Create(b)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(results))
+}
+
+func TestGetBookingsDueForReminderExcludesRecentInfoMail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: true,
+	}
+	GetBookingRepository().Create(b)
+	recentMail := time.Now().UTC().Add(-12 * time.Hour)
+	GetBookingRepository().UpdateLastInfoMailSentAt(b.ID, &recentMail)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(results))
+}
+
+func TestGetBookingsDueForReminderIncludesOldInfoMail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	b := &Booking{
+		UserID:   user.ID,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    enter.Add(8 * time.Hour),
+		Approved: true,
+	}
+	GetBookingRepository().Create(b)
+	oldMail := time.Now().UTC().Add(-25 * time.Hour)
+	GetBookingRepository().UpdateLastInfoMailSentAt(b.ID, &oldMail)
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, len(results))
+	CheckTestString(t, b.ID, results[0].ID)
+}
+
+func TestGetBookingsDueForReminderRespectsBatchSize(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	for i := 0; i < 5; i++ {
+		b := &Booking{
+			UserID:   user.ID,
+			SpaceID:  space.ID,
+			Enter:    enter,
+			Leave:    enter.Add(8 * time.Hour),
+			Approved: true,
+		}
+		GetBookingRepository().Create(b)
+	}
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(3)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 3, len(results))
+}
+
 // Same scenario as TestBookingRepositoryCurrentWithLocationTimezone but the
 // location has no tz set, so the org's default_timezone from settings is used.
 func TestBookingRepositoryCurrentWithDefaultTimezone(t *testing.T) {

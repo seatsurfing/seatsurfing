@@ -11,7 +11,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 45
+	targetVersion := 46
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
@@ -51,7 +51,6 @@ func RunDBSchemaUpdates() {
 			panic(err)
 		}
 	}
-
 	GetSettingsRepository().SetGlobal(SettingDatabaseVersion.Name, strconv.Itoa(targetVersion))
 	SetGlobalInstallID()
 }

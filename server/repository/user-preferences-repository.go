@@ -38,6 +38,7 @@ var (
 	PreferenceCalDAVPass            PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
 	PreferenceCalDAVPath            PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
 	PreferenceMailNotifications     PreferenceName = PreferenceName{Name: "mail_notifications", Type: SettingTypeBool}
+	PreferenceMailReminder          PreferenceName = PreferenceName{Name: "mail_reminder", Type: SettingTypeBool}
 	PreferenceMailLanguage          PreferenceName = PreferenceName{Name: "mail_language", Type: SettingTypeString}
 	PreferenceDateFormat            PreferenceName = PreferenceName{Name: "date_format", Type: SettingTypeString}
 	PreferenceApprovalNotifications PreferenceName = PreferenceName{Name: "approval_notifications", Type: SettingTypeBool}

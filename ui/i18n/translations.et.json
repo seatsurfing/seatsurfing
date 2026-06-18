@@ -492,5 +492,7 @@
   "nameRequirements": "Name may only contain letters, numbers, spaces, hyphens, apostrophes, and dots.",
   "language-de": "German",
   "language-en": "English",
-  "mailLanguage": "Mail language"
+  "mailLanguage": "Mail language",
+  "mailNotificationsBookingInfo": "Booking information",
+  "mailReminderBookingInfo": "Booking reminders"
 }

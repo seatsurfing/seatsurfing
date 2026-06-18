@@ -50,6 +50,7 @@ interface State {
   caldavCalendarsLoaded: boolean;
   caldavError: boolean;
   mailNotifications: boolean;
+  mailReminder: boolean;
   mailLanguage: string;
   use24HourTime: boolean;
   dateFormat: string;
@@ -111,6 +112,7 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
       caldavError: false,
       mailNotifications: false,
+      mailReminder: false,
       mailLanguage: "",
       use24HourTime: true,
       dateFormat: "Y-m-d",
@@ -188,6 +190,8 @@ class Preferences extends React.Component<Props, State> {
         state.caldavCalendar = s.value;
       if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
         state.mailNotifications = s.value === "1";
+      if (s.name === UserPreference.PREF_MAIL_REMINDER)
+        state.mailReminder = s.value === "1";
       if (s.name === UserPreference.PREF_MAIL_LANGUAGE)
         state.mailLanguage = s.value;
       if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
@@ -239,6 +243,10 @@ class Preferences extends React.Component<Props, State> {
       new UserPreference(
         UserPreference.PREF_MAIL_NOTIFICATIONS,
         this.state.mailNotifications ? "1" : "0",
+      ),
+      new UserPreference(
+        UserPreference.PREF_MAIL_REMINDER,
+        this.state.mailReminder ? "1" : "0",
       ),
       new UserPreference(
         UserPreference.PREF_MAIL_LANGUAGE,
@@ -678,10 +686,19 @@ class Preferences extends React.Component<Props, State> {
                   <Form.Check
                     type="checkbox"
                     id="mailNotifications"
-                    label={this.props.t("mailNotifications")}
+                    label={this.props.t("mailNotificationsBookingInfo")}
                     checked={this.state.mailNotifications}
                     onChange={(e: any) =>
                       this.setState({ mailNotifications: e.target.checked })
+                    }
+                  />
+                  <Form.Check
+                    type="checkbox"
+                    id="mailReminder"
+                    label={this.props.t("mailReminderBookingInfo")}
+                    checked={this.state.mailReminder}
+                    onChange={(e: any) =>
+                      this.setState({ mailReminder: e.target.checked })
                     }
                   />
                 </div>
