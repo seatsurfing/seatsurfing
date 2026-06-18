@@ -78,14 +78,22 @@ export function prepareRequestOptions(
   serverOptions: any,
 ): PublicKeyCredentialRequestOptions {
   const opts = serverOptions.publicKey ?? serverOptions;
-  return {
-    ...opts,
-    challenge: base64urlToUint8Array(opts.challenge),
-    allowCredentials: (opts.allowCredentials ?? []).map((c: any) => ({
+  const { allowCredentials, challenge, ...rest } = opts;
+  const result: any = {
+    ...rest,
+    challenge: base64urlToUint8Array(challenge),
+  };
+  // Only include allowCredentials when the server provided a non-empty list.
+  // For discoverable login the server omits allowCredentials entirely; passing
+  // an explicit empty array causes some Chromium builds to reject the request
+  // with NotAllowedError instead of showing the passkey dialog.
+  if (allowCredentials && allowCredentials.length > 0) {
+    result.allowCredentials = allowCredentials.map((c: any) => ({
       ...c,
       id: base64urlToUint8Array(c.id),
-    })),
-  };
+    }));
+  }
+  return result as PublicKeyCredentialRequestOptions;
 }
 
 // Serialise a PublicKeyCredential returned by navigator.credentials.create()

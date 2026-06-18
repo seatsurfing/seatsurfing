@@ -19,6 +19,7 @@ interface RuntimeUserInfos {
   showNames: boolean;
   customLogoUrl: string;
   defaultTimezone: string;
+  orgLanguage: string;
   disableBuddies: boolean;
   maxHoursPartiallyBooked: number;
   maxHoursPartiallyBookedEnabled: boolean;
@@ -31,6 +32,8 @@ interface RuntimeUserInfos {
   pluginWelcomeScreens: any[];
   featureGroups: boolean;
   featureAuthProviders: boolean;
+  featureKioskMode: boolean;
+  kioskModeEnabled: boolean;
   cloudHosted: boolean;
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
@@ -39,10 +42,14 @@ interface RuntimeUserInfos {
   subjectDefault: number;
   use24HourTime: boolean;
   dateFormat: string;
+  weekStartDay: number;
   totpEnabled: boolean;
   enforceTOTP: boolean;
+  hideReports: boolean;
+  hideStats: boolean;
   hasPasskeys: boolean;
   isPrimaryDomain: boolean;
+  targetUtilizationHoursPerWeek: number;
 }
 
 export default class RuntimeConfig {
@@ -69,6 +76,7 @@ export default class RuntimeConfig {
       maxHoursPartiallyBookedEnabled: false,
       showNames: false,
       defaultTimezone: "",
+      orgLanguage: "",
       featureRecurringBookings: false,
       organizationId: "",
       superAdmin: false,
@@ -78,6 +86,8 @@ export default class RuntimeConfig {
       pluginWelcomeScreens: [],
       featureGroups: false,
       featureAuthProviders: false,
+      featureKioskMode: false,
+      kioskModeEnabled: false,
       cloudHosted: false,
       subscriptionActive: false,
       orgPrimaryDomain: "",
@@ -86,10 +96,14 @@ export default class RuntimeConfig {
       subjectDefault: 2,
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      weekStartDay: 1,
       totpEnabled: false,
       enforceTOTP: false,
+      hideReports: false,
+      hideStats: false,
       hasPasskeys: false,
       isPrimaryDomain: false,
+      targetUtilizationHoursPerWeek: 0,
     };
   };
 
@@ -160,6 +174,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.customLogoUrl = s.value;
           if (s.name === "default_timezone")
             RuntimeConfig.INFOS.defaultTimezone = s.value;
+          if (s.name === "_sys_org_language")
+            RuntimeConfig.INFOS.orgLanguage = s.value;
           if (s.name === "feature_recurring_bookings")
             RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
           if (s.name === "allow_recurring_bookings")
@@ -180,6 +196,10 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.featureAuthProviders = s.value
               ? JSON.parse(s.value)
               : [];
+          if (s.name === "feature_kiosk_mode")
+            RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
+          if (s.name === "kiosk_mode_enabled")
+            RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
           if (s.name === "cloud_hosted")
             RuntimeConfig.INFOS.cloudHosted = s.value
               ? JSON.parse(s.value)
@@ -196,6 +216,14 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
           if (s.name === "enforce_totp")
             RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
+          if (s.name === "hide_reports")
+            RuntimeConfig.INFOS.hideReports = s.value === "1";
+          if (s.name === "hide_stats")
+            RuntimeConfig.INFOS.hideStats = s.value === "1";
+          if (s.name === "target_utilization_hours_per_week")
+            RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
+              s.value,
+            );
         });
         resolve();
       });
@@ -203,20 +231,23 @@ export default class RuntimeConfig {
   };
 
   static loadUserPreferences = async (): Promise<void> => {
-    UserPreference.list()
-      .then((list) => {
-        list.forEach((pref) => {
-          if (pref.name === "use_24_hour_time") {
-            RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
-          }
-          if (pref.name === "date_format") {
-            RuntimeConfig.INFOS.dateFormat = pref.value;
-          }
-        });
-      })
-      .catch(() => {
-        // Nothing to do
+    try {
+      const list = await UserPreference.list();
+      list.forEach((pref) => {
+        if (pref.name === UserPreference.PREF_USE_24_HOUR_TIME) {
+          RuntimeConfig.INFOS.use24HourTime = pref.value === "1";
+        }
+        if (pref.name === UserPreference.PREF_DATE_FORMAT) {
+          RuntimeConfig.INFOS.dateFormat = pref.value;
+        }
+        if (pref.name === UserPreference.PREF_WEEK_START_DAY) {
+          const v = parseInt(pref.value);
+          RuntimeConfig.INFOS.weekStartDay = [0, 1, 6].includes(v) ? v : 1;
+        }
       });
+    } catch {
+      // Nothing to do
+    }
   };
 
   static setDetails = (username: string, id: string) => {
@@ -277,6 +308,7 @@ export default class RuntimeConfig {
       "pt",
       "ro",
       "es",
+      "zh-TW",
     ];
   }
 

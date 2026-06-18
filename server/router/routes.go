@@ -2,6 +2,8 @@ package router
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,12 +49,17 @@ var (
 	ResponseCodeBookingNotAllowedBooker          = 1009
 	ResponseCodeBookingSubjectRequired           = 1010
 	ResponseCodeBookingInPast                    = 1011
+	ResponseCodeBookingInvalidSubject            = 1012
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
 	ResponseCodeUserAlreadyExists = 3001
 
 	ResponseCodeGroupNameAlreadyExists = 4001
+
+	ResponseCodePasswordUpdateRequired = 5001
+
+	ResponseCodeAuthProviderAlreadyExists = 6001
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {
@@ -91,6 +98,10 @@ func SendPaymentRequired(w http.ResponseWriter) {
 
 func SendUnauthorized(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func SendUnauthorizedCode(w http.ResponseWriter, code int) {
+	sendErrorCode(w, http.StatusUnauthorized, code)
 }
 
 func SendTooManyRequests(w http.ResponseWriter) {
@@ -286,35 +297,63 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 
 	var handleServiceAccountAuth = func(w http.ResponseWriter, r *http.Request) bool {
 		username, password, ok := r.BasicAuth()
-		if !ok {
+		if ok {
+			if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+				return false
+			}
+			organizationId := username[:36]
+			email := username[37:]
+			user, err := GetUserRepository().GetByEmail(organizationId, email)
+			if err != nil || user == nil {
+				return false
+			}
+			if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
+				return false
+			}
+			if user.HashedPassword == "" {
+				return false
+			}
+			if user.Disabled {
+				return false
+			}
+			if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
+				return false
+			}
+			if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
+				return false
+			}
+			ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+			// Note: service accounts do not have sessions, so we do not set session ID in context
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return true
+		}
+
+		// Try Bearer token auth for service accounts
+		authHeader := r.Header.Get("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
 			return false
 		}
-		if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+		bearerValue := strings.TrimPrefix(authHeader, "Bearer ")
+		// JWTs start with "eyJ" — handled by handleTokenAuth, not here
+		if strings.HasPrefix(bearerValue, "eyJ") {
 			return false
 		}
-		organizationId := username[:36]
-		email := username[37:]
-		user, err := GetUserRepository().GetByEmail(organizationId, email)
+		hash := sha256.Sum256([]byte(bearerValue))
+		tokenHash := hex.EncodeToString(hash[:])
+		user, err := GetUserRepository().GetByApiToken(tokenHash)
 		if err != nil || user == nil {
 			return false
 		}
 		if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
 			return false
 		}
-		if user.HashedPassword == "" {
-			return false
-		}
 		if user.Disabled {
-			return false
-		}
-		if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
 			return false
 		}
 		if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
-		// Note: service accounts do not have sessions, so we do not set session ID in context
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}
@@ -392,7 +431,7 @@ func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
 	if strings.ToLower(config.GetConfig().PublicScheme) == "https" {
 		w.Header().Set("Content-Security-Policy", "upgrade-insecure-requests")
 	}
-	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
+	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(self), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 }

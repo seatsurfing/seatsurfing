@@ -22,10 +22,9 @@ import Formatting from "@/util/Formatting";
 import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import AjaxError from "@/util/AjaxError";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
-import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
 
@@ -101,10 +100,6 @@ class Bookings extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     Location.list().then((locations) => (this.locations = locations));
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
@@ -113,23 +108,16 @@ class Bookings extends React.Component<Props, State> {
   };
 
   updateUrlParams = (
-    enter: string,
-    leave: string,
+    enter: string | null,
+    leave: string | null,
     filter: string | null,
     filterUser: string | null,
     filterLocation: string | null,
   ) => {
     const currentPath = this.props.router.pathname;
-    const {
-      filter: _,
-      user: __,
-      location: ___,
-      ...queryWithoutFilter
-    } = this.props.router.query;
     const currentQuery = {
-      ...queryWithoutFilter,
-      enter,
-      leave,
+      ...(enter !== null && { enter }),
+      ...(leave !== null && { leave }),
       ...(filter !== null && { filter }),
       ...(filterUser && { user: filterUser }),
       ...(filterLocation && { location: filterLocation }),
@@ -145,52 +133,45 @@ class Bookings extends React.Component<Props, State> {
     );
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
-
     const startOfToday = DateUtil.getTodayStart();
     const endOfToday = DateUtil.getTodayEnd();
 
-    const bookings =
-      this.state.filterOption === "enter_leave"
+    this.data = await (this.state.filterOption === "enter_leave"
+      ? Booking.listFiltered(
+          this.state.start,
+          end,
+          this.state.filterUser,
+          this.state.filterLocation,
+        )
+      : this.state.filterOption === "today"
         ? Booking.listFiltered(
-            this.state.start,
-            end,
+            startOfToday,
+            endOfToday,
             this.state.filterUser,
             this.state.filterLocation,
           )
-        : this.state.filterOption === "today"
-          ? Booking.listFiltered(
-              startOfToday,
-              endOfToday,
-              this.state.filterUser,
-              this.state.filterLocation,
-            )
-          : Booking.listCurrent(
-              this.state.filterUser,
-              this.state.filterLocation,
-            );
-
-    bookings.then((list) => {
-      this.data = list;
-      this.setState({ loading: false });
-      this.updateUrlParams(
-        DateUtil.formatToDateTimeString(this.state.start),
-        DateUtil.formatToDateTimeString(this.state.end),
-        this.state.filterOption === "enter_leave" ||
-          this.state.filterOption === "today"
-          ? this.state.filterOption
-          : null,
-        this.state.filterUser,
-        this.state.filterLocation,
-      );
-    });
+        : Booking.listCurrent(
+            this.state.filterUser,
+            this.state.filterLocation,
+          ));
+    this.setState({ loading: false });
+    this.updateUrlParams(
+      this.state.filterOption === "enter_leave"
+        ? DateUtil.formatToDateTimeString(this.state.start)
+        : null,
+      this.state.filterOption === "enter_leave"
+        ? DateUtil.formatToDateTimeString(this.state.end)
+        : null,
+      this.state.filterOption,
+      this.state.filterUser,
+      this.state.filterLocation,
+    );
   };
 
   cancelBooking = (booking: Booking) => {
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
+    const formatter = Formatting.getBookingDateFormatter();
 
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(booking.enter),
@@ -225,12 +206,11 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadSettings = async (): Promise<void> => {
-    return OrgSettings.list().then((settings) => {
-      settings.forEach((s) => {
-        if (s.name === "max_hours_before_delete") {
-          this.maxHoursBeforeDelete = window.parseInt(s.value);
-        }
-      });
+    const settings = await OrgSettings.list();
+    settings.forEach((s) => {
+      if (s.name === "max_hours_before_delete") {
+        this.maxHoursBeforeDelete = window.parseInt(s.value);
+      }
     });
   };
 
@@ -293,7 +273,13 @@ class Bookings extends React.Component<Props, State> {
   exportTable = (e: any) => {
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
-      [{ name: "Seatsurfing Bookings", from: { table: "datatable" } }],
+      [
+        {
+          name: "Seatsurfing Bookings",
+          from: { table: "datatable" },
+          removeColumns: [0, 7],
+        },
+      ],
     );
   };
 
@@ -396,11 +382,12 @@ class Bookings extends React.Component<Props, State> {
         </Form.Group>
 
         <Form.Group as={Row} hidden={this.state.filterOption !== "enter_leave"}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="input-enter">
             {this.props.t("enter")}
           </Form.Label>
           <Col sm="4">
             <DateTimePicker
+              id="input-enter"
               value={this.state.start}
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ start: value });
@@ -413,11 +400,12 @@ class Bookings extends React.Component<Props, State> {
           </Col>
         </Form.Group>
         <Form.Group as={Row} hidden={this.state.filterOption !== "enter_leave"}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="input-leave">
             {this.props.t("leave")}
           </Form.Label>
           <Col sm="4">
             <DateTimePicker
+              id="input-leave"
               value={this.state.end}
               onChange={(value: Date | null) => {
                 if (value != null) this.setState({ end: value });
@@ -465,11 +453,12 @@ class Bookings extends React.Component<Props, State> {
           </Col>
         </Form.Group>
         <Form.Group as={Row}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="area-select">
             {this.props.t("area")}
           </Form.Label>
           <Col sm="4">
             <Form.Select
+              id="area-select"
               value={this.state.filterLocation}
               onChange={(e: any) =>
                 this.setState({ filterLocation: e.target.value })

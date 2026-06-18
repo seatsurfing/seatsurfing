@@ -5,6 +5,7 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -38,7 +39,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
       return;
     }
     // Validate the invite link
-    Ajax.get("/auth/setpw/" + id)
+    Ajax.get("/auth/setpw/" + id, () => true)
       .then((res) => {
         if (res.status === 204 || res.status === 200) {
           this.setState({ linkValid: true });
@@ -65,7 +66,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
     let payload = {
       password: this.state.newPassword,
     };
-    Ajax.postData("/auth/setpw/" + id, payload)
+    Ajax.postData("/auth/setpw/" + id, payload, () => true)
       .then((res) => {
         if (res.status >= 200 && res.status <= 299) {
           this.setState({ loading: false, complete: true, success: true });
@@ -73,7 +74,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
           this.setState({ loading: false, complete: true, success: false });
         }
       })
-      .catch((e) => {
+      .catch(() => {
         this.setState({ loading: false, complete: true, success: false });
       });
   };
@@ -142,7 +143,10 @@ class CompleteUserInvitation extends React.Component<Props, State> {
               }
               required={true}
               autoFocus={true}
-              minLength={8}
+              minLength={Validation.PASSWORD_MIN_LENGTH}
+              maxLength={Validation.PASSWORD_MAX_LENGTH}
+              pattern={Validation.PASSWORD_PATTERN}
+              title={this.props.t("passwordRequirements")}
               disabled={this.state.loading}
               isInvalid={this.state.complete && !this.state.success}
             />

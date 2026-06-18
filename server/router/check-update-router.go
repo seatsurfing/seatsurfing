@@ -18,8 +18,10 @@ func (router *CheckUpdateRouter) SetupRoutes(s *mux.Router) {
 func (router *CheckUpdateRouter) checkUpdate(w http.ResponseWriter, r *http.Request) {
 	latest := GetUpdateChecker().Latest
 	if latest == nil {
-		SendNotFound(w)
-		return
+		latest = &CheckVersionResponse{
+			UpdateAvailable: false,
+			LatestVersion:   "",
+		}
 	}
 	SendJSON(w, latest)
 }

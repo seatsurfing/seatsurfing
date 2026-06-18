@@ -7,7 +7,7 @@
 
 ## 🚀 Seatsurfing SaaS available!
 
-We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS) at. [Start for free now](https://seatsurfing.io/sign-up)!
+We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS). [Start for free now](https://seatsurfing.io/sign-up)!
 
 - **No installation required** - Get started immediately
 - **Microsoft Teams integration** - See [Microsoft AppSource marketplace](https://appsource.microsoft.com/product/office/WA200008773)
@@ -80,14 +80,14 @@ networks:
   sql:
 ```
 
-This starts...
+This starts …
 
-- a PostgreSQL database with data stored on Docker volume "db"
-- a Seatsurfing instance with port 8080 exposed
+- … a PostgreSQL database with data stored on Docker volume "db"
+- … a Seatsurfing instance with port 8080 exposed
 
 The Seatsurfing Booking UI is accessible at :8080/ui/search/ and the Seatsurfing Admin UI instance at :8080/ui/admin/.
 
-To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`) or set the [environment variables](https://seatsurfing.io/docs/self-hosted/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
+To login, use the default admin login (user `admin@seatsurfing.local` and password `Sea!surf1ng`) or set the [environment variables](https://seatsurfing.io/docs/self-hosted/config) `INIT_ORG_USER` and `INIT_ORG_PASS` to customize the admin login.
 
 ### Running on Kubernetes
 

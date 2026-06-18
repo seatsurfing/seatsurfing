@@ -4,6 +4,7 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import User from "./User";
 import Formatting from "../util/Formatting";
+import DateUtil from "../util/DateUtil";
 
 export default class Booking extends Entity {
   enter: Date;
@@ -29,8 +30,8 @@ export default class Booking extends Entity {
 
   serialize(): Object {
     // Convert the local dates to UTC dates without changing the date/time ("fake" UTC)
-    let enter = Formatting.convertToFakeUTCDate(this.enter);
-    let leave = Formatting.convertToFakeUTCDate(this.leave);
+    let enter = DateUtil.convertToFakeUTCDate(this.enter);
+    let leave = DateUtil.convertToFakeUTCDate(this.leave);
 
     if (this.user) {
       return Object.assign(super.serialize(), {
@@ -156,9 +157,9 @@ export default class Booking extends Entity {
     const queryParams = new URLSearchParams();
     queryParams.set(
       "start",
-      Formatting.convertToFakeUTCDate(start).toISOString(),
+      DateUtil.convertToFakeUTCDate(start).toISOString(),
     );
-    queryParams.set("end", Formatting.convertToFakeUTCDate(end).toISOString());
+    queryParams.set("end", DateUtil.convertToFakeUTCDate(end).toISOString());
     if (user) queryParams.set("user", user);
     if (location) queryParams.set("location", location);
     return Ajax.get(`/booking/filter/?${queryParams.toString()}`).then(

@@ -18,6 +18,9 @@ func AttachTimezoneInformationTz(timestamp time.Time, tz string) (time.Time, err
 	if err != nil {
 		return timestamp, err
 	}
+	if timestamp.Location().String() == targetTz.String() {
+		return timestamp, nil
+	}
 	targetTimestamp := timestamp.In(targetTz)
 	_, offset := targetTimestamp.Zone()
 	targetTimestamp = targetTimestamp.Add(time.Second * time.Duration(offset) * -1)

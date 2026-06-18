@@ -1,28 +1,36 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert, InputGroup } from "react-bootstrap";
+import {
+  Form,
+  Col,
+  Row,
+  Button,
+  Alert,
+  InputGroup,
+  Modal,
+} from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
   Trash2 as IconDelete,
   RefreshCw as IconRefresh,
-  Clipboard as IconCopy,
-  Check as IconCheck,
   XCircle as IconReset,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import OrgSettings from "@/types/Settings";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import AuthProvider from "@/types/AuthProvider";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -43,10 +51,11 @@ interface State {
   sendInvitation: boolean;
   resendInvitation: boolean;
   role: number;
-  showUsernameCopied: boolean;
-  showPasswordCopied: boolean;
   totpEnabled: boolean;
   hasPasskeys: boolean;
+  apiTokenConfigured: boolean;
+  showApiTokenModal: boolean;
+  generatedToken: string;
 }
 
 interface Props {
@@ -82,18 +91,15 @@ class EditUser extends React.Component<Props, State> {
       sendInvitation: false,
       resendInvitation: false,
       role: User.UserRoleUser,
-      showUsernameCopied: false,
-      showPasswordCopied: false,
       totpEnabled: false,
       hasPasskeys: false,
+      apiTokenConfigured: false,
+      showApiTokenModal: false,
+      generatedToken: "",
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -105,7 +111,7 @@ class EditUser extends React.Component<Props, State> {
   };
 
   loadData = () => {
-    let promises: Promise<any>[] = [
+    const promises: Promise<any>[] = [
       OrgSettings.getOne("feature_no_user_limit"),
       User.getCount(),
       User.getSelf().then((me) => {
@@ -117,7 +123,7 @@ class EditUser extends React.Component<Props, State> {
     if (id && typeof id === "string" && id !== "add") {
       promises.push(User.get(id));
     }
-    Promise.all(promises).then((values) => {
+    Promise.all(promises).then(async (values) => {
       this.usersMax = values[0] === "1" ? 1000000 : 10;
       this.usersCur = values[1];
       this.adminUserRole = values[2][0].role;
@@ -134,6 +140,12 @@ class EditUser extends React.Component<Props, State> {
         } else if (user.requirePassword) {
           authMethod = "password";
         }
+        const isServiceAccount =
+          user.role === User.UserRoleServiceAccountRO ||
+          user.role === User.UserRoleServiceAccountRW;
+        const apiTokenConfigured = isServiceAccount
+          ? await User.getApiTokenStatus(user.id).catch(() => false)
+          : false;
         this.setState({
           email: user.email,
           originalEmail: user.email,
@@ -145,6 +157,7 @@ class EditUser extends React.Component<Props, State> {
           role: user.role,
           totpEnabled: user.totpEnabled,
           hasPasskeys: user.hasPasskeys,
+          apiTokenConfigured,
         });
       }
       this.setState({
@@ -191,8 +204,14 @@ class EditUser extends React.Component<Props, State> {
     this.entity
       .save()
       .then(() => {
-        this.props.router.push("/admin/users/" + this.entity.id);
-        this.setState({ saved: true, resendInvitation: false });
+        this.props.router.push(
+          `/admin/users/${encodeURIComponent(this.entity.id)}`,
+        );
+        this.setState({
+          saved: true,
+          resendInvitation: false,
+          originalEmail: this.entity.email, // don't (re)send invitation mails on second save
+        });
       })
       .catch((e) => {
         let code: number = 0;
@@ -203,7 +222,7 @@ class EditUser extends React.Component<Props, State> {
           error: true,
           errorText: code
             ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
+            : this.props.t("errorSave"),
         });
       });
   };
@@ -233,37 +252,9 @@ class EditUser extends React.Component<Props, State> {
   };
 
   generatePassword = () => {
-    const length = 32;
-    const charset =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let password = "";
-    for (let i = 0, n = charset.length; i < length; ++i) {
-      password += charset.charAt(Math.floor(Math.random() * n));
-    }
+    const password = Validation.generatePassword();
     this.setState({ password, changePassword: true });
   };
-
-  copyToClipboard = (textKey: keyof State, stateKey: keyof State): Function => {
-    return () => {
-      navigator.clipboard
-        .writeText(this.state[textKey] as string)
-        .then(() => {
-          this.setState({ [stateKey]: true } as any);
-          setTimeout(() => {
-            this.setState({ [stateKey]: false } as any);
-          }, 2000);
-        })
-        .catch(() => {
-          // do nothing
-        });
-    };
-  };
-
-  copyUsernameToClipboard = this.copyToClipboard("email", "showUsernameCopied");
-  copyPasswordToClipboard = this.copyToClipboard(
-    "password",
-    "showPasswordCopied",
-  );
 
   changeRole = (role: number) => {
     let changePassword = this.isServiceAccount(role)
@@ -272,6 +263,24 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ role: role, changePassword });
     if (changePassword) {
       this.generatePassword();
+    }
+  };
+
+  generateApiToken = () => {
+    User.generateApiToken(this.entity.id).then((token) => {
+      this.setState({
+        apiTokenConfigured: true,
+        showApiTokenModal: true,
+        generatedToken: token,
+      });
+    });
+  };
+
+  revokeApiToken = () => {
+    if (window.confirm(this.props.t("confirmRevokeApiToken"))) {
+      User.revokeApiToken(this.entity.id).then(() => {
+        this.setState({ apiTokenConfigured: false });
+      });
     }
   };
 
@@ -308,11 +317,7 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = (
-        <Alert variant="danger">
-          {this.state.errorText ?? this.props.t("errorSave")}
-        </Alert>
-      );
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     const buttonDelete = (
@@ -353,6 +358,7 @@ class EditUser extends React.Component<Props, State> {
     if (!isOwnUser && this.adminUserRole >= this.state.role) {
       roleSelect = (
         <Form.Select
+          id="role"
           value={this.state.role}
           onChange={(e: any) => this.changeRole(parseInt(e.target.value))}
           required={true}
@@ -414,7 +420,12 @@ class EditUser extends React.Component<Props, State> {
       }
       roleSelect = (
         <>
-          <Form.Control plaintext={true} readOnly={true} defaultValue={role} />
+          <Form.Control
+            id="role"
+            plaintext={true}
+            readOnly={true}
+            defaultValue={role}
+          />
           {isOwnUser && (
             <Form.Text className="text-muted">
               {this.props.t("cannotChangeOwnRole")}
@@ -423,31 +434,24 @@ class EditUser extends React.Component<Props, State> {
         </>
       );
     }
-    let copyPasswordIcon = <IconCopy className="feather" />;
-    if (this.state.showPasswordCopied) {
-      copyPasswordIcon = <IconCheck className="feather" />;
-    }
-    let copyUsernameIcon = <IconCopy className="feather" />;
-    if (this.state.showUsernameCopied) {
-      copyUsernameIcon = <IconCheck className="feather" />;
-    }
     return (
       <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="role" column sm="2">
               {this.props.t("role")}
             </Form.Label>
             <Col sm="4">{roleSelect}</Col>
           </Form.Group>
           {!this.isServiceAccount(this.state.role) && (
             <Form.Group as={Row}>
-              <Form.Label column sm="2">
+              <Form.Label htmlFor="email" column sm="2">
                 {this.props.t("emailAddress")}
               </Form.Label>
               <Col sm="4">
                 <Form.Control
+                  id="email"
                   type="email"
                   placeholder="some@domain.com"
                   value={this.state.email}
@@ -460,44 +464,55 @@ class EditUser extends React.Component<Props, State> {
             </Form.Group>
           )}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="firstname" column sm="2">
               {this.props.t("firstname")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
-                type="firstname"
+                id="firstname"
+                type="text"
                 placeholder=""
                 value={this.state.firstname}
                 onChange={(e: any) =>
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="lastname" column sm="2">
               {this.props.t("lastname")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
-                type="lastname"
+                id="lastname"
+                type="text"
                 placeholder=""
                 value={this.state.lastname}
                 onChange={(e: any) =>
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="username" column sm="2">
               {this.props.t("username")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="username"
                   type="text"
                   readOnly={!this.isServiceAccount(this.state.role)}
                   value={this.state.email}
@@ -508,13 +523,7 @@ class EditUser extends React.Component<Props, State> {
                   }
                   required={this.isServiceAccount(this.state.role)}
                 />
-                <Button
-                  onClick={() => this.copyUsernameToClipboard()}
-                  disabled={this.state.email === ""}
-                  variant="outline-secondary"
-                >
-                  {copyUsernameIcon}
-                </Button>
+                <CopyToClipboardButton text={this.state.email} />
               </InputGroup>
             </Col>
           </Form.Group>
@@ -527,7 +536,7 @@ class EditUser extends React.Component<Props, State> {
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="auth-method-password" column sm="2">
               {this.props.t("authMethod")}
             </Form.Label>
             <Col sm="4">
@@ -569,11 +578,12 @@ class EditUser extends React.Component<Props, State> {
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="authProvider" column sm="2">
               {this.props.t("chooseAuthProvider")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="authProvider"
                 value={this.state.authProviderId}
                 onChange={(e: any) =>
                   this.setState({ authProviderId: e.target.value })
@@ -645,12 +655,13 @@ class EditUser extends React.Component<Props, State> {
                 this.state.authMethod !== "password")
             }
           >
-            <Form.Label column sm="2">
+            <Form.Label htmlFor="password" column sm="2">
               {this.props.t("password")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="password"
                   type={
                     this.isServiceAccount(this.state.role) ? "text" : "password"
                   }
@@ -674,7 +685,13 @@ class EditUser extends React.Component<Props, State> {
                       !this.state.changePassword) ||
                     this.isServiceAccount(this.state.role)
                   }
-                  minLength={this.isServiceAccount(this.state.role) ? 32 : 8}
+                  minLength={
+                    this.isServiceAccount(this.state.role)
+                      ? Validation.PASSWORD_MIN_LENGTH_SA
+                      : Validation.PASSWORD_MIN_LENGTH
+                  }
+                  pattern={Validation.PASSWORD_PATTERN}
+                  title={this.props.t("passwordRequirements")}
                 />
                 <Button
                   onClick={() => this.generatePassword()}
@@ -683,14 +700,10 @@ class EditUser extends React.Component<Props, State> {
                 >
                   <IconRefresh className="feather" />
                 </Button>
-                <Button
-                  onClick={() => this.copyPasswordToClipboard()}
-                  disabled={this.state.password === ""}
+                <CopyToClipboardButton
+                  text={this.state.password}
                   hidden={!this.isServiceAccount(this.state.role)}
-                  variant="outline-secondary"
-                >
-                  {copyPasswordIcon}
-                </Button>
+                />
               </InputGroup>
             </Col>
           </Form.Group>
@@ -729,7 +742,79 @@ class EditUser extends React.Component<Props, State> {
               )}
             </Col>
           </Form.Group>
+
+          {/* API Token section — only shown for existing service accounts */}
+          {this.entity.id && this.isServiceAccount(this.state.role) && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("apiToken")}
+              </Form.Label>
+              <Col sm="4" className="d-flex gap-2 align-items-center">
+                <span
+                  className={
+                    this.state.apiTokenConfigured
+                      ? "text-success"
+                      : "text-secondary"
+                  }
+                >
+                  {this.state.apiTokenConfigured
+                    ? this.props.t("apiTokenConfigured")
+                    : this.props.t("apiTokenNotConfigured")}
+                </span>
+                <Button
+                  className="btn-sm"
+                  variant="outline-secondary"
+                  onClick={this.generateApiToken}
+                >
+                  {this.props.t("generateApiToken")}
+                </Button>
+                {this.state.apiTokenConfigured && (
+                  <Button
+                    className="btn-sm"
+                    variant="outline-danger"
+                    onClick={this.revokeApiToken}
+                  >
+                    {this.props.t("revokeApiToken")}
+                  </Button>
+                )}
+              </Col>
+            </Form.Group>
+          )}
         </Form>
+
+        <Modal
+          show={this.state.showApiTokenModal}
+          onHide={() =>
+            this.setState({ showApiTokenModal: false, generatedToken: "" })
+          }
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>{this.props.t("apiToken")}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Alert variant="warning">
+              {this.props.t("apiTokenOnceWarning")}
+            </Alert>
+            <InputGroup>
+              <Form.Control
+                type="text"
+                readOnly
+                value={this.state.generatedToken}
+              />
+              <CopyToClipboardButton text={this.state.generatedToken} />
+            </InputGroup>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                this.setState({ showApiTokenModal: false, generatedToken: "" })
+              }
+            >
+              {this.props.t("close")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </FullLayout>
     );
   }

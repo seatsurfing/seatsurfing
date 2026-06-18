@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Println("Starting...")
+	log.Println("Starting …")
 	log.Println("Seatsurfing version " + GetProductVersion())
 	db := GetDatabase()
 	a := GetApp()

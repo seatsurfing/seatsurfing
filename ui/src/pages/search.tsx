@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-bootstrap";
 import Loading from "../components/Loading";
+import FullWidthModal from "../components/FullWidthModal";
 import {
   IoFilter as FilterIcon,
   IoInformation as InfoIcon,
@@ -28,6 +29,7 @@ import {
   IoTime as TimeIcon,
   IoTimerOutline as TimerIcon,
   IoCalendarOutline as CalendarIcon,
+  IoPerson as NamesIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -35,18 +37,29 @@ import NavBar from "@/components/NavBar";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import withReadyRouter from "@/components/withReadyRouter";
 import { Tooltip } from "react-tooltip";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 import {
   Loader as IconLoad,
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
 } from "react-feather";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
+import createCustomEvent, {
+  bookingToCalendarEvent,
+  CalendarEvent,
+} from "@/components/calendar/CustomEvent";
+import moment from "moment-timezone";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
 import {
   TransformWrapper,
   TransformComponent,
   MiniMap,
+  ReactZoomPanPinchContentRef,
 } from "react-zoom-pan-pinch";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import CalendarButton from "@/components/button/CalendarButton";
 import SpaceAttributeValue from "@/types/SpaceAttributeValue";
 import SearchAttribute from "@/types/SearchAttribute";
 import Buddy from "@/types/Buddy";
@@ -63,7 +76,11 @@ import AjaxError from "@/util/AjaxError";
 import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
+import IconTextButton from "@/components/IconTextButton";
 import DateUtil from "@/util/DateUtil";
+import BrowserUtil from "@/util/BrowserUtil";
+import RendererUtils from "@/util/RendererUtils";
+import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 
 interface State {
   earliestEnterDate: Date;
@@ -82,6 +99,7 @@ interface State {
   errorText: string;
   loading: boolean;
   listView: boolean;
+  showBookerNamesOnMap: boolean;
   prefEnterTime: number;
   prefWorkdayStart: number;
   prefWorkdayEnd: number;
@@ -118,6 +136,13 @@ interface State {
 
   selectionMultiDay: boolean;
   selectionAllDay: boolean;
+
+  showSpaceCalendar: boolean;
+  spaceCalendarDate: Date;
+  spaceCalendarBookings: Booking[];
+  spaceCalendarLoading: boolean;
+  spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
+  windowWidth: number;
 }
 
 interface Props {
@@ -126,21 +151,22 @@ interface Props {
 }
 
 class Search extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
-
   data: Space[];
   locations: Location[];
   mapData: any;
   curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
+  transformWrapperRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
 
+  // time set *before* allDay option was selected
   resetEnterTime: Date | undefined;
   resetLeaveTime: Date | undefined;
+
+  // whether to auto update the enter time (stopped after first manual time change)
+  autoUpdateEnterTimeToPrefWorkdayStart: boolean = true;
 
   constructor(props: any) {
     super(props);
@@ -150,6 +176,7 @@ class Search extends React.Component<Props, State> {
     this.buddies = [];
     this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
+    this.transformWrapperRef = React.createRef();
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
@@ -172,12 +199,16 @@ class Search extends React.Component<Props, State> {
       showError: false,
       errorText: "",
       loading: true,
-      listView: (function () {
-        if (window !== undefined && window.localStorage !== undefined) {
-          return window.localStorage.getItem("listView") === "1";
-        }
-        return false;
-      })(),
+      listView: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
+          "0",
+        ) === "1")(),
+      showBookerNamesOnMap: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+          "0",
+        ) === "1")(),
       prefEnterTime: 0,
       prefWorkdayStart: 0,
       prefWorkdayEnd: 0,
@@ -213,10 +244,22 @@ class Search extends React.Component<Props, State> {
 
       selectionAllDay: false,
       selectionMultiDay: false,
+
+      showSpaceCalendar: false,
+      spaceCalendarDate: new Date(),
+      spaceCalendarBookings: [],
+      spaceCalendarLoading: false,
+      spaceCalendarReturnTo: "showBookingNames",
+      windowWidth: typeof window !== "undefined" ? window.innerWidth : 1024,
     };
   }
 
+  onWindowResize = () => {
+    this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
+  };
+
   componentDidMount = () => {
+    window.addEventListener("resize", this.onWindowResize);
     if (!Ajax.hasAccessToken()) {
       this.props.router.push({
         pathname: "/login",
@@ -225,6 +268,10 @@ class Search extends React.Component<Props, State> {
       return;
     }
     this.loadItems();
+  };
+
+  componentWillUnmount = () => {
+    window.removeEventListener("resize", this.onWindowResize);
   };
 
   loadItems = () => {
@@ -250,10 +297,18 @@ class Search extends React.Component<Props, State> {
             ?.getAttributes()
             .then((attributes) => {
               this.loadMap(this.state.locationId).then(() => {
-                this.setState({
-                  attributeValues: attributes,
-                  loading: false,
-                });
+                this.setState(
+                  {
+                    attributeValues: attributes,
+                    loading: false,
+                  },
+                  () => {
+                    // v4 centerOnInit is unreliable because TransformComponent may mount
+                    // before map data is loaded, causing centering with 0-size content.
+                    // Instead, center explicitly after data is loaded and React has painted.
+                    requestAnimationFrame(() => this.centerMap());
+                  },
+                );
                 if (sidParam) {
                   const space = this.data.find((item) => item.id == sidParam);
                   if (space) this.onSpaceSelect(space);
@@ -267,10 +322,6 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  getEarliestSelectableEnterDate = (): Date => {
-    return DateUtil.getTodayStart();
-  };
-
   loadPreferences = async (): Promise<void> => {
     const self = this;
     return new Promise<void>(function (resolve, reject) {
@@ -279,28 +330,30 @@ class Search extends React.Component<Props, State> {
           const state: any = {};
           list.forEach((s) => {
             if (typeof window !== "undefined") {
-              if (s.name === "enter_time")
+              if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
-              if (s.name === "workday_start")
+              if (s.name === UserPreference.PREF_WORKDAY_START)
                 state.prefWorkdayStart = window.parseInt(s.value);
-              if (s.name === "workday_end")
+              if (s.name === UserPreference.PREF_WORKDAY_END)
                 state.prefWorkdayEnd = window.parseInt(s.value);
-              if (s.name === "workdays")
+              if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
                   .map((val) => window.parseInt(val));
             }
-            if (s.name === "location_id") state.prefLocationId = s.value;
-            if (s.name === "booked_color") state.prefBookedColor = s.value;
-            if (s.name === "not_booked_color")
+            if (s.name === UserPreference.PREF_LOCATION_ID)
+              state.prefLocationId = s.value;
+            if (s.name === UserPreference.PREF_BOOKED_COLOR)
+              state.prefBookedColor = s.value;
+            if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
               state.prefNotBookedColor = s.value;
-            if (s.name === "self_booked_color")
+            if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
               state.prefSelfBookedColor = s.value;
-            if (s.name === "partially_booked_color")
+            if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
               state.prefPartiallyBookedColor = s.value;
-            if (s.name === "buddy_booked_color")
+            if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
               state.prefBuddyBookedColor = s.value;
-            if (s.name === "disallowed_color")
+            if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
               state.prefDisallowedColor = s.value;
           });
           if (RuntimeConfig.INFOS.dailyBasisBooking) {
@@ -355,48 +408,13 @@ class Search extends React.Component<Props, State> {
   };
 
   initDates = () => {
-    let enter = new Date();
-    if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (this.state.prefEnterTime === Search.PreferenceEnterTimeNextDay) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === Search.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
-
-    let leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enter = DateUtil.setHoursToMin(enter);
-      leave = DateUtil.setHoursToMax(leave);
-    }
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      RuntimeConfig.INFOS.dailyBasisBooking,
+    );
 
     this.setState({
       earliestEnterDate: enter,
@@ -600,8 +618,74 @@ class Search extends React.Component<Props, State> {
     );
   };
 
+  /**
+   *
+   * @param enter new enter time or null if enter time should remain unchanged
+   * @param leave new leave time or null if enter time should remain unchanged
+   */
   updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
-    const dateChangedCb = () => {
+    if (enter === null && leave === null) return;
+
+    let newEnter, newLeave;
+
+    // enter and leave change
+    if (enter !== null && leave !== null) {
+      if (
+        DateUtil.equal(enter, this.state.enter) &&
+        DateUtil.equal(leave, this.state.leave)
+      )
+        return;
+      newEnter = enter;
+      newLeave = leave;
+
+      // only enter change
+    } else if (enter !== null) {
+      if (DateUtil.equal(enter, this.state.enter)) return;
+      newEnter = enter;
+      const diff = this.state.leave.getTime() - this.state.enter.getTime();
+      newLeave = new Date();
+      newLeave.setTime(enter.getTime() + diff);
+
+      // only leave change
+    } else if (leave !== null) {
+      if (DateUtil.equal(leave, this.state.leave)) return;
+      newLeave = leave;
+    }
+
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
+      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
+    } else if (this.autoUpdateEnterTimeToPrefWorkdayStart) {
+      if (
+        newEnter &&
+        DateUtil.isSameTime(newEnter, this.state.enter) &&
+        !DateUtil.isSameDay(newEnter, this.state.enter)
+      ) {
+        // enter date changed and enter time remains unchanged but -> set enter time to preferred time or next possible time
+        if (DateUtil.isAfterToday(newEnter)) {
+          newEnter.setHours(this.state.prefWorkdayStart);
+        } else {
+          newEnter.setHours(
+            Math.max(this.state.prefWorkdayStart, new Date().getHours() + 1),
+          );
+        }
+      } else if (
+        (newEnter && !DateUtil.isSameTime(newEnter, this.state.enter)) ||
+        (newLeave && !DateUtil.isSameTime(newLeave, this.state.leave))
+      ) {
+        // user changed time -> no longer auto update time to preferred time
+        this.autoUpdateEnterTimeToPrefWorkdayStart = false;
+      }
+    }
+
+    const stateEnter = newEnter ?? this.state.enter;
+    const stateLeave = newLeave ?? this.state.leave;
+    const state = {
+      enter: stateEnter,
+      leave: stateLeave,
+    };
+
+    const dateChangedCallback = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
           this.setState({ loading: false });
@@ -616,44 +700,7 @@ class Search extends React.Component<Props, State> {
         }
       });
     };
-
-    if (enter === null && leave === null) return;
-
-    let newEnter, newLeave;
-
-    if (enter !== null && leave !== null) {
-      if (
-        DateUtil.equal(enter, this.state.enter) &&
-        DateUtil.equal(leave, this.state.leave)
-      )
-        return;
-      newEnter = enter;
-      newLeave = leave;
-    } else if (enter !== null) {
-      if (DateUtil.equal(enter, this.state.enter)) return;
-      newEnter = enter;
-      const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      newLeave = new Date();
-      newLeave.setTime(enter.getTime() + diff);
-    } else if (leave !== null) {
-      if (DateUtil.equal(leave, this.state.leave)) return;
-      newLeave = leave;
-    }
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
-      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
-    }
-
-    const stateEnter = newEnter ?? this.state.enter;
-    const stateLeave = newLeave ?? this.state.leave;
-    const state = {
-      enter: stateEnter,
-      leave: stateLeave,
-      selectionMultiDay: !DateUtil.isSameDay(stateEnter, stateLeave),
-    };
-
-    this.setState(state, () => dateChangedCb());
+    this.setState(state, () => dateChangedCallback());
   };
 
   changeLocation = (id: string) => {
@@ -667,10 +714,13 @@ class Search extends React.Component<Props, State> {
           ?.getAttributes()
           .then((attributes) => {
             this.loadMap(id).then(() => {
-              this.setState({
-                attributeValues: attributes,
-                loading: false,
-              });
+              this.setState(
+                {
+                  attributeValues: attributes,
+                  loading: false,
+                },
+                () => this.centerMap(),
+              );
             });
           });
       },
@@ -691,8 +741,8 @@ class Search extends React.Component<Props, State> {
         () => this.resetRecurrence(),
       );
     } else {
-      let bookings = Booking.createFromRawArray(item.rawBookings);
-      if (!item.available && bookings && bookings.length > 0) {
+      const bookings = Booking.createFromRawArray(item.rawBookings);
+      if (!item.available && bookings?.length > 0) {
         this.setState({
           showBookingNames: true,
           selectedSpace: item,
@@ -729,10 +779,10 @@ class Search extends React.Component<Props, State> {
       let prefWorkdayStartDate = new Date(this.state.enter);
       prefWorkdayStartDate.setHours(this.state.prefWorkdayStart, 0, 0);
       prefWorkdayStartDate =
-        Formatting.convertToFakeUTCDate(prefWorkdayStartDate);
+        DateUtil.convertToFakeUTCDate(prefWorkdayStartDate);
       let prefWorkdayEndDate = new Date(this.state.leave);
       prefWorkdayEndDate.setHours(this.state.prefWorkdayEnd, 0, 0);
-      prefWorkdayEndDate = Formatting.convertToFakeUTCDate(prefWorkdayEndDate);
+      prefWorkdayEndDate = DateUtil.convertToFakeUTCDate(prefWorkdayEndDate);
 
       let leastEnter = bookings.reduce((a, b) =>
         a.enter < b.enter ? a : b,
@@ -760,15 +810,6 @@ class Search extends React.Component<Props, State> {
       : this.state.prefBookedColor;
   };
 
-  getBookersList = (bookings: Booking[]) => {
-    if (!bookings.length) return "";
-    let str = "";
-    bookings.forEach((b) => {
-      str += (str ? ", " : "") + b.user.email;
-    });
-    return str;
-  };
-
   renderItem = (item: Space) => {
     const bookings = Booking.createFromRawArray(item.rawBookings);
     const boxStyle: React.CSSProperties = {
@@ -777,34 +818,78 @@ class Search extends React.Component<Props, State> {
       top: item.y,
       width: item.width,
       height: item.height,
-      transform: "rotate: " + item.rotation + "deg",
+      transform: `rotate(${item.rotation}deg)`,
       cursor:
         (item.enabled && item.allowed && item.available) ||
         (bookings && bookings.length > 0)
           ? "pointer"
           : "default",
       backgroundColor: this.getAvailabilityStyle(item, bookings),
+      borderRadius: item.shape === "circle" ? "50%" : undefined,
+      clipPath:
+        item.shape === "trapezoid"
+          ? "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)"
+          : undefined,
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",
     };
+    const innerStyle: React.CSSProperties = {
+      transform: `rotate(${-item.rotation}deg)`,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      height: "100%",
+    };
     const className =
       "space space-box" +
-      (item.width < item.height ? " space-box-vertical" : "");
+      (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
+        ? " space-box-vertical"
+        : "");
+    const showBookerNames =
+      this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
+    const bookedEntry = item.rawBookings[0];
+    const bookerName = bookedEntry
+      ? (RuntimeConfig.INFOS.showNames
+          ? RendererUtils.fullname(
+              bookedEntry.userFirstname,
+              bookedEntry.userLastname,
+            )
+          : "") || bookedEntry.userEmail
+      : "";
+    const freeFrom = bookedEntry
+      ? this.props.t("freeFrom", {
+          time: Formatting.getBookingDateFormatter().format(
+            DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave)),
+          ),
+        })
+      : "";
+    let tooltipHtml: string;
+    let labelText: string;
+    if (showBookerNames && bookedEntry) {
+      tooltipHtml = `<div class="text-center">${RendererUtils.escapeHtml(item.name)}<br/>${freeFrom}</div>`;
+      labelText = bookerName || item.name;
+    } else {
+      tooltipHtml = bookedEntry
+        ? `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`
+        : this.props.t("free");
+      labelText = item.name;
+    }
     return (
       <div
         key={item.id}
         style={boxStyle}
         className={className}
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={
-          item.rawBookings[0] ? item.rawBookings[0].userEmail : "Free"
-        }
+        data-tooltip-id="space-tooltip"
+        data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
-        title={this.getBookersList(bookings)}
       >
-        <Tooltip id="my-tooltip" />
-        <p style={textStyle}>{item.name}</p>
+        <div style={innerStyle}>
+          {item.approvalRequired && <SpaceApprovalIcon />}
+          <p style={textStyle}>{labelText}</p>
+        </div>
       </div>
     );
   };
@@ -833,14 +918,18 @@ class Search extends React.Component<Props, State> {
       >
         <div className="ms-2 me-auto space-list-item-div">
           <div className="fw-bold space-list-item-content">{item.name}</div>
-          {bookings.map((booking) => (
-            <div
-              key={booking.user.id}
-              className="space-list-item-content space-list-item-text"
-            >
-              {booking.user.email}
-            </div>
-          ))}
+          {RuntimeConfig.INFOS.showNames &&
+            bookings.map((booking) => (
+              <div
+                key={booking.user.id}
+                className="space-list-item-content space-list-item-text"
+              >
+                {RendererUtils.fullname(
+                  booking.user.firstname,
+                  booking.user.lastname,
+                ) || booking.user.email}
+              </div>
+            ))}
         </div>
         <span className="badge badge-pill" style={{ backgroundColor: bgColor }}>
           {bookerCount}
@@ -874,8 +963,18 @@ class Search extends React.Component<Props, State> {
             {this.props.t("subject")}: {booking.subject}
             <br />
           </span>
-          <span hidden={!booking.user.email}>
-            {this.props.t("user")}: {booking.user.email}
+          <span
+            hidden={
+              !booking.user.firstname &&
+              !booking.user.lastname &&
+              !booking.user.email
+            }
+          >
+            {this.props.t("user")}:{" "}
+            {RendererUtils.fullname(
+              booking.user.firstname,
+              booking.user.lastname,
+            ) || booking.user.email}
             <br />
           </span>
           {this.props.t("enter")}:{" "}
@@ -907,7 +1006,7 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  onConfirmBooking = (e: any) => {
+  onConfirmBooking = async (e: any) => {
     if (e) {
       e.preventDefault();
     }
@@ -941,26 +1040,24 @@ class Search extends React.Component<Props, State> {
       }
       booking.space = this.state.selectedSpace;
     }
-    booking
-      .save()
-      .then(() => {
-        this.setState({
-          createdBookingId: booking.id,
-          confirmingBooking: false,
-          showConfirm: false,
-          showSuccess: true,
-          subject: "",
-        });
-      })
-      .catch((e: any) => {
-        const code = AjaxError.getAppErrorCode(e);
-        this.setState({
-          confirmingBooking: false,
-          showConfirm: false,
-          showError: true,
-          errorText: ErrorText.getTextForAppCode(code, this.props.t),
-        });
+    try {
+      await booking.save();
+      this.setState({
+        createdBookingId: booking.id,
+        confirmingBooking: false,
+        showConfirm: false,
+        showSuccess: true,
+        subject: "",
       });
+    } catch (e: any) {
+      const code = AjaxError.getAppErrorCode(e);
+      this.setState({
+        confirmingBooking: false,
+        showConfirm: false,
+        showError: true,
+        errorText: ErrorText.getTextForAppCode(code, this.props.t),
+      });
+    }
   };
 
   onAddBuddy = (buddyUser: User) => {
@@ -990,6 +1087,59 @@ class Search extends React.Component<Props, State> {
       });
   };
 
+  loadSpaceCalendarBookings = async (date: Date) => {
+    const space = this.state.selectedSpace;
+    if (!space) return;
+
+    const weekStart = DateUtil.getWeekStart(date);
+    const weekEnd = DateUtil.getWeekEnd(date);
+
+    this.setState({ spaceCalendarLoading: true });
+    try {
+      const spaces = await Space.listSingleAvailability(
+        space.locationId,
+        space.id,
+        weekStart,
+        weekEnd,
+      );
+      const bookings = (
+        spaces.length > 0
+          ? Booking.createFromRawArray(spaces[0].rawBookings)
+          : []
+      ).map((e) => {
+        // populate data for calender view
+        e.space.name = space.name;
+        e.space.location.name =
+          this.locations.find((e) => e.id === this.state.locationId)?.name ??
+          "";
+        return e;
+      });
+
+      this.setState({
+        spaceCalendarBookings: bookings,
+        spaceCalendarLoading: false,
+      });
+    } catch {
+      this.setState({ spaceCalendarLoading: false });
+    }
+  };
+
+  openSpaceCalendar = (
+    returnTo: "showBookingNames" | "showConfirm" = "showBookingNames",
+  ) => {
+    const date = this.state.enter ?? new Date();
+    this.setState(
+      {
+        showSpaceCalendar: true,
+        spaceCalendarDate: date,
+        spaceCalendarReturnTo: returnTo,
+      },
+      () => {
+        this.loadSpaceCalendarBookings(date);
+      },
+    );
+  };
+
   getLocation = (): Location | undefined => {
     return this.locations.find((e) => e.id === this.state.locationId);
   };
@@ -1015,11 +1165,12 @@ class Search extends React.Component<Props, State> {
 
   toggleListView = () => {
     this.setState({ listView: !this.state.listView }, () => {
-      if (window !== undefined && window.localStorage !== undefined) {
-        window.localStorage.setItem(
-          "listView",
-          this.state.listView ? "1" : "0",
-        );
+      BrowserUtil.tryLocalStorageSetItem(
+        BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
+        this.state.listView ? "1" : "0",
+      );
+      if (!this.state.listView) {
+        requestAnimationFrame(() => this.centerMap());
       }
     });
   };
@@ -1027,20 +1178,18 @@ class Search extends React.Component<Props, State> {
   getLocationAttributeRows = () => {
     const location = this.getLocation();
     if (!location) {
-      return <></>;
+      return null;
     }
 
     const createFormRow = (
       label: string,
       value: string,
-      key?: string | number,
+      key: string | number,
     ) => (
-      <Form.Group as={Row} key={key}>
-        <Form.Label column sm="4">
-          {label}:
-        </Form.Label>
+      <Form.Group as={Row} key={key} style={{ marginBottom: "5px" }}>
+        <Col sm="4">{label}:</Col>
         <Col sm="8">
-          <Form.Control plaintext={true} readOnly={true} defaultValue={value} />
+          <MarkdownRenderer inline>{value}</MarkdownRenderer>
         </Col>
       </Form.Group>
     );
@@ -1051,14 +1200,16 @@ class Search extends React.Component<Props, State> {
         (attr) => attr.id === attributeValue.attributeId,
       );
       if (!attribute) {
-        return <></>;
+        return null;
       }
 
       const displayValue =
-        attribute.type === 2
-          ? attributeValue.value === "1"
-            ? this.props.t("yes")
-            : ""
+        attribute.type === SpaceAttribute.TYPE_BOOL
+          ? RendererUtils.capitalize(
+              attributeValue.value === "1"
+                ? this.props.t("yes")
+                : this.props.t("no"),
+            )
           : attributeValue.value;
 
       return createFormRow(attribute.label, displayValue, attribute.id);
@@ -1067,7 +1218,9 @@ class Search extends React.Component<Props, State> {
     // timezone
     const timezoneValue =
       location.timezone || RuntimeConfig.INFOS.defaultTimezone;
-    attributeRows.push(createFormRow(this.props.t("timezone"), timezoneValue));
+    attributeRows.push(
+      createFormRow(this.props.t("timezone"), timezoneValue, "timezone"),
+    );
 
     // max. concurrent bookings
     if (location.maxConcurrentBookings) {
@@ -1075,6 +1228,7 @@ class Search extends React.Component<Props, State> {
         createFormRow(
           this.props.t("maxConcurrentBookings"),
           String(location.maxConcurrentBookings),
+          "maxConcurrentBookings",
         ),
       );
     }
@@ -1084,18 +1238,45 @@ class Search extends React.Component<Props, State> {
 
   getSearchFormComparator = (attribute: SpaceAttribute) => {
     const items = [];
-    items.push(<option value=""></option>);
-    if (attribute.type !== 4) {
-      items.push(<option value="eq">=</option>);
-      items.push(<option value="neq">≠</option>);
+    items.push(<option key="empty" value=""></option>);
+    if (attribute.type !== SpaceAttribute.TYPE_SELECT) {
+      items.push(
+        <option key="eq" value="eq">
+          =
+        </option>,
+      );
+      items.push(
+        <option key="neq" value="neq">
+          ≠
+        </option>,
+      );
     }
-    if (attribute.type === 1) {
-      items.push(<option value="gt">&gt;</option>);
-      items.push(<option value="lt">&lt;</option>);
+    if (attribute.type === SpaceAttribute.TYPE_INT) {
+      items.push(
+        <option key="gt" value="gt">
+          &gt;
+        </option>,
+      );
+      items.push(
+        <option key="lt" value="lt">
+          &lt;
+        </option>,
+      );
     }
-    if (attribute.type === 3 || attribute.type === 4) {
-      items.push(<option value="contains">∋</option>);
-      items.push(<option value="ncontains">∌</option>);
+    if (
+      attribute.type === SpaceAttribute.TYPE_STRING ||
+      attribute.type === SpaceAttribute.TYPE_SELECT
+    ) {
+      items.push(
+        <option key="contains" value="contains">
+          ∋
+        </option>,
+      );
+      items.push(
+        <option key="ncontains" value="ncontains">
+          ∌
+        </option>,
+      );
     }
     return items;
   };
@@ -1108,7 +1289,7 @@ class Search extends React.Component<Props, State> {
       type === "location"
         ? this.state.searchAttributesLocation
         : this.state.searchAttributesSpace;
-    if (attribute.type === 1) {
+    if (attribute.type === SpaceAttribute.TYPE_INT) {
       return (
         <Form.Control
           type="number"
@@ -1127,12 +1308,12 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 2) {
+    } else if (attribute.type === SpaceAttribute.TYPE_BOOL) {
       return (
         <Form.Check
           type="checkbox"
           style={{ paddingTop: "5px" }}
-          label={this.props.t("yes")}
+          label={RendererUtils.capitalize(this.props.t("yes"))}
           checked={
             searchAttributes.find((attr) => attr.attributeId === attribute.id)
               ?.value === "1" || false
@@ -1151,7 +1332,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 3) {
+    } else if (attribute.type === SpaceAttribute.TYPE_STRING) {
       return (
         <Form.Control
           type="text"
@@ -1169,7 +1350,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 4) {
+    } else if (attribute.type === SpaceAttribute.TYPE_SELECT) {
       let options: any[] = [];
       attribute.selectValues.forEach((v, k) => {
         options.push(
@@ -1277,19 +1458,22 @@ class Search extends React.Component<Props, State> {
     let attributesApplicable = false;
     const searchFormRows = this.availableAttributes.map((attribute) => {
       if (type === "location" && !attribute.locationApplicable) {
-        return <></>;
+        return null;
       }
       if (type === "space" && !attribute.spaceApplicable) {
-        return <></>;
+        return null;
       }
       attributesApplicable = true;
+      const key = `${type}-attribute-${attribute.id}`;
+      const keySelect = `${key}-select`;
       return (
-        <Form.Group as={Row} key={type + "-attribute-" + attribute.id}>
-          <Form.Label column sm="4">
+        <Form.Group as={Row} key={key}>
+          <Form.Label column sm="4" htmlFor={keySelect}>
             {attribute.label}
           </Form.Label>
           <Col sm="3">
             <Form.Select
+              id={keySelect}
               value={
                 searchAttributes.find(
                   (attr) => attr.attributeId === attribute.id,
@@ -1381,7 +1565,7 @@ class Search extends React.Component<Props, State> {
             this.getLocation()
               ?.getAttributes()
               .then((_attributes) => {
-                this.setState({ loading: false });
+                this.setState({ loading: false }, () => this.centerMap());
               });
           });
         },
@@ -1396,40 +1580,28 @@ class Search extends React.Component<Props, State> {
     this.setState({
       confirmingBooking: true,
     });
-    let deleteItem: any;
-    deleteItem = item;
+    let deleteItem: any = item;
     if (this.state.cancelSeries && item.isRecurring()) {
       deleteItem = await RecurringBooking.get(item.recurringId);
     }
-    deleteItem.delete().then(
-      () => {
-        this.setState(
-          {
-            selectedSpace: null,
-            confirmingBooking: false,
-            showBookingNames: false,
-          },
-          this.refreshPage,
+    const resetState = {
+      selectedSpace: null,
+      confirmingBooking: false,
+      showBookingNames: false,
+    };
+    try {
+      await deleteItem.delete();
+      this.setState(resetState, this.refreshPage);
+    } catch (reason: any) {
+      if (reason instanceof AjaxError && reason.appErrorCode != 0) {
+        window.alert(
+          ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
         );
-      },
-      (reason: any) => {
-        if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
-          window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
-          );
-        } else {
-          window.alert(this.props.t("errorDeleteBooking"));
-        }
-        this.setState(
-          {
-            selectedSpace: null,
-            confirmingBooking: false,
-            showBookingNames: false,
-          },
-          this.refreshPage,
-        );
-      },
-    );
+        this.setState(resetState, this.refreshPage);
+      } else {
+        this.setState(resetState);
+      }
+    }
   };
 
   getRecurrenceObject = (): RecurringBooking => {
@@ -1559,6 +1731,8 @@ class Search extends React.Component<Props, State> {
   };
 
   render() {
+    const earliestEnterDate = DateUtil.getTodayStart();
+
     let hint = <></>;
     if (!this.state.canSearch && this.state.canSearchHint) {
       hint = (
@@ -1580,7 +1754,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1599,7 +1773,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1620,7 +1794,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId || this.state.selectionAllDay}
           value={this.state.enter}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1640,7 +1814,7 @@ class Search extends React.Component<Props, State> {
           disabled={!this.state.locationId || this.state.selectionAllDay}
           value={this.state.leave}
           required={true}
-          minDate={this.getEarliestSelectableEnterDate()}
+          minDate={earliestEnterDate}
           onChange={(value: Date) => {
             if (value != null && value instanceof Date) {
               this.updateEnterAndLeaveDate(
@@ -1701,13 +1875,13 @@ class Search extends React.Component<Props, State> {
           style={{ position: "relative" }}
         >
           <TransformWrapper
+            ref={this.transformWrapperRef}
             initialScale={0.8}
-            initialPositionY={-100}
-            minScale={0.2}
-            maxScale={5}
-            centerOnInit={true}
+            minScale={0.1}
+            maxScale={4}
+            wheel={{ step: 0.003 }}
           >
-            {({ zoomIn, zoomOut, resetTransform }) => (
+            {({ zoomIn, zoomOut }) => (
               <>
                 {window.innerWidth >= 768 && (
                   <div
@@ -1719,6 +1893,7 @@ class Search extends React.Component<Props, State> {
                       border: "1px solid #ccc",
                       background: "#fff",
                       borderRadius: "5px",
+                      overflow: "hidden",
                     }}
                   >
                     <MiniMap>
@@ -1752,18 +1927,29 @@ class Search extends React.Component<Props, State> {
                     <RemoveIcon />
                   </button>
                   <button
-                    onClick={() => resetTransform()}
+                    onClick={() => this.centerMap()}
                     aria-label="Reset zoom"
                     className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <ScanIcon />
                   </button>
                 </div>
-                <TransformComponent
-                  wrapperClass="h-100 w-100"
-                  contentClass="border border-3"
-                >
+                <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>{spaces}</div>
+                  <Tooltip
+                    id="space-tooltip"
+                    float={true}
+                    render={({ activeAnchor }) => (
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            activeAnchor?.getAttribute(
+                              "data-tooltip-html-content",
+                            ) ?? "",
+                        }}
+                      />
+                    )}
+                  />
                 </TransformComponent>
               </>
             )}
@@ -1826,7 +2012,7 @@ class Search extends React.Component<Props, State> {
             </div>
             <div className="ms-2 w-100">
               {Formatting.getFormatterShort().format(
-                Formatting.convertToFakeUTCDate(new Date(this.state.enter)),
+                DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
               )}
             </div>
           </div>
@@ -1841,7 +2027,7 @@ class Search extends React.Component<Props, State> {
             </div>
             <div className="ms-2 w-100">
               {Formatting.getFormatterShort().format(
-                Formatting.convertToFakeUTCDate(new Date(this.state.leave)),
+                DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
               )}
             </div>
           </div>
@@ -1912,6 +2098,22 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
+
+              <IconTextButton
+                text="❮"
+                title={this.props.t("previousDay")}
+                disabled={DateUtil.isSameDay(
+                  this.state.enter,
+                  earliestEnterDate,
+                )}
+                onClick={() => {
+                  this.updateEnterAndLeaveDate(
+                    DateUtil.prevDay(this.state.enter),
+                    DateUtil.prevDay(this.state.leave),
+                  );
+                }}
+              />
+
               <div
                 className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
               >
@@ -1921,6 +2123,17 @@ class Search extends React.Component<Props, State> {
               {this.state.selectionMultiDay && (
                 <div className="ms-2 w-50">{dateLeavePicker}</div>
               )}
+
+              <IconTextButton
+                text="❯"
+                title={this.props.t("nextDay")}
+                onClick={() => {
+                  this.updateEnterAndLeaveDate(
+                    DateUtil.nextDay(this.state.enter),
+                    DateUtil.nextDay(this.state.leave),
+                  );
+                }}
+              />
 
               <button
                 type="button"
@@ -2016,7 +2229,13 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
-              <div className="ms-2 w-100">
+              <div
+                className={`ms-2 ${
+                  RuntimeConfig.INFOS.showNames && !this.state.listView
+                    ? "w-50"
+                    : "w-100"
+                }`}
+              >
                 <Form.Check
                   disabled={!this.state.locationId}
                   type="switch"
@@ -2027,17 +2246,47 @@ class Search extends React.Component<Props, State> {
                   id="switch-control"
                 />
               </div>
+              {RuntimeConfig.INFOS.showNames && !this.state.listView && (
+                <>
+                  <div className="me-2 ms-3">
+                    <NamesIcon
+                      title={this.props.t("names")}
+                      color={"#555"}
+                      height="20px"
+                      width="20px"
+                    />
+                  </div>
+                  <div className="ms-2 w-50">
+                    <Form.Check
+                      type="switch"
+                      checked={this.state.showBookerNamesOnMap}
+                      onChange={() =>
+                        this.setState(
+                          {
+                            showBookerNamesOnMap:
+                              !this.state.showBookerNamesOnMap,
+                          },
+                          () =>
+                            BrowserUtil.tryLocalStorageSetItem(
+                              BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+                              this.state.showBookerNamesOnMap ? "1" : "0",
+                            ),
+                        )
+                      }
+                      label={this.props.t("names")}
+                      aria-label={this.props.t("names")}
+                      id="switch-booker-names"
+                    />
+                  </div>
+                </>
+              )}
             </Form.Group>
           </Form>
         </div>
       </div>
     );
 
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
-
+    const formatter = Formatting.getBookingDateFormatter();
     const locationInfoModal = (
       <Modal
         show={this.state.showLocationDetails}
@@ -2048,7 +2297,9 @@ class Search extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>
           {this.getLocation()?.description && (
-            <p>{this.getLocation()?.description}</p>
+            <MarkdownRenderer>
+              {this.getLocation()?.description ?? ""}
+            </MarkdownRenderer>
           )}
           {this.getLocationAttributeRows()}
         </Modal.Body>
@@ -2116,20 +2367,22 @@ class Search extends React.Component<Props, State> {
     confirmModalRows.push({
       label: this.props.t("enter"),
       value: formatter.format(
-        Formatting.convertToFakeUTCDate(new Date(this.state.enter)),
+        DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
       ),
     });
     confirmModalRows.push({
       label: this.props.t("leave"),
       value: formatter.format(
-        Formatting.convertToFakeUTCDate(new Date(this.state.leave)),
+        DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
       ),
     });
     confirmModalRows.push({
       label: this.props.t("approval"),
-      value: this.state.selectedSpace?.approvalRequired
-        ? this.props.t("yes")
-        : this.props.t("no"),
+      value: RendererUtils.capitalize(
+        this.state.selectedSpace?.approvalRequired
+          ? this.props.t("yes")
+          : this.props.t("no"),
+      ),
     });
     this.state.selectedSpace?.attributes.forEach((attribute) => {
       const attributeName = this.availableAttributes.find(
@@ -2138,10 +2391,12 @@ class Search extends React.Component<Props, State> {
       const attributeType = this.availableAttributes.find(
         (attr) => attr.id === attribute.attributeId,
       )?.type;
-      if (attributeType === 2) {
+      if (attributeType === SpaceAttribute.TYPE_BOOL) {
         confirmModalRows.push({
           label: attributeName,
-          value: attribute.value === "1" ? this.props.t("yes") : <>&mdash;</>,
+          value: RendererUtils.capitalize(
+            attribute.value === "1" ? this.props.t("yes") : this.props.t("no"),
+          ),
         });
       } else {
         confirmModalRows.push({ label: attributeName, value: attribute.value });
@@ -2171,7 +2426,11 @@ class Search extends React.Component<Props, State> {
                   style={{ marginBottom: "5px" }}
                 >
                   <Col sm="4">{row.label}:</Col>
-                  <Col sm="8">{row.value}</Col>
+                  <Col sm="8">
+                    <MarkdownRenderer inline>
+                      {row.value ?? ""}
+                    </MarkdownRenderer>
+                  </Col>
                 </Row>
               );
             })}
@@ -2180,12 +2439,13 @@ class Search extends React.Component<Props, State> {
               style={{ marginTop: "25px" }}
               hidden={RuntimeConfig.INFOS.subjectDefault === 1}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="subject">
                 {this.props.t("subject")}:
               </Form.Label>
               <Col sm="8">
                 <Form.Control
                   type="text"
+                  id="subject"
                   autoFocus={true}
                   placeholder={this.props.t(
                     this.state.selectedSpace?.requireSubject
@@ -2212,11 +2472,12 @@ class Search extends React.Component<Props, State> {
             }
           >
             <Form.Group as={Row} className="d-flex margin-top-10">
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="repeat">
                 {this.props.t("repeat")}:
               </Form.Label>
               <Col sm="8">
                 <Form.Select
+                  id="repeat"
                   value={this.state.recurrence.cadence}
                   onChange={(e: any) => {
                     this.setState(
@@ -2244,12 +2505,13 @@ class Search extends React.Component<Props, State> {
               }
               hidden={!this.state.recurrence.active}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="every">
                 {this.props.t("every")}:
               </Form.Label>
               <Col sm="8">
                 <InputGroup>
                   <Form.Control
+                    id="every"
                     type="number"
                     min={1}
                     max={30}
@@ -2295,11 +2557,12 @@ class Search extends React.Component<Props, State> {
               }
               hidden={!this.state.recurrence.active}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="end">
                 {this.props.t("end")}:
               </Form.Label>
               <Col sm="8">
                 <DateTimePicker
+                  id="end"
                   value={this.state.recurrence.end}
                   onChange={(
                     value: Date | null | [Date | null, Date | null],
@@ -2333,13 +2596,6 @@ class Search extends React.Component<Props, State> {
           </Modal.Body>
           <Modal.Footer hidden={this.state.showRecurringOptions}>
             <Button
-              variant="secondary"
-              onClick={() => this.setState({ showConfirm: false })}
-              disabled={this.state.confirmingBooking}
-            >
-              {this.props.t("cancel")}
-            </Button>
-            <Button
               variant={this.state.recurrence.active ? "primary" : "secondary"}
               onClick={() => this.setState({ showRecurringOptions: true })}
               hidden={
@@ -2350,6 +2606,13 @@ class Search extends React.Component<Props, State> {
             >
               <IconRefresh className="feather" />
             </Button>
+            <CalendarButton
+              onClick={() => {
+                this.setState({ showConfirm: false });
+                this.openSpaceCalendar("showConfirm");
+              }}
+              disabled={this.state.confirmingBooking}
+            />
             <Button
               type="submit"
               variant="primary"
@@ -2434,6 +2697,9 @@ class Search extends React.Component<Props, State> {
     );
     let gotoBooking;
     if (myBooking) {
+      const confirmMessage = this.props.t("confirmCancelBooking", {
+        enter: formatter.format(myBooking.enter),
+      });
       gotoBooking = (
         <>
           <Button
@@ -2447,11 +2713,20 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="danger"
-            onClick={() => this.cancelBooking(myBooking)}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  RendererUtils.decodeHtmlEntities(confirmMessage),
+                )
+              ) {
+                return;
+              }
+              this.cancelBooking(myBooking);
+            }}
             disabled={this.state.confirmingBooking}
           >
             {this.props.t("cancelBooking")}
@@ -2483,7 +2758,7 @@ class Search extends React.Component<Props, State> {
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
-          <p
+          <div
             hidden={!myBooking || !isRecurring}
             style={{ marginTop: "15px", marginBottom: "0" }}
           >
@@ -2496,19 +2771,121 @@ class Search extends React.Component<Props, State> {
               checked={this.state.cancelSeries}
               label={this.props.t("cancelAllUpcomingBookings")}
             />
-          </p>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant={myBooking ? "secondary" : "primary"}
-            onClick={() => this.setState({ showBookingNames: false })}
-          >
-            {this.props.t("back")}
-          </Button>
+          <CalendarButton
+            onClick={() => {
+              this.setState({ showBookingNames: false });
+              this.openSpaceCalendar();
+            }}
+          />
           {gotoBooking}
         </Modal.Footer>
       </Modal>
     );
+
+    const spaceCalendarEvents: CalendarEvent[] =
+      this.state.spaceCalendarBookings.map((b) =>
+        bookingToCalendarEvent(b, "space", this.props.t),
+      );
+
+    const spaceCalToolbar = (props: object) => (
+      <CustomToolbar toolbar={props as any} t={this.props.t} />
+    );
+
+    moment.tz.setDefault("UTC");
+    moment.locale(Formatting.Language);
+    const dow = RuntimeConfig.INFOS.weekStartDay;
+    if (moment.localeData().firstDayOfWeek() !== dow) {
+      moment.updateLocale(moment.locale(), {
+        week: { dow },
+      });
+    }
+    const spaceCalLocalizer = momentLocalizer(moment);
+
+    const spaceCalendarModal = (
+      <FullWidthModal
+        show={this.state.showSpaceCalendar}
+        onHide={() =>
+          this.setState({
+            showSpaceCalendar: false,
+            [this.state.spaceCalendarReturnTo]: true,
+          } as any)
+        }
+        maxWidth={1400}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {this.state.selectedSpace?.name} – {this.props.t("calendar")}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          style={{
+            height: "calc(100vh - 210px)",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          {this.state.spaceCalendarLoading ? (
+            <Loading visible={true} />
+          ) : (
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <Calendar
+                showMultiDayTimes={true}
+                getNow={() => DateUtil.getNowFakeUTC()}
+                localizer={spaceCalLocalizer}
+                events={spaceCalendarEvents}
+                startAccessor={(event: CalendarEvent) => event.enter}
+                endAccessor={(event: CalendarEvent) => event.leave}
+                style={{ height: "100%", width: "100%" }}
+                view={
+                  this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
+                    ? "day"
+                    : "week"
+                }
+                onView={() => {}}
+                views={["week", "day"]}
+                eventPropGetter={(event: CalendarEvent) => {
+                  if (event.approved === false) {
+                    return { style: { opacity: 0.5 } };
+                  }
+                  return {};
+                }}
+                date={this.state.spaceCalendarDate}
+                onNavigate={(newDate: Date) => {
+                  this.setState({ spaceCalendarDate: newDate }, () => {
+                    this.loadSpaceCalendarBookings(newDate);
+                  });
+                }}
+                culture={Formatting.Language}
+                components={{
+                  toolbar: spaceCalToolbar,
+                  event: createCustomEvent(),
+                }}
+                step={180}
+                timeslots={1}
+              />
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              this.setState({
+                showSpaceCalendar: false,
+                [this.state.spaceCalendarReturnTo]: true,
+              } as any)
+            }
+          >
+            {this.props.t("back")}
+          </Button>
+        </Modal.Footer>
+      </FullWidthModal>
+    );
+
     const successModal = (
       <Modal
         show={this.state.showSuccess}
@@ -2544,7 +2921,7 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="secondary"
@@ -2589,6 +2966,7 @@ class Search extends React.Component<Props, State> {
         {searchModal}
         {confirmModal}
         {bookingNamesModal}
+        {spaceCalendarModal}
         {successModal}
         {errorModal}
         {listOrMap}
@@ -2598,13 +2976,24 @@ class Search extends React.Component<Props, State> {
     );
   }
 
-  refreshPage = () => {
-    this.setState({
-      loading: true,
-    });
-    this.loadMap(this.state.locationId).then(() => {
-      this.setState({ loading: false });
-    });
+  refreshPage = async () => {
+    this.setState({ loading: true });
+    await this.loadMap(this.state.locationId);
+    this.setState({ loading: false });
+  };
+
+  centerMap = () => {
+    const ref = this.transformWrapperRef.current;
+    if (!ref) return;
+    const wrapper = ref.instance.wrapperComponent;
+    const content = ref.instance.contentComponent;
+    if (wrapper && content) {
+      const scale = Math.min(
+        wrapper.offsetWidth / content.offsetWidth,
+        wrapper.offsetHeight / content.offsetHeight,
+      );
+      ref.centerView(scale, 0);
+    }
   };
 }
 

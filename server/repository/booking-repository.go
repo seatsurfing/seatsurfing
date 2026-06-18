@@ -18,16 +18,17 @@ type BookingRepository struct {
 }
 
 type Booking struct {
-	ID           string
-	UserID       string
-	SpaceID      string
-	Enter        time.Time
-	Leave        time.Time
-	CalDavID     string
-	Approved     bool
-	Subject      string
-	RecurringID  NullUUID
-	CreatedAtUTC *time.Time
+	ID                    string
+	UserID                string
+	SpaceID               string
+	Enter                 time.Time
+	Leave                 time.Time
+	CalDavID              string
+	Approved              bool
+	Subject               string
+	RecurringID           NullUUID
+	CreatedAtUTC          *time.Time
+	LastInfoMailSentAtUTC *time.Time
 }
 
 type BookingDetails struct {
@@ -95,6 +96,12 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 27 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
 			"ADD COLUMN IF NOT EXISTS created_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 45 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ADD COLUMN IF NOT EXISTS last_info_mail_sent_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
 	}
@@ -187,6 +194,54 @@ func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
 	return e, nil
 }
 
+// KioskBookingEntry holds the minimal booking data needed for the kiosk display.
+type KioskBookingEntry struct {
+	ID            string
+	UserID        string
+	UserEmail     string
+	UserFirstname string
+	UserLastname  string
+	Enter         time.Time
+	Leave         time.Time
+	Subject       string
+}
+
+// GetCurrentAndNextBySpaceID returns the currently-active booking and the next upcoming
+// booking for a space, both evaluated relative to now.
+func (r *BookingRepository) GetCurrentAndNextBySpaceID(spaceID string, now time.Time) (*KioskBookingEntry, *KioskBookingEntry, error) {
+	var current *KioskBookingEntry
+	c := &KioskBookingEntry{}
+	err := GetDatabase().DB().QueryRow(
+		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
+			"FROM bookings "+
+			"INNER JOIN users ON users.id = bookings.user_id "+
+			"WHERE bookings.space_id = $1 "+
+			"AND bookings.enter_time <= $2 AND bookings.leave_time >= $2 "+
+			"AND bookings.approved = true "+
+			"ORDER BY bookings.enter_time ASC LIMIT 1",
+		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.UserFirstname, &c.UserLastname, &c.Enter, &c.Leave, &c.Subject)
+	if err == nil {
+		current = c
+	}
+
+	var next *KioskBookingEntry
+	n := &KioskBookingEntry{}
+	err2 := GetDatabase().DB().QueryRow(
+		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
+			"FROM bookings "+
+			"INNER JOIN users ON users.id = bookings.user_id "+
+			"WHERE bookings.space_id = $1 "+
+			"AND bookings.enter_time > $2 "+
+			"AND bookings.approved = true "+
+			"ORDER BY bookings.enter_time ASC LIMIT 1",
+		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.UserFirstname, &n.UserLastname, &n.Enter, &n.Leave, &n.Subject)
+	if err2 == nil {
+		next = n
+	}
+
+	return current, next, nil
+}
+
 // Get first current or upcoming booking by user
 func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (*BookingDetails, error) {
 	e := &BookingDetails{}
@@ -254,7 +309,10 @@ func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail 
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
 		"INNER JOIN users ON bookings.user_id = users.id " +
-		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()"
+		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz " +
+		"WHERE locations.organization_id = $1 " +
+		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) " +
+		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)"
 	args := []interface{}{organizationID}
 	if userEmail != "" {
 		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
@@ -351,6 +409,11 @@ func (r *BookingRepository) Update(e *Booking) error {
 	return err
 }
 
+func (r *BookingRepository) UpdateLastInfoMailSentAt(id string, t *time.Time) error {
+	_, err := GetDatabase().DB().Exec("UPDATE bookings SET last_info_mail_sent_at_utc = $1 WHERE id = $2", t, id)
+	return err
+}
+
 func (r *BookingRepository) Delete(e *BookingDetails) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE id = $1", e.ID)
 	if err != nil {
@@ -367,6 +430,13 @@ func (r *BookingRepository) Delete(e *BookingDetails) error {
 		}
 	}
 	return nil
+}
+
+func (r *BookingRepository) GetCountAll() (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
+		"FROM bookings").Scan(&res)
+	return res, err
 }
 
 func (r *BookingRepository) GetCount(organizationID string) (int, error) {
@@ -386,7 +456,10 @@ func (r *BookingRepository) GetCountCurrent(organizationID string) (int, error) 
 		"FROM bookings "+
 		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
 		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1 AND enter_time <= NOW() AND leave_time >= NOW()",
+		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz "+
+		"WHERE locations.organization_id = $1 "+
+		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) "+
+		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)",
 		organizationID).Scan(&res)
 	return res, err
 }
@@ -405,6 +478,31 @@ func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leav
 		")",
 		organizationID, enter, leave).Scan(&res)
 	return res, err
+}
+
+func (r *BookingRepository) GetCountByWeekday(organizationID string) ([7]int, error) {
+	var res [7]int
+	rows, err := GetDatabase().DB().Query("SELECT EXTRACT(DOW FROM enter_time)::int AS dow, COUNT(*) "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
+		"INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE locations.organization_id = $1 "+
+		"GROUP BY dow",
+		organizationID)
+	if err != nil {
+		return res, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var dow, count int
+		if err := rows.Scan(&dow, &count); err != nil {
+			return res, err
+		}
+		if dow >= 0 && dow <= 6 {
+			res[dow] = count
+		}
+	}
+	return res, rows.Err()
 }
 
 func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
@@ -606,10 +704,15 @@ func (r *BookingRepository) GetPresenceReport(organizationID string, location *L
 	curTime := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
 	var cols strings.Builder
 	const DateFormat string = "2006-01-02"
+
+	locationConditions := ""
+	if location != nil {
+		locationConditions = " AND b2.space_id IN (SELECT id FROM spaces WHERE location_id = $2) "
+	}
 	for curTime.Before(end) {
 		times = append(times, curTime)
 		cols.WriteString(", ")
-		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND '" + curTime.Format(DateFormat) + "'::DATE BETWEEN DATE(b2.enter_time) AND DATE(b2.leave_time))")
+		cols.WriteString("(SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = b.user_id AND '" + curTime.Format(DateFormat) + "'::DATE BETWEEN DATE(b2.enter_time) AND DATE(b2.leave_time)" + locationConditions + ")")
 		curTime = curTime.AddDate(0, 0, 1)
 	}
 
@@ -687,6 +790,7 @@ func (r *BookingRepository) GetBookingsRequiringApproval(approverUserID string) 
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
 		"INNER JOIN users ON bookings.user_id = users.id "+
 		"WHERE bookings.approved = false AND "+
+		"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "+
 		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		")) "+
@@ -712,6 +816,7 @@ func (r *BookingRepository) GetBookingsCountRequiringApproval(approverUserID str
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(1) "+
 		"FROM bookings "+
 		"WHERE approved = false AND "+
+		"leave_time >= NOW() - INTERVAL '24 hours' AND "+
 		"space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		"))", approverUserID).Scan(&count)

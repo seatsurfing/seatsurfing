@@ -9,7 +9,8 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   selectedItem: string;
@@ -34,10 +35,6 @@ class Attributes extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );
@@ -67,16 +64,24 @@ class Attributes extends React.Component<Props, State> {
       <tr key={e.id} onClick={() => this.onItemSelect(e)}>
         <td>{e.label}</td>
         <td>{this.getTextForType(e.type)}</td>
-        <td>{e.locationApplicable ? this.props.t("yes") : ""}</td>
-        <td>{e.spaceApplicable ? this.props.t("yes") : ""}</td>
+        <td>{RendererUtils.state(e.locationApplicable)}</td>
+        <td>{RendererUtils.state(e.spaceApplicable)}</td>
       </tr>
     );
   };
 
   exportTable = (e: any) => {
+    const t = this.props.t;
+    const headers = [t("name"), t("type"), t("areas"), t("spaces")];
+    const rows = this.data.map((item) => [
+      item.label,
+      this.getTextForType(item.type),
+      RendererUtils.stateXls(item.locationApplicable, t),
+      RendererUtils.stateXls(item.spaceApplicable, t),
+    ]);
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-attributes", format: "xlsx" },
-      [{ name: "Seatsurfing Attributes", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Attributes", from: { array: [headers, ...rows] } }],
     );
   };
 

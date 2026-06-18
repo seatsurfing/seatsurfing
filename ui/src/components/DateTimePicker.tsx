@@ -12,6 +12,7 @@ interface State {
 
 interface Props {
   t: TranslationFunc;
+  id?: string;
   enableTime?: boolean | undefined;
   noCalendar?: boolean | undefined;
   required?: boolean | undefined;
@@ -70,6 +71,7 @@ class DateTimePicker extends React.Component<Props, State> {
     return (
       <Flatpickr
         className="form-control"
+        id={this.props.id}
         data-enable-time={this.props.enableTime}
         disabled={this.props.disabled}
         value={this.props.value}
@@ -83,7 +85,10 @@ class DateTimePicker extends React.Component<Props, State> {
           time_24hr: RuntimeConfig.INFOS.use24HourTime,
           minDate: this.props.minDate,
           maxDate: this.props.maxDate,
-          locale: this.state.locale,
+          locale: {
+            ...this.state.locale,
+            firstDayOfWeek: RuntimeConfig.INFOS.weekStartDay,
+          },
           noCalendar: this.props.noCalendar,
         }}
       />

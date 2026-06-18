@@ -147,6 +147,18 @@ func TestPreferencesPutInvalid(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestPreferencesPutInvalidColor(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Invalid color values → 400
+	payload := `[{"name": "booked_color", "value": "this is invalid"}, {"name": "disallowed_color", "value": "` + CreateTestString(1000) + `"}]`
+	req := NewHTTPRequest("PUT", "/preference/", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestPreferencesForbiddenNoAuth(t *testing.T) {
 	ClearTestDB()
 

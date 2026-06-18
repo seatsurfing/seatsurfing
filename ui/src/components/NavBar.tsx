@@ -156,7 +156,7 @@ class NavBar extends React.Component<Props, State> {
         );
       }
       signOffButton = (
-        <Nav.Link onClick={this.logOut}>{this.props.t("signout")}</Nav.Link>
+        <Nav.Link onClick={this.logOut}>{this.props.t("logout")}</Nav.Link>
       );
       if (this.state.mergeRequests.length > 0) {
         mergeRequestsButton = (
@@ -216,7 +216,6 @@ class NavBar extends React.Component<Props, State> {
             )}
           </Nav.Link>
           {adminButton}
-          {signOffButton}
         </Nav>
         <Nav className="ms-auto">
           {initMergeButton}
@@ -226,6 +225,7 @@ class NavBar extends React.Component<Props, State> {
             {RuntimeConfig.INFOS.username}
           </Nav.Link>
           <LanguageSelector inNavbar={true} />
+          {signOffButton}
         </Nav>
       </>
     );

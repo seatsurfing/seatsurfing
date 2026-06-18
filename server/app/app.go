@@ -49,6 +49,10 @@ func (a *App) InitializeDatabases() {
 	SetEmailLogCallback(func(subject, recipient, organizationID string) error {
 		return GetMailLogRepository().LogEmail(subject, recipient, organizationID)
 	})
+	// Set up email footer provider: DB value takes precedence over file fallback
+	SetGlobalEmailFooterProvider(func(language string) (string, error) {
+		return GetSettingsRepository().GetGlobalStringLocalized(SettingEmailFooterPrefix, language)
+	})
 }
 
 func (a *App) InitializePlugins() {
@@ -124,6 +128,7 @@ func (a *App) InitializeRouter() {
 	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
+	routers["/kiosk/"] = &KioskRouter{}
 	for _, plg := range plugin.GetPlugins() {
 		for route, router := range (*plg).GetPublicRoutes() {
 			routers[route] = router
@@ -178,7 +183,11 @@ func (a *App) InitializeDefaultOrg() {
 	if err == nil && numOrgs == 0 {
 		log.Println("Creating default organization...")
 		config := GetConfig()
-		email := config.InitOrgUser + "@seatsurfing.local"
+		domain := config.InitOrgDomain
+		email := config.InitOrgUser + "@" + domain
+		if domain == "localhost" {
+			email = config.InitOrgUser + "@" + "seatsurfing.local"
+		}
 		org := &Organization{
 			Name:             config.InitOrgName,
 			ContactEmail:     email,
@@ -188,6 +197,8 @@ func (a *App) InitializeDefaultOrg() {
 			SignupDate:       time.Now().UTC(),
 		}
 		GetOrganizationRepository().Create(org)
+		GetOrganizationRepository().AddDomain(org, domain, true)
+		GetOrganizationRepository().SetPrimaryDomain(org, domain)
 		user := &User{
 			OrganizationID: org.ID,
 			Email:          email,
@@ -204,7 +215,7 @@ func (a *App) InitializeDefaultOrg() {
 func (a *App) InitializeSingleOrgSettings() {
 	numOrgs, err := GetOrganizationRepository().GetNumOrgs()
 	if err == nil && numOrgs == 1 {
-		log.Println("Updating settings for primary organization...")
+		log.Println("Updating settings for primary organization …")
 		orgs, err := GetOrganizationRepository().GetAll()
 		if err != nil {
 			log.Println("Error while getting primary organization:", err)
@@ -216,6 +227,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
 		GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+		GetSettingsRepository().Set(org.ID, SettingFeatureKioskMode.Name, "1")
 	}
 }
 
@@ -256,9 +268,14 @@ func (a *App) onTimerTick() {
 	if time.Now().Minute() == 0 {
 		go a.CheckDomainAccessibilityTimer()
 	}
+	// Update install stats once per hour
+	if time.Now().Minute() == 0 {
+		go a.UpdateInstallStats()
+	}
 }
 
 func (a *App) InitializeTimers() {
+	a.UpdateInstallStats()
 	a.onTimerTick()
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	GetUpdateChecker().InitializeVersionUpdateTimer(installID)
@@ -269,6 +286,18 @@ func (a *App) InitializeTimers() {
 			a.onTimerTick()
 		}
 	}()
+}
+
+func (a *App) UpdateInstallStats() {
+	if GetConfig().DisableAnonymousUsageStats {
+		return
+	}
+	stats := &InstallStats{}
+	stats.NumLocations, _ = GetLocationRepository().GetCountAll()
+	stats.NumUsers, _ = GetUserRepository().GetCountAll()
+	stats.NumBookings, _ = GetBookingRepository().GetCountAll()
+	stats.NumSpaces, _ = GetSpaceRepository().GetCountAll()
+	SetInstallStats(stats)
 }
 
 func (a *App) CheckDomainAccessibilityTimer() {
@@ -409,7 +438,7 @@ func (a *App) getAttributePaths(dir string) []string {
 }
 
 func (a *App) startPublicHttpServer() {
-	log.Println("Initializing Public REST services...")
+	log.Println("Initializing Public REST services …")
 	a.PublicHttpServer = &http.Server{
 		Addr:         GetConfig().PublicListenAddr,
 		WriteTimeout: time.Second * 15,

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"sync"
+
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type AuthProviderRepository struct {
@@ -85,6 +87,38 @@ func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 	}
+	if curVersion < 42 {
+		r.encryptExistingClientSecrets()
+	}
+}
+
+func (r *AuthProviderRepository) encryptExistingClientSecrets() {
+	rows, err := GetDatabase().DB().Query("SELECT id, client_secret FROM auth_providers")
+	if err != nil {
+		panic(err)
+	}
+	type record struct {
+		id     string
+		secret string
+	}
+	var records []record
+	for rows.Next() {
+		var rec record
+		if err := rows.Scan(&rec.id, &rec.secret); err != nil {
+			panic(err)
+		}
+		records = append(records, rec)
+	}
+	rows.Close()
+	for _, rec := range records {
+		encrypted, err := EncryptString(rec.secret)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE auth_providers SET client_secret = $1 WHERE id = $2", encrypted, rec.id); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *AuthProviderRepository) Create(e *AuthProvider) error {
@@ -107,6 +141,30 @@ func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 		"FROM auth_providers "+
 		"WHERE id = $1",
 		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func (r *AuthProviderRepository) GetOneByOrgId(id string, orgId string) (*AuthProvider, error) {
+	e := &AuthProvider{}
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+		"FROM auth_providers "+
+		"WHERE id = $1 AND organization_id = $2",
+		id, orgId).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func (r *AuthProviderRepository) GetByName(organizationID string, name string) (*AuthProvider, error) {
+	e := &AuthProvider{}
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+		"FROM auth_providers "+
+		"WHERE organization_id = $1 AND name = $2",
+		organizationID, name).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
 	if err != nil {
 		return nil, err
 	}

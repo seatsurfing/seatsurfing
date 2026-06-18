@@ -19,10 +19,10 @@ type OrganizationRouter struct {
 }
 
 type CreateOrganizationRequest struct {
-	Name      string `json:"name" validate:"required"`
-	Firstname string `json:"firstname" validate:"required"`
-	Lastname  string `json:"lastname" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
+	Name      string `json:"name" validate:"required,min=2,max=64"`
+	Firstname string `json:"firstname" validate:"required,min=2,max=64"`
+	Lastname  string `json:"lastname" validate:"required,min=2,max=64"`
+	Email     string `json:"email" validate:"required,email,max=128"`
 	Language  string `json:"language" validate:"required,len=2"`
 }
 
@@ -42,7 +42,7 @@ type GetDomainResponse struct {
 
 type ChangeOrgEmailPayload struct {
 	OrgID string `json:"orgId" validate:"required,uuid"`
-	Email string `json:"email" validate:"required,email,max=254"`
+	Email string `json:"email" validate:"required,email,max=256"`
 	Code  int    `json:"code" validate:"required,numeric,len=6"`
 }
 
@@ -209,6 +209,10 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	domainName := strings.TrimSpace(strings.ToLower(vars["domain"]))
+	if !ValidateDomain(domainName) {
+		SendBadRequest(w)
+		return
+	}
 	// Check if domain is special
 	if strings.HasSuffix(domainName, ".seatsurfing.app") || strings.HasSuffix(domainName, ".seatsurfing.io") {
 		SendBadRequest(w)
@@ -338,9 +342,14 @@ func (router *OrganizationRouter) setPrimaryDomain(w http.ResponseWriter, r *htt
 		SendForbidden(w)
 		return
 	}
-	if _, err = GetOrganizationRepository().GetDomain(e, vars["domain"]); err != nil {
+	domain, err := GetOrganizationRepository().GetDomain(e, vars["domain"])
+	if err != nil {
 		log.Println(err)
 		SendNotFound(w)
+		return
+	}
+	if !domain.Active {
+		SendBadRequest(w)
 		return
 	}
 	GetOrganizationRepository().SetPrimaryDomain(e, vars["domain"])
@@ -384,6 +393,10 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	}
 	var m CreateOrganizationRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !isValidCreateOrganizationRequest(&m) {
 		SendBadRequest(w)
 		return
 	}
@@ -555,7 +568,11 @@ func (router *OrganizationRouter) SendOrgConfirmDeleteOrgEmail(user *User, ID st
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 		"orgName":        org.Name,
 	}
-	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), org.Language, vars, org.ID)
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(user.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), language, vars, org.ID)
 }
 
 func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request) {
@@ -566,6 +583,10 @@ func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request)
 	}
 	var m CreateOrganizationRequest
 	if err := UnmarshalValidateBody(r, &m); err != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !isValidCreateOrganizationRequest(&m) {
 		SendBadRequest(w)
 		return
 	}
@@ -598,6 +619,10 @@ func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, fav
 			}
 		}
 	}
+}
+
+func isValidCreateOrganizationRequest(m *CreateOrganizationRequest) bool {
+	return IsValidOrgName(m.Name) && IsValidHumanName(m.Firstname) && IsValidHumanName(m.Lastname) && IsValidOrgLanguage(m.Language)
 }
 
 func (router *OrganizationRouter) copyFromRestModel(m *CreateOrganizationRequest) *Organization {

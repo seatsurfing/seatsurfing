@@ -1,6 +1,7 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import Formatting from "../util/Formatting";
+import DateUtil from "../util/DateUtil";
 
 export default class RecurringBooking extends Entity {
   static CadenceDaily: number = 1;
@@ -29,9 +30,9 @@ export default class RecurringBooking extends Entity {
 
   serialize(): Object {
     // Convert the local dates to UTC dates without changing the date/time ("fake" UTC)
-    let enter = Formatting.convertToFakeUTCDate(this.enter);
-    let leave = Formatting.convertToFakeUTCDate(this.leave);
-    let end = Formatting.convertToFakeUTCDate(this.end);
+    let enter = DateUtil.convertToFakeUTCDate(this.enter);
+    let leave = DateUtil.convertToFakeUTCDate(this.leave);
+    let end = DateUtil.convertToFakeUTCDate(this.end);
 
     return Object.assign(super.serialize(), {
       enter: enter.toISOString(),

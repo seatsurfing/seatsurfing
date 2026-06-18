@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-const uiURL = process.env.UI_URL ? process.env.UI_URL : "http://localhost:8080";
+import { login } from "../util/helper";
 
 test.beforeEach(async ({ page }) => {
   // Suppress the MFA encouragement modal
@@ -8,25 +7,17 @@ test.beforeEach(async ({ page }) => {
     window.localStorage.setItem("mfaEncouragementDismissed", "1");
   });
 
-  // Open login page
-  await page.goto(uiURL + "/ui/login/");
-  await expect(page).toHaveURL(/login\/$/);
-
-  // Enter credentials
-  await page
-    .getByPlaceholder("you@company.com")
-    .fill("admin@seatsurfing.local");
-  await page.getByPlaceholder("Password").fill("12345678");
-  await page.getByRole("button", { name: "➤" }).click();
+  // Enter credentials and log in
+  await login(page, "admin@seatsurfing.local", "Sea!surf1ng");
 
   // Ensure we've reached the dashboard
   await expect(page).toHaveURL(/search\/$/);
 });
 
 test("crud booking", async ({ page }) => {
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByRole("combobox").selectOption({ label: "Sample Floor" });
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByText("Desk 1", { exact: true }).click();
   await expect(
     page.getByRole("dialog").getByText("Book a space"),
@@ -37,7 +28,7 @@ test("crud booking", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("button", { name: "My bookings" }).click();
   await expect(page).toHaveURL(/bookings\/$/);
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByLabel("Calendar", { exact: true }).click(); // switch to list view
   await page
     .getByText(/Sample Floor/)

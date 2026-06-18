@@ -15,6 +15,9 @@ type SeatsurfingPlugin interface {
 	OnOrganizationCreated(organizationID string)
 	OnOrganizationUpdated(organizationID string)
 	OnBeforeOrganizationDelete(organizationID string)
+	OnBookingCreated(bookingID string)
+	OnBookingUpdated(bookingID string)
+	OnBookingDeleted(bookingID string)
 }
 
 type AdminUIMenuItem struct {

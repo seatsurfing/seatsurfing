@@ -2,7 +2,7 @@
 
 ## Set up development environment
 
-1. Make sure Node.js 22 or later is installed:
+1. Make sure Node.js 24 or later is installed:
 
    ```shell
    node -v
@@ -12,24 +12,6 @@
 
    ```shell
    go version
-   ```
-
-1. Set up a local PostgreSQL database, i.e. using a container:
-
-   ```shell
-   docker run --name postgres \
-   	-v postgres:/var/lib/postgresql/data \
-   	-e POSTGRES_PASSWORD=root \
-   	-p 5432:5432 \
-   	-d \
-   	postgres:17-alpine
-   ```
-
-1. Create databases named `seatsurfing` (for running the application) and `seatsurfing_test` (for running the tests) in your PostgreSQL database:
-
-   ```sql
-   CREATE DATABASE seatsurfing;
-   CREATE DATABASE seatsurfing_test;
    ```
 
 1. Check out Seatsurfing's code:
@@ -57,7 +39,7 @@
 
    _Optionally: Add a custom `.env` file in the folder `./server` to set additional environment variables._
 
-You should now be able to access the UI at http://localhost:3000/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `12345678`). To check notification e-mails sent by the system open the MailHog interface at http://localhost:8025/.
+You should now be able to access the UI at http://localhost:3000/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `Sea!surf1ng`). To check notification e-mails sent by the system open the MailHog interface at http://localhost:8025/.
 
 ## Adding translations
 
@@ -111,4 +93,4 @@ Before submitting a pull request, please make sure the unit and e2e (written in 
 
 We use [conventional commits](https://www.conventionalcommits.org/) and squash merges, so the PR title should follow the conventional commit conventions.
 
-Please provide a comprehensible description about the added/changed functionality. If frontend functionality is modified, screenshots are a welcome addition.
+Please provide a comprehensive description about the added/changed functionality. If frontend functionality is modified, screenshots are a welcome addition.

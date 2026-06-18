@@ -11,7 +11,7 @@ RUN ./add-missing-translations.sh
 RUN npm ci
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.1-bookworm AS server-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.4-bookworm AS server-builder
 RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 ARG TARGETPLATFORM
@@ -23,7 +23,7 @@ WORKDIR /go/src/app
 RUN go get -d -v .
 RUN CGO_ENABLED=1 xx-go build -ldflags="-w -s" -o main && xx-verify main
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.1-bookworm AS healthcheck-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.4-bookworm AS healthcheck-builder
 COPY --from=xx / /
 ARG TARGETPLATFORM
 RUN xx-apt install -y libc6-dev binutils gcc libc6-dev
@@ -31,7 +31,7 @@ WORKDIR /go/src/healthcheck
 ADD healthcheck/ .
 RUN xx-go build -ldflags="-w -s" -o healthcheck . && xx-verify healthcheck
 
-FROM gcr.io/distroless/base-debian12
+FROM gcr.io/distroless/base-debian13@sha256:57c1e4c72feb5925c4763ae4f6bd2013ad3854f57eff5b60dd9acb1ce0abc66e
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
       org.opencontainers.image.url="https://seatsurfing.io" \
       org.opencontainers.image.documentation="https://seatsurfing.io/docs/"

@@ -12,9 +12,10 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import JwtDecoder from "@/util/JwtDecoder";
 import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
-import * as Validation from "@/util/Validation";
-import * as Navigation from "@/util/Navigation";
+import Validation from "@/util/Validation";
+import Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
+import { ResponseCode } from "@/types/ErrorText";
 import TotpInput from "@/components/TotpInput";
 import Passkey, {
   prepareRequestOptions,
@@ -46,6 +47,8 @@ interface State {
   orgDomain: string;
   domainNotFound: boolean;
   passkeyAvailable: boolean;
+  requirePasswordUpdate: boolean;
+  newPassword: string;
 }
 
 interface Props {
@@ -82,8 +85,9 @@ class Login extends React.Component<Props, State> {
       loading: true,
       orgDomain: "",
       domainNotFound: false,
-      // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
       passkeyAvailable: Passkey.isSupported(),
+      requirePasswordUpdate: false,
+      newPassword: "",
     };
   }
 
@@ -97,10 +101,6 @@ class Login extends React.Component<Props, State> {
       }
     }
     this.loadOrgDetails();
-    // Refine the platform authenticator availability check asynchronously (Finding #14)
-    Passkey.isPlatformAuthAvailable().then((available) =>
-      this.setState({ passkeyAvailable: available }),
-    );
   };
 
   applyOrg = (res: any) => {
@@ -132,7 +132,7 @@ class Login extends React.Component<Props, State> {
 
   loadOrgDetails = () => {
     const domain = window.location.host.split(":").shift();
-    Ajax.get("/auth/org/" + domain)
+    Ajax.get("/auth/org/" + domain, () => true)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -143,7 +143,7 @@ class Login extends React.Component<Props, State> {
   };
 
   checkSingleOrg = () => {
-    Ajax.get("/auth/singleorg")
+    Ajax.get("/auth/singleorg", () => true)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -153,6 +153,23 @@ class Login extends React.Component<Props, State> {
           loading: false,
         });
       });
+  };
+
+  onSuccessfulLogin = async (data: {
+    accessToken: string;
+    logoutUrl: string;
+    refreshToken: string;
+  }): Promise<void> => {
+    const credentials: AjaxCredentials = {
+      accessToken: data.accessToken,
+      accessTokenExpiry: JwtDecoder.getExpiryDate(data.accessToken),
+      logoutUrl: data.logoutUrl,
+      profilePageUrl: "",
+    };
+    Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+    Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
+    await RuntimeConfig.loadUserAndSettings();
+    this.setState({ redirect: this.getRedirectUrl() });
   };
 
   onPasswordSubmit = (e: any) => {
@@ -170,25 +187,24 @@ class Login extends React.Component<Props, State> {
     if (this.state.requirePasskey && this.state.passkeyStateId) {
       payload.passkeyStateId = this.state.passkeyStateId;
     }
-    Ajax.postData("/auth/login", payload)
+    Ajax.postData("/auth/login", payload, () => true)
       .then((res) => {
-        const credentials: AjaxCredentials = {
-          accessToken: res.json.accessToken,
-          accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
-          logoutUrl: res.json.logoutUrl,
-          profilePageUrl: "",
-        };
-        Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-        Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
-        RuntimeConfig.loadUserAndSettings().then(() => {
-          this.setState({ redirect: this.getRedirectUrl() });
-        });
+        this.onSuccessfulLogin(res.json);
       })
       .catch((err) => {
         if (
           err instanceof AjaxError &&
           (err as AjaxError).httpStatusCode === 401
         ) {
+          if (err.appErrorCode === ResponseCode.PasswordUpdateRequired) {
+            this.setState({
+              requirePasswordUpdate: true,
+              invalid: false,
+              inPasswordSubmit: false,
+            });
+            return;
+          }
+
           // Check if the body contains a passkey challenge
           if ((err as any).responseBody) {
             try {
@@ -210,7 +226,7 @@ class Login extends React.Component<Props, State> {
                 this.performPasskeyAssertion(body.stateId, rawOpts);
                 return;
               }
-            } catch (_) {}
+            } catch {}
           }
           this.setState({
             requireTotp: true,
@@ -219,6 +235,30 @@ class Login extends React.Component<Props, State> {
           });
           return;
         }
+        this.setState({
+          invalid: true,
+          inPasswordSubmit: false,
+        });
+      });
+  };
+
+  onNewPasswordSubmit = (e: any) => {
+    e.preventDefault();
+    this.setState({
+      inPasswordSubmit: true,
+    });
+
+    const payload: any = {
+      email: this.state.email,
+      password: this.state.password,
+      organizationId: this.org?.id,
+      newPassword: this.state.newPassword,
+    };
+    Ajax.postData("/auth/updatepw", payload, () => true)
+      .then((res) => {
+        this.onSuccessfulLogin(res.json);
+      })
+      .catch(() => {
         this.setState({
           invalid: true,
           inPasswordSubmit: false,
@@ -257,17 +297,9 @@ class Login extends React.Component<Props, State> {
         passkeyStateId: stateId,
         passkeyCredential: serialized,
       };
-      const res = await Ajax.postData("/auth/login", payload);
-      const credentials: AjaxCredentials = {
-        accessToken: res.json.accessToken,
-        accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
-        logoutUrl: res.json.logoutUrl,
-        profilePageUrl: "",
-      };
-      Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.json.refreshToken);
-      await RuntimeConfig.loadUserAndSettings();
-      this.setState({ redirect: this.getRedirectUrl(), inPasskeyLogin: false });
+      const res = await Ajax.postData("/auth/login", payload, () => true);
+      await this.onSuccessfulLogin(res.json);
+      this.setState({ inPasskeyLogin: false });
     } catch (err: any) {
       // On passkey failure, offer TOTP fallback if available (spec §6.1)
       if (this.state.allowTotpFallback) {
@@ -305,24 +337,11 @@ class Login extends React.Component<Props, State> {
         credential as PublicKeyCredential,
       );
       const res = await Passkey.finishLogin(beginResponse.stateId, serialized);
-      const credentials: AjaxCredentials = {
-        accessToken: res.accessToken,
-        accessTokenExpiry: JwtDecoder.getExpiryDate(res.accessToken),
-        logoutUrl: "",
-        profilePageUrl: "",
-      };
-      Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(res.refreshToken);
-      await RuntimeConfig.loadUserAndSettings();
-      this.setState({
-        redirect: this.getRedirectUrl(),
-        inPasskeyLogin: false,
-        passkeyLoginFailed: false,
-      });
+      await this.onSuccessfulLogin({ ...res, logoutUrl: "" });
+      this.setState({ inPasskeyLogin: false, passkeyLoginFailed: false });
     } catch (err: any) {
+      console.log("Passkey login failed", err);
       // NotAllowedError = user dismissed the browser passkey dialog — no error shown.
-      // Any other error (e.g. 404 from finishLogin for an expired/unknown credential)
-      // must surface to the user.
       const cancelled =
         err instanceof DOMException && err.name === "NotAllowedError";
       this.setState({
@@ -333,10 +352,10 @@ class Login extends React.Component<Props, State> {
   };
 
   getRedirectUrl = () => {
-    // prevent (open) redirect to absolute URLs
+    // only allow relative redirect URLs to prevent (open) redirects
     const redirectUrl = this.props.router.query["redir"] as string;
-    if (!redirectUrl || Validation.isAbsoluteUrl(redirectUrl)) {
-      return Navigation.PATH_SEARCH;
+    if (!redirectUrl || !Validation.isRelativeUrl(redirectUrl)) {
+      return Navigation.PATH_PAGE_SEARCH;
     }
 
     // do not redirect to admin pages for non-admin users (to prevent "auto logout")
@@ -344,7 +363,7 @@ class Login extends React.Component<Props, State> {
       Navigation.isAdminPath(redirectUrl) &&
       !RuntimeConfig.INFOS?.spaceAdmin
     ) {
-      return Navigation.PATH_SEARCH;
+      return Navigation.PATH_PAGE_SEARCH;
     }
 
     return redirectUrl;
@@ -400,13 +419,13 @@ class Login extends React.Component<Props, State> {
 
     const copyrightFooter = (
       <div className="copyright-footer">
-        &copy; Seatsurfing &#183;{" "}
+        &copy;&nbsp;
         <a
           href="https://seatsurfing.io"
           target="_blank"
           rel="noopener noreferrer"
         >
-          https://seatsurfing.io
+          Seatsurfing
         </a>
         <LanguageSelector />
       </div>
@@ -487,11 +506,17 @@ class Login extends React.Component<Props, State> {
 
     return (
       <div className="container-signin">
-        {/* Passkey 2FA prompt – shown when password verified but passkey required */}
+        {/* ------------------ */}
+        {/* Passkey 2FA prompt */}
+        {/* ------------------ */}
+
+        {/* Shown when password verified but passkey required */}
         <Form
           className="form-signin"
           name="passkey-2fa"
-          hidden={!this.state.requirePasskey}
+          hidden={
+            !this.state.requirePasskey || this.state.requirePasswordUpdate
+          }
         >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
@@ -552,11 +577,90 @@ class Login extends React.Component<Props, State> {
             </InputGroup>
           </Form.Group>
         </Form>
+
+        {/* --------------- */}
+        {/* Password update */}
+        {/* --------------- */}
+
+        <Form
+          className="form-signin"
+          onSubmit={this.onNewPasswordSubmit}
+          name="password-update"
+          hidden={
+            this.state.requireTotp ||
+            this.state.requirePasskey ||
+            !this.state.requirePasswordUpdate
+          }
+        >
+          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <h3>{this.org?.name}</h3>
+          <p>{this.props.t("passwordUpdateInfo")}</p>
+          <Form.Group style={{ marginBottom: "5px" }}>
+            <Form.Control
+              type="email"
+              readOnly={true}
+              value={this.state.email}
+            />
+          </Form.Group>
+          <Form.Group style={{ marginBottom: "5px" }}>
+            <InputGroup>
+              <Form.Control
+                type="password"
+                readOnly={this.state.inPasswordSubmit}
+                placeholder={this.props.t("newPasswordPlaceholder")}
+                value={this.state.newPassword}
+                onChange={(e: any) =>
+                  this.setState({
+                    newPassword: e.target.value,
+                  })
+                }
+                minLength={Validation.PASSWORD_MIN_LENGTH}
+                maxLength={Validation.PASSWORD_MAX_LENGTH}
+                pattern={Validation.PASSWORD_PATTERN}
+                required={true}
+                isInvalid={this.state.invalid}
+                autoFocus={true}
+                title={this.props.t("passwordRequirements")}
+              />
+              <Button variant="primary" type="submit">
+                {this.state.inPasswordSubmit ? (
+                  <Loading showText={false} paddingTop={false} />
+                ) : (
+                  <div className="feather-btn">&#10148;</div>
+                )}
+              </Button>
+            </InputGroup>
+            <p className="margin-top-50">
+              <Button
+                variant="link"
+                className="p-0"
+                onClick={() =>
+                  this.setState({
+                    requirePasswordUpdate: false,
+                    email: "",
+                    password: "",
+                  })
+                }
+              >
+                {this.props.t("back")}
+              </Button>
+            </p>
+          </Form.Group>
+        </Form>
+
+        {/* -------------- */}
+        {/* Standard login */}
+        {/* -------------- */}
+
         <Form
           className="form-signin"
           onSubmit={this.onPasswordSubmit}
           name="password-login"
-          hidden={this.state.requireTotp || this.state.requirePasskey}
+          hidden={
+            this.state.requireTotp ||
+            this.state.requirePasskey ||
+            this.state.requirePasswordUpdate
+          }
         >
           <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
           <h3>{this.org?.name}</h3>
@@ -594,7 +698,6 @@ class Login extends React.Component<Props, State> {
                 }
                 required={true}
                 isInvalid={this.state.invalid}
-                minLength={8}
               />
               <Button variant="primary" type="submit">
                 {this.state.inPasswordSubmit ? (

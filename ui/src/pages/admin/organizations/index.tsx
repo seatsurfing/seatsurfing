@@ -8,8 +8,6 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Organization from "@/types/Organization";
-import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   selectedItem: string;
@@ -33,10 +31,6 @@ class Organizations extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadItems();
   };
 

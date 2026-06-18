@@ -1,6 +1,9 @@
 package testutil
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,11 +16,15 @@ import (
 
 	"github.com/google/uuid"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/app"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 )
+
+const TestPassword = "Sea!surf1ng"
+const TestPasswordNew = "Changed!Pass1"
 
 type LoginResponse struct {
 	RequireOTP   bool   `json:"otpRequired"`
@@ -34,23 +41,26 @@ var DatabaseTables = [...]string{
 	"buddies",
 	"debug_time_issues",
 	"groups",
+	"location_allowed_bookers",
 	"locations",
+	"mail_logs",
 	"organizations",
 	"organizations_domains",
+	"passkeys",
 	"recurring_bookings",
 	"refresh_tokens",
 	"sessions",
 	"settings",
+	"space_attribute_values",
+	"space_attributes",
+	"spaces",
+	"spaces_allowed_bookers",
+	"spaces_approvers",
 	"spaces_attributes",
 	"spaces_attributes_values",
-	"spaces",
-	"spaces_approvers",
-	"spaces_allowed_bookers",
-	"passkeys",
 	"users",
 	"users_groups",
 	"users_preferences",
-	"mail_logs",
 }
 
 func GetTestJWT(userID string) string {
@@ -152,11 +162,11 @@ func CreateTestUserInOrg(org *Organization) *User {
 	return CreateTestUserInOrgDomain(org, "test.com")
 }
 
-func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
+func CreateTestUserDomain(org *Organization, domain string, role UserRole) *User {
 	user := &User{
 		Email:          uuid.New().String() + "@" + domain,
 		OrganizationID: org.ID,
-		Role:           UserRoleOrgAdmin,
+		Role:           role,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
@@ -164,8 +174,20 @@ func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
 	return user
 }
 
+func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
+	return CreateTestUserDomain(org, domain, UserRoleOrgAdmin)
+}
+
 func CreateTestUserOrgAdmin(org *Organization) *User {
 	return CreateTestUserOrgAdminDomain(org, "test.com")
+}
+
+func CreateTestUserOrgSpaceAdmin(org *Organization) *User {
+	return CreateTestUserDomain(org, "test.com", UserRoleSpaceAdmin)
+}
+
+func CreateTestString(length int) string {
+	return strings.Repeat("a", 1000)
 }
 
 func LoginTestUserParams(userID string) *LoginResponse {
@@ -209,6 +231,20 @@ func CreateTestLocationAndSpace(org *Organization) (*Location, *Space) {
 		panic(err)
 	}
 	return location, space
+}
+
+func CreateTestGroup(org *Organization, user *User) *Group {
+	group := &Group{
+		OrganizationID: org.ID,
+	}
+	if err := GetGroupRepository().Create(group); err != nil {
+		panic(err)
+	}
+	if user != nil {
+		GetGroupRepository().AddMembers(group, []string{user.ID})
+	}
+
+	return group
 }
 
 func CreateTestBooking9To5(user *User, space *Space, offsetDay int) *Booking {
@@ -328,4 +364,38 @@ func TestRunner(m *testing.M) {
 	DropTestDB()
 	db.Close()
 	os.Exit(code)
+}
+
+func CreateTestServiceAccountRW(org *Organization) *User {
+	user := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRW,
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		panic(err)
+	}
+	return user
+}
+
+func GenerateTestApiToken(userID string) string {
+	rawBytes := make([]byte, 32)
+	if _, err := rand.Read(rawBytes); err != nil {
+		panic(err)
+	}
+	rawToken := hex.EncodeToString(rawBytes)
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := hex.EncodeToString(hash[:])
+	if err := GetUserRepository().SetApiToken(userID, NullString(tokenHash)); err != nil {
+		panic(err)
+	}
+	return rawToken
+}
+
+func NewHTTPRequestBearer(method, url, rawToken string, body io.Reader) *http.Request {
+	req, _ := http.NewRequest(method, url, body)
+	if rawToken != "" {
+		req.Header.Set("Authorization", "Bearer "+rawToken)
+	}
+	return req
 }

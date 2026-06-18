@@ -10,13 +10,15 @@ import Loading from "@/components/Loading";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import Formatting from "@/util/Formatting";
+
+import DateUtil from "@/util/DateUtil";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import DateTimePicker from "@/components/DateTimePicker";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   loading: boolean;
@@ -55,8 +57,8 @@ class ReportAnalysis extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
+    if (RuntimeConfig.INFOS.hideReports) {
+      this.props.router.push("/404");
       return;
     }
     Location.list().then((locations) => (this.locations = locations));
@@ -66,27 +68,26 @@ class ReportAnalysis extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const end = new Date(this.state.end);
     end.setHours(23, 59, 59);
     let params =
       "start=" +
       encodeURIComponent(
-        Formatting.convertToFakeUTCDate(this.state.start).toISOString(),
+        DateUtil.convertToFakeUTCDate(this.state.start).toISOString(),
       );
     params +=
       "&end=" +
-      encodeURIComponent(Formatting.convertToFakeUTCDate(end).toISOString());
+      encodeURIComponent(DateUtil.convertToFakeUTCDate(end).toISOString());
     params += "&locationId=" + encodeURIComponent(this.state.locationId);
-    Ajax.get("/booking/report/presence/?" + params)
-      .then((res) => {
-        this.data = res.json;
-        this.setState({ loading: false });
-      })
-      .catch((e: any) => {
-        const errorCode: number = AjaxError.getAppErrorCode(e);
-        this.setState({ loading: false, errorCode, error: true });
-      });
+    try {
+      const res = await Ajax.get("/booking/report/presence/?" + params);
+      this.data = res.json;
+      this.setState({ loading: false });
+    } catch (e: any) {
+      const errorCode: number = AjaxError.getAppErrorCode(e);
+      this.setState({ loading: false, errorCode, error: errorCode != 0 });
+    }
   };
 
   getRows = () => {

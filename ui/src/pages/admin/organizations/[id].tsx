@@ -15,7 +15,8 @@ import Organization from "@/types/Organization";
 import Domain from "@/types/Domain";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
-import RedirectUtil from "@/util/RedirectUtil";
+
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -59,10 +60,6 @@ class EditOrganization extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -102,7 +99,7 @@ class EditOrganization extends React.Component<Props, State> {
       .then(() => {
         if (createUser) {
           Domain.add(this.entity.id, this.state.domain).then(() => {
-            let user = new User();
+            const user = new User();
             user.organizationId = this.entity.id;
             user.email = this.state.email;
             user.password = this.state.password;
@@ -196,7 +193,7 @@ class EditOrganization extends React.Component<Props, State> {
       );
     }
 
-    const languages = ["de", "en", "he"];
+    const languages = ["de", "en"];
 
     let adminSection = <></>;
     if (!this.entity.id) {
@@ -238,7 +235,10 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ password: e.target.value })
                 }
                 required={true}
-                minLength={8}
+                minLength={Validation.PASSWORD_MIN_LENGTH}
+                maxLength={Validation.PASSWORD_MAX_LENGTH}
+                pattern={Validation.PASSWORD_PATTERN}
+                title={this.props.t("passwordRequirements")}
               />
             </Col>
           </Form.Group>
@@ -261,6 +261,8 @@ class EditOrganization extends React.Component<Props, State> {
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
                 autoFocus={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -277,7 +279,9 @@ class EditOrganization extends React.Component<Props, State> {
                 required={true}
               >
                 {languages.map((lc) => (
-                  <option key={lc}>{lc}</option>
+                  <option key={lc} value={lc}>
+                    {this.props.t("language-" + lc)}
+                  </option>
                 ))}
               </Form.Select>
             </Col>
@@ -299,6 +303,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -314,6 +320,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -327,6 +335,7 @@ class EditOrganization extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+                maxLength={128}
               />
             </Col>
           </Form.Group>

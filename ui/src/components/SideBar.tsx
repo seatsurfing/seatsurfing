@@ -23,7 +23,8 @@ import PremiumFeatureIcon from "./PremiumFeatureIcon";
 import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
-import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
+import Event from "@/util/Event";
 
 interface State {
   approvalCount: number;
@@ -45,43 +46,53 @@ class SideBar extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!RuntimeConfig.INFOS.spaceAdmin) {
-      Ajax.PERSISTER.deleteCredentialsFromStorage();
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
-    Booking.getPendingApprovalsCount()
-      .then((count) => {
-        this.setState({ approvalCount: count });
-      })
-      .catch((error) => {
-        console.error("Error fetching pending approvals count:", error);
-      });
-    this.updateApprovalCount();
+    this.pollApprovalCount();
+    window.addEventListener(
+      Event.APPROVAL_COUNT_CHANGED,
+      this.updateApprovalCount,
+    );
   };
 
-  updateApprovalCount = () => {
+  componentWillUnmount = () => {
+    window.removeEventListener(
+      Event.APPROVAL_COUNT_CHANGED,
+      this.updateApprovalCount,
+    );
+  };
+
+  /**
+   * Fetches the number of pending approvals
+   *
+   * @returns true, if the user's session is (still) alive
+   */
+  updateApprovalCount = async (): Promise<boolean> => {
+    let count: number;
+    try {
+      count = await Booking.getPendingApprovalsCount();
+    } catch (error) {
+      if (error instanceof AjaxError && error.httpStatusCode === 401) {
+        return false; // session lost
+      }
+
+      console.error("Error fetching pending approvals count", error);
+      return true;
+    }
+    this.setState({ approvalCount: count });
+    return true;
+  };
+
+  pollApprovalCount = async () => {
+    // Do nothing if we don't have an access token
     if (!Ajax.hasAccessToken()) {
-      // Do nothing if we don't have an access token
       return;
     }
-    window.setTimeout(() => {
-      Booking.getPendingApprovalsCount()
-        .then((count) => {
-          // Successfully fetched pending approvals count, update state & continue polling
-          this.setState({ approvalCount: count });
-          this.updateApprovalCount();
-        })
-        .catch((error) => {
-          if (error instanceof AjaxError && error.httpStatusCode === 401) {
-            // Not authenticated anymore, stop polling
-            return;
-          }
-          // Some other error occurred, try again in next interval
-          console.error("Error fetching pending approvals count:", error);
-          this.updateApprovalCount();
-        });
-    }, 30 * 1000); // Poll every 30 seconds
+
+    const sessionAlive = await this.updateApprovalCount();
+
+    // Poll again in 30 seconds if session is (still) alive
+    if (sessionAlive) {
+      window.setTimeout(this.pollApprovalCount, 30 * 1000);
+    }
   };
 
   getActiveKey = () => {
@@ -302,36 +313,41 @@ class SideBar extends React.Component<Props, State> {
                   icon={IconApproval}
                   title={this.props.t("approvals")}
                 />
-                <span className="d-none d-md-inline">
+                <span className="d-none d-md-inline position-relative">
                   {" "}
                   {this.props.t("approvals")}
+                  <Badge
+                    bg="primary"
+                    hidden={this.state.approvalCount === 0}
+                    className="position-absolute top-50 start-100 translate-middle-y"
+                    style={{
+                      marginLeft: "5px",
+                    }}
+                  >
+                    {RendererUtils.numberPlus(this.state.approvalCount, 9)}
+                  </Badge>
                 </span>
                 <PremiumFeatureIcon className="d-none d-md-inline" />
-                <Badge
-                  bg="primary"
-                  hidden={this.state.approvalCount === 0}
-                  style={{ marginLeft: "5px" }}
+              </Nav.Link>
+            </li>
+            {!RuntimeConfig.INFOS.hideReports && (
+              <li className="nav-item">
+                <Nav.Link
+                  as={Link}
+                  eventKey="/admin/report/analysis"
+                  href="/admin/report/analysis"
                 >
-                  {this.state.approvalCount}
-                </Badge>
-              </Nav.Link>
-            </li>
-            <li className="nav-item">
-              <Nav.Link
-                as={Link}
-                eventKey="/admin/report/analysis"
-                href="/admin/report/analysis"
-              >
-                <this.SidebarIcon
-                  icon={IconAnalysis}
-                  title={this.props.t("analysis")}
-                />
-                <span className="d-none d-md-inline">
-                  {" "}
-                  {this.props.t("analysis")}
-                </span>
-              </Nav.Link>
-            </li>
+                  <this.SidebarIcon
+                    icon={IconAnalysis}
+                    title={this.props.t("analysis")}
+                  />
+                  <span className="d-none d-md-inline">
+                    {" "}
+                    {this.props.t("analysis")}
+                  </span>
+                </Nav.Link>
+              </li>
+            )}
             {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
               if (item.visibility !== "spaceadmin") {
                 return;

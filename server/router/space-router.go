@@ -15,22 +15,24 @@ type SpaceRouter struct {
 }
 
 type SpaceAttributeValueRequest struct {
-	AttributeID string `json:"attributeId"`
-	Value       string `json:"value"`
+	AttributeID string `json:"attributeId" validate:"required,uuid"`
+	Value       string `json:"value" validate:"max=256"`
 }
 
 type CreateSpaceRequest struct {
-	Name                  string                       `json:"name" validate:"required"`
-	X                     uint                         `json:"x"`
-	Y                     uint                         `json:"y"`
-	Width                 uint                         `json:"width"`
-	Height                uint                         `json:"height"`
-	Rotation              uint                         `json:"rotation"`
+	Name                  string                       `json:"name" validate:"required,max=128"`
+	X                     uint                         `json:"x" validate:"max=100000"`
+	Y                     uint                         `json:"y" validate:"max=100000"`
+	Width                 uint                         `json:"width" validate:"max=5000"`
+	Height                uint                         `json:"height" validate:"max=5000"`
+	Rotation              uint                         `json:"rotation" validate:"max=359"`
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
-	Attributes            []SpaceAttributeValueRequest `json:"attributes"`
-	ApproverGroupIDs      []string                     `json:"approverGroupIds"`
-	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds"`
+	KioskEnabled          bool                         `json:"kioskEnabled"`
+	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle trapezoid"`
+	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
+	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
+	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 }
 
 type UpdateSpaceRequest struct {
@@ -39,8 +41,8 @@ type UpdateSpaceRequest struct {
 }
 
 type SpaceBulkUpdateRequest struct {
-	Creates   []CreateSpaceRequest `json:"creates"`
-	Updates   []UpdateSpaceRequest `json:"updates"`
+	Creates   []CreateSpaceRequest `json:"creates" validate:"dive"`
+	Updates   []UpdateSpaceRequest `json:"updates" validate:"dive"`
 	DeleteIDs []string             `json:"deleteIds"`
 }
 
@@ -64,13 +66,16 @@ type GetSpaceResponse struct {
 }
 
 type GetSpaceAvailabilityBookingsResponse struct {
-	BookingID   string    `json:"id"`
-	RecurringID string    `json:"recurringId"`
-	UserID      string    `json:"userId"`
-	UserEmail   string    `json:"userEmail"`
-	Enter       time.Time `json:"enter"`
-	Leave       time.Time `json:"leave"`
-	Subject     string    `json:"subject"`
+	BookingID     string    `json:"id"`
+	RecurringID   string    `json:"recurringId"`
+	UserID        string    `json:"userId"`
+	UserEmail     string    `json:"userEmail"`
+	UserFirstname string    `json:"userFirstname"`
+	UserLastname  string    `json:"userLastname"`
+	Enter         time.Time `json:"enter"`
+	Leave         time.Time `json:"leave"`
+	Subject       string    `json:"subject"`
+	Approved      bool      `json:"approved"`
 }
 
 type GetSpaceAvailabilityResponse struct {
@@ -84,11 +89,15 @@ type GetSpaceAvailabilityRequest struct {
 	Enter      time.Time         `json:"enter"`
 	Leave      time.Time         `json:"leave"`
 	SpaceID    string            `json:"spaceId"`
-	Attributes []SearchAttribute `json:"attributes"`
+	Attributes []SearchAttribute `json:"attributes" validate:"dive"`
 }
 
 func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
+
+	// Availability
 	s.HandleFunc("/availability", router.getAvailability).Methods("GET")
+	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("GET")
+
 	s.HandleFunc("/bulk", router.bulkUpdate).Methods("POST")
 	s.HandleFunc("/{id}/approver/remove", router.removeApprovers).Methods("POST")
 	s.HandleFunc("/{id}/approver", router.getApprovers).Methods("GET")
@@ -96,7 +105,6 @@ func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/allowedbooker/remove", router.removeAllowedBookers).Methods("POST")
 	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
 	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
-	s.HandleFunc("/{id}/availability", router.getSingleSpaceAvailability).Methods("GET")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -229,7 +237,13 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 		SendInternalServerError(w)
 		return
 	}
-	allowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
+	spaceAllowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	locationAllowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(locationId)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -245,6 +259,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	if r.URL.Query().Has("attributes") {
 		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
 	}
+	isAllowedToBookLocation := router.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
 		if spaceID != "" && e.ID != spaceID {
@@ -262,8 +277,9 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 			m.Rotation = e.Rotation
 			m.RequireSubject = e.RequireSubject
 			m.Enabled = e.Enabled
+			m.Shape = e.Shape
 			m.Available = e.Available
-			m.IsAllowed = router.IsUserAllowedToBook(&e.Space, allowedBookers, userGroups)
+			m.IsAllowed = isAllowedToBookLocation && router.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups)
 			m.IsApprovalRequired = router.IsApprovalRequired(&e.Space, approvers)
 			router.appendAttributesToRestModel(&m.GetSpaceResponse, attributeValues)
 			m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
@@ -273,18 +289,25 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 				leave, _ := GetLocationRepository().AttachTimezoneInformation(booking.Leave, location)
 				outUserId := ""
 				outUserEmail := ""
+				outUserFirstname := ""
+				outUserLastname := ""
 				if showName || user.Email == booking.UserEmail {
 					outUserId = booking.UserID
 					outUserEmail = booking.UserEmail
+					outUserFirstname = booking.UserFirstname
+					outUserLastname = booking.UserLastname
 				}
 				entry := &GetSpaceAvailabilityBookingsResponse{
-					BookingID:   booking.BookingID,
-					RecurringID: booking.RecurringID,
-					UserID:      outUserId,
-					UserEmail:   outUserEmail,
-					Enter:       enter,
-					Leave:       leave,
-					Subject:     booking.Subject,
+					BookingID:     booking.BookingID,
+					RecurringID:   booking.RecurringID,
+					UserID:        outUserId,
+					UserEmail:     outUserEmail,
+					UserFirstname: outUserFirstname,
+					UserLastname:  outUserLastname,
+					Enter:         enter,
+					Leave:         leave,
+					Subject:       booking.Subject,
+					Approved:      booking.Approved,
 				}
 				m.Bookings = append(m.Bookings, entry)
 			}
@@ -303,7 +326,7 @@ func (router *SpaceRouter) IsApprovalRequired(e *Space, approvers []*SpaceGroup)
 	return false
 }
 
-func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
+func (router *SpaceRouter) IsUserAllowedToBookSpace(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
 	restricted := false
 	for _, allowedBooker := range allowedBookers {
 		if allowedBooker.SpaceID == e.ID {
@@ -318,9 +341,26 @@ func (router *SpaceRouter) IsUserAllowedToBook(e *Space, allowedBookers []*Space
 	return !restricted
 }
 
+func (router *SpaceRouter) IsUserAllowedToBookLocation(allowedBookers []*LocationGroup, userGroups []*Group) bool {
+	restricted := false
+	for _, allowedBooker := range allowedBookers {
+		restricted = true
+		for _, userGroup := range userGroups {
+			if allowedBooker.GroupID == userGroup.ID {
+				return true
+			}
+		}
+	}
+	return !restricted
+}
+
 func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	var m SpaceBulkUpdateRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if len(m.Creates)+len(m.Updates)+len(m.DeleteIDs) > 64 {
 		SendBadRequest(w)
 		return
 	}
@@ -903,6 +943,8 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Rotation = m.Rotation
 	e.RequireSubject = m.RequireSubject
 	e.Enabled = m.Enabled
+	e.KioskEnabled = m.KioskEnabled
+	e.Shape = m.Shape
 	return e
 }
 
@@ -918,6 +960,8 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.Rotation = e.Rotation
 	m.RequireSubject = e.RequireSubject
 	m.Enabled = e.Enabled
+	m.KioskEnabled = e.KioskEnabled
+	m.Shape = e.Shape
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {

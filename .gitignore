@@ -3,3 +3,4 @@
 docker-readme-modified.md
 .vscode/
 node_modules/
+ui/tsconfig.tsbuildinfo

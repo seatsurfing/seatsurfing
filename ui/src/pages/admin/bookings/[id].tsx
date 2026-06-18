@@ -20,7 +20,7 @@ import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import RuntimeConfig from "@/components/RuntimeConfig";
@@ -69,9 +69,6 @@ interface Props {
 }
 
 class EditBooking extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
   entity: Booking = new Booking();
   authProviders: { [key: string]: string } = {};
   dailyBasisBooking: boolean;
@@ -134,10 +131,6 @@ class EditBooking extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const promises = [
       this.loadData(),
       this.loadSettings(),
@@ -200,50 +193,15 @@ class EditBooking extends React.Component<Props, State> {
 
   initDates = () => {
     if (!this.isNewBooking) return;
-    const enter = new Date();
-    if (this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (
-      this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNextDay
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
 
-    const leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      this.dailyBasisBooking,
+    );
 
-    if (this.dailyBasisBooking) {
-      enter.setHours(0, 0, 0, 0);
-      leave.setHours(23, 59, 59, 0);
-    }
     this.setState({
       enter,
       leave,
@@ -311,24 +269,26 @@ class EditBooking extends React.Component<Props, State> {
           let state: any = {};
           list.forEach((s) => {
             if (typeof window !== "undefined") {
-              if (s.name === "enter_time")
+              if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
-              if (s.name === "workday_start")
+              if (s.name === UserPreference.PREF_WORKDAY_START)
                 state.prefWorkdayStart = window.parseInt(s.value);
-              if (s.name === "workday_end")
+              if (s.name === UserPreference.PREF_WORKDAY_END)
                 state.prefWorkdayEnd = window.parseInt(s.value);
-              if (s.name === "workdays")
+              if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
                   .map((val) => window.parseInt(val));
             }
-            if (s.name === "location_id") state.prefLocationId = s.value;
-            if (s.name === "booked_color") state.prefBookedColor = s.value;
-            if (s.name === "not_booked_color")
+            if (s.name === UserPreference.PREF_LOCATION_ID)
+              state.prefLocationId = s.value;
+            if (s.name === UserPreference.PREF_BOOKED_COLOR)
+              state.prefBookedColor = s.value;
+            if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
               state.prefNotBookedColor = s.value;
-            if (s.name === "self_booked_color")
+            if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
               state.prefSelfBookedColor = s.value;
-            if (s.name === "buddy_booked_color")
+            if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
               state.prefBuddyBookedColor = s.value;
           });
           if (self.dailyBasisBooking) {
@@ -353,7 +313,7 @@ class EditBooking extends React.Component<Props, State> {
     });
   };
 
-  //TODO: modify to init according to selcted user
+  //TODO: modify to init according to selected user
   // initCurrentBookingCount = () => {
   //     Booking.list().then(list => {
   //         this.curBookingCount = list.length;
@@ -457,10 +417,7 @@ class EditBooking extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
-
+    const formatter = Formatting.getBookingDateFormatter();
     const confirmMessage = this.props.t("confirmCancelBooking", {
       enter: formatter.format(this.entity.enter),
     });
@@ -708,6 +665,7 @@ class EditBooking extends React.Component<Props, State> {
 
     const enterDatePicker = (
       <DateTimePicker
+        id="booking-enter"
         value={this.state.enter}
         onChange={(value: Date | null) => {
           if (value != null) this.setEnterDate(value);
@@ -719,6 +677,7 @@ class EditBooking extends React.Component<Props, State> {
     );
     const leaveDatePicker = (
       <DateTimePicker
+        id="booking-leave"
         value={this.state.leave}
         onChange={(value: Date | null) => {
           if (value != null) this.setLeaveDate(value);
@@ -806,6 +765,7 @@ class EditBooking extends React.Component<Props, State> {
           selected={this.state.typeaheadSelected}
           filterBy={this.filterSearch}
           isLoading={this.state.typeaheadLoading}
+          inputProps={{ id: "booking-user" }}
           labelKey="email"
           multiple={false}
           minLength={3}
@@ -839,6 +799,7 @@ class EditBooking extends React.Component<Props, State> {
     } else {
       userField = (
         <Form.Control
+          id="booking-user"
           type="text"
           disabled
           value={this.state.selectedUserEmail}
@@ -861,32 +822,33 @@ class EditBooking extends React.Component<Props, State> {
           {hint}
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-user">
               {this.props.t("user")}
             </Form.Label>
             <Col sm="4">{userField}</Col>
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-enter">
               {this.props.t("enter")}
             </Form.Label>
             <Col sm="4">{enterDatePicker}</Col>
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-leave">
               {this.props.t("leave")}
             </Form.Label>
             <Col sm="4">{leaveDatePicker}</Col>
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-location">
               {this.props.t("area")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="booking-location"
                 disabled={this.state.isDisabledLocation || !this.state.canEdit}
                 required={true}
                 value={this.state.selectedLocationId}
@@ -923,11 +885,12 @@ class EditBooking extends React.Component<Props, State> {
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-space">
               {this.props.t("space")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="booking-space"
                 disabled={this.state.isDisabledSpace || !this.state.canEdit}
                 required={true}
                 value={this.state.selectedSpaceId}
@@ -977,11 +940,12 @@ class EditBooking extends React.Component<Props, State> {
           </Form.Group>
 
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="booking-subject">
               {this.props.t("subject")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="booking-subject"
                 type="subject"
                 value={this.state.subject}
                 minLength={this.getSelectedSpace()?.requireSubject ? 3 : 0}

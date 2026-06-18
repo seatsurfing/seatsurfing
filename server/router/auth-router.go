@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -105,7 +106,7 @@ type IdPUserInfo struct {
 
 type InitPasswordResetRequest struct {
 	OrganizationID string `json:"organizationId" validate:"required,uuid"`
-	Email          string `json:"email" validate:"required,email,max=254"`
+	Email          string `json:"email" validate:"required,email,max=256"`
 }
 
 type CompletePasswordResetRequest struct {
@@ -121,12 +122,19 @@ type AuthPreflightResponse struct {
 }
 
 type AuthPasswordRequest struct {
-	Email             string          `json:"email" validate:"required,email,max=254"`
+	Email             string          `json:"email" validate:"required,email,max=256"`
 	Password          string          `json:"password" validate:"required,min=8,max=64"`
 	OrganizationID    string          `json:"organizationId" validate:"required,uuid"`
 	Code              string          `json:"code,omitempty"`
 	PasskeyStateID    string          `json:"passkeyStateId,omitempty"`
 	PasskeyCredential json.RawMessage `json:"passkeyCredential,omitempty"`
+}
+
+type PasswordUpdateRequest struct {
+	Email          string `json:"email" validate:"required,email,max=256"`
+	Password       string `json:"password" validate:"required,min=8,max=64"`
+	NewPassword    string `json:"newPassword" validate:"required,min=8,max=64"`
+	OrganizationID string `json:"organizationId" validate:"required,uuid"`
 }
 
 type RefreshRequest struct {
@@ -157,6 +165,7 @@ func (router *AuthRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/login/{type}/", router.login).Methods("GET")
 	s.HandleFunc("/{id}/callback", router.callback).Methods("GET")
 	s.HandleFunc("/login", router.loginPassword).Methods("POST")
+	s.HandleFunc("/updatepw", router.updatePassword).Methods("POST")
 	s.HandleFunc("/passkey/login/begin", router.beginPasskeyLogin).Methods("POST")
 	s.HandleFunc("/passkey/login/finish", router.finishPasskeyLogin).Methods("POST")
 	s.HandleFunc("/logout/{where}", router.logout).Methods("GET")
@@ -297,19 +306,14 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if user == nil || err != nil {
+		if err != nil {
+			log.Println(err)
+		}
 		log.Printf("Password reset failed: user %s not found in org %s\n", m.Email, m.OrganizationID)
 		SendUpdated(w)
 		return
 	}
-	if user.HashedPassword == "" {
-		SendUpdated(w)
-		return
-	}
-	if user.Disabled {
-		SendUpdated(w)
-		return
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if !CanResetPassword(user) {
 		SendUpdated(w)
 		return
 	}
@@ -320,7 +324,8 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	}
 	existingStates, _ := GetAuthStateRepository().GetActiveByPayloadAndType(user.ID, AuthResetPasswordRequest)
 	if len(existingStates) >= 2 {
-		SendTooManyRequests(w)
+		log.Printf("Max. password reset requests exceeded for user %s\n", user.Email)
+		SendUpdated(w) // for security reasons, we send success message to not disclose existing user accounts
 		return
 	}
 	authState := &AuthState{
@@ -346,6 +351,12 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	authState, err := GetAuthStateRepository().GetOne(vars["id"])
 	if err != nil {
@@ -427,6 +438,12 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	authState, err := GetAuthStateRepository().GetOne(vars["id"])
 	if err != nil {
@@ -457,6 +474,7 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 	}
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	user.PasswordPending = false
+	user.PasswordUpdateRequired = false
 	user.AuthProviderID = NullUUID("")
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
@@ -528,31 +546,32 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err == sql.ErrNoRows {
+		SendBadRequest(w)
+		return
+	}
 	if err != nil {
-		SendNotFound(w)
+		SendInternalServerError(w)
 		return
 	}
-	if user.HashedPassword == "" {
-		SendNotFound(w)
+
+	if !CanPasswordLogin(user) {
+		SendBadRequest(w)
 		return
 	}
-	if user.PasswordPending {
-		SendNotFound(w)
-		return
-	}
-	if user.Disabled {
-		SendNotFound(w)
-		return
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
-		SendNotFound(w)
-		return
-	}
+
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
+
+	// check if password update is required
+	if user.PasswordUpdateRequired {
+		SendUnauthorizedCode(w, ResponseCodePasswordUpdateRequired)
+		return
+	}
+
 	passkeyResult := router.handlePasskey2FA(w, r, user, &m)
 	if passkeyResult == passkey2FAHandled {
 		return
@@ -567,7 +586,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		// Check for replay attack
 		if totpCache.isCodeUsed(user.ID, m.Code) {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
@@ -580,31 +599,64 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), *TotpOptions)
 		if err != nil || !valid {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
 		// Mark code as used to prevent replay
 		totpCache.markCodeAsUsed(user.ID, m.Code)
 	}
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	now := time.Now().UTC()
-	user.LastActivityAtUTC = &now
-	GetUserRepository().Update(user)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during password login")
+
+	router.createAndSendJWT(w, r, user, "password login", "", "")
+}
+
+func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request) {
+	if GetConfig().DisablePasswordLogin {
+		SendNotFound(w)
+		return
+	}
+	var m PasswordUpdateRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+
+	if m.Password == m.NewPassword {
+		SendBadRequest(w)
+		return
+	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
+	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err == sql.ErrNoRows {
+		SendBadRequest(w)
+		return
+	}
+	if err != nil {
 		SendInternalServerError(w)
 		return
 	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+
+	// check if password update is allowed
+	if !CanUpdatePassword(user) {
+		SendBadRequest(w)
+		return
 	}
-	SendJSON(w, res)
+
+	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
+	user.PasswordUpdateRequired = false
+	GetUserRepository().Update(user)
+
+	router.createAndSendJWT(w, r, user, "password update", "", "")
 }
 
 func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
@@ -741,21 +793,8 @@ func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *Auth
 		return
 	}
 	GetAuthStateRepository().Delete(authState)
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during Atlassian verify")
-		SendInternalServerError(w)
-		return
-	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-	SendJSON(w, res)
+
+	router.createAndSendJWT(w, r, user, "Atlassian verify", "", "")
 }
 
 func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
@@ -848,26 +887,8 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	GetAuthStateRepository().Delete(authState)
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
-	now := time.Now().UTC()
-	user.LastActivityAtUTC = &now
-	GetUserRepository().Update(user)
-	session := router.CreateSession(r, user)
-	if session == nil {
-		log.Println("Error: Failed to create session during OAuth verify")
-		SendInternalServerError(w)
-		return
-	}
-	claims := router.CreateClaims(user, session)
-	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
-	res := &JWTResponse{
-		AccessToken:    accessToken,
-		RefreshToken:   refreshToken,
-		LogoutURL:      router.getLogoutUrl(provider),
-		ProfilePageURL: router.getProfilePageURL(provider),
-	}
-	SendJSON(w, res)
+
+	router.createAndSendJWT(w, r, user, "OAuth verify", router.getLogoutUrl(provider), router.getProfilePageURL(provider))
 }
 
 func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
@@ -1091,29 +1112,36 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	// Extract email address from JSON response
 	var result map[string]interface{}
 	json.Unmarshal([]byte(contents), &result)
-	if (result[provider.UserInfoEmailField] == nil) || (strings.TrimSpace(result[provider.UserInfoEmailField].(string)) == "") {
-		return nil, nil, fmt.Errorf("could not read email address from field: %s", provider.UserInfoEmailField)
-	}
-	email := strings.TrimSpace(result[provider.UserInfoEmailField].(string))
-	firstname := ""
-	lastname := ""
-	if provider.UserInfoFirstnameField != "" {
-		if result[provider.UserInfoFirstnameField] != nil {
-			firstname = strings.TrimSpace(result[provider.UserInfoFirstnameField].(string))
-		}
-	}
-	if provider.UserInfoLastnameField != "" {
-		if result[provider.UserInfoLastnameField] != nil {
-			lastname = strings.TrimSpace(result[provider.UserInfoLastnameField].(string))
-		}
-	}
-	info := &IdPUserInfo{
-		Email:     email,
-		Firstname: firstname,
-		Lastname:  lastname,
+	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField)
+	if err != nil {
+		return nil, nil, err
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	return info, payload, nil
+}
+
+func ExtractUserInfoFields(result map[string]interface{}, emailField, firstnameField, lastnameField string) (*IdPUserInfo, error) {
+	emailVal, ok := result[emailField].(string)
+	if !ok || strings.TrimSpace(emailVal) == "" {
+		return nil, fmt.Errorf("could not read email address from field: %s", emailField)
+	}
+	firstname := ""
+	lastname := ""
+	if firstnameField != "" {
+		if val, ok := result[firstnameField].(string); ok {
+			firstname = strings.TrimSpace(val)
+		}
+	}
+	if lastnameField != "" {
+		if val, ok := result[lastnameField].(string); ok {
+			lastname = strings.TrimSpace(val)
+		}
+	}
+	return &IdPUserInfo{
+		Email:     strings.TrimSpace(emailVal),
+		Firstname: firstname,
+		Lastname:  lastname,
+	}, nil
 }
 
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {
@@ -1127,7 +1155,11 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"confirmID":      ID,
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 	}
-	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars, org.ID)
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(user.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), language, vars, org.ID)
 }
 
 func (router *AuthRouter) SendUserInvitationEmail(user *User, ID string, org *Organization) error {
@@ -1151,10 +1183,17 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 		log.Println("Error compiling config for auth provider " + provider.Name + ": No primary domain found for organization")
 		return nil
 	}
+
+	clientSecret, err := DecryptString(provider.ClientSecret)
+	if err != nil {
+		log.Printf("Error decrypting client secret for auth provider %s: %v\n", provider.ID, err)
+		return nil
+	}
+
 	config := &oauth2.Config{
 		RedirectURL:  FormatURL(primaryDomain.DomainName) + "/auth/" + provider.ID + "/callback",
 		ClientID:     provider.ClientID,
-		ClientSecret: provider.ClientSecret,
+		ClientSecret: clientSecret,
 		Scopes:       strings.Split(provider.Scopes, ","),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   provider.AuthURL,
@@ -1258,4 +1297,27 @@ func unmarshalAuthStateLoginPayload(payload string) *AuthStateLoginPayload {
 	var o *AuthStateLoginPayload
 	json.Unmarshal([]byte(payload), &o)
 	return o
+}
+
+func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Request, user *User, authMethod string, logoutURL string, profilePageURL string) {
+	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
+	now := time.Now().UTC()
+	user.LastActivityAtUTC = &now
+	GetUserRepository().Update(user)
+	session := router.CreateSession(r, user)
+	if session == nil {
+		log.Println("Error: Failed to create session during " + authMethod)
+		SendInternalServerError(w)
+		return
+	}
+	claims := router.CreateClaims(user, session)
+	accessToken := router.CreateAccessToken(claims)
+	refreshToken := router.createRefreshToken(claims)
+	res := &JWTResponse{
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
+		LogoutURL:      logoutURL,
+		ProfilePageURL: profilePageURL,
+	}
+	SendJSON(w, res)
 }

@@ -6,3 +6,7 @@
 .navbar-brand > img {
   height: 2rem;
 }
+
+.navbar-nav .nav-link.active {
+  color: var(--bs-primary) !important;
+}

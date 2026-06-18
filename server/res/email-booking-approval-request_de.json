@@ -9,5 +9,11 @@
     "Platz: {{spaceName}}",
     "Betreff: {{subject}}",
     "Bitte überprüfe und genehmige oder lehne diese Buchung im Admin-Panel ab."
+  ],
+  "buttons": [
+    {
+      "label": "Genehmigungen ansehen",
+      "url": "{{orgDomain}}ui/admin/approvals/"
+    }
   ]
 }

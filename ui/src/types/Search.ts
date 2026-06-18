@@ -1,8 +1,106 @@
-import User from "./User";
-import Location from "./Location";
-import Space from "./Space";
 import Ajax from "../util/Ajax";
-import Group from "./Group";
+import Navigation from "@/util/Navigation";
+
+export class UserSearchResult {
+  id: string;
+  email: string;
+  firstname: string;
+  lastname: string;
+
+  constructor() {
+    this.id = "";
+    this.email = "";
+    this.firstname = "";
+    this.lastname = "";
+  }
+
+  deserialize(input: any): void {
+    this.id = input.id;
+    this.email = input.email;
+    this.firstname = input.firstname;
+    this.lastname = input.lastname;
+  }
+
+  static from(input: any): UserSearchResult {
+    const e = new UserSearchResult();
+    e.deserialize(input);
+    return e;
+  }
+}
+
+export class LocationSearchResult {
+  id: string;
+  name: string;
+  description: string;
+
+  constructor() {
+    this.id = "";
+    this.name = "";
+    this.description = "";
+  }
+
+  deserialize(input: any): void {
+    this.id = input.id;
+    this.name = input.name;
+    this.description = input.description;
+  }
+
+  static from(input: any): LocationSearchResult {
+    const e = new LocationSearchResult();
+    e.deserialize(input);
+    return e;
+  }
+}
+
+export class SpaceSearchResult {
+  id: string;
+  name: string;
+  location: LocationSearchResult | null;
+
+  constructor() {
+    this.id = "";
+    this.name = "";
+    this.location = null;
+  }
+
+  deserialize(input: any): void {
+    this.id = input.id;
+    this.name = input.name;
+    if (input.location) {
+      this.location = LocationSearchResult.from(input.location);
+    }
+  }
+
+  static from(input: any): SpaceSearchResult {
+    const e = new SpaceSearchResult();
+    e.deserialize(input);
+    return e;
+  }
+}
+
+export class GroupSearchResult {
+  id: string;
+  name: string;
+  organizationId: string;
+
+  constructor() {
+    this.id = "";
+    this.name = "";
+    this.organizationId = "";
+  }
+
+  deserialize(input: any): void {
+    this.id = input.id;
+    this.name = input.name;
+    this.organizationId = input.organizationId;
+  }
+
+  static from(input: any): GroupSearchResult {
+    const e = new GroupSearchResult();
+    e.deserialize(input);
+    return e;
+  }
+}
 
 export class SearchOptions {
   keyword: string = "";
@@ -26,10 +124,10 @@ export class SearchOptions {
 }
 
 export default class Search {
-  users: User[];
-  locations: Location[];
-  spaces: Space[];
-  groups: Group[];
+  users: UserSearchResult[];
+  locations: LocationSearchResult[];
+  spaces: SpaceSearchResult[];
+  groups: GroupSearchResult[];
 
   constructor() {
     this.users = [];
@@ -39,42 +137,23 @@ export default class Search {
   }
 
   deserialize(input: any): void {
-    if (input.users) {
-      this.users = input.users.map((user: any) => {
-        let e = new User();
-        e.deserialize(user);
-        return e;
-      });
-    }
-    if (input.groups) {
-      this.groups = input.groups.map((group: any) => {
-        let e = new Group();
-        e.deserialize(group);
-        return e;
-      });
-    }
-    if (input.locations) {
-      this.locations = input.locations.map((location: any) => {
-        let e = new Location();
-        e.deserialize(location);
-        return e;
-      });
-    }
-    if (input.spaces) {
-      this.spaces = input.spaces.map((space: any) => {
-        let e = new Space();
-        e.deserialize(space);
-        return e;
-      });
-    }
+    if (input.users) this.users = input.users.map(UserSearchResult.from);
+    if (input.groups) this.groups = input.groups.map(GroupSearchResult.from);
+    if (input.locations)
+      this.locations = input.locations.map(LocationSearchResult.from);
+    if (input.spaces) this.spaces = input.spaces.map(SpaceSearchResult.from);
+  }
+
+  static from(input: any): Search {
+    const e = new Search();
+    e.deserialize(input);
+    return e;
   }
 
   static async search(options: SearchOptions): Promise<Search> {
-    const result = await Ajax.get(
-      "/search/?" + options.getSearchParams().toString(),
+    const { json } = await Ajax.get(
+      `${Navigation.PATH_API_SEARCH}/?${options.getSearchParams().toString()}`,
     );
-    const e: Search = new Search();
-    e.deserialize(result.json);
-    return e;
+    return Search.from(json);
   }
 }

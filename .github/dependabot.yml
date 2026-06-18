@@ -13,6 +13,8 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: npm
     directories:
@@ -36,6 +38,8 @@ updates:
           - "minor"
           - "patch"
     open-pull-requests-limit: 50
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: docker
     directory: "/"
@@ -44,6 +48,8 @@ updates:
     commit-message:
       prefix: "fix(deps)"
     open-pull-requests-limit: 50
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: github-actions
     directory: "/" # see https://docs.github.com/de/code-security/reference/supply-chain-security/dependabot-options-reference#directories-or-directory--
@@ -52,3 +58,5 @@ updates:
     commit-message:
       prefix: "build"
       include: "scope"
+    cooldown:
+      default-days: 7

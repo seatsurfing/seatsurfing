@@ -2,7 +2,10 @@ package router
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"image/png"
 	"log"
 	"net/http"
@@ -60,7 +63,7 @@ type GetSessionResponse struct {
 }
 
 type CreateUserRequest struct {
-	Email          string `json:"email" validate:"required,max=254"`
+	Email          string `json:"email" validate:"required,max=256"`
 	Firstname      string `json:"firstname" validate:"required,max=128"`
 	Lastname       string `json:"lastname" validate:"required,max=128"`
 	AtlassianID    string `json:"atlassianId"`
@@ -106,7 +109,7 @@ type SetPasswordRequest struct {
 }
 
 type InitMergeUsersRequest struct {
-	Email string `json:"email" validate:"required,email,max=254"`
+	Email string `json:"email" validate:"required,email,max=256"`
 }
 
 type GenerateTotpResponse struct {
@@ -144,6 +147,9 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/{id}/passkeys", router.adminResetPasskeys).Methods("DELETE")
 	s.HandleFunc("/{id}/totp", router.adminResetTotp).Methods("DELETE")
+	s.HandleFunc("/{id}/api-token", router.getApiToken).Methods("GET")
+	s.HandleFunc("/{id}/api-token", router.generateApiToken).Methods("POST")
+	s.HandleFunc("/{id}/api-token", router.revokeApiToken).Methods("DELETE")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -460,6 +466,12 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	user := GetRequestUser(r)
 	e := user
@@ -476,6 +488,7 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
+	e.PasswordUpdateRequired = user.ID != e.ID
 	if err := GetUserRepository().Update(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -623,6 +636,17 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if !IsValidHumanName(m.Firstname) || !IsValidHumanName(m.Lastname) {
+		SendBadRequest(w)
+		return
+	}
+
+	if m.Password != "" && !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	vars := mux.Vars(r)
 	e, err := GetUserRepository().GetOne(vars["id"])
 	if err != nil {
@@ -634,6 +658,19 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+
+	if m.AuthProviderID != "" {
+		if !ValidateGUID(m.AuthProviderID) {
+			SendBadRequest(w)
+			return
+		}
+		authProvider, _ := GetAuthProviderRepository().GetOneByOrgId(m.AuthProviderID, user.OrganizationID)
+		if authProvider == nil {
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	if user.ID == e.ID {
@@ -650,22 +687,31 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.HashedPassword = NullString("")
 		eNew.AuthProviderID = NullUUID("")
 		eNew.PasswordPending = true
+		GetSessionRepository().DeleteOfUser(e)
 	} else if m.Password != "" {
 		// Admin provided a new password - update it
 		eNew.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 		eNew.AuthProviderID = NullUUID("")
 		eNew.PasswordPending = false
+		GetSessionRepository().DeleteOfUser(e)
 	} else if m.AuthProviderID != "" {
 		// Admin set an auth provider - update it
 		eNew.HashedPassword = NullString("")
 		eNew.AuthProviderID = NullUUID(m.AuthProviderID)
 		eNew.PasswordPending = false
+		if m.AuthProviderID != string(e.AuthProviderID) {
+			GetSessionRepository().DeleteOfUser(e)
+		}
 	} else {
 		// No auth method change - preserve existing values
 		eNew.HashedPassword = e.HashedPassword
 		eNew.AuthProviderID = e.AuthProviderID
 		eNew.PasswordPending = e.PasswordPending
+		eNew.PasswordUpdateRequired = e.PasswordUpdateRequired
 	}
+
+	eNew.TotpSecret = e.TotpSecret
+	eNew.AtlassianID = e.AtlassianID
 
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {
@@ -745,10 +791,34 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+
+	if !IsValidHumanName(m.Firstname) || !IsValidHumanName(m.Lastname) {
+		SendBadRequest(w)
+		return
+	}
+
+	if m.Password != "" && !ValidatePassword(m.Password) {
+		SendBadRequest(w)
+		return
+	}
+
 	if m.OrganizationID != "" && m.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
 		SendForbidden(w)
 		return
 	}
+
+	if m.AuthProviderID != "" {
+		if !ValidateGUID(m.AuthProviderID) {
+			SendBadRequest(w)
+			return
+		}
+		authProvider, _ := GetAuthProviderRepository().GetOneByOrgId(m.AuthProviderID, user.OrganizationID)
+		if authProvider == nil {
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	e := router.copyFromRestModel(&m)
 	if e.OrganizationID == "" || !GetUserRepository().IsSuperAdmin(user) {
 		e.OrganizationID = user.OrganizationID
@@ -812,16 +882,19 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 		// Invitation mode: user needs to set password via email link
 		e.HashedPassword = NullString("")
 		e.AuthProviderID = NullUUID("")
+		e.PasswordUpdateRequired = false
 		e.PasswordPending = true
 	} else if m.Password != "" {
 		// Password mode: password provided by admin
 		e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 		e.AuthProviderID = NullUUID("")
+		e.PasswordUpdateRequired = true
 		e.PasswordPending = false
 	} else {
 		// IdP mode: user logs in via external auth provider
 		e.HashedPassword = NullString("")
 		e.AuthProviderID = NullUUID(m.AuthProviderID)
+		e.PasswordUpdateRequired = false
 		e.PasswordPending = false
 	}
 
@@ -849,4 +922,106 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 		m.AuthProviderID = string(e.AuthProviderID)
 	}
 	return m
+}
+
+type GenerateApiTokenResponse struct {
+	Token string `json:"token"`
+}
+
+type GetApiTokenStatusResponse struct {
+	Configured bool `json:"configured"`
+}
+
+func (router *UserRouter) getApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	res := &GetApiTokenStatusResponse{
+		Configured: e.ApiToken != "",
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	rawBytes := make([]byte, 32)
+	if _, err := rand.Read(rawBytes); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	rawToken := hex.EncodeToString(rawBytes)
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := hex.EncodeToString(hash[:])
+	if err := GetUserRepository().SetApiToken(e.ID, NullString(tokenHash)); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := &GenerateApiTokenResponse{
+		Token: rawToken,
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetUserRepository().SetApiToken(e.ID, NullString("")); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

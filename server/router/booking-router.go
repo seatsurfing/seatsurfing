@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -41,7 +42,7 @@ type BookingRequest struct {
 
 type CreateBookingRequest struct {
 	SpaceID string `json:"spaceId" validate:"required"`
-	Subject string `json:"subject"`
+	Subject string `json:"subject" validate:"omitempty,max=256"`
 	BookingRequest
 }
 
@@ -74,19 +75,6 @@ type GetPresenceReportResult struct {
 	Presences [][]int            `json:"presences"`
 }
 
-type DebugTimeIssuesRequest struct {
-	Time time.Time `json:"time" validate:"required"`
-}
-
-type DebugTimeIssuesResponse struct {
-	Timezone                string    `json:"tz"`
-	Error                   string    `json:"error"`
-	ReceivedTime            string    `json:"receivedTime"`
-	ReceivedTimeTransformed string    `json:"receivedTimeTransformed"`
-	Database                time.Time `json:"dbTime"`
-	Result                  time.Time `json:"result"`
-}
-
 type GetPendingApprovalsCountResponse struct {
 	Count int `json:"count"`
 }
@@ -105,7 +93,6 @@ type CaldavConfig struct {
 func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/pendingapprovals/count", router.getPendingApprovalsCount).Methods("GET")
 	s.HandleFunc("/pendingapprovals/", router.getPendingApprovals).Methods("GET")
-	s.HandleFunc("/debugtimeissues/", router.debugTimeIssues).Methods("POST")
 	s.HandleFunc("/report/presence/", router.getPresenceReport).Methods("GET")
 	s.HandleFunc("/filter/", router.getFiltered).Methods("GET")
 	s.HandleFunc("/current/", router.getCurrent).Methods("GET")
@@ -142,6 +129,12 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendBadRequest(w)
 		return
 	}
+
+	if e.Leave.Before(time.Now().Add(-24 * time.Hour)) {
+		SendBadRequest(w)
+		return
+	}
+
 	if e.Approved {
 		SendUpdated(w)
 		return
@@ -204,57 +197,6 @@ func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.
 	SendJSON(w, res)
 }
 
-func (router *BookingRouter) debugTimeIssues(w http.ResponseWriter, r *http.Request) {
-	var m DebugTimeIssuesRequest
-	if UnmarshalValidateBody(r, &m) != nil {
-		SendBadRequest(w)
-		return
-	}
-	tz := "America/Los_Angeles"
-	res := &DebugTimeIssuesResponse{
-		Timezone:     tz,
-		ReceivedTime: m.Time.String(),
-		Error:        "No error",
-	}
-	_, err := time.LoadLocation(tz)
-	if err != nil {
-		res.Error = "Could not load timezone: " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	timeNew, err := AttachTimezoneInformationTz(m.Time, tz)
-	if err != nil {
-		res.Error = "Could not attach timezone information (incoming): " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	res.ReceivedTimeTransformed = timeNew.String()
-	e := &DebugTimeIssueItem{
-		Created: timeNew,
-	}
-	if err := GetDebugTimeIssuesRepository().Create(e); err != nil {
-		res.Error = "Could not create database record: " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	defer GetDebugTimeIssuesRepository().Delete(e)
-	e2, err := GetDebugTimeIssuesRepository().GetOne(e.ID)
-	if err != nil {
-		res.Error = "Could not load database record: " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	res.Database = e2.Created
-	timeToSend, err := AttachTimezoneInformationTz(e2.Created, tz)
-	if err != nil {
-		res.Error = "Could not attach timezone information (outgoing): " + err.Error()
-		SendJSON(w, res)
-		return
-	}
-	res.Result = timeToSend
-	SendJSON(w, res)
-}
-
 func (router *BookingRouter) validateBookingFilters(w http.ResponseWriter, r *http.Request) (*User, string, string, bool) {
 	user := GetRequestUser(r)
 	if !CanSpaceAdminOrg(user, user.OrganizationID) {
@@ -273,6 +215,10 @@ func (router *BookingRouter) validateBookingFilters(w http.ResponseWriter, r *ht
 
 	filterLocationId := r.URL.Query().Get("location")
 	if filterLocationId != "" {
+		if !ValidateGUID(filterLocationId) {
+			SendBadRequest(w)
+			return nil, "", "", false
+		}
 		filterLocation, _ := GetLocationRepository().GetOne(filterLocationId)
 		if filterLocation == nil || filterLocation.OrganizationID != user.OrganizationID {
 			SendBadRequest(w)
@@ -500,6 +446,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
+		Subject: m.Subject,
 		BookingRequest: BookingRequest{
 			Enter: eNew.Enter,
 			Leave: eNew.Leave,
@@ -578,7 +525,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, location *Location, requestUser *User, bookingID string, upcomingBookingsMarkup int) (bool, int) {
-	if valid, code := router.isValidBookingRequest(m, requestUser, location.OrganizationID, bookingID, upcomingBookingsMarkup); !valid {
+	if valid, code := router.isValidBookingRequest(m, location, requestUser, location.OrganizationID, bookingID, upcomingBookingsMarkup); !valid {
 		return false, code
 	}
 	if !router.isValidConcurrent(m, location, bookingID) {
@@ -681,6 +628,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
+		Subject: m.Subject,
 		BookingRequest: BookingRequest{
 			Enter: e.Enter,
 			Leave: e.Leave,
@@ -767,6 +715,11 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 		SendForbidden(w)
 		return
 	}
+	hideReports, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideReports.Name)
+	if hideReports {
+		SendNotFound(w)
+		return
+	}
 	start, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("start"))
 	if err != nil {
 		SendBadRequest(w)
@@ -789,9 +742,13 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 	locationID := r.URL.Query().Get("locationId")
 	var location *Location = nil
 	if locationID != "" {
+		if !ValidateGUID(locationID) {
+			SendBadRequest(w)
+			return
+		}
 		location, _ = GetLocationRepository().GetOne(locationID)
 		if location == nil {
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 		if !GetUserRepository().IsSuperAdmin(user) && location.OrganizationID != user.OrganizationID {
@@ -924,7 +881,10 @@ func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, u
 	return len(curAtTime) < maxConcurrent
 }
 
-func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
+func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, location *Location, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
+	if !IsValidBookingSubject(m.Subject) {
+		return false, ResponseCodeBookingInvalidSubject
+	}
 	isUpdate := bookingID != ""
 	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
 		return false, ResponseCodeBookingInvalidBookingDuration
@@ -947,11 +907,28 @@ func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, user
 	if m.SpaceID == "" {
 		return true, 0
 	}
+
+	// check allowed space and location bookers
 	groupMemberships, _ := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
-	allowedBookers, _ := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{m.SpaceID})
-	if len(allowedBookers) > 0 {
+	allowedSpaceBookers, _ := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{m.SpaceID})
+	if len(allowedSpaceBookers) > 0 {
 		allowed := false
-		for _, allowedBooker := range allowedBookers {
+		for _, allowedBooker := range allowedSpaceBookers {
+			for _, group := range groupMemberships {
+				if group.ID == allowedBooker.GroupID {
+					allowed = true
+					break
+				}
+			}
+		}
+		if !allowed {
+			return false, ResponseCodeBookingNotAllowedBooker
+		}
+	}
+	allowedLocationBookers, _ := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
+	if len(allowedLocationBookers) > 0 {
+		allowed := false
+		for _, allowedBooker := range allowedLocationBookers {
 			for _, group := range groupMemberships {
 				if group.ID == allowedBooker.GroupID {
 					allowed = true
@@ -1247,7 +1224,13 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	if subject == "" {
 		subject = "—"
 	}
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	vars := map[string]string{
+		"orgDomain":     FormatURL(domain.DomainName) + "/",
 		"recipientName": user.GetSafeRecipientName(),
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
@@ -1264,14 +1247,25 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	} else if notification == BookingMailNotificationDeleted {
 		template = GetEmailTemplatePathBookingDeleted()
 	}
-	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
+	}
+	now := time.Now().UTC()
+	if err := GetBookingRepository().UpdateLastInfoMailSentAt(e.ID, &now); err != nil {
+		log.Println(err)
 	}
 }
 
 func (router *BookingRouter) onBookingUpdated(e *Booking) {
 	router.updateCalDavEvent(e)
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnBookingUpdated(e.ID)
+	}
 	router.sendMailNotification(e, BookingMailNotificationUpdated)
 }
 
@@ -1281,6 +1275,9 @@ func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 		router.sendMailNotification(e, BookingMailNotificationDeclined)
 	} else {
 		router.createCalDavEvent(e)
+		for _, plg := range plugin.GetPlugins() {
+			(*plg).OnBookingCreated(e.ID)
+		}
 		router.sendMailNotification(e, BookingMailNotificationApproved)
 	}
 }
@@ -1288,6 +1285,9 @@ func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
 func (router *BookingRouter) onBookingCreated(e *Booking) {
 	if e.Approved {
 		router.createCalDavEvent(e)
+		for _, plg := range plugin.GetPlugins() {
+			(*plg).OnBookingCreated(e.ID)
+		}
 		router.sendMailNotification(e, BookingMailNotificationCreated)
 	} else {
 		// Booking requires approval - notify approvers
@@ -1355,12 +1355,17 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		}
 	}
 
-	// Send email to each approver
 	subject := e.Subject
 	if subject == "" {
 		subject = "—"
 	}
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
+	// Send email to each approver
 	for userID := range approverUserIDs {
 		approver, err := GetUserRepository().GetOne(userID)
 		if err != nil {
@@ -1369,6 +1374,7 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		}
 
 		vars := map[string]string{
+			"orgDomain":     FormatURL(domain.DomainName) + "/",
 			"recipientName": GetLocalPartFromEmailAddress(approver.Email),
 			"userEmail":     bookingUser.Email,
 			"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
@@ -1377,14 +1383,21 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 			"subject":       subject,
 		}
 
+		approverLang := org.Language
+		if userLang, err := GetUserPreferencesRepository().Get(approver.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+			approverLang = userLang
+		}
 		template := GetEmailTemplatePathBookingApprovalRequest()
-		if err := SendEmailWithOrg(&MailAddress{Address: approver.Email}, template, org.Language, vars, org.ID); err != nil {
+		if err := SendEmailWithOrg(&MailAddress{Address: approver.Email}, template, approverLang, vars, org.ID); err != nil {
 			log.Println("Error sending approval notification email:", err)
 		}
 	}
 }
 
 func (router *BookingRouter) onBookingDeleted(e *Booking, sendNotification bool) {
+	for _, plg := range plugin.GetPlugins() {
+		(*plg).OnBookingDeleted(e.ID)
+	}
 	caldavClient, caldavEvent, path, err := router.initCaldavEvent(e)
 	if err == nil {
 		if e.CalDavID != "" {

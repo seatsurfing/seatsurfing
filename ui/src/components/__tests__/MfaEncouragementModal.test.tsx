@@ -8,6 +8,7 @@ vi.mock("next-export-i18n", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
+  useSelectedLanguage: () => ({ lang: "en" }),
 }));
 
 // Mock react-bootstrap Modal to a simpler implementation

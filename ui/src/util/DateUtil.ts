@@ -1,3 +1,8 @@
+import RuntimeConfig from "@/components/RuntimeConfig";
+import UserPreference, {
+  PreferenceEnterTimeType,
+} from "@/types/UserPreference";
+
 export default class DateUtil {
   static MS_PER_MINUTE = 1000 * 60;
   static MS_PER_HOUR = DateUtil.MS_PER_MINUTE * 60;
@@ -72,11 +77,38 @@ export default class DateUtil {
       date.getUTCHours(),
       date.getUTCMinutes(),
       date.getUTCSeconds(),
+      0,
     );
   };
 
+  static convertToFakeUTCDate(d: Date): Date {
+    return new Date(
+      Date.UTC(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        d.getHours(),
+        d.getMinutes(),
+        d.getSeconds(),
+        0,
+      ),
+    );
+  }
+
+  static isInFuture(date: Date): boolean {
+    return this.convertToUTC(date) > new Date();
+  }
+
+  static isAfterToday(date: Date): boolean {
+    return this.isInFuture(date) && !this.isToday(date);
+  }
+
   static isInPast(date: Date): boolean {
     return this.convertToUTC(date) < new Date();
+  }
+
+  static isToday(date: Date): boolean {
+    return this.isSameDay(date, new Date());
   }
 
   /**
@@ -157,6 +189,15 @@ export default class DateUtil {
     return this.setHoursToMax(new Date());
   }
 
+  /**
+   * @returns Today's date with time 23:59:59.999
+   */
+  static getTodayTime(hour: number, minute: number, second: number): Date {
+    const todayTime = new Date();
+    todayTime.setHours(hour, minute, second, 0);
+    return todayTime;
+  }
+
   static copyDate(source: Date, target: Date): Date {
     const result = new Date(target);
     result.setFullYear(
@@ -191,7 +232,132 @@ export default class DateUtil {
     );
   }
 
+  /**
+   * @param date1 Date1 to compare
+   * @param date2 Date2 to compare
+   * @returns true, if both dates have the same time (hours and minutes)
+   */
+  static isSameTime(date1: Date, date2: Date): boolean {
+    return (
+      date1.getHours() === date2.getHours() &&
+      date1.getMinutes() === date2.getMinutes()
+    );
+  }
+
   static equal(date1: Date, date2: Date): boolean {
     return date1.getTime() === date2.getTime();
+  }
+
+  static prevDay(date: Date): Date {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() - 1);
+    return nextDay;
+  }
+
+  static nextDay(date: Date): Date {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return nextDay;
+  }
+
+  static getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    d.setDate(d.getDate() - d.getDay());
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  static getWeekEnd(date: Date): Date {
+    const d = new Date(date);
+    d.setDate(d.getDate() + (6 - d.getDay()));
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }
+
+  static getNowFakeUTC(): Date {
+    return this.convertToFakeUTCDate(new Date());
+  }
+
+  static hoursToDay(hours: number) {
+    return Math.floor(hours / 24);
+  }
+
+  /**
+   * calculates the "next free enter time" for a booking based on a leave date which is
+   *  - next day if "dailyBasisBooking" is active, or
+   *  - +1 minute otherwise
+   *
+   * @param leave Leave date of the last booking
+   * @returns new date for "next free enter time"
+   */
+  static getNextFreeEnterTime(leave: Date): Date {
+    if (RuntimeConfig.INFOS.dailyBasisBooking) {
+      const nextDay = new Date(leave);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      nextDay.setUTCHours(0, 0, 0, 0);
+      return nextDay;
+    }
+    return new Date(leave.getTime() + DateUtil.MS_PER_MINUTE);
+  }
+
+  /**
+   * Calculates the next enter and leave time based on the user's
+   * preferred (workday) times and the org's global (booking) settings
+   *
+   * @returns default enter and leave time for a new booking
+   */
+  static getNextPreferredEnterAndLeaveTime(
+    prefEnterTime: PreferenceEnterTimeType,
+    prefWorkdayStart: number,
+    prefWorkdayEnd: number,
+    prefWorkdays: number[],
+    dailyBasisBooking: boolean,
+  ): { enter: Date; leave: Date } {
+    let enter = new Date();
+    if (prefEnterTime === UserPreference.PreferenceEnterTime.Now) {
+      enter.setHours(enter.getHours() + 1, 0, 0);
+      if (enter.getHours() < prefWorkdayStart) {
+        // preferred start time works for today
+        enter.setHours(prefWorkdayStart, 0, 0, 0);
+      }
+      if (enter.getHours() >= prefWorkdayEnd) {
+        // todays next start time is after preferred end date -> switch to next day
+        enter.setDate(enter.getDate() + 1);
+        enter.setHours(prefWorkdayStart, 0, 0, 0);
+      }
+    } else if (prefEnterTime === UserPreference.PreferenceEnterTime.NextDay) {
+      enter.setDate(enter.getDate() + 1);
+      enter.setHours(prefWorkdayStart, 0, 0, 0);
+    } else if (
+      prefEnterTime === UserPreference.PreferenceEnterTime.NextWorkday
+    ) {
+      enter.setDate(enter.getDate() + 1);
+      let add = 0;
+      let nextDayFound = false;
+      let lookFor = enter.getDay();
+      while (!nextDayFound) {
+        if (prefWorkdays.includes(lookFor) || add > 7) {
+          nextDayFound = true;
+        } else {
+          add++;
+          lookFor++;
+          if (lookFor > 6) {
+            lookFor = 0;
+          }
+        }
+      }
+      enter.setDate(enter.getDate() + add);
+      enter.setHours(prefWorkdayStart, 0, 0, 0);
+    }
+
+    let leave = new Date(enter);
+    leave.setHours(prefWorkdayEnd, 0, 0);
+
+    if (dailyBasisBooking) {
+      enter = DateUtil.setHoursToMin(enter);
+      leave = DateUtil.setHoursToMax(leave);
+    }
+
+    return { enter, leave };
   }
 }

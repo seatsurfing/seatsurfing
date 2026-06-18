@@ -11,7 +11,6 @@ import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import AuthProvider from "@/types/AuthProvider";
 import RuntimeConfig from "@/components/RuntimeConfig";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   selectedItem: string;
@@ -37,10 +36,6 @@ class Users extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );
@@ -168,7 +163,7 @@ class Users extends React.Component<Props, State> {
           </caption>
           <thead>
             <tr>
-              <th>{this.props.t("username")}</th>
+              <th>{this.props.t("user")}</th>
               <th>
                 {this.props.t("lastname")}, {this.props.t("firstname")}
               </th>

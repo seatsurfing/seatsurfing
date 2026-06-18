@@ -10,11 +10,14 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	. "github.com/seatsurfing/seatsurfing/server/config"
 )
 
 type CheckVersionRequest struct {
-	InstallID      string `json:"id" validate:"required,uuid"`
-	CurrentVersion string `json:"version" validate:"required,semver"`
+	InstallID      string       `json:"id" validate:"required,uuid"`
+	CurrentVersion string       `json:"version" validate:"required,semver"`
+	Stats          InstallStats `json:"stats"`
 }
 
 type CheckVersionResponse struct {
@@ -43,6 +46,9 @@ func (uc *UpdateChecker) pollLatestRelease(installID string) (*CheckVersionRespo
 		InstallID:      installID,
 		CurrentVersion: GetProductVersion(),
 	}
+	if !GetConfig().DisableAnonymousUsageStats {
+		payload.Stats = *GetInstallStats()
+	}
 	req, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -65,6 +71,17 @@ func (uc *UpdateChecker) pollLatestRelease(installID string) (*CheckVersionRespo
 	}
 	return &details, nil
 }
+
+/*
+func (uc *UpdateChecker) getUsageStats() *InstallStatsRequest {
+	res := &InstallStatsRequest{}
+		res.NumLocations, _ = GetLocationRepository().GetCountAll()
+		res.NumUsers, _ = GetUserRepository().GetCountAll()
+		res.NumBookings, _ = GetBookingRepository().GetCountAll()
+		res.NumSpaces, _ = GetSpaceRepository().GetCountAll()
+		return res
+	}
+*/
 
 func (uc *UpdateChecker) updateLatestReleaseDetails(installID string) error {
 	details, err := uc.pollLatestRelease(installID)

@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"crypto/tls"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -120,6 +121,16 @@ func SetEmailLogCallback(callback EmailLogCallback) {
 	emailLogCallback = callback
 }
 
+// GlobalEmailFooterProvider is an optional function that returns the footer text for a given language from the database.
+// If it returns ("", nil), the file-based fallback is used.
+type GlobalEmailFooterProvider func(language string) (string, error)
+
+var globalEmailFooterProvider GlobalEmailFooterProvider
+
+func SetGlobalEmailFooterProvider(p GlobalEmailFooterProvider) {
+	globalEmailFooterProvider = p
+}
+
 var SendMailMockContent = ""
 
 type MailButton struct {
@@ -128,12 +139,19 @@ type MailButton struct {
 	Label     string `json:"label"`
 }
 
+type FinalInfo struct {
+	Text  string `json:"text"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
+}
+
 type MailTemplate struct {
 	Subject         string       `json:"subject"`
 	Headline        string       `json:"headline"`
 	Paragraphs      []string     `json:"paragraphs"`
 	Buttons         []MailButton `json:"buttons"`
 	FinalParagraphs []string     `json:"finalParagraphs"`
+	FinalInfo       *FinalInfo   `json:"finalInfo"`
 }
 
 type MailAddress struct {
@@ -205,7 +223,7 @@ func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
 	s := string(data)
 	var jsonContent MailTemplate
 	if err := json.Unmarshal(jsonTemplate, &jsonContent); err != nil {
-		return nil, "", fmt.Errorf("error unmarshalling json template: %v", err)
+		return nil, "", fmt.Errorf("error unmarshaling json template: %v", err)
 	}
 	s = strings.ReplaceAll(s, "{{headline}}", html.EscapeString(jsonContent.Headline))
 	body := ""
@@ -218,6 +236,11 @@ func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
 	}
 	for _, paragraph := range jsonContent.FinalParagraphs {
 		body += "<p>" + html.EscapeString(paragraph) + "</p>"
+	}
+	if jsonContent.FinalInfo != nil {
+		anchor := "<a href=\"" + jsonContent.FinalInfo.URL + "\">" + html.EscapeString(jsonContent.FinalInfo.Label) + "</a>"
+		text := strings.ReplaceAll(html.EscapeString(jsonContent.FinalInfo.Text), "{{link}}", anchor)
+		body += "<p class=\"small\">" + text + "</p>"
 	}
 	s = strings.ReplaceAll(s, "{{body}}", body)
 	return &jsonContent, s, nil
@@ -316,17 +339,27 @@ func SendEmailWithBodyAndAttachmentAndOrg(recipient *MailAddress, subject, body,
 		MimeType:  "image/png",
 		ContentID: "seatsurfing-logo",
 	})
-	footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
-	if err != nil {
-		return fmt.Errorf("error getting footer template path: %v", err)
+	var footerJSON []byte
+	if globalEmailFooterProvider != nil {
+		if dbFooter, err := globalEmailFooterProvider(language); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Failed to get email footer from database for language '%s': %v\n", language, err)
+		} else if dbFooter != "" {
+			footerJSON = []byte(dbFooter)
+		}
 	}
-	footerData, err := os.ReadFile(footerFile)
-	if err != nil {
-		return fmt.Errorf("error reading footer template file: %v", err)
+	if footerJSON == nil {
+		footerFile, err := GetEmailTemplatePath(GetEmailTemplatePathFooter(), language)
+		if err != nil {
+			return fmt.Errorf("error getting footer template path: %v", err)
+		}
+		footerJSON, err = os.ReadFile(footerFile)
+		if err != nil {
+			return fmt.Errorf("error reading footer template file: %v", err)
+		}
 	}
 	var jsonFooter []string
-	if err := json.Unmarshal(footerData, &jsonFooter); err != nil {
-		return fmt.Errorf("error unmarshalling footer json: %v", err)
+	if err := json.Unmarshal(footerJSON, &jsonFooter); err != nil {
+		return fmt.Errorf("error unmarshaling footer json: %v", err)
 	}
 	footer := ""
 	for _, paragraph := range jsonFooter {

@@ -20,14 +20,20 @@ import {
   Loader as IconLoad,
   Download as IconDownload,
   Tag as IconTag,
+  Square as IconSquare,
+  Circle as IconCircle,
+  Grid as IconGrid,
+  Eye as IconEye,
 } from "react-feather";
-import { Rnd } from "react-rnd";
+import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
+import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttributeValue from "@/types/SpaceAttributeValue";
@@ -36,10 +42,31 @@ import Group from "@/types/Group";
 import Location from "@/types/Location";
 import Ajax from "@/util/Ajax";
 import Space from "@/types/Space";
-import Search, { SearchOptions } from "@/types/Search";
+import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
-import RedirectUtil from "@/util/RedirectUtil";
+
+import RendererUtils from "@/util/RendererUtils";
+import Navigation from "@/util/Navigation";
+import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
+import FloorPlanDesigner from "@/components/FloorPlanDesigner";
+
+const IconTrapezoid = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polygon points="7,3 17,3 23,21 1,21" />
+  </svg>
+);
 
 interface SpaceState {
   id: string;
@@ -55,12 +82,315 @@ interface SpaceState {
   rotation: number;
   requireSubject: boolean;
   enabled: boolean;
+  kioskEnabled: boolean;
+  shape: string;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
   approvers: any[] | undefined;
   allowBookers: any[] | undefined;
 }
+
+interface SpaceRectProps {
+  space: SpaceState;
+  index: number;
+  isSelected: boolean;
+  onSelect: (i: number) => void;
+  onDoubleClick: (i: number) => void;
+  onDragEnd: (i: number, x: number, y: number) => void;
+  onResizeEnd: (
+    i: number,
+    x: number,
+    y: number,
+    width: string,
+    height: string,
+  ) => void;
+  onRotateEnd: (i: number, rotation: number, x: number, y: number) => void;
+  onNameChange: (i: number, name: string) => void;
+  unnamedLabel: string;
+  newSpaceName: (baseName: string) => string;
+  mapWidth: number;
+  mapHeight: number;
+  snapToGrid: boolean;
+  outline: boolean;
+}
+
+const GRID_SIZE = 50;
+
+const SpaceRect: React.FC<SpaceRectProps> = ({
+  space,
+  index,
+  isSelected,
+  onSelect,
+  onDoubleClick,
+  onDragEnd,
+  onResizeEnd,
+  onRotateEnd,
+  onNameChange,
+  unnamedLabel,
+  newSpaceName,
+  mapWidth,
+  mapHeight,
+  snapToGrid,
+  outline,
+}) => {
+  const targetRef = React.useRef<HTMLDivElement>(null);
+  const moveableRef = React.useRef<Moveable>(null);
+  const width = parseInt(space.width.replace(/^\D+/g, ""));
+  const height = parseInt(space.height.replace(/^\D+/g, ""));
+  const [rotateThrottle, setRotateThrottle] = React.useState(0);
+
+  React.useEffect(() => {
+    if (isSelected) {
+      moveableRef.current?.updateRect();
+    }
+  }, [space.x, space.y, space.rotation, isSelected]);
+
+  React.useEffect(() => {
+    if (!isSelected) {
+      setRotateThrottle(0);
+      return;
+    }
+    const getThrottle = (e: KeyboardEvent) => {
+      if (e.ctrlKey) return 45;
+      if (e.shiftKey) return 15;
+      return 0;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const next = getThrottle(e);
+      setRotateThrottle((prev) => (prev !== next ? next : prev));
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
+    };
+  }, [isSelected]);
+
+  const clampPosition = (
+    left: number,
+    top: number,
+    rotationDeg: number = space.rotation,
+  ) => {
+    if (mapWidth <= 0 || mapHeight <= 0) {
+      return { left, top };
+    }
+    const rad = (rotationDeg * Math.PI) / 180;
+    const cosA = Math.abs(Math.cos(rad));
+    const sinA = Math.abs(Math.sin(rad));
+    const boundingWidth = width * cosA + height * sinA;
+    const boundingHeight = width * sinA + height * cosA;
+    const minLeft = (boundingWidth - width) / 2;
+    const maxLeft = mapWidth - (width + boundingWidth) / 2;
+    const minTop = (boundingHeight - height) / 2;
+    const maxTop = mapHeight - (height + boundingHeight) / 2;
+    if (maxLeft < minLeft || maxTop < minTop) {
+      return { left, top };
+    }
+    return {
+      left: Math.min(Math.max(minLeft, left), maxLeft),
+      top: Math.min(Math.max(minTop, top), maxTop),
+    };
+  };
+
+  let className = "space-dragger";
+  if (RendererUtils.isSpaceVertical(width, height, space.rotation))
+    className += " space-dragger-vertical";
+  if (space.shape === "circle") className += " space-dragger-circle";
+  if (space.shape === "trapezoid") className += " space-dragger-trapezoid";
+  if (isSelected) className += " space-dragger-selected";
+
+  return (
+    <>
+      <div
+        ref={targetRef}
+        style={{
+          position: "absolute",
+          left: space.x,
+          top: space.y,
+          width: space.width,
+          height: space.height,
+          transform: `rotate(${space.rotation}deg)`,
+          zIndex: isSelected ? 1 : undefined,
+        }}
+        className={className}
+        onMouseDown={() => {
+          onSelect(index);
+          onDoubleClick(index);
+        }}
+      >
+        {outline && space.shape === "trapezoid" && (
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+            }}
+          >
+            <polygon
+              points="20,0 80,0 100,100 0,100"
+              fill="none"
+              stroke={isSelected ? "hsl(215, 55%, 45%)" : "hsl(190, 45%, 60%)"}
+              strokeWidth="4"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        )}
+        <div
+          style={{
+            transform: `rotate(${-space.rotation}deg)`,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          {space.approvers && space.approvers.length > 0 && (
+            <SpaceApprovalIcon />
+          )}
+          <input
+            type="text"
+            id={`spaceName${index}`}
+            value={space.name}
+            onChange={(e) => onNameChange(index, e.target.value)}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) {
+                onNameChange(index, newSpaceName(unnamedLabel));
+              }
+            }}
+          />
+        </div>
+      </div>
+      {isSelected && (
+        <Moveable
+          ref={moveableRef}
+          target={targetRef}
+          draggable={true}
+          resizable={true}
+          rotatable={true}
+          throttleRotate={rotateThrottle}
+          origin={false}
+          snappable={snapToGrid}
+          snapGridWidth={snapToGrid ? GRID_SIZE : undefined}
+          snapGridHeight={snapToGrid ? GRID_SIZE : undefined}
+          onDrag={({ target, left, top }) => {
+            const clamped = clampPosition(left, top);
+            target.style.left = `${clamped.left}px`;
+            target.style.top = `${clamped.top}px`;
+            if (clamped.left !== left || clamped.top !== top) {
+              moveableRef.current?.updateRect();
+            }
+          }}
+          onDragEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              const clamped = clampPosition(lastEvent.left, lastEvent.top);
+              onDragEnd(
+                index,
+                Math.round(clamped.left),
+                Math.round(clamped.top),
+              );
+            }
+            onSelect(index);
+          }}
+          onResize={({ target, width, height, drag }) => {
+            target.style.width = `${width}px`;
+            target.style.height = `${height}px`;
+            target.style.left = `${drag.left}px`;
+            target.style.top = `${drag.top}px`;
+          }}
+          onResizeEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              const newWidth = Math.round(lastEvent.width);
+              const newHeight = Math.round(lastEvent.height);
+              const newLeft = Math.round(lastEvent.drag.left);
+              const newTop = Math.round(lastEvent.drag.top);
+              const rad = (space.rotation * Math.PI) / 180;
+              const cosA = Math.abs(Math.cos(rad));
+              const sinA = Math.abs(Math.sin(rad));
+              const bw = newWidth * cosA + newHeight * sinA;
+              const bh = newWidth * sinA + newHeight * cosA;
+              const minResizeLeft = (bw - newWidth) / 2;
+              const maxResizeLeft = mapWidth - (newWidth + bw) / 2;
+              const minResizeTop = (bh - newHeight) / 2;
+              const maxResizeTop = mapHeight - (newHeight + bh) / 2;
+              const isOutside =
+                mapWidth > 0 &&
+                mapHeight > 0 &&
+                maxResizeLeft >= minResizeLeft &&
+                maxResizeTop >= minResizeTop &&
+                (newLeft < minResizeLeft ||
+                  newLeft > maxResizeLeft ||
+                  newTop < minResizeTop ||
+                  newTop > maxResizeTop);
+              if (isOutside) {
+                const target = targetRef.current;
+                if (target) {
+                  target.style.width = space.width;
+                  target.style.height = space.height;
+                  target.style.left = `${space.x}px`;
+                  target.style.top = `${space.y}px`;
+                  moveableRef.current?.updateRect();
+                }
+                return;
+              }
+              onResizeEnd(
+                index,
+                newLeft,
+                newTop,
+                `${newWidth}px`,
+                `${newHeight}px`,
+              );
+            }
+          }}
+          onRotate={({ target, transform }) => {
+            target.style.transform = transform;
+          }}
+          onRotateEnd={({ lastEvent }) => {
+            if (lastEvent) {
+              const newRotation =
+                ((Math.round(lastEvent.rotation) % 360) + 360) % 360;
+              const rad = (newRotation * Math.PI) / 180;
+              const cosA = Math.abs(Math.cos(rad));
+              const sinA = Math.abs(Math.sin(rad));
+              const boundingWidth = width * cosA + height * sinA;
+              const boundingHeight = width * sinA + height * cosA;
+              const minLeft = (boundingWidth - width) / 2;
+              const maxLeft = mapWidth - (width + boundingWidth) / 2;
+              const minTop = (boundingHeight - height) / 2;
+              const maxTop = mapHeight - (height + boundingHeight) / 2;
+              const wouldBeOutside =
+                mapWidth > 0 &&
+                mapHeight > 0 &&
+                (maxLeft < minLeft ||
+                  maxTop < minTop ||
+                  space.x < minLeft ||
+                  space.x > maxLeft ||
+                  space.y < minTop ||
+                  space.y > maxTop);
+              if (wouldBeOutside) {
+                const target = targetRef.current;
+                if (target) {
+                  target.style.transform = `rotate(${space.rotation}deg)`;
+                  moveableRef.current?.updateRect();
+                }
+                return;
+              }
+              onRotateEnd(index, newRotation, space.x, space.y);
+            }
+          }}
+        />
+      )}
+    </>
+  );
+};
 
 interface State {
   loading: boolean;
@@ -78,6 +408,8 @@ interface State {
   mapScaleOnLoad: number;
   fileLabel: string;
   files: FileList | null;
+  mapType: "upload" | "designed";
+  designData: string;
   spaces: SpaceState[];
   selectedSpace: number | null;
   deleteIds: string[];
@@ -88,10 +420,16 @@ interface State {
   deletedAttributeIds: string[];
   showEditSpaceDetailsModal: boolean;
   selectedSpaceMouseDownTimestamp: number;
-  typeaheadApproversOptions: Group[];
+  typeaheadApproversOptions: GroupSearchResult[];
   typeaheadApproversLoading: boolean;
-  typeaheadAllowBookersOptions: Group[];
+  typeaheadAllowBookersOptions: GroupSearchResult[];
   typeaheadAllowBookersLoading: boolean;
+  typeaheadLocationAllowBookersOptions: GroupSearchResult[];
+  typeaheadLocationAllowBookersLoading: boolean;
+  locationAllowBookers: any[] | undefined;
+  showDesignerModal: boolean;
+  gridEnabled: boolean;
+  outline: boolean;
 }
 
 interface Props {
@@ -107,6 +445,8 @@ class EditLocation extends React.Component<Props, State> {
   ExcellentExport: any;
   typeaheadApprovers: any = null;
   typeaheadAllowBookers: any = null;
+  typeaheadLocationAllowBookers: any = null;
+  editSpaceFormRef = React.createRef<HTMLFormElement>();
 
   constructor(props: any) {
     super(props);
@@ -127,6 +467,8 @@ class EditLocation extends React.Component<Props, State> {
       mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
       files: null,
+      mapType: "upload",
+      designData: "",
       spaces: [],
       selectedSpace: null,
       deleteIds: [],
@@ -141,14 +483,16 @@ class EditLocation extends React.Component<Props, State> {
       typeaheadApproversLoading: false,
       typeaheadAllowBookersOptions: [],
       typeaheadAllowBookersLoading: false,
+      typeaheadLocationAllowBookersOptions: [],
+      typeaheadLocationAllowBookersLoading: false,
+      locationAllowBookers: [],
+      showDesignerModal: false,
+      gridEnabled: false,
+      outline: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const promises = [this.loadData(), this.loadTimezones()];
     Promise.all(promises).then(() => {
       this.setState({
@@ -188,20 +532,37 @@ class EditLocation extends React.Component<Props, State> {
             });
             return this.entity.getMap().then((mapData) => {
               this.mapData = mapData;
-              return SpaceAttribute.list().then((attributes) => {
-                return this.entity.getAttributes().then((attributeValues) => {
-                  this.setState({
-                    name: location.name,
-                    description: location.description,
-                    limitConcurrentBookings: location.maxConcurrentBookings > 0,
-                    maxConcurrentBookings: location.maxConcurrentBookings,
-                    timezone: location.timezone,
-                    enabled: location.enabled,
-                    mapScale: location.mapScale,
-                    mapScaleOnLoad: location.mapScale,
-                    attributeValues: attributeValues,
-                    availableAttributes: attributes,
-                    loading: false,
+              const loadDesign =
+                location.mapType === "designed"
+                  ? this.entity.getFloorPlanDesign()
+                  : Promise.resolve("");
+              return loadDesign.then((designData) => {
+                return SpaceAttribute.list().then((attributes) => {
+                  return this.entity.getAttributes().then((attributeValues) => {
+                    this.setState({
+                      name: location.name,
+                      description: location.description,
+                      limitConcurrentBookings:
+                        location.maxConcurrentBookings > 0,
+                      maxConcurrentBookings: location.maxConcurrentBookings,
+                      timezone: location.timezone,
+                      enabled: location.enabled,
+                      mapScale: location.mapScale,
+                      mapScaleOnLoad: location.mapScale,
+                      mapType:
+                        location.mapType === "designed" ? "designed" : "upload",
+                      designData: designData || "",
+                      attributeValues: attributeValues,
+                      availableAttributes: attributes,
+                      locationAllowBookers:
+                        location.allowedBookerGroupIds &&
+                        location.allowedBookerGroupIds
+                          ? this.groups.filter((g) =>
+                              location.allowedBookerGroupIds.includes(g.id),
+                            )
+                          : [],
+                      loading: false,
+                    });
                   });
                 });
               });
@@ -209,7 +570,6 @@ class EditLocation extends React.Component<Props, State> {
           });
         });
       });
-    } else {
     }
   };
 
@@ -253,6 +613,8 @@ class EditLocation extends React.Component<Props, State> {
         space.rotation = Math.round(item.rotation);
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
+        space.kioskEnabled = item.kioskEnabled;
+        space.shape = item.shape;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -332,6 +694,10 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
     this.entity.mapScale = this.state.mapScale;
+    this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
+    this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
+      ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
+      : [];
     this.entity
       .save()
       .then(() => {
@@ -339,7 +705,30 @@ class EditLocation extends React.Component<Props, State> {
           .then(() => {
             this.saveSpaces()
               .then(() => {
-                if (this.state.files && this.state.files.length > 0) {
+                if (this.state.mapType === "designed") {
+                  this.entity
+                    .setFloorPlanDesign(this.state.designData)
+                    .then(() => {
+                      this.loadData(this.entity.id);
+                      this.props.router.push(
+                        "/admin/locations/" + this.entity.id,
+                      );
+                      this.setState({
+                        spaces: this.state.spaces.map((s) => {
+                          s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));
+                          s.orgWidth = parseInt(s.width.replace(/^\D+/g, ""));
+                          s.orgX = s.x;
+                          s.orgY = s.y;
+                          return s;
+                        }),
+                        saved: true,
+                        changed: false,
+                        submitting: false,
+                        mapScaleOnLoad: this.state.mapScale,
+                      });
+                    })
+                    .catch(() => onError());
+                } else if (this.state.files && this.state.files.length > 0) {
                   this.entity
                     .setMap(this.state.files.item(0) as File)
                     .then(() => {
@@ -411,10 +800,26 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
+  newSpaceName(baseName: string): string {
+    const existingNames = new Set(this.state.spaces.map((s) => s.name));
+    const match = baseName.match(/^(.+?) \(#\d+\)$/);
+    const extractedBase = match ? match[1].trim() : "";
+    const trimmedBaseName = baseName.trim();
+    const base = extractedBase || trimmedBaseName || this.props.t("unnamed");
+    if (!existingNames.has(base)) {
+      return base;
+    }
+    let i = 2;
+    while (existingNames.has(`${base} (#${i})`)) {
+      i++;
+    }
+    return `${base} (#${i})`;
+  }
+
   newSpaceState = (e?: Space): SpaceState => {
     const res: SpaceState = {
       id: e ? e.id : "",
-      name: e ? e.name : this.props.t("unnamed"),
+      name: e ? e.name : this.newSpaceName(this.props.t("unnamed")),
       x: e ? e.x : 10,
       y: e ? e.y : 10,
       width: e ? e.width + "px" : "100px",
@@ -423,11 +828,13 @@ class EditLocation extends React.Component<Props, State> {
       orgHeight: e ? e.height : 100,
       orgX: e ? e.x : 10,
       orgY: e ? e.y : 10,
-      rotation: 0,
+      rotation: e ? e.rotation : 0,
       requireSubject: e
         ? e.requireSubject
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
+      kioskEnabled: e ? e.kioskEnabled : false,
+      shape: e ? e.shape : "",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -473,6 +880,44 @@ class EditLocation extends React.Component<Props, State> {
   setSpaceDimensions = (i: number, width: string, height: string) => {
     const spaces = this.state.spaces;
     const space = { ...spaces[i] };
+    space.width = width;
+    space.height = height;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceShape = (i: number, shape: string) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.shape = shape;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceRotation = (i: number, rotation: number, x: number, y: number) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.rotation = rotation;
+    space.x = x;
+    space.y = y;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpacePositionAndDimensions = (
+    i: number,
+    x: number,
+    y: number,
+    width: string,
+    height: string,
+  ) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.x = x;
+    space.y = y;
     space.width = width;
     space.height = height;
     space.changed = true;
@@ -551,6 +996,7 @@ class EditLocation extends React.Component<Props, State> {
       const spaces = this.state.spaces;
       const space = { ...spaces[this.state.selectedSpace] };
       const newSpace: SpaceState = Object.assign({}, space);
+      newSpace.name = this.newSpaceName(newSpace.name);
       newSpace.id = "";
       newSpace.x += 20;
       newSpace.y += 20;
@@ -585,51 +1031,25 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   renderRect = (i: number) => {
-    const size = {
-      width: this.state.spaces[i].width,
-      height: this.state.spaces[i].height,
-    };
-    const position = { x: this.state.spaces[i].x, y: this.state.spaces[i].y };
-    const width = parseInt(this.state.spaces[i].width.replace(/^\D+/g, ""));
-    const height = parseInt(this.state.spaces[i].height.replace(/^\D+/g, ""));
-    let className = "space-dragger";
-    let inputStyle = {};
-    if (width < height) {
-      className += " space-dragger-vertical";
-      inputStyle = {
-        width: height + "px",
-      };
-    }
-    if (i === this.state.selectedSpace) {
-      className += " space-dragger-selected";
-    }
     return (
-      <Rnd
+      <SpaceRect
         key={i}
-        size={size}
-        position={position}
-        onMouseDown={() => {
-          this.onSpaceSelect(i);
-          this.checkDoubleClickSpace(i);
-        }}
-        onDragStop={(e, d) => {
-          this.setSpacePosition(i, d.x, d.y);
-          this.onSpaceSelect(i);
-        }}
-        onResizeStop={(e, d, ref) => {
-          this.setSpaceDimensions(i, ref.style.width, ref.style.height);
-        }}
-        className={className}
-      >
-        <input
-          type="text"
-          style={inputStyle}
-          value={this.state.spaces[i].name}
-          onChange={(e) => {
-            this.setSpaceName(i, e.target.value);
-          }}
-        />
-      </Rnd>
+        space={this.state.spaces[i]}
+        index={i}
+        isSelected={i === this.state.selectedSpace}
+        onSelect={this.onSpaceSelect}
+        onDoubleClick={this.checkDoubleClickSpace}
+        onDragEnd={this.setSpacePosition}
+        onResizeEnd={this.setSpacePositionAndDimensions}
+        onRotateEnd={this.setSpaceRotation}
+        onNameChange={this.setSpaceName}
+        unnamedLabel={this.props.t("unnamed")}
+        newSpaceName={this.newSpaceName}
+        mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
+        mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
+        snapToGrid={this.state.gridEnabled}
+        outline={this.state.outline}
+      />
     );
   };
 
@@ -660,31 +1080,51 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
-  renderRow = (space: SpaceState) => {
+  renderRow = (space: SpaceState, rowNumber: number) => {
     let bookingLink;
     if (space.id) {
-      const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${this.entity.id}&sid=${space.id}`;
+      const bookingLinkUrl = Navigation.spaceAbsolute(this.entity.id, space.id);
       bookingLink = (
-        <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
-          {bookingLinkUrl}
-        </a>
+        <span onClick={(e) => e.stopPropagation()}>
+          <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
+            {RendererUtils.shortenLink(bookingLinkUrl, 40)}
+          </a>
+          <CopyToClipboardButton text={bookingLinkUrl} small={true} />
+        </span>
       );
     } else {
       bookingLink = this.props.t("saveAreaToGetLink");
     }
 
     return (
-      <tr key={space.id}>
+      <tr
+        key={space.id}
+        onClick={() => {
+          this.setState({
+            selectedSpace: rowNumber,
+            showEditSpaceDetailsModal: true,
+          });
+        }}
+      >
         <td>{space.name}</td>
-        <td>{space.enabled ? "☑" : "☐"}</td>
-        <td>{space.requireSubject ? "☑" : "☐"}</td>
+        <td>{RendererUtils.state(space.enabled)}</td>
+        <td>{RendererUtils.state(space.requireSubject)}</td>
+        <td>{RendererUtils.state(space.kioskEnabled)}</td>
+        <td>
+          {RendererUtils.state(space.approvers && space.approvers?.length > 0)}
+        </td>
+        <td>
+          {RendererUtils.state(
+            space.allowBookers && space.allowBookers?.length > 0,
+          )}
+        </td>
         <td>{bookingLink}</td>
       </tr>
     );
   };
 
   getAvailableAttributeOptions = () => {
-    let res: any[] = [];
+    const res: any[] = [];
     this.state.availableAttributes.forEach((a) => {
       let ok = true;
       if (!a.locationApplicable) {
@@ -793,7 +1233,7 @@ class EditLocation extends React.Component<Props, State> {
 
   handleAllowBookersSearch = (query: string) => {
     this.setState({ typeaheadAllowBookersLoading: true });
-    let options = new SearchOptions();
+    const options = new SearchOptions();
     options.includeGroups = true;
     options.keyword = query ? query : "";
     Search.search(options).then((res) => {
@@ -814,6 +1254,25 @@ class EditLocation extends React.Component<Props, State> {
     space.changed = true;
     spaces[this.state.selectedSpace] = space;
     this.setState({ spaces: spaces, changed: true });
+  };
+
+  handleLocationAllowBookersSearch = (query: string) => {
+    this.setState({ typeaheadLocationAllowBookersLoading: true });
+    let options = new SearchOptions();
+    options.includeGroups = true;
+    options.keyword = query ? query : "";
+    Search.search(options).then((res) => {
+      this.setState({
+        typeaheadLocationAllowBookersOptions: res.groups,
+        typeaheadLocationAllowBookersLoading: false,
+      });
+    });
+  };
+
+  onLocationAllowBookersSearchSelected = (selected: any) => {
+    this.setState({
+      locationAllowBookers: selected.map((group: any) => group as Group),
+    });
   };
 
   getSpaceAttributeRows = () => {
@@ -839,8 +1298,9 @@ class EditLocation extends React.Component<Props, State> {
         input = (
           <Form.Check
             type="checkbox"
+            id={`space-attr-value-${a.id}`}
             disabled={!this.isSpaceAttributeEnabled(a.id)}
-            label={this.props.t("yes")}
+            label={RendererUtils.capitalize(this.props.t("yes"))}
             checked={this.getSpaceAttributeValue(a.id) === "1"}
             onChange={(e: any) =>
               this.setSpaceAttributeValue(a.id, e.target.checked ? "1" : "0")
@@ -864,6 +1324,7 @@ class EditLocation extends React.Component<Props, State> {
           <Col sm="4">
             <Form.Check
               type="checkbox"
+              id={`space-attr-${a.id}`}
               label={a.label}
               checked={this.isSpaceAttributeEnabled(a.id)}
               onChange={(e: any) =>
@@ -890,22 +1351,25 @@ class EditLocation extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>
           <Form
+            ref={this.editSpaceFormRef}
             onSubmit={(e) => {
               e.preventDefault();
             }}
           >
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="space-name">
                 {this.props.t("name")}
               </Form.Label>
               <Col sm="8">
                 <Form.Control
+                  id="space-name"
                   type="text"
                   value={this.getSelectedSpace()?.name}
                   onChange={(e: any) =>
                     this.setSpaceName(this.state.selectedSpace!, e.target.value)
                   }
                   required={true}
+                  pattern=".*\S.*"
                 />
               </Col>
             </Form.Group>
@@ -913,14 +1377,14 @@ class EditLocation extends React.Component<Props, State> {
               as={Row}
               hidden={RuntimeConfig.INFOS.subjectDefault === 1}
             >
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="check-requireSubject">
                 {this.props.t("requireSubject")}
               </Form.Label>
               <Col sm="8">
                 <Form.Check
                   type="checkbox"
                   id="check-requireSubject"
-                  label={this.props.t("yes")}
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
                   checked={this.getSelectedSpace()?.requireSubject}
                   onChange={(e: any) =>
                     this.setSpaceRequireSubject(
@@ -932,14 +1396,14 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="space-enabled">
                 {this.props.t("enabled")}
               </Form.Label>
               <Col sm="8">
                 <Form.Check
                   type="checkbox"
-                  id="check-enabled"
-                  label={this.props.t("yes")}
+                  id="space-enabled"
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
                   checked={this.getSelectedSpace()?.enabled}
                   onChange={(e: any) =>
                     this.setSpaceEnabled(
@@ -950,8 +1414,75 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
+            <Form.Group
+              as={Row}
+              hidden={
+                !RuntimeConfig.INFOS.featureKioskMode ||
+                !RuntimeConfig.INFOS.kioskModeEnabled
+              }
+            >
+              <Form.Label column sm="4" htmlFor="space-kiosk-enabled">
+                {this.props.t("kioskMode")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Check
+                  type="checkbox"
+                  id="space-kiosk-enabled"
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
+                  checked={this.getSelectedSpace()?.kioskEnabled}
+                  onChange={(e: any) => {
+                    const spaces = this.state.spaces;
+                    const idx = this.state.selectedSpace!;
+                    const space = { ...spaces[idx] };
+                    space.kioskEnabled = e.target.checked;
+                    space.changed = true;
+                    spaces[idx] = space;
+                    this.setState({ spaces: spaces, changed: true });
+                  }}
+                />
+                {this.getSelectedSpace()?.kioskEnabled &&
+                  this.getSelectedSpace()?.id && (
+                    <Form.Text as="div" className="text-muted">
+                      {(() => {
+                        const spaceId = this.getSelectedSpace()!.id;
+                        const colorUrl = Navigation.kioskUrl(spaceId, "color");
+                        const monoUrl = Navigation.kioskUrl(spaceId, "mono");
+                        return (
+                          <>
+                            <div className="mt-1">
+                              <a
+                                href={colorUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {this.props.t("kioskModeColorUrl")}
+                              </a>{" "}
+                              <CopyToClipboardButton
+                                text={colorUrl}
+                                small={true}
+                              />
+                              <a
+                                style={{ marginLeft: "20px" }}
+                                href={monoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {this.props.t("kioskModeMonoUrl")}
+                              </a>{" "}
+                              <CopyToClipboardButton
+                                text={monoUrl}
+                                small={true}
+                              />
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </Form.Text>
+                  )}
+              </Col>
+            </Form.Group>
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="search-approvers-input">
                 {this.props.t("approvers")}
               </Form.Label>
               <Col sm="8">
@@ -959,6 +1490,7 @@ class EditLocation extends React.Component<Props, State> {
                   disabled={!RuntimeConfig.INFOS.featureGroups}
                   filterBy={this.filterSearch}
                   id="search-approvers"
+                  inputProps={{ id: "search-approvers-input" }}
                   isLoading={this.state.typeaheadApproversLoading}
                   labelKey="name"
                   multiple={true}
@@ -987,7 +1519,7 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
-              <Form.Label column sm="4">
+              <Form.Label column sm="4" htmlFor="search-allowbookers-input">
                 {this.props.t("allowBookers")}
               </Form.Label>
               <Col sm="8">
@@ -995,6 +1527,7 @@ class EditLocation extends React.Component<Props, State> {
                   disabled={!RuntimeConfig.INFOS.featureGroups}
                   filterBy={this.filterSearch}
                   id="search-allowbookers"
+                  inputProps={{ id: "search-allowbookers-input" }}
                   isLoading={this.state.typeaheadAllowBookersLoading}
                   labelKey="name"
                   multiple={true}
@@ -1028,7 +1561,10 @@ class EditLocation extends React.Component<Props, State> {
         <Modal.Footer>
           <Button
             variant="primary"
-            onClick={() => this.setState({ showEditSpaceDetailsModal: false })}
+            onClick={() => {
+              if (!this.editSpaceFormRef.current?.reportValidity()) return;
+              this.setState({ showEditSpaceDetailsModal: false });
+            }}
           >
             {this.props.t("ok")}
           </Button>
@@ -1054,7 +1590,7 @@ class EditLocation extends React.Component<Props, State> {
     if (!found) {
       newAttributeValues.push(av);
     }
-    let changedAttributeIds: string[] = Object.assign(
+    const changedAttributeIds: string[] = Object.assign(
       [],
       this.state.changedAttributeIds,
     );
@@ -1074,7 +1610,7 @@ class EditLocation extends React.Component<Props, State> {
         newAttributeValues.push(e);
       }
     });
-    let deletedAttributeIds: string[] = Object.assign(
+    const deletedAttributeIds: string[] = Object.assign(
       [],
       this.state.deletedAttributeIds,
     );
@@ -1107,6 +1643,7 @@ class EditLocation extends React.Component<Props, State> {
           input = (
             <Form.Control
               type="number"
+              id={`loc-attr-${av.attributeId}`}
               min={0}
               value={this.state.attributeValues[idx].value}
               onChange={(e: any) =>
@@ -1118,7 +1655,8 @@ class EditLocation extends React.Component<Props, State> {
           input = (
             <Form.Check
               type="checkbox"
-              label={this.props.t("yes")}
+              id={`loc-attr-${av.attributeId}`}
+              label={RendererUtils.capitalize(this.props.t("yes"))}
               checked={this.state.attributeValues[idx].value === "1"}
               onChange={(e: any) =>
                 this.setAttribute(av.attributeId, e.target.checked ? "1" : "0")
@@ -1129,6 +1667,7 @@ class EditLocation extends React.Component<Props, State> {
           input = (
             <Form.Control
               type="text"
+              id={`loc-attr-${av.attributeId}`}
               value={this.state.attributeValues[idx].value}
               onChange={(e: any) =>
                 this.setAttribute(av.attributeId, e.target.value)
@@ -1138,7 +1677,7 @@ class EditLocation extends React.Component<Props, State> {
         }
         let row = (
           <Form.Group as={Row} key={av.attributeId}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor={`loc-attr-${av.attributeId}`}>
               {a.label}
             </Form.Label>
             <Col sm="4">{input}</Col>
@@ -1160,9 +1699,31 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
+    const t = this.props.t;
+    const headers = [
+      t("name"),
+      t("enabled"),
+      t("requireSubject"),
+      t("kioskMode"),
+      t("approvers"),
+      t("allowBookers"),
+      t("bookingLink"),
+    ];
+    const rows = this.state.spaces.map((space) => [
+      space.name,
+      RendererUtils.stateXls(space.enabled, t),
+      RendererUtils.stateXls(space.requireSubject, t),
+      RendererUtils.stateXls(space.kioskEnabled, t),
+      RendererUtils.stateXls(space.approvers && space.approvers?.length > 0, t),
+      RendererUtils.stateXls(
+        space.allowBookers && space.allowBookers?.length > 0,
+        t,
+      ),
+      space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
+    ]);
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-spaces", format: "xlsx" },
-      [{ name: "Seatsurfing Spaces", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Spaces", from: { array: [headers, ...rows] } }],
     );
   };
 
@@ -1212,7 +1773,9 @@ class EditLocation extends React.Component<Props, State> {
     let floorPlan = <></>;
     let attributeTable = <></>;
     let spaceTable = <></>;
-    const rows = this.state.spaces.map((item) => this.renderRow(item));
+    const rows = this.state.spaces.map((item, rowNumber) =>
+      this.renderRow(item, rowNumber),
+    );
     if (this.entity.id) {
       buttons = (
         <>
@@ -1234,12 +1797,13 @@ class EditLocation extends React.Component<Props, State> {
             ")"
           : "",
       };
-      let spaces = this.state.spaces.map((item, i) => {
+      let spaces = this.state.spaces.map((_item, i) => {
         return this.renderRect(i);
       });
       let buttonEditSpaceDetails = <></>;
       let buttonCopySpace = <></>;
       let buttonDeleteSpace = <></>;
+      let buttonShapeSelector = <></>;
       if (this.state.selectedSpace != null) {
         buttonEditSpaceDetails = (
           <Button
@@ -1268,6 +1832,59 @@ class EditLocation extends React.Component<Props, State> {
             <IconDelete className="feather" /> {this.props.t("deleteSpace")}
           </Button>
         );
+        const selectedShape = this.getSelectedSpace()?.shape ?? "";
+        buttonShapeSelector = (
+          <Dropdown as="div" className="btn-group">
+            <Dropdown.Toggle
+              className="btn-sm"
+              variant="outline-secondary"
+              id="dropdown-shape"
+            >
+              {selectedShape === "circle" ? (
+                <>
+                  <IconCircle className="feather" />{" "}
+                  {this.props.t("shapeCircle")}
+                </>
+              ) : selectedShape === "trapezoid" ? (
+                <>
+                  <IconTrapezoid className="feather" />{" "}
+                  {this.props.t("shapeTrapezoid")}
+                </>
+              ) : (
+                <>
+                  <IconSquare className="feather" /> {this.props.t("shapeRect")}
+                </>
+              )}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item
+                active={selectedShape === ""}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "")
+                }
+              >
+                <IconSquare className="feather" /> {this.props.t("shapeRect")}
+              </Dropdown.Item>
+              <Dropdown.Item
+                active={selectedShape === "circle"}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "circle")
+                }
+              >
+                <IconCircle className="feather" /> {this.props.t("shapeCircle")}
+              </Dropdown.Item>
+              <Dropdown.Item
+                active={selectedShape === "trapezoid"}
+                onClick={() =>
+                  this.setSpaceShape(this.state.selectedSpace!, "trapezoid")
+                }
+              >
+                <IconTrapezoid className="feather" />{" "}
+                {this.props.t("shapeTrapezoid")}
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        );
       }
       floorPlan = (
         <>
@@ -1278,7 +1895,8 @@ class EditLocation extends React.Component<Props, State> {
             <h4>{this.props.t("floorplan")}</h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
-                {buttonEditSpaceDetails} {buttonCopySpace} {buttonDeleteSpace}
+                {buttonEditSpaceDetails} {buttonShapeSelector} {buttonCopySpace}{" "}
+                {buttonDeleteSpace}
                 <Button
                   className="btn-sm"
                   variant="outline-secondary"
@@ -1287,11 +1905,62 @@ class EditLocation extends React.Component<Props, State> {
                 >
                   <IconMap className="feather" /> {this.props.t("addSpace")}
                 </Button>
+                <Button
+                  className="btn-sm"
+                  variant={
+                    this.state.gridEnabled
+                      ? "outline-primary"
+                      : "outline-secondary"
+                  }
+                  onClick={() =>
+                    this.setState((prev) => ({
+                      gridEnabled: !prev.gridEnabled,
+                    }))
+                  }
+                >
+                  <IconGrid className="feather" /> {this.props.t("showGrid")}
+                </Button>
+                <Button
+                  className="btn-sm"
+                  variant={
+                    this.state.outline ? "outline-primary" : "outline-secondary"
+                  }
+                  onClick={() =>
+                    this.setState((prev) => ({
+                      outline: !prev.outline,
+                    }))
+                  }
+                >
+                  <IconEye className="feather" /> {this.props.t("outline")}
+                </Button>
               </div>
             </div>
           </div>
           <div className="mapScrollContainer">
-            <div style={floorPlanStyle}>{spaces}</div>
+            <div
+              style={floorPlanStyle}
+              className={this.state.outline ? "spaces-outline" : undefined}
+              onClick={(e) => {
+                if (e.target === e.currentTarget)
+                  this.setState({ selectedSpace: null });
+              }}
+            >
+              {this.state.gridEnabled && (
+                <div
+                  className="floorplan-grid-overlay"
+                  style={{
+                    width: this.mapData
+                      ? this.mapData.width * this.state.mapScale
+                      : 0,
+                    height: this.mapData
+                      ? this.mapData.height * this.state.mapScale
+                      : 0,
+                    backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                  }}
+                />
+              )}
+              {spaces}
+            </div>
           </div>
         </>
       );
@@ -1343,12 +2012,26 @@ class EditLocation extends React.Component<Props, State> {
               <div className="btn-group me-2">{downloadButton}</div>
             </div>
           </div>
-          <Table striped={true} hover={true} id="datatable">
+          <Table
+            striped={true}
+            hover={true}
+            id="datatable"
+            className="clickable-table"
+          >
             <thead>
               <tr>
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
+                <th>
+                  {this.props.t("kioskMode")} <PremiumFeatureIcon />
+                </th>
+                <th>
+                  {this.props.t("approvers")} <PremiumFeatureIcon />
+                </th>
+                <th>
+                  {this.props.t("allowBookers")} <PremiumFeatureIcon />
+                </th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
@@ -1368,28 +2051,33 @@ class EditLocation extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-name">
               {this.props.t("name")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="location-name"
                 type="text"
                 placeholder={this.props.t("name")}
                 value={this.state.name}
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
+                pattern=".*\S.*"
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-description">
               {this.props.t("description")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
-                type="text"
+                id="location-description"
+                as="textarea"
+                rows={3}
                 placeholder={this.props.t("description")}
                 value={this.state.description}
+                maxLength={512}
                 onChange={(e: any) =>
                   this.setState({ description: e.target.value })
                 }
@@ -1397,11 +2085,12 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-timezone">
               {this.props.t("timezone")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="location-timezone"
                 value={this.state.timezone}
                 onChange={(e: any) =>
                   this.setState({ timezone: e.target.value })
@@ -1420,14 +2109,14 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-enabled">
               {this.props.t("enabled")}
             </Form.Label>
             <Col sm="4">
               <Form.Check
                 type="checkbox"
-                id="check-enabled"
-                label={this.props.t("yes")}
+                id="location-enabled"
+                label={RendererUtils.capitalize(this.props.t("yes"))}
                 checked={this.state.enabled}
                 onChange={(e: any) =>
                   this.setState({ enabled: e.target.checked })
@@ -1436,7 +2125,7 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="input-limitConcurrentBookings">
               {this.props.t("maxConcurrentBookings")}
             </Form.Label>
             <Col sm="4">
@@ -1451,6 +2140,7 @@ class EditLocation extends React.Component<Props, State> {
                 />
                 <Form.Control
                   type="number"
+                  id="input-limitConcurrentBookings"
                   min="0"
                   value={this.state.maxConcurrentBookings}
                   onChange={(e: any) =>
@@ -1464,33 +2154,96 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-floorplan">
               {this.props.t("floorplan")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
-                type="file"
-                accept="image/png, image/jpeg, image/gif, image/svg+xml"
-                onChange={(e: any) =>
+              <Form.Check
+                type="radio"
+                id="map-type-upload"
+                name="mapType"
+                label={this.props.t("uploadFile")}
+                checked={this.state.mapType === "upload"}
+                onChange={() => this.setState({ mapType: "upload" })}
+              />
+              <Form.Check
+                type="radio"
+                id="map-type-designed"
+                name="mapType"
+                label={this.props.t("designFloorPlan")}
+                checked={this.state.mapType === "designed"}
+                style={{ marginBottom: "10px" }}
+                onChange={() =>
                   this.setState({
-                    files: e.target.files,
-                    fileLabel: e.target.files.item(0).name,
-                    mapScale: 1.0,
+                    mapType: "designed",
+                    files: null,
+                    fileLabel: "",
                   })
                 }
-                required={!this.entity.id}
               />
+              {this.state.mapType === "upload" && (
+                <Form.Control
+                  id="location-floorplan"
+                  type="file"
+                  accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                  onChange={(e: any) =>
+                    this.setState({
+                      files: e.target.files,
+                      fileLabel: e.target.files.item(0).name,
+                      mapScale: 1.0,
+                    })
+                  }
+                  required={!this.entity.id && this.state.mapType === "upload"}
+                />
+              )}
+              {this.state.mapType === "designed" && (
+                <>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => this.setState({ showDesignerModal: true })}
+                  >
+                    <IconEdit className="feather" />{" "}
+                    {this.props.t("editFloorPlan")}
+                  </Button>
+                  <Modal
+                    show={this.state.showDesignerModal}
+                    onHide={() => this.setState({ showDesignerModal: false })}
+                    dialogClassName="fpd-modal-dialog"
+                    backdrop="static"
+                    keyboard={false}
+                  >
+                    <Modal.Header closeButton>
+                      <Modal.Title>
+                        {this.props.t("designFloorPlan")}
+                      </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <FloorPlanDesigner
+                        designData={this.state.designData}
+                        onChange={(designData: string) =>
+                          this.setState({ designData, changed: true })
+                        }
+                      />
+                    </Modal.Body>
+                  </Modal>
+                </>
+              )}
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="location-scale">
               {this.props.t("scale")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
+                  id="location-scale"
                   type="number"
-                  disabled={!this.entity.id || this.state.files !== null}
+                  disabled={
+                    !this.entity.id ||
+                    this.state.files !== null ||
+                    this.state.mapType === "designed"
+                  }
                   placeholder={this.props.t("scale")}
                   min={1}
                   max={1000}
@@ -1501,6 +2254,43 @@ class EditLocation extends React.Component<Props, State> {
                 />
                 <InputGroup.Text>%</InputGroup.Text>
               </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="location-allowed-bookers">
+              {this.props.t("allowBookers")}
+            </Form.Label>
+            <Col sm="4">
+              <AsyncTypeahead
+                disabled={!RuntimeConfig.INFOS.featureGroups}
+                filterBy={this.filterSearch}
+                id="search-allowbookers"
+                inputProps={{ id: "location-allowed-bookers" }}
+                isLoading={this.state.typeaheadLocationAllowBookersLoading}
+                labelKey="name"
+                multiple={true}
+                minLength={3}
+                onChange={this.onLocationAllowBookersSearchSelected}
+                onSearch={this.handleLocationAllowBookersSearch}
+                defaultSelected={this.state.locationAllowBookers}
+                options={this.state.typeaheadLocationAllowBookersOptions}
+                placeholder={this.props.t("searchForGroup")}
+                ref={(ref: any) => {
+                  this.typeaheadLocationAllowBookers = ref;
+                }}
+                renderMenuItemChildren={(option: any) => (
+                  <div className="d-flex">
+                    <ProfilePicture width={24} height={24} />
+                    <span style={{ marginLeft: "10px" }}>{option.name}</span>
+                  </div>
+                )}
+              />
+              <Form.Text
+                className="text-muted"
+                hidden={!RuntimeConfig.INFOS.featureGroups}
+              >
+                {this.props.t("setAllowBookersHint")}
+              </Form.Text>
             </Col>
           </Form.Group>
         </Form>

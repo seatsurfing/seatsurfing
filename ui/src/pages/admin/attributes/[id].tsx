@@ -12,8 +12,6 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
-import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
@@ -51,10 +49,6 @@ class EditAttribute extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -111,7 +105,7 @@ class EditAttribute extends React.Component<Props, State> {
       return <></>;
     }
 
-    let backButton = (
+    const backButton = (
       <Link
         href="/admin/attributes"
         className="btn btn-sm btn-outline-secondary"
@@ -136,7 +130,7 @@ class EditAttribute extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
     }
 
-    let buttonDelete = (
+    const buttonDelete = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -146,7 +140,7 @@ class EditAttribute extends React.Component<Props, State> {
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
     );
-    let buttonSave = (
+    const buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"

@@ -1,7 +1,7 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc } from "@/components/withTranslation";
 
-const enum ResponseCode {
+export const enum ResponseCode {
   BookingSlotConflict = 1001,
   BookingLocationMaxConcurrent = 1002,
   BookingTooManyUpcomingBookings = 1003,
@@ -17,6 +17,10 @@ const enum ResponseCode {
   UsernameExists = 3001,
 
   GroupNameAlreadyExists = 4001,
+
+  PasswordUpdateRequired = 5001,
+
+  AuthProviderNameExists = 6001,
 }
 
 export default class ErrorText {
@@ -49,6 +53,8 @@ export default class ErrorText {
       [ResponseCode.UsernameExists]: () => t("errorUsernameExists"),
       [ResponseCode.GroupNameAlreadyExists]: () =>
         t("errorGroupNameAlreadyExists"),
+      [ResponseCode.AuthProviderNameExists]: () =>
+        t("errorAuthProviderNameExists"),
     };
 
     return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");

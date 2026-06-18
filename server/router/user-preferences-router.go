@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -17,9 +18,9 @@ type UserPreferencesRouter struct {
 }
 
 type ListCaldavCalendarsRequest struct {
-	URL      string `json:"url" validate:"required,url"`
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	URL      string `json:"url" validate:"required,url,max=256"`
+	Username string `json:"username" validate:"required,max=256"`
+	Password string `json:"password" validate:"required,max=256"`
 }
 
 type ListCaldavCalendarsResponse struct {
@@ -36,13 +37,12 @@ func (router *UserPreferencesRouter) SetupRoutes(s *mux.Router) {
 }
 
 func (router *UserPreferencesRouter) caldavListCalendars(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		log.Println("Error: CalDAV integration requires a valid crypt key (CRYPT_KEY).")
-		SendInternalServerError(w)
-		return
-	}
 	var m ListCaldavCalendarsRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !ValidateURL(m.URL) {
 		SendBadRequest(w)
 		return
 	}
@@ -95,7 +95,7 @@ func (router *UserPreferencesRouter) setPreference(w http.ResponseWriter, r *htt
 		SendBadRequest(w)
 		return
 	}
-	if !router.isValidPreferenceValue(vars["name"], value.Value) {
+	if !router.isValidPreferenceValue(vars["name"], value.Value, user) {
 		SendBadRequest(w)
 		return
 	}
@@ -141,7 +141,7 @@ func (router *UserPreferencesRouter) setAll(w http.ResponseWriter, r *http.Reque
 			SendBadRequest(w)
 			return
 		}
-		if !router.isValidPreferenceValue(e.Name, e.Value) {
+		if !router.isValidPreferenceValue(e.Name, e.Value, user) {
 			SendBadRequest(w)
 			return
 		}
@@ -168,6 +168,9 @@ func (router *UserPreferencesRouter) doSetOne(userID, name, value string) error 
 }
 
 func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
+	if len(name) > 50 {
+		return false
+	}
 	if name == PreferenceEnterTime.Name ||
 		name == PreferenceWorkdayStart.Name ||
 		name == PreferenceWorkdayEnd.Name ||
@@ -184,9 +187,11 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVPass.Name ||
 		name == PreferenceCalDAVPath.Name ||
 		name == PreferenceMailNotifications.Name ||
+		name == PreferenceMailLanguage.Name ||
 		name == PreferenceApprovalNotifications.Name ||
 		name == Preference24HourTime.Name ||
-		name == PreferenceDateFormat.Name {
+		name == PreferenceDateFormat.Name ||
+		name == PreferenceWeekStartDay.Name {
 		return true
 	}
 	return false
@@ -241,6 +246,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	if name == PreferenceMailNotifications.Name {
 		return PreferenceMailNotifications.Type
 	}
+	if name == PreferenceMailLanguage.Name {
+		return PreferenceMailLanguage.Type
+	}
 	if name == PreferenceApprovalNotifications.Name {
 		return PreferenceApprovalNotifications.Type
 	}
@@ -249,6 +257,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceDateFormat.Name {
 		return PreferenceDateFormat.Type
+	}
+	if name == PreferenceWeekStartDay.Name {
+		return PreferenceWeekStartDay.Type
 	}
 	return 0
 }
@@ -279,10 +290,11 @@ func (router *UserPreferencesRouter) isValidPreferenceType(name string, value st
 		}
 		return ok
 	}
+
 	return false
 }
 
-func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value string) bool {
+func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value string, user *User) bool {
 	if name == PreferenceEnterTime.Name {
 		i, _ := strconv.Atoi(value)
 		if !(i == PreferenceEnterTimeNow || i == PreferenceEnterTimeNextDay || i == PreferenceEnterTimeNextWorkday) {
@@ -319,7 +331,38 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			return false
 		}
 	}
-	return true
+	if name == PreferenceMailLanguage.Name {
+		if value == "" {
+			return true
+		}
+		return GetConfig().IsValidLanguageCode(value)
+	}
+	if name == PreferenceWeekStartDay.Name {
+		i, _ := strconv.Atoi(value)
+		if i != 0 && i != 1 && i != 6 {
+			return false
+		}
+	}
+	if name == PreferenceBookedColor.Name ||
+		name == PreferenceNotBookedColor.Name ||
+		name == PreferenceSelfBookedColor.Name ||
+		name == PreferencePartiallyBookedColor.Name ||
+		name == PreferenceBuddyBookedColor.Name ||
+		name == PreferenceDisallowedColor.Name {
+		return ValidateColorHex(value)
+	}
+	if name == PreferenceLocation.Name {
+		if value == "" {
+			return true
+		}
+		if !ValidateGUID(value) {
+			return false
+		}
+		location, _ := GetLocationRepository().GetOne(value)
+		return location.OrganizationID == user.OrganizationID
+	}
+
+	return len(value) <= 512
 }
 
 func (router *UserPreferencesRouter) copyToRestModel(e *UserPreference) *GetSettingsResponse {

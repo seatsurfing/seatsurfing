@@ -7,26 +7,27 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type AuthProviderRouter struct {
 }
 
 type CreateAuthProviderRequest struct {
-	Name                   string `json:"name" validate:"required"`
+	Name                   string `json:"name" validate:"required,max=256"`
 	ProviderType           int    `json:"providerType" validate:"required"`
-	AuthURL                string `json:"authUrl" validate:"required"`
-	TokenURL               string `json:"tokenUrl" validate:"required"`
+	AuthURL                string `json:"authUrl" validate:"required,max=512"`
+	TokenURL               string `json:"tokenUrl" validate:"required,max=512"`
 	AuthStyle              int    `json:"authStyle"`
-	Scopes                 string `json:"scopes" validate:"required"`
-	UserInfoURL            string `json:"userInfoUrl" validate:"required"`
-	UserInfoEmailField     string `json:"userInfoEmailField" validate:"required"`
-	UserInfoFirstnameField string `json:"userInfoFirstnameField"`
-	UserInfoLastnameField  string `json:"userInfoLastnameField"`
-	ClientID               string `json:"clientId" validate:"required"`
-	ClientSecret           string `json:"clientSecret" validate:"required"`
-	LogoutURL              string `json:"logoutUrl"`
-	ProfilePageURL         string `json:"profilePageUrl"`
+	Scopes                 string `json:"scopes" validate:"required,max=256"`
+	UserInfoURL            string `json:"userInfoUrl" validate:"required,max=512"`
+	UserInfoEmailField     string `json:"userInfoEmailField" validate:"required,max=256"`
+	UserInfoFirstnameField string `json:"userInfoFirstnameField" validate:"max=256"`
+	UserInfoLastnameField  string `json:"userInfoLastnameField" validate:"max=256"`
+	ClientID               string `json:"clientId" validate:"required,max=256"`
+	ClientSecret           string `json:"clientSecret,omitempty" validate:"max=256"`
+	LogoutURL              string `json:"logoutUrl" validate:"max=256"`
+	ProfilePageURL         string `json:"profilePageUrl" validate:"max=256"`
 }
 
 type GetAuthProviderResponse struct {
@@ -110,9 +111,33 @@ func (router *AuthProviderRouter) getAll(w http.ResponseWriter, r *http.Request)
 	}
 	SendJSON(w, res)
 }
+
+func (router *AuthProviderRouter) validateCreateAuthProviderRequest(m *CreateAuthProviderRequest) bool {
+	if m.ProviderType != int(OAuth2) {
+		return false
+	}
+	if m.AuthStyle < 0 || m.AuthStyle > 2 {
+		return false
+	}
+	if !ValidateURL(m.AuthURL) || !ValidateURL(m.TokenURL) || !ValidateURL(m.UserInfoURL) {
+		return false
+	}
+	if m.LogoutURL != "" && !ValidateURL(m.LogoutURL) {
+		return false
+	}
+	if m.ProfilePageURL != "" && !ValidateURL(m.ProfilePageURL) {
+		return false
+	}
+	return true
+}
+
 func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request) {
 	var m CreateAuthProviderRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !router.validateCreateAuthProviderRequest(&m) {
 		SendBadRequest(w)
 		return
 	}
@@ -131,7 +156,26 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		SendForbidden(w)
 		return
 	}
+
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, m.Name)
+	if err == nil && existingAuthProvider != nil && existingAuthProvider.ID != e.ID {
+		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
+		return
+	}
+
+	// keep existing client secret if no new secret was set or encrypt the new one
+	if m.ClientSecret == "" {
+		m.ClientSecret = e.ClientSecret
+	} else {
+		ClientSecretEncrypted, err := EncryptString(m.ClientSecret)
+		if err != nil {
+			log.Println("Error encrypting client secret")
+		}
+		m.ClientSecret = ClientSecretEncrypted
+	}
+
 	eNew := router.copyFromRestModel(&m)
+
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
 	eNew.ReadOnly = e.ReadOnly
@@ -188,19 +232,40 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !router.validateCreateAuthProviderRequest(&m) || m.ClientSecret == "" {
+		SendBadRequest(w)
+		return
+	}
+
 	user := GetRequestUser(r)
-	e := router.copyFromRestModel(&m)
-	e.OrganizationID = user.OrganizationID
-	e.ReadOnly = false
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !CanAdminOrg(user, user.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
+
+	// encrypt client secret
+	ClientSecretEncrypted, err := EncryptString(m.ClientSecret)
+	if err != nil {
+		log.Println("Error encrypting client secret")
+	}
+	m.ClientSecret = ClientSecretEncrypted
+
+	e := router.copyFromRestModel(&m)
+	e.OrganizationID = user.OrganizationID
+	e.ReadOnly = false
+
 	featureAuthProviders, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingFeatureAuthProviders.Name)
 	if !featureAuthProviders {
 		SendPaymentRequired(w)
 		return
 	}
+
+	existingAuthProvider, err := GetAuthProviderRepository().GetByName(e.OrganizationID, e.Name)
+	if err == nil && existingAuthProvider != nil {
+		SendAlreadyExistsCode(w, ResponseCodeAuthProviderAlreadyExists)
+		return
+	}
+
 	if err := GetAuthProviderRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -234,7 +299,7 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.OrganizationID = e.OrganizationID
 	m.Name = e.Name
 	m.ClientID = e.ClientID
-	m.ClientSecret = e.ClientSecret
+	e.ClientSecret = "" // client secret is not exposed to the client
 	m.AuthURL = e.AuthURL
 	m.TokenURL = e.TokenURL
 	m.AuthStyle = e.AuthStyle

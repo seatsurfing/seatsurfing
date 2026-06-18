@@ -26,7 +26,7 @@ import User from "@/types/User";
 import Group from "@/types/Group";
 import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import RendererUtils from "@/util/RendererUtils";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
@@ -74,10 +74,6 @@ class EditUser extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -134,7 +130,7 @@ class EditUser extends React.Component<Props, State> {
           error: true,
           errorText: code
             ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
+            : this.props.t("errorSave"),
         });
       });
   };
@@ -276,11 +272,7 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = (
-        <Alert variant="danger">
-          {this.state.errorText ?? this.props.t("errorSave")}
-        </Alert>
-      );
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     let buttonDelete = (
@@ -398,12 +390,13 @@ class EditUser extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="name">
               {this.props.t("name")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
-                type="name"
+                id="name"
+                type="text"
                 value={this.state.name}
                 minLength={3}
                 onChange={(e: any) => this.setState({ name: e.target.value })}

@@ -13,7 +13,10 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
-import RedirectUtil from "@/util/RedirectUtil";
+
+import RendererUtils from "@/util/RendererUtils";
+import Navigation from "@/util/Navigation";
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 
 interface State {
   selectedItem: string;
@@ -38,10 +41,6 @@ class Locations extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );
@@ -60,27 +59,50 @@ class Locations extends React.Component<Props, State> {
   };
 
   renderItem = (location: Location) => {
-    const bookingLinkUrl = `${window.location.origin}/ui/search?lid=${location.id}`;
+    const bookingLinkUrl = Navigation.locationAbsolute(location.id);
     return (
-      <tr key={location.id} onClick={() => this.onItemSelect(location)}>
+      <tr
+        key={location.id}
+        onClick={() => this.onItemSelect(location)}
+        title={location.description}
+      >
         <td>{location.name}</td>
-        <td>{location.enabled ? "☑" : "☐"}</td>
+        <td>{RendererUtils.state(location.enabled)}</td>
         <td>
           {location.mapWidth}&nbsp;&times;&nbsp;{location.mapHeight}
         </td>
         <td>
+          {RendererUtils.state(location.allowedBookerGroupIds?.length > 0)}
+        </td>
+        <td>
           <a href={bookingLinkUrl} target="_blank" rel="noopener noreferrer">
-            {bookingLinkUrl}
+            {RendererUtils.shortenLink(bookingLinkUrl, 40)}
           </a>
+          <CopyToClipboardButton text={bookingLinkUrl} small={true} />
         </td>
       </tr>
     );
   };
 
   exportTable = (e: any) => {
+    const t = this.props.t;
+    const headers = [
+      t("name"),
+      t("enabled"),
+      t("map"),
+      t("allowBookers"),
+      t("bookingLink"),
+    ];
+    const rows = this.data.map((loc) => [
+      loc.name,
+      RendererUtils.stateXls(loc.enabled, t),
+      `${loc.mapWidth} x ${loc.mapHeight}`,
+      RendererUtils.stateXls(loc.allowedBookerGroupIds?.length > 0, t),
+      Navigation.locationAbsolute(loc.id),
+    ]);
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-areas", format: "xlsx" },
-      [{ name: "Seatsurfing Areas", from: { table: "datatable" } }],
+      [{ name: "Seatsurfing Areas", from: { array: [headers, ...rows] } }],
     );
   };
 
@@ -148,6 +170,7 @@ class Locations extends React.Component<Props, State> {
               <th>{this.props.t("name")}</th>
               <th>{this.props.t("enabled")}</th>
               <th>{this.props.t("map")}</th>
+              <th>{this.props.t("allowBookers")}</th>
               <th>{this.props.t("bookingLink")}</th>
             </tr>
           </thead>

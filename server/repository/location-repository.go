@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -19,6 +20,7 @@ type Location struct {
 	MapHeight             uint
 	MapScale              float64
 	MapMimeType           string
+	MapType               string
 	Description           string
 	MaxConcurrentBookings uint
 	Timezone              string
@@ -31,6 +33,11 @@ type LocationMap struct {
 	Height   uint
 	Scale    float64
 	Data     []byte
+}
+
+type LocationGroup struct {
+	LocationID string
+	GroupID    string
 }
 
 var locationRepository *LocationRepository
@@ -86,15 +93,28 @@ func (r *LocationRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 39 {
+		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS locations_allowed_bookers (" +
+			"location_id uuid NOT NULL, " +
+			"group_id uuid NOT NULL, " +
+			"PRIMARY KEY (location_id, group_id))"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 44 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations ADD COLUMN IF NOT EXISTS map_type VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *LocationRepository) Create(e *Location) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO locations "+
-		"(organization_id, name, description, max_concurrent_bookings, tz, enabled) "+
-		"VALUES ($1, $2, $3, $4, $5, $6) "+
+		"(organization_id, name, description, max_concurrent_bookings, tz, enabled, map_type) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7) "+
 		"RETURNING id",
-		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.Timezone, e.Enabled).Scan(&id)
+		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.Timezone, e.Enabled, e.MapType).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -104,10 +124,10 @@ func (r *LocationRepository) Create(e *Location) error {
 
 func (r *LocationRepository) GetOne(id string) (*Location, error) {
 	e := &Location{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, description, max_concurrent_bookings, tz, enabled "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled "+
 		"FROM locations "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled)
+		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +136,7 @@ func (r *LocationRepository) GetOne(id string) (*Location, error) {
 
 func (r *LocationRepository) GetByKeyword(organizationID string, keyword string) ([]*Location, error) {
 	var result []*Location
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, description, max_concurrent_bookings, tz, enabled "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled "+
 		"FROM locations "+
 		"WHERE organization_id = $1 AND LOWER(name) LIKE '%' || $2 || '%' "+
 		"ORDER BY name", organizationID, strings.ToLower(keyword))
@@ -126,7 +146,7 @@ func (r *LocationRepository) GetByKeyword(organizationID string, keyword string)
 	defer rows.Close()
 	for rows.Next() {
 		e := &Location{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +157,7 @@ func (r *LocationRepository) GetByKeyword(organizationID string, keyword string)
 
 func (r *LocationRepository) GetAll(organizationID string) ([]*Location, error) {
 	var result []*Location
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, description, max_concurrent_bookings, tz, enabled "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled "+
 		"FROM locations "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY name", organizationID)
@@ -147,7 +167,7 @@ func (r *LocationRepository) GetAll(organizationID string) ([]*Location, error) 
 	defer rows.Close()
 	for rows.Next() {
 		e := &Location{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled)
 		if err != nil {
 			return nil, err
 		}
@@ -164,14 +184,21 @@ func (r *LocationRepository) Update(e *Location) error {
 		"max_concurrent_bookings = $4, "+
 		"map_scale = $5, "+
 		"tz = $6, "+
-		"enabled = $7 "+
-		"WHERE id = $8",
-		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.MapScale, e.Timezone, e.Enabled, e.ID)
+		"enabled = $7, "+
+		"map_type = $8 "+
+		"WHERE id = $9",
+		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.MapScale, e.Timezone, e.Enabled, e.MapType, e.ID)
 	return err
 }
 
 func (r *LocationRepository) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE bookings.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_allowed_bookers WHERE spaces_allowed_bookers.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_approvers WHERE spaces_approvers.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
 		return err
 	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces WHERE location_id = $1", e.ID); err != nil {
@@ -180,6 +207,10 @@ func (r *LocationRepository) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE entity_id = $1 AND entity_type = $2", e.ID, SpaceAttributeValueEntityTypeLocation); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1", e.ID); err != nil {
+		return err
+	}
+
 	_, err := GetDatabase().DB().Exec("DELETE FROM locations WHERE id = $1", e.ID)
 	return err
 }
@@ -211,6 +242,13 @@ func (r *LocationRepository) DeleteAll(organizationID string) error {
 	return err
 }
 
+func (r *LocationRepository) GetCountAll() (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
+		"FROM locations").Scan(&res)
+	return res, err
+}
+
 func (r *LocationRepository) GetCount(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+
@@ -218,6 +256,17 @@ func (r *LocationRepository) GetCount(organizationID string) (int, error) {
 		"WHERE organization_id = $1",
 		organizationID).Scan(&res)
 	return res, err
+}
+
+func (r *LocationRepository) ClearMapData(e *Location) error {
+	_, err := GetDatabase().DB().Exec("UPDATE locations SET "+
+		"map_mimetype = '', "+
+		"map_data = NULL, "+
+		"map_width = 0, "+
+		"map_height = 0 "+
+		"WHERE id = $1",
+		e.ID)
+	return err
 }
 
 func (r *LocationRepository) SetMap(e *Location, locationMap *LocationMap) error {
@@ -229,6 +278,17 @@ func (r *LocationRepository) SetMap(e *Location, locationMap *LocationMap) error
 		"map_scale = $5 "+
 		"WHERE id = $6",
 		locationMap.MimeType, locationMap.Data, locationMap.Width, locationMap.Height, locationMap.Scale, e.ID)
+	return err
+}
+
+func (r *LocationRepository) SetMapMeta(e *Location) error {
+	_, err := GetDatabase().DB().Exec("UPDATE locations SET "+
+		"map_mimetype = $1, "+
+		"map_width = $2, "+
+		"map_height = $3, "+
+		"map_scale = $4 "+
+		"WHERE id = $5",
+		e.MapMimeType, e.MapWidth, e.MapHeight, e.MapScale, e.ID)
 	return err
 }
 
@@ -256,4 +316,46 @@ func (r *LocationRepository) GetTimezone(location *Location) string {
 func (r *LocationRepository) AttachTimezoneInformation(timestamp time.Time, location *Location) (time.Time, error) {
 	tz := GetLocationRepository().GetTimezone(location)
 	return util.AttachTimezoneInformationTz(timestamp, tz)
+}
+
+func (r *LocationRepository) ReplaceAllowedBookers(location *Location, allowedBookersGroupIDs []string) error {
+	if len(allowedBookersGroupIDs) == 0 {
+		_, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1", location.ID)
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE location_id = $1 AND group_id != ALL($2::uuid[])",
+		location.ID, pq.StringArray(allowedBookersGroupIDs)); err != nil {
+		return err
+	}
+	for _, groupID := range allowedBookersGroupIDs {
+		if _, err := GetDatabase().DB().Exec("INSERT INTO locations_allowed_bookers (location_id, group_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", location.ID, groupID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *LocationRepository) GetAllAllowedBookersForLocationList(locationIDs []string) ([]*LocationGroup, error) {
+	var result []*LocationGroup
+	rows, err := GetDatabase().DB().Query("SELECT location_id, group_id "+
+		"FROM locations_allowed_bookers "+
+		"WHERE location_id = ANY($1::uuid[])",
+		pq.StringArray(locationIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &LocationGroup{}
+		err = rows.Scan(&e.LocationID, &e.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
+func (r *LocationRepository) GetAllAllowedBookersForLocation(locationID string) ([]*LocationGroup, error) {
+	return r.GetAllAllowedBookersForLocationList([]string{locationID})
 }

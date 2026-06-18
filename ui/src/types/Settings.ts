@@ -1,5 +1,6 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
+import Navigation from "../util/Navigation";
 
 export default class Settings extends Entity {
   name: string;
@@ -25,32 +26,38 @@ export default class Settings extends Entity {
   }
 
   getBackendUrl(): string {
-    return "/setting/";
+    return Navigation.PATH_API_SETTINGS;
   }
 
   static async list(): Promise<Settings[]> {
-    return Ajax.get("/setting/").then((result) => {
-      let list: Settings[] = [];
-      (result.json as []).forEach((item) => {
-        let e: Settings = new Settings();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
+    const result = await Ajax.get(Navigation.PATH_API_SETTINGS);
+    const list: Settings[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Settings = new Settings();
+      e.deserialize(item);
+      list.push(e);
     });
+    return list;
   }
 
   static async setAll(settings: Settings[]): Promise<void> {
-    let payload = settings.map((e) => e.serialize());
-    return Ajax.putData("/setting/", payload).then(() => undefined);
+    const payload = settings.map((e) => e.serialize());
+    return Ajax.putData(Navigation.PATH_API_SETTINGS, payload).then(
+      () => undefined,
+    );
   }
 
   static async setOne(name: string, value: string): Promise<void> {
-    let payload = { value: value };
-    return Ajax.putData("/setting/" + name, payload).then(() => undefined);
+    const payload = { value: value };
+    return Ajax.putData(
+      `${Navigation.PATH_API_SETTINGS}${encodeURIComponent(name)}`,
+      payload,
+    ).then(() => undefined);
   }
 
   static async getOne(name: string): Promise<string> {
-    return Ajax.get("/setting/" + name).then((res) => res.json);
+    return Ajax.get(
+      `${Navigation.PATH_API_SETTINGS}${encodeURIComponent(name)}`,
+    ).then((res) => res.json);
   }
 }

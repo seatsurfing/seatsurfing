@@ -1,6 +1,6 @@
 :root {
   --sidebar-width-collapsed: 50px;
-  --sidebar-width-expanded: 190px;
+  --sidebar-width-expanded: 200px;
 }
 
 .sidebar {
@@ -44,7 +44,7 @@
 }
 
 .sidebar .nav-link.active {
-  color: #007bff;
+  color: var(--bs-primary);
 }
 
 .sidebar .nav-link:hover .feather,

@@ -1,5 +1,5 @@
 import Ajax from "../util/Ajax";
-import Formatting from "../util/Formatting";
+import DateUtil from "../util/DateUtil";
 import Location from "./Location";
 
 export default class SearchAttribute {
@@ -27,8 +27,8 @@ export default class SearchAttribute {
     attributes: SearchAttribute[],
   ): Promise<Location[]> {
     let payload = {
-      enter: Formatting.convertToFakeUTCDate(enter).toISOString(),
-      leave: Formatting.convertToFakeUTCDate(leave).toISOString(),
+      enter: DateUtil.convertToFakeUTCDate(enter).toISOString(),
+      leave: DateUtil.convertToFakeUTCDate(leave).toISOString(),
       attributes: attributes.map((a) => a.serialize()),
     };
     return Ajax.postData("/location/search", payload).then((result) => {

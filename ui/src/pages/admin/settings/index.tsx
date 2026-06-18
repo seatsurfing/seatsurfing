@@ -10,12 +10,14 @@ import {
   Popover,
   OverlayTrigger,
   Badge,
+  Modal,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
   Save as IconSave,
   AlertTriangle as IconAlert,
   Check as IconCheck,
+  RefreshCw as IconRefresh,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -26,13 +28,18 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
+import UrlInput from "@/components/form/UrlInput";
 import Domain from "@/types/Domain";
 import Organization from "@/types/Organization";
 import AuthProvider from "@/types/AuthProvider";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
-import RedirectUtil from "@/util/RedirectUtil";
+
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import Validation from "@/util/Validation";
+import RendererUtils from "@/util/RendererUtils";
+import UpdateChecker from "@/util/UpdateChecker";
 
 interface State {
   allowAnyUser: boolean;
@@ -49,8 +56,8 @@ interface State {
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
   maxHoursPartiallyBookedEnabled: boolean;
-  maxBookingDurationHours: number;
-  minBookingDurationHours: number;
+  maxBookingDuration: number;
+  minBookingDuration: number;
   targetUtilizationHoursPerWeek: number;
   dailyBasisBooking: boolean;
   noAdminRestrictions: boolean;
@@ -61,7 +68,7 @@ interface State {
   disableBuddies: boolean;
   loading: boolean;
   submitting: boolean;
-  saved: boolean;
+  showSavedModal: boolean;
   error: boolean;
   newDomain: string;
   domains: Domain[];
@@ -71,6 +78,10 @@ interface State {
   allowRecurringBookings: boolean;
   newUserDefaultMailNotification: boolean;
   enforceTOTP: boolean;
+  kioskSecret: string;
+  kioskModeEnabled: boolean;
+  hideReports: boolean;
+  hideStats: boolean;
 }
 
 interface Props {
@@ -95,8 +106,8 @@ class Settings extends React.Component<Props, State> {
       customLogoUrl: "",
       maxBookingsPerUser: 0,
       maxConcurrentBookingsPerUser: 0,
-      maxBookingDurationHours: 0,
-      minBookingDurationHours: 0,
+      maxBookingDuration: 0,
+      minBookingDuration: 0,
       targetUtilizationHoursPerWeek: 0,
       maxDaysInAdvance: 0,
       bookingRetentionEnabled: false,
@@ -115,7 +126,7 @@ class Settings extends React.Component<Props, State> {
       disableBuddies: false,
       loading: true,
       submitting: false,
-      saved: false,
+      showSavedModal: false,
       error: false,
       newDomain: "",
       domains: [],
@@ -125,15 +136,15 @@ class Settings extends React.Component<Props, State> {
       allowRecurringBookings: true,
       newUserDefaultMailNotification: false,
       enforceTOTP: false,
+      kioskSecret: "",
+      kioskModeEnabled: false,
+      hideReports: false,
+      hideStats: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
-    let promises = [
+    const promises = [
       this.loadSettings(),
       this.loadItems(),
       this.loadAuthProviders(),
@@ -159,32 +170,8 @@ class Settings extends React.Component<Props, State> {
   };
 
   checkUpdates = async (): Promise<void> => {
-    let self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.cloudHosted) {
-        resolve();
-        return;
-      }
-      Ajax.get("/uc/")
-        .then((res) => {
-          self.setState(
-            {
-              latestVersion: res.json,
-            },
-            () => resolve(),
-          );
-        })
-        .catch(() => {
-          console.warn("Could not check for updates.");
-          let res = { version: "", updateAvailable: false };
-          self.setState(
-            {
-              latestVersion: res,
-            },
-            () => resolve(),
-          );
-        });
-    });
+    if (RuntimeConfig.INFOS.cloudHosted) return;
+    this.setState({ latestVersion: await UpdateChecker.check() });
   };
 
   loadAuthProviders = async (): Promise<void> => {
@@ -195,7 +182,7 @@ class Settings extends React.Component<Props, State> {
 
   loadSettings = async (): Promise<void> => {
     return OrgSettings.list().then((settings) => {
-      let state: any = {};
+      const state: any = {};
       settings.forEach((s) => {
         if (s.name === "allow_any_user") state.allowAnyUser = s.value === "1";
         if (s.name === "default_timezone") state.defaultTimezone = s.value;
@@ -216,16 +203,16 @@ class Settings extends React.Component<Props, State> {
           state.enableMaxHoursBeforeDelete = window.parseInt(s.value);
         if (s.name === "max_hours_before_delete")
           state.maxHoursBeforeDelete = window.parseInt(s.value);
+        if (s.name === "daily_basis_booking")
+          state.dailyBasisBooking = s.value === "1";
         if (s.name === "max_booking_duration_hours")
-          state.maxBookingDurationHours = window.parseInt(s.value);
+          state.maxBookingDuration = window.parseInt(s.value);
         if (s.name === "min_booking_duration_hours")
-          state.minBookingDurationHours = window.parseInt(s.value);
+          state.minBookingDuration = window.parseInt(s.value);
         if (s.name === "target_utilization_hours_per_week")
           state.targetUtilizationHoursPerWeek = window.parseInt(s.value);
         if (s.name === "subject_default")
           state.subjectDefault = window.parseInt(s.value);
-        if (s.name === "daily_basis_booking")
-          state.dailyBasisBooking = s.value === "1";
         if (s.name === "no_admin_restrictions")
           state.noAdminRestrictions = s.value === "1";
         if (s.name === "show_names") state.showNames = s.value === "1";
@@ -246,18 +233,48 @@ class Settings extends React.Component<Props, State> {
         if (s.name === "new_user_default_mail_notification")
           state.newUserDefaultMailNotification = s.value === "1";
         if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
+        if (s.name === "kiosk_mode_enabled")
+          state.kioskModeEnabled = s.value === "1";
+        if (s.name === "kiosk_access_secret")
+          state.kioskSecret =
+            s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
         if (s.name === "_sys_org_signup_delete")
           state.allowOrgDelete = s.value === "1";
+        if (s.name === "hide_reports") state.hideReports = s.value === "1";
+        if (s.name === "hide_stats") state.hideStats = s.value === "1";
       });
-      if (state.dailyBasisBooking && state.maxBookingDurationHours % 24 !== 0) {
-        state.maxBookingDurationHours +=
-          24 - (state.maxBookingDurationHours % 24);
-      }
+
+      const convert = (value: number): number => {
+        return state.dailyBasisBooking ? value / 24 : value;
+      };
+      state.minBookingDuration = convert(state.minBookingDuration);
+      state.maxBookingDuration = convert(state.maxBookingDuration);
+      state.targetUtilizationHoursPerWeek = convert(
+        state.targetUtilizationHoursPerWeek,
+      );
+
       this.setState({
         ...this.state,
         ...state,
       });
     });
+  };
+
+  generateKioskSecret = () => {
+    this.setState({ kioskSecret: Validation.generatePassword(32, true) });
+  };
+
+  saveKioskSecret = (e: any) => {
+    e.preventDefault();
+    OrgSettings.setOne("kiosk_access_secret", this.state.kioskSecret)
+      .then(() => {
+        this.setState({
+          kioskSecret: RendererUtils.SECRET_PLACEHOLDER,
+        });
+      })
+      .catch(() => {
+        this.setState({ error: true });
+      });
   };
 
   loadTimezones = async (): Promise<void> => {
@@ -266,14 +283,13 @@ class Settings extends React.Component<Props, State> {
     });
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
-      saved: false,
       error: false,
     });
-    let payload = [
+    const payload = [
       new OrgSettings("allow_any_user", this.state.allowAnyUser ? "1" : "0"),
       new OrgSettings("default_timezone", this.state.defaultTimezone),
       new OrgSettings(
@@ -325,7 +341,10 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings(
         "max_booking_duration_hours",
-        this.state.maxBookingDurationHours.toString(),
+        (
+          Math.max(Math.round(this.state.maxBookingDuration), 1) *
+          (this.state.dailyBasisBooking ? 24 : 1)
+        ).toString(),
       ),
       new OrgSettings(
         "max_hours_partially_booked_enabled",
@@ -337,11 +356,17 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings(
         "min_booking_duration_hours",
-        this.state.minBookingDurationHours.toString(),
+        (
+          Math.round(this.state.minBookingDuration) *
+          (this.state.dailyBasisBooking ? 24 : 1)
+        ).toString(),
       ),
       new OrgSettings(
         "target_utilization_hours_per_week",
-        this.state.targetUtilizationHoursPerWeek.toString(),
+        (
+          Math.max(Math.round(this.state.targetUtilizationHoursPerWeek), 1) *
+          (this.state.dailyBasisBooking ? 24 : 1)
+        ).toString(),
       ),
       new OrgSettings(
         "allow_recurring_bookings",
@@ -353,29 +378,25 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings("enforce_totp", this.state.enforceTOTP ? "1" : "0"),
       new OrgSettings("subject_default", this.state.subjectDefault.toString()),
+      new OrgSettings(
+        "kiosk_mode_enabled",
+        this.state.kioskModeEnabled ? "1" : "0",
+      ),
+      new OrgSettings("hide_reports", this.state.hideReports ? "1" : "0"),
+      new OrgSettings("hide_stats", this.state.hideStats ? "1" : "0"),
     ];
-    OrgSettings.setAll(payload)
-      .then(() => {
-        RuntimeConfig.loadSettings()
-          .then(() => {
-            this.setState({
-              submitting: false,
-              saved: true,
-            });
-          })
-          .catch(() => {
-            this.setState({
-              submitting: false,
-              error: true,
-            });
-          });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
+    try {
+      await OrgSettings.setAll(payload);
+      this.setState({
+        submitting: false,
+        showSavedModal: true,
       });
+    } catch {
+      this.setState({
+        submitting: false,
+        error: true,
+      });
+    }
   };
 
   onAuthProviderSelect = (e: AuthProvider) => {
@@ -511,14 +532,15 @@ class Settings extends React.Component<Props, State> {
   };
 
   onDailyBasisBookingChange = (enabled: boolean) => {
-    let maxBookingDurationHours: number = Number(
-      this.state.maxBookingDurationHours,
-    );
-    if (enabled && maxBookingDurationHours % 24 !== 0) {
-      maxBookingDurationHours += 24 - (maxBookingDurationHours % 24);
-    }
+    const convert = (value: number): number => {
+      return enabled ? value / 24 : value * 24;
+    };
     this.setState({
-      maxBookingDurationHours: maxBookingDurationHours,
+      minBookingDuration: convert(this.state.minBookingDuration),
+      maxBookingDuration: convert(this.state.maxBookingDuration),
+      targetUtilizationHoursPerWeek: convert(
+        this.state.targetUtilizationHoursPerWeek,
+      ),
       dailyBasisBooking: enabled,
     });
   };
@@ -599,6 +621,7 @@ class Settings extends React.Component<Props, State> {
             variant="secondary"
             size="sm"
             hidden={domain.primary}
+            disabled={!domain.active}
             onClick={() => this.setPrimaryDomain(domain.domain)}
           >
             Primary
@@ -656,14 +679,13 @@ class Settings extends React.Component<Props, State> {
       );
     }
 
-    let hint = <></>;
-    if (this.state.saved) {
-      hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
-    } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
-    }
+    const hint = this.state.error ? (
+      <Alert variant="danger">{this.props.t("errorSave")}</Alert>
+    ) : (
+      <></>
+    );
 
-    let buttonSave = (
+    const buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -673,41 +695,33 @@ class Settings extends React.Component<Props, State> {
         <IconSave className="feather" /> {this.props.t("save")}
       </Button>
     );
+
     let updateHint = (
       <span className="form-control-plaintext">
         {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
       </span>
     );
-    const domain = window.location.host.split(":").shift();
-    if (
-      this.state.latestVersion &&
-      !(
-        domain?.endsWith(".seatsurfing.app") ||
-        domain?.endsWith(".seatsurfing.io")
-      )
-    ) {
-      if (this.state.latestVersion.updateAvailable) {
-        updateHint = (
-          <span className="form-control-plaintext">
-            {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
-            &nbsp; (
-            <a
-              href="https://github.com/seatsurfing/seatsurfing/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              upgrade to {this.state.latestVersion.version}
-            </a>
-            )
-          </span>
-        );
-      } else {
-        updateHint = (
-          <span className="form-control-plaintext">
-            {process.env.NEXT_PUBLIC_PRODUCT_VERSION} (up to date)
-          </span>
-        );
-      }
+    if (this.state.latestVersion?.updateAvailable) {
+      updateHint = (
+        <span className="form-control-plaintext">
+          {process.env.NEXT_PUBLIC_PRODUCT_VERSION}
+          &nbsp;(
+          <a
+            href="https://github.com/seatsurfing/seatsurfing/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            upgrade to {this.state.latestVersion.version}
+          </a>
+          )
+        </span>
+      );
+    } else if (this.state.latestVersion) {
+      updateHint = (
+        <span className="form-control-plaintext">
+          {process.env.NEXT_PUBLIC_PRODUCT_VERSION} (up to date)
+        </span>
+      );
     }
 
     return (
@@ -720,7 +734,11 @@ class Settings extends React.Component<Props, State> {
             </Form.Label>
             <Col sm="4">
               <p className="form-control-plaintext">
-                {this.org?.name} ({this.org?.language})
+                {this.org?.name} (
+                {this.org?.language
+                  ? this.props.t("language-" + this.org.language)
+                  : "—"}
+                )
                 <br />
                 {this.org?.contactFirstname} {this.org?.contactLastname} (
                 {this.org?.contactEmail})
@@ -751,9 +769,9 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("customLogoUrl")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
+              <UrlInput
                 id="input-customLogoUrl"
-                type="url"
+                placeholder="https://…"
                 value={this.state.customLogoUrl}
                 onChange={(e: any) =>
                   this.setState({ customLogoUrl: e.target.value })
@@ -952,42 +970,50 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-maxBookingDurationHours">
-              {this.props.t("maxBookingDurationHours")}
+            <Form.Label column sm="2" htmlFor="input-minBookingDuration">
+              {this.props.t("minBookingDuration")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
-                  id="input-maxBookingDurationHours"
+                  id="input-minBookingDuration"
                   type="number"
-                  value={this.state.maxBookingDurationHours}
+                  value={Math.round(this.state.minBookingDuration)}
                   onChange={(e: any) =>
-                    this.setState({ maxBookingDurationHours: e.target.value })
+                    this.setState({ minBookingDuration: e.target.value })
                   }
                   min="0"
                   max="9999"
                 />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                <InputGroup.Text>
+                  {this.state.dailyBasisBooking
+                    ? this.props.t("days")
+                    : this.props.t("hours")}
+                </InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-minBookingDurationHours">
-              {this.props.t("minBookingDurationHours")}
+            <Form.Label column sm="2" htmlFor="input-maxBookingDuration">
+              {this.props.t("maxBookingDuration")}
             </Form.Label>
             <Col sm="4">
               <InputGroup>
                 <Form.Control
-                  id="input-minBookingDurationHours"
+                  id="input-maxBookingDuration"
                   type="number"
-                  value={this.state.minBookingDurationHours}
+                  value={Math.max(Math.round(this.state.maxBookingDuration), 1)}
                   onChange={(e: any) =>
-                    this.setState({ minBookingDurationHours: e.target.value })
+                    this.setState({ maxBookingDuration: e.target.value })
                   }
                   min="0"
                   max="9999"
                 />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                <InputGroup.Text>
+                  {this.state.dailyBasisBooking
+                    ? this.props.t("days")
+                    : this.props.t("hours")}
+                </InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>
@@ -1004,7 +1030,10 @@ class Settings extends React.Component<Props, State> {
                 <Form.Control
                   id="input-targetUtilizationHoursPerWeek"
                   type="number"
-                  value={this.state.targetUtilizationHoursPerWeek}
+                  value={Math.max(
+                    Math.round(this.state.targetUtilizationHoursPerWeek),
+                    1,
+                  )}
                   onChange={(e: any) =>
                     this.setState({
                       targetUtilizationHoursPerWeek: e.target.value,
@@ -1013,7 +1042,11 @@ class Settings extends React.Component<Props, State> {
                   min="0"
                   max="168"
                 />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                <InputGroup.Text>
+                  {this.state.dailyBasisBooking
+                    ? this.props.t("days")
+                    : this.props.t("hours")}
+                </InputGroup.Text>
               </InputGroup>
             </Col>
           </Form.Group>
@@ -1170,7 +1203,108 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("authProviders")}</h4>
+            <h4>{this.props.t("reportSettings")}</h4>
+          </div>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-hideReports"
+                label={this.props.t("hideReports")}
+                checked={this.state.hideReports}
+                onChange={(e: any) =>
+                  this.setState({ hideReports: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-hideStats"
+                label={this.props.t("hideStats")}
+                checked={this.state.hideStats}
+                onChange={(e: any) =>
+                  this.setState({ hideStats: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>
+              {this.props.t("kioskMode")}
+              <PremiumFeatureIcon />
+            </h4>
+          </div>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-kioskModeEnabled"
+                label={this.props.t("kioskModeAvailable")}
+                checked={
+                  this.state.kioskModeEnabled &&
+                  RuntimeConfig.INFOS.featureKioskMode
+                }
+                disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                onChange={(e: any) =>
+                  this.setState({ kioskModeEnabled: e.target.checked })
+                }
+              />
+              <Form.Text className="text-muted">
+                {this.props.t("kioskModeAvailableHint")}
+              </Form.Text>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="input-kioskSecret">
+              {this.props.t("kioskSecret")}
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <Form.Control
+                  id="input-kioskSecret"
+                  type="text"
+                  value={this.state.kioskSecret}
+                  disabled={true}
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.generateKioskSecret}
+                  title={this.props.t("generatePassword")}
+                  disabled={!RuntimeConfig.INFOS.featureKioskMode}
+                >
+                  <IconRefresh className="feather" />
+                </Button>
+                <CopyToClipboardButton
+                  text={this.state.kioskSecret}
+                  disabled={
+                    !this.state.kioskSecret ||
+                    this.state.kioskSecret === RendererUtils.SECRET_PLACEHOLDER
+                  }
+                />
+              </InputGroup>
+            </Col>
+            <Col sm="2">
+              <Button
+                variant="outline-secondary"
+                onClick={this.saveKioskSecret}
+                disabled={
+                  !RuntimeConfig.INFOS.featureKioskMode ||
+                  !this.state.kioskSecret ||
+                  this.state.kioskSecret === RendererUtils.SECRET_PLACEHOLDER
+                }
+              >
+                {this.props.t("save")}
+              </Button>
+            </Col>
+          </Form.Group>
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>
+              {this.props.t("authProviders")}
+              <PremiumFeatureIcon />
+            </h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
                 <Link
@@ -1205,6 +1339,29 @@ class Settings extends React.Component<Props, State> {
           {authProviderTable}
           {dangerZone}
         </Form>
+        <Modal
+          show={this.state.showSavedModal}
+          onHide={() => {
+            window.location.reload();
+          }}
+          backdrop="static"
+          keyboard={false}
+        >
+          <Modal.Header>
+            <Modal.Title>{this.props.t("settings")}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{this.props.t("entryUpdatedReloadRequired")}</Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="primary"
+              onClick={() => {
+                window.location.reload();
+              }}
+            >
+              {this.props.t("reload")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </FullLayout>
     );
   }
