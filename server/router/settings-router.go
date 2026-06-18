@@ -12,7 +12,6 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -184,8 +183,8 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	res = append(res, router.getSysSettingVersion())
 	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
 	res = append(res, router.getSysSettingDisablePasswordLogin())
-	for _, plg := range plugin.GetPlugins() {
-		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
+	for _, plg := range GetPlugins() {
+		plgSettings := plg.GetPublicSettings(user.OrganizationID)
 		for _, setting := range plgSettings {
 			res = append(res, &GetSettingsResponse{
 				Name:  setting.Name,
@@ -524,8 +523,8 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 
 func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *GetSettingsResponse {
 	res := []SettingsRouterWelcomeScreen{}
-	for _, plg := range plugin.GetPlugins() {
-		ws := (*plg).GetAdminWelcomeScreen()
+	for _, plg := range GetPlugins() {
+		ws := plg.GetAdminWelcomeScreen()
 		if ws != nil {
 			skip := false
 			for _, setting := range settings {
@@ -555,8 +554,8 @@ func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *Ge
 
 func (router *SettingsRouter) getAdminMenuItems() *GetSettingsResponse {
 	res := []SettingsRouterAdminMenuItem{}
-	for _, plg := range plugin.GetPlugins() {
-		for _, item := range (*plg).GetAdminUIMenuItems() {
+	for _, plg := range GetPlugins() {
+		for _, item := range plg.GetAdminUIMenuItems() {
 			resItem := SettingsRouterAdminMenuItem{
 				ID:         item.ID,
 				Title:      item.Title,

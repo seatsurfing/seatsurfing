@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -183,8 +183,8 @@ func (r *OrganizationRepository) Create(e *Organization) error {
 	}
 	e.ID = id
 	GetSettingsRepository().InitDefaultSettingsForOrg(e.ID)
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnOrganizationCreated(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnOrganizationCreated(e.ID)
 	}
 	return nil
 }
@@ -308,15 +308,15 @@ func (r *OrganizationRepository) Update(e *Organization) error {
 	if err != nil {
 		return err
 	}
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnOrganizationUpdated(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnOrganizationUpdated(e.ID)
 	}
 	return nil
 }
 
 func (r *OrganizationRepository) Delete(e *Organization) error {
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnBeforeOrganizationDelete(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnBeforeOrganizationDelete(e.ID)
 	}
 	if err := GetAuthProviderRepository().DeleteAll(e.ID); err != nil {
 		return err

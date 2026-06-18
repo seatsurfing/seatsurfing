@@ -6,15 +6,31 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
+type PluginHTTPRequest struct {
+	Method   string
+	Path     string
+	RawQuery string
+	Headers  map[string][]string
+	Body     []byte
+	UserID   string
+}
+
+type PluginHTTPResponse struct {
+	StatusCode int
+	Headers    map[string][]string
+	Body       []byte
+}
+
 type SeatsurfingPlugin interface {
-	GetPublicRoutes() map[string]Route
+	GetRoutePrefix() []string
 	GetUnauthorizedRoutes() []string
-	GetRepositories() []Repository
+	RunSchemaUpdates()
 	GetAdminUIMenuItems() []AdminUIMenuItem
 	OnTimer()
-	OnInit()
+	OnInit(hostAPIBrokerID uint32)
 	GetAdminWelcomeScreen() *AdminWelcomeScreen
 	GetPublicSettings(organizationID string) []*PluginSetting
+	HandleHTTPRequest(req PluginHTTPRequest) PluginHTTPResponse
 	OnUserCreated(userID string)
 	OnUserUpdated(userID string)
 	OnBeforeUserDelete(userID string)
@@ -56,39 +72,35 @@ const (
 )
 
 type PluginRPC struct {
-	client *rpc.Client
+	Client *rpc.Client
+	Broker *plugin.MuxBroker
 }
 
-func (p *PluginRPC) GetPublicRoutes() map[string]Route {
-	var resp map[string]Route
-	err := p.client.Call("Plugin.GetPublicRoutes", new(interface{}), &resp)
-	if err != nil {
-		return make(map[string]Route)
-	}
-	return resp
-}
-
-func (p *PluginRPC) GetUnauthorizedRoutes() []string {
+func (p *PluginRPC) GetRoutePrefix() []string {
 	var resp []string
-	err := p.client.Call("Plugin.GetUnauthorizedRoutes", new(interface{}), &resp)
+	err := p.Client.Call("Plugin.GetRoutePrefix", new(any), &resp)
 	if err != nil {
 		return []string{}
 	}
 	return resp
 }
 
-func (p *PluginRPC) GetRepositories() []Repository {
-	var resp []Repository
-	err := p.client.Call("Plugin.GetRepositories", new(interface{}), &resp)
+func (p *PluginRPC) GetUnauthorizedRoutes() []string {
+	var resp []string
+	err := p.Client.Call("Plugin.GetUnauthorizedRoutes", new(any), &resp)
 	if err != nil {
-		return []Repository{}
+		return []string{}
 	}
 	return resp
 }
 
+func (p *PluginRPC) RunSchemaUpdates() {
+	p.Client.Call("Plugin.RunSchemaUpdates", new(any), new(any))
+}
+
 func (p *PluginRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 	var resp []AdminUIMenuItem
-	err := p.client.Call("Plugin.GetAdminUIMenuItems", new(interface{}), &resp)
+	err := p.Client.Call("Plugin.GetAdminUIMenuItems", new(any), &resp)
 	if err != nil {
 		return []AdminUIMenuItem{}
 	}
@@ -96,16 +108,16 @@ func (p *PluginRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 }
 
 func (p *PluginRPC) OnTimer() {
-	p.client.Call("Plugin.OnTimer", new(interface{}), new(interface{}))
+	p.Client.Call("Plugin.OnTimer", new(any), new(any))
 }
 
-func (p *PluginRPC) OnInit() {
-	p.client.Call("Plugin.OnInit", new(interface{}), new(interface{}))
+func (p *PluginRPC) OnInit(brokerID uint32) {
+	p.Client.Call("Plugin.OnInit", brokerID, new(any))
 }
 
 func (p *PluginRPC) GetAdminWelcomeScreen() *AdminWelcomeScreen {
 	var resp AdminWelcomeScreen
-	err := p.client.Call("Plugin.GetAdminWelcomeScreen", new(interface{}), &resp)
+	err := p.Client.Call("Plugin.GetAdminWelcomeScreen", new(any), &resp)
 	if err != nil {
 		return nil
 	}
@@ -114,84 +126,96 @@ func (p *PluginRPC) GetAdminWelcomeScreen() *AdminWelcomeScreen {
 
 func (p *PluginRPC) GetPublicSettings(organizationID string) []*PluginSetting {
 	var resp []*PluginSetting
-	err := p.client.Call("Plugin.GetPublicSettings", organizationID, &resp)
+	err := p.Client.Call("Plugin.GetPublicSettings", organizationID, &resp)
 	if err != nil {
 		return []*PluginSetting{}
 	}
 	return resp
 }
 
+func (p *PluginRPC) HandleHTTPRequest(req PluginHTTPRequest) PluginHTTPResponse {
+	var resp PluginHTTPResponse
+	p.Client.Call("Plugin.HandleHTTPRequest", req, &resp)
+	return resp
+}
+
 func (p *PluginRPC) OnUserCreated(userID string) {
-	p.client.Call("Plugin.OnUserCreated", userID, new(interface{}))
+	p.Client.Call("Plugin.OnUserCreated", userID, new(any))
 }
 
 func (p *PluginRPC) OnUserUpdated(userID string) {
-	p.client.Call("Plugin.OnUserUpdated", userID, new(interface{}))
+	p.Client.Call("Plugin.OnUserUpdated", userID, new(any))
 }
 
 func (p *PluginRPC) OnBeforeUserDelete(userID string) {
-	p.client.Call("Plugin.OnBeforeUserDelete", userID, new(interface{}))
+	p.Client.Call("Plugin.OnBeforeUserDelete", userID, new(any))
 }
 
 func (p *PluginRPC) OnOrganizationCreated(organizationID string) {
-	p.client.Call("Plugin.OnOrganizationCreated", organizationID, new(interface{}))
+	p.Client.Call("Plugin.OnOrganizationCreated", organizationID, new(any))
 }
 
 func (p *PluginRPC) OnOrganizationUpdated(organizationID string) {
-	p.client.Call("Plugin.OnOrganizationUpdated", organizationID, new(interface{}))
+	p.Client.Call("Plugin.OnOrganizationUpdated", organizationID, new(any))
 }
 
 func (p *PluginRPC) OnBeforeOrganizationDelete(organizationID string) {
-	p.client.Call("Plugin.OnBeforeOrganizationDelete", organizationID, new(interface{}))
+	p.Client.Call("Plugin.OnBeforeOrganizationDelete", organizationID, new(any))
 }
 
 func (p *PluginRPC) OnBookingCreated(bookingID string) {
-	p.client.Call("Plugin.OnBookingCreated", bookingID, new(interface{}))
+	p.Client.Call("Plugin.OnBookingCreated", bookingID, new(any))
 }
 
 func (p *PluginRPC) OnBookingUpdated(bookingID string) {
-	p.client.Call("Plugin.OnBookingUpdated", bookingID, new(interface{}))
+	p.Client.Call("Plugin.OnBookingUpdated", bookingID, new(any))
 }
 
 func (p *PluginRPC) OnBookingDeleted(bookingID string) {
-	p.client.Call("Plugin.OnBookingDeleted", bookingID, new(interface{}))
+	p.Client.Call("Plugin.OnBookingDeleted", bookingID, new(any))
 }
 
 type PluginRPCServer struct {
-	Impl SeatsurfingPlugin
+	Impl   SeatsurfingPlugin
+	Broker *plugin.MuxBroker
 }
 
-func (s *PluginRPCServer) GetPublicRoutes(args interface{}, resp *map[string]Route) error {
-	*resp = s.Impl.GetPublicRoutes()
+func (s *PluginRPCServer) GetRoutePrefix(args any, resp *[]string) error {
+	*resp = s.Impl.GetRoutePrefix()
 	return nil
 }
 
-func (s *PluginRPCServer) GetUnauthorizedRoutes(args interface{}, resp *[]string) error {
+func (s *PluginRPCServer) GetUnauthorizedRoutes(args any, resp *[]string) error {
 	*resp = s.Impl.GetUnauthorizedRoutes()
 	return nil
 }
 
-func (s *PluginRPCServer) GetRepositories(args interface{}, resp *[]Repository) error {
-	*resp = s.Impl.GetRepositories()
+func (s *PluginRPCServer) RunSchemaUpdates(args any, resp *any) error {
+	s.Impl.RunSchemaUpdates()
 	return nil
 }
 
-func (s *PluginRPCServer) GetAdminUIMenuItems(args interface{}, resp *[]AdminUIMenuItem) error {
+func (s *PluginRPCServer) GetAdminUIMenuItems(args any, resp *[]AdminUIMenuItem) error {
 	*resp = s.Impl.GetAdminUIMenuItems()
 	return nil
 }
 
-func (s *PluginRPCServer) OnTimer(args interface{}, resp *interface{}) error {
+func (s *PluginRPCServer) OnTimer(args any, resp *any) error {
 	s.Impl.OnTimer()
 	return nil
 }
 
-func (s *PluginRPCServer) OnInit(args interface{}, resp *interface{}) error {
-	s.Impl.OnInit()
+// PluginSideBroker is set in the plugin process when Server() is called.
+// The plugin binary can read this to Dial the host's HostAPI broker stream.
+var PluginSideBroker *plugin.MuxBroker
+
+func (s *PluginRPCServer) OnInit(brokerID uint32, resp *any) error {
+	PluginSideBroker = s.Broker
+	s.Impl.OnInit(brokerID)
 	return nil
 }
 
-func (s *PluginRPCServer) GetAdminWelcomeScreen(args interface{}, resp *AdminWelcomeScreen) error {
+func (s *PluginRPCServer) GetAdminWelcomeScreen(args any, resp *AdminWelcomeScreen) error {
 	result := s.Impl.GetAdminWelcomeScreen()
 	if result != nil {
 		*resp = *result
@@ -204,47 +228,52 @@ func (s *PluginRPCServer) GetPublicSettings(organizationID string, resp *[]*Plug
 	return nil
 }
 
-func (s *PluginRPCServer) OnUserCreated(userID string, resp *interface{}) error {
+func (s *PluginRPCServer) HandleHTTPRequest(req PluginHTTPRequest, resp *PluginHTTPResponse) error {
+	*resp = s.Impl.HandleHTTPRequest(req)
+	return nil
+}
+
+func (s *PluginRPCServer) OnUserCreated(userID string, resp *any) error {
 	s.Impl.OnUserCreated(userID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnUserUpdated(userID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnUserUpdated(userID string, resp *any) error {
 	s.Impl.OnUserUpdated(userID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnBeforeUserDelete(userID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnBeforeUserDelete(userID string, resp *any) error {
 	s.Impl.OnBeforeUserDelete(userID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnOrganizationCreated(organizationID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnOrganizationCreated(organizationID string, resp *any) error {
 	s.Impl.OnOrganizationCreated(organizationID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnOrganizationUpdated(organizationID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnOrganizationUpdated(organizationID string, resp *any) error {
 	s.Impl.OnOrganizationUpdated(organizationID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnBeforeOrganizationDelete(organizationID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnBeforeOrganizationDelete(organizationID string, resp *any) error {
 	s.Impl.OnBeforeOrganizationDelete(organizationID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnBookingCreated(bookingID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnBookingCreated(bookingID string, resp *any) error {
 	s.Impl.OnBookingCreated(bookingID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnBookingUpdated(bookingID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnBookingUpdated(bookingID string, resp *any) error {
 	s.Impl.OnBookingUpdated(bookingID)
 	return nil
 }
 
-func (s *PluginRPCServer) OnBookingDeleted(bookingID string, resp *interface{}) error {
+func (s *PluginRPCServer) OnBookingDeleted(bookingID string, resp *any) error {
 	s.Impl.OnBookingDeleted(bookingID)
 	return nil
 }
@@ -253,10 +282,10 @@ type SeatsurfingPluginImpl struct {
 	Impl SeatsurfingPlugin
 }
 
-func (p *SeatsurfingPluginImpl) Server(*plugin.MuxBroker) (interface{}, error) {
-	return &PluginRPCServer{Impl: p.Impl}, nil
+func (p *SeatsurfingPluginImpl) Server(b *plugin.MuxBroker) (any, error) {
+	return &PluginRPCServer{Impl: p.Impl, Broker: b}, nil
 }
 
-func (SeatsurfingPluginImpl) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}, error) {
-	return &PluginRPC{client: c}, nil
+func (SeatsurfingPluginImpl) Client(b *plugin.MuxBroker, c *rpc.Client) (any, error) {
+	return &PluginRPC{Client: c, Broker: b}, nil
 }

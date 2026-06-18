@@ -23,7 +23,7 @@ import (
 	goPlugin "github.com/hashicorp/go-plugin"
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
+	"github.com/seatsurfing/seatsurfing/server/pluginapi"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -67,7 +67,7 @@ func (a *App) InitializeDatabases() {
 	})
 }
 
-func (a *App) InitializePlugins2() {
+func (a *App) InitializePlugins() {
 	files, err := os.ReadDir(filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath))
 	if err != nil {
 		return
@@ -79,13 +79,13 @@ func (a *App) InitializePlugins2() {
 			continue
 		}
 		if !f.IsDir() && info.Mode()&0100 != 0 {
-			a.loadPlugin2(f)
+			a.loadPlugin(f)
 		}
 	}
 
 }
 
-func (a *App) loadPlugin2(f os.DirEntry) {
+func (a *App) loadPlugin(f os.DirEntry) {
 	handshakeConfig := goPlugin.HandshakeConfig{
 		ProtocolVersion:  1,
 		MagicCookieKey:   "SEATSURFING_PLUGIN",
@@ -94,7 +94,6 @@ func (a *App) loadPlugin2(f os.DirEntry) {
 	var pluginMap = map[string]goPlugin.Plugin{
 		"seatsurfing": &SeatsurfingPluginImpl{},
 	}
-	//cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, "subscription")
 	log.Println("Loading plugin", f.Name())
 	cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name())
 	client := goPlugin.NewClient(&goPlugin.ClientConfig{
@@ -102,7 +101,6 @@ func (a *App) loadPlugin2(f os.DirEntry) {
 		Plugins:         pluginMap,
 		Cmd:             exec.Command(cmd),
 	})
-	//defer client.Kill()
 	rpcClient, err := client.Client()
 	if err != nil {
 		log.Println("Error initializing plugin client:", err)
@@ -115,12 +113,23 @@ func (a *App) loadPlugin2(f os.DirEntry) {
 		client.Kill()
 		return
 	}
-	plg, ok := raw.(SeatsurfingPlugin)
+	pluginRPC, ok := raw.(*PluginRPC)
 	if !ok {
-		log.Println("Error asserting plugin type")
+		log.Println("Error asserting PluginRPC type")
 		client.Kill()
 		return
 	}
+	plg := SeatsurfingPlugin(pluginRPC)
+
+	// Start HostAPI server on a dedicated broker stream so the plugin can call back.
+	brokerID := pluginRPC.Broker.NextId()
+	go pluginRPC.Broker.AcceptAndServe(brokerID, pluginapi.NewHostAPIRPCServer(&hostAPIImpl{}))
+
+	RegisterPlugin(plg)
+	AddUnauthorizedRoutes(plg.GetUnauthorizedRoutes())
+	plg.RunSchemaUpdates()
+	plg.OnInit(brokerID)
+
 	instance := &PluginInstance{
 		Instance: plg,
 		Client:   client,
@@ -128,7 +137,88 @@ func (a *App) loadPlugin2(f os.DirEntry) {
 	a.PluginInstances = append(a.PluginInstances, instance)
 }
 
-func (a *App) KillPlugins2() {
+// hostAPIImpl is the host-side implementation of pluginapi.HostAPI.
+// It wraps the real repository singletons and utility functions.
+type hostAPIImpl struct{}
+
+func (h *hostAPIImpl) GetSettingsRepository() pluginapi.SettingsRepository {
+	return GetSettingsRepository()
+}
+func (h *hostAPIImpl) GetUserRepository() pluginapi.UserRepository {
+	return GetUserRepository()
+}
+func (h *hostAPIImpl) GetOrganizationRepository() pluginapi.OrganizationRepository {
+	return GetOrganizationRepository()
+}
+func (h *hostAPIImpl) GetGroupRepository() pluginapi.GroupRepository {
+	return GetGroupRepository()
+}
+func (h *hostAPIImpl) GetBookingRepository() pluginapi.BookingRepository {
+	return GetBookingRepository()
+}
+func (h *hostAPIImpl) GetSpaceRepository() pluginapi.SpaceRepository {
+	return GetSpaceRepository()
+}
+func (h *hostAPIImpl) GetLocationRepository() pluginapi.LocationRepository {
+	return GetLocationRepository()
+}
+func (h *hostAPIImpl) GetAuthProviderRepository() pluginapi.AuthProviderRepository {
+	return GetAuthProviderRepository()
+}
+func (h *hostAPIImpl) GetAuthStateRepository() pluginapi.AuthStateRepository {
+	return GetAuthStateRepository()
+}
+func (h *hostAPIImpl) SendEmail(recipient, subject, body, language, orgID string) error {
+	return SendEmailWithBodyAndOrg(&MailAddress{Address: recipient}, subject, body, language, orgID)
+}
+func (h *hostAPIImpl) Encrypt(plaintext string) (string, error) {
+	return EncryptString(plaintext)
+}
+func (h *hostAPIImpl) Decrypt(ciphertext string) (string, error) {
+	return DecryptString(ciphertext)
+}
+func (h *hostAPIImpl) IsValidLanguageCode(code string) bool {
+	return GetConfig().IsValidLanguageCode(code)
+}
+func (h *hostAPIImpl) DisablePasswordLogin() bool {
+	return GetConfig().DisablePasswordLogin
+}
+
+func (a *App) forwardToPlugin(plg SeatsurfingPlugin, w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	userID := ""
+	if u := GetRequestUser(r); u != nil {
+		userID = u.ID
+	}
+
+	req := PluginHTTPRequest{
+		Method:   r.Method,
+		Path:     r.URL.Path,
+		RawQuery: r.URL.RawQuery,
+		Headers:  map[string][]string(r.Header),
+		Body:     body,
+		UserID:   userID,
+	}
+
+	resp := plg.HandleHTTPRequest(req)
+
+	for key, vals := range resp.Headers {
+		for _, v := range vals {
+			w.Header().Add(key, v)
+		}
+	}
+	if resp.StatusCode != 0 {
+		w.WriteHeader(resp.StatusCode)
+	}
+	w.Write(resp.Body)
+}
+
+func (a *App) KillPlugins() {
 	log.Println("Killing plugins …")
 	for _, plg := range a.PluginInstances {
 		log.Println("Killing plugin", plg.Instance)
@@ -136,11 +226,6 @@ func (a *App) KillPlugins2() {
 	}
 }
 
-func (a *App) InitializePlugins() {
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnInit()
-	}
-}
 
 type notFoundResponseWriter struct {
 	http.ResponseWriter
@@ -210,9 +295,14 @@ func (a *App) InitializeRouter() {
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}
-	for _, plg := range plugin.GetPlugins() {
-		for route, router := range (*plg).GetPublicRoutes() {
-			routers[route] = router
+	for _, inst := range a.PluginInstances {
+		for _, prefix := range inst.Instance.GetRoutePrefix() {
+			prefix := prefix
+			inst := inst
+			subRouter := a.Router.PathPrefix(prefix).Subrouter()
+			subRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				a.forwardToPlugin(inst.Instance, w, r)
+			})
 		}
 	}
 	for route, router := range routers {
@@ -342,8 +432,8 @@ func (a *App) onTimerTick() {
 		log.Printf("Purged %d old bookings", num)
 	}
 
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnTimer()
+	for _, inst := range a.PluginInstances {
+		inst.Instance.OnTimer()
 	}
 	// Check domain accessibility once per hour
 	if time.Now().Minute() == 0 {
@@ -545,5 +635,5 @@ func (a *App) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	a.PublicHttpServer.Shutdown(ctx)
-	a.KillPlugins2()
+	a.KillPlugins()
 }

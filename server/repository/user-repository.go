@@ -11,7 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -199,8 +198,8 @@ func (r *UserRepository) Create(e *User) error {
 		GetUserPreferencesRepository().Set(e.ID, PreferenceMailNotifications.Name, "1")
 	}
 
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnUserCreated(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnUserCreated(e.ID)
 	}
 	return nil
 }
@@ -435,15 +434,15 @@ func (r *UserRepository) Update(e *User) error {
 	if err != nil {
 		return err
 	}
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnUserUpdated(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnUserUpdated(e.ID)
 	}
 	return nil
 }
 
 func (r *UserRepository) Delete(e *User) error {
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnBeforeUserDelete(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnBeforeUserDelete(e.ID)
 	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
 		"bookings.user_id = $1", e.ID); err != nil {

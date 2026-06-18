@@ -449,6 +449,13 @@ func GetRequestSessionID(r *http.Request) string {
 	return sessionID.(string)
 }
 
+// SetRequestUserID injects a user ID into the context so GetRequestUser can retrieve it.
+// Used by plugin HTTP dispatchers that receive the user ID via RPC.
+func SetRequestUserID(r *http.Request, userID string) *http.Request {
+	ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
+	return r.WithContext(ctx)
+}
+
 func GetRequestUserID(r *http.Request) string {
 	userID := r.Context().Value(contextKeyUserID)
 	if userID == nil {
