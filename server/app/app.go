@@ -324,7 +324,11 @@ func (a *App) sendBookingReminderEmail(e *BookingDetails) {
 		"spaceName":     e.Space.Name,
 		"subject":       subject,
 	}
-	if err := SendEmailWithOrg(&MailAddress{Address: e.UserEmail}, GetEmailTemplatePathBookingReminder(), org.Language, vars, org.ID); err != nil {
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	if err := SendEmailWithOrg(&MailAddress{Address: e.UserEmail}, GetEmailTemplatePathBookingReminder(), language, vars, org.ID); err != nil {
 		log.Println(err)
 		return
 	}
