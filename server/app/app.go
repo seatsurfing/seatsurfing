@@ -262,7 +262,9 @@ func (a *App) onTimerTick() {
 	}
 
 	// send booking reminder emails (~24h before booking start)
-	go a.sendBookingReminders()
+	if time.Now().Minute()%5 == 0 {
+		go a.sendBookingReminders()
+	}
 
 	for _, plg := range plugin.GetPlugins() {
 		(*plg).OnTimer()
@@ -278,7 +280,7 @@ func (a *App) onTimerTick() {
 }
 
 func (a *App) sendBookingReminders() {
-	bookings, err := GetBookingRepository().GetBookingsDueForReminder(100)
+	bookings, err := GetBookingRepository().GetBookingsDueForReminder(25)
 	if err != nil {
 		log.Println(err)
 		return
