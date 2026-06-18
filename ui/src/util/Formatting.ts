@@ -117,7 +117,7 @@ export default class Formatting {
   }
 
   static stripTimezoneDetails(s: string): string {
-    const match = s.match(/^(.*?)([+-]\d{2}:\d{2})$/);
+    const match = s.match(/^(.+?)([+-]\d{2}:\d{2})$/);
     if (!match) {
       return s;
     }
