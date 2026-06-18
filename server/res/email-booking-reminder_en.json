@@ -15,7 +15,7 @@
     }
   ],
   "finalInfo": {
-    "text": "Don't want to receive booking information by e-mail anymore? Disable it in the Seatsurfing interface under {{link}}.",
+    "text": "Don't want to receive booking reminders by e-mail anymore? Disable them in the Seatsurfing interface under {{link}}.",
     "label": "Preferences",
     "url": "{{orgDomain}}ui/preferences/"
   }
