@@ -439,9 +439,10 @@ func (r *BookingRepository) GetBookingsDueForReminder(batchSize int) ([]*Booking
 		"INNER JOIN users ON bookings.user_id = users.id " +
 		"WHERE bookings.reminder_sent_at_utc IS NULL " +
 		"AND bookings.approved = true " +
-		"AND bookings.enter_time > NOW() + INTERVAL '20 hours' " +
-		"AND bookings.enter_time <= NOW() + INTERVAL '25 hours' " +
-		"AND (bookings.last_info_mail_sent_at_utc IS NULL OR bookings.last_info_mail_sent_at_utc < NOW() - INTERVAL '24 hours') " +
+		"AND bookings.enter_time > (NOW() AT TIME ZONE 'UTC') + INTERVAL '20 hours' " +
+		"AND bookings.enter_time <= (NOW() AT TIME ZONE 'UTC') + INTERVAL '25 hours' " +
+		"AND (bookings.last_info_mail_sent_at_utc IS NULL OR bookings.last_info_mail_sent_at_utc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '24 hours') " +
+		"ORDER BY bookings.enter_time ASC " +
 		"LIMIT $1",
 		batchSize)
 	if err != nil {
