@@ -15,7 +15,7 @@
     }
   ],
   "finalInfo": {
-    "text": "Möchtest du keine Buchungsinformationen mehr per E-Mail erhalten? Deaktiviere diese in der Seatsurfing-Oberfläche unter {{link}}.",
+    "text": "Möchtest du keine Buchungserinnerungen mehr per E-Mail erhalten? Deaktiviere diese in der Seatsurfing-Oberfläche unter {{link}}.",
     "label": "Einstellungen",
     "url": "{{orgDomain}}ui/preferences/"
   }
