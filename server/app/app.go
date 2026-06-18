@@ -262,6 +262,7 @@ func (a *App) onTimerTick() {
 	}
 
 	// send booking reminder emails (~24h before booking start)
+	// run every 5 minutes to not cause overlapping runs
 	if time.Now().Minute()%5 == 0 {
 		go a.sendBookingReminders()
 	}
