@@ -467,6 +467,9 @@ func GetRequestUserID(r *http.Request) string {
 
 func GetRequestUser(r *http.Request) *User {
 	ID := GetRequestUserID(r)
+	if ID == "" {
+		return nil
+	}
 	user, err := GetUserRepository().GetOne(ID)
 	if err != nil {
 		log.Println(err)
