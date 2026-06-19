@@ -34,12 +34,16 @@ jobs:
       - name: Install server dependencies
         working-directory: ./server
         run: go get -v ./...
+      - name: Build server
+        working-directory: ./server
+        run: go build -o ./seatsurfing .
       - uses: JarvusInnovations/background-action@v1
         name: Run server in background
         with:
           working-directory: ./server
-          run: STATIC_UI_PATH=../ui/build PUBLIC_SCHEME=http PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable CRYPT_KEY=rC8REJftxMcdhzTvu9Tk6RqgygBRctZC go run `ls *.go | grep -v _test.go`
+          run: STATIC_UI_PATH=../ui/build PUBLIC_SCHEME=http PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable CRYPT_KEY=rC8REJftxMcdhzTvu9Tk6RqgygBRctZC ./seatsurfing
           wait-on: http-get://localhost:8080/auth/singleorg
+          wait-for: 60s
 
       - name: Install dependencies
         working-directory: ./e2e
