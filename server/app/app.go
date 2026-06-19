@@ -54,6 +54,9 @@ type App struct {
 
 func (a *App) InitializeDatabases() {
 	RunDBSchemaUpdates()
+	for _, inst := range a.PluginInstances {
+		inst.Instance.RunSchemaUpdates()
+	}
 	InitDefaultOrgSettings()
 	InitDefaultUserPreferences()
 	// Set up email logging callback
@@ -184,10 +187,14 @@ func (h *hostAPIImpl) DisablePasswordLogin() bool {
 }
 
 func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "error reading request body", http.StatusInternalServerError)
-		return
+	var body []byte
+	if r.Body != nil {
+		var err error
+		body, err = io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "error reading request body", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	userID := ""
