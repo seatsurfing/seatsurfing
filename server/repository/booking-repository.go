@@ -14,28 +14,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
-type BookingRepository struct {
-}
-
-type Booking struct {
-	ID           string
-	UserID       string
-	SpaceID      string
-	Enter        time.Time
-	Leave        time.Time
-	CalDavID     string
-	Approved     bool
-	Subject      string
-	RecurringID  NullUUID
-	CreatedAtUTC *time.Time
-}
-
-type BookingDetails struct {
-	Space         SpaceDetails
-	UserEmail     string
-	UserFirstname string
-	UserLastname  string
-	Booking
+type BookingStore struct {
 }
 
 type BookingPresenceItem struct {
@@ -43,12 +22,12 @@ type BookingPresenceItem struct {
 	Presence map[string]int
 }
 
-var bookingRepository *BookingRepository
+var bookingRepository *BookingStore
 var bookingRepositoryOnce sync.Once
 
-func GetBookingRepository() *BookingRepository {
+func GetBookingRepository() *BookingStore {
 	bookingRepositoryOnce.Do(func() {
-		bookingRepository = &BookingRepository{}
+		bookingRepository = &BookingStore{}
 		_, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS bookings (" +
 			"id uuid DEFAULT uuid_generate_v4(), " +
 			"user_id uuid NOT NULL, " +
@@ -67,7 +46,7 @@ func GetBookingRepository() *BookingRepository {
 	return bookingRepository
 }
 
-func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 18 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
 			"ADD COLUMN IF NOT EXISTS caldav_id VARCHAR NOT NULL DEFAULT ''"); err != nil {
@@ -100,7 +79,7 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 }
 
-func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
+func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
 
 	// delete old bookings (limit number of deletion by batch size and delete oldest first)
 	result, err := GetDatabase().DB().Exec(`
@@ -155,7 +134,7 @@ func (r *BookingRepository) PurgeOldBookings(batchSize int) (int, error) {
 	return int(rowsAffected), nil
 }
 
-func (r *BookingRepository) Create(e *Booking) error {
+func (r *BookingStore) Create(e *Booking) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
 		"(user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, created_at_utc) "+
@@ -169,7 +148,7 @@ func (r *BookingRepository) Create(e *Booking) error {
 	return nil
 }
 
-func (r *BookingRepository) GetOne(id string) (*BookingDetails, error) {
+func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 	e := &BookingDetails{}
 	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
@@ -201,7 +180,7 @@ type KioskBookingEntry struct {
 
 // GetCurrentAndNextBySpaceID returns the currently-active booking and the next upcoming
 // booking for a space, both evaluated relative to now.
-func (r *BookingRepository) GetCurrentAndNextBySpaceID(spaceID string, now time.Time) (*KioskBookingEntry, *KioskBookingEntry, error) {
+func (r *BookingStore) GetCurrentAndNextBySpaceID(spaceID string, now time.Time) (*KioskBookingEntry, *KioskBookingEntry, error) {
 	var current *KioskBookingEntry
 	c := &KioskBookingEntry{}
 	err := GetDatabase().DB().QueryRow(
@@ -236,7 +215,7 @@ func (r *BookingRepository) GetCurrentAndNextBySpaceID(spaceID string, now time.
 }
 
 // Get first current or upcoming booking by user
-func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (*BookingDetails, error) {
+func (r *BookingStore) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (*BookingDetails, error) {
 	e := &BookingDetails{}
 	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
@@ -255,7 +234,7 @@ func (r *BookingRepository) GetFirstUpcomingOrCurrentBookingByUserID(userID stri
 	return e, nil
 }
 
-func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string, locationId string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -292,7 +271,7 @@ func (r *BookingRepository) GetAllByOrg(organizationID string, startTime, endTim
 	return result, nil
 }
 
-func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail string, locationId string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -333,7 +312,7 @@ func (r *BookingRepository) GetAllCurrentByOrg(organizationID string, userEmail 
 	return result, nil
 }
 
-func (r *BookingRepository) GetAllByUser(userID string, startTime time.Time) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllByUser(userID string, startTime time.Time) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
@@ -360,7 +339,7 @@ func (r *BookingRepository) GetAllByUser(userID string, startTime time.Time) ([]
 	return result, nil
 }
 
-func (r *BookingRepository) GetAllByRecurringID(recurringID string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllByRecurringID(recurringID string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
@@ -387,7 +366,7 @@ func (r *BookingRepository) GetAllByRecurringID(recurringID string) ([]*BookingD
 	return result, nil
 }
 
-func (r *BookingRepository) Update(e *Booking) error {
+func (r *BookingStore) Update(e *Booking) error {
 	_, err := GetDatabase().DB().Exec("UPDATE bookings SET "+
 		"user_id = $1, "+
 		"space_id = $2, "+
@@ -402,7 +381,7 @@ func (r *BookingRepository) Update(e *Booking) error {
 	return err
 }
 
-func (r *BookingRepository) Delete(e *BookingDetails) error {
+func (r *BookingStore) Delete(e *BookingDetails) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE id = $1", e.ID)
 	if err != nil {
 		return err
@@ -420,14 +399,14 @@ func (r *BookingRepository) Delete(e *BookingDetails) error {
 	return nil
 }
 
-func (r *BookingRepository) GetCountAll() (int, error) {
+func (r *BookingStore) GetCountAll() (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) " +
 		"FROM bookings").Scan(&res)
 	return res, err
 }
 
-func (r *BookingRepository) GetCount(organizationID string) (int, error) {
+func (r *BookingStore) GetCount(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
 		"FROM bookings "+
@@ -438,7 +417,7 @@ func (r *BookingRepository) GetCount(organizationID string) (int, error) {
 	return res, err
 }
 
-func (r *BookingRepository) GetCountCurrent(organizationID string) (int, error) {
+func (r *BookingStore) GetCountCurrent(organizationID string) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
 		"FROM bookings "+
@@ -452,7 +431,7 @@ func (r *BookingRepository) GetCountCurrent(organizationID string) (int, error) 
 	return res, err
 }
 
-func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leave time.Time) (int, error) {
+func (r *BookingStore) GetCountDateRange(organizationID string, enter, leave time.Time) (int, error) {
 	var res int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
 		"FROM bookings "+
@@ -468,7 +447,7 @@ func (r *BookingRepository) GetCountDateRange(organizationID string, enter, leav
 	return res, err
 }
 
-func (r *BookingRepository) GetCountByWeekday(organizationID string) ([7]int, error) {
+func (r *BookingStore) GetCountByWeekday(organizationID string) ([7]int, error) {
 	var res [7]int
 	rows, err := GetDatabase().DB().Query("SELECT EXTRACT(DOW FROM enter_time)::int AS dow, COUNT(*) "+
 		"FROM bookings "+
@@ -493,7 +472,7 @@ func (r *BookingRepository) GetCountByWeekday(organizationID string) ([7]int, er
 	return res, rows.Err()
 }
 
-func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
+func (r *BookingStore) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
 	query := "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60), 0) " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
@@ -514,7 +493,7 @@ func (r *BookingRepository) GetTotalBookedMinutes(organizationID string, enter, 
 	return int(math.RoundToEven(totalBookedMinutes)), err
 }
 
-func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Time, location *Location) (int, error) {
+func (r *BookingStore) GetLoad(organizationID string, enter, leave time.Time, location *Location) (int, error) {
 	totalBookedMinutes, err := r.GetTotalBookedMinutes(organizationID, enter, leave, location)
 	if err != nil {
 		return 0, err
@@ -564,7 +543,7 @@ func (r *BookingRepository) GetLoad(organizationID string, enter, leave time.Tim
 // bigger than should be covered by overlap start / end checks
 //
 // get all bookings by a specific user which overlap with the provided time range
-func (r *BookingRepository) GetTimeRangeByUser(userID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
+func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
 	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
@@ -591,7 +570,7 @@ func (r *BookingRepository) GetTimeRangeByUser(userID string, enter time.Time, l
 
 // GetConflicts returns bookings for a specific space which overlap
 // with the specified enter and leave times.
-func (r *BookingRepository) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
+func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
 	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
@@ -619,7 +598,7 @@ func (r *BookingRepository) GetConflicts(spaceID string, enter time.Time, leave 
 
 // GetConcurrent returns concurrent bookings for a specific location
 // within the specified enter and leave times.
-func (r *BookingRepository) GetConcurrent(location *Location, enter time.Time, leave time.Time, excludeBookingID string) (int, error) {
+func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave time.Time, excludeBookingID string) (int, error) {
 	var getNumActive = func(bookings []*Booking, timestamp time.Time) int {
 		res := 0
 		for _, b := range bookings {
@@ -676,7 +655,7 @@ func (r *BookingRepository) GetConcurrent(location *Location, enter time.Time, l
 	return max, nil
 }
 
-func (r *BookingRepository) GetPresenceReport(organizationID string, location *Location, start time.Time, end time.Time, maxResults, offset int) ([]*BookingPresenceItem, error) {
+func (r *BookingStore) GetPresenceReport(organizationID string, location *Location, start time.Time, end time.Time, maxResults, offset int) ([]*BookingPresenceItem, error) {
 	// Build list of users to include in report
 	users, err := GetUserRepository().GetAll(organizationID, maxResults, offset)
 	if err != nil {
@@ -768,7 +747,7 @@ func (r *BookingRepository) GetPresenceReport(organizationID string, location *L
 	return res, nil
 }
 
-func (r *BookingRepository) GetBookingsRequiringApproval(approverUserID string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*BookingDetails, error) {
 	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
@@ -799,7 +778,7 @@ func (r *BookingRepository) GetBookingsRequiringApproval(approverUserID string) 
 	return result, nil
 }
 
-func (r *BookingRepository) GetBookingsCountRequiringApproval(approverUserID string) (int, error) {
+func (r *BookingStore) GetBookingsCountRequiringApproval(approverUserID string) (int, error) {
 	var count int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(1) "+
 		"FROM bookings "+

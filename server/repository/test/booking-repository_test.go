@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
@@ -239,7 +239,7 @@ func TestBookingRepositoryRecurringUUID(t *testing.T) {
 		SpaceID:     space.ID,
 		Enter:       time.Now().Add(1 * time.Hour),
 		Leave:       time.Now().Add(2 * time.Hour),
-		RecurringID: api.NullUUID(recurringID.String()),
+		RecurringID: NullUUID(recurringID.String()),
 	}
 	log.Println("Recurring ID 2:", string(booking.RecurringID))
 	err := GetBookingRepository().Create(booking)
@@ -271,7 +271,7 @@ func TestBookingRepositoryRecurringUUIDNull(t *testing.T) {
 		SpaceID:     space.ID,
 		Enter:       time.Now().Add(1 * time.Hour),
 		Leave:       time.Now().Add(2 * time.Hour),
-		RecurringID: api.NullUUID(""),
+		RecurringID: NullUUID(""),
 	}
 	err := GetBookingRepository().Create(booking)
 	CheckTestBool(t, true, err == nil)
@@ -309,7 +309,7 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 		SpaceID:     space.ID,
 		Enter:       time9,
 		Leave:       time11,
-		RecurringID: api.NullUUID(""),
+		RecurringID: NullUUID(""),
 	}
 	GetBookingRepository().Create(booking)
 
@@ -345,7 +345,7 @@ func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 		SpaceID:     space.ID,
 		Enter:       twoHoursAgo,
 		Leave:       twoHoursLater,
-		RecurringID: api.NullUUID(""),
+		RecurringID: NullUUID(""),
 	}
 	GetBookingRepository().Create(booking)
 
@@ -481,7 +481,7 @@ func TestBookingRepositoryGetAllByRecurringID(t *testing.T) {
 		SpaceID:     space.ID,
 		Enter:       time.Now(),
 		Leave:       time.Now().Add(8 * time.Hour),
-		RecurringID: api.NullUUID(rb.ID),
+		RecurringID: NullUUID(rb.ID),
 	}
 	err = GetBookingRepository().Create(booking1)
 	CheckTestIsNil(t, err)
@@ -491,7 +491,7 @@ func TestBookingRepositoryGetAllByRecurringID(t *testing.T) {
 		SpaceID:     space.ID,
 		Enter:       time.Now().Add(24 * time.Hour),
 		Leave:       time.Now().Add(32 * time.Hour),
-		RecurringID: api.NullUUID(rb.ID),
+		RecurringID: NullUUID(rb.ID),
 	}
 	err = GetBookingRepository().Create(booking2)
 	CheckTestIsNil(t, err)

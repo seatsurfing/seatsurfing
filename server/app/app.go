@@ -21,9 +21,8 @@ import (
 
 	"github.com/gorilla/mux"
 	goPlugin "github.com/hashicorp/go-plugin"
-	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/pluginapi"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -35,7 +34,7 @@ var _appOnce sync.Once
 //var registeredPlugins []SeatsurfingPlugin
 
 type PluginInstance struct {
-	Instance SeatsurfingPlugin
+	Instance api.SeatsurfingPlugin
 	Client   *goPlugin.Client
 }
 
@@ -63,7 +62,7 @@ func (a *App) InitializeDatabases() {
 	})
 	// Set up email footer provider: DB value takes precedence over file fallback
 	SetGlobalEmailFooterProvider(func(language string) (string, error) {
-		return GetSettingsRepository().GetGlobalStringLocalized(SettingEmailFooterPrefix, language)
+		return GetSettingsRepository().GetGlobalStringLocalized(api.SettingEmailFooterPrefix, language)
 	})
 }
 
@@ -92,7 +91,7 @@ func (a *App) loadPlugin(f os.DirEntry) {
 		MagicCookieValue: "b929e613-f1b6-4cca-9fc0-04cfc007e9c6",
 	}
 	var pluginMap = map[string]goPlugin.Plugin{
-		"seatsurfing": &SeatsurfingPluginImpl{},
+		"seatsurfing": &api.SeatsurfingPluginImpl{},
 	}
 	log.Println("Loading plugin", f.Name())
 	cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name())
@@ -113,19 +112,19 @@ func (a *App) loadPlugin(f os.DirEntry) {
 		client.Kill()
 		return
 	}
-	pluginRPC, ok := raw.(*PluginRPC)
+	pluginRPC, ok := raw.(*api.PluginRPC)
 	if !ok {
 		log.Println("Error asserting PluginRPC type")
 		client.Kill()
 		return
 	}
-	plg := SeatsurfingPlugin(pluginRPC)
+	plg := api.SeatsurfingPlugin(pluginRPC)
 
 	// Start HostAPI server on a dedicated broker stream so the plugin can call back.
 	brokerID := pluginRPC.Broker.NextId()
-	go pluginRPC.Broker.AcceptAndServe(brokerID, pluginapi.NewHostAPIRPCServer(&hostAPIImpl{}))
+	go pluginRPC.Broker.AcceptAndServe(brokerID, api.NewHostAPIRPCServer(&hostAPIImpl{}))
 
-	RegisterPlugin(plg)
+	api.RegisterPlugin(plg)
 	AddUnauthorizedRoutes(plg.GetUnauthorizedRoutes())
 	plg.RunSchemaUpdates()
 	plg.OnInit(brokerID)
@@ -141,31 +140,31 @@ func (a *App) loadPlugin(f os.DirEntry) {
 // It wraps the real repository singletons and utility functions.
 type hostAPIImpl struct{}
 
-func (h *hostAPIImpl) GetSettingsRepository() pluginapi.SettingsRepository {
+func (h *hostAPIImpl) GetSettingsRepository() api.SettingsRepository {
 	return GetSettingsRepository()
 }
-func (h *hostAPIImpl) GetUserRepository() pluginapi.UserRepository {
+func (h *hostAPIImpl) GetUserRepository() api.UserRepository {
 	return GetUserRepository()
 }
-func (h *hostAPIImpl) GetOrganizationRepository() pluginapi.OrganizationRepository {
+func (h *hostAPIImpl) GetOrganizationRepository() api.OrganizationRepository {
 	return GetOrganizationRepository()
 }
-func (h *hostAPIImpl) GetGroupRepository() pluginapi.GroupRepository {
+func (h *hostAPIImpl) GetGroupRepository() api.GroupRepository {
 	return GetGroupRepository()
 }
-func (h *hostAPIImpl) GetBookingRepository() pluginapi.BookingRepository {
+func (h *hostAPIImpl) GetBookingRepository() api.BookingRepository {
 	return GetBookingRepository()
 }
-func (h *hostAPIImpl) GetSpaceRepository() pluginapi.SpaceRepository {
+func (h *hostAPIImpl) GetSpaceRepository() api.SpaceRepository {
 	return GetSpaceRepository()
 }
-func (h *hostAPIImpl) GetLocationRepository() pluginapi.LocationRepository {
+func (h *hostAPIImpl) GetLocationRepository() api.LocationRepository {
 	return GetLocationRepository()
 }
-func (h *hostAPIImpl) GetAuthProviderRepository() pluginapi.AuthProviderRepository {
+func (h *hostAPIImpl) GetAuthProviderRepository() api.AuthProviderRepository {
 	return GetAuthProviderRepository()
 }
-func (h *hostAPIImpl) GetAuthStateRepository() pluginapi.AuthStateRepository {
+func (h *hostAPIImpl) GetAuthStateRepository() api.AuthStateRepository {
 	return GetAuthStateRepository()
 }
 func (h *hostAPIImpl) SendEmail(recipient, subject, body, language, orgID string) error {
@@ -184,7 +183,7 @@ func (h *hostAPIImpl) DisablePasswordLogin() bool {
 	return GetConfig().DisablePasswordLogin
 }
 
-func (a *App) forwardToPlugin(plg SeatsurfingPlugin, w http.ResponseWriter, r *http.Request) {
+func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "error reading request body", http.StatusInternalServerError)
@@ -196,7 +195,7 @@ func (a *App) forwardToPlugin(plg SeatsurfingPlugin, w http.ResponseWriter, r *h
 		userID = u.ID
 	}
 
-	req := PluginHTTPRequest{
+	req := api.PluginHTTPRequest{
 		Method:   r.Method,
 		Path:     r.URL.Path,
 		RawQuery: r.URL.RawQuery,
@@ -275,7 +274,7 @@ func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
 
 func (a *App) InitializeRouter() {
 	a.Router = mux.NewRouter()
-	routers := make(map[string]Route)
+	routers := make(map[string]api.Route)
 	routers["/location/{locationId}/space/"] = &SpaceRouter{}
 	routers["/location/"] = &LocationRouter{}
 	routers["/booking/"] = &BookingRouter{}
@@ -359,7 +358,7 @@ func (a *App) InitializeDefaultOrg() {
 		if domain == "localhost" {
 			email = config.InitOrgUser + "@" + "seatsurfing.local"
 		}
-		org := &Organization{
+		org := &api.Organization{
 			Name:             config.InitOrgName,
 			ContactEmail:     email,
 			ContactFirstname: "Organization",
@@ -370,11 +369,11 @@ func (a *App) InitializeDefaultOrg() {
 		GetOrganizationRepository().Create(org)
 		GetOrganizationRepository().AddDomain(org, domain, true)
 		GetOrganizationRepository().SetPrimaryDomain(org, domain)
-		user := &User{
+		user := &api.User{
 			OrganizationID: org.ID,
 			Email:          email,
-			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
-			Role:           UserRoleOrgAdmin,
+			HashedPassword: api.NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
+			Role:           api.UserRoleOrgAdmin,
 			Firstname:      "Organization",
 			Lastname:       "Admin",
 		}
@@ -393,12 +392,12 @@ func (a *App) InitializeSingleOrgSettings() {
 			return
 		}
 		org := orgs[0]
-		GetSettingsRepository().Set(org.ID, SettingFeatureNoUserLimit.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureKioskMode.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureNoUserLimit.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureCustomDomains.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureGroups.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureAuthProviders.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureRecurringBookings.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureKioskMode.Name, "1")
 	}
 }
 
@@ -448,7 +447,7 @@ func (a *App) onTimerTick() {
 func (a *App) InitializeTimers() {
 	a.UpdateInstallStats()
 	a.onTimerTick()
-	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	installID, _ := GetSettingsRepository().GetGlobalString(api.SettingInstallID.Name)
 	GetUpdateChecker().InitializeVersionUpdateTimer(installID)
 	a.CleanupTicker = time.NewTicker(time.Minute * 1)
 	go func() {

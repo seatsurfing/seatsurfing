@@ -141,12 +141,6 @@ type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken" validate:"required"`
 }
 
-type AuthStateLoginPayload struct {
-	UserID    string `json:"userId"`
-	LoginType string `json:"type"`
-	Redirect  string `json:"redirect,omitempty"`
-}
-
 type CreateAccessTokenOptions int
 
 const (

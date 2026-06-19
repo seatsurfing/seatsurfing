@@ -1,10 +1,8 @@
-package pluginapi
+package api
 
 import (
 	"errors"
 	"net/rpc"
-
-	"github.com/seatsurfing/seatsurfing/server/repository"
 )
 
 // ─── Args / Reply structs ────────────────────────────────────────────────────
@@ -35,7 +33,7 @@ type SettingsDeleteArgs struct{ OrgID, Name string }
 // Users
 type UserGetOneArgs struct{ ID string }
 type UserGetOneReply struct {
-	User *repository.User
+	User *User
 	Err  string
 }
 type UserGetAllArgs struct {
@@ -44,28 +42,28 @@ type UserGetAllArgs struct {
 	Offset     int
 }
 type UserGetAllReply struct {
-	Users []*repository.User
+	Users []*User
 	Err   string
 }
 type UserGetByEmailArgs struct{ OrgID, Email string }
 type UserGetUsersWithEmailArgs struct{ Email string }
 type UserGetUsersWithEmailReply struct {
-	Users []*repository.User
+	Users []*User
 	Err   string
 }
 type UserGetCountArgs struct{ OrgID string }
 type UserHashPasswordArgs struct{ Password string }
-type UserIsAdminArgs struct{ User *repository.User }
-type UserMutateArgs struct{ User *repository.User }
+type UserIsAdminArgs struct{ User *User }
+type UserMutateArgs struct{ User *User }
 
 // Organizations
 type OrgGetOneArgs struct{ ID string }
 type OrgGetOneReply struct {
-	Org *repository.Organization
+	Org *Organization
 	Err string
 }
 type OrgGetAllReply struct {
-	Orgs []*repository.Organization
+	Orgs []*Organization
 	Err  string
 }
 type OrgGetByDomainArgs struct{ Domain string }
@@ -74,57 +72,57 @@ type OrgGetDaysPassedArgs struct {
 	DaysPassed    int
 	SettingExists string
 }
-type OrgGetPrimaryDomainArgs struct{ Org *repository.Organization }
+type OrgGetPrimaryDomainArgs struct{ Org *Organization }
 type OrgGetPrimaryDomainReply struct {
-	Domain *repository.Domain
+	Domain *Domain
 	Err    string
 }
-type OrgMutateArgs struct{ Org *repository.Organization }
+type OrgMutateArgs struct{ Org *Organization }
 type OrgAddDomainArgs struct {
-	Org    *repository.Organization
+	Org    *Organization
 	Domain string
 	Active bool
 }
 type OrgSetPrimaryDomainArgs struct {
-	Org    *repository.Organization
+	Org    *Organization
 	Domain string
 }
-type OrgCreateSampleDataArgs struct{ Org *repository.Organization }
+type OrgCreateSampleDataArgs struct{ Org *Organization }
 
 // Groups
 type GroupGetOneArgs struct{ ID string }
 type GroupGetOneReply struct {
-	Group *repository.Group
+	Group *Group
 	Err   string
 }
 type GroupGetAllArgs struct{ OrgID string }
 type GroupGetAllReply struct {
-	Groups []*repository.Group
+	Groups []*Group
 	Err    string
 }
 type GroupGetByNameArgs struct{ OrgID, Name string }
-type GroupGetMemberIDsArgs struct{ Group *repository.Group }
+type GroupGetMemberIDsArgs struct{ Group *Group }
 type GroupGetMemberIDsReply struct {
 	IDs []string
 	Err string
 }
 type GroupMembersArgs struct {
-	Group   *repository.Group
+	Group   *Group
 	UserIDs []string
 }
-type GroupMutateArgs struct{ Group *repository.Group }
+type GroupMutateArgs struct{ Group *Group }
 
 // Bookings
 type BookingGetOneArgs struct{ ID string }
 type BookingGetOneReply struct {
-	Booking *repository.BookingDetails
+	Booking *BookingDetails
 	Err     string
 }
 
 // Spaces
 type SpaceGetOneArgs struct{ ID string }
 type SpaceGetOneReply struct {
-	Space *repository.Space
+	Space *Space
 	Err   string
 }
 type SpaceGetCountArgs struct{ OrgID string }
@@ -132,17 +130,17 @@ type SpaceGetCountArgs struct{ OrgID string }
 // Locations
 type LocationGetOneArgs struct{ ID string }
 type LocationGetOneReply struct {
-	Location *repository.Location
+	Location *Location
 	Err      string
 }
 type LocationGetCountArgs struct{ OrgID string }
-type LocationGetTimezoneArgs struct{ Location *repository.Location }
+type LocationGetTimezoneArgs struct{ Location *Location }
 
 // AuthProvider
-type AuthProviderMutateArgs struct{ AuthProvider *repository.AuthProvider }
+type AuthProviderMutateArgs struct{ AuthProvider *AuthProvider }
 
 // AuthState
-type AuthStateMutateArgs struct{ AuthState *repository.AuthState }
+type AuthStateMutateArgs struct{ AuthState *AuthState }
 
 // General
 type SendEmailArgs struct{ Recipient, Subject, Body, Language, OrgID string }
@@ -576,21 +574,21 @@ func (r *settingsRepositoryRPC) Delete(orgID, name string) error {
 
 type userRepositoryRPC struct{ client *rpc.Client }
 
-func (r *userRepositoryRPC) GetOne(id string) (*repository.User, error) {
+func (r *userRepositoryRPC) GetOne(id string) (*User, error) {
 	var reply UserGetOneReply
 	if err := r.client.Call("Plugin.UserGetOne", UserGetOneArgs{id}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.User, strErr(reply.Err)
 }
-func (r *userRepositoryRPC) GetAll(orgID string, maxResults, offset int) ([]*repository.User, error) {
+func (r *userRepositoryRPC) GetAll(orgID string, maxResults, offset int) ([]*User, error) {
 	var reply UserGetAllReply
 	if err := r.client.Call("Plugin.UserGetAll", UserGetAllArgs{orgID, maxResults, offset}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Users, strErr(reply.Err)
 }
-func (r *userRepositoryRPC) GetByEmail(orgID, email string) (*repository.User, error) {
+func (r *userRepositoryRPC) GetByEmail(orgID, email string) (*User, error) {
 	var reply UserGetOneReply
 	if err := r.client.Call("Plugin.UserGetByEmail", UserGetByEmailArgs{orgID, email}, &reply); err != nil {
 		return nil, err
@@ -609,38 +607,38 @@ func (r *userRepositoryRPC) GetHashedPassword(password string) string {
 	_ = r.client.Call("Plugin.UserGetHashedPassword", UserHashPasswordArgs{password}, &reply)
 	return reply.V
 }
-func (r *userRepositoryRPC) GetUsersWithEmail(email string) ([]*repository.User, error) {
+func (r *userRepositoryRPC) GetUsersWithEmail(email string) ([]*User, error) {
 	var reply UserGetUsersWithEmailReply
 	if err := r.client.Call("Plugin.UserGetUsersWithEmail", UserGetUsersWithEmailArgs{email}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Users, strErr(reply.Err)
 }
-func (r *userRepositoryRPC) IsOrgAdmin(user *repository.User) bool {
+func (r *userRepositoryRPC) IsOrgAdmin(user *User) bool {
 	var reply BoolReply
 	_ = r.client.Call("Plugin.UserIsOrgAdmin", UserIsAdminArgs{user}, &reply)
 	return reply.V
 }
-func (r *userRepositoryRPC) IsSuperAdmin(user *repository.User) bool {
+func (r *userRepositoryRPC) IsSuperAdmin(user *User) bool {
 	var reply BoolReply
 	_ = r.client.Call("Plugin.UserIsSuperAdmin", UserIsAdminArgs{user}, &reply)
 	return reply.V
 }
-func (r *userRepositoryRPC) Create(e *repository.User) error {
+func (r *userRepositoryRPC) Create(e *User) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.UserCreate", UserMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *userRepositoryRPC) Update(e *repository.User) error {
+func (r *userRepositoryRPC) Update(e *User) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.UserUpdate", UserMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *userRepositoryRPC) Delete(e *repository.User) error {
+func (r *userRepositoryRPC) Delete(e *User) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.UserDelete", UserMutateArgs{e}, &reply); err != nil {
 		return err
@@ -650,84 +648,84 @@ func (r *userRepositoryRPC) Delete(e *repository.User) error {
 
 type organizationRepositoryRPC struct{ client *rpc.Client }
 
-func (r *organizationRepositoryRPC) GetOne(id string) (*repository.Organization, error) {
+func (r *organizationRepositoryRPC) GetOne(id string) (*Organization, error) {
 	var reply OrgGetOneReply
 	if err := r.client.Call("Plugin.OrgGetOne", OrgGetOneArgs{id}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Org, strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) GetAll() ([]*repository.Organization, error) {
+func (r *organizationRepositoryRPC) GetAll() ([]*Organization, error) {
 	var reply OrgGetAllReply
 	if err := r.client.Call("Plugin.OrgGetAll", struct{}{}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Orgs, strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) GetOneByDomain(domain string) (*repository.Organization, error) {
+func (r *organizationRepositoryRPC) GetOneByDomain(domain string) (*Organization, error) {
 	var reply OrgGetOneReply
 	if err := r.client.Call("Plugin.OrgGetOneByDomain", OrgGetByDomainArgs{domain}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Org, strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) GetByEmail(email string) (*repository.Organization, error) {
+func (r *organizationRepositoryRPC) GetByEmail(email string) (*Organization, error) {
 	var reply OrgGetOneReply
 	if err := r.client.Call("Plugin.OrgGetByEmail", OrgGetByEmailArgs{email}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Org, strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*repository.Organization, error) {
+func (r *organizationRepositoryRPC) GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*Organization, error) {
 	var reply OrgGetAllReply
 	if err := r.client.Call("Plugin.OrgGetAllDaysPassedSinceSignup", OrgGetDaysPassedArgs{daysPassed, settingExists}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Orgs, strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) GetPrimaryDomain(e *repository.Organization) (*repository.Domain, error) {
+func (r *organizationRepositoryRPC) GetPrimaryDomain(e *Organization) (*Domain, error) {
 	var reply OrgGetPrimaryDomainReply
 	if err := r.client.Call("Plugin.OrgGetPrimaryDomain", OrgGetPrimaryDomainArgs{e}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Domain, strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) Create(e *repository.Organization) error {
+func (r *organizationRepositoryRPC) Create(e *Organization) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgCreate", OrgMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) Update(e *repository.Organization) error {
+func (r *organizationRepositoryRPC) Update(e *Organization) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgUpdate", OrgMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) Delete(e *repository.Organization) error {
+func (r *organizationRepositoryRPC) Delete(e *Organization) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgDelete", OrgMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) AddDomain(e *repository.Organization, domain string, active bool) error {
+func (r *organizationRepositoryRPC) AddDomain(e *Organization, domain string, active bool) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgAddDomain", OrgAddDomainArgs{e, domain, active}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) SetPrimaryDomain(e *repository.Organization, domain string) error {
+func (r *organizationRepositoryRPC) SetPrimaryDomain(e *Organization, domain string) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgSetPrimaryDomain", OrgSetPrimaryDomainArgs{e, domain}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *organizationRepositoryRPC) CreateSampleData(org *repository.Organization) error {
+func (r *organizationRepositoryRPC) CreateSampleData(org *Organization) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgCreateSampleData", OrgCreateSampleDataArgs{org}, &reply); err != nil {
 		return err
@@ -737,63 +735,63 @@ func (r *organizationRepositoryRPC) CreateSampleData(org *repository.Organizatio
 
 type groupRepositoryRPC struct{ client *rpc.Client }
 
-func (r *groupRepositoryRPC) GetOne(id string) (*repository.Group, error) {
+func (r *groupRepositoryRPC) GetOne(id string) (*Group, error) {
 	var reply GroupGetOneReply
 	if err := r.client.Call("Plugin.GroupGetOne", GroupGetOneArgs{id}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Group, strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) GetAll(orgID string) ([]*repository.Group, error) {
+func (r *groupRepositoryRPC) GetAll(orgID string) ([]*Group, error) {
 	var reply GroupGetAllReply
 	if err := r.client.Call("Plugin.GroupGetAll", GroupGetAllArgs{orgID}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Groups, strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) GetByName(orgID, name string) (*repository.Group, error) {
+func (r *groupRepositoryRPC) GetByName(orgID, name string) (*Group, error) {
 	var reply GroupGetOneReply
 	if err := r.client.Call("Plugin.GroupGetByName", GroupGetByNameArgs{orgID, name}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.Group, strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) GetMemberUserIDs(e *repository.Group) ([]string, error) {
+func (r *groupRepositoryRPC) GetMemberUserIDs(e *Group) ([]string, error) {
 	var reply GroupGetMemberIDsReply
 	if err := r.client.Call("Plugin.GroupGetMemberUserIDs", GroupGetMemberIDsArgs{e}, &reply); err != nil {
 		return nil, err
 	}
 	return reply.IDs, strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) AddMembers(e *repository.Group, userIDs []string) error {
+func (r *groupRepositoryRPC) AddMembers(e *Group, userIDs []string) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.GroupAddMembers", GroupMembersArgs{e, userIDs}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) RemoveMembers(e *repository.Group, userIDs []string) error {
+func (r *groupRepositoryRPC) RemoveMembers(e *Group, userIDs []string) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.GroupRemoveMembers", GroupMembersArgs{e, userIDs}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) Create(e *repository.Group) error {
+func (r *groupRepositoryRPC) Create(e *Group) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.GroupCreate", GroupMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) Update(e *repository.Group) error {
+func (r *groupRepositoryRPC) Update(e *Group) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.GroupUpdate", GroupMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *groupRepositoryRPC) Delete(e *repository.Group) error {
+func (r *groupRepositoryRPC) Delete(e *Group) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.GroupDelete", GroupMutateArgs{e}, &reply); err != nil {
 		return err
@@ -803,7 +801,7 @@ func (r *groupRepositoryRPC) Delete(e *repository.Group) error {
 
 type bookingRepositoryRPC struct{ client *rpc.Client }
 
-func (r *bookingRepositoryRPC) GetOne(id string) (*repository.BookingDetails, error) {
+func (r *bookingRepositoryRPC) GetOne(id string) (*BookingDetails, error) {
 	var reply BookingGetOneReply
 	if err := r.client.Call("Plugin.BookingGetOne", BookingGetOneArgs{id}, &reply); err != nil {
 		return nil, err
@@ -813,7 +811,7 @@ func (r *bookingRepositoryRPC) GetOne(id string) (*repository.BookingDetails, er
 
 type spaceRepositoryRPC struct{ client *rpc.Client }
 
-func (r *spaceRepositoryRPC) GetOne(id string) (*repository.Space, error) {
+func (r *spaceRepositoryRPC) GetOne(id string) (*Space, error) {
 	var reply SpaceGetOneReply
 	if err := r.client.Call("Plugin.SpaceGetOne", SpaceGetOneArgs{id}, &reply); err != nil {
 		return nil, err
@@ -830,7 +828,7 @@ func (r *spaceRepositoryRPC) GetCount(orgID string) (int, error) {
 
 type locationRepositoryRPC struct{ client *rpc.Client }
 
-func (r *locationRepositoryRPC) GetOne(id string) (*repository.Location, error) {
+func (r *locationRepositoryRPC) GetOne(id string) (*Location, error) {
 	var reply LocationGetOneReply
 	if err := r.client.Call("Plugin.LocationGetOne", LocationGetOneArgs{id}, &reply); err != nil {
 		return nil, err
@@ -844,7 +842,7 @@ func (r *locationRepositoryRPC) GetCount(orgID string) (int, error) {
 	}
 	return reply.V, nil
 }
-func (r *locationRepositoryRPC) GetTimezone(location *repository.Location) string {
+func (r *locationRepositoryRPC) GetTimezone(location *Location) string {
 	var reply StringReply
 	_ = r.client.Call("Plugin.LocationGetTimezone", LocationGetTimezoneArgs{location}, &reply)
 	return reply.V
@@ -852,14 +850,14 @@ func (r *locationRepositoryRPC) GetTimezone(location *repository.Location) strin
 
 type authProviderRepositoryRPC struct{ client *rpc.Client }
 
-func (r *authProviderRepositoryRPC) Create(e *repository.AuthProvider) error {
+func (r *authProviderRepositoryRPC) Create(e *AuthProvider) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.AuthProviderCreate", AuthProviderMutateArgs{e}, &reply); err != nil {
 		return err
 	}
 	return strErr(reply.Err)
 }
-func (r *authProviderRepositoryRPC) Update(e *repository.AuthProvider) error {
+func (r *authProviderRepositoryRPC) Update(e *AuthProvider) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.AuthProviderUpdate", AuthProviderMutateArgs{e}, &reply); err != nil {
 		return err
@@ -869,7 +867,7 @@ func (r *authProviderRepositoryRPC) Update(e *repository.AuthProvider) error {
 
 type authStateRepositoryRPC struct{ client *rpc.Client }
 
-func (r *authStateRepositoryRPC) Create(e *repository.AuthState) error {
+func (r *authStateRepositoryRPC) Create(e *AuthState) error {
 	var reply ErrorReply
 	if err := r.client.Call("Plugin.AuthStateCreate", AuthStateMutateArgs{e}, &reply); err != nil {
 		return err
