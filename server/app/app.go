@@ -455,7 +455,7 @@ func (a *App) InitializeTimers() {
 	a.UpdateInstallStats()
 	a.onTimerTick()
 	installID, _ := GetSettingsRepository().GetGlobalString(api.SettingInstallID.Name)
-	GetUpdateChecker().InitializeVersionUpdateTimer(installID)
+	go GetUpdateChecker().InitializeVersionUpdateTimer(installID)
 	a.CleanupTicker = time.NewTicker(time.Minute * 1)
 	go func() {
 		for {
