@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.106.0](https://github.com/seatsurfing/seatsurfing/compare/v1.105.0...v1.106.0) (2026-06-17)
+
+
+### ✨ Features
+
+* **booking-ui:** add user preference mail language ([#2285](https://github.com/seatsurfing/seatsurfing/issues/2285)) ([d419e28](https://github.com/seatsurfing/seatsurfing/commit/d419e288078e54b50c58447a56b7f7228e705959))
+* **main:** add last booking info sent information ([#2287](https://github.com/seatsurfing/seatsurfing/issues/2287)) ([c579bbf](https://github.com/seatsurfing/seatsurfing/commit/c579bbf8221d9e400ef2de8b9a7ae989865fd3a3))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2289](https://github.com/seatsurfing/seatsurfing/issues/2289)) ([d8b2c66](https://github.com/seatsurfing/seatsurfing/commit/d8b2c66e82f1115f6a32e726d83728b164ab5e11))
+* **main:** add German translation for change mail address email template ([#2288](https://github.com/seatsurfing/seatsurfing/issues/2288)) ([3070cc8](https://github.com/seatsurfing/seatsurfing/commit/3070cc8992e95b2f1ad04b5eba001e7d817dd39b))
+* **main:** make IsValidLanguageCode() case sensitive ([#2286](https://github.com/seatsurfing/seatsurfing/issues/2286)) ([3eeca4b](https://github.com/seatsurfing/seatsurfing/commit/3eeca4b6f2e283bdbaef709888e4376d12e4df82))
+
+## [1.105.0](https://github.com/seatsurfing/seatsurfing/compare/v1.104.1...v1.105.0) (2026-06-17)
+
+
+### ✨ Features
+
+* **booking-ui:** add link to preferences page in booking info mails ([#2280](https://github.com/seatsurfing/seatsurfing/issues/2280)) ([8743aec](https://github.com/seatsurfing/seatsurfing/commit/8743aecdeb7ea8814d96e24f94ce5242e2876cac))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add translation for language selection ([#2284](https://github.com/seatsurfing/seatsurfing/issues/2284)) ([3fd10eb](https://github.com/seatsurfing/seatsurfing/commit/3fd10eb9b5ba63d502bea5fa3aed6609a8a70a15))
+* **deps:** bump golang.org/x/crypto from 0.52.0 to 0.53.0 in /server in the minor-and-patch group ([#2278](https://github.com/seatsurfing/seatsurfing/issues/2278)) ([5abd300](https://github.com/seatsurfing/seatsurfing/commit/5abd30068ce1932156500f0aef87adc07e21cd58))
+* **deps:** bump vite from 8.0.13 to 8.0.16 in /ui ([#2282](https://github.com/seatsurfing/seatsurfing/issues/2282)) ([264c8e3](https://github.com/seatsurfing/seatsurfing/commit/264c8e3a306c2faf56ef53597fa933c9559838c2))
+
 ## [1.104.1](https://github.com/seatsurfing/seatsurfing/compare/v1.104.0...v1.104.1) (2026-06-12)
 
 

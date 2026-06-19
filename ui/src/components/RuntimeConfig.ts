@@ -19,6 +19,7 @@ interface RuntimeUserInfos {
   showNames: boolean;
   customLogoUrl: string;
   defaultTimezone: string;
+  orgLanguage: string;
   disableBuddies: boolean;
   maxHoursPartiallyBooked: number;
   maxHoursPartiallyBookedEnabled: boolean;
@@ -75,6 +76,7 @@ export default class RuntimeConfig {
       maxHoursPartiallyBookedEnabled: false,
       showNames: false,
       defaultTimezone: "",
+      orgLanguage: "",
       featureRecurringBookings: false,
       organizationId: "",
       superAdmin: false,
@@ -172,6 +174,8 @@ export default class RuntimeConfig {
             RuntimeConfig.INFOS.customLogoUrl = s.value;
           if (s.name === "default_timezone")
             RuntimeConfig.INFOS.defaultTimezone = s.value;
+          if (s.name === "_sys_org_language")
+            RuntimeConfig.INFOS.orgLanguage = s.value;
           if (s.name === "feature_recurring_bookings")
             RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
           if (s.name === "allow_recurring_bookings")

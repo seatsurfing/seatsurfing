@@ -1,5 +1,9 @@
 #!/bin/sh
 
+cd config
+go test -v -cover
+cd ..
+
 cd util/test
 go test -v -cover
 cd ../..

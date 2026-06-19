@@ -77,6 +77,12 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 45 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ADD COLUMN IF NOT EXISTS last_info_mail_sent_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
@@ -378,6 +384,11 @@ func (r *BookingStore) Update(e *Booking) error {
 		"recurring_id = $8 "+
 		"WHERE id = $9",
 		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), e.ID)
+	return err
+}
+
+func (r *BookingStore) UpdateLastInfoMailSentAt(id string, t *time.Time) error {
+	_, err := GetDatabase().DB().Exec("UPDATE bookings SET last_info_mail_sent_at_utc = $1 WHERE id = $2", t, id)
 	return err
 }
 

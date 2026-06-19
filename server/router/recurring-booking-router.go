@@ -445,9 +445,19 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 		"subject":       subject,
 	}
 	template := GetEmailTemplatePathRecurringBookingCreated()
-	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
+	}
+	now := time.Now().UTC()
+	for _, b := range bookings {
+		if err := GetBookingRepository().UpdateLastInfoMailSentAt(b.ID, &now); err != nil {
+			log.Println(err)
+		}
 	}
 }
 

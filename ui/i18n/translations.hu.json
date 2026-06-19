@@ -489,5 +489,8 @@
   "featuresLink": "Compare features",
   "showGrid": "Show grid",
   "outline": "Outline",
-  "nameRequirements": "Name may only contain letters, numbers, spaces, hyphens, apostrophes, and dots."
+  "nameRequirements": "Name may only contain letters, numbers, spaces, hyphens, apostrophes, and dots.",
+  "language-de": "German",
+  "language-en": "English",
+  "mailLanguage": "Mail language"
 }

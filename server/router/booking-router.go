@@ -1246,9 +1246,17 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	} else if notification == BookingMailNotificationDeleted {
 		template = GetEmailTemplatePathBookingDeleted()
 	}
-	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
+	}
+	now := time.Now().UTC()
+	if err := GetBookingRepository().UpdateLastInfoMailSentAt(e.ID, &now); err != nil {
+		log.Println(err)
 	}
 }
 
@@ -1374,8 +1382,12 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 			"subject":       subject,
 		}
 
+		approverLang := org.Language
+		if userLang, err := GetUserPreferencesRepository().Get(approver.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+			approverLang = userLang
+		}
 		template := GetEmailTemplatePathBookingApprovalRequest()
-		if err := SendEmailWithOrg(&MailAddress{Address: approver.Email}, template, org.Language, vars, org.ID); err != nil {
+		if err := SendEmailWithOrg(&MailAddress{Address: approver.Email}, template, approverLang, vars, org.ID); err != nil {
 			log.Println("Error sending approval notification email:", err)
 		}
 	}

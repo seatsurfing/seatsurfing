@@ -569,7 +569,11 @@ func (router *OrganizationRouter) SendOrgConfirmDeleteOrgEmail(user *User, ID st
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 		"orgName":        org.Name,
 	}
-	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), org.Language, vars, org.ID)
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(user.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), language, vars, org.ID)
 }
 
 func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request) {

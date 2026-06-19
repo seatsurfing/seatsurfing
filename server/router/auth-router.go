@@ -1149,7 +1149,11 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"confirmID":      ID,
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 	}
-	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars, org.ID)
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(user.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), language, vars, org.ID)
 }
 
 func (router *AuthRouter) SendUserInvitationEmail(user *User, ID string, org *Organization) error {

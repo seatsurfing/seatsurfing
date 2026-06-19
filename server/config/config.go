@@ -241,9 +241,8 @@ func (c *Config) loadPublicKey(path string) (*rsa.PublicKey, error) {
 
 func (c *Config) IsValidLanguageCode(isoLanguageCode string) bool {
 	validLanguageCodes := []string{"de", "en"}
-	lc := strings.ToLower(isoLanguageCode)
 	for _, s := range validLanguageCodes {
-		if lc == s {
+		if isoLanguageCode == s {
 			return true
 		}
 	}
