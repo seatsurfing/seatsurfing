@@ -129,16 +129,17 @@ type SpaceDetails struct {
 // ─── Booking ─────────────────────────────────────────────────────────────────
 
 type Booking struct {
-	ID           string
-	UserID       string
-	SpaceID      string
-	Enter        time.Time
-	Leave        time.Time
-	CalDavID     string
-	Approved     bool
-	Subject      string
-	RecurringID  NullUUID
-	CreatedAtUTC *time.Time
+	ID                    string
+	UserID                string
+	SpaceID               string
+	Enter                 time.Time
+	Leave                 time.Time
+	CalDavID              string
+	Approved              bool
+	Subject               string
+	RecurringID           NullUUID
+	CreatedAtUTC          *time.Time
+	LastInfoMailSentAtUTC *time.Time
 }
 
 type BookingDetails struct {
