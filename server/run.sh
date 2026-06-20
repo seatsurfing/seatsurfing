@@ -11,6 +11,7 @@ else
         -p 5432:5432 \
         -e POSTGRES_PASSWORD=root \
         -e POSTGRES_USER=postgres \
+        -e PGDATA=/var/lib/postgresql/data/pgdata \
         -v postgres-seatsurfing:/var/lib/postgresql/data \
         --name postgres-seatsurfing \
         postgres:17-alpine
