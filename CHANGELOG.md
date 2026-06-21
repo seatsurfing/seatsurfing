@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.106.1](https://github.com/seatsurfing/seatsurfing/compare/v1.106.0...v1.106.1) (2026-06-21)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** fix button CSS definitions ([#2293](https://github.com/seatsurfing/seatsurfing/issues/2293)) ([f8006d5](https://github.com/seatsurfing/seatsurfing/commit/f8006d596b5c1e24bc679ac5836974233deeb16c))
+* **deps:** bump undici from 7.25.0 to 7.28.0 in /ui ([#2300](https://github.com/seatsurfing/seatsurfing/issues/2300)) ([7b3b154](https://github.com/seatsurfing/seatsurfing/commit/7b3b15460359ae78d1dd75161068bb8b0605ad40))
+* **main:** updated Finnish localization ([#2295](https://github.com/seatsurfing/seatsurfing/issues/2295)) ([1f348d9](https://github.com/seatsurfing/seatsurfing/commit/1f348d937ea7c2140eecd7d97407bd1655ad698a))
+* **server:** improve dev run script compatibility with macos container ([#2303](https://github.com/seatsurfing/seatsurfing/issues/2303)) ([268e861](https://github.com/seatsurfing/seatsurfing/commit/268e861deed11b88ec52744758b771573bdc4b93))
+
+
+### 📚 Documentation
+
+* **main:** add hints to docker compose example ([#2304](https://github.com/seatsurfing/seatsurfing/issues/2304)) ([73dce74](https://github.com/seatsurfing/seatsurfing/commit/73dce7476bb6e759d29eb4b9efd61a2d98c02709))
+
 ## [1.106.0](https://github.com/seatsurfing/seatsurfing/compare/v1.105.0...v1.106.0) (2026-06-17)
 
 
