@@ -11,40 +11,20 @@ import (
 
 	"github.com/google/uuid"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
-type OrganizationRepository struct {
+type OrganizationStore struct {
 }
 
-type Organization struct {
-	ID               string
-	Name             string
-	ContactFirstname string
-	ContactLastname  string
-	ContactEmail     string
-	Language         string
-	SignupDate       time.Time
-}
-
-type Domain struct {
-	DomainName     string
-	OrganizationID string
-	Active         bool
-	VerifyToken    string
-	Primary        bool
-	Accessible     bool
-	AccessCheck    *time.Time
-}
-
-var organizationRepository *OrganizationRepository
+var organizationRepository *OrganizationStore
 var organizationRepositoryOnce sync.Once
 
-func GetOrganizationRepository() *OrganizationRepository {
+func GetOrganizationRepository() *OrganizationStore {
 	organizationRepositoryOnce.Do(func() {
-		organizationRepository = &OrganizationRepository{}
+		organizationRepository = &OrganizationStore{}
 		_, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS organizations (" +
 			"id uuid DEFAULT uuid_generate_v4(), " +
 			"name VARCHAR NOT NULL, " +
@@ -67,7 +47,7 @@ func GetOrganizationRepository() *OrganizationRepository {
 	return organizationRepository
 }
 
-func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+func (r *OrganizationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 3 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE organizations " +
 			"ADD COLUMN IF NOT EXISTS contact_firstname VARCHAR, " +
@@ -171,7 +151,7 @@ func (r *OrganizationRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 	}
 }
 
-func (r *OrganizationRepository) Create(e *Organization) error {
+func (r *OrganizationStore) Create(e *Organization) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO organizations "+
 		"(name, contact_firstname, contact_lastname, contact_email, language, signup_date) "+
@@ -183,13 +163,13 @@ func (r *OrganizationRepository) Create(e *Organization) error {
 	}
 	e.ID = id
 	GetSettingsRepository().InitDefaultSettingsForOrg(e.ID)
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnOrganizationCreated(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnOrganizationCreated(e.ID)
 	}
 	return nil
 }
 
-func (r *OrganizationRepository) GetOneByDomain(domain string) (*Organization, error) {
+func (r *OrganizationStore) GetOneByDomain(domain string) (*Organization, error) {
 	e := &Organization{}
 	err := GetDatabase().DB().QueryRow("SELECT organizations.id, organizations.name, organizations.contact_firstname, organizations.contact_lastname, organizations.contact_email, organizations.language, organizations.signup_date "+
 		"FROM organizations_domains "+
@@ -202,7 +182,7 @@ func (r *OrganizationRepository) GetOneByDomain(domain string) (*Organization, e
 	return e, nil
 }
 
-func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
+func (r *OrganizationStore) GetOne(id string) (*Organization, error) {
 	e := &Organization{}
 	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
 		"FROM organizations "+
@@ -214,7 +194,7 @@ func (r *OrganizationRepository) GetOne(id string) (*Organization, error) {
 	return e, nil
 }
 
-func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error) {
+func (r *OrganizationStore) GetByEmail(email string) (*Organization, error) {
 	e := &Organization{}
 	err := GetDatabase().DB().QueryRow("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date "+
 		"FROM organizations "+
@@ -226,7 +206,7 @@ func (r *OrganizationRepository) GetByEmail(email string) (*Organization, error)
 	return e, nil
 }
 
-func (r *OrganizationRepository) GetAll() ([]*Organization, error) {
+func (r *OrganizationStore) GetAll() ([]*Organization, error) {
 	var result []*Organization
 	rows, err := GetDatabase().DB().Query("SELECT id, name, contact_firstname, contact_lastname, contact_email, language, signup_date " +
 		"FROM organizations ORDER BY name")
@@ -245,7 +225,7 @@ func (r *OrganizationRepository) GetAll() ([]*Organization, error) {
 	return result, nil
 }
 
-func (r *OrganizationRepository) GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*Organization, error) {
+func (r *OrganizationStore) GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*Organization, error) {
 	var result []*Organization
 	interval := strconv.Itoa(daysPassed)
 	settingExistsQuery := "AND $2 = $2 "
@@ -272,7 +252,7 @@ func (r *OrganizationRepository) GetAllDaysPassedSinceSignup(daysPassed int, set
 	return result, nil
 }
 
-func (r *OrganizationRepository) GetNumOrgs() (int, error) {
+func (r *OrganizationStore) GetNumOrgs() (int, error) {
 	var result int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM organizations").Scan(&result)
 	if err != nil {
@@ -281,7 +261,7 @@ func (r *OrganizationRepository) GetNumOrgs() (int, error) {
 	return result, nil
 }
 
-func (r *OrganizationRepository) GetAllIDs() ([]string, error) {
+func (r *OrganizationStore) GetAllIDs() ([]string, error) {
 	var result []string
 	rows, err := GetDatabase().DB().Query("SELECT id " +
 		"FROM organizations")
@@ -300,7 +280,7 @@ func (r *OrganizationRepository) GetAllIDs() ([]string, error) {
 	return result, nil
 }
 
-func (r *OrganizationRepository) Update(e *Organization) error {
+func (r *OrganizationStore) Update(e *Organization) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations SET "+
 		"name = $1, contact_firstname = $2, contact_lastname = $3, contact_email = $4, language = $5, signup_date = $6 "+
 		"WHERE id = $7",
@@ -308,15 +288,15 @@ func (r *OrganizationRepository) Update(e *Organization) error {
 	if err != nil {
 		return err
 	}
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnOrganizationUpdated(e.ID)
+	for _, plg := range GetPlugins() {
+		plg.OnOrganizationUpdated(e.ID)
 	}
 	return nil
 }
 
-func (r *OrganizationRepository) Delete(e *Organization) error {
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnBeforeOrganizationDelete(e.ID)
+func (r *OrganizationStore) Delete(e *Organization) error {
+	for _, plg := range GetPlugins() {
+		plg.OnBeforeOrganizationDelete(e.ID)
 	}
 	if err := GetAuthProviderRepository().DeleteAll(e.ID); err != nil {
 		return err
@@ -347,7 +327,7 @@ func (r *OrganizationRepository) Delete(e *Organization) error {
 	return err
 }
 
-func (r *OrganizationRepository) GetDomain(org *Organization, domain string) (*Domain, error) {
+func (r *OrganizationStore) GetDomain(org *Organization, domain string) (*Domain, error) {
 	e := &Domain{}
 	err := GetDatabase().DB().QueryRow("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check "+
 		"FROM organizations_domains "+
@@ -359,7 +339,7 @@ func (r *OrganizationRepository) GetDomain(org *Organization, domain string) (*D
 	return e, nil
 }
 
-func (r *OrganizationRepository) AddDomain(e *Organization, domain string, active bool) error {
+func (r *OrganizationStore) AddDomain(e *Organization, domain string, active bool) error {
 	verifyToken := uuid.New().String()
 	_, err := GetDatabase().DB().Exec("INSERT INTO organizations_domains "+
 		"(domain, organization_id, active, verify_token) "+
@@ -368,14 +348,14 @@ func (r *OrganizationRepository) AddDomain(e *Organization, domain string, activ
 	return err
 }
 
-func (r *OrganizationRepository) RemoveDomain(e *Organization, domain string) error {
+func (r *OrganizationStore) RemoveDomain(e *Organization, domain string) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM organizations_domains "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
 		strings.ToLower(domain), e.ID)
 	return err
 }
 
-func (r *OrganizationRepository) ActivateDomain(e *Organization, domain string) error {
+func (r *OrganizationStore) ActivateDomain(e *Organization, domain string) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET active = TRUE "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
@@ -383,7 +363,7 @@ func (r *OrganizationRepository) ActivateDomain(e *Organization, domain string) 
 	return err
 }
 
-func (r *OrganizationRepository) SetDomainAccessibility(orgID string, domain string, accessible bool, accessCheck time.Time) error {
+func (r *OrganizationStore) SetDomainAccessibility(orgID string, domain string, accessible bool, accessCheck time.Time) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET accessible = $3, access_check = $4 "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
@@ -391,7 +371,7 @@ func (r *OrganizationRepository) SetDomainAccessibility(orgID string, domain str
 	return err
 }
 
-func (r *OrganizationRepository) SetPrimaryDomain(e *Organization, domain string) error {
+func (r *OrganizationStore) SetPrimaryDomain(e *Organization, domain string) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET primary_domain = FALSE "+
 		"WHERE organization_id = $1",
@@ -406,7 +386,7 @@ func (r *OrganizationRepository) SetPrimaryDomain(e *Organization, domain string
 	return err
 }
 
-func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, error) {
+func (r *OrganizationStore) GetPrimaryDomain(e *Organization) (*Domain, error) {
 	domains, err := r.GetDomains(e)
 	if err != nil {
 		return nil, err
@@ -424,7 +404,7 @@ func (r *OrganizationRepository) GetPrimaryDomain(e *Organization) (*Domain, err
 	return nil, errors.New("no primary domain found")
 }
 
-func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) {
+func (r *OrganizationStore) GetDomains(e *Organization) ([]*Domain, error) {
 	var result []*Domain
 	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check "+
 		"FROM organizations_domains "+
@@ -445,7 +425,7 @@ func (r *OrganizationRepository) GetDomains(e *Organization) ([]*Domain, error) 
 	}
 	return result, nil
 }
-func (r *OrganizationRepository) GetAllDomains() ([]*Domain, error) {
+func (r *OrganizationStore) GetAllDomains() ([]*Domain, error) {
 	var result []*Domain
 	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check " +
 		"FROM organizations_domains " +
@@ -465,7 +445,7 @@ func (r *OrganizationRepository) GetAllDomains() ([]*Domain, error) {
 	return result, nil
 }
 
-func (r *OrganizationRepository) IsValidCustomDomainForOrg(email string, org *Organization) bool {
+func (r *OrganizationStore) IsValidCustomDomainForOrg(email string, org *Organization) bool {
 	domain := GetDomainFromEmail(email)
 	if domain == "" {
 		return false
@@ -484,7 +464,7 @@ func (r *OrganizationRepository) IsValidCustomDomainForOrg(email string, org *Or
 	return false
 }
 
-func (r *OrganizationRepository) CreateSampleData(org *Organization) error {
+func (r *OrganizationStore) CreateSampleData(org *Organization) error {
 	location := &Location{
 		OrganizationID: org.ID,
 		Name:           "Sample Floor",

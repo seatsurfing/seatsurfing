@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 )
 

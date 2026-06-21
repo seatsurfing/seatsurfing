@@ -53,7 +53,8 @@ func (uc *UpdateChecker) pollLatestRelease(installID string) (*CheckVersionRespo
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(url, "application/json", bytes.NewReader(req))
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Post(url, "application/json", bytes.NewReader(req))
 	if err != nil {
 		return nil, err
 	}

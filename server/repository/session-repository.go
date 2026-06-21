@@ -3,6 +3,8 @@ package repository
 import (
 	"sync"
 	"time"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
 type SessionRepository struct {

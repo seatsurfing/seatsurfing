@@ -1,11 +1,5 @@
 package router
 
-import (
-	"sync"
-
-	"github.com/seatsurfing/seatsurfing/server/plugin"
-)
-
 var unauthorizedRoutes = []string{
 	"/auth/",
 	"/organization/domain/",
@@ -19,13 +13,10 @@ var unauthorizedRoutes = []string{
 	"/kiosk/",
 }
 
-var unauthorizedRoutesOnce sync.Once
+func AddUnauthorizedRoutes(routes []string) {
+	unauthorizedRoutes = append(unauthorizedRoutes, routes...)
+}
 
 func getUnauthorizedRoutes() []string {
-	unauthorizedRoutesOnce.Do(func() {
-		for _, plg := range plugin.GetPlugins() {
-			unauthorizedRoutes = append(unauthorizedRoutes, (*plg).GetUnauthorizedRoutes()...)
-		}
-	})
 	return unauthorizedRoutes
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 )
 
 func RunDBSchemaUpdates() {
@@ -38,9 +37,6 @@ func RunDBSchemaUpdates() {
 		GetSessionRepository(),
 		GetPasskeyRepository(),
 		GetLocationFloorPlanRepository(),
-	}
-	for _, plg := range plugin.GetPlugins() {
-		repositories = append(repositories, (*plg).GetRepositories()...)
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)

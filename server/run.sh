@@ -30,7 +30,7 @@ docker run --rm -d -p 1025:1025 -p 8025:8025 --name mailhog-seatsurfing richarve
 DEV=1
 CRYPT_KEY=rC8REJftxMcdhzTvu9Tk6RqgygBRctZC
 STATIC_UI_PATH=../ui/build
-PLUGINS_SUB_PATH=../../plugins/build
+PLUGINS_SUB_PATH=../../plugin-cloud-features/build
 SMTP_HOST=127.0.0.1
 SMTP_PORT=1025 
 PUBLIC_SCHEME=http
