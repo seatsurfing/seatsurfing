@@ -36,6 +36,7 @@ var _appOnce sync.Once
 type PluginInstance struct {
 	Instance api.SeatsurfingPlugin
 	Client   *goPlugin.Client
+	BrokerID uint32
 }
 
 func GetApp() *App {
@@ -129,12 +130,11 @@ func (a *App) loadPlugin(f os.DirEntry) {
 
 	api.RegisterPlugin(plg)
 	AddUnauthorizedRoutes(plg.GetUnauthorizedRoutes())
-	plg.RunSchemaUpdates()
-	plg.OnInit(brokerID)
 
 	instance := &PluginInstance{
 		Instance: plg,
 		Client:   client,
+		BrokerID: brokerID,
 	}
 	a.PluginInstances = append(a.PluginInstances, instance)
 }
@@ -224,6 +224,12 @@ func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, 
 	w.Write(resp.Body)
 }
 
+func (a *App) NotifyPlugins() {
+	for _, inst := range a.PluginInstances {
+		inst.Instance.OnInit(inst.BrokerID)
+	}
+}
+
 func (a *App) KillPlugins() {
 	log.Println("Killing plugins …")
 	for _, plg := range a.PluginInstances {
@@ -279,6 +285,15 @@ func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func pluginPrefixConflicts(pluginPrefix string, builtInPrefixes []string) bool {
+	for _, b := range builtInPrefixes {
+		if strings.HasPrefix(pluginPrefix, b) || strings.HasPrefix(b, pluginPrefix) {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *App) InitializeRouter() {
 	a.Router = mux.NewRouter()
 	routers := make(map[string]api.Route)
@@ -301,8 +316,18 @@ func (a *App) InitializeRouter() {
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}
+	builtInPrefixes := make([]string, 0, len(routers))
+	for route, router := range routers {
+		builtInPrefixes = append(builtInPrefixes, route)
+		subRouter := a.Router.PathPrefix(route).Subrouter()
+		router.SetupRoutes(subRouter)
+	}
 	for _, inst := range a.PluginInstances {
 		for _, prefix := range inst.Instance.GetRoutePrefix() {
+			if pluginPrefixConflicts(prefix, builtInPrefixes) {
+				log.Printf("Plugin route prefix %q conflicts with a built-in route and will not be registered", prefix)
+				continue
+			}
 			prefix := prefix
 			inst := inst
 			subRouter := a.Router.PathPrefix(prefix).Subrouter()
@@ -310,10 +335,6 @@ func (a *App) InitializeRouter() {
 				a.forwardToPlugin(inst.Instance, w, r)
 			})
 		}
-	}
-	for route, router := range routers {
-		subRouter := a.Router.PathPrefix(route).Subrouter()
-		router.SetupRoutes(subRouter)
 	}
 	a.setupStaticUIRoutes(a.Router)
 	//a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)

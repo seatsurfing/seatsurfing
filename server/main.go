@@ -18,6 +18,7 @@ func main() {
 	a.InitializeDatabases()
 	a.InitializeDefaultOrg()
 	a.InitializeSingleOrgSettings()
+	a.NotifyPlugins()
 	a.InitializeRouter()
 	a.InitializeTimers()
 	a.Run()

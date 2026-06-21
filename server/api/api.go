@@ -55,6 +55,11 @@ type AdminWelcomeScreen struct {
 	SkipOnSettingTrue string
 }
 
+type adminWelcomeScreenResult struct {
+	Present bool
+	Screen  AdminWelcomeScreen
+}
+
 type PluginSetting struct {
 	Name        string
 	Value       string
@@ -116,12 +121,12 @@ func (p *PluginRPC) OnInit(brokerID uint32) {
 }
 
 func (p *PluginRPC) GetAdminWelcomeScreen() *AdminWelcomeScreen {
-	var resp AdminWelcomeScreen
+	var resp adminWelcomeScreenResult
 	err := p.Client.Call("Plugin.GetAdminWelcomeScreen", new(any), &resp)
-	if err != nil {
+	if err != nil || !resp.Present {
 		return nil
 	}
-	return &resp
+	return &resp.Screen
 }
 
 func (p *PluginRPC) GetPublicSettings(organizationID string) []*PluginSetting {
@@ -217,10 +222,11 @@ func (s *PluginRPCServer) OnInit(brokerID uint32, resp *any) error {
 	return nil
 }
 
-func (s *PluginRPCServer) GetAdminWelcomeScreen(args any, resp *AdminWelcomeScreen) error {
+func (s *PluginRPCServer) GetAdminWelcomeScreen(args any, resp *adminWelcomeScreenResult) error {
 	result := s.Impl.GetAdminWelcomeScreen()
 	if result != nil {
-		*resp = *result
+		resp.Present = true
+		resp.Screen = *result
 	}
 	return nil
 }
