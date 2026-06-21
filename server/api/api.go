@@ -135,7 +135,9 @@ func (p *PluginRPC) GetPublicSettings(organizationID string) []*PluginSetting {
 
 func (p *PluginRPC) HandleHTTPRequest(req PluginHTTPRequest) PluginHTTPResponse {
 	var resp PluginHTTPResponse
-	p.Client.Call("Plugin.HandleHTTPRequest", req, &resp)
+	if err := p.Client.Call("Plugin.HandleHTTPRequest", req, &resp); err != nil {
+		return PluginHTTPResponse{StatusCode: 502}
+	}
 	return resp
 }
 
