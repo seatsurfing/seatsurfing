@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.107.0](https://github.com/seatsurfing/seatsurfing/compare/v1.106.1...v1.107.0) (2026-06-21)
+
+
+### ✨ Features
+
+* **server:** new plugin api ([#2298](https://github.com/seatsurfing/seatsurfing/issues/2298)) ([952d556](https://github.com/seatsurfing/seatsurfing/commit/952d556867a424bd88a8c2a6ca3b124d3951e3e4))
+
 ## [1.106.1](https://github.com/seatsurfing/seatsurfing/compare/v1.106.0...v1.106.1) (2026-06-21)
 
 
