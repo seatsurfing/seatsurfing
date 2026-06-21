@@ -14,5 +14,7 @@ func RegisterPlugin(plg SeatsurfingPlugin) {
 func GetPlugins() []SeatsurfingPlugin {
 	registeredPluginsMu.RLock()
 	defer registeredPluginsMu.RUnlock()
-	return registeredPlugins
+	plugins := make([]SeatsurfingPlugin, len(registeredPlugins))
+	copy(plugins, registeredPlugins)
+	return plugins
 }
