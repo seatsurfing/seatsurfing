@@ -37,6 +37,7 @@ type PluginInstance struct {
 	Instance api.SeatsurfingPlugin
 	Client   *goPlugin.Client
 	BrokerID uint32
+	Name     string
 }
 
 func GetApp() *App {
@@ -124,9 +125,9 @@ func (a *App) loadPlugin(f os.DirEntry) {
 	}
 	plg := api.SeatsurfingPlugin(pluginRPC)
 
-	// Start HostAPI server on a dedicated broker stream so the plugin can call back.
+	// Reserve broker ID now; AcceptAndServe starts in NotifyPlugins just before OnInit
+	// to avoid the 5-second Accept timeout firing during DB initialisation.
 	brokerID := pluginRPC.Broker.NextId()
-	go pluginRPC.Broker.AcceptAndServe(brokerID, api.NewHostAPIRPCServer(&hostAPIImpl{}))
 
 	api.RegisterPlugin(plg)
 	AddUnauthorizedRoutes(plg.GetUnauthorizedRoutes())
@@ -135,6 +136,7 @@ func (a *App) loadPlugin(f os.DirEntry) {
 		Instance: plg,
 		Client:   client,
 		BrokerID: brokerID,
+		Name:     f.Name(),
 	}
 	a.PluginInstances = append(a.PluginInstances, instance)
 }
@@ -226,6 +228,12 @@ func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, 
 
 func (a *App) NotifyPlugins() {
 	for _, inst := range a.PluginInstances {
+		pluginRPC := inst.Instance.(*api.PluginRPC)
+		go func(pr *api.PluginRPC, brokerID uint32, name string) {
+			log.Printf("Plugin %s: HostAPI broker stream %d: waiting for plugin to dial", name, brokerID)
+			pr.Broker.AcceptAndServe(brokerID, api.NewHostAPIRPCServer(&hostAPIImpl{}))
+			log.Printf("Plugin %s: HostAPI broker stream %d: AcceptAndServe returned", name, brokerID)
+		}(pluginRPC, inst.BrokerID, inst.Name)
 		inst.Instance.OnInit(inst.BrokerID)
 	}
 }
@@ -664,3 +672,4 @@ func (a *App) Run() {
 	a.PublicHttpServer.Shutdown(ctx)
 	a.KillPlugins()
 }
+

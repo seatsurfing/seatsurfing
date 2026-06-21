@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
@@ -55,7 +56,7 @@ type AdminWelcomeScreen struct {
 	SkipOnSettingTrue string
 }
 
-type adminWelcomeScreenResult struct {
+type AdminWelcomeScreenResult struct {
 	Present bool
 	Screen  AdminWelcomeScreen
 }
@@ -100,30 +101,42 @@ func (p *PluginRPC) GetUnauthorizedRoutes() []string {
 }
 
 func (p *PluginRPC) RunSchemaUpdates() {
-	p.Client.Call("Plugin.RunSchemaUpdates", new(any), new(any))
+	if err := p.Client.Call("Plugin.RunSchemaUpdates", new(any), new(any)); err != nil {
+		log.Println("RunSchemaUpdates RPC error:", err)
+	}
 }
 
 func (p *PluginRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 	var resp []AdminUIMenuItem
 	err := p.Client.Call("Plugin.GetAdminUIMenuItems", new(any), &resp)
 	if err != nil {
+		log.Println("GetAdminUIMenuItems RPC error:", err)
 		return []AdminUIMenuItem{}
 	}
+	log.Printf("GetAdminUIMenuItems returned %d items: %+v", len(resp), resp)
 	return resp
 }
 
 func (p *PluginRPC) OnTimer() {
-	p.Client.Call("Plugin.OnTimer", new(any), new(any))
+	if err := p.Client.Call("Plugin.OnTimer", new(any), new(any)); err != nil {
+		log.Println("OnTimer RPC error:", err)
+	}
 }
 
 func (p *PluginRPC) OnInit(brokerID uint32) {
-	p.Client.Call("Plugin.OnInit", brokerID, new(any))
+	if err := p.Client.Call("Plugin.OnInit", brokerID, new(any)); err != nil {
+		log.Println("OnInit RPC error:", err)
+	}
 }
 
 func (p *PluginRPC) GetAdminWelcomeScreen() *AdminWelcomeScreen {
-	var resp adminWelcomeScreenResult
+	var resp AdminWelcomeScreenResult
 	err := p.Client.Call("Plugin.GetAdminWelcomeScreen", new(any), &resp)
-	if err != nil || !resp.Present {
+	if err != nil {
+		log.Println("GetAdminWelcomeScreen RPC error:", err)
+		return nil
+	}
+	if !resp.Present {
 		return nil
 	}
 	return &resp.Screen
@@ -222,7 +235,7 @@ func (s *PluginRPCServer) OnInit(brokerID uint32, resp *any) error {
 	return nil
 }
 
-func (s *PluginRPCServer) GetAdminWelcomeScreen(args any, resp *adminWelcomeScreenResult) error {
+func (s *PluginRPCServer) GetAdminWelcomeScreen(args any, resp *AdminWelcomeScreenResult) error {
 	result := s.Impl.GetAdminWelcomeScreen()
 	if result != nil {
 		resp.Present = true
