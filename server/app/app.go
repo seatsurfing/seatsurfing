@@ -254,13 +254,13 @@ type notFoundResponseWriter struct {
 
 func (w *notFoundResponseWriter) WriteHeader(status int) {
 	w.status = status
-	if status != http.StatusNotFound {
+	if status != http.StatusNotFound && status != http.StatusMethodNotAllowed {
 		w.ResponseWriter.WriteHeader(status)
 	}
 }
 
 func (w *notFoundResponseWriter) Write(b []byte) (int, error) {
-	if w.status == http.StatusNotFound {
+	if w.status == http.StatusNotFound || w.status == http.StatusMethodNotAllowed {
 		return len(b), nil
 	}
 	return w.ResponseWriter.Write(b)
@@ -339,6 +339,7 @@ func (a *App) InitializeRouter() {
 			prefix := prefix
 			inst := inst
 			subRouter := a.Router.PathPrefix(prefix).Subrouter()
+			subRouter.Methods("OPTIONS").PathPrefix("/").HandlerFunc(CorsHandler)
 			subRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				a.forwardToPlugin(inst.Instance, w, r)
 			})
