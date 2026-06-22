@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.107.2](https://github.com/seatsurfing/seatsurfing/compare/v1.107.1...v1.107.2) (2026-06-22)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix faulty plugin callbacks ([#2311](https://github.com/seatsurfing/seatsurfing/issues/2311)) ([4f9598b](https://github.com/seatsurfing/seatsurfing/commit/4f9598b5fd97b702f9d4b0407cd4470520a6981b))
+
 ## [1.107.1](https://github.com/seatsurfing/seatsurfing/compare/v1.107.0...v1.107.1) (2026-06-22)
 
 
