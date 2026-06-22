@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.107.1](https://github.com/seatsurfing/seatsurfing/compare/v1.107.0...v1.107.1) (2026-06-22)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix plugin route handling ([#2308](https://github.com/seatsurfing/seatsurfing/issues/2308)) ([d549fdc](https://github.com/seatsurfing/seatsurfing/commit/d549fdc403eef05879f4591bf325d21c2a3eff7e))
+
 ## [1.107.0](https://github.com/seatsurfing/seatsurfing/compare/v1.106.1...v1.107.0) (2026-06-21)
 
 
