@@ -257,10 +257,8 @@ func (s *HostAPIRPCServer) UserIsSuperAdmin(a UserIsAdminArgs, r *BoolReply) err
 	r.V = s.impl.GetUserRepository().IsSuperAdmin(a.User)
 	return nil
 }
-func (s *HostAPIRPCServer) UserCreate(a UserMutateArgs, r *UserGetOneReply) error {
-	err := s.impl.GetUserRepository().Create(a.User)
-	r.User = a.User
-	r.Err = errStr(err)
+func (s *HostAPIRPCServer) UserCreate(a UserMutateArgs, r *ErrorReply) error {
+	r.Err = errStr(s.impl.GetUserRepository().Create(a.User))
 	return nil
 }
 func (s *HostAPIRPCServer) UserUpdate(a UserMutateArgs, r *ErrorReply) error {
@@ -303,10 +301,8 @@ func (s *HostAPIRPCServer) OrgGetPrimaryDomain(a OrgGetPrimaryDomainArgs, r *Org
 	r.Domain, r.Err = v, errStr(err)
 	return nil
 }
-func (s *HostAPIRPCServer) OrgCreate(a OrgMutateArgs, r *OrgGetOneReply) error {
-	err := s.impl.GetOrganizationRepository().Create(a.Org)
-	r.Org = a.Org
-	r.Err = errStr(err)
+func (s *HostAPIRPCServer) OrgCreate(a OrgMutateArgs, r *ErrorReply) error {
+	r.Err = errStr(s.impl.GetOrganizationRepository().Create(a.Org))
 	return nil
 }
 func (s *HostAPIRPCServer) OrgUpdate(a OrgMutateArgs, r *ErrorReply) error {
@@ -629,12 +625,9 @@ func (r *userRepositoryRPC) IsSuperAdmin(user *User) bool {
 	return reply.V
 }
 func (r *userRepositoryRPC) Create(e *User) error {
-	var reply UserGetOneReply
+	var reply ErrorReply
 	if err := r.client.Call("Plugin.UserCreate", UserMutateArgs{e}, &reply); err != nil {
 		return err
-	}
-	if reply.User != nil {
-		*e = *reply.User
 	}
 	return strErr(reply.Err)
 }
@@ -698,12 +691,9 @@ func (r *organizationRepositoryRPC) GetPrimaryDomain(e *Organization) (*Domain, 
 	return reply.Domain, strErr(reply.Err)
 }
 func (r *organizationRepositoryRPC) Create(e *Organization) error {
-	var reply OrgGetOneReply
+	var reply ErrorReply
 	if err := r.client.Call("Plugin.OrgCreate", OrgMutateArgs{e}, &reply); err != nil {
 		return err
-	}
-	if reply.Org != nil {
-		*e = *reply.Org
 	}
 	return strErr(reply.Err)
 }
