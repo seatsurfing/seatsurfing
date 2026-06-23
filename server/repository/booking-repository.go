@@ -111,6 +111,9 @@ func (r *BookingRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 			"ADD COLUMN IF NOT EXISTS reminder_sent_at_utc TIMESTAMP NULL DEFAULT NULL"); err != nil {
 			panic(err)
 		}
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_reminder_due ON bookings(enter_time) WHERE reminder_sent_at_utc IS NULL AND approved = true"); err != nil {
+			panic(err)
+		}
 	}
 }
 
