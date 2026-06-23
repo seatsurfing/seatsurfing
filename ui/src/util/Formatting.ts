@@ -122,8 +122,11 @@ export default class Formatting {
       return s;
     }
     const withoutOffset = match[1];
-    return /\.\d+$/.test(withoutOffset)
-      ? withoutOffset + "Z"
-      : withoutOffset + ".000Z";
+    const fractionMatch = withoutOffset.match(/\.(\d+)$/);
+    if (fractionMatch) {
+      const ms = fractionMatch[1].padEnd(3, "0").slice(0, 3);
+      return withoutOffset.replace(/\.\d+$/, "." + ms) + "Z";
+    }
+    return withoutOffset + ".000Z";
   }
 }
