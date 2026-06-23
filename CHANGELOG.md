@@ -1,5 +1,56 @@
 # Changelog
 
+## [1.107.4](https://github.com/seatsurfing/seatsurfing/compare/v1.107.3...v1.107.4) (2026-06-23)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix creating AuthState via plugin API ([#2315](https://github.com/seatsurfing/seatsurfing/issues/2315)) ([1758f9f](https://github.com/seatsurfing/seatsurfing/commit/1758f9f5f56334fd2d413ee4b08d6b8f89461bd0))
+
+## [1.107.3](https://github.com/seatsurfing/seatsurfing/compare/v1.107.2...v1.107.3) (2026-06-23)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump react-tooltip from 6.0.7 to 6.0.8 in /ui in the production-dependencies group across 1 directory ([#2306](https://github.com/seatsurfing/seatsurfing/issues/2306)) ([e993296](https://github.com/seatsurfing/seatsurfing/commit/e993296f1c63f49251dcc12da53f1c9fdf79652c))
+* **server:** fix potential bugs when communicating with the plugin ([#2313](https://github.com/seatsurfing/seatsurfing/issues/2313)) ([e06feff](https://github.com/seatsurfing/seatsurfing/commit/e06feffbdb246ec1deebb99a2b77fcd42e05a855))
+
+## [1.107.2](https://github.com/seatsurfing/seatsurfing/compare/v1.107.1...v1.107.2) (2026-06-22)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix faulty plugin callbacks ([#2311](https://github.com/seatsurfing/seatsurfing/issues/2311)) ([4f9598b](https://github.com/seatsurfing/seatsurfing/commit/4f9598b5fd97b702f9d4b0407cd4470520a6981b))
+
+## [1.107.1](https://github.com/seatsurfing/seatsurfing/compare/v1.107.0...v1.107.1) (2026-06-22)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix plugin route handling ([#2308](https://github.com/seatsurfing/seatsurfing/issues/2308)) ([d549fdc](https://github.com/seatsurfing/seatsurfing/commit/d549fdc403eef05879f4591bf325d21c2a3eff7e))
+
+## [1.107.0](https://github.com/seatsurfing/seatsurfing/compare/v1.106.1...v1.107.0) (2026-06-21)
+
+
+### ✨ Features
+
+* **server:** new plugin api ([#2298](https://github.com/seatsurfing/seatsurfing/issues/2298)) ([952d556](https://github.com/seatsurfing/seatsurfing/commit/952d556867a424bd88a8c2a6ca3b124d3951e3e4))
+
+## [1.106.1](https://github.com/seatsurfing/seatsurfing/compare/v1.106.0...v1.106.1) (2026-06-21)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** fix button CSS definitions ([#2293](https://github.com/seatsurfing/seatsurfing/issues/2293)) ([f8006d5](https://github.com/seatsurfing/seatsurfing/commit/f8006d596b5c1e24bc679ac5836974233deeb16c))
+* **deps:** bump undici from 7.25.0 to 7.28.0 in /ui ([#2300](https://github.com/seatsurfing/seatsurfing/issues/2300)) ([7b3b154](https://github.com/seatsurfing/seatsurfing/commit/7b3b15460359ae78d1dd75161068bb8b0605ad40))
+* **main:** updated Finnish localization ([#2295](https://github.com/seatsurfing/seatsurfing/issues/2295)) ([1f348d9](https://github.com/seatsurfing/seatsurfing/commit/1f348d937ea7c2140eecd7d97407bd1655ad698a))
+* **server:** improve dev run script compatibility with macos container ([#2303](https://github.com/seatsurfing/seatsurfing/issues/2303)) ([268e861](https://github.com/seatsurfing/seatsurfing/commit/268e861deed11b88ec52744758b771573bdc4b93))
+
+
+### 📚 Documentation
+
+* **main:** add hints to docker compose example ([#2304](https://github.com/seatsurfing/seatsurfing/issues/2304)) ([73dce74](https://github.com/seatsurfing/seatsurfing/commit/73dce7476bb6e759d29eb4b9efd61a2d98c02709))
+
 ## [1.106.0](https://github.com/seatsurfing/seatsurfing/compare/v1.105.0...v1.106.0) (2026-06-17)
 
 

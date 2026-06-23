@@ -7,7 +7,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
-type SettingsRepository struct {
+type SettingsStore struct {
 }
 
 type OrgSetting struct {
@@ -16,65 +16,12 @@ type OrgSetting struct {
 	Value          string
 }
 
-type SettingName struct {
-	Name string
-	Type SettingType
-}
-
-const (
-	SettingSubjectDefaultDisabled = 1
-	SettingSubjectDefaultOptional = 2
-	SettingSubjectDefaultRequired = 3
-)
-
-var (
-	SettingInstallID                      SettingName = SettingName{Name: "install_id", Type: SettingTypeString}
-	SettingDatabaseVersion                SettingName = SettingName{Name: "db_version", Type: SettingTypeInt}
-	SettingEmailFooterPrefix              SettingName = SettingName{Name: "email_footer_", Type: SettingTypeString}
-	SettingAllowAnyUser                   SettingName = SettingName{Name: "allow_any_user", Type: SettingTypeBool}
-	SettingConfluenceServerSharedSecret   SettingName = SettingName{Name: "confluence_server_shared_secret", Type: SettingTypeString}
-	SettingConfluenceAnonymous            SettingName = SettingName{Name: "confluence_anonymous", Type: SettingTypeBool}
-	SettingMaxBookingsPerUser             SettingName = SettingName{Name: "max_bookings_per_user", Type: SettingTypeInt}
-	SettingMaxConcurrentBookingsPerUser   SettingName = SettingName{Name: "max_concurrent_bookings_per_user", Type: SettingTypeInt}
-	SettingMaxDaysInAdvance               SettingName = SettingName{Name: "max_days_in_advance", Type: SettingTypeInt}
-	SettingBookingRetentionEnabled        SettingName = SettingName{Name: "booking_retention_enabled", Type: SettingTypeBool}
-	SettingBookingRetentionDays           SettingName = SettingName{Name: "booking_retention_days", Type: SettingTypeInt}
-	SettingEnableMaxHourBeforeDelete      SettingName = SettingName{Name: "enable_max_hours_before_delete", Type: SettingTypeBool}
-	SettingMaxHoursBeforeDelete           SettingName = SettingName{Name: "max_hours_before_delete", Type: SettingTypeInt}
-	SettingMinBookingDurationHours        SettingName = SettingName{Name: "min_booking_duration_hours", Type: SettingTypeInt}
-	SettingMaxBookingDurationHours        SettingName = SettingName{Name: "max_booking_duration_hours", Type: SettingTypeInt}
-	SettingTargetUtilizationHoursPerWeek  SettingName = SettingName{Name: "target_utilization_hours_per_week", Type: SettingTypeInt}
-	SettingMaxHoursPartiallyBooked        SettingName = SettingName{Name: "max_hours_partially_booked", Type: SettingTypeInt}
-	SettingMaxHoursPartiallyBookedEnabled SettingName = SettingName{Name: "max_hours_partially_booked_enabled", Type: SettingTypeBool}
-	SettingDailyBasisBooking              SettingName = SettingName{Name: "daily_basis_booking", Type: SettingTypeBool}
-	SettingNoAdminRestrictions            SettingName = SettingName{Name: "no_admin_restrictions", Type: SettingTypeBool}
-	SettingCustomLogoUrl                  SettingName = SettingName{Name: "custom_logo_url", Type: SettingTypeString}
-	SettingShowNames                      SettingName = SettingName{Name: "show_names", Type: SettingTypeBool}
-	SettingAllowBookingsNonExistingUsers  SettingName = SettingName{Name: "allow_booking_nonexist_users", Type: SettingTypeBool}
-	SettingDisableBuddies                 SettingName = SettingName{Name: "disable_buddies", Type: SettingTypeBool}
-	SettingDefaultTimezone                SettingName = SettingName{Name: "default_timezone", Type: SettingTypeString}
-	SettingAllowRecurringBookings         SettingName = SettingName{Name: "allow_recurring_bookings", Type: SettingTypeBool}
-	SettingNewUserDefaultMailNotification SettingName = SettingName{Name: "new_user_default_mail_notification", Type: SettingTypeBool}
-	SettingSubjectDefault                 SettingName = SettingName{Name: "subject_default", Type: SettingTypeInt}
-	SettingFeatureNoUserLimit             SettingName = SettingName{Name: "feature_no_user_limit", Type: SettingTypeBool}
-	SettingFeatureCustomDomains           SettingName = SettingName{Name: "feature_custom_domains", Type: SettingTypeBool}
-	SettingFeatureGroups                  SettingName = SettingName{Name: "feature_groups", Type: SettingTypeBool}
-	SettingFeatureAuthProviders           SettingName = SettingName{Name: "feature_auth_providers", Type: SettingTypeBool}
-	SettingFeatureRecurringBookings       SettingName = SettingName{Name: "feature_recurring_bookings", Type: SettingTypeBool}
-	SettingEnforceTOTP                    SettingName = SettingName{Name: "enforce_totp", Type: SettingTypeBool}
-	SettingKioskSecret                    SettingName = SettingName{Name: "kiosk_access_secret", Type: SettingTypeString}
-	SettingKioskModeEnabled               SettingName = SettingName{Name: "kiosk_mode_enabled", Type: SettingTypeBool}
-	SettingFeatureKioskMode               SettingName = SettingName{Name: "feature_kiosk_mode", Type: SettingTypeBool}
-	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
-	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
-)
-
-var settingsRepository *SettingsRepository
+var settingsRepository *SettingsStore
 var settingsRepositoryOnce sync.Once
 
-func GetSettingsRepository() *SettingsRepository {
+func GetSettingsRepository() *SettingsStore {
 	settingsRepositoryOnce.Do(func() {
-		settingsRepository = &SettingsRepository{}
+		settingsRepository = &SettingsStore{}
 		_, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS settings (" +
 			"organization_id uuid NOT NULL, " +
 			"name VARCHAR NOT NULL, " +
@@ -87,7 +34,7 @@ func GetSettingsRepository() *SettingsRepository {
 	return settingsRepository
 }
 
-func (r *SettingsRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+func (r *SettingsStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	// upgrade old settings
 	rows, err := GetDatabase().DB().Query("SELECT organization_id FROM settings " +
 		"WHERE name = 'subscription_max_users' AND NULLIF(value, '')::int > " + strconv.Itoa(DefaultUserLimit))
@@ -111,7 +58,7 @@ func (r *SettingsRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	// nothing yet
 }
 
-func (r *SettingsRepository) Set(organizationID string, name string, value string) error {
+func (r *SettingsStore) Set(organizationID string, name string, value string) error {
 	if _, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES ($1, $2, $3) "+
 		"ON CONFLICT (organization_id, name) DO UPDATE SET value = $3",
@@ -122,7 +69,7 @@ func (r *SettingsRepository) Set(organizationID string, name string, value strin
 	return nil
 }
 
-func (r *SettingsRepository) Delete(organizationID string, name string) error {
+func (r *SettingsStore) Delete(organizationID string, name string) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE organization_id = $1 AND name = $2",
 		organizationID, name); err != nil {
 		return err
@@ -131,7 +78,7 @@ func (r *SettingsRepository) Delete(organizationID string, name string) error {
 	return nil
 }
 
-func (r *SettingsRepository) Get(organizationID string, name string) (string, error) {
+func (r *SettingsStore) Get(organizationID string, name string) (string, error) {
 	// Check cache first
 	cachRes, err := GetCache().Get(organizationID + "_" + name)
 	if err == nil {
@@ -150,7 +97,7 @@ func (r *SettingsRepository) Get(organizationID string, name string) (string, er
 	return res, nil
 }
 
-func (r *SettingsRepository) GetOrganizationIDsByValue(name, value string) ([]string, error) {
+func (r *SettingsStore) GetOrganizationIDsByValue(name, value string) ([]string, error) {
 	var res []string
 	rows, err := GetDatabase().DB().Query("SELECT organization_id FROM settings "+
 		"WHERE name = $1 AND value = $2",
@@ -170,11 +117,11 @@ func (r *SettingsRepository) GetOrganizationIDsByValue(name, value string) ([]st
 	return res, nil
 }
 
-func (r *SettingsRepository) SetGlobal(name string, value string) error {
+func (r *SettingsStore) SetGlobal(name string, value string) error {
 	return r.Set(r.GetNullUUID(), name, value)
 }
 
-func (r *SettingsRepository) GetInt(organizationID string, name string) (int, error) {
+func (r *SettingsStore) GetInt(organizationID string, name string) (int, error) {
 	res, err := r.Get(organizationID, name)
 	if err != nil {
 		return 0, err
@@ -183,7 +130,7 @@ func (r *SettingsRepository) GetInt(organizationID string, name string) (int, er
 	return i, err
 }
 
-func (r *SettingsRepository) GetBool(organizationID string, name string) (bool, error) {
+func (r *SettingsStore) GetBool(organizationID string, name string) (bool, error) {
 	res, err := r.Get(organizationID, name)
 	if err != nil {
 		return false, err
@@ -192,7 +139,7 @@ func (r *SettingsRepository) GetBool(organizationID string, name string) (bool, 
 	return b, err
 }
 
-func (r *SettingsRepository) GetGlobalString(name string) (string, error) {
+func (r *SettingsStore) GetGlobalString(name string) (string, error) {
 	res, err := r.Get(r.GetNullUUID(), name)
 	if err != nil {
 		return "", err
@@ -200,11 +147,11 @@ func (r *SettingsRepository) GetGlobalString(name string) (string, error) {
 	return res, nil
 }
 
-func (r *SettingsRepository) GetGlobalStringLocalized(prefix SettingName, language string) (string, error) {
+func (r *SettingsStore) GetGlobalStringLocalized(prefix SettingName, language string) (string, error) {
 	return r.GetGlobalString(prefix.Name + language)
 }
 
-func (r *SettingsRepository) GetGlobalInt(name string) (int, error) {
+func (r *SettingsStore) GetGlobalInt(name string) (int, error) {
 	res, err := r.Get(r.GetNullUUID(), name)
 	if err != nil {
 		return 0, err
@@ -213,7 +160,7 @@ func (r *SettingsRepository) GetGlobalInt(name string) (int, error) {
 	return i, err
 }
 
-func (r *SettingsRepository) GetGlobalBool(name string) (bool, error) {
+func (r *SettingsStore) GetGlobalBool(name string) (bool, error) {
 	res, err := r.Get(r.GetNullUUID(), name)
 	if err != nil {
 		return false, err
@@ -222,7 +169,7 @@ func (r *SettingsRepository) GetGlobalBool(name string) (bool, error) {
 	return b, err
 }
 
-func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error) {
+func (r *SettingsStore) GetAll(organizationID string) ([]*OrgSetting, error) {
 	var result []*OrgSetting
 	rows, err := GetDatabase().DB().Query("SELECT organization_id, name, value FROM settings "+
 		"WHERE organization_id = $1 "+
@@ -243,7 +190,7 @@ func (r *SettingsRepository) GetAll(organizationID string) ([]*OrgSetting, error
 	return result, nil
 }
 
-func (r *SettingsRepository) GetOrgIDsByValue(name string, value string) ([]string, error) {
+func (r *SettingsStore) GetOrgIDsByValue(name string, value string) ([]string, error) {
 	var result []string
 	rows, err := GetDatabase().DB().Query("SELECT organization_id FROM settings "+
 		"WHERE name = $1 AND value = $2 "+
@@ -263,7 +210,7 @@ func (r *SettingsRepository) GetOrgIDsByValue(name string, value string) ([]stri
 	return result, nil
 }
 
-func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) error {
+func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
 		"VALUES "+
 		"($1, '"+SettingFeatureNoUserLimit.Name+"', '0'), "+
@@ -305,7 +252,7 @@ func (r *SettingsRepository) InitDefaultSettingsForOrg(organizationID string) er
 	return err
 }
 
-func (r *SettingsRepository) InitDefaultSettings(orgIDs []string) error {
+func (r *SettingsStore) InitDefaultSettings(orgIDs []string) error {
 	for _, orgID := range orgIDs {
 		if err := r.InitDefaultSettingsForOrg(orgID); err != nil {
 			return err
@@ -314,11 +261,11 @@ func (r *SettingsRepository) InitDefaultSettings(orgIDs []string) error {
 	return nil
 }
 
-func (r *SettingsRepository) DeleteAll(organizationID string) error {
+func (r *SettingsStore) DeleteAll(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE organization_id = $1", organizationID)
 	return err
 }
 
-func (r *SettingsRepository) GetNullUUID() string {
+func (r *SettingsStore) GetNullUUID() string {
 	return "00000000-0000-0000-0000-000000000000"
 }

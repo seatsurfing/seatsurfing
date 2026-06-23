@@ -4,10 +4,6 @@ export default class Formatting {
   static Language: string = "en";
   static t: (key: string, view?: object) => any;
 
-  static tbool(s: string) {
-    return Formatting.t(s) === "1";
-  }
-
   static getFormatter(local?: boolean): Intl.DateTimeFormat {
     return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
@@ -38,7 +34,7 @@ export default class Formatting {
   }
 
   static getFormatterShort(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
+    return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
       year: "numeric",
       month: "2-digit",
@@ -47,7 +43,6 @@ export default class Formatting {
       minute: "numeric",
       hour12: !RuntimeConfig.INFOS.use24HourTime,
     });
-    return formatter;
   }
 
   static getFormatterDate(local?: boolean): Intl.DateTimeFormat {
@@ -122,9 +117,16 @@ export default class Formatting {
   }
 
   static stripTimezoneDetails(s: string): string {
-    if (s.length > 6 && (s[s.length - 6] === "+" || s[s.length - 6] === "-")) {
-      return s.substring(0, s.length - 6) + ".000Z";
+    const match = s.match(/^(.+?)([+-]\d{2}:\d{2})$/);
+    if (!match) {
+      return s;
     }
-    return s;
+    const withoutOffset = match[1];
+    const fractionMatch = withoutOffset.match(/\.(\d+)$/);
+    if (fractionMatch) {
+      const ms = fractionMatch[1].padEnd(3, "0").slice(0, 3);
+      return withoutOffset.replace(/\.\d+$/, "." + ms) + "Z";
+    }
+    return withoutOffset + ".000Z";
   }
 }

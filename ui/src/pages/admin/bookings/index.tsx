@@ -224,9 +224,9 @@ class Bookings extends React.Component<Props, State> {
 
   renderItem = (booking: Booking) => {
     const btnStyle: CSS.Properties = {
-      ["padding" as any]: "0.1rem 0.3rem",
-      ["font-size" as any]: "0.875rem",
-      ["border-radius" as any]: "0.2rem",
+      padding: "0.1rem 0.3rem",
+      fontSize: "0.875rem",
+      borderRadius: "0.2rem",
     };
     return (
       <tr key={booking.id} onClick={() => this.onItemSelect(booking)}>

@@ -6,23 +6,19 @@ import (
 	"sync"
 
 	"github.com/lib/pq"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
-type GroupRepository struct {
+type GroupStore struct {
 }
 
-type Group struct {
-	ID             string
-	OrganizationID string
-	Name           string
-}
-
-var groupRepository *GroupRepository
+var groupRepository *GroupStore
 var groupRepositoryOnce sync.Once
 
-func GetGroupRepository() *GroupRepository {
+func GetGroupRepository() *GroupStore {
 	groupRepositoryOnce.Do(func() {
-		groupRepository = &GroupRepository{}
+		groupRepository = &GroupStore{}
 		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS groups (" +
 			"id uuid DEFAULT uuid_generate_v4(), " +
 			"organization_id uuid NOT NULL, " +
@@ -40,11 +36,11 @@ func GetGroupRepository() *GroupRepository {
 	return groupRepository
 }
 
-func (r *GroupRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+func (r *GroupStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	// Nothing yet
 }
 
-func (r *GroupRepository) Create(e *Group) error {
+func (r *GroupStore) Create(e *Group) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO groups "+
 		"(organization_id, name) "+
@@ -58,7 +54,7 @@ func (r *GroupRepository) Create(e *Group) error {
 	return nil
 }
 
-func (r *GroupRepository) GetOne(id string) (*Group, error) {
+func (r *GroupStore) GetOne(id string) (*Group, error) {
 	e := &Group{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name "+
 		"FROM groups "+
@@ -70,7 +66,7 @@ func (r *GroupRepository) GetOne(id string) (*Group, error) {
 	return e, nil
 }
 
-func (r *GroupRepository) GetAll(organizationID string) ([]*Group, error) {
+func (r *GroupStore) GetAll(organizationID string) ([]*Group, error) {
 	var result []*Group
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
 		"FROM groups "+
@@ -92,7 +88,7 @@ func (r *GroupRepository) GetAll(organizationID string) ([]*Group, error) {
 	return result, nil
 }
 
-func (r *GroupRepository) GetAllByIDs(groupIDs []string) ([]*Group, error) {
+func (r *GroupStore) GetAllByIDs(groupIDs []string) ([]*Group, error) {
 	var result []*Group
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
 		"FROM groups "+
@@ -114,7 +110,7 @@ func (r *GroupRepository) GetAllByIDs(groupIDs []string) ([]*Group, error) {
 	return result, nil
 }
 
-func (r *GroupRepository) GetAllWhereUserIsMember(userID string) ([]*Group, error) {
+func (r *GroupStore) GetAllWhereUserIsMember(userID string) ([]*Group, error) {
 	var result []*Group
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
 		"FROM groups "+
@@ -136,7 +132,7 @@ func (r *GroupRepository) GetAllWhereUserIsMember(userID string) ([]*Group, erro
 	return result, nil
 }
 
-func (r *GroupRepository) GetByKeyword(organizationID string, keyword string) ([]*Group, error) {
+func (r *GroupStore) GetByKeyword(organizationID string, keyword string) ([]*Group, error) {
 	var result []*Group
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name "+
 		"FROM groups "+
@@ -157,7 +153,7 @@ func (r *GroupRepository) GetByKeyword(organizationID string, keyword string) ([
 	return result, nil
 }
 
-func (r *GroupRepository) GetByName(organizationID string, name string) (*Group, error) {
+func (r *GroupStore) GetByName(organizationID string, name string) (*Group, error) {
 	e := &Group{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name "+
 		"FROM groups "+
@@ -168,7 +164,7 @@ func (r *GroupRepository) GetByName(organizationID string, name string) (*Group,
 	return e, nil
 }
 
-func (r *GroupRepository) GroupsExistAndBelongToOrg(organizationID string, groupIDs []string) (bool, error) {
+func (r *GroupStore) GroupsExistAndBelongToOrg(organizationID string, groupIDs []string) (bool, error) {
 	var count int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+
 		"FROM groups "+
@@ -180,7 +176,7 @@ func (r *GroupRepository) GroupsExistAndBelongToOrg(organizationID string, group
 	return count == len(groupIDs), nil
 }
 
-func (r *GroupRepository) Update(e *Group) error {
+func (r *GroupStore) Update(e *Group) error {
 	_, err := GetDatabase().DB().Exec("UPDATE groups SET "+
 		"organization_id = $1, "+
 		"name = $2 "+
@@ -189,7 +185,7 @@ func (r *GroupRepository) Update(e *Group) error {
 	return err
 }
 
-func (r *GroupRepository) Delete(e *Group) error {
+func (r *GroupStore) Delete(e *Group) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE "+
 		"group_id = $1", e.ID); err != nil {
 		return err
@@ -198,7 +194,7 @@ func (r *GroupRepository) Delete(e *Group) error {
 	return err
 }
 
-func (r *GroupRepository) DeleteAll(organizationID string) error {
+func (r *GroupStore) DeleteAll(organizationID string) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE "+
 		"group_id IN (SELECT id from groups WHERE organization_id = $1)", organizationID); err != nil {
 		return err
@@ -207,7 +203,7 @@ func (r *GroupRepository) DeleteAll(organizationID string) error {
 	return err
 }
 
-func (r *GroupRepository) GetMemberUserIDs(e *Group) ([]string, error) {
+func (r *GroupStore) GetMemberUserIDs(e *Group) ([]string, error) {
 	var result []string
 	rows, err := GetDatabase().DB().Query("SELECT user_id "+
 		"FROM users_groups "+
@@ -229,7 +225,7 @@ func (r *GroupRepository) GetMemberUserIDs(e *Group) ([]string, error) {
 	return result, nil
 }
 
-func (r *GroupRepository) AddMembers(e *Group, userIDs []string) error {
+func (r *GroupStore) AddMembers(e *Group, userIDs []string) error {
 	sqlStr := "INSERT INTO users_groups (group_id, user_id) VALUES "
 	vals := []interface{}{}
 	i := 1
@@ -243,7 +239,7 @@ func (r *GroupRepository) AddMembers(e *Group, userIDs []string) error {
 	return err
 }
 
-func (r *GroupRepository) RemoveMembers(e *Group, userIDs []string) error {
+func (r *GroupStore) RemoveMembers(e *Group, userIDs []string) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE group_id = $1 AND user_id = ANY($2)", e.ID, pq.Array(userIDs))
 	return err
 }

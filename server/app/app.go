@@ -10,16 +10,19 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
-	. "github.com/seatsurfing/seatsurfing/server/api"
+	goPlugin "github.com/hashicorp/go-plugin"
+	"github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -27,6 +30,15 @@ import (
 
 var _appInstance *App
 var _appOnce sync.Once
+
+//var registeredPlugins []SeatsurfingPlugin
+
+type PluginInstance struct {
+	Instance api.SeatsurfingPlugin
+	Client   *goPlugin.Client
+	BrokerID uint32
+	Name     string
+}
 
 func GetApp() *App {
 	_appOnce.Do(func() {
@@ -39,10 +51,14 @@ type App struct {
 	Router           *mux.Router
 	PublicHttpServer *http.Server
 	CleanupTicker    *time.Ticker
+	PluginInstances  []*PluginInstance
 }
 
 func (a *App) InitializeDatabases() {
 	RunDBSchemaUpdates()
+	for _, inst := range a.PluginInstances {
+		inst.Instance.RunSchemaUpdates()
+	}
 	InitDefaultOrgSettings()
 	InitDefaultUserPreferences()
 	// Set up email logging callback
@@ -51,15 +67,185 @@ func (a *App) InitializeDatabases() {
 	})
 	// Set up email footer provider: DB value takes precedence over file fallback
 	SetGlobalEmailFooterProvider(func(language string) (string, error) {
-		return GetSettingsRepository().GetGlobalStringLocalized(SettingEmailFooterPrefix, language)
+		return GetSettingsRepository().GetGlobalStringLocalized(api.SettingEmailFooterPrefix, language)
 	})
 }
 
 func (a *App) InitializePlugins() {
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnInit()
+	files, err := os.ReadDir(filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath))
+	if err != nil {
+		return
+	}
+	for _, f := range files {
+		info, err := f.Info()
+		if err != nil {
+			log.Println("Error while reading plugin file info:", err)
+			continue
+		}
+		if !f.IsDir() && info.Mode()&0100 != 0 {
+			a.loadPlugin(f)
+		}
+	}
+
+}
+
+func (a *App) loadPlugin(f os.DirEntry) {
+	handshakeConfig := goPlugin.HandshakeConfig{
+		ProtocolVersion:  1,
+		MagicCookieKey:   "SEATSURFING_PLUGIN",
+		MagicCookieValue: "b929e613-f1b6-4cca-9fc0-04cfc007e9c6",
+	}
+	var pluginMap = map[string]goPlugin.Plugin{
+		"seatsurfing": &api.SeatsurfingPluginImpl{},
+	}
+	log.Println("Loading plugin", f.Name())
+	cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name())
+	client := goPlugin.NewClient(&goPlugin.ClientConfig{
+		HandshakeConfig: handshakeConfig,
+		Plugins:         pluginMap,
+		Cmd:             exec.Command(cmd),
+	})
+	rpcClient, err := client.Client()
+	if err != nil {
+		log.Println("Error initializing plugin client:", err)
+		client.Kill()
+		return
+	}
+	raw, err := rpcClient.Dispense("seatsurfing")
+	if err != nil {
+		log.Println("Error dispensing plugin:", err)
+		client.Kill()
+		return
+	}
+	pluginRPC, ok := raw.(*api.PluginRPC)
+	if !ok {
+		log.Println("Error asserting PluginRPC type")
+		client.Kill()
+		return
+	}
+	plg := api.SeatsurfingPlugin(pluginRPC)
+
+	// Reserve broker ID now; AcceptAndServe starts in NotifyPlugins just before OnInit
+	// to avoid the 5-second Accept timeout firing during DB initialisation.
+	brokerID := pluginRPC.Broker.NextId()
+
+	api.RegisterPlugin(plg)
+	AddUnauthorizedRoutes(plg.GetUnauthorizedRoutes())
+
+	instance := &PluginInstance{
+		Instance: plg,
+		Client:   client,
+		BrokerID: brokerID,
+		Name:     f.Name(),
+	}
+	a.PluginInstances = append(a.PluginInstances, instance)
+}
+
+// hostAPIImpl is the host-side implementation of pluginapi.HostAPI.
+// It wraps the real repository singletons and utility functions.
+type hostAPIImpl struct{}
+
+func (h *hostAPIImpl) GetSettingsRepository() api.SettingsRepository {
+	return GetSettingsRepository()
+}
+func (h *hostAPIImpl) GetUserRepository() api.UserRepository {
+	return GetUserRepository()
+}
+func (h *hostAPIImpl) GetOrganizationRepository() api.OrganizationRepository {
+	return GetOrganizationRepository()
+}
+func (h *hostAPIImpl) GetGroupRepository() api.GroupRepository {
+	return GetGroupRepository()
+}
+func (h *hostAPIImpl) GetBookingRepository() api.BookingRepository {
+	return GetBookingRepository()
+}
+func (h *hostAPIImpl) GetSpaceRepository() api.SpaceRepository {
+	return GetSpaceRepository()
+}
+func (h *hostAPIImpl) GetLocationRepository() api.LocationRepository {
+	return GetLocationRepository()
+}
+func (h *hostAPIImpl) GetAuthProviderRepository() api.AuthProviderRepository {
+	return GetAuthProviderRepository()
+}
+func (h *hostAPIImpl) GetAuthStateRepository() api.AuthStateRepository {
+	return GetAuthStateRepository()
+}
+func (h *hostAPIImpl) SendEmail(recipient, subject, body, language, orgID string) error {
+	return SendEmailWithBodyAndOrg(&MailAddress{Address: recipient}, subject, body, language, orgID)
+}
+func (h *hostAPIImpl) Encrypt(plaintext string) (string, error) {
+	return EncryptString(plaintext)
+}
+func (h *hostAPIImpl) Decrypt(ciphertext string) (string, error) {
+	return DecryptString(ciphertext)
+}
+func (h *hostAPIImpl) IsValidLanguageCode(code string) bool {
+	return GetConfig().IsValidLanguageCode(code)
+}
+func (h *hostAPIImpl) DisablePasswordLogin() bool {
+	return GetConfig().DisablePasswordLogin
+}
+
+func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, r *http.Request) {
+	var body []byte
+	if r.Body != nil {
+		var err error
+		body, err = io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "error reading request body", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	userID := ""
+	if u := GetRequestUser(r); u != nil {
+		userID = u.ID
+	}
+
+	req := api.PluginHTTPRequest{
+		Method:   r.Method,
+		Path:     r.URL.Path,
+		RawQuery: r.URL.RawQuery,
+		Headers:  map[string][]string(r.Header),
+		Body:     body,
+		UserID:   userID,
+	}
+
+	resp := plg.HandleHTTPRequest(req)
+
+	for key, vals := range resp.Headers {
+		for _, v := range vals {
+			w.Header().Add(key, v)
+		}
+	}
+	if resp.StatusCode != 0 {
+		w.WriteHeader(resp.StatusCode)
+	}
+	w.Write(resp.Body)
+}
+
+func (a *App) NotifyPlugins() {
+	for _, inst := range a.PluginInstances {
+		pluginRPC := inst.Instance.(*api.PluginRPC)
+		go func(pr *api.PluginRPC, brokerID uint32, name string) {
+			log.Printf("Plugin %s: HostAPI broker stream %d: waiting for plugin to dial", name, brokerID)
+			pr.Broker.AcceptAndServe(brokerID, api.NewHostAPIRPCServer(&hostAPIImpl{}))
+			log.Printf("Plugin %s: HostAPI broker stream %d: AcceptAndServe returned", name, brokerID)
+		}(pluginRPC, inst.BrokerID, inst.Name)
+		inst.Instance.OnInit(inst.BrokerID)
 	}
 }
+
+func (a *App) KillPlugins() {
+	log.Println("Killing plugins …")
+	for _, plg := range a.PluginInstances {
+		log.Println("Killing plugin", plg.Instance)
+		plg.Client.Kill()
+	}
+}
+
 
 type notFoundResponseWriter struct {
 	http.ResponseWriter
@@ -68,13 +254,13 @@ type notFoundResponseWriter struct {
 
 func (w *notFoundResponseWriter) WriteHeader(status int) {
 	w.status = status
-	if status != http.StatusNotFound {
+	if status != http.StatusNotFound && status != http.StatusMethodNotAllowed {
 		w.ResponseWriter.WriteHeader(status)
 	}
 }
 
 func (w *notFoundResponseWriter) Write(b []byte) (int, error) {
-	if w.status == http.StatusNotFound {
+	if w.status == http.StatusNotFound || w.status == http.StatusMethodNotAllowed {
 		return len(b), nil
 	}
 	return w.ResponseWriter.Write(b)
@@ -107,9 +293,18 @@ func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func pluginPrefixConflicts(pluginPrefix string, builtInPrefixes []string) bool {
+	for _, b := range builtInPrefixes {
+		if strings.HasPrefix(pluginPrefix, b) || strings.HasPrefix(b, pluginPrefix) {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *App) InitializeRouter() {
 	a.Router = mux.NewRouter()
-	routers := make(map[string]Route)
+	routers := make(map[string]api.Route)
 	routers["/location/{locationId}/space/"] = &SpaceRouter{}
 	routers["/location/"] = &LocationRouter{}
 	routers["/booking/"] = &BookingRouter{}
@@ -129,14 +324,26 @@ func (a *App) InitializeRouter() {
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}
-	for _, plg := range plugin.GetPlugins() {
-		for route, router := range (*plg).GetPublicRoutes() {
-			routers[route] = router
-		}
-	}
+	builtInPrefixes := make([]string, 0, len(routers))
 	for route, router := range routers {
+		builtInPrefixes = append(builtInPrefixes, route)
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
+	}
+	for _, inst := range a.PluginInstances {
+		for _, prefix := range inst.Instance.GetRoutePrefix() {
+			if pluginPrefixConflicts(prefix, builtInPrefixes) {
+				log.Printf("Plugin route prefix %q conflicts with a built-in route and will not be registered", prefix)
+				continue
+			}
+			prefix := prefix
+			inst := inst
+			subRouter := a.Router.PathPrefix(prefix).Subrouter()
+			subRouter.Methods("OPTIONS").PathPrefix("/").HandlerFunc(CorsHandler)
+			subRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				a.forwardToPlugin(inst.Instance, w, r)
+			})
+		}
 	}
 	a.setupStaticUIRoutes(a.Router)
 	//a.Router.Path("/robots.txt").Methods("GET").HandlerFunc(a.RobotsTxtHandler)
@@ -188,7 +395,7 @@ func (a *App) InitializeDefaultOrg() {
 		if domain == "localhost" {
 			email = config.InitOrgUser + "@" + "seatsurfing.local"
 		}
-		org := &Organization{
+		org := &api.Organization{
 			Name:             config.InitOrgName,
 			ContactEmail:     email,
 			ContactFirstname: "Organization",
@@ -199,11 +406,11 @@ func (a *App) InitializeDefaultOrg() {
 		GetOrganizationRepository().Create(org)
 		GetOrganizationRepository().AddDomain(org, domain, true)
 		GetOrganizationRepository().SetPrimaryDomain(org, domain)
-		user := &User{
+		user := &api.User{
 			OrganizationID: org.ID,
 			Email:          email,
-			HashedPassword: NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
-			Role:           UserRoleOrgAdmin,
+			HashedPassword: api.NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
+			Role:           api.UserRoleOrgAdmin,
 			Firstname:      "Organization",
 			Lastname:       "Admin",
 		}
@@ -222,12 +429,12 @@ func (a *App) InitializeSingleOrgSettings() {
 			return
 		}
 		org := orgs[0]
-		GetSettingsRepository().Set(org.ID, SettingFeatureNoUserLimit.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
-		GetSettingsRepository().Set(org.ID, SettingFeatureKioskMode.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureNoUserLimit.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureCustomDomains.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureGroups.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureAuthProviders.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureRecurringBookings.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureKioskMode.Name, "1")
 	}
 }
 
@@ -267,8 +474,8 @@ func (a *App) onTimerTick() {
 		go a.sendBookingReminders()
 	}
 
-	for _, plg := range plugin.GetPlugins() {
-		(*plg).OnTimer()
+	for _, inst := range a.PluginInstances {
+		inst.Instance.OnTimer()
 	}
 	// Check domain accessibility once per hour
 	if time.Now().Minute() == 0 {
@@ -356,8 +563,8 @@ func (a *App) sendBookingReminderEmail(e *BookingDetails) {
 func (a *App) InitializeTimers() {
 	a.UpdateInstallStats()
 	a.onTimerTick()
-	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
-	GetUpdateChecker().InitializeVersionUpdateTimer(installID)
+	installID, _ := GetSettingsRepository().GetGlobalString(api.SettingInstallID.Name)
+	go GetUpdateChecker().InitializeVersionUpdateTimer(installID)
 	a.CleanupTicker = time.NewTicker(time.Minute * 1)
 	go func() {
 		for {
@@ -526,7 +733,7 @@ func (a *App) startPublicHttpServer() {
 		Handler:      a.Router,
 	}
 	go func() {
-		if err := a.PublicHttpServer.ListenAndServe(); err != nil {
+		if err := a.PublicHttpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 			os.Exit(-1)
 		}
@@ -537,10 +744,12 @@ func (a *App) startPublicHttpServer() {
 func (a *App) Run() {
 	a.startPublicHttpServer()
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 	log.Println("Shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	a.PublicHttpServer.Shutdown(ctx)
+	a.KillPlugins()
 }
+

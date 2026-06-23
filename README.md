@@ -60,7 +60,12 @@ services:
       - 8080:8080
     environment:
       POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
+      # CRYPT_KEY is used for encrypting sensitive data in the database
       CRYPT_KEY: 'some-random-32-bytes-long-string'
+      # When running without a reverse proxy taking care of TLS termination,
+      # use the following settings which enable HTTP on port 8080
+      PUBLIC_SCHEME: 'http'
+      PUBLIC_PORT: '8080'
   db:
     image: postgres:17
     restart: always
