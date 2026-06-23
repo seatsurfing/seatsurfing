@@ -8,7 +8,10 @@ import (
 // ─── Args / Reply structs ────────────────────────────────────────────────────
 
 type BoolReply struct{ V bool }
-type IntReply struct{ V int }
+type IntReply struct {
+	V   int
+	Err string
+}
 type StringReply struct{ V string }
 type StringSliceReply struct {
 	V   []string
@@ -192,10 +195,7 @@ func (s *HostAPIRPCServer) SettingsGetBool(a SettingsGetArgs, r *SettingsGetBool
 }
 func (s *HostAPIRPCServer) SettingsGetInt(a SettingsGetArgs, r *IntReply) error {
 	v, err := s.impl.GetSettingsRepository().GetInt(a.OrgID, a.Name)
-	r.V = v
-	if err != nil {
-		return err
-	}
+	r.V, r.Err = v, errStr(err)
 	return nil
 }
 func (s *HostAPIRPCServer) SettingsGetNullUUID(_ struct{}, r *StringReply) error {
@@ -234,10 +234,7 @@ func (s *HostAPIRPCServer) UserGetByEmail(a UserGetByEmailArgs, r *UserGetOneRep
 }
 func (s *HostAPIRPCServer) UserGetCount(a UserGetCountArgs, r *IntReply) error {
 	v, err := s.impl.GetUserRepository().GetCount(a.OrgID)
-	r.V = v
-	if err != nil {
-		return err
-	}
+	r.V, r.Err = v, errStr(err)
 	return nil
 }
 func (s *HostAPIRPCServer) UserGetHashedPassword(a UserHashPasswordArgs, r *StringReply) error {
@@ -387,10 +384,7 @@ func (s *HostAPIRPCServer) SpaceGetOne(a SpaceGetOneArgs, r *SpaceGetOneReply) e
 }
 func (s *HostAPIRPCServer) SpaceGetCount(a SpaceGetCountArgs, r *IntReply) error {
 	v, err := s.impl.GetSpaceRepository().GetCount(a.OrgID)
-	r.V = v
-	if err != nil {
-		return err
-	}
+	r.V, r.Err = v, errStr(err)
 	return nil
 }
 
@@ -402,10 +396,7 @@ func (s *HostAPIRPCServer) LocationGetOne(a LocationGetOneArgs, r *LocationGetOn
 }
 func (s *HostAPIRPCServer) LocationGetCount(a LocationGetCountArgs, r *IntReply) error {
 	v, err := s.impl.GetLocationRepository().GetCount(a.OrgID)
-	r.V = v
-	if err != nil {
-		return err
-	}
+	r.V, r.Err = v, errStr(err)
 	return nil
 }
 func (s *HostAPIRPCServer) LocationGetTimezone(a LocationGetTimezoneArgs, r *StringReply) error {
@@ -547,7 +538,7 @@ func (r *settingsRepositoryRPC) GetInt(orgID, name string) (int, error) {
 	if err := r.client.Call("Plugin.SettingsGetInt", SettingsGetArgs{orgID, name}, &reply); err != nil {
 		return 0, err
 	}
-	return reply.V, nil
+	return reply.V, strErr(reply.Err)
 }
 func (r *settingsRepositoryRPC) GetNullUUID() string {
 	var reply StringReply
@@ -604,7 +595,7 @@ func (r *userRepositoryRPC) GetCount(orgID string) (int, error) {
 	if err := r.client.Call("Plugin.UserGetCount", UserGetCountArgs{orgID}, &reply); err != nil {
 		return 0, err
 	}
-	return reply.V, nil
+	return reply.V, strErr(reply.Err)
 }
 func (r *userRepositoryRPC) GetHashedPassword(password string) string {
 	var reply StringReply
@@ -833,7 +824,7 @@ func (r *spaceRepositoryRPC) GetCount(orgID string) (int, error) {
 	if err := r.client.Call("Plugin.SpaceGetCount", SpaceGetCountArgs{orgID}, &reply); err != nil {
 		return 0, err
 	}
-	return reply.V, nil
+	return reply.V, strErr(reply.Err)
 }
 
 type locationRepositoryRPC struct{ client *rpc.Client }
@@ -850,7 +841,7 @@ func (r *locationRepositoryRPC) GetCount(orgID string) (int, error) {
 	if err := r.client.Call("Plugin.LocationGetCount", LocationGetCountArgs{orgID}, &reply); err != nil {
 		return 0, err
 	}
-	return reply.V, nil
+	return reply.V, strErr(reply.Err)
 }
 func (r *locationRepositoryRPC) GetTimezone(location *Location) string {
 	var reply StringReply
