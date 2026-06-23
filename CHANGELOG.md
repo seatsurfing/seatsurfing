@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.107.3](https://github.com/seatsurfing/seatsurfing/compare/v1.107.2...v1.107.3) (2026-06-23)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump react-tooltip from 6.0.7 to 6.0.8 in /ui in the production-dependencies group across 1 directory ([#2306](https://github.com/seatsurfing/seatsurfing/issues/2306)) ([e993296](https://github.com/seatsurfing/seatsurfing/commit/e993296f1c63f49251dcc12da53f1c9fdf79652c))
+* **server:** fix potential bugs when communicating with the plugin ([#2313](https://github.com/seatsurfing/seatsurfing/issues/2313)) ([e06feff](https://github.com/seatsurfing/seatsurfing/commit/e06feffbdb246ec1deebb99a2b77fcd42e05a855))
+
 ## [1.107.2](https://github.com/seatsurfing/seatsurfing/compare/v1.107.1...v1.107.2) (2026-06-22)
 
 
