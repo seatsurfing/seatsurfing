@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.107.4](https://github.com/seatsurfing/seatsurfing/compare/v1.107.3...v1.107.4) (2026-06-23)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix creating AuthState via plugin API ([#2315](https://github.com/seatsurfing/seatsurfing/issues/2315)) ([1758f9f](https://github.com/seatsurfing/seatsurfing/commit/1758f9f5f56334fd2d413ee4b08d6b8f89461bd0))
+
 ## [1.107.3](https://github.com/seatsurfing/seatsurfing/compare/v1.107.2...v1.107.3) (2026-06-23)
 
 
