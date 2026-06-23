@@ -246,7 +246,6 @@ func (a *App) KillPlugins() {
 	}
 }
 
-
 type notFoundResponseWriter struct {
 	http.ResponseWriter
 	status int
@@ -501,7 +500,7 @@ func (a *App) sendBookingReminders() {
 	var wg sync.WaitGroup
 	for _, booking := range bookings {
 		wg.Add(1)
-		go func(b *BookingDetails) {
+		go func(b *api.BookingDetails) {
 			defer wg.Done()
 			a.sendBookingReminderEmail(b)
 		}(booking)
@@ -514,7 +513,7 @@ func (a *App) sendBookingReminders() {
 	}
 }
 
-func (a *App) sendBookingReminderEmail(e *BookingDetails) {
+func (a *App) sendBookingReminderEmail(e *api.BookingDetails) {
 	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailReminder.Name)
 	if err != nil || !active {
 		return
@@ -752,4 +751,3 @@ func (a *App) Run() {
 	a.PublicHttpServer.Shutdown(ctx)
 	a.KillPlugins()
 }
-

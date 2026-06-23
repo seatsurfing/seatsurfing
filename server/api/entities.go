@@ -140,6 +140,7 @@ type Booking struct {
 	RecurringID           NullUUID
 	CreatedAtUTC          *time.Time
 	LastInfoMailSentAtUTC *time.Time
+	ReminderSentAtUTC     *time.Time
 }
 
 type BookingDetails struct {
