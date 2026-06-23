@@ -9,10 +9,10 @@ describe("Formatting", () => {
       );
     });
 
-    it("supports date strings with microseconds", () => {
+    it("truncates fractional seconds to milliseconds", () => {
       expect(
         Formatting.stripTimezoneDetails("2026-06-19T07:10:02.611091+02:00"),
-      ).toBe("2026-06-19T07:10:02.611091Z");
+      ).toBe("2026-06-19T07:10:02.611Z");
     });
 
     it("replaces negative UTC offset with .000Z", () => {
