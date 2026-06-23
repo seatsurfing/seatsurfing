@@ -144,6 +144,10 @@ type AuthProviderMutateArgs struct{ AuthProvider *AuthProvider }
 
 // AuthState
 type AuthStateMutateArgs struct{ AuthState *AuthState }
+type AuthStateGetOneReply struct {
+	AuthState *AuthState
+	Err       string
+}
 
 // General
 type SendEmailArgs struct{ Recipient, Subject, Body, Language, OrgID string }
@@ -415,8 +419,10 @@ func (s *HostAPIRPCServer) AuthProviderUpdate(a AuthProviderMutateArgs, r *Error
 }
 
 // AuthState
-func (s *HostAPIRPCServer) AuthStateCreate(a AuthStateMutateArgs, r *ErrorReply) error {
-	r.Err = errStr(s.impl.GetAuthStateRepository().Create(a.AuthState))
+func (s *HostAPIRPCServer) AuthStateCreate(a AuthStateMutateArgs, r *AuthStateGetOneReply) error {
+	err := s.impl.GetAuthStateRepository().Create(a.AuthState)
+	r.AuthState = a.AuthState
+	r.Err = errStr(err)
 	return nil
 }
 
@@ -869,9 +875,12 @@ func (r *authProviderRepositoryRPC) Update(e *AuthProvider) error {
 type authStateRepositoryRPC struct{ client *rpc.Client }
 
 func (r *authStateRepositoryRPC) Create(e *AuthState) error {
-	var reply ErrorReply
+	var reply AuthStateGetOneReply
 	if err := r.client.Call("Plugin.AuthStateCreate", AuthStateMutateArgs{e}, &reply); err != nil {
 		return err
+	}
+	if reply.AuthState != nil {
+		*e = *reply.AuthState
 	}
 	return strErr(reply.Err)
 }
