@@ -1,0 +1,22 @@
+{
+  "subject": "Your Seatsurfing booking: Reminder",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "This is a reminder for your upcoming booking.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Your bookings",
+      "url": "{{orgDomain}}ui/bookings/"
+    }
+  ],
+  "finalInfo": {
+    "text": "Don't want to receive booking reminders by e-mail anymore? Disable them in the Seatsurfing interface under {{link}}.",
+    "label": "Preferences",
+    "url": "{{orgDomain}}ui/preferences/"
+  }
+}

@@ -157,6 +157,7 @@ func (r *UserStore) Create(e *User) error {
 	mailNotification, _ := GetSettingsRepository().GetBool(e.OrganizationID, SettingNewUserDefaultMailNotification.Name)
 	if mailNotification {
 		GetUserPreferencesRepository().Set(e.ID, PreferenceMailNotifications.Name, "1")
+		GetUserPreferencesRepository().Set(e.ID, PreferenceMailReminder.Name, "1")
 	}
 
 	for _, plg := range GetPlugins() {

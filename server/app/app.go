@@ -246,7 +246,6 @@ func (a *App) KillPlugins() {
 	}
 }
 
-
 type notFoundResponseWriter struct {
 	http.ResponseWriter
 	status int
@@ -468,6 +467,12 @@ func (a *App) onTimerTick() {
 		log.Printf("Purged %d old bookings", num)
 	}
 
+	// send booking reminder emails (~24h before booking start)
+	// run every 5 minutes to not cause overlapping runs
+	if time.Now().Minute()%5 == 0 {
+		go a.sendBookingReminders()
+	}
+
 	for _, inst := range a.PluginInstances {
 		inst.Instance.OnTimer()
 	}
@@ -478,6 +483,79 @@ func (a *App) onTimerTick() {
 	// Update install stats once per hour
 	if time.Now().Minute() == 0 {
 		go a.UpdateInstallStats()
+	}
+}
+
+var bookingReminderMu sync.Mutex
+
+func (a *App) sendBookingReminders() {
+	bookingReminderMu.Lock()
+	defer bookingReminderMu.Unlock()
+
+	bookings, err := GetBookingRepository().GetBookingsDueForReminder(25)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var wg sync.WaitGroup
+	for _, booking := range bookings {
+		wg.Add(1)
+		go func(b *api.BookingDetails) {
+			defer wg.Done()
+			a.sendBookingReminderEmail(b)
+		}(booking)
+	}
+	wg.Wait()
+
+	num := len(bookings)
+	if num > 0 {
+		log.Printf("Sent %d booking reminder emails", num)
+	}
+}
+
+func (a *App) sendBookingReminderEmail(e *api.BookingDetails) {
+	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailReminder.Name)
+	if err != nil || !active {
+		return
+	}
+	org, err := GetOrganizationRepository().GetOne(e.Space.Location.OrganizationID)
+	if err != nil || org == nil {
+		log.Println(err)
+		return
+	}
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	recipientName := e.UserFirstname
+	if recipientName == "" {
+		recipientName = GetLocalPartFromEmailAddress(e.UserEmail)
+	}
+	subject := e.Subject
+	if subject == "" {
+		subject = "—"
+	}
+	vars := map[string]string{
+		"orgDomain":     FormatURL(domain.DomainName) + "/",
+		"recipientName": recipientName,
+		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
+		"areaName":      e.Space.Location.Name,
+		"spaceName":     e.Space.Name,
+		"subject":       subject,
+	}
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	if err := SendEmailWithOrg(&MailAddress{Address: e.UserEmail}, GetEmailTemplatePathBookingReminder(), language, vars, org.ID); err != nil {
+		log.Println(err)
+		return
+	}
+
+	now := time.Now().UTC()
+	if err := GetBookingRepository().SetReminderSent(e.ID, &now); err != nil {
+		log.Println(err)
 	}
 }
 
@@ -673,4 +751,3 @@ func (a *App) Run() {
 	a.PublicHttpServer.Shutdown(ctx)
 	a.KillPlugins()
 }
-

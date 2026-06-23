@@ -187,6 +187,7 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVPass.Name ||
 		name == PreferenceCalDAVPath.Name ||
 		name == PreferenceMailNotifications.Name ||
+		name == PreferenceMailReminder.Name ||
 		name == PreferenceMailLanguage.Name ||
 		name == PreferenceApprovalNotifications.Name ||
 		name == Preference24HourTime.Name ||
@@ -245,6 +246,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceMailNotifications.Name {
 		return PreferenceMailNotifications.Type
+	}
+	if name == PreferenceMailReminder.Name {
+		return PreferenceMailReminder.Type
 	}
 	if name == PreferenceMailLanguage.Name {
 		return PreferenceMailLanguage.Type
