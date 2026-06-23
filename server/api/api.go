@@ -113,7 +113,6 @@ func (p *PluginRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 		log.Println("GetAdminUIMenuItems RPC error:", err)
 		return []AdminUIMenuItem{}
 	}
-	log.Printf("GetAdminUIMenuItems returned %d items: %+v", len(resp), resp)
 	return resp
 }
 
