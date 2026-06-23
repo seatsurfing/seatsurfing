@@ -280,19 +280,30 @@ func (a *App) onTimerTick() {
 	}
 }
 
+var bookingReminderMu sync.Mutex
+
 func (a *App) sendBookingReminders() {
+	bookingReminderMu.Lock()
+	defer bookingReminderMu.Unlock()
+
 	bookings, err := GetBookingRepository().GetBookingsDueForReminder(25)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	var wg sync.WaitGroup
 	for _, booking := range bookings {
-		go a.sendBookingReminderEmail(booking)
+		wg.Add(1)
+		go func(b *BookingDetails) {
+			defer wg.Done()
+			a.sendBookingReminderEmail(b)
+		}(booking)
 	}
+	wg.Wait()
 
 	num := len(bookings)
 	if num > 0 {
-		log.Printf("Send %d booking reminder emails", num)
+		log.Printf("Sent %d booking reminder emails", num)
 	}
 }
 
