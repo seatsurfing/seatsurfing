@@ -10,12 +10,7 @@ interface Props {
 class NotFoundModal extends React.Component<Props> {
   render() {
     return (
-      <Modal
-        show={this.props.show}
-        onHide={this.props.onHide}
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={this.props.show} backdrop="static" keyboard={false}>
         <Modal.Header>
           <Modal.Title>{this.props.t("notFoundTitle")}</Modal.Title>
         </Modal.Header>
