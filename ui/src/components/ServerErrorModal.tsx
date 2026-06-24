@@ -24,6 +24,14 @@ class ServerErrorModal extends React.Component<Props> {
           <p>{this.props.t("serverErrorBody")}</p>
         </Modal.Body>
         <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+          >
+            {this.props.t("home")}
+          </Button>
           <Button variant="primary" onClick={() => window.location.reload()}>
             {this.props.t("reload")}
           </Button>

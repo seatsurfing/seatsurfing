@@ -28,7 +28,6 @@ class SessionExpiredModal extends React.Component<Props> {
           <Button
             variant="primary"
             onClick={() => {
-              this.props.onHide();
               this.toLogin(Router);
             }}
           >
