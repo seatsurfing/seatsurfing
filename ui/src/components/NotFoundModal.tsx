@@ -27,7 +27,7 @@ class NotFoundModal extends React.Component<Props> {
           <Button
             variant="secondary"
             onClick={() => {
-              window.location.href = "/";
+              window.location.href = "/ui/";
             }}
           >
             {this.props.t("home")}
