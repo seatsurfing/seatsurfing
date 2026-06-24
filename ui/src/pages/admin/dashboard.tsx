@@ -22,7 +22,6 @@ import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import Stats from "@/types/Stats";
 import StatsLoad from "@/types/StatsLoad";
 import Location from "@/types/Location";
-import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
 
@@ -135,7 +134,7 @@ class Dashboard extends React.Component<Props, State> {
         resolve();
         return;
       }
-      StatsLoad.get(locationId)
+      StatsLoad.getLoad(locationId)
         .then((statsLoad) => {
           const stats = self.state.stats ?? ({} as any);
           stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
@@ -156,15 +155,10 @@ class Dashboard extends React.Component<Props, State> {
         resolve();
         return;
       }
-      const queryParams = new URLSearchParams();
-      if (locationId) queryParams.set("location", locationId);
-      const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
-      Ajax.get(`/stats/weekday${params}`)
-        .then((result) => {
+      StatsLoad.getWeekday(locationId)
+        .then((bookingsByWeekday) => {
           const stats = self.state.stats ?? ({} as any);
-          stats.bookingsByWeekday = result.json.bookingsByWeekday ?? [
-            0, 0, 0, 0, 0, 0, 0,
-          ];
+          stats.bookingsByWeekday = bookingsByWeekday;
           self.setState({ stats, selectedWeekdayLocationId: locationId });
           resolve();
         })

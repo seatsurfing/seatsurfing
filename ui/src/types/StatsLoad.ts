@@ -20,7 +20,7 @@ export default class Stats {
     this.spaceLoadLastWeek = input.spaceLoadLastWeek;
   }
 
-  static async get(locationId: string | null): Promise<Stats> {
+  static async getLoad(locationId: string | null): Promise<Stats> {
     const queryParams = new URLSearchParams();
     if (locationId) queryParams.set("location", locationId);
     const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
@@ -28,5 +28,13 @@ export default class Stats {
     const e: Stats = new Stats();
     e.deserialize(result.json);
     return e;
+  }
+
+  static async getWeekday(locationId: string | null): Promise<number[]> {
+    const queryParams = new URLSearchParams();
+    if (locationId) queryParams.set("location", locationId);
+    const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    const result = await Ajax.get(`/stats/weekday${params}`);
+    return result.json.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0];
   }
 }
