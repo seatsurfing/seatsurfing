@@ -506,15 +506,20 @@ func (r *BookingStore) GetCountDateRange(organizationID string, enter, leave tim
 	return res, err
 }
 
-func (r *BookingStore) GetCountByWeekday(organizationID string) ([7]int, error) {
+func (r *BookingStore) GetCountByWeekday(organizationID string, location *Location) ([7]int, error) {
 	var res [7]int
-	rows, err := GetDatabase().DB().Query("SELECT EXTRACT(DOW FROM enter_time)::int AS dow, COUNT(*) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1 "+
-		"GROUP BY dow",
-		organizationID)
+	query := "SELECT EXTRACT(DOW FROM enter_time)::int AS dow, COUNT(*) " +
+		"FROM bookings " +
+		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
+		"INNER JOIN locations ON locations.id = spaces.location_id " +
+		"WHERE locations.organization_id = $1"
+	args := []any{organizationID}
+	if location != nil {
+		query += " AND spaces.location_id = $2"
+		args = append(args, location.ID)
+	}
+	query += " GROUP BY dow"
+	rows, err := GetDatabase().DB().Query(query, args...)
 	if err != nil {
 		return res, err
 	}
