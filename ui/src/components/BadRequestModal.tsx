@@ -5,7 +5,6 @@ import { Button, Modal } from "react-bootstrap";
 interface Props {
   t: TranslationFunc;
   show: boolean;
-  onHide: () => void;
 }
 
 class BadRequestModal extends React.Component<Props> {

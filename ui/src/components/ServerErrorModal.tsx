@@ -5,7 +5,6 @@ import { Button, Modal } from "react-bootstrap";
 interface Props {
   t: TranslationFunc;
   show: boolean;
-  onHide: () => void;
 }
 
 class ServerErrorModal extends React.Component<Props> {

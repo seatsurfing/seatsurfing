@@ -6,7 +6,6 @@ import Router, { NextRouter } from "next/router";
 interface Props {
   t: TranslationFunc;
   show: boolean;
-  onHide: () => void;
 }
 
 class SessionExpiredModal extends React.Component<Props> {
