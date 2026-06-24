@@ -328,22 +328,10 @@ class App extends React.Component<Props, State> {
             onSetup={this.onMfaEncouragementSetup}
           />
         )}
-        <SessionExpiredModal
-          show={this.state.showSessionExpired}
-          onHide={() => this.setState({ showSessionExpired: false })}
-        />
-        <ServerErrorModal
-          show={this.state.showServerError}
-          onHide={() => this.setState({ showServerError: false })}
-        />
-        <NotFoundModal
-          show={this.state.showNotFound}
-          onHide={() => this.setState({ showNotFound: false })}
-        />
-        <BadRequestModal
-          show={this.state.showBadRequest}
-          onHide={() => this.setState({ showBadRequest: false })}
-        />
+        <SessionExpiredModal show={this.state.showSessionExpired} />
+        <ServerErrorModal show={this.state.showServerError} />
+        <NotFoundModal show={this.state.showNotFound} />
+        <BadRequestModal show={this.state.showBadRequest} />
         <Component {...pageProps} />
       </>
     );
