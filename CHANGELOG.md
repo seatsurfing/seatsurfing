@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.108.0](https://github.com/seatsurfing/seatsurfing/compare/v1.107.4...v1.108.0) (2026-06-23)
+
+
+### ✨ Features
+
+* **booking-ui:** add reminder emails ([#2294](https://github.com/seatsurfing/seatsurfing/issues/2294)) ([230264e](https://github.com/seatsurfing/seatsurfing/commit/230264ebfa2c0838c3660003e83b7317db570d1b))
+
+
+### 🐛 Bug Fixes
+
+* **main:** support timestamps with milliseconds in stripTimezoneDetails() ([#2292](https://github.com/seatsurfing/seatsurfing/issues/2292)) ([aa95ac0](https://github.com/seatsurfing/seatsurfing/commit/aa95ac0b71eba6505b0595ed4fcfd5a09687c84b))
+
 ## [1.107.4](https://github.com/seatsurfing/seatsurfing/compare/v1.107.3...v1.107.4) (2026-06-23)
 
 
