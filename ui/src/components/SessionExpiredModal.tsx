@@ -12,7 +12,7 @@ interface Props {
 class SessionExpiredModal extends React.Component<Props> {
   toLogin(router: NextRouter) {
     const currentPath = router.asPath;
-    router.push(`/login?redir=${encodeURIComponent(currentPath)}`);
+    window.location.href = `/ui/login/?redir=${encodeURIComponent(currentPath)}`;
   }
 
   render() {
