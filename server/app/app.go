@@ -562,8 +562,12 @@ func (a *App) sendBookingReminderEmail(e *api.BookingDetails) {
 func (a *App) InitializeTimers() {
 	a.UpdateInstallStats()
 	a.onTimerTick()
-	installID, _ := GetSettingsRepository().GetGlobalString(api.SettingInstallID.Name)
-	go GetUpdateChecker().InitializeVersionUpdateTimer(installID)
+	if GetConfig().DisableVersionCheck {
+		log.Println("ℹ️  Version check is disabled.")
+	} else {
+		installID, _ := GetSettingsRepository().GetGlobalString(api.SettingInstallID.Name)
+		go GetUpdateChecker().InitializeVersionUpdateTimer(installID)
+	}
 	a.CleanupTicker = time.NewTicker(time.Minute * 1)
 	go func() {
 		for {

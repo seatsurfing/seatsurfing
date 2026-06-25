@@ -61,6 +61,7 @@ type Config struct {
 	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
 	MaxPasskeysPerUser                  int  // Maximum number of passkeys a single user may register
+	DisableVersionCheck                 bool // Disable polling seatsurfing.io for latest version information
 	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
 }
 
@@ -192,6 +193,7 @@ func (c *Config) ReadConfig() {
 		log.Println("⚠️  Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
 		c.MaxPasskeysPerUser = 10
 	}
+	c.DisableVersionCheck = (c.getEnv("DISABLE_VERSION_CHECK", "0") == "1")
 	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
 
 	// Check deprecated environment variables
