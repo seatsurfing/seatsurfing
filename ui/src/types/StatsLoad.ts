@@ -1,23 +1,23 @@
 import Ajax from "../util/Ajax";
 
 export default class Stats {
-  spaceLoadToday: number;
-  spaceLoadYesterday: number;
+  spaceLoadNextWeek: number;
   spaceLoadThisWeek: number;
   spaceLoadLastWeek: number;
+  spaceLoadLastMonth: number;
 
   constructor() {
-    this.spaceLoadToday = 0;
-    this.spaceLoadYesterday = 0;
+    this.spaceLoadNextWeek = 0;
     this.spaceLoadThisWeek = 0;
     this.spaceLoadLastWeek = 0;
+    this.spaceLoadLastMonth = 0;
   }
 
   deserialize(input: any): void {
-    this.spaceLoadToday = input.spaceLoadToday;
-    this.spaceLoadYesterday = input.spaceLoadYesterday;
+    this.spaceLoadNextWeek = input.spaceLoadNextWeek;
     this.spaceLoadThisWeek = input.spaceLoadThisWeek;
     this.spaceLoadLastWeek = input.spaceLoadLastWeek;
+    this.spaceLoadLastMonth = input.spaceLoadLastMonth;
   }
 
   static async getLoad(locationId: string | null): Promise<Stats> {

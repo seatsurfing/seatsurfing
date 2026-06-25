@@ -136,11 +136,11 @@ class Dashboard extends React.Component<Props, State> {
       }
       StatsLoad.getLoad(locationId)
         .then((statsLoad) => {
-          const stats = self.state.stats ?? ({} as any);
-          stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
+          const stats = Object.assign(new Stats(), self.state.stats ?? {});
+          stats.spaceLoadNextWeek = statsLoad.spaceLoadNextWeek;
           stats.spaceLoadThisWeek = statsLoad.spaceLoadThisWeek;
-          stats.spaceLoadToday = statsLoad.spaceLoadToday;
-          stats.spaceLoadYesterday = statsLoad.spaceLoadYesterday;
+          stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
+          stats.spaceLoadLastMonth = statsLoad.spaceLoadLastMonth;
           self.setState({ stats, selectedUtilizationLocationId: locationId });
           resolve();
         })
@@ -157,7 +157,7 @@ class Dashboard extends React.Component<Props, State> {
       }
       StatsLoad.getWeekday(locationId)
         .then((bookingsByWeekday) => {
-          const stats = self.state.stats ?? ({} as any);
+          const stats = Object.assign(new Stats(), self.state.stats ?? {});
           stats.bookingsByWeekday = bookingsByWeekday;
           self.setState({ stats, selectedWeekdayLocationId: locationId });
           resolve();
