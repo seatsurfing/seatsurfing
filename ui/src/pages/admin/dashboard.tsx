@@ -63,16 +63,14 @@ class Dashboard extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
-    const promises = [
+  componentDidMount = async () => {
+    await Promise.all([
       this.loadItems(),
       this.loadLocations(),
       this.getUserInfo(),
       this.checkUpdates(),
-    ];
-    Promise.all(promises).then(() => {
-      this.setState({ loading: false });
-    });
+    ]);
+    this.setState({ loading: false });
   };
 
   checkUpdates = async (): Promise<void> => {
@@ -83,87 +81,43 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   getUserInfo = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      User.getSelf()
-        .then((user) => {
-          self.setState(
-            {
-              spaceAdmin: user.spaceAdmin,
-              orgAdmin: user.admin,
-            },
-            () => resolve(),
-          );
-        })
-        .catch((e) => reject(e));
-    });
+    const user = await User.getSelf();
+    this.setState({ spaceAdmin: user.spaceAdmin, orgAdmin: user.admin });
   };
 
   loadLocations = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      Location.list()
-        .then((locations) => {
-          self.locations = locations;
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    this.locations = await Location.list();
   };
 
   loadItems = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.hideStats) {
-        resolve();
-        return;
-      }
-      Stats.get()
-        .then((stats) => {
-          self.setState({ stats: stats });
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    if (RuntimeConfig.INFOS.hideStats) {
+      return;
+    }
+    const stats = await Stats.get();
+    this.setState({ stats });
   };
 
   updateLoad = async (locationId: string): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.hideStats) {
-        resolve();
-        return;
-      }
-      StatsLoad.getLoad(locationId)
-        .then((statsLoad) => {
-          const stats = Object.assign(new Stats(), self.state.stats ?? {});
-          stats.spaceLoadNextWeek = statsLoad.spaceLoadNextWeek;
-          stats.spaceLoadThisWeek = statsLoad.spaceLoadThisWeek;
-          stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
-          stats.spaceLoadLastMonth = statsLoad.spaceLoadLastMonth;
-          self.setState({ stats, selectedUtilizationLocationId: locationId });
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    if (RuntimeConfig.INFOS.hideStats) {
+      return;
+    }
+    const statsLoad = await StatsLoad.getLoad(locationId);
+    const stats = Object.assign(new Stats(), this.state.stats ?? {});
+    stats.spaceLoadNextWeek = statsLoad.spaceLoadNextWeek;
+    stats.spaceLoadThisWeek = statsLoad.spaceLoadThisWeek;
+    stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
+    stats.spaceLoadLastMonth = statsLoad.spaceLoadLastMonth;
+    this.setState({ stats, selectedUtilizationLocationId: locationId });
   };
 
   updateWeekdayChart = async (locationId: string): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.hideStats) {
-        resolve();
-        return;
-      }
-      StatsLoad.getWeekday(locationId)
-        .then((bookingsByWeekday) => {
-          const stats = Object.assign(new Stats(), self.state.stats ?? {});
-          stats.bookingsByWeekday = bookingsByWeekday;
-          self.setState({ stats, selectedWeekdayLocationId: locationId });
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    if (RuntimeConfig.INFOS.hideStats) {
+      return;
+    }
+    const bookingsByWeekday = await StatsLoad.getWeekday(locationId);
+    const stats = Object.assign(new Stats(), this.state.stats ?? {});
+    stats.bookingsByWeekday = bookingsByWeekday;
+    this.setState({ stats, selectedWeekdayLocationId: locationId });
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
