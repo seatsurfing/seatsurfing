@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -85,6 +86,10 @@ func (router *StatsRouter) getLoad(w http.ResponseWriter, r *http.Request) {
 	locationId := r.URL.Query().Get("location")
 	var location *Location = nil
 	if locationId != "" {
+		if uuid.Validate(locationId) != nil {
+			SendBadRequest(w)
+			return
+		}
 		var err error
 		location, err = GetLocationRepository().GetOne(locationId)
 		if err != nil {
@@ -161,6 +166,10 @@ func (router *StatsRouter) getWeekday(w http.ResponseWriter, r *http.Request) {
 	locationId := r.URL.Query().Get("location")
 	var location *Location = nil
 	if locationId != "" {
+		if uuid.Validate(locationId) != nil {
+			SendBadRequest(w)
+			return
+		}
 		var err error
 		location, err = GetLocationRepository().GetOne(locationId)
 		if err != nil {
