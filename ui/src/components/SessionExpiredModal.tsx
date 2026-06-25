@@ -6,13 +6,12 @@ import Router, { NextRouter } from "next/router";
 interface Props {
   t: TranslationFunc;
   show: boolean;
-  onHide: () => void;
 }
 
 class SessionExpiredModal extends React.Component<Props> {
   toLogin(router: NextRouter) {
     const currentPath = router.asPath;
-    router.push(`/login?redir=${encodeURIComponent(currentPath)}`);
+    window.location.href = `/ui/login/?redir=${encodeURIComponent(currentPath)}`;
   }
 
   render() {
@@ -28,7 +27,6 @@ class SessionExpiredModal extends React.Component<Props> {
           <Button
             variant="primary"
             onClick={() => {
-              this.props.onHide();
               this.toLogin(Router);
             }}
           >

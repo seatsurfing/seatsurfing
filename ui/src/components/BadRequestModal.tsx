@@ -5,18 +5,12 @@ import { Button, Modal } from "react-bootstrap";
 interface Props {
   t: TranslationFunc;
   show: boolean;
-  onHide: () => void;
 }
 
 class BadRequestModal extends React.Component<Props> {
   render() {
     return (
-      <Modal
-        show={this.props.show}
-        onHide={this.props.onHide}
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={this.props.show} backdrop="static" keyboard={false}>
         <Modal.Header>
           <Modal.Title>{this.props.t("badRequestTitle")}</Modal.Title>
         </Modal.Header>

@@ -492,5 +492,6 @@
   "language-en": "Englanti",
   "mailLanguage": "Sähköpostien kieli",
   "mailNotificationsBookingInfo": "Booking information",
-  "mailReminderBookingInfo": "Booking reminders"
+  "mailReminderBookingInfo": "Booking reminders",
+  "home": "Home"
 }
