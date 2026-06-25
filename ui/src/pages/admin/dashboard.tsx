@@ -22,7 +22,6 @@ import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import Stats from "@/types/Stats";
 import StatsLoad from "@/types/StatsLoad";
 import Location from "@/types/Location";
-import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
 
@@ -36,7 +35,8 @@ interface State {
   spaceAdmin: boolean;
   orgAdmin: boolean;
   latestVersion: any;
-  selectedLocationId: string | null;
+  selectedUtilizationLocationId: string | null;
+  selectedWeekdayLocationId: string | null;
   stats: Stats | null;
 }
 
@@ -57,21 +57,20 @@ class Dashboard extends React.Component<Props, State> {
       spaceAdmin: false,
       orgAdmin: false,
       latestVersion: null,
-      selectedLocationId: null,
+      selectedUtilizationLocationId: null,
+      selectedWeekdayLocationId: null,
       stats: null,
     };
   }
 
-  componentDidMount = () => {
-    const promises = [
+  componentDidMount = async () => {
+    await Promise.all([
       this.loadItems(),
       this.loadLocations(),
       this.getUserInfo(),
       this.checkUpdates(),
-    ];
-    Promise.all(promises).then(() => {
-      this.setState({ loading: false });
-    });
+    ]);
+    this.setState({ loading: false });
   };
 
   checkUpdates = async (): Promise<void> => {
@@ -82,69 +81,43 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   getUserInfo = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      User.getSelf()
-        .then((user) => {
-          self.setState(
-            {
-              spaceAdmin: user.spaceAdmin,
-              orgAdmin: user.admin,
-            },
-            () => resolve(),
-          );
-        })
-        .catch((e) => reject(e));
-    });
+    const user = await User.getSelf();
+    this.setState({ spaceAdmin: user.spaceAdmin, orgAdmin: user.admin });
   };
 
   loadLocations = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      Location.list()
-        .then((locations) => {
-          self.locations = locations;
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    this.locations = await Location.list();
   };
 
   loadItems = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.hideStats) {
-        resolve();
-        return;
-      }
-      Stats.get()
-        .then((stats) => {
-          self.setState({ stats: stats });
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    if (RuntimeConfig.INFOS.hideStats) {
+      return;
+    }
+    const stats = await Stats.get();
+    this.setState({ stats });
   };
 
   updateLoad = async (locationId: string): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      if (RuntimeConfig.INFOS.hideStats) {
-        resolve();
-        return;
-      }
-      StatsLoad.get(locationId)
-        .then((statsLoad) => {
-          const stats = self.state.stats ?? ({} as any);
-          stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
-          stats.spaceLoadThisWeek = statsLoad.spaceLoadThisWeek;
-          stats.spaceLoadToday = statsLoad.spaceLoadToday;
-          stats.spaceLoadYesterday = statsLoad.spaceLoadYesterday;
-          self.setState({ stats, selectedLocationId: locationId });
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    if (RuntimeConfig.INFOS.hideStats) {
+      return;
+    }
+    const statsLoad = await StatsLoad.getLoad(locationId);
+    const stats = Object.assign(new Stats(), this.state.stats ?? {});
+    stats.spaceLoadNextWeek = statsLoad.spaceLoadNextWeek;
+    stats.spaceLoadThisWeek = statsLoad.spaceLoadThisWeek;
+    stats.spaceLoadLastWeek = statsLoad.spaceLoadLastWeek;
+    stats.spaceLoadLastMonth = statsLoad.spaceLoadLastMonth;
+    this.setState({ stats, selectedUtilizationLocationId: locationId });
+  };
+
+  updateWeekdayChart = async (locationId: string): Promise<void> => {
+    if (RuntimeConfig.INFOS.hideStats) {
+      return;
+    }
+    const bookingsByWeekday = await StatsLoad.getWeekday(locationId);
+    const stats = Object.assign(new Stats(), this.state.stats ?? {});
+    stats.bookingsByWeekday = bookingsByWeekday;
+    this.setState({ stats, selectedWeekdayLocationId: locationId });
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
@@ -175,13 +148,7 @@ class Dashboard extends React.Component<Props, State> {
     const labels = bookingsByWeekday.map((_, index) =>
       this.props.t(`workday-${index}`),
     );
-    return (
-      <WeekdayChart
-        data={bookingsByWeekday}
-        labels={labels}
-        title={this.props.t("bookingsByWeekday")}
-      />
-    );
+    return <WeekdayChart data={bookingsByWeekday} labels={labels} />;
   };
 
   renderProgressBar = (num: number | undefined, title: string) => {
@@ -326,9 +293,53 @@ class Dashboard extends React.Component<Props, State> {
               ),
             )}
           </Row>
-          {this.renderWeekdayChart(
-            this.state.stats?.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0],
-          )}
+          <Row className="mb-4">
+            <Col sm="12" xl="8">
+              <Card>
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <Card.Title className="mb-0">
+                      {this.props.t("bookingsByWeekday")}
+                    </Card.Title>
+                    <Dropdown>
+                      <Dropdown.Toggle variant="outline-secondary" size="sm">
+                        {this.state.selectedWeekdayLocationId
+                          ? this.locations.find(
+                              (e) =>
+                                e.id == this.state.selectedWeekdayLocationId,
+                            )?.name
+                          : this.props.t("allAreas")}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu align="end">
+                        <Dropdown.Item
+                          onClick={() => {
+                            this.updateWeekdayChart("");
+                          }}
+                        >
+                          {this.props.t("allAreas")}
+                        </Dropdown.Item>
+                        {this.locations.map((location) => (
+                          <Dropdown.Item
+                            key={location.id}
+                            onClick={() => {
+                              this.updateWeekdayChart(location.id);
+                            }}
+                          >
+                            {location.name}
+                          </Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </div>
+                  {this.renderWeekdayChart(
+                    this.state.stats?.bookingsByWeekday ?? [
+                      0, 0, 0, 0, 0, 0, 0,
+                    ],
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
           <Row className="mb-4">
             <Col sm="12" xl="8">
               <Card>
@@ -362,9 +373,11 @@ class Dashboard extends React.Component<Props, State> {
                     </Card.Title>
                     <Dropdown>
                       <Dropdown.Toggle variant="outline-secondary" size="sm">
-                        {this.state.selectedLocationId
+                        {this.state.selectedUtilizationLocationId
                           ? this.locations.find(
-                              (e) => e.id == this.state.selectedLocationId,
+                              (e) =>
+                                e.id ==
+                                this.state.selectedUtilizationLocationId,
                             )?.name
                           : this.props.t("allAreas")}
                       </Dropdown.Toggle>
@@ -378,6 +391,7 @@ class Dashboard extends React.Component<Props, State> {
                         </Dropdown.Item>
                         {this.locations.map((location) => (
                           <Dropdown.Item
+                            key={location.id}
                             onClick={() => {
                               this.updateLoad(location.id);
                             }}

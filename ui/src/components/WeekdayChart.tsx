@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react";
-import { Card, Col, Row } from "react-bootstrap";
 import {
   Chart,
   BarController,
@@ -14,14 +13,12 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 interface WeekdayChartProps {
   data: number[];
   labels: string[];
-  title: string;
   height?: number;
 }
 
 const WeekdayChart: React.FC<WeekdayChartProps> = ({
   data,
   labels,
-  title,
   height = 200,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,18 +63,9 @@ const WeekdayChart: React.FC<WeekdayChartProps> = ({
   }, [data, labels]);
 
   return (
-    <Row className="mb-4">
-      <Col sm="12" xl="8">
-        <Card>
-          <Card.Body>
-            <Card.Title className="mb-3">{title}</Card.Title>
-            <div style={{ height: `${height}px` }}>
-              <canvas ref={canvasRef} />
-            </div>
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
+    <div style={{ height: `${height}px` }}>
+      <canvas ref={canvasRef} />
+    </div>
   );
 };
 

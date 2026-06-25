@@ -1,26 +1,26 @@
 import Ajax from "../util/Ajax";
 
 export default class Stats {
-  spaceLoadToday: number;
-  spaceLoadYesterday: number;
+  spaceLoadNextWeek: number;
   spaceLoadThisWeek: number;
   spaceLoadLastWeek: number;
+  spaceLoadLastMonth: number;
 
   constructor() {
-    this.spaceLoadToday = 0;
-    this.spaceLoadYesterday = 0;
+    this.spaceLoadNextWeek = 0;
     this.spaceLoadThisWeek = 0;
     this.spaceLoadLastWeek = 0;
+    this.spaceLoadLastMonth = 0;
   }
 
   deserialize(input: any): void {
-    this.spaceLoadToday = input.spaceLoadToday;
-    this.spaceLoadYesterday = input.spaceLoadYesterday;
+    this.spaceLoadNextWeek = input.spaceLoadNextWeek;
     this.spaceLoadThisWeek = input.spaceLoadThisWeek;
     this.spaceLoadLastWeek = input.spaceLoadLastWeek;
+    this.spaceLoadLastMonth = input.spaceLoadLastMonth;
   }
 
-  static async get(locationId: string | null): Promise<Stats> {
+  static async getLoad(locationId: string | null): Promise<Stats> {
     const queryParams = new URLSearchParams();
     if (locationId) queryParams.set("location", locationId);
     const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
@@ -28,5 +28,13 @@ export default class Stats {
     const e: Stats = new Stats();
     e.deserialize(result.json);
     return e;
+  }
+
+  static async getWeekday(locationId: string | null): Promise<number[]> {
+    const queryParams = new URLSearchParams();
+    if (locationId) queryParams.set("location", locationId);
+    const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    const result = await Ajax.get(`/stats/weekday${params}`);
+    return result.json.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0];
   }
 }
