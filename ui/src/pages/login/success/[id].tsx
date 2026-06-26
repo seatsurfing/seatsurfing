@@ -7,6 +7,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import Ajax from "@/util/Ajax";
 import AjaxCredentials from "@/util/AjaxCredentials";
 import JwtDecoder from "@/util/JwtDecoder";
+import Validation from "@/util/Validation";
 
 interface State {
   redirect: string | null;
@@ -28,40 +29,35 @@ class LoginSuccess extends React.Component<Props, State> {
     this.loadData();
   };
 
-  loadData = () => {
+  loadData = async () => {
     const { id } = this.props.router.query;
     if (id) {
-      return Ajax.get("/auth/verify/" + id, () => true)
-        .then((res) => {
-          if (res.json && res.json.accessToken) {
-            const credentials: AjaxCredentials = {
-              accessToken: res.json.accessToken,
-              accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
-              logoutUrl: res.json.logoutUrl,
-              profilePageUrl: res.json.profilePageUrl,
-            };
-            Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
-              res.json.refreshToken,
-            );
-            Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
-            RuntimeConfig.loadUserAndSettings().then(() => {
-              let redirect =
-                (this.props.router.query["redir"] as string) || "/search";
-              this.setState({
-                redirect,
-              });
-            });
-          } else {
-            this.setState({
-              redirect: "/login/failed/",
-            });
-          }
-        })
-        .catch(() => {
-          this.setState({
-            redirect: "/login/failed/",
-          });
-        });
+      try {
+        const res = await Ajax.get("/auth/verify/" + id, () => true);
+        if (res.json && res.json.accessToken) {
+          const credentials: AjaxCredentials = {
+            accessToken: res.json.accessToken,
+            accessTokenExpiry: JwtDecoder.getExpiryDate(res.json.accessToken),
+            logoutUrl: res.json.logoutUrl,
+            profilePageUrl: res.json.profilePageUrl,
+          };
+          Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
+            res.json.refreshToken,
+          );
+          Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+          await RuntimeConfig.loadUserAndSettings();
+          const redirParam = this.props.router.query["redir"] as string;
+          const redirect =
+            redirParam && Validation.isRelativeUrl(redirParam)
+              ? redirParam
+              : "/search";
+          this.setState({ redirect });
+        } else {
+          this.setState({ redirect: "/login/failed/" });
+        }
+      } catch {
+        this.setState({ redirect: "/login/failed/" });
+      }
     }
   };
 
