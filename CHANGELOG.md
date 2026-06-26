@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.109.0](https://github.com/seatsurfing/seatsurfing/compare/v1.108.0...v1.109.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **admin-ui:** add area dropdown to weekday stats ([#2319](https://github.com/seatsurfing/seatsurfing/issues/2319)) ([f834994](https://github.com/seatsurfing/seatsurfing/commit/f834994a31b607cb770669f18ab229f21ca6faea))
+* **main:** add home button to "server error" and "not found" modal ([#2318](https://github.com/seatsurfing/seatsurfing/issues/2318)) ([e288f25](https://github.com/seatsurfing/seatsurfing/commit/e288f25828bee5479e8dd76ec778baf948274950))
+
 ## [1.108.0](https://github.com/seatsurfing/seatsurfing/compare/v1.107.4...v1.108.0) (2026-06-23)
 
 
