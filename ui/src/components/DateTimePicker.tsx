@@ -40,7 +40,7 @@ class DateTimePicker extends React.Component<Props, State> {
     if (lang.indexOf("-") !== -1) {
       lang = lang.split("-")[0];
     }
-    if (lang === "en") {
+    if (lang === "en" || !/^[a-z]{2,3}$/.test(lang)) {
       this.setState({ locale: DefaultLocale });
       return;
     }
