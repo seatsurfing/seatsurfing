@@ -196,6 +196,9 @@ func (router *StatsRouter) getWeekday(w http.ResponseWriter, r *http.Request) {
 			enter, leave = &nextWeekEnter, &nextWeekLeave
 		case "lastMonth":
 			enter, leave = &lastMonthEnter, &lastMonthLeave
+		default:
+			SendBadRequest(w)
+			return
 		}
 	}
 
