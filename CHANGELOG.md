@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.109.1](https://github.com/seatsurfing/seatsurfing/compare/v1.109.0...v1.109.1) (2026-06-26)
+
+
+### 🐛 Bug Fixes
+
+* **main:** add regex to test language parameter ([#2323](https://github.com/seatsurfing/seatsurfing/issues/2323)) ([64f55f5](https://github.com/seatsurfing/seatsurfing/commit/64f55f58fe2cd1eb4579f130697d123a610fd99b))
+* **main:** fix open redirect after verifying access token ([#2324](https://github.com/seatsurfing/seatsurfing/issues/2324)) ([db078c7](https://github.com/seatsurfing/seatsurfing/commit/db078c7293e945451253ccf87b8d4dcea98e6f12))
+
 ## [1.109.0](https://github.com/seatsurfing/seatsurfing/compare/v1.108.0...v1.109.0) (2026-06-25)
 
 
