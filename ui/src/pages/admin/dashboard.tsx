@@ -37,6 +37,7 @@ interface State {
   latestVersion: any;
   selectedUtilizationLocationId: string | null;
   selectedWeekdayLocationId: string | null;
+  selectedWeekdayPeriod: string | null;
   stats: Stats | null;
 }
 
@@ -59,6 +60,7 @@ class Dashboard extends React.Component<Props, State> {
       latestVersion: null,
       selectedUtilizationLocationId: null,
       selectedWeekdayLocationId: null,
+      selectedWeekdayPeriod: null,
       stats: null,
     };
   }
@@ -97,7 +99,7 @@ class Dashboard extends React.Component<Props, State> {
     this.setState({ stats });
   };
 
-  updateLoad = async (locationId: string): Promise<void> => {
+  updateLoad = async (locationId: string | null = null): Promise<void> => {
     if (RuntimeConfig.INFOS.hideStats) {
       return;
     }
@@ -110,14 +112,17 @@ class Dashboard extends React.Component<Props, State> {
     this.setState({ stats, selectedUtilizationLocationId: locationId });
   };
 
-  updateWeekdayChart = async (locationId: string): Promise<void> => {
+  updateWeekdayChart = async (
+    locationId: string | null = null,
+    period: string | null = null,
+  ): Promise<void> => {
     if (RuntimeConfig.INFOS.hideStats) {
       return;
     }
-    const bookingsByWeekday = await StatsLoad.getWeekday(locationId);
+    const bookingsByWeekday = await StatsLoad.getWeekday(locationId, period);
     const stats = Object.assign(new Stats(), this.state.stats ?? {});
     stats.bookingsByWeekday = bookingsByWeekday;
-    this.setState({ stats, selectedWeekdayLocationId: locationId });
+    this.setState({ stats, selectedWeekdayLocationId: locationId, selectedWeekdayPeriod: period });
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
@@ -301,35 +306,81 @@ class Dashboard extends React.Component<Props, State> {
                     <Card.Title className="mb-0">
                       {this.props.t("bookingsByWeekday")}
                     </Card.Title>
-                    <Dropdown>
-                      <Dropdown.Toggle variant="outline-secondary" size="sm">
-                        {this.state.selectedWeekdayLocationId
-                          ? this.locations.find(
-                              (e) =>
-                                e.id == this.state.selectedWeekdayLocationId,
-                            )?.name
-                          : this.props.t("allAreas")}
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu align="end">
-                        <Dropdown.Item
-                          onClick={() => {
-                            this.updateWeekdayChart("");
-                          }}
-                        >
-                          {this.props.t("allAreas")}
-                        </Dropdown.Item>
-                        {this.locations.map((location) => (
+                    <div className="d-flex gap-2">
+                      <Dropdown>
+                        <Dropdown.Toggle variant="outline-secondary" size="sm">
+                          {this.state.selectedWeekdayPeriod
+                            ? this.props.t(this.state.selectedWeekdayPeriod)
+                            : this.props.t("allTime")}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu align="end">
                           <Dropdown.Item
-                            key={location.id}
                             onClick={() => {
-                              this.updateWeekdayChart(location.id);
+                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, null);
                             }}
                           >
-                            {location.name}
+                            {this.props.t("allTime")}
                           </Dropdown.Item>
-                        ))}
-                      </Dropdown.Menu>
-                    </Dropdown>
+                          <Dropdown.Item
+                            onClick={() => {
+                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "lastMonth");
+                            }}
+                          >
+                            {this.props.t("lastMonth")}
+                          </Dropdown.Item>
+                          <Dropdown.Item
+                            onClick={() => {
+                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "lastWeek");
+                            }}
+                          >
+                            {this.props.t("lastWeek")}
+                          </Dropdown.Item>
+                          <Dropdown.Item
+                            onClick={() => {
+                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "thisWeek");
+                            }}
+                          >
+                            {this.props.t("thisWeek")}
+                          </Dropdown.Item>
+                          <Dropdown.Item
+                            onClick={() => {
+                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "nextWeek");
+                            }}
+                          >
+                            {this.props.t("nextWeek")}
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                      <Dropdown>
+                        <Dropdown.Toggle variant="outline-secondary" size="sm">
+                          {this.state.selectedWeekdayLocationId
+                            ? this.locations.find(
+                                (e) =>
+                                  e.id == this.state.selectedWeekdayLocationId,
+                              )?.name
+                            : this.props.t("allAreas")}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu align="end">
+                          <Dropdown.Item
+                            onClick={() => {
+                              this.updateWeekdayChart(null, this.state.selectedWeekdayPeriod);
+                            }}
+                          >
+                            {this.props.t("allAreas")}
+                          </Dropdown.Item>
+                          {this.locations.map((location) => (
+                            <Dropdown.Item
+                              key={location.id}
+                              onClick={() => {
+                                this.updateWeekdayChart(location.id, this.state.selectedWeekdayPeriod);
+                              }}
+                            >
+                              {location.name}
+                            </Dropdown.Item>
+                          ))}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
                   </div>
                   {this.renderWeekdayChart(
                     this.state.stats?.bookingsByWeekday ?? [
@@ -384,7 +435,7 @@ class Dashboard extends React.Component<Props, State> {
                       <Dropdown.Menu align="end">
                         <Dropdown.Item
                           onClick={() => {
-                            this.updateLoad("");
+                            this.updateLoad();
                           }}
                         >
                           {this.props.t("allAreas")}

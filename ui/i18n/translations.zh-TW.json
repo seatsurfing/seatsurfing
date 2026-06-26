@@ -425,6 +425,7 @@
   "date": "日期",
   "error404": "找不到該頁面。點擊此處返回。",
   "allAreas": "所有區域",
+  "allTime": "所有時間",
   "targetUtilizationHoursPerWeek": "每個空間的每週目標使用率",
   "nextWeek": "下週",
   "lastMonth": "上個月",

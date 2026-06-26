@@ -430,6 +430,7 @@
   "date": "Date",
   "error404": "This page was not found. Click here to get back.",
   "allAreas": "All areas",
+  "allTime": "All time",
   "targetUtilizationHoursPerWeek": "Target weekly utilization per space",
   "nextWeek": "Next week",
   "lastMonth": "Last month",

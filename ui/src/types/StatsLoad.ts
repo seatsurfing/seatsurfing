@@ -30,9 +30,10 @@ export default class Stats {
     return e;
   }
 
-  static async getWeekday(locationId: string | null): Promise<number[]> {
+  static async getWeekday(locationId: string | null, period: string | null): Promise<number[]> {
     const queryParams = new URLSearchParams();
     if (locationId) queryParams.set("location", locationId);
+    if (period) queryParams.set("period", period);
     const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
     const result = await Ajax.get(`/stats/weekday${params}`);
     return result.json.bookingsByWeekday ?? [0, 0, 0, 0, 0, 0, 0];
