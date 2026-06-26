@@ -122,7 +122,11 @@ class Dashboard extends React.Component<Props, State> {
     const bookingsByWeekday = await StatsLoad.getWeekday(locationId, period);
     const stats = Object.assign(new Stats(), this.state.stats ?? {});
     stats.bookingsByWeekday = bookingsByWeekday;
-    this.setState({ stats, selectedWeekdayLocationId: locationId, selectedWeekdayPeriod: period });
+    this.setState({
+      stats,
+      selectedWeekdayLocationId: locationId,
+      selectedWeekdayPeriod: period,
+    });
   };
 
   renderStatsCard = (num: number | undefined, title: string, link?: string) => {
@@ -316,35 +320,50 @@ class Dashboard extends React.Component<Props, State> {
                         <Dropdown.Menu align="end">
                           <Dropdown.Item
                             onClick={() => {
-                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, null);
+                              this.updateWeekdayChart(
+                                this.state.selectedWeekdayLocationId,
+                                null,
+                              );
                             }}
                           >
                             {this.props.t("allTime")}
                           </Dropdown.Item>
                           <Dropdown.Item
                             onClick={() => {
-                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "lastMonth");
+                              this.updateWeekdayChart(
+                                this.state.selectedWeekdayLocationId,
+                                "lastMonth",
+                              );
                             }}
                           >
                             {this.props.t("lastMonth")}
                           </Dropdown.Item>
                           <Dropdown.Item
                             onClick={() => {
-                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "lastWeek");
+                              this.updateWeekdayChart(
+                                this.state.selectedWeekdayLocationId,
+                                "lastWeek",
+                              );
                             }}
                           >
                             {this.props.t("lastWeek")}
                           </Dropdown.Item>
                           <Dropdown.Item
                             onClick={() => {
-                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "thisWeek");
+                              this.updateWeekdayChart(
+                                this.state.selectedWeekdayLocationId,
+                                "thisWeek",
+                              );
                             }}
                           >
                             {this.props.t("thisWeek")}
                           </Dropdown.Item>
                           <Dropdown.Item
                             onClick={() => {
-                              this.updateWeekdayChart(this.state.selectedWeekdayLocationId, "nextWeek");
+                              this.updateWeekdayChart(
+                                this.state.selectedWeekdayLocationId,
+                                "nextWeek",
+                              );
                             }}
                           >
                             {this.props.t("nextWeek")}
@@ -363,7 +382,10 @@ class Dashboard extends React.Component<Props, State> {
                         <Dropdown.Menu align="end">
                           <Dropdown.Item
                             onClick={() => {
-                              this.updateWeekdayChart(null, this.state.selectedWeekdayPeriod);
+                              this.updateWeekdayChart(
+                                null,
+                                this.state.selectedWeekdayPeriod,
+                              );
                             }}
                           >
                             {this.props.t("allAreas")}
@@ -372,7 +394,10 @@ class Dashboard extends React.Component<Props, State> {
                             <Dropdown.Item
                               key={location.id}
                               onClick={() => {
-                                this.updateWeekdayChart(location.id, this.state.selectedWeekdayPeriod);
+                                this.updateWeekdayChart(
+                                  location.id,
+                                  this.state.selectedWeekdayPeriod,
+                                );
                               }}
                             >
                               {location.name}
