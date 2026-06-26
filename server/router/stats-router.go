@@ -147,7 +147,7 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave, nil)
 	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave, nil)
 	m.SpaceLoadLastMonth, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastMonthEnter, lastMonthLeave, nil)
-	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, nil)
+	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, nil, nil, nil)
 	SendJSON(w, m)
 }
 
@@ -183,7 +183,26 @@ func (router *StatsRouter) getWeekday(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var enter, leave *time.Time
+	period := r.URL.Query().Get("period")
+	if period != "" {
+		thisWeekEnter, thisWeekLeave, lastWeekEnter, lastWeekLeave, nextWeekEnter, nextWeekLeave, lastMonthEnter, lastMonthLeave := getDateRanges()
+		switch period {
+		case "thisWeek":
+			enter, leave = &thisWeekEnter, &thisWeekLeave
+		case "lastWeek":
+			enter, leave = &lastWeekEnter, &lastWeekLeave
+		case "nextWeek":
+			enter, leave = &nextWeekEnter, &nextWeekLeave
+		case "lastMonth":
+			enter, leave = &lastMonthEnter, &lastMonthLeave
+		default:
+			SendBadRequest(w)
+			return
+		}
+	}
+
 	m := &GetWeekdayResponse{}
-	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, location)
+	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, location, enter, leave)
 	SendJSON(w, m)
 }
