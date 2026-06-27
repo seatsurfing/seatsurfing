@@ -1,6 +1,11 @@
-.navbar-brand {
+.navbar {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.navbar-brand {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .navbar-brand > img {
