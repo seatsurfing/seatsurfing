@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.110.0](https://github.com/seatsurfing/seatsurfing/compare/v1.109.1...v1.110.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **admin-ui:** add period filter to weekday stats ([#2322](https://github.com/seatsurfing/seatsurfing/issues/2322)) ([a9dda0b](https://github.com/seatsurfing/seatsurfing/commit/a9dda0b0fd7c4e28f722d968461908e9527806ae))
+* **server:** add DISABLE_VERSION_CHECK option ([#2320](https://github.com/seatsurfing/seatsurfing/issues/2320)) ([d09b5ca](https://github.com/seatsurfing/seatsurfing/commit/d09b5caf0589d90c4533197125e20dfb31a4ce29))
+
 ## [1.109.1](https://github.com/seatsurfing/seatsurfing/compare/v1.109.0...v1.109.1) (2026-06-26)
 
 
