@@ -233,13 +233,11 @@ class Bookings extends React.Component<Props, State> {
         <td>
           {booking.recurringId ? <IconRecurring className="feather" /> : <></>}
         </td>
-        <td
-          title={RendererUtils.fullname(
+        <td title={booking.user.email}>
+          {RendererUtils.fullname(
             booking.user.firstname,
             booking.user.lastname,
           )}
-        >
-          {booking.user.email}
         </td>
         <td>{booking.space.location.name}</td>
         <td>{booking.space.name}</td>
@@ -509,7 +507,7 @@ class Bookings extends React.Component<Props, State> {
           <thead>
             <tr>
               <th></th>
-              <th>{this.props.t("user")}</th>
+              <th>{this.props.t("name")}</th>
               <th>{this.props.t("area")}</th>
               <th>{this.props.t("space")}</th>
               <th>{this.props.t("enter")}</th>
