@@ -19,6 +19,7 @@ import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import DateTimePicker from "@/components/DateTimePicker";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   loading: boolean;
@@ -104,7 +105,9 @@ class ReportAnalysis extends React.Component<Props, State> {
       });
       return (
         <tr key={user.userId}>
-          <td className="no-wrap">{user.email}</td>
+          <td className="no-wrap" title={user.email}>
+            {RendererUtils.fullname(user.firstname, user.lastname)}
+          </td>
           {cols}
         </tr>
       );
@@ -271,7 +274,7 @@ class ReportAnalysis extends React.Component<Props, State> {
         >
           <thead>
             <tr>
-              <th className="no-wrap">{this.props.t("user")}</th>
+              <th className="no-wrap">{this.props.t("name")}</th>
               {this.data.dates.map((date: string) => (
                 <th key={"date-" + date} className="no-wrap">
                   {date}

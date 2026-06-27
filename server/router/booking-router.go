@@ -779,8 +779,10 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 	sort.Strings(res.Dates)
 	for i, item := range items {
 		res.Users[i] = GetUserInfoSmall{
-			UserID: item.User.ID,
-			Email:  item.User.Email,
+			UserID:    item.User.ID,
+			Email:     item.User.Email,
+			Firstname: item.User.Firstname,
+			Lastname:  item.User.Lastname,
 		}
 		res.Presences[i] = make([]int, numDates)
 		for j, date := range res.Dates {
