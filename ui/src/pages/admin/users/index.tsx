@@ -8,9 +8,9 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
-import Ajax from "@/util/Ajax";
 import AuthProvider from "@/types/AuthProvider";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   selectedItem: string;
@@ -35,23 +35,19 @@ class Users extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
-    import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
-    );
+  componentDidMount = async () => {
+    const imp = await import("excellentexport");
+    this.ExcellentExport = imp.default;
     this.loadItems();
   };
 
-  loadItems = () => {
-    AuthProvider.list().then((providers) => {
-      providers.forEach((provider) => {
-        this.authProviders[provider.id] = provider.name;
-      });
-      User.list().then((list) => {
-        this.data = list;
-        this.setState({ loading: false });
-      });
+  loadItems = async () => {
+    const providers = await AuthProvider.list();
+    providers.forEach((provider) => {
+      this.authProviders[provider.id] = provider.name;
     });
+    this.data = await User.list();
+    this.setState({ loading: false });
   };
 
   onItemSelect = (user: User) => {
@@ -86,11 +82,7 @@ class Users extends React.Component<Props, State> {
     return (
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
-        <td>
-          {user.lastname}
-          {user.lastname && user.firstname ? ", " : ""}
-          {user.firstname}
-        </td>
+        <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
         <td>{role}</td>
         <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
           {authProvider}
@@ -164,9 +156,7 @@ class Users extends React.Component<Props, State> {
           <thead>
             <tr>
               <th>{this.props.t("user")}</th>
-              <th>
-                {this.props.t("lastname")}, {this.props.t("firstname")}
-              </th>
+              <th>{this.props.t("name")}</th>
               <th>{this.props.t("role")}</th>
               <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
                 {this.props.t("loginMeans")}
