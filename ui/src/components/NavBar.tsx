@@ -17,6 +17,8 @@ import {
   Calendar as IconCalendar,
   PlusSquare as IconPlus,
   User as IconUser,
+  Heart as IconBuddies,
+  Shield as IconAdmin,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
@@ -151,7 +153,7 @@ class NavBar extends React.Component<Props, State> {
             eventKey="/admin/dashboard"
             href="/admin/dashboard"
           >
-            {this.props.t("administration")}
+            <IconAdmin className="feather" /> {this.props.t("administration")}
           </Nav.Link>
         );
       }
@@ -182,9 +184,11 @@ class NavBar extends React.Component<Props, State> {
       buddies = (
         <Nav.Link as={Link} eventKey="/buddies" href="/buddies">
           {RuntimeConfig.EMBEDDED ? (
-            <IconCalendar className="feather feather-lg" />
+            <IconBuddies className="feather feather-lg" />
           ) : (
-            this.props.t("myBuddies")
+            <>
+              <IconBuddies className="feather" /> {this.props.t("myBuddies")}
+            </>
           )}
         </Nav.Link>
       );
@@ -197,14 +201,19 @@ class NavBar extends React.Component<Props, State> {
             {RuntimeConfig.EMBEDDED ? (
               <IconPlus className="feather feather-lg" />
             ) : (
-              this.props.t("bookSeat")
+              <>
+                <IconPlus className="feather" /> {this.props.t("bookSeat")}
+              </>
             )}
           </Nav.Link>
           <Nav.Link as={Link} eventKey="/bookings" href="/bookings">
             {RuntimeConfig.EMBEDDED ? (
               <IconCalendar className="feather feather-lg" />
             ) : (
-              this.props.t("myBookings")
+              <>
+                <IconCalendar className="feather" />{" "}
+                {this.props.t("myBookings")}
+              </>
             )}
           </Nav.Link>
           {buddies}
@@ -212,7 +221,10 @@ class NavBar extends React.Component<Props, State> {
             {RuntimeConfig.EMBEDDED ? (
               <IconSettings className="feather feather-lg" />
             ) : (
-              this.props.t("preferences")
+              <>
+                <IconSettings className="feather" />{" "}
+                {this.props.t("preferences")}
+              </>
             )}
           </Nav.Link>
           {adminButton}

@@ -9,7 +9,7 @@ div#__next {
 .feather {
   width: 16px;
   height: 16px;
-  vertical-align: text-bottom;
+  vertical-align: text-top;
 }
 
 .loading-overlay {
