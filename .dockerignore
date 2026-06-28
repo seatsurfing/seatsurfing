@@ -1,4 +1,9 @@
 ui/.next/
 ui/node_modules/
 ui/build/
+ui/vitest.config.ts
+ui/setupVitest.ts
 e2e/
+.github
+*.md
+server/**/*_test.go
