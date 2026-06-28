@@ -90,8 +90,10 @@ type GetUserResponse struct {
 }
 
 type GetUserInfoSmall struct {
-	UserID string `json:"userId"`
-	Email  string `json:"email"`
+	UserID    string `json:"userId"`
+	Email     string `json:"email"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
 }
 
 type GetMergeRequestResponse struct {
