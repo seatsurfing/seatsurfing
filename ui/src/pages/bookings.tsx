@@ -43,6 +43,7 @@ interface State {
   cancelSeries: boolean;
   calendarDate: Date;
   calendarShow: boolean;
+  workdays: number[];
 }
 
 interface Props {
@@ -69,6 +70,7 @@ class Bookings extends React.Component<Props, State> {
           BrowserUtil.LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW,
           "1",
         ) === "1")(),
+      workdays: [],
     };
   }
 
@@ -80,11 +82,15 @@ class Bookings extends React.Component<Props, State> {
     Promise.all([
       Booking.list(),
       UserPreference.getOne(UserPreference.PREF_WORKDAY_START),
-    ]).then(([list, workDayStart]) => {
+      UserPreference.getOne(UserPreference.PREF_WORKDAYS),
+    ]).then(([list, workDayStart, workdays]) => {
       this.data = list;
       const ws = parseInt(workDayStart);
       this.workdayStartHour = !isNaN(ws) && ws >= 0 && ws <= 23 ? ws : 9;
-      this.setState({ loading: false });
+      const parsedWorkdays = workdays
+        ? workdays.split(",").map((v: string) => parseInt(v))
+        : [];
+      this.setState({ loading: false, workdays: parsedWorkdays });
     });
   };
 
@@ -325,6 +331,17 @@ class Bookings extends React.Component<Props, State> {
               scrollToTime={DateUtil.convertToFakeUTCDate(
                 DateUtil.getTodayTime(this.workdayStartHour, 0, 0),
               )}
+              dayPropGetter={(date: Date) => {
+                if (
+                  this.state.workdays.length > 0 &&
+                  !this.state.workdays.includes(date.getUTCDay())
+                ) {
+                  return {
+                    style: { backgroundColor: "rgba(0, 0, 0, 0.05)" },
+                  };
+                }
+                return {};
+              }}
             ></Calendar>
           </div>
         </div>
