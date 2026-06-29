@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.110.1](https://github.com/seatsurfing/seatsurfing/compare/v1.110.0...v1.110.1) (2026-06-29)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** improve user's name in table ([#2328](https://github.com/seatsurfing/seatsurfing/issues/2328)) ([318fa2a](https://github.com/seatsurfing/seatsurfing/commit/318fa2a50b34a987da345f083207cd347fad438f))
+* **admin-ui:** show user names in booking overview ([#2329](https://github.com/seatsurfing/seatsurfing/issues/2329)) ([40a9e9b](https://github.com/seatsurfing/seatsurfing/commit/40a9e9b7364fe7abf091ba67b1a20b3e2bdde536))
+* **admin-ui:** show user names on analysis page ([#2331](https://github.com/seatsurfing/seatsurfing/issues/2331)) ([3d201d7](https://github.com/seatsurfing/seatsurfing/commit/3d201d76283097ecca247561d5ec325dac842983))
+* **booking-ui:** add icons to navbar ([#2332](https://github.com/seatsurfing/seatsurfing/issues/2332)) ([3b05f34](https://github.com/seatsurfing/seatsurfing/commit/3b05f34f615750f72966baba698a39cbea8a8ae5))
+* **booking-ui:** align navbar height to admin UI ([#2330](https://github.com/seatsurfing/seatsurfing/issues/2330)) ([b9c30da](https://github.com/seatsurfing/seatsurfing/commit/b9c30daffbf877ade44c1881e253fd42f6637c3f))
+
 ## [1.110.0](https://github.com/seatsurfing/seatsurfing/compare/v1.109.1...v1.110.0) (2026-06-27)
 
 
