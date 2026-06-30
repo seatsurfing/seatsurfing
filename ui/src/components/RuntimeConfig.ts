@@ -25,6 +25,7 @@ interface RuntimeUserInfos {
   maxHoursPartiallyBookedEnabled: boolean;
   featureRecurringBookings: boolean;
   organizationId: string;
+  orgName: string;
   superAdmin: boolean;
   spaceAdmin: boolean;
   orgAdmin: boolean;
@@ -79,6 +80,7 @@ export default class RuntimeConfig {
       orgLanguage: "",
       featureRecurringBookings: false,
       organizationId: "",
+      orgName: "",
       superAdmin: false,
       spaceAdmin: false,
       orgAdmin: false,
@@ -117,116 +119,102 @@ export default class RuntimeConfig {
       }
     }
     if (credentials.accessToken) {
-      RuntimeConfig.loadUserAndSettings()
-        .then(() => {
-          resolve();
-        })
-        .catch((e) => {
-          Ajax.PERSISTER.deleteCredentialsFromStorage();
-          resolve();
-        });
-    } else {
-      resolve();
+      try {
+        await RuntimeConfig.loadUserAndSettings();
+      } catch {
+        Ajax.PERSISTER.deleteCredentialsFromStorage();
+      }
     }
+    resolve();
   };
 
   static loadSettings = async (): Promise<void> => {
-    return new Promise<void>(function (resolve, reject) {
-      OrgSettings.list().then((settings) => {
-        settings.forEach((s) => {
-          if (typeof window !== "undefined") {
-            if (s.name === "max_bookings_per_user")
-              RuntimeConfig.INFOS.maxBookingsPerUser = window.parseInt(s.value);
-            if (s.name === "max_concurrent_bookings_per_user")
-              RuntimeConfig.INFOS.maxConcurrentBookingsPerUser =
-                window.parseInt(s.value);
-            if (s.name === "max_days_in_advance")
-              RuntimeConfig.INFOS.maxDaysInAdvance = window.parseInt(s.value);
-            if (s.name === "max_booking_duration_hours")
-              RuntimeConfig.INFOS.maxBookingDurationHours = window.parseInt(
-                s.value,
-              );
-            if (s.name === "max_hours_before_delete")
-              RuntimeConfig.INFOS.maxHoursBeforeDelete = window.parseInt(
-                s.value,
-              );
-            if (s.name === "max_hours_partially_booked")
-              RuntimeConfig.INFOS.maxHoursPartiallyBooked = window.parseInt(
-                s.value,
-              );
-            if (s.name === "min_booking_duration_hours")
-              RuntimeConfig.INFOS.minBookingDurationHours = window.parseInt(
-                s.value,
-              );
-          }
-          if (s.name === "daily_basis_booking")
-            RuntimeConfig.INFOS.dailyBasisBooking = s.value === "1";
-          if (s.name === "no_admin_restrictions")
-            RuntimeConfig.INFOS.noAdminRestrictions = s.value === "1";
-          if (s.name === "max_hours_partially_booked_enabled")
-            RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled =
-              s.value === "1";
-          if (s.name === "show_names")
-            RuntimeConfig.INFOS.showNames = s.value === "1";
-          if (s.name === "disable_buddies")
-            RuntimeConfig.INFOS.disableBuddies = s.value === "1";
-          if (s.name === "custom_logo_url")
-            RuntimeConfig.INFOS.customLogoUrl = s.value;
-          if (s.name === "default_timezone")
-            RuntimeConfig.INFOS.defaultTimezone = s.value;
-          if (s.name === "_sys_org_language")
-            RuntimeConfig.INFOS.orgLanguage = s.value;
-          if (s.name === "feature_recurring_bookings")
-            RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
-          if (s.name === "allow_recurring_bookings")
-            RuntimeConfig.INFOS.allowRecurringBookings = s.value === "1";
-          if (s.name === "_sys_admin_menu_items")
-            RuntimeConfig.INFOS.pluginMenuItems = s.value
-              ? JSON.parse(s.value)
-              : [];
-          if (s.name === "_sys_admin_welcome_screens")
-            RuntimeConfig.INFOS.pluginWelcomeScreens = s.value
-              ? JSON.parse(s.value)
-              : [];
-          if (s.name === "feature_groups")
-            RuntimeConfig.INFOS.featureGroups = s.value
-              ? JSON.parse(s.value)
-              : [];
-          if (s.name === "feature_auth_providers")
-            RuntimeConfig.INFOS.featureAuthProviders = s.value
-              ? JSON.parse(s.value)
-              : [];
-          if (s.name === "feature_kiosk_mode")
-            RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
-          if (s.name === "kiosk_mode_enabled")
-            RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
-          if (s.name === "cloud_hosted")
-            RuntimeConfig.INFOS.cloudHosted = s.value
-              ? JSON.parse(s.value)
-              : [];
-          if (s.name === "subscription_active")
-            RuntimeConfig.INFOS.subscriptionActive = s.value
-              ? JSON.parse(s.value)
-              : [];
-          if (s.name === "_sys_org_primary_domain")
-            RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
-          if (s.name === "_sys_disable_password_login")
-            RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
-          if (s.name === "subject_default")
-            RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
-          if (s.name === "enforce_totp")
-            RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
-          if (s.name === "hide_reports")
-            RuntimeConfig.INFOS.hideReports = s.value === "1";
-          if (s.name === "hide_stats")
-            RuntimeConfig.INFOS.hideStats = s.value === "1";
-          if (s.name === "target_utilization_hours_per_week")
-            RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
-              s.value,
-            );
-        });
-        resolve();
-      });
+    const settings = await OrgSettings.list();
+    settings.forEach((s) => {
+      if (typeof window !== "undefined") {
+        if (s.name === "max_bookings_per_user")
+          RuntimeConfig.INFOS.maxBookingsPerUser = window.parseInt(s.value);
+        if (s.name === "max_concurrent_bookings_per_user")
+          RuntimeConfig.INFOS.maxConcurrentBookingsPerUser = window.parseInt(
+            s.value,
+          );
+        if (s.name === "max_days_in_advance")
+          RuntimeConfig.INFOS.maxDaysInAdvance = window.parseInt(s.value);
+        if (s.name === "max_booking_duration_hours")
+          RuntimeConfig.INFOS.maxBookingDurationHours = window.parseInt(
+            s.value,
+          );
+        if (s.name === "max_hours_before_delete")
+          RuntimeConfig.INFOS.maxHoursBeforeDelete = window.parseInt(s.value);
+        if (s.name === "max_hours_partially_booked")
+          RuntimeConfig.INFOS.maxHoursPartiallyBooked = window.parseInt(
+            s.value,
+          );
+        if (s.name === "min_booking_duration_hours")
+          RuntimeConfig.INFOS.minBookingDurationHours = window.parseInt(
+            s.value,
+          );
+      }
+      if (s.name === "daily_basis_booking")
+        RuntimeConfig.INFOS.dailyBasisBooking = s.value === "1";
+      if (s.name === "no_admin_restrictions")
+        RuntimeConfig.INFOS.noAdminRestrictions = s.value === "1";
+      if (s.name === "max_hours_partially_booked_enabled")
+        RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled = s.value === "1";
+      if (s.name === "show_names")
+        RuntimeConfig.INFOS.showNames = s.value === "1";
+      if (s.name === "disable_buddies")
+        RuntimeConfig.INFOS.disableBuddies = s.value === "1";
+      if (s.name === "custom_logo_url")
+        RuntimeConfig.INFOS.customLogoUrl = s.value;
+      if (s.name === "default_timezone")
+        RuntimeConfig.INFOS.defaultTimezone = s.value;
+      if (s.name === "_sys_org_language")
+        RuntimeConfig.INFOS.orgLanguage = s.value;
+      if (s.name === "feature_recurring_bookings")
+        RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
+      if (s.name === "allow_recurring_bookings")
+        RuntimeConfig.INFOS.allowRecurringBookings = s.value === "1";
+      if (s.name === "_sys_admin_menu_items")
+        RuntimeConfig.INFOS.pluginMenuItems = s.value
+          ? JSON.parse(s.value)
+          : [];
+      if (s.name === "_sys_admin_welcome_screens")
+        RuntimeConfig.INFOS.pluginWelcomeScreens = s.value
+          ? JSON.parse(s.value)
+          : [];
+      if (s.name === "feature_groups")
+        RuntimeConfig.INFOS.featureGroups = s.value ? JSON.parse(s.value) : [];
+      if (s.name === "feature_auth_providers")
+        RuntimeConfig.INFOS.featureAuthProviders = s.value
+          ? JSON.parse(s.value)
+          : [];
+      if (s.name === "feature_kiosk_mode")
+        RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
+      if (s.name === "kiosk_mode_enabled")
+        RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
+      if (s.name === "cloud_hosted")
+        RuntimeConfig.INFOS.cloudHosted = s.value ? JSON.parse(s.value) : [];
+      if (s.name === "subscription_active")
+        RuntimeConfig.INFOS.subscriptionActive = s.value
+          ? JSON.parse(s.value)
+          : [];
+      if (s.name === "_sys_org_primary_domain")
+        RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
+      if (s.name === "_sys_disable_password_login")
+        RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
+      if (s.name === "subject_default")
+        RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
+      if (s.name === "enforce_totp")
+        RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
+      if (s.name === "hide_reports")
+        RuntimeConfig.INFOS.hideReports = s.value === "1";
+      if (s.name === "hide_stats")
+        RuntimeConfig.INFOS.hideStats = s.value === "1";
+      if (s.name === "target_utilization_hours_per_week")
+        RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
+          s.value,
+        );
     });
   };
 
@@ -250,41 +238,38 @@ export default class RuntimeConfig {
     }
   };
 
-  static setDetails = (username: string, id: string) => {
-    RuntimeConfig.loadSettings().then(() => {
-      RuntimeConfig.INFOS.username = username;
-      RuntimeConfig.INFOS.userId = id;
-    });
+  static setDetails = async (username: string, id: string) => {
+    await RuntimeConfig.loadSettings();
+    RuntimeConfig.INFOS.username = username;
+    RuntimeConfig.INFOS.userId = id;
   };
 
   static async setLoginDetails(): Promise<void> {
-    return User.getSelf().then((user) => {
-      RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-      RuntimeConfig.setDetails(user.email, user.id);
-    });
+    const user = await User.getSelf();
+    RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
+    RuntimeConfig.setDetails(user.email, user.id);
   }
 
   static loadUserAndSettings = async (): Promise<void> => {
     RuntimeConfig.resetInfos();
-    return User.getSelf().then((user) => {
-      RuntimeConfig.INFOS.organizationId = user.organizationId;
-      RuntimeConfig.INFOS.superAdmin = user.superAdmin;
-      RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
-      RuntimeConfig.INFOS.orgAdmin = user.admin;
-      RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-      RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
-      RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
-      RuntimeConfig.INFOS.isPrimaryDomain = user.isPrimaryDomain;
-      RuntimeConfig.setDetails(user.email, user.id);
-      return RuntimeConfig.loadSettings().then(() => {
-        return RuntimeConfig.loadUserPreferences();
-      });
-    });
+    const user = await User.getSelf();
+    RuntimeConfig.INFOS.organizationId = user.organizationId;
+    RuntimeConfig.INFOS.superAdmin = user.superAdmin;
+    RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
+    RuntimeConfig.INFOS.orgAdmin = user.admin;
+    RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
+    RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
+    RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
+    RuntimeConfig.INFOS.isPrimaryDomain = user.isPrimaryDomain;
+    RuntimeConfig.setDetails(user.email, user.id);
+    RuntimeConfig.INFOS.orgName = user.organization.name;
+    await RuntimeConfig.loadSettings();
+    await RuntimeConfig.loadUserPreferences();
   };
 
   static getLanguage(): string {
     if (typeof window !== "undefined") {
-      let curLang = window.localStorage.getItem("next-export-i18n-lang");
+      const curLang = window.localStorage.getItem("next-export-i18n-lang");
       if (curLang) {
         return curLang;
       }
@@ -312,7 +297,7 @@ export default class RuntimeConfig {
     ];
   }
 
-  static logOut(): void {
+  static async logOut(): Promise<void> {
     const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
     const logoutUrl = credentials.logoutUrl;
     const proceed = () => {
@@ -324,9 +309,11 @@ export default class RuntimeConfig {
       }
       window.location.href = "/ui/login?noredirect=1";
     };
-    Ajax.get("/auth/logout/current")
-      .then(() => proceed())
-      .catch(() => proceed());
+    try {
+      await Ajax.get("/auth/logout/current");
+    } finally {
+      proceed();
+    }
   }
 }
 
