@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.111.0](https://github.com/seatsurfing/seatsurfing/compare/v1.110.1...v1.111.0) (2026-06-29)
+
+
+### ✨ Features
+
+* **booking-ui:** mark workdays in booking calendar ([#2336](https://github.com/seatsurfing/seatsurfing/issues/2336)) ([7a39708](https://github.com/seatsurfing/seatsurfing/commit/7a39708e60d6e05447f62257fc52593dd652c18b))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.75 to 1.0.76 in /server in the minor-and-patch group ([#2338](https://github.com/seatsurfing/seatsurfing/issues/2338)) ([ecfccff](https://github.com/seatsurfing/seatsurfing/commit/ecfccfff70d6af98051e3873cf20b973cb47e057))
+
 ## [1.110.1](https://github.com/seatsurfing/seatsurfing/compare/v1.110.0...v1.110.1) (2026-06-29)
 
 
