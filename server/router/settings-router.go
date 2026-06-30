@@ -89,7 +89,8 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if vars["name"] == SysSettingOrgPrimaryDomain {
-		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(user.OrganizationID)
+		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
+		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(org)
 		SendJSON(w, sysSettingOrgPrimaryDomain.Value)
 		return
 	}
@@ -99,7 +100,8 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if vars["name"] == SysSettingOrgLanguage {
-		SendJSON(w, router.getSysSettingOrgLanguage(user.OrganizationID).Value)
+		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
+		SendJSON(w, router.getSysSettingOrgLanguage(org).Value)
 		return
 	}
 	// Kiosk secret: return "1" if configured, "" if not – never expose the stored hash.
@@ -185,9 +187,10 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	if CanSpaceAdminOrg(user, user.OrganizationID) {
 		res = append(res, router.getAdminMenuItems())
 	}
+	org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
 	res = append(res, router.getSysSettingVersion())
-	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
-	res = append(res, router.getSysSettingOrgLanguage(user.OrganizationID))
+	res = append(res, router.getSysSettingOrgPrimaryDomain(org))
+	res = append(res, router.getSysSettingOrgLanguage(org))
 	res = append(res, router.getSysSettingDisablePasswordLogin())
 	for _, plg := range GetPlugins() {
 		plgSettings := plg.GetPublicSettings(user.OrganizationID)
@@ -613,8 +616,7 @@ func (router *SettingsRouter) getSysSettingDisablePasswordLogin() *GetSettingsRe
 	}
 }
 
-func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSettingsResponse {
-	org, _ := GetOrganizationRepository().GetOne(orgId)
+func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(org *Organization) *GetSettingsResponse {
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 
 	primaryDomainValue := ""
@@ -628,8 +630,7 @@ func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSe
 	}
 }
 
-func (router *SettingsRouter) getSysSettingOrgLanguage(orgId string) *GetSettingsResponse {
-	org, _ := GetOrganizationRepository().GetOne(orgId)
+func (router *SettingsRouter) getSysSettingOrgLanguage(org *Organization) *GetSettingsResponse {
 	language := ""
 	if org != nil {
 		language = org.Language
