@@ -948,7 +948,11 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Enabled = m.Enabled
 	e.KioskEnabled = m.KioskEnabled
 	e.Shape = m.Shape
-	e.FontSize = m.FontSize
+	if m.FontSize == "" {
+		e.FontSize = "normal"
+	} else {
+		e.FontSize = m.FontSize
+	}
 	return e
 }
 
