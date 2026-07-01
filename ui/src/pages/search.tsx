@@ -270,10 +270,11 @@ onKeyDown = (e: KeyboardEvent) => {
     ) {
       return;
     }
-    const target = e.target as HTMLElement;
+const target = e.target;
     if (
-      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
-      target.isContentEditable
+      target instanceof HTMLElement &&
+      (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+        target.isContentEditable)
     ) {
       return;
     }
