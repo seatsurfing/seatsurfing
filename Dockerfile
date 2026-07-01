@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM docker.io/tonistiigi/xx AS xx
 
-FROM --platform=$BUILDPLATFORM node:24-alpine AS ui-builder
+FROM --platform=$BUILDPLATFORM node:26-alpine AS ui-builder
 RUN apk add --no-cache jq bash
 ARG CI_VERSION
 ENV NEXT_PUBLIC_PRODUCT_VERSION=$CI_VERSION
