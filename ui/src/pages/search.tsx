@@ -258,7 +258,7 @@ class Search extends React.Component<Props, State> {
     this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
   };
 
-onKeyDown = (e: KeyboardEvent) => {
+  onKeyDown = (e: KeyboardEvent) => {
     if (e.altKey || e.ctrlKey || e.metaKey) {
       return;
     }
@@ -270,7 +270,7 @@ onKeyDown = (e: KeyboardEvent) => {
     ) {
       return;
     }
-const target = e.target;
+    const target = e.target;
     if (
       target instanceof HTMLElement &&
       (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
