@@ -494,5 +494,9 @@
   "mailLanguage": "Sähköpostien kieli",
   "mailNotificationsBookingInfo": "Booking information",
   "mailReminderBookingInfo": "Booking reminders",
-  "home": "Home"
+  "home": "Home",
+  "big": "Big",
+  "bigger": "Bigger",
+  "normal": "Normal",
+  "small": "Small"
 }

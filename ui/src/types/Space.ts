@@ -18,6 +18,7 @@ export default class Space extends Entity {
   enabled: boolean;
   kioskEnabled: boolean;
   shape: string;
+  fontSize: string;
   attributes: SpaceAttributeValue[];
   approverGroupIds: string[];
   allowedBookerGroupIds: string[];
@@ -40,6 +41,7 @@ export default class Space extends Entity {
     this.enabled = true;
     this.kioskEnabled = false;
     this.shape = "";
+    this.fontSize = "normal";
     this.attributes = [];
     this.approverGroupIds = [];
     this.allowedBookerGroupIds = [];
@@ -124,6 +126,7 @@ export default class Space extends Entity {
       enabled: this.enabled,
       kioskEnabled: this.kioskEnabled,
       shape: this.shape,
+      fontSize: this.fontSize,
       attributes: this.attributes.map((a) => a.serialize()),
       approverGroupIds: this.approverGroupIds,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
@@ -143,6 +146,7 @@ export default class Space extends Entity {
     this.enabled = input.enabled;
     this.kioskEnabled = input.kioskEnabled ?? false;
     this.shape = input.shape ?? "";
+    this.fontSize = input.fontSize || "normal";
     if (input.allowed !== undefined) {
       this.allowed = input.allowed;
     }

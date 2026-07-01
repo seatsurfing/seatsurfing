@@ -66,4 +66,22 @@ export default class RendererUtils {
   static capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   static SECRET_PLACEHOLDER = "••••••••••••••••";
+
+  static readonly SPACE_FONT_SIZES: { [key: string]: number } = {
+    small: 10,
+    normal: 12,
+    big: 14,
+    bigger: 18,
+  };
+
+  static readonly SPACE_FONT_SIZE_OPTIONS: string[] = Object.keys(
+    RendererUtils.SPACE_FONT_SIZES,
+  );
+
+  static spaceFontSizePx(spaceFontSize: string | undefined): number {
+    return (
+      RendererUtils.SPACE_FONT_SIZES[spaceFontSize || "normal"] ||
+      RendererUtils.SPACE_FONT_SIZES.normal
+    );
+  }
 }
