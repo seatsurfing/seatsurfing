@@ -258,8 +258,83 @@ class Search extends React.Component<Props, State> {
     this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
   };
 
+  onKeyDown = (e: KeyboardEvent) => {
+    if (
+      e.key !== "ArrowLeft" &&
+      e.key !== "ArrowRight" &&
+      e.key !== "ArrowUp" &&
+      e.key !== "ArrowDown"
+    ) {
+      return;
+    }
+    const target = e.target as HTMLElement;
+    if (
+      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+      target.isContentEditable
+    ) {
+      return;
+    }
+    if (
+      this.state.showConfirm ||
+      this.state.showSearchModal ||
+      this.state.showLocationDetails ||
+      this.state.showSpaceCalendar ||
+      this.state.showBookingNames ||
+      this.state.showRecurringOptions
+    ) {
+      return;
+    }
+    if (document.querySelector(".flatpickr-calendar.open")) {
+      return;
+    }
+
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      if (!this.state.locationId) {
+        return;
+      }
+      e.preventDefault();
+      if (e.key === "ArrowLeft") {
+        if (DateUtil.isSameDay(this.state.enter, DateUtil.getTodayStart())) {
+          return;
+        }
+        this.updateEnterAndLeaveDate(
+          DateUtil.prevDay(this.state.enter),
+          DateUtil.prevDay(this.state.leave),
+        );
+      } else {
+        this.updateEnterAndLeaveDate(
+          DateUtil.nextDay(this.state.enter),
+          DateUtil.nextDay(this.state.leave),
+        );
+      }
+    } else {
+      e.preventDefault();
+      this.changeLocationRelative(e.key === "ArrowUp" ? -1 : 1);
+    }
+  };
+
+  changeLocationRelative = (direction: 1 | -1) => {
+    const enabledLocations = this.locations.filter((l) => l.enabled);
+    if (enabledLocations.length === 0) {
+      return;
+    }
+    const currentIndex = enabledLocations.findIndex(
+      (l) => l.id === this.state.locationId,
+    );
+    const newIndex =
+      currentIndex === -1
+        ? 0
+        : (currentIndex + direction + enabledLocations.length) %
+          enabledLocations.length;
+    const newLocation = enabledLocations[newIndex];
+    if (newLocation && newLocation.id !== this.state.locationId) {
+      this.changeLocation(newLocation.id);
+    }
+  };
+
   componentDidMount = () => {
     window.addEventListener("resize", this.onWindowResize);
+    window.addEventListener("keydown", this.onKeyDown);
     if (!Ajax.hasAccessToken()) {
       this.props.router.push({
         pathname: "/login",
@@ -272,6 +347,7 @@ class Search extends React.Component<Props, State> {
 
   componentWillUnmount = () => {
     window.removeEventListener("resize", this.onWindowResize);
+    window.removeEventListener("keydown", this.onKeyDown);
   };
 
   loadItems = () => {
