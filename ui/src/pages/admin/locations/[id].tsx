@@ -24,6 +24,7 @@ import {
   Circle as IconCircle,
   Grid as IconGrid,
   Eye as IconEye,
+  Type as IconFontSize,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -84,6 +85,7 @@ interface SpaceState {
   enabled: boolean;
   kioskEnabled: boolean;
   shape: string;
+  fontSize: string;
   changed: boolean;
   attributes: Map<string, string>;
   enabledAttributes: string[];
@@ -113,6 +115,7 @@ interface SpaceRectProps {
   mapHeight: number;
   snapToGrid: boolean;
   outline: boolean;
+  fontSize: number;
 }
 
 const GRID_SIZE = 50;
@@ -133,6 +136,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   mapHeight,
   snapToGrid,
   outline,
+  fontSize,
 }) => {
   const targetRef = React.useRef<HTMLDivElement>(null);
   const moveableRef = React.useRef<Moveable>(null);
@@ -259,6 +263,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           <input
             type="text"
             id={`spaceName${index}`}
+            style={{ fontSize: `${fontSize}px` }}
             value={space.name}
             onChange={(e) => onNameChange(index, e.target.value)}
             onBlur={(e) => {
@@ -615,6 +620,7 @@ class EditLocation extends React.Component<Props, State> {
         space.enabled = item.enabled;
         space.kioskEnabled = item.kioskEnabled;
         space.shape = item.shape;
+        space.fontSize = item.fontSize;
         space.attributes = [];
         item.enabledAttributes.forEach((attributeId) => {
           let value = item.attributes.get(attributeId);
@@ -835,6 +841,7 @@ class EditLocation extends React.Component<Props, State> {
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
       shape: e ? e.shape : "",
+      fontSize: e ? e.fontSize || "normal" : "normal",
       changed: true,
       attributes: new Map<string, string>(),
       enabledAttributes: [],
@@ -891,6 +898,15 @@ class EditLocation extends React.Component<Props, State> {
     const spaces = this.state.spaces;
     const space = { ...spaces[i] };
     space.shape = shape;
+    space.changed = true;
+    spaces[i] = space;
+    this.setState({ spaces: spaces, changed: true });
+  };
+
+  setSpaceFontSize = (i: number, fontSize: string) => {
+    const spaces = this.state.spaces;
+    const space = { ...spaces[i] };
+    space.fontSize = fontSize;
     space.changed = true;
     spaces[i] = space;
     this.setState({ spaces: spaces, changed: true });
@@ -1049,6 +1065,7 @@ class EditLocation extends React.Component<Props, State> {
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
         snapToGrid={this.state.gridEnabled}
         outline={this.state.outline}
+        fontSize={RendererUtils.spaceFontSizePx(this.state.spaces[i].fontSize)}
       />
     );
   };
@@ -1804,6 +1821,7 @@ class EditLocation extends React.Component<Props, State> {
       let buttonCopySpace = <></>;
       let buttonDeleteSpace = <></>;
       let buttonShapeSelector = <></>;
+      let buttonFontSizeSelector = <></>;
       if (this.state.selectedSpace != null) {
         buttonEditSpaceDetails = (
           <Button
@@ -1885,6 +1903,32 @@ class EditLocation extends React.Component<Props, State> {
             </Dropdown.Menu>
           </Dropdown>
         );
+        const selectedFontSize = this.getSelectedSpace()?.fontSize ?? "normal";
+        buttonFontSizeSelector = (
+          <Dropdown as="div" className="btn-group">
+            <Dropdown.Toggle
+              className="btn-sm"
+              variant="outline-secondary"
+              id="dropdown-space-font-size"
+            >
+              <IconFontSize className="feather" />{" "}
+              {this.props.t(selectedFontSize)}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              {RendererUtils.SPACE_FONT_SIZE_OPTIONS.map((size) => (
+                <Dropdown.Item
+                  key={size}
+                  active={selectedFontSize === size}
+                  onClick={() =>
+                    this.setSpaceFontSize(this.state.selectedSpace!, size)
+                  }
+                >
+                  {this.props.t(size)}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
+        );
       }
       floorPlan = (
         <>
@@ -1895,8 +1939,8 @@ class EditLocation extends React.Component<Props, State> {
             <h4>{this.props.t("floorplan")}</h4>
             <div className="btn-toolbar mb-2 mb-md-0">
               <div className="btn-group me-2">
-                {buttonEditSpaceDetails} {buttonShapeSelector} {buttonCopySpace}{" "}
-                {buttonDeleteSpace}
+                {buttonEditSpaceDetails} {buttonShapeSelector}{" "}
+                {buttonFontSizeSelector} {buttonCopySpace} {buttonDeleteSpace}
                 <Button
                   className="btn-sm"
                   variant="outline-secondary"

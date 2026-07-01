@@ -833,6 +833,7 @@ class Search extends React.Component<Props, State> {
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",
+      fontSize: RendererUtils.spaceFontSizePx(item.fontSize),
     };
     const innerStyle: React.CSSProperties = {
       transform: `rotate(${-item.rotation}deg)`,

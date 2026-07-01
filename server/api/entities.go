@@ -119,6 +119,7 @@ type Space struct {
 	Enabled        bool
 	KioskEnabled   bool
 	Shape          string
+	FontSize       string
 }
 
 type SpaceDetails struct {
