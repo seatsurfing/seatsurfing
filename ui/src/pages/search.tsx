@@ -258,7 +258,10 @@ class Search extends React.Component<Props, State> {
     this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
   };
 
-  onKeyDown = (e: KeyboardEvent) => {
+onKeyDown = (e: KeyboardEvent) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) {
+      return;
+    }
     if (
       e.key !== "ArrowLeft" &&
       e.key !== "ArrowRight" &&
