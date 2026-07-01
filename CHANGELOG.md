@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.111.1](https://github.com/seatsurfing/seatsurfing/compare/v1.111.0...v1.111.1) (2026-06-30)
+
+
+### 🐛 Bug Fixes
+
+* **main:** show organization name in title ([#2342](https://github.com/seatsurfing/seatsurfing/issues/2342)) ([2f3068c](https://github.com/seatsurfing/seatsurfing/commit/2f3068c2ad779514e3f28a86d041299d3470876b))
+* **server:** performance improvement for API settings ([#2343](https://github.com/seatsurfing/seatsurfing/issues/2343)) ([197007e](https://github.com/seatsurfing/seatsurfing/commit/197007e997e7a034cb01c0dac2cdb8441b10acc1))
+
 ## [1.111.0](https://github.com/seatsurfing/seatsurfing/compare/v1.110.1...v1.111.0) (2026-06-29)
 
 
