@@ -840,7 +840,7 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
-      shape: e ? e.shape : "",
+      shape: e ? e.shape || "rect" : "rect",
       fontSize: e ? e.fontSize || "normal" : "normal",
       changed: true,
       attributes: new Map<string, string>(),
@@ -1864,7 +1864,7 @@ class EditLocation extends React.Component<Props, State> {
             <IconDelete className="feather" /> {this.props.t("deleteSpace")}
           </Button>
         );
-        const selectedShape = this.getSelectedSpace()?.shape ?? "";
+        const selectedShape = this.getSelectedSpace()?.shape ?? "rect";
         buttonShapeSelector = (
           <Dropdown as="div" className="btn-group">
             <Dropdown.Toggle
@@ -1890,9 +1890,9 @@ class EditLocation extends React.Component<Props, State> {
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <Dropdown.Item
-                active={selectedShape === ""}
+                active={selectedShape === "rect"}
                 onClick={() =>
-                  this.setSpaceShape(this.state.selectedSpace!, "")
+                  this.setSpaceShape(this.state.selectedSpace!, "rect")
                 }
               >
                 <IconSquare className="feather" /> {this.props.t("shapeRect")}
