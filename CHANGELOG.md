@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.112.0](https://github.com/seatsurfing/seatsurfing/compare/v1.111.1...v1.112.0) (2026-07-01)
+
+
+### ✨ Features
+
+* **booking-ui:** add font sizes for spaces ([#2346](https://github.com/seatsurfing/seatsurfing/issues/2346)) ([935718e](https://github.com/seatsurfing/seatsurfing/commit/935718e024188465ee1f7cd0fd25df5af642ca2c))
+* **booking-ui:** add shortcuts for arrow keys ([#2347](https://github.com/seatsurfing/seatsurfing/issues/2347)) ([ff9571b](https://github.com/seatsurfing/seatsurfing/commit/ff9571b46bfcf4759b052b6f688dce3594fcb8f6))
+
 ## [1.111.1](https://github.com/seatsurfing/seatsurfing/compare/v1.111.0...v1.111.1) (2026-06-30)
 
 
