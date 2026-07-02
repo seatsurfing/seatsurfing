@@ -508,5 +508,6 @@
   "outline": "Umrisse",
   "mailNotificationsBookingInfo": "Buchungsinformationen",
   "mailReminderBookingInfo": "Buchungserinnerungen",
-  "home": "Startseite"
+  "home": "Startseite",
+  "markdownSupported": "Markdown-Syntax wird unterstützt"
 }

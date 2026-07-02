@@ -507,5 +507,6 @@
   "outline": "Outline",
   "mailNotificationsBookingInfo": "Booking information",
   "mailReminderBookingInfo": "Booking reminders",
-  "home": "Home"
+  "home": "Home",
+  "markdownSupported": "Markdown syntax is supported"
 }
