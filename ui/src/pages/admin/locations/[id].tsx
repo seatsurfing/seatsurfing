@@ -1328,14 +1328,19 @@ class EditLocation extends React.Component<Props, State> {
         input = (
           <>
             <Form.Control
+              id={`space-attr-value-${a.id}`}
               type="text"
+              aria-label={a.label}
+              aria-describedby={`space-attr-value-${a.id}-help`}
               disabled={!this.isSpaceAttributeEnabled(a.id)}
               value={this.getSpaceAttributeValue(a.id)}
               onChange={(e: any) =>
                 this.setSpaceAttributeValue(a.id, e.target.value)
               }
             />
-            <Form.Text muted>{this.props.t("markdownSupported")}</Form.Text>
+            <Form.Text id={`space-attr-value-${a.id}-help`} muted>
+              {this.props.t("markdownSupported")}
+            </Form.Text>
           </>
         );
       }
