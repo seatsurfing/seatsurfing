@@ -11,6 +11,8 @@ export const enum ResponseCode {
   BookingInvalidMinBookingDuration = 1007,
   BookingMaxHoursBeforeDelete = 1008,
   BookingInPast = 1011,
+  BookingInvalidTimeWindow = 1013,
+  BookingInvalidWeekday = 1014,
 
   PresenceReportDateRangeTooLong = 2001,
 
@@ -48,6 +50,9 @@ export default class ErrorText {
           num: INFOS.maxHoursBeforeDelete,
         }),
       [ResponseCode.BookingInPast]: () => t("errorInPast"),
+      [ResponseCode.BookingInvalidTimeWindow]: () =>
+        t("errorInvalidTimeWindow"),
+      [ResponseCode.BookingInvalidWeekday]: () => t("errorInvalidWeekday"),
       [ResponseCode.PresenceReportDateRangeTooLong]: () =>
         t("errorDateRangeTooLong"),
       [ResponseCode.UsernameExists]: () => t("errorUsernameExists"),

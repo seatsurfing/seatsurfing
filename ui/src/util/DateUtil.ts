@@ -360,4 +360,43 @@ export default class DateUtil {
 
     return { enter, leave };
   }
+
+  /**
+   * Converts a "HH:MM" time (as used by the <input type="time"> form
+   * control) into an hour/minute pair, or [undefined, undefined] if unset.
+   *
+   * @param value time string in "HH:MM" format, or ""
+   * @returns hour/minute pair
+   */
+  static splitTimeOfDay(
+    value: string,
+  ): [number | undefined, number | undefined] {
+    if (!value) {
+      return [undefined, undefined];
+    }
+    const [hour, minute] = value.split(":").map((s) => parseInt(s, 10));
+    return [hour, minute];
+  }
+
+  /**
+   * Converts an hour/minute pair back into a "HH:MM" string, or "" if unset.
+   *
+   * @param hour hour of day, or null/undefined if unset
+   * @param minute minute of hour, or null/undefined if unset
+   * @returns time string in "HH:MM" format, or ""
+   */
+  static joinTimeOfDay(
+    hour: number | null | undefined,
+    minute: number | null | undefined,
+  ): string {
+    if (
+      hour === null ||
+      hour === undefined ||
+      minute === null ||
+      minute === undefined
+    ) {
+      return "";
+    }
+    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+  }
 }

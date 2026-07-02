@@ -135,6 +135,49 @@ func TestRecurringBookingsPrecheck(t *testing.T) {
 	CheckTestBool(t, true, resBody[5].Success)  // 02
 }
 
+func TestRecurringBookingsBookableDaysRestriction(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	user1 := CreateTestUserInOrg(org)
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 2,
+		OrganizationID:        org.ID,
+		Enabled:               true,
+		BookableDays:          "1,2,3,4,5", // Monday - Friday only
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
+	GetSpaceRepository().Create(s1)
+
+	// Daily cadence from Saturday (08-31) to Monday (09-02)
+	payload := `{
+	"spaceId": "` + s1.ID + `",
+	"subject": "Test",
+	"enter": "2030-08-31T09:00:00+02:00",
+	"leave": "2030-08-31T15:00:00+02:00",
+	"end": "2030-09-03T00:00:00+02:00",
+	"cadence": 1,
+	"cycle": 1
+	}`
+	req := NewHTTPRequest("POST", "/recurring-booking/precheck", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []CreateRecurringBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 3, len(resBody))
+
+	CheckTestBool(t, false, resBody[0].Success) // 31 - Saturday
+	CheckTestInt(t, ResponseCodeBookingInvalidWeekday, resBody[0].ErrorCode)
+	CheckTestBool(t, false, resBody[1].Success) // 01 - Sunday
+	CheckTestInt(t, ResponseCodeBookingInvalidWeekday, resBody[1].ErrorCode)
+	CheckTestBool(t, true, resBody[2].Success) // 02 - Monday
+}
+
 func TestRecurringBookingsCreateDelete(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
