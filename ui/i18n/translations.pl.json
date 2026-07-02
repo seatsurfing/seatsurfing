@@ -500,5 +500,6 @@
   "big": "Big",
   "bigger": "Bigger",
   "normal": "Normal",
-  "small": "Small"
+  "small": "Small",
+  "markdownSupported": "Markdown syntax is supported"
 }

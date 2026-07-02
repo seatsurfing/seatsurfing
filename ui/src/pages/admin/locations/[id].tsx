@@ -1326,14 +1326,22 @@ class EditLocation extends React.Component<Props, State> {
         );
       } else {
         input = (
-          <Form.Control
-            type="text"
-            disabled={!this.isSpaceAttributeEnabled(a.id)}
-            value={this.getSpaceAttributeValue(a.id)}
-            onChange={(e: any) =>
-              this.setSpaceAttributeValue(a.id, e.target.value)
-            }
-          />
+          <>
+            <Form.Control
+              id={`space-attr-value-${a.id}`}
+              type="text"
+              aria-label={a.label}
+              aria-describedby={`space-attr-value-${a.id}-help`}
+              disabled={!this.isSpaceAttributeEnabled(a.id)}
+              value={this.getSpaceAttributeValue(a.id)}
+              onChange={(e: any) =>
+                this.setSpaceAttributeValue(a.id, e.target.value)
+              }
+            />
+            <Form.Text id={`space-attr-value-${a.id}-help`} muted>
+              {this.props.t("markdownSupported")}
+            </Form.Text>
+          </>
         );
       }
       const row = (
@@ -1682,14 +1690,20 @@ class EditLocation extends React.Component<Props, State> {
           );
         } else {
           input = (
-            <Form.Control
-              type="text"
-              id={`loc-attr-${av.attributeId}`}
-              value={this.state.attributeValues[idx].value}
-              onChange={(e: any) =>
-                this.setAttribute(av.attributeId, e.target.value)
-              }
-            />
+            <>
+              <Form.Control
+                type="text"
+                id={`loc-attr-${av.attributeId}`}
+                aria-describedby={`loc-attr-${av.attributeId}-help`}
+                value={this.state.attributeValues[idx].value}
+                onChange={(e: any) =>
+                  this.setAttribute(av.attributeId, e.target.value)
+                }
+              />
+              <Form.Text id={`loc-attr-${av.attributeId}-help`} muted>
+                {this.props.t("markdownSupported")}
+              </Form.Text>
+            </>
           );
         }
         let row = (
@@ -2126,6 +2140,7 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ description: e.target.value })
                 }
               />
+              <Form.Text muted>{this.props.t("markdownSupported")}</Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
