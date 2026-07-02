@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.113.0](https://github.com/seatsurfing/seatsurfing/compare/v1.112.0...v1.113.0) (2026-07-02)
+
+
+### ✨ Features
+
+* **booking-ui:** show weekday in enter time picker ([18eff93](https://github.com/seatsurfing/seatsurfing/commit/18eff93df7a35a4b6926384eb293d1c8eb359f34))
+
 ## [1.112.0](https://github.com/seatsurfing/seatsurfing/compare/v1.111.1...v1.112.0) (2026-07-01)
 
 
