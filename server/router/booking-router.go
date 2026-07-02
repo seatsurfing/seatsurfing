@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -530,6 +531,64 @@ func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, l
 	if !router.isValidConcurrent(m, location, bookingID) {
 		return false, ResponseCodeBookingLocationMaxConcurrent
 	}
+	if valid, code := router.isValidBookingWeekdayAndTimeWindow(&m.BookingRequest, location, requestUser); !valid {
+		return false, code
+	}
+	return true, 0
+}
+
+// isValidBookingWeekdayAndTimeWindow checks the location's optional
+// bookable-weekdays restriction against every calendar day the booking
+// spans, and the location's optional earliest/latest booking time of day.
+// The time-of-day check only applies when daily-basis booking is not
+// enabled for the organization, since daily-basis bookings are not tied to a
+// specific time of day.
+func (router *BookingRouter) isValidBookingWeekdayAndTimeWindow(m *BookingRequest, location *Location, user *User) (bool, int) {
+	noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
+	if noAdminRestrictions && CanSpaceAdminOrg(user, location.OrganizationID) {
+		return true, 0
+	}
+
+	if location.BookableDays != "" {
+		allowedDays := map[time.Weekday]bool{}
+		for _, s := range strings.Split(location.BookableDays, ",") {
+			n, err := strconv.Atoi(strings.TrimSpace(s))
+			if err != nil {
+				continue
+			}
+			allowedDays[time.Weekday(n)] = true
+		}
+		now := m.Enter
+		for now.Before(m.Leave) {
+			if !allowedDays[now.Weekday()] {
+				return false, ResponseCodeBookingInvalidWeekday
+			}
+			now = now.AddDate(0, 0, 1)
+		}
+	}
+
+	if location.BookingTimeStart != "" || location.BookingTimeEnd != "" {
+		dailyBasisBooking, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingDailyBasisBooking.Name)
+		if !dailyBasisBooking {
+			if location.BookingTimeStart != "" {
+				start, err := time.Parse("15:04", location.BookingTimeStart)
+				if err == nil {
+					if m.Enter.Hour()*60+m.Enter.Minute() < start.Hour()*60+start.Minute() {
+						return false, ResponseCodeBookingInvalidTimeWindow
+					}
+				}
+			}
+			if location.BookingTimeEnd != "" {
+				end, err := time.Parse("15:04", location.BookingTimeEnd)
+				if err == nil {
+					if m.Leave.Hour()*60+m.Leave.Minute() > end.Hour()*60+end.Minute() {
+						return false, ResponseCodeBookingInvalidTimeWindow
+					}
+				}
+			}
+		}
+	}
+
 	return true, 0
 }
 

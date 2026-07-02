@@ -115,6 +115,80 @@ func TestLocationsCRUD(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestLocationsBookingTimeWindowAndBookableDaysCRUD(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// Create
+	payload := `{"name": "Location 1", "bookingTimeStartHour": 9, "bookingTimeStartMinute": 0, "bookingTimeEndHour": 17, "bookingTimeEndMinute": 0, "bookableDays": "1,3,5,1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Read - values normalized (deduplicated + sorted days)
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 9, *resBody.BookingTimeStartHour)
+	CheckTestInt(t, 0, *resBody.BookingTimeStartMinute)
+	CheckTestInt(t, 17, *resBody.BookingTimeEndHour)
+	CheckTestInt(t, 0, *resBody.BookingTimeEndMinute)
+	CheckTestString(t, "1,3,5", resBody.BookableDays)
+
+	// Update - clear restrictions
+	payload = `{"name": "Location 1", "bookableDays": ""}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestIsNil(t, resBody2.BookingTimeStartHour)
+	CheckTestIsNil(t, resBody2.BookingTimeStartMinute)
+	CheckTestIsNil(t, resBody2.BookingTimeEndHour)
+	CheckTestIsNil(t, resBody2.BookingTimeEndMinute)
+	CheckTestString(t, "", resBody2.BookableDays)
+}
+
+func TestLocationsInvalidBookingTimeWindow(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// hour out of range
+	payload := `{"name": "Location 1", "bookingTimeStartHour": 24, "bookingTimeStartMinute": 0}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// hour without matching minute
+	payload = `{"name": "Location 1", "bookingTimeStartHour": 9}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// start not before end
+	payload = `{"name": "Location 1", "bookingTimeStartHour": 17, "bookingTimeStartMinute": 0, "bookingTimeEndHour": 9, "bookingTimeEndMinute": 0}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// invalid weekday number
+	payload = `{"name": "Location 1", "bookableDays": "1,2,9"}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestLocationsList(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
