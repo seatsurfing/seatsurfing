@@ -1,6 +1,14 @@
 import React from "react";
 import Loading from "../components/Loading";
-import { Alert, Button, ButtonGroup, Form, Modal, Nav, ToggleButton } from "react-bootstrap";
+import {
+  Alert,
+  Button,
+  ButtonGroup,
+  Form,
+  Modal,
+  Nav,
+  ToggleButton,
+} from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
