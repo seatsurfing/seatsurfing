@@ -30,8 +30,8 @@ type CreateSpaceRequest struct {
 	RequireSubject        bool                         `json:"requireSubject"`
 	Enabled               bool                         `json:"enabled"`
 	KioskEnabled          bool                         `json:"kioskEnabled"`
-	Shape                 string                       `json:"shape" validate:"omitempty,oneof=circle trapezoid"`
-	FontSize              string                       `json:"fontSize" validate:"omitempty,oneof=small normal big bigger"`
+	Shape                 string                       `json:"shape" validate:"oneof=rect circle trapezoid"`
+	FontSize              string                       `json:"fontSize" validate:"oneof=small normal big bigger"`
 	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
@@ -948,11 +948,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Enabled = m.Enabled
 	e.KioskEnabled = m.KioskEnabled
 	e.Shape = m.Shape
-	if m.FontSize == "" {
-		e.FontSize = "normal"
-	} else {
-		e.FontSize = m.FontSize
-	}
+	e.FontSize = m.FontSize
 	return e
 }
 

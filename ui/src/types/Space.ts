@@ -40,7 +40,7 @@ export default class Space extends Entity {
     this.requireSubject = false;
     this.enabled = true;
     this.kioskEnabled = false;
-    this.shape = "";
+    this.shape = "rect";
     this.fontSize = "normal";
     this.attributes = [];
     this.approverGroupIds = [];
@@ -145,7 +145,7 @@ export default class Space extends Entity {
     this.requireSubject = input.requireSubject;
     this.enabled = input.enabled;
     this.kioskEnabled = input.kioskEnabled ?? false;
-    this.shape = input.shape ?? "";
+    this.shape = input.shape || "rect";
     this.fontSize = input.fontSize || "normal";
     if (input.allowed !== undefined) {
       this.allowed = input.allowed;
