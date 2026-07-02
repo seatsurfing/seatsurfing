@@ -1694,12 +1694,15 @@ class EditLocation extends React.Component<Props, State> {
               <Form.Control
                 type="text"
                 id={`loc-attr-${av.attributeId}`}
+                aria-describedby={`loc-attr-${av.attributeId}-help`}
                 value={this.state.attributeValues[idx].value}
                 onChange={(e: any) =>
                   this.setAttribute(av.attributeId, e.target.value)
                 }
               />
-              <Form.Text muted>{this.props.t("markdownSupported")}</Form.Text>
+              <Form.Text id={`loc-attr-${av.attributeId}-help`} muted>
+                {this.props.t("markdownSupported")}
+              </Form.Text>
             </>
           );
         }
