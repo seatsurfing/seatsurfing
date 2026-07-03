@@ -17,6 +17,8 @@ import (
 func TestBuddiesEmptyResult(t *testing.T) {
 	ClearTestDB()
 	loginResponse := CreateLoginTestUser()
+	user, _ := GetUserRepository().GetOne(loginResponse.UserID)
+	GetSettingsRepository().Set(user.OrganizationID, SettingShowNames.Name, "1")
 
 	req := NewHTTPRequest("GET", "/buddy/", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
@@ -32,6 +34,7 @@ func TestBuddiesCRUD(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
 
 	// Create buddy users
 	buddyUser1 := CreateTestUserInOrg(org)
@@ -79,6 +82,7 @@ func TestDeleteBuddyOfAnotherUser(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
 
 	// Create buddy users
 	buddyUser1 := CreateTestUserInOrg(org)
@@ -107,6 +111,7 @@ func TestBuddiesCreateWithMissingUser(t *testing.T) {
 	user2 := CreateTestUserOrgAdmin(org)
 	loginResponse2 := LoginTestUser(user2.ID)
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
 	GetSettingsRepository().Set(org.ID, SettingAllowBookingsNonExistingUsers.Name, "1")
 
 	// Create
@@ -120,6 +125,7 @@ func TestBuddiesList(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
 
 	// Create buddy users
 	buddyUser1 := CreateTestUserInOrg(org)
@@ -175,6 +181,50 @@ func TestBuddiesList(t *testing.T) {
 		t.Fatalf("Expected array with 1 elements")
 	}
 	CheckTestString(t, buddyUser3.ID, resBody2[0].BuddyID)
+}
+
+func TestBuddiesForbiddenWhenFeatureDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	buddyUser1 := CreateTestUserInOrg(org)
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	payload := "{\"buddyId\": \"" + buddyUser1.ID + "\"}"
+
+	// show_names off, disable_buddies off (default) → forbidden
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "0")
+	GetSettingsRepository().Set(org.ID, SettingDisableBuddies.Name, "0")
+	req := NewHTTPRequest("GET", "/buddy/", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// show_names on, disable_buddies on → forbidden
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingDisableBuddies.Name, "1")
+	req = NewHTTPRequest("GET", "/buddy/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// show_names on, disable_buddies off → allowed, then verify delete is also gated
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingDisableBuddies.Name, "0")
+	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	GetSettingsRepository().Set(org.ID, SettingDisableBuddies.Name, "1")
+	req = NewHTTPRequest("DELETE", "/buddy/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
 func TestBuddiesListUnauthorized(t *testing.T) {
