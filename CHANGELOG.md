@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.113.2](https://github.com/seatsurfing/seatsurfing/compare/v1.113.1...v1.113.2) (2026-07-03)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** fix error if buddies are disabled ([#2359](https://github.com/seatsurfing/seatsurfing/issues/2359)) ([fe35aa6](https://github.com/seatsurfing/seatsurfing/commit/fe35aa6660ee731ce013d189a48c45439460c3ce))
+
 ## [1.113.1](https://github.com/seatsurfing/seatsurfing/compare/v1.113.0...v1.113.1) (2026-07-03)
 
 
