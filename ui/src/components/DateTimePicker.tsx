@@ -17,6 +17,7 @@ interface Props {
   noCalendar?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
+  showWeekday?: boolean | undefined;
   value: Date;
   minDate?: Date | undefined;
   maxDate?: Date | undefined;
@@ -60,7 +61,9 @@ class DateTimePicker extends React.Component<Props, State> {
     }
     let formatting = this.props.noCalendar
       ? ""
-      : RuntimeConfig.INFOS.dateFormat + " ";
+      : RuntimeConfig.INFOS.dateFormat +
+        (this.props.showWeekday ? " (D)" : "") +
+        " ";
     if (this.props.enableTime) {
       if (RuntimeConfig.INFOS.use24HourTime) {
         formatting += "H:i";

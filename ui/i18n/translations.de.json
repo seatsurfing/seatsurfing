@@ -359,6 +359,13 @@
   "workday-4": "Donnerstag",
   "workday-5": "Freitag",
   "workday-6": "Samstag",
+  "workday-short-0": "So",
+  "workday-short-1": "Mo",
+  "workday-short-2": "Di",
+  "workday-short-3": "Mi",
+  "workday-short-4": "Do",
+  "workday-short-5": "Fr",
+  "workday-short-6": "Sa",
   "weekStartDay": "Wochenbeginn",
   "workdays": "Arbeitstage",
   "workingHours": "Bürozeiten",
@@ -506,5 +513,6 @@
   "outline": "Umrisse",
   "mailNotificationsBookingInfo": "Buchungsinformationen",
   "mailReminderBookingInfo": "Buchungserinnerungen",
-  "home": "Startseite"
+  "home": "Startseite",
+  "markdownSupported": "Markdown-Syntax wird unterstützt"
 }

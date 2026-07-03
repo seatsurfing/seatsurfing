@@ -1,9 +1,17 @@
 import React from "react";
 import Loading from "../components/Loading";
-import { Alert, Button, ButtonGroup, Form, Modal, Nav } from "react-bootstrap";
+import {
+  Alert,
+  Button,
+  ButtonGroup,
+  Form,
+  Modal,
+  Nav,
+} from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
+import WeekdaySelection from "@/components/WeekdaySelection";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -22,6 +30,7 @@ import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
 import { PreferencesTab } from "@/util/Navigation";
+import CONSTANT from "@/util/Contant";
 
 interface State {
   loading: boolean;
@@ -200,7 +209,7 @@ class Preferences extends React.Component<Props, State> {
         state.dateFormat = s.value;
       if (s.name === UserPreference.PREF_WEEK_START_DAY) {
         const v = parseInt(s.value);
-        state.weekStartDay = [0, 1, 6].includes(v) ? v : 1;
+        state.weekStartDay = CONSTANT.WEEK_START_DAYS.includes(v) ? v : 1;
       }
     });
     await new Promise<void>((resolve) =>
@@ -347,10 +356,8 @@ class Preferences extends React.Component<Props, State> {
     });
   };
 
-  onWorkdayCheck = (day: number, checked: boolean) => {
-    const workdays = this.state.workdays.map((val, i) =>
-      i === day ? checked : val,
-    );
+  onWorkdaysChange = (days: number[]) => {
+    const workdays = [0, 1, 2, 3, 4, 5, 6].map((day) => days.includes(day));
     this.setState({
       workdays: workdays,
     });
@@ -644,18 +651,14 @@ class Preferences extends React.Component<Props, State> {
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
-                  {[1, 2, 3, 4, 5, 6, 0].map((day) => (
-                    <Form.Check
-                      type="checkbox"
-                      key={"workday-" + day}
-                      id={"workday-" + day}
-                      label={this.props.t("workday-" + day)}
-                      checked={this.state.workdays[day]}
-                      onChange={(e: any) =>
-                        this.onWorkdayCheck(day, e.target.checked)
-                      }
-                    />
-                  ))}
+                  <WeekdaySelection
+                    id="workdays"
+                    weekStartDay={this.state.weekStartDay}
+                    value={[0, 1, 2, 3, 4, 5, 6].filter(
+                      (day) => this.state.workdays[day],
+                    )}
+                    onChange={this.onWorkdaysChange}
+                  />
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
@@ -671,7 +674,7 @@ class Preferences extends React.Component<Props, State> {
                     })
                   }
                 >
-                  {[6, 0, 1].map((day) => (
+                  {CONSTANT.WEEK_START_DAYS.map((day) => (
                     <option key={"week-start-" + day} value={day}>
                       {this.props.t("workday-" + day)}
                     </option>

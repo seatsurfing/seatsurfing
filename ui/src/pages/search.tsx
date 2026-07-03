@@ -1832,6 +1832,7 @@ class Search extends React.Component<Props, State> {
       <div aria-label="Reservation start date">
         <DateTimePicker
           enableTime={false}
+          showWeekday={!this.state.selectionMultiDay}
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
@@ -1851,6 +1852,7 @@ class Search extends React.Component<Props, State> {
       <div aria-label="Reservation start date">
         <DateTimePicker
           enableTime={false}
+          showWeekday={!this.state.selectionMultiDay}
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}

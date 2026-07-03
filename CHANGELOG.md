@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.113.0](https://github.com/seatsurfing/seatsurfing/compare/v1.112.0...v1.113.0) (2026-07-02)
+
+
+### ✨ Features
+
+* **booking-ui:** improve workday selection ([#2352](https://github.com/seatsurfing/seatsurfing/issues/2352)) ([7543593](https://github.com/seatsurfing/seatsurfing/commit/7543593fb859fe420734fe0a5c468bc249a38b7f))
+* **booking-ui:** show weekday in enter time picker ([18eff93](https://github.com/seatsurfing/seatsurfing/commit/18eff93df7a35a4b6926384eb293d1c8eb359f34))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add Markdown syntax hint ([#2351](https://github.com/seatsurfing/seatsurfing/issues/2351)) ([b49800a](https://github.com/seatsurfing/seatsurfing/commit/b49800a21478447b6e3512499df0c3af394bbeb9))
+* **server:** require font-size and shape in space API ([#2350](https://github.com/seatsurfing/seatsurfing/issues/2350)) ([d5fae4f](https://github.com/seatsurfing/seatsurfing/commit/d5fae4f0018219771295722e7cc5318893e1689b))
+
 ## [1.112.0](https://github.com/seatsurfing/seatsurfing/compare/v1.111.1...v1.112.0) (2026-07-01)
 
 

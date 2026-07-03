@@ -48,7 +48,7 @@ func TestBookingsCRUD(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -416,7 +416,7 @@ func TestBookingsCreateNonExistingUser(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -454,7 +454,7 @@ func TestBookingsCreateNonExistingUserNoAdmin(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -486,7 +486,7 @@ func TestBookingsCreateNonExistingUserNotEnabled(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -515,7 +515,7 @@ func TestBookingsCreateNonExistingUserForeignDomain(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -543,7 +543,7 @@ func TestBookingsList(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -603,7 +603,7 @@ func TestBookingsGetForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -646,7 +646,7 @@ func TestBookingsUpdateForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -677,7 +677,7 @@ func TestBookingsUpdateForeign(t *testing.T) {
 	locationID2 := res.Header().Get("X-Object-Id")
 
 	// Create space #2
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID2+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -710,7 +710,7 @@ func TestBookingsCreateForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -745,7 +745,7 @@ func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -928,7 +928,7 @@ func TestBookingsInPastAreNotDeletable(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -969,7 +969,7 @@ func TestBookingsDeleteToCloseBeingAdmin(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1026,7 +1026,7 @@ func TestBookingConflictDurationTooShort(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1081,7 +1081,7 @@ func TestBookingUpdateConflictDurationTooShort(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1129,7 +1129,7 @@ func TestBookingsDeleteForeign(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1171,7 +1171,7 @@ func TestBookingsDeleteSpaceAdmin(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1213,7 +1213,7 @@ func TestBookingsConflictEnd(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1247,7 +1247,7 @@ func TestBookingsConflictStart(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1281,7 +1281,7 @@ func TestBookingsConflictInner(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1315,7 +1315,7 @@ func TestBookingsConflictOuter(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1349,7 +1349,7 @@ func TestBookingsConflictUpdateSelf(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
@@ -1384,7 +1384,7 @@ func TestBookingsConflictUpdateOther(t *testing.T) {
 	locationID := res.Header().Get("X-Object-Id")
 
 	// Create space
-	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true}`
+	payload = `{"name": "H234", "x": 50, "y": 100, "width": 200, "height": 300, "rotation": 90, "enabled": true, "shape": "rect", "fontSize": "normal"}`
 	req = NewHTTPRequest("POST", "/location/"+locationID+"/space/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)

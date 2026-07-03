@@ -53,6 +53,7 @@ import DateUtil from "@/util/DateUtil";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
 import DateTimePicker from "@/components/DateTimePicker";
+import WeekdaySelection from "@/components/WeekdaySelection";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (
   <svg
@@ -880,7 +881,7 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
-      shape: e ? e.shape : "",
+      shape: e ? e.shape || "rect" : "rect",
       fontSize: e ? e.fontSize || "normal" : "normal",
       changed: true,
       attributes: new Map<string, string>(),
@@ -1367,14 +1368,22 @@ class EditLocation extends React.Component<Props, State> {
         );
       } else {
         input = (
-          <Form.Control
-            type="text"
-            disabled={!this.isSpaceAttributeEnabled(a.id)}
-            value={this.getSpaceAttributeValue(a.id)}
-            onChange={(e: any) =>
-              this.setSpaceAttributeValue(a.id, e.target.value)
-            }
-          />
+          <>
+            <Form.Control
+              id={`space-attr-value-${a.id}`}
+              type="text"
+              aria-label={a.label}
+              aria-describedby={`space-attr-value-${a.id}-help`}
+              disabled={!this.isSpaceAttributeEnabled(a.id)}
+              value={this.getSpaceAttributeValue(a.id)}
+              onChange={(e: any) =>
+                this.setSpaceAttributeValue(a.id, e.target.value)
+              }
+            />
+            <Form.Text id={`space-attr-value-${a.id}-help`} muted>
+              {this.props.t("markdownSupported")}
+            </Form.Text>
+          </>
         );
       }
       const row = (
@@ -1723,14 +1732,20 @@ class EditLocation extends React.Component<Props, State> {
           );
         } else {
           input = (
-            <Form.Control
-              type="text"
-              id={`loc-attr-${av.attributeId}`}
-              value={this.state.attributeValues[idx].value}
-              onChange={(e: any) =>
-                this.setAttribute(av.attributeId, e.target.value)
-              }
-            />
+            <>
+              <Form.Control
+                type="text"
+                id={`loc-attr-${av.attributeId}`}
+                aria-describedby={`loc-attr-${av.attributeId}-help`}
+                value={this.state.attributeValues[idx].value}
+                onChange={(e: any) =>
+                  this.setAttribute(av.attributeId, e.target.value)
+                }
+              />
+              <Form.Text id={`loc-attr-${av.attributeId}-help`} muted>
+                {this.props.t("markdownSupported")}
+              </Form.Text>
+            </>
           );
         }
         let row = (
@@ -1783,30 +1798,6 @@ class EditLocation extends React.Component<Props, State> {
       { anchor: e.target, filename: "seatsurfing-spaces", format: "xlsx" },
       [{ name: "Seatsurfing Spaces", from: { array: [headers, ...rows] } }],
     );
-  };
-
-  renderBookableDaysButtons = () => {
-    const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
-    return [1, 2, 3, 4, 5, 6, 0].map((day) => {
-      const isActive = this.state.bookableDays.includes(day);
-      return (
-        <Button
-          key={day}
-          variant={isActive ? "primary" : "secondary"}
-          size="sm"
-          title={this.props.t("workday-" + day)}
-          onClick={() => {
-            const newBookableDays = isActive
-              ? this.state.bookableDays.filter((d) => d !== day)
-              : [...this.state.bookableDays, day];
-            this.setState({ bookableDays: newBookableDays });
-          }}
-          style={{ marginRight: "5px" }}
-        >
-          {weekdayLabels[day]}
-        </Button>
-      );
-    });
   };
 
   render() {
@@ -1915,7 +1906,7 @@ class EditLocation extends React.Component<Props, State> {
             <IconDelete className="feather" /> {this.props.t("deleteSpace")}
           </Button>
         );
-        const selectedShape = this.getSelectedSpace()?.shape ?? "";
+        const selectedShape = this.getSelectedSpace()?.shape ?? "rect";
         buttonShapeSelector = (
           <Dropdown as="div" className="btn-group">
             <Dropdown.Toggle
@@ -1941,9 +1932,9 @@ class EditLocation extends React.Component<Props, State> {
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <Dropdown.Item
-                active={selectedShape === ""}
+                active={selectedShape === "rect"}
                 onClick={() =>
-                  this.setSpaceShape(this.state.selectedSpace!, "")
+                  this.setSpaceShape(this.state.selectedSpace!, "rect")
                 }
               >
                 <IconSquare className="feather" /> {this.props.t("shapeRect")}
@@ -2191,6 +2182,7 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ description: e.target.value })
                 }
               />
+              <Form.Text muted>{this.props.t("markdownSupported")}</Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -2267,7 +2259,12 @@ class EditLocation extends React.Component<Props, State> {
               {this.props.t("bookableDays")}
             </Form.Label>
             <Col sm="4" id="location-bookable-days">
-              {this.renderBookableDaysButtons()}
+              <WeekdaySelection
+                value={this.state.bookableDays}
+                onChange={(bookableDays: number[]) =>
+                  this.setState({ bookableDays })
+                }
+              />
             </Col>
           </Form.Group>
           {!RuntimeConfig.INFOS.dailyBasisBooking && (
