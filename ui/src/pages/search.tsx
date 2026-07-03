@@ -355,12 +355,11 @@ class Search extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    const promises = [
-      this.loadLocations(),
-      this.loadPreferences(),
-      this.loadBuddies(),
-      this.loadAvailableAttributes(),
-    ];
+    const promises = [this.loadLocations(), this.loadPreferences()];
+    if (!RuntimeConfig.INFOS.disableBuddies && RuntimeConfig.INFOS.showNames) {
+      promises.push(this.loadBuddies());
+    }
+    promises.push(this.loadAvailableAttributes());
     Promise.all(promises).then(() => {
       this.initDates();
       if (this.state.locationId === "" && this.locations.length > 0) {
@@ -1149,7 +1148,7 @@ class Search extends React.Component<Props, State> {
       showBookingNames: false,
       loading: true,
     });
-    let buddy: Buddy = new Buddy();
+    const buddy: Buddy = new Buddy();
     buddy.buddy = buddyUser;
     buddy
       .save()
