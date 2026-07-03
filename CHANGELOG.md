@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.113.1](https://github.com/seatsurfing/seatsurfing/compare/v1.113.0...v1.113.1) (2026-07-03)
+
+
+### 🐛 Bug Fixes
+
+* **server:** test feature flags in buddy router ([#2357](https://github.com/seatsurfing/seatsurfing/issues/2357)) ([925da88](https://github.com/seatsurfing/seatsurfing/commit/925da884b759385f31a1bd9db86a63a98914b1a4))
+
 ## [1.113.0](https://github.com/seatsurfing/seatsurfing/compare/v1.112.0...v1.113.0) (2026-07-02)
 
 
