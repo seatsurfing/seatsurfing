@@ -3,8 +3,12 @@ import { TranslationFunc } from "@/components/withTranslation";
 export default class RendererUtils {
   static readonly BREAKPOINT_SMALL = 576;
 
-  static fullname(firstname: string, lastname: string): string {
-    if (!firstname && !lastname) return "";
+  static fullname(
+    firstname: string,
+    lastname: string,
+    fallback?: string,
+  ): string {
+    if (!firstname && !lastname) return fallback || "";
     if (firstname && lastname) return `${firstname} ${lastname}`;
     if (firstname) return firstname;
     return lastname;
