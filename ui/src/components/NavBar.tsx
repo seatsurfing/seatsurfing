@@ -242,8 +242,7 @@ class NavBar extends React.Component<Props, State> {
               {RendererUtils.fullname(
                 RuntimeConfig.INFOS.firstname,
                 RuntimeConfig.INFOS.lastname,
-              )}
-            </span>
+              ) || RuntimeConfig.INFOS.username}
           </Nav.Link>
           <LanguageSelector inNavbar={true} />
           {signOffButton}
