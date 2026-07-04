@@ -35,6 +35,7 @@ import DateUtil from "@/util/DateUtil";
 import RendererUtils from "@/util/RendererUtils";
 import BrowserUtil from "@/util/BrowserUtil";
 import UserPreference from "@/types/UserPreference";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -53,11 +54,11 @@ interface Props {
 
 class Bookings extends React.Component<Props, State> {
   data: Booking[];
-  workdayStartHour: number;
+  workdayStart: string;
 
   constructor(props: any) {
     super(props);
-    this.workdayStartHour = 0;
+    this.workdayStart = "09:00";
     this.data = [];
     this.state = {
       loading: true,
@@ -85,8 +86,9 @@ class Bookings extends React.Component<Props, State> {
       UserPreference.getOne(UserPreference.PREF_WORKDAYS),
     ]).then(([list, workDayStart, workdays]) => {
       this.data = list;
-      const ws = parseInt(workDayStart);
-      this.workdayStartHour = !isNaN(ws) && ws >= 0 && ws <= 23 ? ws : 9;
+      this.workdayStart = Validation.isValidTimeString(workDayStart)
+        ? workDayStart
+        : "09:00";
       const parsedWorkdays = workdays
         ? workdays.split(",").map((v: string) => parseInt(v))
         : [];
@@ -329,7 +331,7 @@ class Bookings extends React.Component<Props, State> {
                 event: createCustomEvent(),
               }}
               scrollToTime={DateUtil.convertToFakeUTCDate(
-                DateUtil.getTodayTime(this.workdayStartHour, 0, 0),
+                DateUtil.getTodayTimeFromTimeString(this.workdayStart),
               )}
               dayPropGetter={(date: Date) => {
                 if (

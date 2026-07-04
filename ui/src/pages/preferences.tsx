@@ -40,8 +40,8 @@ interface State {
   saved: boolean;
   error: boolean;
   enterTime: number;
-  workdayStart: number;
-  workdayEnd: number;
+  workdayStart: string;
+  workdayEnd: string;
   workdays: boolean[];
   booked: string;
   notBooked: string;
@@ -102,8 +102,8 @@ class Preferences extends React.Component<Props, State> {
       saved: false,
       error: false,
       enterTime: 0,
-      workdayStart: 0,
-      workdayEnd: 0,
+      workdayStart: "09:00",
+      workdayEnd: "17:00",
       workdays: [],
       booked: COLOR_BOOKED,
       notBooked: COLOR_NOT_BOOKED,
@@ -166,9 +166,9 @@ class Preferences extends React.Component<Props, State> {
         if (s.name === UserPreference.PREF_ENTER_TIME)
           state.enterTime = window.parseInt(s.value);
         if (s.name === UserPreference.PREF_WORKDAY_START)
-          state.workdayStart = window.parseInt(s.value);
+          state.workdayStart = s.value;
         if (s.name === UserPreference.PREF_WORKDAY_END)
-          state.workdayEnd = window.parseInt(s.value);
+          state.workdayEnd = s.value;
       }
       if (s.name === UserPreference.PREF_WORKDAYS) {
         state.workdays = [];
@@ -244,11 +244,11 @@ class Preferences extends React.Component<Props, State> {
       ),
       new UserPreference(
         UserPreference.PREF_WORKDAY_START,
-        this.state.workdayStart.toString(),
+        this.state.workdayStart,
       ),
       new UserPreference(
         UserPreference.PREF_WORKDAY_END,
-        this.state.workdayEnd.toString(),
+        this.state.workdayEnd,
       ),
       new UserPreference(UserPreference.PREF_WORKDAYS, workdays.join(",")),
       new UserPreference(
@@ -603,13 +603,13 @@ class Preferences extends React.Component<Props, State> {
                       id="workdayStart"
                       noCalendar={true}
                       enableTime={true}
-                      value={DateUtil.getTodayTime(
+                      value={DateUtil.getTodayTimeFromTimeString(
                         this.state.workdayStart,
-                        0,
-                        0,
                       )}
                       onChange={(value: Date) =>
-                        this.setState({ workdayStart: value.getHours() })
+                        this.setState({
+                          workdayStart: DateUtil.formatTimeString(value),
+                        })
                       }
                     />
                   </div>
@@ -629,20 +629,25 @@ class Preferences extends React.Component<Props, State> {
                       id="workdayEnd"
                       noCalendar={true}
                       enableTime={true}
-                      value={DateUtil.getTodayTime(this.state.workdayEnd, 0, 0)}
-                      minDate={DateUtil.getTodayTime(
-                        this.state.workdayStart + 1,
-                        0,
-                        0,
+                      value={DateUtil.getTodayTimeFromTimeString(
+                        this.state.workdayEnd,
+                      )}
+                      minDate={DateUtil.getTodayTimeFromMinutes(
+                        DateUtil.timeStringToMinutes(this.state.workdayStart) +
+                          1,
                       )}
                       onChange={(value: Date) =>
-                        this.setState({ workdayEnd: value.getHours() })
+                        this.setState({
+                          workdayEnd: DateUtil.formatTimeString(value),
+                        })
                       }
                     />
                   </div>
                 </div>
                 {!RuntimeConfig.INFOS.dailyBasisBooking &&
-                  this.state.workdayEnd - this.state.workdayStart >
+                  (DateUtil.timeStringToMinutes(this.state.workdayEnd) -
+                    DateUtil.timeStringToMinutes(this.state.workdayStart)) /
+                    60 >
                     RuntimeConfig.INFOS.maxBookingDurationHours && (
                     <Form.Text muted>
                       {this.props.t("workingHoursHintExceedsMaxDuration", {

@@ -198,6 +198,64 @@ export default class DateUtil {
     return todayTime;
   }
 
+  /**
+   * @param totalMinutes minutes since midnight (0-1440)
+   * @returns today's date with the time of day set accordingly
+   */
+  static getTodayTimeFromMinutes(totalMinutes: number): Date {
+    return this.getTodayTime(
+      Math.floor(totalMinutes / 60),
+      totalMinutes % 60,
+      0,
+    );
+  }
+
+  /**
+   * @param date Date to modify (mutated in place)
+   * @param totalMinutes minutes since midnight (0-1440)
+   * @returns the same date, with hours/minutes set accordingly
+   */
+  static setTimeFromMinutes(date: Date, totalMinutes: number): Date {
+    date.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+    return date;
+  }
+
+  /**
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns minutes since midnight
+   */
+  static timeStringToMinutes(s: string): number {
+    const [hours, minutes] = s.split(":").map((v) => parseInt(v, 10));
+    return hours * 60 + minutes;
+  }
+
+  /**
+   * @param date Date to format
+   * @returns time string in the format "HH:MM" (24h)
+   */
+  static formatTimeString(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+
+  /**
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns today's date with the time of day set accordingly
+   */
+  static getTodayTimeFromTimeString(s: string): Date {
+    return this.getTodayTimeFromMinutes(this.timeStringToMinutes(s));
+  }
+
+  /**
+   * @param date Date to modify (mutated in place)
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns the same date, with hours/minutes set accordingly
+   */
+  static setTimeFromTimeString(date: Date, s: string): Date {
+    return this.setTimeFromMinutes(date, this.timeStringToMinutes(s));
+  }
+
   static copyDate(source: Date, target: Date): Date {
     const result = new Date(target);
     result.setFullYear(
@@ -308,26 +366,31 @@ export default class DateUtil {
    */
   static getNextPreferredEnterAndLeaveTime(
     prefEnterTime: PreferenceEnterTimeType,
-    prefWorkdayStart: number,
-    prefWorkdayEnd: number,
+    prefWorkdayStart: string,
+    prefWorkdayEnd: string,
     prefWorkdays: number[],
     dailyBasisBooking: boolean,
   ): { enter: Date; leave: Date } {
+    const prefWorkdayStartMinutes =
+      DateUtil.timeStringToMinutes(prefWorkdayStart);
+    const prefWorkdayEndMinutes = DateUtil.timeStringToMinutes(prefWorkdayEnd);
+
     let enter = new Date();
     if (prefEnterTime === UserPreference.PreferenceEnterTime.Now) {
       enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < prefWorkdayStart) {
+      const enterMinutes = enter.getHours() * 60 + enter.getMinutes();
+      if (enterMinutes < prefWorkdayStartMinutes) {
         // preferred start time works for today
-        enter.setHours(prefWorkdayStart, 0, 0, 0);
+        DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
       }
-      if (enter.getHours() >= prefWorkdayEnd) {
+      if (enterMinutes >= prefWorkdayEndMinutes) {
         // todays next start time is after preferred end date -> switch to next day
         enter.setDate(enter.getDate() + 1);
-        enter.setHours(prefWorkdayStart, 0, 0, 0);
+        DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
       }
     } else if (prefEnterTime === UserPreference.PreferenceEnterTime.NextDay) {
       enter.setDate(enter.getDate() + 1);
-      enter.setHours(prefWorkdayStart, 0, 0, 0);
+      DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
     } else if (
       prefEnterTime === UserPreference.PreferenceEnterTime.NextWorkday
     ) {
@@ -347,11 +410,11 @@ export default class DateUtil {
         }
       }
       enter.setDate(enter.getDate() + add);
-      enter.setHours(prefWorkdayStart, 0, 0, 0);
+      DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
     }
 
     let leave = new Date(enter);
-    leave.setHours(prefWorkdayEnd, 0, 0);
+    DateUtil.setTimeFromTimeString(leave, prefWorkdayEnd);
 
     if (dailyBasisBooking) {
       enter = DateUtil.setHoursToMin(enter);

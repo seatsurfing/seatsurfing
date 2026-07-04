@@ -12,6 +12,7 @@ var colorHexRegex = regexp.MustCompile(`^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$`)
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var domainRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)+$`)
+var timeStringRegex = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
 var humanNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.]+$`)
 var orgNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.&,+()/#@!_<>]+$`)
 var validOrgLanguages = map[string]bool{"de": true, "en": true}
@@ -58,6 +59,10 @@ func ValidateColorHex(s string) bool {
 
 func ValidateGUID(s string) bool {
 	return guidRegex.MatchString(s)
+}
+
+func ValidateTimeString(s string) bool {
+	return timeStringRegex.MatchString(s)
 }
 
 func ValidateDomain(s string) bool {
