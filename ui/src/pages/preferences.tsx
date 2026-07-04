@@ -357,14 +357,15 @@ class Preferences extends React.Component<Props, State> {
   };
 
   onWorkdayCheck = (day: number, checked: boolean) => {
-    if (!checked && this.state.workdays.filter((val) => val).length <= 1) {
-      return;
-    }
-    const workdays = this.state.workdays.map((val, i) =>
-      i === day ? checked : val,
-    );
-    this.setState({
-      workdays: workdays,
+    this.setState((prevState) => {
+      if (!checked && prevState.workdays.filter((val) => val).length <= 1) {
+        return null;
+      }
+      return {
+        workdays: prevState.workdays.map((val, i) =>
+          i === day ? checked : val,
+        ),
+      };
     });
   };
 
