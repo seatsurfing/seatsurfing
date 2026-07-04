@@ -242,20 +242,6 @@ export default class RuntimeConfig {
     }
   };
 
-  static setUserDetails = async (user: User) => {
-    await RuntimeConfig.loadSettings();
-    RuntimeConfig.INFOS.username = user.email;
-    RuntimeConfig.INFOS.userId = user.id;
-    RuntimeConfig.INFOS.firstname = user.firstname;
-    RuntimeConfig.INFOS.lastname = user.lastname;
-  };
-
-  static async setLoginDetails(): Promise<void> {
-    const user = await User.getSelf();
-    RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-    RuntimeConfig.setUserDetails(user);
-  }
-
   static loadUserAndSettings = async (): Promise<void> => {
     RuntimeConfig.resetInfos();
     const user = await User.getSelf();
@@ -267,7 +253,10 @@ export default class RuntimeConfig {
     RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
     RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
     RuntimeConfig.INFOS.isPrimaryDomain = user.isPrimaryDomain;
-    RuntimeConfig.setUserDetails(user);
+    RuntimeConfig.INFOS.username = user.email;
+    RuntimeConfig.INFOS.userId = user.id;
+    RuntimeConfig.INFOS.firstname = user.firstname;
+    RuntimeConfig.INFOS.lastname = user.lastname;
     RuntimeConfig.INFOS.orgName = user.organization.name;
     await RuntimeConfig.loadSettings();
     await RuntimeConfig.loadUserPreferences();
