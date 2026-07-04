@@ -1,57 +1,83 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
 
+export interface DateFormatter {
+  format(date?: Date | number): string;
+}
+
 export default class Formatting {
   static Language: string = "en";
   static t: (key: string, view?: object) => any;
 
-  static getFormatter(local?: boolean): Intl.DateTimeFormat {
+  private static formatDatePart(
+    date: Date | number | undefined,
+    local?: boolean,
+  ): string {
+    const d =
+      date === undefined
+        ? new Date()
+        : typeof date === "number"
+          ? new Date(date)
+          : date;
+    const year = local ? d.getFullYear() : d.getUTCFullYear();
+    const month = (local ? d.getMonth() : d.getUTCMonth()) + 1;
+    const day = local ? d.getDate() : d.getUTCDate();
+    return RuntimeConfig.INFOS.dateFormat
+      .replace("Y", year.toString().padStart(4, "0"))
+      .replace("m", month.toString().padStart(2, "0"))
+      .replace("d", day.toString().padStart(2, "0"));
+  }
+
+  private static getWeekdayFormatter(local?: boolean): Intl.DateTimeFormat {
     return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
       weekday: "long",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+    });
+  }
+
+  private static getTimeFormatter(local?: boolean): Intl.DateTimeFormat {
+    return new Intl.DateTimeFormat(Formatting.Language, {
+      timeZone: local ? undefined : "UTC",
       hour: "numeric",
       minute: "numeric",
       hour12: !RuntimeConfig.INFOS.use24HourTime,
     });
   }
 
-  static getFormatterNoTime(local?: boolean): Intl.DateTimeFormat {
-    return new Intl.DateTimeFormat(Formatting.Language, {
-      timeZone: local ? undefined : "UTC",
-      weekday: "long",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+  static getFormatter(local?: boolean): DateFormatter {
+    const weekdayFormatter = Formatting.getWeekdayFormatter(local);
+    const timeFormatter = Formatting.getTimeFormatter(local);
+    return {
+      format: (date?: Date | number) =>
+        `${weekdayFormatter.format(date)}, ${Formatting.formatDatePart(date, local)}, ${timeFormatter.format(date)}`,
+    };
   }
 
-  static getBookingDateFormatter(): Intl.DateTimeFormat {
+  static getFormatterNoTime(local?: boolean): DateFormatter {
+    const weekdayFormatter = Formatting.getWeekdayFormatter(local);
+    return {
+      format: (date?: Date | number) =>
+        `${weekdayFormatter.format(date)}, ${Formatting.formatDatePart(date, local)}`,
+    };
+  }
+
+  static getBookingDateFormatter(): DateFormatter {
     return RuntimeConfig.INFOS.dailyBasisBooking
       ? Formatting.getFormatterNoTime()
       : Formatting.getFormatter();
   }
 
-  static getFormatterShort(local?: boolean): Intl.DateTimeFormat {
-    return new Intl.DateTimeFormat(Formatting.Language, {
-      timeZone: local ? undefined : "UTC",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: !RuntimeConfig.INFOS.use24HourTime,
-    });
+  static getFormatterShort(local?: boolean): DateFormatter {
+    const timeFormatter = Formatting.getTimeFormatter(local);
+    return {
+      format: (date?: Date | number) =>
+        `${Formatting.formatDatePart(date, local)}, ${timeFormatter.format(date)}`,
+    };
   }
 
-  static getFormatterDate(local?: boolean): Intl.DateTimeFormat {
-    return new Intl.DateTimeFormat(Formatting.Language, {
-      timeZone: local ? undefined : "UTC",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+  static getFormatterDate(local?: boolean): DateFormatter {
+    return {
+      format: (date?: Date | number) => Formatting.formatDatePart(date, local),
+    };
   }
 
   static getDateTimePickerFormatString(): string {
