@@ -14,6 +14,8 @@ import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import DateTimePicker from "@/components/DateTimePicker";
+import DateUtil from "@/util/DateUtil";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
@@ -595,23 +597,22 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label htmlFor="workdayStart">
                   {this.props.t("workingHours")}
                 </Form.Label>
-                <div>
-                  <Form.Control
-                    type="number"
-                    id="workdayStart"
-                    value={this.state.workdayStart}
-                    onChange={(e: any) =>
-                      this.setState({
-                        workdayStart:
-                          typeof window !== "undefined"
-                            ? window.parseInt(e.target.value)
-                            : 0,
-                      })
-                    }
-                    min="0"
-                    max="23"
-                    style={{ display: "inline", width: "40%" }}
-                  />
+                <div className="d-flex align-items-center">
+                  <div style={{ width: "40%" }}>
+                    <DateTimePicker
+                      id="workdayStart"
+                      noCalendar={true}
+                      enableTime={true}
+                      value={DateUtil.getTodayTime(
+                        this.state.workdayStart,
+                        0,
+                        0,
+                      )}
+                      onChange={(value: Date) =>
+                        this.setState({ workdayStart: value.getHours() })
+                      }
+                    />
+                  </div>
                   <span
                     style={{
                       width: "20%",
@@ -623,17 +624,22 @@ class Preferences extends React.Component<Props, State> {
                       {this.props.t("to").toString()}
                     </Form.Label>
                   </span>
-                  <Form.Control
-                    type="number"
-                    id="workdayEnd"
-                    value={this.state.workdayEnd}
-                    onChange={(e: any) =>
-                      this.setState({ workdayEnd: e.target.value })
-                    }
-                    min={this.state.workdayStart + 1}
-                    max="23"
-                    style={{ display: "inline", width: "40%" }}
-                  />
+                  <div style={{ width: "40%" }}>
+                    <DateTimePicker
+                      id="workdayEnd"
+                      noCalendar={true}
+                      enableTime={true}
+                      value={DateUtil.getTodayTime(this.state.workdayEnd, 0, 0)}
+                      minDate={DateUtil.getTodayTime(
+                        this.state.workdayStart + 1,
+                        0,
+                        0,
+                      )}
+                      onChange={(value: Date) =>
+                        this.setState({ workdayEnd: value.getHours() })
+                      }
+                    />
+                  </div>
                 </div>
                 {!RuntimeConfig.INFOS.dailyBasisBooking &&
                   this.state.workdayEnd - this.state.workdayStart >
