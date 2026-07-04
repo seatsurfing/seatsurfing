@@ -29,6 +29,7 @@ import SaveButton from "@/components/SaveButton";
 import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
+import ReloadModal from "@/components/ReloadModal";
 import { PreferencesTab } from "@/util/Navigation";
 import CONSTANT from "@/util/Contant";
 
@@ -67,6 +68,7 @@ interface State {
   activeSessions: Session[];
   currentSessionId: string;
   showPasswordChangedModal: boolean;
+  showReloadModal: boolean;
 }
 
 interface Props {
@@ -129,6 +131,7 @@ class Preferences extends React.Component<Props, State> {
       activeSessions: [],
       currentSessionId: "",
       showPasswordChangedModal: false,
+      showReloadModal: false,
     };
   }
 
@@ -281,7 +284,7 @@ class Preferences extends React.Component<Props, State> {
     try {
       await UserPreference.setAll(payload);
       await RuntimeConfig.loadUserPreferences();
-      this.setState({ submitting: false, saved: true });
+      this.setState({ submitting: false, showReloadModal: true });
     } catch {
       this.setState({ submitting: false, error: true });
     }
@@ -339,7 +342,7 @@ class Preferences extends React.Component<Props, State> {
     ];
     try {
       await UserPreference.setAll(payload);
-      this.setState({ submitting: false, saved: true });
+      this.setState({ submitting: false, showReloadModal: true });
     } catch {
       this.setState({ submitting: false, error: true });
     }
@@ -1129,6 +1132,12 @@ class Preferences extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
         </Modal>
+        <ReloadModal
+          show={this.state.showReloadModal}
+          title={this.props.t(
+            this.state.activeTab === "tab-style" ? "style" : "bookings",
+          )}
+        />
       </>
     );
   }
