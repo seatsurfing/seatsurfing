@@ -2,5 +2,6 @@
 .eslintcache
 docker-readme-modified.md
 .vscode/
+.claude/
 node_modules/
 ui/tsconfig.tsbuildinfo
