@@ -6,6 +6,8 @@ import UserPreference from "@/types/UserPreference";
 interface RuntimeUserInfos {
   username: string;
   userId: string;
+  firstname: string;
+  lastname: string;
   idpLogin: boolean;
   isLoading: boolean;
   maxBookingsPerUser: number;
@@ -60,6 +62,8 @@ export default class RuntimeConfig {
   static resetInfos = () => {
     RuntimeConfig.INFOS = {
       username: "",
+      firstname: "",
+      lastname: "",
       userId: "",
       idpLogin: false,
       isLoading: true,
@@ -238,16 +242,18 @@ export default class RuntimeConfig {
     }
   };
 
-  static setDetails = async (username: string, id: string) => {
+  static setUserDetails = async (user: User) => {
     await RuntimeConfig.loadSettings();
-    RuntimeConfig.INFOS.username = username;
-    RuntimeConfig.INFOS.userId = id;
+    RuntimeConfig.INFOS.username = user.email;
+    RuntimeConfig.INFOS.userId = user.id;
+    RuntimeConfig.INFOS.firstname = user.firstname;
+    RuntimeConfig.INFOS.lastname = user.lastname;
   };
 
   static async setLoginDetails(): Promise<void> {
     const user = await User.getSelf();
     RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
-    RuntimeConfig.setDetails(user.email, user.id);
+    RuntimeConfig.setUserDetails(user);
   }
 
   static loadUserAndSettings = async (): Promise<void> => {
@@ -261,7 +267,7 @@ export default class RuntimeConfig {
     RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
     RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
     RuntimeConfig.INFOS.isPrimaryDomain = user.isPrimaryDomain;
-    RuntimeConfig.setDetails(user.email, user.id);
+    RuntimeConfig.setUserDetails(user);
     RuntimeConfig.INFOS.orgName = user.organization.name;
     await RuntimeConfig.loadSettings();
     await RuntimeConfig.loadUserPreferences();

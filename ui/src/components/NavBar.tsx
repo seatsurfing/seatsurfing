@@ -28,6 +28,7 @@ import MergeRequest from "@/types/MergeRequest";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import LanguageSelector from "./LanguageSelector";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   showMergeInit: boolean;
@@ -234,7 +235,15 @@ class NavBar extends React.Component<Props, State> {
           {mergeRequestsButton}
           <Nav.Link as="span" className="icon-link d-none d-xl-flex pe-none">
             <IconUser className="feather feather-lg" />
-            {RuntimeConfig.INFOS.username}
+            <span
+              title={RuntimeConfig.INFOS.username}
+              style={{ pointerEvents: "auto" }}
+            >
+              {RendererUtils.fullname(
+                RuntimeConfig.INFOS.firstname,
+                RuntimeConfig.INFOS.lastname,
+              )}
+            </span>
           </Nav.Link>
           <LanguageSelector inNavbar={true} />
           {signOffButton}
