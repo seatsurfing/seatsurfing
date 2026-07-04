@@ -47,16 +47,20 @@ export default class Formatting {
     const weekdayFormatter = Formatting.getWeekdayFormatter(local);
     const timeFormatter = Formatting.getTimeFormatter(local);
     return {
-      format: (date?: Date | number) =>
-        `${weekdayFormatter.format(date)}, ${Formatting.formatDatePart(date, local)}, ${timeFormatter.format(date)}`,
+      format: (date?: Date | number) => {
+        const d = date === undefined ? new Date() : date;
+        return `${weekdayFormatter.format(d)}, ${Formatting.formatDatePart(d, local)}, ${timeFormatter.format(d)}`;
+      },
     };
   }
 
   static getFormatterNoTime(local?: boolean): DateFormatter {
     const weekdayFormatter = Formatting.getWeekdayFormatter(local);
     return {
-      format: (date?: Date | number) =>
-        `${weekdayFormatter.format(date)}, ${Formatting.formatDatePart(date, local)}`,
+      format: (date?: Date | number) => {
+        const d = date === undefined ? new Date() : date;
+        return `${weekdayFormatter.format(d)}, ${Formatting.formatDatePart(d, local)}`;
+      },
     };
   }
 
@@ -69,8 +73,10 @@ export default class Formatting {
   static getFormatterShort(local?: boolean): DateFormatter {
     const timeFormatter = Formatting.getTimeFormatter(local);
     return {
-      format: (date?: Date | number) =>
-        `${Formatting.formatDatePart(date, local)}, ${timeFormatter.format(date)}`,
+      format: (date?: Date | number) => {
+        const d = date === undefined ? new Date() : date;
+        return `${Formatting.formatDatePart(d, local)}, ${timeFormatter.format(d)}`;
+      },
     };
   }
 
