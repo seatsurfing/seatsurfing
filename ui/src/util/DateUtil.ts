@@ -190,7 +190,7 @@ export default class DateUtil {
   }
 
   /**
-   * @returns Today's date with time 23:59:59.999
+   * @returns Today's date with a specified time
    */
   static getTodayTime(hour: number, minute: number, second: number): Date {
     const todayTime = new Date();
