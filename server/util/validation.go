@@ -107,3 +107,25 @@ func IsValidBookingSubject(s string) bool {
 	}
 	return !strings.Contains(s, "@@@")
 }
+
+func IsValidDateFormat(s string) bool {
+	switch s {
+	case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsValidWeekdaysList(s string) bool {
+	tokens := strings.Split(s, ",")
+	seen := make(map[int]bool)
+	for _, token := range tokens {
+		weekday, err := strconv.Atoi(token)
+		if err != nil || weekday < 0 || weekday > 6 || seen[weekday] {
+			return false
+		}
+		seen[weekday] = true
+	}
+	return true
+}
