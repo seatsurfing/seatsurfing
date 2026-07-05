@@ -7,15 +7,11 @@ import {
   Form,
   Modal,
   Nav,
-<<<<<<< HEAD
-=======
   ToggleButton,
->>>>>>> main
 } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
-import WeekdaySelection from "@/components/WeekdaySelection";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -363,12 +359,6 @@ class Preferences extends React.Component<Props, State> {
     });
   };
 
-<<<<<<< HEAD
-  onWorkdaysChange = (days: number[]) => {
-    const workdays = [0, 1, 2, 3, 4, 5, 6].map((day) => days.includes(day));
-    this.setState({
-      workdays: workdays,
-=======
   onWorkdayCheck = (day: number, checked: boolean) => {
     this.setState((prevState) => {
       if (!checked && prevState.workdays.filter((val) => val).length <= 1) {
@@ -379,7 +369,6 @@ class Preferences extends React.Component<Props, State> {
           i === day ? checked : val,
         ),
       };
->>>>>>> main
     });
   };
 
@@ -671,16 +660,6 @@ class Preferences extends React.Component<Props, State> {
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
-<<<<<<< HEAD
-                  <WeekdaySelection
-                    id="workdays"
-                    weekStartDay={this.state.weekStartDay}
-                    value={[0, 1, 2, 3, 4, 5, 6].filter(
-                      (day) => this.state.workdays[day],
-                    )}
-                    onChange={this.onWorkdaysChange}
-                  />
-=======
                   <ButtonGroup>
                     {[0, 1, 2, 3, 4, 5, 6]
                       .map((offset) => (this.state.weekStartDay + offset) % 7)
@@ -704,7 +683,6 @@ class Preferences extends React.Component<Props, State> {
                         </ToggleButton>
                       ))}
                   </ButtonGroup>
->>>>>>> main
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
