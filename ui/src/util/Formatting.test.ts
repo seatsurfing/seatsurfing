@@ -3,6 +3,15 @@ import Formatting from "./Formatting";
 import RuntimeConfig from "@/components/RuntimeConfig";
 
 describe("Formatting", () => {
+  let infosSnapshot: typeof RuntimeConfig.INFOS;
+
+  beforeEach(() => {
+    infosSnapshot = { ...RuntimeConfig.INFOS };
+  });
+
+  afterEach(() => {
+    RuntimeConfig.INFOS = infosSnapshot;
+  });
   describe("getFormatterDate", () => {
     const date = new Date(Date.UTC(2026, 6, 4, 11, 41));
 
