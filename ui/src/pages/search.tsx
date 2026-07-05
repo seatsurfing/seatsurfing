@@ -437,7 +437,7 @@ class Search extends React.Component<Props, State> {
           });
           if (RuntimeConfig.INFOS.dailyBasisBooking) {
             state.prefWorkdayStart = "00:00";
-            state.prefWorkdayEnd = "23:00";
+            state.prefWorkdayEnd = "23:59";
           }
           state.recurrence = {
             ...self.state.recurrence,

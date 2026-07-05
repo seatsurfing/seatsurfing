@@ -293,7 +293,7 @@ class EditBooking extends React.Component<Props, State> {
           });
           if (self.dailyBasisBooking) {
             state.prefWorkdayStart = "00:00";
-            state.prefWorkdayEnd = "23:00";
+            state.prefWorkdayEnd = "23:59";
           }
           self.setState(
             {
