@@ -61,8 +61,11 @@ const createCustomEvent =
           event.mode == "space" &&
           (event.firstname || event.lastname || event.email) && (
             <>
-              {RendererUtils.fullname(event.firstname, event.lastname) ||
-                event.email}
+              {RendererUtils.fullname(
+                event.firstname,
+                event.lastname,
+                event.email,
+              )}
             </>
           )}
       </div>

@@ -1017,7 +1017,8 @@ class Search extends React.Component<Props, State> {
                 {RendererUtils.fullname(
                   booking.user.firstname,
                   booking.user.lastname,
-                ) || booking.user.email}
+                  booking.user.email,
+                )}
               </div>
             ))}
         </div>
@@ -1064,7 +1065,8 @@ class Search extends React.Component<Props, State> {
             {RendererUtils.fullname(
               booking.user.firstname,
               booking.user.lastname,
-            ) || booking.user.email}
+              booking.user.email,
+            )}
             <br />
           </span>
           {this.props.t("enter")}:{" "}
