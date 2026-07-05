@@ -400,10 +400,6 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if !router.isValidBookingTimeWindowInput(&m) {
-		SendBadRequest(w)
-		return
-	}
 	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
@@ -472,10 +468,6 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 			SendBadRequest(w)
 			return
 		}
-	}
-	if !router.isValidBookingTimeWindowInput(&m) {
-		SendBadRequest(w)
-		return
 	}
 	if err := GetLocationRepository().Create(e); err != nil {
 		log.Println(err)
@@ -767,28 +759,6 @@ func normalizeBookableDays(v string) string {
 	return strings.Join(parts, ",")
 }
 
-// isValidBookingTimeWindowInput validates the booking time window fields of
-// a location create/update request.
-func (router *LocationRouter) isValidBookingTimeWindowInput(m *CreateLocationRequest) bool {
-	if !isValidBookableDays(m.BookableDays) {
-		return false
-	}
-	if (m.BookingTimeStartHour == nil) != (m.BookingTimeStartMinute == nil) {
-		return false
-	}
-	if (m.BookingTimeEndHour == nil) != (m.BookingTimeEndMinute == nil) {
-		return false
-	}
-	if m.BookingTimeStartHour != nil && m.BookingTimeEndHour != nil {
-		startMinutes := *m.BookingTimeStartHour*60 + *m.BookingTimeStartMinute
-		endMinutes := *m.BookingTimeEndHour*60 + *m.BookingTimeEndMinute
-		if startMinutes >= endMinutes {
-			return false
-		}
-	}
-	return true
-}
-
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
 	e := &Location{}
 	e.Name = m.Name
@@ -798,8 +768,6 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Enabled = m.Enabled
 	e.MapScale = m.MapScale
 	e.MapType = m.MapType
-	e.BookingTimeStart = formatBookingTimeOfDay(m.BookingTimeStartHour, m.BookingTimeStartMinute)
-	e.BookingTimeEnd = formatBookingTimeOfDay(m.BookingTimeEndHour, m.BookingTimeEndMinute)
 	e.BookableDays = normalizeBookableDays(m.BookableDays)
 	return e
 }
@@ -818,8 +786,6 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
-	m.BookingTimeStartHour, m.BookingTimeStartMinute = parseBookingTimeOfDay(e.BookingTimeStart)
-	m.BookingTimeEndHour, m.BookingTimeEndMinute = parseBookingTimeOfDay(e.BookingTimeEnd)
 	m.BookableDays = e.BookableDays
 
 	if allowedBookers != nil {

@@ -261,10 +261,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	if r.URL.Query().Has("attributes") {
 		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
 	}
-	bookingRouter := &BookingRouter{}
-	bookingWindow := &BookingRequest{Enter: enter, Leave: leave}
-	isBookableWindow, _ := bookingRouter.isValidBookingWeekdayAndTimeWindow(bookingWindow, location, user)
-	isAllowedToBookLocation := isBookableWindow && router.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
+	isAllowedToBookLocation := router.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
 		if spaceID != "" && e.ID != spaceID {
