@@ -613,11 +613,26 @@ class Preferences extends React.Component<Props, State> {
                       value={DateUtil.getTodayTimeFromTimeString(
                         this.state.workdayStart,
                       )}
-                      onChange={(value: Date) =>
+                      maxDate={DateUtil.getTodayTimeFromMinutes(23 * 60 - 1)}
+                      onChange={(value: Date) => {
+                        const workdayStart = DateUtil.formatTimeString(value);
+                        const startMinutes =
+                          DateUtil.timeStringToMinutes(workdayStart);
+                        const endMinutes = DateUtil.timeStringToMinutes(
+                          this.state.workdayEnd,
+                        );
                         this.setState({
-                          workdayStart: DateUtil.formatTimeString(value),
-                        })
-                      }
+                          workdayStart: workdayStart,
+                          workdayEnd:
+                            endMinutes >= startMinutes + 60
+                              ? this.state.workdayEnd
+                              : DateUtil.formatTimeString(
+                                  DateUtil.getTodayTimeFromMinutes(
+                                    startMinutes + 60,
+                                  ),
+                                ),
+                        });
+                      }}
                     />
                   </div>
                   <span
@@ -643,11 +658,25 @@ class Preferences extends React.Component<Props, State> {
                         DateUtil.timeStringToMinutes(this.state.workdayStart) +
                           1,
                       )}
-                      onChange={(value: Date) =>
+                      onChange={(value: Date) => {
+                        const workdayEnd = DateUtil.formatTimeString(value);
+                        const endMinutes =
+                          DateUtil.timeStringToMinutes(workdayEnd);
+                        const startMinutes = DateUtil.timeStringToMinutes(
+                          this.state.workdayStart,
+                        );
                         this.setState({
-                          workdayEnd: DateUtil.formatTimeString(value),
-                        })
-                      }
+                          workdayEnd: workdayEnd,
+                          workdayStart:
+                            startMinutes <= endMinutes - 60
+                              ? this.state.workdayStart
+                              : DateUtil.formatTimeString(
+                                  DateUtil.getTodayTimeFromMinutes(
+                                    endMinutes - 60,
+                                  ),
+                                ),
+                        });
+                      }}
                     />
                   </div>
                 </div>
