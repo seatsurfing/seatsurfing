@@ -95,14 +95,6 @@ func (r *LocationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 	if curVersion < 48 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
-			"ADD COLUMN IF NOT EXISTS booking_time_start VARCHAR NOT NULL DEFAULT ''"); err != nil {
-			panic(err)
-		}
-		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
-			"ADD COLUMN IF NOT EXISTS booking_time_end VARCHAR NOT NULL DEFAULT ''"); err != nil {
-			panic(err)
-		}
-		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
 			"ADD COLUMN IF NOT EXISTS bookable_days VARCHAR NOT NULL DEFAULT ''"); err != nil {
 			panic(err)
 		}
@@ -112,10 +104,10 @@ func (r *LocationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 func (r *LocationStore) Create(e *Location) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO locations "+
-		"(organization_id, name, description, max_concurrent_bookings, tz, enabled, map_type, booking_time_start, booking_time_end, bookable_days) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) "+
+		"(organization_id, name, description, max_concurrent_bookings, tz, enabled, map_type, bookable_days) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "+
 		"RETURNING id",
-		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.Timezone, e.Enabled, e.MapType, e.BookingTimeStart, e.BookingTimeEnd, e.BookableDays).Scan(&id)
+		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.Timezone, e.Enabled, e.MapType, e.BookableDays).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -125,10 +117,10 @@ func (r *LocationStore) Create(e *Location) error {
 
 func (r *LocationStore) GetOne(id string) (*Location, error) {
 	e := &Location{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, booking_time_start, booking_time_end, bookable_days "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days "+
 		"FROM locations "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookingTimeStart, &e.BookingTimeEnd, &e.BookableDays)
+		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +129,7 @@ func (r *LocationStore) GetOne(id string) (*Location, error) {
 
 func (r *LocationStore) GetByKeyword(organizationID string, keyword string) ([]*Location, error) {
 	var result []*Location
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, booking_time_start, booking_time_end, bookable_days "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days "+
 		"FROM locations "+
 		"WHERE organization_id = $1 AND LOWER(name) LIKE '%' || $2 || '%' "+
 		"ORDER BY name", organizationID, strings.ToLower(keyword))
@@ -147,7 +139,7 @@ func (r *LocationStore) GetByKeyword(organizationID string, keyword string) ([]*
 	defer rows.Close()
 	for rows.Next() {
 		e := &Location{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookingTimeStart, &e.BookingTimeEnd, &e.BookableDays)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays)
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +150,7 @@ func (r *LocationStore) GetByKeyword(organizationID string, keyword string) ([]*
 
 func (r *LocationStore) GetAll(organizationID string) ([]*Location, error) {
 	var result []*Location
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, booking_time_start, booking_time_end, bookable_days "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, map_mimetype, map_width, map_height, map_scale, map_type, description, max_concurrent_bookings, tz, enabled, bookable_days "+
 		"FROM locations "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY name", organizationID)
@@ -168,7 +160,7 @@ func (r *LocationStore) GetAll(organizationID string) ([]*Location, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &Location{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookingTimeStart, &e.BookingTimeEnd, &e.BookableDays)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.MapMimeType, &e.MapWidth, &e.MapHeight, &e.MapScale, &e.MapType, &e.Description, &e.MaxConcurrentBookings, &e.Timezone, &e.Enabled, &e.BookableDays)
 		if err != nil {
 			return nil, err
 		}
@@ -187,11 +179,9 @@ func (r *LocationStore) Update(e *Location) error {
 		"tz = $6, "+
 		"enabled = $7, "+
 		"map_type = $8, "+
-		"booking_time_start = $9, "+
-		"booking_time_end = $10, "+
-		"bookable_days = $11 "+
-		"WHERE id = $12",
-		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.MapScale, e.Timezone, e.Enabled, e.MapType, e.BookingTimeStart, e.BookingTimeEnd, e.BookableDays, e.ID)
+		"bookable_days = $9 "+
+		"WHERE id = $10",
+		e.OrganizationID, e.Name, e.Description, e.MaxConcurrentBookings, e.MapScale, e.Timezone, e.Enabled, e.MapType, e.BookableDays, e.ID)
 	return err
 }
 

@@ -32,19 +32,15 @@ type LocationRouter struct {
 }
 
 type CreateLocationRequest struct {
-	Name                   string   `json:"name" validate:"required,max=128"`
-	Description            string   `json:"description" validate:"max=512"`
-	MaxConcurrentBookings  uint     `json:"maxConcurrentBookings"`
-	Timezone               string   `json:"timezone" validate:"max=32"`
-	Enabled                bool     `json:"enabled"`
-	MapScale               float64  `json:"mapScale"`
-	MapType                string   `json:"mapType" validate:"omitempty,oneof=designed"`
-	AllowedBookerGroupIDs  []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
-	BookingTimeStartHour   *int     `json:"bookingTimeStartHour" validate:"omitempty,min=0,max=23"`
-	BookingTimeStartMinute *int     `json:"bookingTimeStartMinute" validate:"omitempty,min=0,max=59"`
-	BookingTimeEndHour     *int     `json:"bookingTimeEndHour" validate:"omitempty,min=0,max=23"`
-	BookingTimeEndMinute   *int     `json:"bookingTimeEndMinute" validate:"omitempty,min=0,max=59"`
-	BookableDays           string   `json:"bookableDays" validate:"max=13"`
+	Name                  string   `json:"name" validate:"required,max=128"`
+	Description           string   `json:"description" validate:"max=512"`
+	MaxConcurrentBookings uint     `json:"maxConcurrentBookings"`
+	Timezone              string   `json:"timezone" validate:"max=32"`
+	Enabled               bool     `json:"enabled"`
+	MapScale              float64  `json:"mapScale"`
+	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
+	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	BookableDays          string   `json:"bookableDays" validate:"max=13"`
 }
 
 type GetLocationResponse struct {
