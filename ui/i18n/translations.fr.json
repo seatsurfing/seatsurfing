@@ -508,14 +508,10 @@
   "bigger": "Bigger",
   "normal": "Normal",
   "small": "Small",
-<<<<<<< HEAD
   "markdownSupported": "Markdown syntax is supported",
   "bookableDays": "Bookable weekdays",
   "bookingTimeWindow": "Booking hours",
   "errorBookingTimeEndBeforeStart": "The end time must be after the start time.",
   "errorInvalidTimeWindow": "Bookings for this location are only allowed within the configured booking hours.",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday."
-=======
-  "markdownSupported": "Markdown syntax is supported"
->>>>>>> main
 }
