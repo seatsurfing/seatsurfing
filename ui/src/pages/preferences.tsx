@@ -7,6 +7,10 @@ import {
   Form,
   Modal,
   Nav,
+<<<<<<< HEAD
+=======
+  ToggleButton,
+>>>>>>> main
 } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
@@ -29,6 +33,7 @@ import SaveButton from "@/components/SaveButton";
 import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
+import ReloadModal from "@/components/ReloadModal";
 import { PreferencesTab } from "@/util/Navigation";
 import CONSTANT from "@/util/Contant";
 
@@ -67,6 +72,7 @@ interface State {
   activeSessions: Session[];
   currentSessionId: string;
   showPasswordChangedModal: boolean;
+  showReloadModal: boolean;
 }
 
 interface Props {
@@ -129,6 +135,7 @@ class Preferences extends React.Component<Props, State> {
       activeSessions: [],
       currentSessionId: "",
       showPasswordChangedModal: false,
+      showReloadModal: false,
     };
   }
 
@@ -281,7 +288,7 @@ class Preferences extends React.Component<Props, State> {
     try {
       await UserPreference.setAll(payload);
       await RuntimeConfig.loadUserPreferences();
-      this.setState({ submitting: false, saved: true });
+      this.setState({ submitting: false, showReloadModal: true });
     } catch {
       this.setState({ submitting: false, error: true });
     }
@@ -339,7 +346,7 @@ class Preferences extends React.Component<Props, State> {
     ];
     try {
       await UserPreference.setAll(payload);
-      this.setState({ submitting: false, saved: true });
+      this.setState({ submitting: false, showReloadModal: true });
     } catch {
       this.setState({ submitting: false, error: true });
     }
@@ -356,10 +363,23 @@ class Preferences extends React.Component<Props, State> {
     });
   };
 
+<<<<<<< HEAD
   onWorkdaysChange = (days: number[]) => {
     const workdays = [0, 1, 2, 3, 4, 5, 6].map((day) => days.includes(day));
     this.setState({
       workdays: workdays,
+=======
+  onWorkdayCheck = (day: number, checked: boolean) => {
+    this.setState((prevState) => {
+      if (!checked && prevState.workdays.filter((val) => val).length <= 1) {
+        return { workdays: prevState.workdays };
+      }
+      return {
+        workdays: prevState.workdays.map((val, i) =>
+          i === day ? checked : val,
+        ),
+      };
+>>>>>>> main
     });
   };
 
@@ -651,6 +671,7 @@ class Preferences extends React.Component<Props, State> {
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
+<<<<<<< HEAD
                   <WeekdaySelection
                     id="workdays"
                     weekStartDay={this.state.weekStartDay}
@@ -659,6 +680,31 @@ class Preferences extends React.Component<Props, State> {
                     )}
                     onChange={this.onWorkdaysChange}
                   />
+=======
+                  <ButtonGroup>
+                    {[0, 1, 2, 3, 4, 5, 6]
+                      .map((offset) => (this.state.weekStartDay + offset) % 7)
+                      .map((day) => (
+                        <ToggleButton
+                          type="checkbox"
+                          variant={
+                            this.state.workdays[day]
+                              ? "primary"
+                              : "outline-secondary"
+                          }
+                          key={"workday-" + day}
+                          id={"workday-" + day}
+                          value={day}
+                          checked={this.state.workdays[day]}
+                          onChange={(e: any) =>
+                            this.onWorkdayCheck(day, e.target.checked)
+                          }
+                        >
+                          {this.props.t("workday-short-" + day)}
+                        </ToggleButton>
+                      ))}
+                  </ButtonGroup>
+>>>>>>> main
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">
@@ -1112,6 +1158,12 @@ class Preferences extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
         </Modal>
+        <ReloadModal
+          show={this.state.showReloadModal}
+          title={this.props.t(
+            this.state.activeTab === "tab-style" ? "style" : "bookings",
+          )}
+        />
       </>
     );
   }

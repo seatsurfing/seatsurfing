@@ -27,9 +27,11 @@ export const bookingToCalendarEvent = (
 ): CalendarEvent => {
   let title: string;
   if (mode === "space") {
-    title =
-      RendererUtils.fullname(booking.user.firstname, booking.user.lastname) ||
-      booking.user.email;
+    title = RendererUtils.fullname(
+      booking.user.firstname,
+      booking.user.lastname,
+      booking.user.email,
+    );
     if (booking.subject) {
       title = title ? `${title} – ${booking.subject}` : booking.subject;
     }

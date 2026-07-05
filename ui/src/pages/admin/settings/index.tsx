@@ -10,7 +10,6 @@ import {
   Popover,
   OverlayTrigger,
   Badge,
-  Modal,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
@@ -37,6 +36,7 @@ import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import ReloadModal from "@/components/ReloadModal";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import UpdateChecker from "@/util/UpdateChecker";
@@ -783,6 +783,134 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-showNames"
+                label={this.props.t("showNames")}
+                checked={this.state.showNames}
+                onChange={(e: any) =>
+                  this.setState({ showNames: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-disableBuddies"
+                label={this.props.t("disableBuddies")}
+                disabled={!this.state.showNames}
+                checked={this.state.disableBuddies}
+                onChange={(e: any) =>
+                  this.setState({ disableBuddies: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-newUserDefaultMailNotification"
+                label={this.props.t("newUserDefaultMailNotification")}
+                checked={this.state.newUserDefaultMailNotification}
+                onChange={(e: any) =>
+                  this.setState({
+                    newUserDefaultMailNotification: e.target.checked,
+                  })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-enforceTOTP"
+                label={this.props.t("enforceTOTP")}
+                checked={this.state.enforceTOTP}
+                onChange={(e: any) =>
+                  this.setState({ enforceTOTP: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="input-defaultTimezone">
+              {this.props.t("defaultTimezone")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                id="input-defaultTimezone"
+                value={this.state.defaultTimezone}
+                onChange={(e: any) =>
+                  this.setState({ defaultTimezone: e.target.value })
+                }
+              >
+                {this.timezones.map((tz) => (
+                  <option key={tz}>{tz}</option>
+                ))}
+              </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-confluenceServerSharedSecret"
+            >
+              {this.props.t("confluenceServerSharedSecret")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                id="input-confluenceServerSharedSecret"
+                type="text"
+                value={this.state.confluenceServerSharedSecret}
+                onChange={(e: any) =>
+                  this.setState({
+                    confluenceServerSharedSecret: e.target.value,
+                  })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="input-newDomain">
+              {this.props.t("domains")}
+              <PremiumFeatureIcon />
+            </Form.Label>
+            <Col sm="4">
+              {domains}
+              <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
+                <Form.Control
+                  id="input-newDomain"
+                  type="text"
+                  value={this.state.newDomain}
+                  onChange={(e: any) =>
+                    this.setState({ newDomain: e.target.value })
+                  }
+                  placeholder={this.props.t("yourDomainPlaceholder")}
+                  onKeyDown={this.handleNewDomainKeyDown}
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.addDomain}
+                  disabled={!this.isValidDomain()}
+                >
+                  {this.props.t("addDomain")}
+                </Button>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+
+          {/* BOOKINGS */}
+
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>{this.props.t("bookings")}</h4>
+          </div>
+          <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="input-maxBookingsPerUser">
               {this.props.t("maxBookingsPerUser")}
             </Form.Label>
@@ -947,19 +1075,6 @@ class Settings extends React.Component<Props, State> {
             <Col sm="6">
               <Form.Check
                 type="checkbox"
-                id="check-disableBuddies"
-                label={this.props.t("disableBuddies")}
-                checked={this.state.disableBuddies}
-                onChange={(e: any) =>
-                  this.setState({ disableBuddies: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
                 id="check-dailyBasisBooking"
                 label={this.props.t("dailyBasisBooking")}
                 checked={this.state.dailyBasisBooking}
@@ -1051,29 +1166,21 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-showNames"
-                label={this.props.t("showNames")}
-                checked={this.state.showNames}
+            <Form.Label column sm="2" htmlFor="input-subjectDefault">
+              {this.props.t("subjectDefault")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                id="input-subjectDefault"
+                value={this.state.subjectDefault}
                 onChange={(e: any) =>
-                  this.setState({ showNames: e.target.checked })
+                  this.setState({ subjectDefault: e.target.value })
                 }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-allowBookingNonExistUsers"
-                label={this.props.t("allowBookingNonExistUsers")}
-                checked={this.state.allowBookingNonExistUsers}
-                onChange={(e: any) =>
-                  this.setState({ allowBookingNonExistUsers: e.target.checked })
-                }
-              />
+              >
+                <option value="1">{this.props.t("disabled")}</option>
+                <option value="2">{this.props.t("optional")}</option>
+                <option value="3">{this.props.t("required")}</option>
+              </Form.Select>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1093,115 +1200,18 @@ class Settings extends React.Component<Props, State> {
             <Col sm="6">
               <Form.Check
                 type="checkbox"
-                id="check-newUserDefaultMailNotification"
-                label={this.props.t("newUserDefaultMailNotification")}
-                checked={this.state.newUserDefaultMailNotification}
+                id="check-allowBookingNonExistUsers"
+                label={this.props.t("allowBookingNonExistUsers")}
+                checked={this.state.allowBookingNonExistUsers}
                 onChange={(e: any) =>
-                  this.setState({
-                    newUserDefaultMailNotification: e.target.checked,
-                  })
+                  this.setState({ allowBookingNonExistUsers: e.target.checked })
                 }
               />
             </Col>
           </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-enforceTOTP"
-                label={this.props.t("enforceTOTP")}
-                checked={this.state.enforceTOTP}
-                onChange={(e: any) =>
-                  this.setState({ enforceTOTP: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-defaultTimezone">
-              {this.props.t("defaultTimezone")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="input-defaultTimezone"
-                value={this.state.defaultTimezone}
-                onChange={(e: any) =>
-                  this.setState({ defaultTimezone: e.target.value })
-                }
-              >
-                {this.timezones.map((tz) => (
-                  <option key={tz}>{tz}</option>
-                ))}
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-subjectDefault">
-              {this.props.t("subjectDefault")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="input-subjectDefault"
-                value={this.state.subjectDefault}
-                onChange={(e: any) =>
-                  this.setState({ subjectDefault: e.target.value })
-                }
-              >
-                <option value="1">{this.props.t("disabled")}</option>
-                <option value="2">{this.props.t("optional")}</option>
-                <option value="3">{this.props.t("required")}</option>
-              </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="input-confluenceServerSharedSecret"
-            >
-              {this.props.t("confluenceServerSharedSecret")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="input-confluenceServerSharedSecret"
-                type="text"
-                value={this.state.confluenceServerSharedSecret}
-                onChange={(e: any) =>
-                  this.setState({
-                    confluenceServerSharedSecret: e.target.value,
-                  })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-newDomain">
-              {this.props.t("domains")}
-              <PremiumFeatureIcon />
-            </Form.Label>
-            <Col sm="4">
-              {domains}
-              <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
-                <Form.Control
-                  id="input-newDomain"
-                  type="text"
-                  value={this.state.newDomain}
-                  onChange={(e: any) =>
-                    this.setState({ newDomain: e.target.value })
-                  }
-                  placeholder={this.props.t("yourDomainPlaceholder")}
-                  onKeyDown={this.handleNewDomainKeyDown}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.addDomain}
-                  disabled={!this.isValidDomain()}
-                >
-                  {this.props.t("addDomain")}
-                </Button>
-              </InputGroup>
-            </Col>
-          </Form.Group>
+
+          {/* REPORTS */}
+
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h4>{this.props.t("reportSettings")}</h4>
           </div>
@@ -1231,6 +1241,9 @@ class Settings extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
+
+          {/* KIOSK MODE */}
+
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h4>
               {this.props.t("kioskMode")}
@@ -1300,6 +1313,9 @@ class Settings extends React.Component<Props, State> {
               </Button>
             </Col>
           </Form.Group>
+
+          {/* AUTH PROVIDERS */}
+
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h4>
               {this.props.t("authProviders")}
@@ -1339,29 +1355,10 @@ class Settings extends React.Component<Props, State> {
           {authProviderTable}
           {dangerZone}
         </Form>
-        <Modal
+        <ReloadModal
           show={this.state.showSavedModal}
-          onHide={() => {
-            window.location.reload();
-          }}
-          backdrop="static"
-          keyboard={false}
-        >
-          <Modal.Header>
-            <Modal.Title>{this.props.t("settings")}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>{this.props.t("entryUpdatedReloadRequired")}</Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="primary"
-              onClick={() => {
-                window.location.reload();
-              }}
-            >
-              {this.props.t("reload")}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+          title={this.props.t("settings")}
+        />
       </FullLayout>
     );
   }
