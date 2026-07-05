@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.113.3](https://github.com/seatsurfing/seatsurfing/compare/v1.113.2...v1.113.3) (2026-07-05)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add booking section on org settings page and bind buddies checkbox to show booker names ([#2362](https://github.com/seatsurfing/seatsurfing/issues/2362)) ([892d7ad](https://github.com/seatsurfing/seatsurfing/commit/892d7ad1dd865d22658894da4ab74b2a5d8783ef))
+* **booking-ui:** format dates with user's preferred date format ([#2366](https://github.com/seatsurfing/seatsurfing/issues/2366)) ([346da1a](https://github.com/seatsurfing/seatsurfing/commit/346da1abed52b20397565b2fe026b3c7c6c19c83))
+* **booking-ui:** make sure at least one workday is selected ([#2363](https://github.com/seatsurfing/seatsurfing/issues/2363)) ([dc4debd](https://github.com/seatsurfing/seatsurfing/commit/dc4debdcca8ae9a3f1bc7428d137118a1f11b9b2))
+* **booking-ui:** show reload modal after saving user preferences ([#2367](https://github.com/seatsurfing/seatsurfing/issues/2367)) ([3cb3f3a](https://github.com/seatsurfing/seatsurfing/commit/3cb3f3a9f66872b6de5e10cb65d328e3dbaafb02))
+* **booking-ui:** show user's firstname and lastname in navbar ([#2368](https://github.com/seatsurfing/seatsurfing/issues/2368)) ([bfc5ff1](https://github.com/seatsurfing/seatsurfing/commit/bfc5ff119d98d9469efdf646291ff47d4878d531))
+
 ## [1.113.2](https://github.com/seatsurfing/seatsurfing/compare/v1.113.1...v1.113.2) (2026-07-03)
 
 
