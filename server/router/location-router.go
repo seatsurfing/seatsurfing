@@ -5,13 +5,11 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"image"
 	"io"
 	"log"
 	"net/http"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -400,6 +398,12 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if m.BookableDays != "" {
+		if !isValidBookableDays(m.BookableDays) {
+			SendBadRequest(w)
+			return
+		}
+	}
 	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
@@ -473,6 +477,12 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
+	}
+	if m.BookableDays != "" {
+		if !isValidBookableDays(m.BookableDays) {
+			SendBadRequest(w)
+			return
+		}
 	}
 
 	err := GetLocationRepository().ReplaceAllowedBookers(e, m.AllowedBookerGroupIDs)
@@ -696,30 +706,8 @@ func (router *LocationRouter) loadSampleData(w http.ResponseWriter, r *http.Requ
 	GetOrganizationRepository().CreateSampleData(org)
 }
 
-// formatBookingTimeOfDay renders an optional hour/minute pair (as received
-// over the API) as the zero-padded "HH:MM" string stored on the entity, or
-// "" if unset.
-func formatBookingTimeOfDay(hour, minute *int) string {
-	if hour == nil || minute == nil {
-		return ""
-	}
-	return fmt.Sprintf("%02d:%02d", *hour, *minute)
-}
-
-// parseBookingTimeOfDay parses the "HH:MM" string stored on the entity back
-// into an hour/minute pair, or (nil, nil) if unset.
-func parseBookingTimeOfDay(v string) (*int, *int) {
-	t, err := time.Parse("15:04", v)
-	if err != nil {
-		return nil, nil
-	}
-	hour, minute := t.Hour(), t.Minute()
-	return &hour, &minute
-}
-
-// isValidBookableDays reports whether v is empty (no restriction) or a
-// comma-separated list of weekday numbers (0 = Sunday … 6 = Saturday).
 func isValidBookableDays(v string) bool {
+	// TODO use existing validation method
 	if v == "" {
 		return true
 	}
@@ -732,33 +720,6 @@ func isValidBookableDays(v string) bool {
 	return true
 }
 
-// normalizeBookableDays parses a validated weekday list, removes duplicates
-// and returns it in ascending order. Invalid input is returned unchanged;
-// callers must validate first.
-func normalizeBookableDays(v string) string {
-	if v == "" {
-		return ""
-	}
-	seen := map[int]bool{}
-	days := []int{}
-	for _, s := range strings.Split(v, ",") {
-		n, err := strconv.Atoi(strings.TrimSpace(s))
-		if err != nil || n < 0 || n > 6 {
-			return v
-		}
-		if !seen[n] {
-			seen[n] = true
-			days = append(days, n)
-		}
-	}
-	sort.Ints(days)
-	parts := make([]string, len(days))
-	for i, d := range days {
-		parts[i] = strconv.Itoa(d)
-	}
-	return strings.Join(parts, ",")
-}
-
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
 	e := &Location{}
 	e.Name = m.Name
@@ -768,7 +729,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Enabled = m.Enabled
 	e.MapScale = m.MapScale
 	e.MapType = m.MapType
-	e.BookableDays = normalizeBookableDays(m.BookableDays)
+	e.BookableDays = m.BookableDays
 	return e
 }
 
