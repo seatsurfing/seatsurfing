@@ -10,7 +10,6 @@ import {
   Popover,
   OverlayTrigger,
   Badge,
-  Modal,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
@@ -37,6 +36,7 @@ import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import ReloadModal from "@/components/ReloadModal";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import UpdateChecker from "@/util/UpdateChecker";
@@ -1355,29 +1355,10 @@ class Settings extends React.Component<Props, State> {
           {authProviderTable}
           {dangerZone}
         </Form>
-        <Modal
+        <ReloadModal
           show={this.state.showSavedModal}
-          onHide={() => {
-            window.location.reload();
-          }}
-          backdrop="static"
-          keyboard={false}
-        >
-          <Modal.Header>
-            <Modal.Title>{this.props.t("settings")}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>{this.props.t("entryUpdatedReloadRequired")}</Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="primary"
-              onClick={() => {
-                window.location.reload();
-              }}
-            >
-              {this.props.t("reload")}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+          title={this.props.t("settings")}
+        />
       </FullLayout>
     );
   }
