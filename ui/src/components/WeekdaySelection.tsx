@@ -8,6 +8,7 @@ interface Props {
   weekStartDay?: number;
   value: number[];
   onChange: (value: number[]) => void;
+  preventEmpty?: boolean;
 }
 
 class WeekdaySelection extends React.Component<Props> {
@@ -15,6 +16,9 @@ class WeekdaySelection extends React.Component<Props> {
     const value = checked
       ? [...this.props.value, day]
       : this.props.value.filter((d) => d !== day);
+    if (!checked && this.props.preventEmpty && value.length < 1) {
+      return;
+    }
     this.props.onChange(value);
   };
 
