@@ -476,7 +476,7 @@ class EditLocation extends React.Component<Props, State> {
       enabled: true,
       bookingTimeStart: "",
       bookingTimeEnd: "",
-      bookableDays: [],
+      bookableDays: [0, 1, 2, 3, 4, 5, 6],
       mapScale: 1.0,
       mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
@@ -567,7 +567,7 @@ class EditLocation extends React.Component<Props, State> {
                         ? location.bookableDays
                             .split(",")
                             .map((d) => parseInt(d, 10))
-                        : [],
+                        : [0, 1, 2, 3, 4, 5, 6],
                       mapScale: location.mapScale,
                       mapScaleOnLoad: location.mapScale,
                       mapType:
@@ -2264,6 +2264,7 @@ class EditLocation extends React.Component<Props, State> {
                 onChange={(bookableDays: number[]) =>
                   this.setState({ bookableDays })
                 }
+                preventEmpty={true}
               />
             </Col>
           </Form.Group>
