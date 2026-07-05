@@ -656,7 +656,7 @@ class Preferences extends React.Component<Props, State> {
                       )}
                       minDate={DateUtil.getTodayTimeFromMinutes(
                         DateUtil.timeStringToMinutes(this.state.workdayStart) +
-                          1,
+                          60,
                       )}
                       onChange={(value: Date) => {
                         const workdayEnd = DateUtil.formatTimeString(value);
