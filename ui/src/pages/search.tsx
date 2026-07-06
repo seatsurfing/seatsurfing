@@ -103,8 +103,6 @@ interface State {
   prefEnterTime: number;
   prefWorkdayStart: string;
   prefWorkdayEnd: string;
-  prefWorkdayStart: string;
-  prefWorkdayEnd: string;
   prefWorkdays: number[];
   prefLocationId: string;
   prefBookedColor: string;

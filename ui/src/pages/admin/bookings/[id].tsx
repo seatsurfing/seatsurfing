@@ -55,8 +55,6 @@ interface State {
   prefEnterTime: number;
   prefWorkdayStart: string;
   prefWorkdayEnd: string;
-  prefWorkdayStart: string;
-  prefWorkdayEnd: string;
   prefWorkdays: number[];
   prefLocationId: string;
   selfEmail: string;
@@ -101,6 +99,7 @@ class EditBooking extends React.Component<Props, State> {
       loading: true,
       saved: false,
       error: false,
+      errorText: "",
       wasCreated: false,
       goBack: false,
       enter: new Date(),
