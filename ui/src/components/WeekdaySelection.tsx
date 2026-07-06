@@ -32,9 +32,7 @@ class WeekdaySelection extends React.Component<Props> {
             <ToggleButton
               type="checkbox"
               variant={
-                this.props.value.includes(day)
-                  ? "primary"
-                  : "outline-secondary"
+                this.props.value.includes(day) ? "primary" : "outline-secondary"
               }
               key={"weekday-" + day}
               id={(this.props.id ? this.props.id + "-" : "") + "weekday-" + day}
