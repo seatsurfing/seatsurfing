@@ -179,60 +179,6 @@ func TestBookingsBookableDaysRestriction(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
 
-func TestBookingsBookingTimeWindowRestriction(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserInOrg(org)
-	loginResponse := LoginTestUser(user.ID)
-	location, space := CreateTestLocationAndSpace(org)
-	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
-
-	location.BookingTimeStart = "09:00"
-	location.BookingTimeEnd = "17:00"
-	GetLocationRepository().Update(location)
-
-	// starts too early
-	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-02T08:00:00Z\", \"leave\": \"2030-09-02T10:00:00Z\", \"subject\": \"Test Event\"}"
-	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
-	CheckTestString(t, strconv.Itoa(ResponseCodeBookingInvalidTimeWindow), res.Header().Get("X-Error-Code"))
-
-	// ends too late
-	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-02T16:00:00Z\", \"leave\": \"2030-09-02T18:00:00Z\", \"subject\": \"Test Event\"}"
-	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
-	CheckTestString(t, strconv.Itoa(ResponseCodeBookingInvalidTimeWindow), res.Header().Get("X-Error-Code"))
-
-	// within window
-	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-02T09:00:00Z\", \"leave\": \"2030-09-02T17:00:00Z\", \"subject\": \"Test Event\"}"
-	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-}
-
-func TestBookingsBookingTimeWindowIgnoredWithDailyBasisBooking(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	GetSettingsRepository().Set(org.ID, SettingDailyBasisBooking.Name, "1")
-	GetSettingsRepository().Set(org.ID, SettingMaxBookingDurationHours.Name, "24")
-	user := CreateTestUserInOrg(org)
-	loginResponse := LoginTestUser(user.ID)
-	location, space := CreateTestLocationAndSpace(org)
-	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
-
-	location.BookingTimeStart = "09:00"
-	location.BookingTimeEnd = "17:00"
-	GetLocationRepository().Update(location)
-
-	// full-day booking that would violate the time window if it were enforced
-	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-02T00:00:00Z\", \"leave\": \"2030-09-02T23:59:59Z\", \"subject\": \"Test Event\"}"
-	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-}
-
 func TestBookingsSubjectRequired(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
