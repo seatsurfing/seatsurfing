@@ -500,6 +500,37 @@ func CanSpaceAdminOrg(user *User, organizationID string) bool {
 	return false
 }
 
+// IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)
+// falls on one of the location's bookable weekdays, honoring the org's
+// no-admin-restrictions setting for space admins.
+func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time.Time) bool {
+	if location.BookableDays == "" {
+		return true
+	}
+	if CanSpaceAdminOrg(user, location.OrganizationID) {
+		noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
+		if noAdminRestrictions {
+			return true
+		}
+	}
+	allowedDays := map[time.Weekday]bool{}
+	for _, s := range strings.Split(location.BookableDays, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil {
+			continue
+		}
+		allowedDays[time.Weekday(n)] = true
+	}
+	now := enter
+	for now.Before(leave) {
+		if !allowedDays[now.Weekday()] {
+			return false
+		}
+		now = now.AddDate(0, 0, 1)
+	}
+	return true
+}
+
 func CanAdminOrg(user *User, organizationID string) bool {
 	if (user.OrganizationID == organizationID) && (GetUserRepository().IsOrgAdmin(user)) {
 		return true

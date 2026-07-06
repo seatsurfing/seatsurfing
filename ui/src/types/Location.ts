@@ -1,6 +1,5 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
-import DateUtil from "../util/DateUtil";
 import SpaceAttributeValue from "./SpaceAttributeValue";
 
 export default class Location extends Entity {
@@ -15,8 +14,6 @@ export default class Location extends Entity {
   mapScale: number;
   mapType: string;
   allowedBookerGroupIds: string[];
-  bookingTimeStart: string;
-  bookingTimeEnd: string;
   bookableDays: string;
 
   constructor() {
@@ -32,17 +29,10 @@ export default class Location extends Entity {
     this.mapScale = 1.0;
     this.mapType = "";
     this.allowedBookerGroupIds = [];
-    this.bookingTimeStart = "";
-    this.bookingTimeEnd = "";
     this.bookableDays = "";
   }
 
   serialize(): Object {
-    const [bookingTimeStartHour, bookingTimeStartMinute] =
-      DateUtil.splitTimeOfDay(this.bookingTimeStart);
-    const [bookingTimeEndHour, bookingTimeEndMinute] = DateUtil.splitTimeOfDay(
-      this.bookingTimeEnd,
-    );
     return Object.assign(super.serialize(), {
       name: this.name,
       description: this.description,
@@ -52,10 +42,6 @@ export default class Location extends Entity {
       mapScale: this.mapScale,
       mapType: this.mapType,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
-      bookingTimeStartHour,
-      bookingTimeStartMinute,
-      bookingTimeEndHour,
-      bookingTimeEndMinute,
       bookableDays: this.bookableDays,
     });
   }
@@ -75,14 +61,6 @@ export default class Location extends Entity {
     if (input.allowedBookerGroupIds) {
       this.allowedBookerGroupIds = input.allowedBookerGroupIds;
     }
-    this.bookingTimeStart = DateUtil.joinTimeOfDay(
-      input.bookingTimeStartHour,
-      input.bookingTimeStartMinute,
-    );
-    this.bookingTimeEnd = DateUtil.joinTimeOfDay(
-      input.bookingTimeEndHour,
-      input.bookingTimeEndMinute,
-    );
     this.bookableDays = input.bookableDays || "";
   }
 
@@ -137,7 +115,7 @@ export default class Location extends Entity {
   async getAttributes(): Promise<SpaceAttributeValue[]> {
     return Ajax.get(this.getBackendUrl() + this.id + "/attribute").then(
       (result) => {
-        let list: SpaceAttributeValue[] = [];
+        const list: SpaceAttributeValue[] = [];
         (result.json as []).forEach((item) => {
           let e: SpaceAttributeValue = new SpaceAttributeValue();
           e.deserialize(item);
@@ -149,7 +127,7 @@ export default class Location extends Entity {
   }
 
   async setAttribute(attributeId: string, value: string): Promise<void> {
-    let payload = {
+    const payload = {
       value: value,
     };
     return Ajax.postData(

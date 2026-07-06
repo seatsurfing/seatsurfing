@@ -12,6 +12,7 @@ var colorHexRegex = regexp.MustCompile(`^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$`)
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 var guidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var domainRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)+$`)
+var timeStringRegex = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
 var humanNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.]+$`)
 var orgNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.&,+()/#@!_<>]+$`)
 var validOrgLanguages = map[string]bool{"de": true, "en": true}
@@ -60,6 +61,10 @@ func ValidateGUID(s string) bool {
 	return guidRegex.MatchString(s)
 }
 
+func ValidateTimeString(s string) bool {
+	return timeStringRegex.MatchString(s)
+}
+
 func ValidateDomain(s string) bool {
 	if len(s) > 253 {
 		return false
@@ -106,4 +111,29 @@ func IsValidBookingSubject(s string) bool {
 		return false
 	}
 	return !strings.Contains(s, "@@@")
+}
+
+func IsValidDateFormat(s string) bool {
+	switch s {
+	case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsValidWeekdaysList(s string) bool {
+	if len(s) > 13 {
+		return false
+	}
+	tokens := strings.Split(s, ",")
+	prev := -1
+	for _, token := range tokens {
+		weekday, err := strconv.Atoi(token)
+		if err != nil || weekday < 0 || weekday > 6 || weekday <= prev {
+			return false
+		}
+		prev = weekday
+	}
+	return true
 }

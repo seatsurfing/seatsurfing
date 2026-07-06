@@ -190,12 +190,70 @@ export default class DateUtil {
   }
 
   /**
-   * @returns Today's date with time 23:59:59.999
+   * @returns Today's date with a specified time
    */
   static getTodayTime(hour: number, minute: number, second: number): Date {
     const todayTime = new Date();
     todayTime.setHours(hour, minute, second, 0);
     return todayTime;
+  }
+
+  /**
+   * @param totalMinutes minutes since midnight (0-1440)
+   * @returns today's date with the time of day set accordingly
+   */
+  static getTodayTimeFromMinutes(totalMinutes: number): Date {
+    return this.getTodayTime(
+      Math.floor(totalMinutes / 60),
+      totalMinutes % 60,
+      0,
+    );
+  }
+
+  /**
+   * @param date Date to modify (mutated in place)
+   * @param totalMinutes minutes since midnight (0-1440)
+   * @returns the same date, with hours/minutes set accordingly
+   */
+  static setTimeFromMinutes(date: Date, totalMinutes: number): Date {
+    date.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+    return date;
+  }
+
+  /**
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns minutes since midnight
+   */
+  static timeStringToMinutes(s: string): number {
+    const [hours, minutes] = s.split(":").map((v) => parseInt(v, 10));
+    return hours * 60 + minutes;
+  }
+
+  /**
+   * @param date Date to format
+   * @returns time string in the format "HH:MM" (24h)
+   */
+  static formatTimeString(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+
+  /**
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns today's date with the time of day set accordingly
+   */
+  static getTodayTimeFromTimeString(s: string): Date {
+    return this.getTodayTimeFromMinutes(this.timeStringToMinutes(s));
+  }
+
+  /**
+   * @param date Date to modify (mutated in place)
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns the same date, with hours/minutes set accordingly
+   */
+  static setTimeFromTimeString(date: Date, s: string): Date {
+    return this.setTimeFromMinutes(date, this.timeStringToMinutes(s));
   }
 
   static copyDate(source: Date, target: Date): Date {
@@ -301,6 +359,30 @@ export default class DateUtil {
   }
 
   /**
+   * Parses a string into a time string in format "HH:MM" (24h).
+   * Accepts "HH:MM" or just "HH" (in which case minutes default to "00").
+   * Hours may be 0-24, minutes 0-59.
+   *
+   * @param s string to parse into time string
+   * @returns time string in format "HH:MM" (24h), or null if not parsable
+   */
+  static parseTimeString(s: string): string | null {
+    const match = s.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+    if (!match) {
+      return null;
+    }
+
+    const hours = parseInt(match[1], 10);
+    const minutes = match[2] !== undefined ? parseInt(match[2], 10) : 0;
+
+    if (hours < 0 || hours > 24 || minutes < 0 || minutes > 59) {
+      return null;
+    }
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  }
+
+  /**
    * Calculates the next enter and leave time based on the user's
    * preferred (workday) times and the org's global (booking) settings
    *
@@ -308,26 +390,31 @@ export default class DateUtil {
    */
   static getNextPreferredEnterAndLeaveTime(
     prefEnterTime: PreferenceEnterTimeType,
-    prefWorkdayStart: number,
-    prefWorkdayEnd: number,
+    prefWorkdayStart: string,
+    prefWorkdayEnd: string,
     prefWorkdays: number[],
     dailyBasisBooking: boolean,
   ): { enter: Date; leave: Date } {
+    const prefWorkdayStartMinutes =
+      DateUtil.timeStringToMinutes(prefWorkdayStart);
+    const prefWorkdayEndMinutes = DateUtil.timeStringToMinutes(prefWorkdayEnd);
+
     let enter = new Date();
     if (prefEnterTime === UserPreference.PreferenceEnterTime.Now) {
       enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < prefWorkdayStart) {
+      const enterMinutes = enter.getHours() * 60 + enter.getMinutes();
+      if (enterMinutes < prefWorkdayStartMinutes) {
         // preferred start time works for today
-        enter.setHours(prefWorkdayStart, 0, 0, 0);
+        DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
       }
-      if (enter.getHours() >= prefWorkdayEnd) {
+      if (enterMinutes >= prefWorkdayEndMinutes) {
         // todays next start time is after preferred end date -> switch to next day
         enter.setDate(enter.getDate() + 1);
-        enter.setHours(prefWorkdayStart, 0, 0, 0);
+        DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
       }
     } else if (prefEnterTime === UserPreference.PreferenceEnterTime.NextDay) {
       enter.setDate(enter.getDate() + 1);
-      enter.setHours(prefWorkdayStart, 0, 0, 0);
+      DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
     } else if (
       prefEnterTime === UserPreference.PreferenceEnterTime.NextWorkday
     ) {
@@ -347,11 +434,11 @@ export default class DateUtil {
         }
       }
       enter.setDate(enter.getDate() + add);
-      enter.setHours(prefWorkdayStart, 0, 0, 0);
+      DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
     }
 
     let leave = new Date(enter);
-    leave.setHours(prefWorkdayEnd, 0, 0);
+    DateUtil.setTimeFromTimeString(leave, prefWorkdayEnd);
 
     if (dailyBasisBooking) {
       enter = DateUtil.setHoursToMin(enter);
@@ -359,44 +446,5 @@ export default class DateUtil {
     }
 
     return { enter, leave };
-  }
-
-  /**
-   * Converts a "HH:MM" time (as used by the <input type="time"> form
-   * control) into an hour/minute pair, or [undefined, undefined] if unset.
-   *
-   * @param value time string in "HH:MM" format, or ""
-   * @returns hour/minute pair
-   */
-  static splitTimeOfDay(
-    value: string,
-  ): [number | undefined, number | undefined] {
-    if (!value) {
-      return [undefined, undefined];
-    }
-    const [hour, minute] = value.split(":").map((s) => parseInt(s, 10));
-    return [hour, minute];
-  }
-
-  /**
-   * Converts an hour/minute pair back into a "HH:MM" string, or "" if unset.
-   *
-   * @param hour hour of day, or null/undefined if unset
-   * @param minute minute of hour, or null/undefined if unset
-   * @returns time string in "HH:MM" format, or ""
-   */
-  static joinTimeOfDay(
-    hour: number | null | undefined,
-    minute: number | null | undefined,
-  ): string {
-    if (
-      hour === null ||
-      hour === undefined ||
-      minute === null ||
-      minute === undefined
-    ) {
-      return "";
-    }
-    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
   }
 }

@@ -158,3 +158,35 @@ func TestInvalidOrgNames(t *testing.T) {
 		CheckTestBool(t, IsValidOrgName(input), false)
 	}
 }
+
+func TestValidWeekdaysLists(t *testing.T) {
+	inputs := []string{
+		"0",
+		"6",
+		"0,1,2,3,4,5,6",
+		"1,3,5",
+		"0,6",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, IsValidWeekdaysList(input), true)
+	}
+}
+
+func TestInvalidWeekdaysLists(t *testing.T) {
+	inputs := []string{
+		"",
+		"7",
+		"-1",
+		"1,1",
+		"2,1",
+		"0,1,2,3,4,5,6,6",
+		"abc",
+		"1,",
+		",1",
+		"1, 2",
+		"0,1,2,3,4,5,60",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, IsValidWeekdaysList(input), false)
+	}
+}

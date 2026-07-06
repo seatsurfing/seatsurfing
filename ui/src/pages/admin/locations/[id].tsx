@@ -412,8 +412,6 @@ interface State {
   maxConcurrentBookings: number;
   timezone: string;
   enabled: boolean;
-  bookingTimeStart: string;
-  bookingTimeEnd: string;
   bookableDays: number[];
   mapScale: number;
   mapScaleOnLoad: number;
@@ -474,8 +472,6 @@ class EditLocation extends React.Component<Props, State> {
       maxConcurrentBookings: 0,
       timezone: "",
       enabled: true,
-      bookingTimeStart: "",
-      bookingTimeEnd: "",
       bookableDays: [0, 1, 2, 3, 4, 5, 6],
       mapScale: 1.0,
       mapScaleOnLoad: 1.0,
@@ -561,8 +557,6 @@ class EditLocation extends React.Component<Props, State> {
                       maxConcurrentBookings: location.maxConcurrentBookings,
                       timezone: location.timezone,
                       enabled: location.enabled,
-                      bookingTimeStart: location.bookingTimeStart,
-                      bookingTimeEnd: location.bookingTimeEnd,
                       bookableDays: location.bookableDays
                         ? location.bookableDays
                             .split(",")
@@ -698,16 +692,6 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ deleteIds: [] });
   };
 
-  isBookingTimeWindowValid = (): boolean => {
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      return true;
-    }
-    if (!this.state.bookingTimeStart || !this.state.bookingTimeEnd) {
-      return true;
-    }
-    return this.state.bookingTimeEnd > this.state.bookingTimeStart;
-  };
-
   onSubmit = (e: any) => {
     const onError = () => {
       this.setState({
@@ -717,9 +701,7 @@ class EditLocation extends React.Component<Props, State> {
       });
     };
     e.preventDefault();
-    if (!this.isBookingTimeWindowValid()) {
-      return;
-    }
+
     this.setState({ submitting: true, errorSaving: false });
     this.entity.name = this.state.name;
     this.entity.description = this.state.description;
@@ -728,12 +710,6 @@ class EditLocation extends React.Component<Props, State> {
       : 0;
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
-    this.entity.bookingTimeStart = RuntimeConfig.INFOS.dailyBasisBooking
-      ? ""
-      : this.state.bookingTimeStart;
-    this.entity.bookingTimeEnd = RuntimeConfig.INFOS.dailyBasisBooking
-      ? ""
-      : this.state.bookingTimeEnd;
     this.entity.bookableDays = this.state.bookableDays.join(",");
     this.entity.mapScale = this.state.mapScale;
     this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
@@ -814,11 +790,6 @@ class EditLocation extends React.Component<Props, State> {
           .catch(() => onError());
       })
       .catch(() => onError());
-  };
-
-  timeOfDayToDate = (value: string): Date => {
-    const [hour, minute] = DateUtil.splitTimeOfDay(value);
-    return DateUtil.getTodayTime(hour ?? 0, minute ?? 0, 0);
   };
 
   setMapScale = (scale: number) => {
@@ -1131,7 +1102,6 @@ class EditLocation extends React.Component<Props, State> {
           variant="outline-secondary"
           type="submit"
           form="form"
-          disabled={!this.isBookingTimeWindowValid()}
         >
           <IconSave className="feather" /> {this.props.t("save")}
         </Button>
@@ -2262,58 +2232,14 @@ class EditLocation extends React.Component<Props, State> {
               <WeekdaySelection
                 value={this.state.bookableDays}
                 onChange={(bookableDays: number[]) =>
-                  this.setState({ bookableDays })
+                  this.setState({
+                    bookableDays: [...bookableDays].sort((a, b) => a - b),
+                  })
                 }
                 preventEmpty={true}
               />
             </Col>
           </Form.Group>
-          {!RuntimeConfig.INFOS.dailyBasisBooking && (
-            <Form.Group as={Row}>
-              <Form.Label column sm="2" htmlFor="location-booking-time-start">
-                {this.props.t("bookingTimeWindow")}
-              </Form.Label>
-              <Col sm="2">
-                <DateTimePicker
-                  noCalendar={true}
-                  enableTime={true}
-                  id="location-booking-time-start"
-                  value={this.timeOfDayToDate(this.state.bookingTimeStart)}
-                  onChange={(value: Date) =>
-                    this.setState({
-                      bookingTimeStart: DateUtil.joinTimeOfDay(
-                        value.getHours(),
-                        value.getMinutes(),
-                      ),
-                    })
-                  }
-                />
-              </Col>
-              <Col sm="2">
-                <DateTimePicker
-                  noCalendar={true}
-                  enableTime={true}
-                  id="location-booking-time-end"
-                  value={this.timeOfDayToDate(this.state.bookingTimeEnd)}
-                  onChange={(value: Date) =>
-                    this.setState({
-                      bookingTimeEnd: DateUtil.joinTimeOfDay(
-                        value.getHours(),
-                        value.getMinutes(),
-                      ),
-                    })
-                  }
-                />
-              </Col>
-              {!this.isBookingTimeWindowValid() && (
-                <Col sm={{ span: 8, offset: 2 }}>
-                  <Form.Text className="text-danger">
-                    {this.props.t("errorBookingTimeEndBeforeStart")}
-                  </Form.Text>
-                </Col>
-              )}
-            </Form.Group>
-          )}
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="location-floorplan">
               {this.props.t("floorplan")}

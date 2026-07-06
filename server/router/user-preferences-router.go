@@ -305,35 +305,16 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			return false
 		}
 	}
-	if name == PreferenceWorkdayStart.Name {
-		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 24 {
-			return false
-		}
-	}
-	if name == PreferenceWorkdayEnd.Name {
-		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 24 {
+	if name == PreferenceWorkdayStart.Name || name == PreferenceWorkdayEnd.Name {
+		if !ValidateTimeString(value) {
 			return false
 		}
 	}
 	if name == PreferenceWorkdays.Name {
-		tokens := strings.Split(value, ",")
-		ok := true
-		for _, token := range tokens {
-			if workday, err := strconv.Atoi(token); err != nil || workday < 0 || workday > 6 {
-				ok = false
-			}
-		}
-		return ok
+		return IsValidWeekdaysList(value)
 	}
 	if name == PreferenceDateFormat.Name {
-		switch value {
-		case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
-			return true
-		default:
-			return false
-		}
+		return IsValidDateFormat(value)
 	}
 	if name == PreferenceMailLanguage.Name {
 		if value == "" {

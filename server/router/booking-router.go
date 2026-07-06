@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -540,29 +539,9 @@ func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, l
 // isValidBookingWeekday checks the location's optional bookable-weekdays
 // restriction against every calendar day the booking spans.
 func (router *BookingRouter) isValidBookingWeekday(m *BookingRequest, location *Location, user *User) (bool, int) {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && CanSpaceAdminOrg(user, location.OrganizationID) {
-		return true, 0
+	if !IsLocationWeekdayBookable(location, user, m.Enter, m.Leave) {
+		return false, ResponseCodeBookingInvalidWeekday
 	}
-
-	if location.BookableDays != "" {
-		allowedDays := map[time.Weekday]bool{}
-		for _, s := range strings.Split(location.BookableDays, ",") {
-			n, err := strconv.Atoi(strings.TrimSpace(s))
-			if err != nil {
-				continue
-			}
-			allowedDays[time.Weekday(n)] = true
-		}
-		now := m.Enter
-		for now.Before(m.Leave) {
-			if !allowedDays[now.Weekday()] {
-				return false, ResponseCodeBookingInvalidWeekday
-			}
-			now = now.AddDate(0, 0, 1)
-		}
-	}
-
 	return true, 0
 }
 

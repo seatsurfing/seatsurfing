@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.113.4](https://github.com/seatsurfing/seatsurfing/compare/v1.113.3...v1.113.4) (2026-07-06)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** support minutes for preferred working hours ([#2364](https://github.com/seatsurfing/seatsurfing/issues/2364)) ([144970c](https://github.com/seatsurfing/seatsurfing/commit/144970cc8718cdbb0d688f18237d426fd736d96a))
+* **server:** test weekdays list does not contain duplicates ([#2374](https://github.com/seatsurfing/seatsurfing/issues/2374)) ([597d164](https://github.com/seatsurfing/seatsurfing/commit/597d16499bf96ab7e3407629e3a7e755f2db0c03))
+
 ## [1.113.3](https://github.com/seatsurfing/seatsurfing/compare/v1.113.2...v1.113.3) (2026-07-05)
 
 

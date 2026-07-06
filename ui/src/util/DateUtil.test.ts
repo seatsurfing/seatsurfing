@@ -32,6 +32,55 @@ describe("DateUtil", () => {
     });
   });
 
+  describe("parseTimeString", () => {
+    it("should parse a valid HH:MM string", () => {
+      expect(DateUtil.parseTimeString("08:30")).toBe("08:30");
+    });
+
+    it("should parse a valid single-digit HH:MM string", () => {
+      expect(DateUtil.parseTimeString("8:30")).toBe("08:30");
+    });
+
+    it("should parse an hour-only string as HH:00", () => {
+      expect(DateUtil.parseTimeString("8")).toBe("08:00");
+    });
+
+    it("should parse a two-digit hour-only string as HH:00", () => {
+      expect(DateUtil.parseTimeString("18")).toBe("18:00");
+    });
+
+    it("should accept hour 24 as the maximum", () => {
+      expect(DateUtil.parseTimeString("24")).toBe("24:00");
+      expect(DateUtil.parseTimeString("24:00")).toBe("24:00");
+    });
+
+    it("should accept minute 59 as the maximum", () => {
+      expect(DateUtil.parseTimeString("12:59")).toBe("12:59");
+    });
+
+    it("should return null if hour is greater than 24", () => {
+      expect(DateUtil.parseTimeString("25")).toBeNull();
+      expect(DateUtil.parseTimeString("25:00")).toBeNull();
+    });
+
+    it("should return null if minute is greater than 59", () => {
+      expect(DateUtil.parseTimeString("12:60")).toBeNull();
+    });
+
+    it("should return null for non-numeric input", () => {
+      expect(DateUtil.parseTimeString("abc")).toBeNull();
+    });
+
+    it("should return null for an empty string", () => {
+      expect(DateUtil.parseTimeString("")).toBeNull();
+    });
+
+    it("should return null for malformed separators", () => {
+      expect(DateUtil.parseTimeString("12:3:0")).toBeNull();
+      expect(DateUtil.parseTimeString("12-30")).toBeNull();
+    });
+  });
+
   describe("getNextFreeEnterTime", () => {
     it("should return 2026-04-25T00:00:00.000Z for leave 2026-04-24T16:59:59.000Z with dailyBasisBooking", () => {
       RuntimeConfig.INFOS = { ...RuntimeConfig.INFOS, dailyBasisBooking: true };

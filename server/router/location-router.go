@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -399,7 +398,7 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if m.BookableDays != "" {
-		if !isValidBookableDays(m.BookableDays) {
+		if !IsValidWeekdaysList(m.BookableDays) {
 			SendBadRequest(w)
 			return
 		}
@@ -479,7 +478,7 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if m.BookableDays != "" {
-		if !isValidBookableDays(m.BookableDays) {
+		if !IsValidWeekdaysList(m.BookableDays) {
 			SendBadRequest(w)
 			return
 		}
@@ -704,20 +703,6 @@ func (router *LocationRouter) loadSampleData(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	GetOrganizationRepository().CreateSampleData(org)
-}
-
-func isValidBookableDays(v string) bool {
-	// TODO use existing validation method
-	if v == "" {
-		return true
-	}
-	for _, s := range strings.Split(v, ",") {
-		n, err := strconv.Atoi(strings.TrimSpace(s))
-		if err != nil || n < 0 || n > 6 {
-			return false
-		}
-	}
-	return true
 }
 
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
