@@ -52,8 +52,8 @@ interface State {
   canSave: boolean;
   canEdit: boolean;
   prefEnterTime: number;
-  prefWorkdayStart: number;
-  prefWorkdayEnd: number;
+  prefWorkdayStart: string;
+  prefWorkdayEnd: string;
   prefWorkdays: number[];
   prefLocationId: string;
   selfEmail: string;
@@ -118,8 +118,8 @@ class EditBooking extends React.Component<Props, State> {
       canSave: false,
       canEdit: false,
       prefEnterTime: 0,
-      prefWorkdayStart: 0,
-      prefWorkdayEnd: 0,
+      prefWorkdayStart: "09:00",
+      prefWorkdayEnd: "17:00",
       prefWorkdays: [],
       prefLocationId: "",
       selfEmail: "",
@@ -272,9 +272,9 @@ class EditBooking extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = window.parseInt(s.value);
+                state.prefWorkdayStart = s.value;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = window.parseInt(s.value);
+                state.prefWorkdayEnd = s.value;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
@@ -292,8 +292,8 @@ class EditBooking extends React.Component<Props, State> {
               state.prefBuddyBookedColor = s.value;
           });
           if (self.dailyBasisBooking) {
-            state.prefWorkdayStart = 0;
-            state.prefWorkdayEnd = 23;
+            state.prefWorkdayStart = "00:00";
+            state.prefWorkdayEnd = "23:59";
           }
           self.setState(
             {

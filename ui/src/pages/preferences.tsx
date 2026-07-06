@@ -14,6 +14,8 @@ import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import DateTimePicker from "@/components/DateTimePicker";
+import DateUtil from "@/util/DateUtil";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
@@ -39,8 +41,8 @@ interface State {
   saved: boolean;
   error: boolean;
   enterTime: number;
-  workdayStart: number;
-  workdayEnd: number;
+  workdayStart: string;
+  workdayEnd: string;
   workdays: boolean[];
   booked: string;
   notBooked: string;
@@ -102,8 +104,8 @@ class Preferences extends React.Component<Props, State> {
       saved: false,
       error: false,
       enterTime: 0,
-      workdayStart: 0,
-      workdayEnd: 0,
+      workdayStart: "09:00",
+      workdayEnd: "17:00",
       workdays: [],
       booked: COLOR_BOOKED,
       notBooked: COLOR_NOT_BOOKED,
@@ -167,9 +169,9 @@ class Preferences extends React.Component<Props, State> {
         if (s.name === UserPreference.PREF_ENTER_TIME)
           state.enterTime = window.parseInt(s.value);
         if (s.name === UserPreference.PREF_WORKDAY_START)
-          state.workdayStart = window.parseInt(s.value);
+          state.workdayStart = s.value;
         if (s.name === UserPreference.PREF_WORKDAY_END)
-          state.workdayEnd = window.parseInt(s.value);
+          state.workdayEnd = s.value;
       }
       if (s.name === UserPreference.PREF_WORKDAYS) {
         state.workdays = [];
@@ -245,11 +247,11 @@ class Preferences extends React.Component<Props, State> {
       ),
       new UserPreference(
         UserPreference.PREF_WORKDAY_START,
-        this.state.workdayStart.toString(),
+        this.state.workdayStart,
       ),
       new UserPreference(
         UserPreference.PREF_WORKDAY_END,
-        this.state.workdayEnd.toString(),
+        this.state.workdayEnd,
       ),
       new UserPreference(UserPreference.PREF_WORKDAYS, workdays.join(",")),
       new UserPreference(
@@ -602,23 +604,37 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label htmlFor="workdayStart">
                   {this.props.t("workingHours")}
                 </Form.Label>
-                <div>
-                  <Form.Control
-                    type="number"
-                    id="workdayStart"
-                    value={this.state.workdayStart}
-                    onChange={(e: any) =>
-                      this.setState({
-                        workdayStart:
-                          typeof window !== "undefined"
-                            ? window.parseInt(e.target.value)
-                            : 0,
-                      })
-                    }
-                    min="0"
-                    max="23"
-                    style={{ display: "inline", width: "40%" }}
-                  />
+                <div className="d-flex align-items-center">
+                  <div style={{ width: "40%" }}>
+                    <DateTimePicker
+                      id="workdayStart"
+                      noCalendar={true}
+                      enableTime={true}
+                      value={DateUtil.getTodayTimeFromTimeString(
+                        this.state.workdayStart,
+                      )}
+                      maxDate={DateUtil.getTodayTimeFromMinutes(23 * 60 - 1)}
+                      onChange={(value: Date) => {
+                        const workdayStart = DateUtil.formatTimeString(value);
+                        const startMinutes =
+                          DateUtil.timeStringToMinutes(workdayStart);
+                        const endMinutes = DateUtil.timeStringToMinutes(
+                          this.state.workdayEnd,
+                        );
+                        this.setState({
+                          workdayStart: workdayStart,
+                          workdayEnd:
+                            endMinutes >= startMinutes + 60
+                              ? this.state.workdayEnd
+                              : DateUtil.formatTimeString(
+                                  DateUtil.getTodayTimeFromMinutes(
+                                    startMinutes + 60,
+                                  ),
+                                ),
+                        });
+                      }}
+                    />
+                  </div>
                   <span
                     style={{
                       width: "20%",
@@ -630,20 +646,44 @@ class Preferences extends React.Component<Props, State> {
                       {this.props.t("to").toString()}
                     </Form.Label>
                   </span>
-                  <Form.Control
-                    type="number"
-                    id="workdayEnd"
-                    value={this.state.workdayEnd}
-                    onChange={(e: any) =>
-                      this.setState({ workdayEnd: e.target.value })
-                    }
-                    min={this.state.workdayStart + 1}
-                    max="23"
-                    style={{ display: "inline", width: "40%" }}
-                  />
+                  <div style={{ width: "40%" }}>
+                    <DateTimePicker
+                      id="workdayEnd"
+                      noCalendar={true}
+                      enableTime={true}
+                      value={DateUtil.getTodayTimeFromTimeString(
+                        this.state.workdayEnd,
+                      )}
+                      minDate={DateUtil.getTodayTimeFromMinutes(
+                        DateUtil.timeStringToMinutes(this.state.workdayStart) +
+                          60,
+                      )}
+                      onChange={(value: Date) => {
+                        const workdayEnd = DateUtil.formatTimeString(value);
+                        const endMinutes =
+                          DateUtil.timeStringToMinutes(workdayEnd);
+                        const startMinutes = DateUtil.timeStringToMinutes(
+                          this.state.workdayStart,
+                        );
+                        this.setState({
+                          workdayEnd: workdayEnd,
+                          workdayStart:
+                            startMinutes <= endMinutes - 60
+                              ? this.state.workdayStart
+                              : DateUtil.formatTimeString(
+                                  DateUtil.getTodayTimeFromMinutes(
+                                    endMinutes - 60,
+                                  ),
+                                ),
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
                 {!RuntimeConfig.INFOS.dailyBasisBooking &&
-                  this.state.workdayEnd - this.state.workdayStart >
+                  (DateUtil.timeStringToMinutes(this.state.workdayEnd) -
+                    DateUtil.timeStringToMinutes(this.state.workdayStart)) /
+                    60 >
                     RuntimeConfig.INFOS.maxBookingDurationHours && (
                     <Form.Text muted>
                       {this.props.t("workingHoursHintExceedsMaxDuration", {

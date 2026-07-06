@@ -42,4 +42,12 @@ export default class Validation {
     }
     return chars.join("");
   }
+
+  /**
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns true if s is a valid "HH:MM" time string
+   */
+  static isValidTimeString(s: string): boolean {
+    return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s);
+  }
 }

@@ -305,15 +305,8 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			return false
 		}
 	}
-	if name == PreferenceWorkdayStart.Name {
-		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 24 {
-			return false
-		}
-	}
-	if name == PreferenceWorkdayEnd.Name {
-		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 24 {
+	if name == PreferenceWorkdayStart.Name || name == PreferenceWorkdayEnd.Name {
+		if !ValidateTimeString(value) {
 			return false
 		}
 	}

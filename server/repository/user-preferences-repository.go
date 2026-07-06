@@ -23,8 +23,8 @@ type PreferenceName struct {
 
 var (
 	PreferenceEnterTime             PreferenceName = PreferenceName{Name: "enter_time", Type: SettingTypeInt}
-	PreferenceWorkdayStart          PreferenceName = PreferenceName{Name: "workday_start", Type: SettingTypeInt}
-	PreferenceWorkdayEnd            PreferenceName = PreferenceName{Name: "workday_end", Type: SettingTypeInt}
+	PreferenceWorkdayStart          PreferenceName = PreferenceName{Name: "workday_start", Type: SettingTypeString}
+	PreferenceWorkdayEnd            PreferenceName = PreferenceName{Name: "workday_end", Type: SettingTypeString}
 	PreferenceWorkdays              PreferenceName = PreferenceName{Name: "workdays", Type: SettingTypeIntArray}
 	PreferenceLocation              PreferenceName = PreferenceName{Name: "location_id", Type: SettingTypeString}
 	PreferenceBookedColor           PreferenceName = PreferenceName{Name: "booked_color", Type: SettingTypeString}
@@ -71,7 +71,16 @@ func GetUserPreferencesRepository() *UserPreferencesRepository {
 }
 
 func (r *UserPreferencesRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// nothing yet
+	if curVersion < 48 {
+		// workday_start / workday_end used to be stored as a plain hour (0-24),
+		// now they are stored as a "HH:MM" time string
+		if _, err := GetDatabase().DB().Exec("UPDATE users_preferences SET value = "+
+			"(LPAD(LEAST(value::integer, 23)::text, 2, '0') || ':00') "+
+			"WHERE name IN ($1, $2)",
+			PreferenceWorkdayStart.Name, PreferenceWorkdayEnd.Name); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *UserPreferencesRepository) Set(userID string, name string, value string) error {
@@ -145,8 +154,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 	_, err := GetDatabase().DB().Exec("INSERT INTO users_preferences (user_id, name, value) "+
 		"VALUES "+
 		"($1, '"+PreferenceEnterTime.Name+"', '"+strconv.Itoa(PreferenceEnterTimeNow)+"'), "+
-		"($1, '"+PreferenceWorkdayStart.Name+"', '9'), "+
-		"($1, '"+PreferenceWorkdayEnd.Name+"', '17'), "+
+		"($1, '"+PreferenceWorkdayStart.Name+"', '09:00'), "+
+		"($1, '"+PreferenceWorkdayEnd.Name+"', '17:00'), "+
 		"($1, '"+PreferenceWorkdays.Name+"', '1,2,3,4,5'), "+
 		"($1, '"+PreferenceLocation.Name+"', ''), "+
 		"($1, '"+PreferenceBookedColor.Name+"', '#ff453a'), "+

@@ -101,8 +101,8 @@ interface State {
   listView: boolean;
   showBookerNamesOnMap: boolean;
   prefEnterTime: number;
-  prefWorkdayStart: number;
-  prefWorkdayEnd: number;
+  prefWorkdayStart: string;
+  prefWorkdayEnd: string;
   prefWorkdays: number[];
   prefLocationId: string;
   prefBookedColor: string;
@@ -210,8 +210,8 @@ class Search extends React.Component<Props, State> {
           "0",
         ) === "1")(),
       prefEnterTime: 0,
-      prefWorkdayStart: 0,
-      prefWorkdayEnd: 0,
+      prefWorkdayStart: "09:00",
+      prefWorkdayEnd: "17:00",
       prefWorkdays: [],
       prefLocationId: "",
       prefBookedColor: "#ff453a",
@@ -412,9 +412,9 @@ class Search extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = window.parseInt(s.value);
+                state.prefWorkdayStart = s.value;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = window.parseInt(s.value);
+                state.prefWorkdayEnd = s.value;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
@@ -436,8 +436,8 @@ class Search extends React.Component<Props, State> {
               state.prefDisallowedColor = s.value;
           });
           if (RuntimeConfig.INFOS.dailyBasisBooking) {
-            state.prefWorkdayStart = 0;
-            state.prefWorkdayEnd = 23;
+            state.prefWorkdayStart = "00:00";
+            state.prefWorkdayEnd = "23:59";
           }
           state.recurrence = {
             ...self.state.recurrence,
@@ -742,10 +742,14 @@ class Search extends React.Component<Props, State> {
       ) {
         // enter date changed and enter time remains unchanged but -> set enter time to preferred time or next possible time
         if (DateUtil.isAfterToday(newEnter)) {
-          newEnter.setHours(this.state.prefWorkdayStart);
+          DateUtil.setTimeFromTimeString(newEnter, this.state.prefWorkdayStart);
         } else {
-          newEnter.setHours(
-            Math.max(this.state.prefWorkdayStart, new Date().getHours() + 1),
+          DateUtil.setTimeFromMinutes(
+            newEnter,
+            Math.max(
+              DateUtil.timeStringToMinutes(this.state.prefWorkdayStart),
+              (new Date().getHours() + 1) * 60,
+            ),
           );
         }
       } else if (
@@ -856,11 +860,17 @@ class Search extends React.Component<Props, State> {
       bookings.length > 0
     ) {
       let prefWorkdayStartDate = new Date(this.state.enter);
-      prefWorkdayStartDate.setHours(this.state.prefWorkdayStart, 0, 0);
+      DateUtil.setTimeFromTimeString(
+        prefWorkdayStartDate,
+        this.state.prefWorkdayStart,
+      );
       prefWorkdayStartDate =
         DateUtil.convertToFakeUTCDate(prefWorkdayStartDate);
       let prefWorkdayEndDate = new Date(this.state.leave);
-      prefWorkdayEndDate.setHours(this.state.prefWorkdayEnd, 0, 0);
+      DateUtil.setTimeFromTimeString(
+        prefWorkdayEndDate,
+        this.state.prefWorkdayEnd,
+      );
       prefWorkdayEndDate = DateUtil.convertToFakeUTCDate(prefWorkdayEndDate);
 
       let leastEnter = bookings.reduce((a, b) =>
