@@ -472,16 +472,16 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := GetLocationRepository().Create(e); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
 	if m.BookableDays != "" {
 		if !IsValidWeekdaysList(m.BookableDays) {
 			SendBadRequest(w)
 			return
 		}
+	}
+	if err := GetLocationRepository().Create(e); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
 	}
 
 	err := GetLocationRepository().ReplaceAllowedBookers(e, m.AllowedBookerGroupIDs)
