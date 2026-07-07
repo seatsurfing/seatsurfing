@@ -18,8 +18,8 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
-	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 	"github.com/ulule/limiter/v3"
@@ -51,8 +51,7 @@ var (
 	ResponseCodeBookingSubjectRequired           = 1010
 	ResponseCodeBookingInPast                    = 1011
 	ResponseCodeBookingInvalidSubject            = 1012
-	ResponseCodeBookingInvalidTimeWindow         = 1013
-	ResponseCodeBookingInvalidWeekday            = 1014
+	ResponseCodeBookingInvalidWeekday            = 1013
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
@@ -521,12 +520,13 @@ func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time
 		}
 		allowedDays[time.Weekday(n)] = true
 	}
-	now := enter
-	for now.Before(leave) {
-		if !allowedDays[now.Weekday()] {
+	day := time.Date(enter.Year(), enter.Month(), enter.Day(), 0, 0, 0, 0, enter.Location())
+	lastDay := time.Date(leave.Year(), leave.Month(), leave.Day(), 0, 0, 0, 0, leave.Location())
+	for !day.After(lastDay) {
+		if !allowedDays[day.Weekday()] {
 			return false
 		}
-		now = now.AddDate(0, 0, 1)
+		day = day.AddDate(0, 0, 1)
 	}
 	return true
 }

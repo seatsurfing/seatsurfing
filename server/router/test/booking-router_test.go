@@ -179,6 +179,28 @@ func TestBookingsBookableDaysRestriction(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
 
+func TestBookingsBookableDaysRestrictionMultiDay(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingDurationHours.Name, "48")
+
+	// restrict to Monday only
+	location.BookableDays = "1"
+	GetLocationRepository().Update(location)
+
+	// 2030-09-02 (Monday) 16:00 -> 2030-09-03 (Tuesday) 10:00
+	// spans two calendar days, and Tuesday is not bookable -> must be rejected
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-02T16:00:00Z\", \"leave\": \"2030-09-03T10:00:00Z\", \"subject\": \"Test Event\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingInvalidWeekday), res.Header().Get("X-Error-Code"))
+}
+
 func TestBookingsSubjectRequired(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

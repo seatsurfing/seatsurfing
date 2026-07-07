@@ -46,13 +46,10 @@ import Space from "@/types/Space";
 import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
-
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
-import DateUtil from "@/util/DateUtil";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
-import DateTimePicker from "@/components/DateTimePicker";
 import WeekdaySelection from "@/components/WeekdaySelection";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (

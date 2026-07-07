@@ -120,8 +120,8 @@ class EditBooking extends React.Component<Props, State> {
       canSave: false,
       canEdit: false,
       prefEnterTime: 0,
-      prefWorkdayStart: "09:00",
-      prefWorkdayEnd: "17:00",
+      prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       prefWorkdays: [],
       prefLocationId: "",
       selfEmail: "",
@@ -274,9 +274,13 @@ class EditBooking extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = DateUtil.parseTimeString(s.value);
+                state.prefWorkdayStart =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_START;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = DateUtil.parseTimeString(s.value);
+                state.prefWorkdayEnd =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_END;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")

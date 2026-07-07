@@ -49,22 +49,28 @@ describe("DateUtil", () => {
       expect(DateUtil.parseTimeString("18")).toBe("18:00");
     });
 
-    it("should accept hour 24 as the maximum", () => {
-      expect(DateUtil.parseTimeString("24")).toBe("24:00");
-      expect(DateUtil.parseTimeString("24:00")).toBe("24:00");
+    it("should accept hour 23 as the maximum", () => {
+      expect(DateUtil.parseTimeString("23")).toBe("23:00");
+      expect(DateUtil.parseTimeString("23:59")).toBe("23:59");
     });
 
     it("should accept minute 59 as the maximum", () => {
       expect(DateUtil.parseTimeString("12:59")).toBe("12:59");
     });
 
-    it("should return null if hour is greater than 24", () => {
+    it("should return null if hour is 24 or greater", () => {
+      expect(DateUtil.parseTimeString("24")).toBeNull();
+      expect(DateUtil.parseTimeString("24:00")).toBeNull();
       expect(DateUtil.parseTimeString("25")).toBeNull();
       expect(DateUtil.parseTimeString("25:00")).toBeNull();
     });
 
     it("should return null if minute is greater than 59", () => {
       expect(DateUtil.parseTimeString("12:60")).toBeNull();
+    });
+
+    it("should accept 00:00 as the minimum", () => {
+      expect(DateUtil.parseTimeString("00:00")).toBe("00:00");
     });
 
     it("should return null for non-numeric input", () => {

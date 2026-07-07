@@ -97,8 +97,8 @@ class Preferences extends React.Component<Props, State> {
       saved: false,
       error: false,
       enterTime: 0,
-      workdayStart: "09:00",
-      workdayEnd: "17:00",
+      workdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      workdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       workdays: [],
       booked: COLOR_BOOKED,
       notBooked: COLOR_NOT_BOOKED,
@@ -163,9 +163,13 @@ class Preferences extends React.Component<Props, State> {
           state.enterTime = window.parseInt(s.value);
       }
       if (s.name === UserPreference.PREF_WORKDAY_START)
-        state.workdayStart = DateUtil.parseTimeString(s.value) ?? "09:00";
+        state.workdayStart =
+          DateUtil.parseTimeString(s.value) ??
+          UserPreference.DEFAULT_WORKDAY_START;
       if (s.name === UserPreference.PREF_WORKDAY_END)
-        state.workdayEnd = DateUtil.parseTimeString(s.value) ?? "17:00";
+        state.workdayEnd =
+          DateUtil.parseTimeString(s.value) ??
+          UserPreference.DEFAULT_WORKDAY_END;
       if (s.name === UserPreference.PREF_WORKDAYS) {
         state.workdays = s.value
           .split(",")

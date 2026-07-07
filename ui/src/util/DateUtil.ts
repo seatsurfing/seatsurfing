@@ -361,7 +361,7 @@ export default class DateUtil {
   /**
    * Parses a string into a time string in format "HH:MM" (24h).
    * Accepts "HH:MM" or just "HH" (in which case minutes default to "00").
-   * Hours may be 0-24, minutes 0-59.
+   * Hours may be 0-23, minutes 0-59.
    *
    * @param s string to parse into time string
    * @returns time string in format "HH:MM" (24h), or null if not parsable
@@ -375,7 +375,7 @@ export default class DateUtil {
     const hours = parseInt(match[1], 10);
     const minutes = match[2] !== undefined ? parseInt(match[2], 10) : 0;
 
-    if (hours < 0 || hours > 24 || minutes < 0 || minutes > 59) {
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
       return null;
     }
 
