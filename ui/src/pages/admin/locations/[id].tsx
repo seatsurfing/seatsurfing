@@ -2220,9 +2220,7 @@ class EditLocation extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="location-bookable-days">
-              {this.props.t("bookableDays")}
-            </Form.Label>
+            <Form.Label column sm="2">{this.props.t("bookableDays")}</Form.Label>
             <Col sm="4">
               <WeekdaySelection
                 id="location-bookable-days"
