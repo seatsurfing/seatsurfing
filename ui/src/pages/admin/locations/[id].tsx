@@ -705,7 +705,8 @@ class EditLocation extends React.Component<Props, State> {
       : 0;
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
-    this.entity.bookableDays = this.state.bookableDays.join(",");
+    this.entity.bookableDays =
+      this.state.bookableDays.length === 7 ? "" : this.state.bookableDays.join(",");
     this.entity.mapScale = this.state.mapScale;
     this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
