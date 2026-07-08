@@ -93,7 +93,7 @@ func (r *LocationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
-	if curVersion < 48 {
+	if curVersion < 49 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
 			"ADD COLUMN IF NOT EXISTS bookable_days VARCHAR NOT NULL DEFAULT ''"); err != nil {
 			panic(err)
