@@ -24,7 +24,6 @@ import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
-import Ajax from "@/util/Ajax";
 import OrgSettings from "@/types/Settings";
 
 import AuthProvider from "@/types/AuthProvider";
@@ -46,7 +45,7 @@ interface State {
   requirePassword: boolean;
   password: string;
   changePassword: boolean;
-  authMethod: string; // "password" | "provider" | "invitation"
+  authMethod: string; // one of User.AuthMethodPassword | User.AuthMethodProvider | User.AuthMethodInvitation
   authProviderId: string;
   sendInvitation: boolean;
   resendInvitation: boolean;
@@ -86,7 +85,7 @@ class EditUser extends React.Component<Props, State> {
       requirePassword: false,
       password: "",
       changePassword: false,
-      authMethod: "password",
+      authMethod: User.AuthMethodPassword,
       authProviderId: "",
       sendInvitation: false,
       resendInvitation: false,
@@ -129,16 +128,16 @@ class EditUser extends React.Component<Props, State> {
       this.adminUserRole = values[2][0].role;
       this.authProviders = values[3];
       if (values.length >= 5) {
-        let user = values[4];
+        const user = values[4];
         this.entity = user;
         // Determine auth method from user data
-        let authMethod = "password";
+        let authMethod = User.AuthMethodPassword;
         if (user.passwordPending) {
-          authMethod = "invitation";
+          authMethod = User.AuthMethodInvitation;
         } else if (user.authProviderId) {
-          authMethod = "provider";
+          authMethod = User.AuthMethodProvider;
         } else if (user.requirePassword) {
-          authMethod = "password";
+          authMethod = User.AuthMethodPassword;
         }
         const isServiceAccount =
           user.role === User.UserRoleServiceAccountRO ||
@@ -152,7 +151,7 @@ class EditUser extends React.Component<Props, State> {
           firstname: user.firstname,
           lastname: user.lastname,
           requirePassword: user.requirePassword,
-          authMethod: authMethod,
+          authMethod,
           authProviderId: user.authProviderId || "",
           role: user.role,
           totpEnabled: user.totpEnabled,
@@ -166,7 +165,7 @@ class EditUser extends React.Component<Props, State> {
     });
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       error: false,
@@ -178,7 +177,7 @@ class EditUser extends React.Component<Props, State> {
     this.entity.role = this.state.role;
 
     // Set authentication fields based on selected auth method
-    if (this.state.authMethod === "invitation") {
+    if (this.state.authMethod === User.AuthMethodInvitation) {
       // Only send invitation if email changed or explicitly requested
       const emailChanged = this.state.email !== this.state.originalEmail;
       const isNewUser = !this.entity.id;
@@ -186,7 +185,7 @@ class EditUser extends React.Component<Props, State> {
         isNewUser || emailChanged || this.state.resendInvitation;
       this.entity.password = "";
       this.entity.authProviderId = "";
-    } else if (this.state.authMethod === "provider") {
+    } else if (this.state.authMethod === User.AuthMethodProvider) {
       this.entity.sendInvitation = false;
       this.entity.password = "";
       this.entity.authProviderId = this.state.authProviderId;
@@ -201,53 +200,48 @@ class EditUser extends React.Component<Props, State> {
       }
     }
 
-    this.entity
-      .save()
-      .then(() => {
-        this.props.router.push(
-          `/admin/users/${encodeURIComponent(this.entity.id)}`,
-        );
-        this.setState({
-          saved: true,
-          resendInvitation: false,
-          originalEmail: this.entity.email, // don't (re)send invitation mails on second save
-        });
-      })
-      .catch((e) => {
-        let code: number = 0;
-        if (e instanceof AjaxError) {
-          code = e.appErrorCode;
-        }
-        this.setState({
-          error: true,
-          errorText: code
-            ? ErrorText.getTextForAppCode(code, this.props.t)
-            : this.props.t("errorSave"),
-        });
+    try {
+      await this.entity.save();
+      this.props.router.push(
+        `/admin/users/${encodeURIComponent(this.entity.id)}`,
+      );
+      this.setState({
+        saved: true,
+        resendInvitation: false,
+        originalEmail: this.entity.email, // don't (re)send invitation mails on second save
       });
+    } catch (e) {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
+      this.setState({
+        error: true,
+        errorText: code
+          ? ErrorText.getTextForAppCode(code, this.props.t)
+          : this.props.t("errorSave"),
+      });
+    }
   };
 
-  deleteItem = () => {
+  deleteItem = async () => {
     if (window.confirm(this.props.t("confirmDeleteUser"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
+      await this.entity.delete();
+      this.setState({ goBack: true });
     }
   };
 
-  resetPasskeys = () => {
+  resetPasskeys = async () => {
     if (window.confirm(this.props.t("confirmResetPasskeys"))) {
-      User.adminResetPasskeys(this.entity.id).then(() => {
-        this.setState({ hasPasskeys: false });
-      });
+      await User.adminResetPasskeys(this.entity.id);
+      this.setState({ hasPasskeys: false });
     }
   };
 
-  resetTotp = () => {
+  resetTotp = async () => {
     if (window.confirm(this.props.t("confirmResetTotp"))) {
-      User.adminResetTotp(this.entity.id).then(() => {
-        this.setState({ totpEnabled: false });
-      });
+      await User.adminResetTotp(this.entity.id);
+      this.setState({ totpEnabled: false });
     }
   };
 
@@ -266,21 +260,19 @@ class EditUser extends React.Component<Props, State> {
     }
   };
 
-  generateApiToken = () => {
-    User.generateApiToken(this.entity.id).then((token) => {
-      this.setState({
-        apiTokenConfigured: true,
-        showApiTokenModal: true,
-        generatedToken: token,
-      });
+  generateApiToken = async () => {
+    const token = await User.generateApiToken(this.entity.id);
+    this.setState({
+      apiTokenConfigured: true,
+      showApiTokenModal: true,
+      generatedToken: token,
     });
   };
 
-  revokeApiToken = () => {
+  revokeApiToken = async () => {
     if (window.confirm(this.props.t("confirmRevokeApiToken"))) {
-      User.revokeApiToken(this.entity.id).then(() => {
-        this.setState({ apiTokenConfigured: false });
-      });
+      await User.revokeApiToken(this.entity.id);
+      this.setState({ apiTokenConfigured: false });
     }
   };
 
@@ -545,8 +537,10 @@ class EditUser extends React.Component<Props, State> {
                 id="auth-method-password"
                 name="authMethod"
                 label={this.props.t("authMethodPassword")}
-                checked={this.state.authMethod === "password"}
-                onChange={() => this.setState({ authMethod: "password" })}
+                checked={this.state.authMethod === User.AuthMethodPassword}
+                onChange={() =>
+                  this.setState({ authMethod: User.AuthMethodPassword })
+                }
               />
               {this.authProviders.length > 0 && (
                 <Form.Check
@@ -554,8 +548,10 @@ class EditUser extends React.Component<Props, State> {
                   id="auth-method-provider"
                   name="authMethod"
                   label={this.props.t("authMethodProvider")}
-                  checked={this.state.authMethod === "provider"}
-                  onChange={() => this.setState({ authMethod: "provider" })}
+                  checked={this.state.authMethod === User.AuthMethodProvider}
+                  onChange={() =>
+                    this.setState({ authMethod: User.AuthMethodProvider })
+                  }
                 />
               )}
               <Form.Check
@@ -563,8 +559,10 @@ class EditUser extends React.Component<Props, State> {
                 id="auth-method-invitation"
                 name="authMethod"
                 label={this.props.t("authMethodInvitation")}
-                checked={this.state.authMethod === "invitation"}
-                onChange={() => this.setState({ authMethod: "invitation" })}
+                checked={this.state.authMethod === User.AuthMethodInvitation}
+                onChange={() =>
+                  this.setState({ authMethod: User.AuthMethodInvitation })
+                }
               />
             </Col>
           </Form.Group>
@@ -574,7 +572,7 @@ class EditUser extends React.Component<Props, State> {
             as={Row}
             hidden={
               this.isServiceAccount(this.state.role) ||
-              this.state.authMethod !== "provider" ||
+              this.state.authMethod !== User.AuthMethodProvider ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
@@ -588,7 +586,7 @@ class EditUser extends React.Component<Props, State> {
                 onChange={(e: any) =>
                   this.setState({ authProviderId: e.target.value })
                 }
-                required={this.state.authMethod === "provider"}
+                required={this.state.authMethod === User.AuthMethodProvider}
               >
                 <option value="">{this.props.t("pleaseSelect")}</option>
                 {this.authProviders.map((provider) => (
@@ -606,7 +604,7 @@ class EditUser extends React.Component<Props, State> {
             hidden={
               this.isServiceAccount(this.state.role) ||
               !this.entity.id ||
-              this.state.authMethod !== "password" ||
+              this.state.authMethod !== User.AuthMethodPassword ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
@@ -629,7 +627,7 @@ class EditUser extends React.Component<Props, State> {
             hidden={
               this.isServiceAccount(this.state.role) ||
               !this.entity.id ||
-              this.state.authMethod !== "invitation"
+              this.state.authMethod !== User.AuthMethodInvitation
             }
           >
             <Col sm="6">
@@ -652,7 +650,7 @@ class EditUser extends React.Component<Props, State> {
               (RuntimeConfig.INFOS.disablePasswordLogin &&
                 !this.isServiceAccount(this.state.role)) ||
               (!this.isServiceAccount(this.state.role) &&
-                this.state.authMethod !== "password")
+                this.state.authMethod !== User.AuthMethodPassword)
             }
           >
             <Form.Label htmlFor="password" column sm="2">
@@ -673,10 +671,10 @@ class EditUser extends React.Component<Props, State> {
                     !!(
                       this.isServiceAccount(this.state.role) ||
                       (!this.entity.id &&
-                        this.state.authMethod === "password") ||
+                        this.state.authMethod === User.AuthMethodPassword) ||
                       (this.entity.id &&
                         this.state.changePassword &&
-                        this.state.authMethod === "password")
+                        this.state.authMethod === User.AuthMethodPassword)
                     )
                   }
                   disabled={

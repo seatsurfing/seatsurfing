@@ -66,17 +66,13 @@ class Users extends React.Component<Props, State> {
     let role = this.props.t("roleUser");
     if (user.role === User.UserRoleSpaceAdmin) {
       role = this.props.t("roleSpaceAdmin");
-    }
-    if (user.role === User.UserRoleOrgAdmin) {
+    } else if (user.role === User.UserRoleOrgAdmin) {
       role = this.props.t("roleOrgAdmin");
-    }
-    if (user.role === User.UserRoleServiceAccountRO) {
+    } else if (user.role === User.UserRoleServiceAccountRO) {
       role = this.props.t("roleServiceAccountRO");
-    }
-    if (user.role === User.UserRoleServiceAccountRW) {
+    } else if (user.role === User.UserRoleServiceAccountRW) {
       role = this.props.t("roleServiceAccountRW");
-    }
-    if (user.role === User.UserRoleSuperAdmin) {
+    } else if (user.role === User.UserRoleSuperAdmin) {
       role = this.props.t("roleSuperAdmin");
     }
     return (
@@ -104,7 +100,7 @@ class Users extends React.Component<Props, State> {
       return <></>;
     }
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-users.xlsx"
         href="#"
@@ -114,7 +110,7 @@ class Users extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         <Link
@@ -134,7 +130,7 @@ class Users extends React.Component<Props, State> {
       );
     }
 
-    let rows = this.data.map((item) => this.renderItem(item));
+    const rows = this.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("users")} buttons={buttons}>
