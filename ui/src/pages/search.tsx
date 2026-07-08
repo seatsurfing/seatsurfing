@@ -1329,6 +1329,24 @@ class Search extends React.Component<Props, State> {
       );
     }
 
+    // bookable weekdays
+    if (location.bookableDays) {
+      const bookableDaysValue = location.bookableDays
+        .split(",")
+        .map((d) => parseInt(d, 10))
+        .filter((d) => !isNaN(d))
+        .sort((a, b) => a - b)
+        .map((d) => this.props.t("workday-short-" + d))
+        .join(", ");
+      attributeRows.push(
+        createFormRow(
+          this.props.t("bookableDays"),
+          bookableDaysValue,
+          "bookableDays",
+        ),
+      );
+    }
+
     return attributeRows;
   };
 

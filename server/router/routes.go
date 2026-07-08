@@ -521,7 +521,10 @@ func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time
 		allowedDays[time.Weekday(n)] = true
 	}
 	day := time.Date(enter.Year(), enter.Month(), enter.Day(), 0, 0, 0, 0, enter.Location())
-	lastDay := time.Date(leave.Year(), leave.Month(), leave.Day(), 0, 0, 0, 0, leave.Location())
+	// leave is exclusive: the last day to check is the calendar day just before leave,
+	// so a leave of exactly midnight does not pull in the following day.
+	lastInstant := leave.Add(-time.Nanosecond)
+	lastDay := time.Date(lastInstant.Year(), lastInstant.Month(), lastInstant.Day(), 0, 0, 0, 0, lastInstant.Location())
 	for !day.After(lastDay) {
 		if !allowedDays[day.Weekday()] {
 			return false

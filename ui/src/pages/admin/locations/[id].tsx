@@ -2223,8 +2223,9 @@ class EditLocation extends React.Component<Props, State> {
             <Form.Label column sm="2" htmlFor="location-bookable-days">
               {this.props.t("bookableDays")}
             </Form.Label>
-            <Col sm="4" id="location-bookable-days">
+            <Col sm="4">
               <WeekdaySelection
+                id="location-bookable-days"
                 value={this.state.bookableDays}
                 onChange={(bookableDays: number[]) =>
                   this.setState({
