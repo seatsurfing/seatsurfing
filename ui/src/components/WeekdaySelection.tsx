@@ -13,13 +13,13 @@ interface Props {
 
 class WeekdaySelection extends React.Component<Props> {
   onCheck = (day: number, checked: boolean) => {
-    const value = checked
-      ? [...this.props.value, day]
+    const next = checked
+      ? Array.from(new Set([...this.props.value, day]))
       : this.props.value.filter((d) => d !== day);
-    if (!checked && this.props.preventEmpty && value.length < 1) {
+    if (!checked && this.props.preventEmpty && next.length < 1) {
       return;
     }
-    this.props.onChange(value);
+    this.props.onChange([...next].sort((a, b) => a - b));
   };
 
   render() {
