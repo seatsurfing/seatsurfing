@@ -680,9 +680,7 @@ class Preferences extends React.Component<Props, State> {
                 )}
               </Form.Group>
               <Form.Group className="margin-top-15">
-                <Form.Label htmlFor="workdays">
-                  {this.props.t("workdays")}
-                </Form.Label>
+                <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
                   <WeekdaySelection
                     id="workdays"
