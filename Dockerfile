@@ -13,7 +13,7 @@ COPY ui/ /app/
 RUN ./add-missing-translations.sh
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.4-bookworm AS server-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.27rc2-bookworm AS server-builder
 RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 ARG TARGETPLATFORM
@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=1 xx-go build -ldflags="-w -s" -o main && xx-verify main
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.4-bookworm AS healthcheck-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.27rc2-bookworm AS healthcheck-builder
 COPY --from=xx / /
 ARG TARGETPLATFORM
 RUN xx-apt install -y libc6-dev binutils gcc
