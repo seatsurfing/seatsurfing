@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.113.5](https://github.com/seatsurfing/seatsurfing/compare/v1.113.4...v1.113.5) (2026-07-09)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump library/golang from 1.26.4-bookworm to 1.27rc2-bookworm ([#2382](https://github.com/seatsurfing/seatsurfing/issues/2382)) ([12b1861](https://github.com/seatsurfing/seatsurfing/commit/12b186166e4b16e6f7752b80212ff955b6cb180e))
+* **deps:** bump react-icons from 5.6.0 to 5.7.0 in /ui in the production-dependencies group across 1 directory ([#2377](https://github.com/seatsurfing/seatsurfing/issues/2377)) ([d3fb6be](https://github.com/seatsurfing/seatsurfing/commit/d3fb6bef7a08b48761b384d1788576a688b0f92e))
+
+
+### 🔧 Refactoring
+
+* **admin-ui:** some minor refactoring for user management ([#2380](https://github.com/seatsurfing/seatsurfing/issues/2380)) ([b2489c5](https://github.com/seatsurfing/seatsurfing/commit/b2489c56a3e1c35fa9144165eb585b6a533c1cf5))
+
 ## [1.113.4](https://github.com/seatsurfing/seatsurfing/compare/v1.113.3...v1.113.4) (2026-07-06)
 
 
