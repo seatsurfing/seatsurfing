@@ -243,7 +243,7 @@ class Preferences extends React.Component<Props, State> {
       ),
       new UserPreference(
         UserPreference.PREF_WORKDAYS,
-        this.state.workdays.join(","),
+        [...this.state.workdays].sort((a, b) => a - b).join(","),
       ),
       new UserPreference(
         UserPreference.PREF_MAIL_NOTIFICATIONS,
