@@ -12,6 +12,10 @@ export default class User extends Entity {
   static UserRoleServiceAccountRW: number = 22;
   static UserRoleSuperAdmin: number = 90;
 
+  static AuthMethodPassword: string = "password";
+  static AuthMethodProvider: string = "provider";
+  static AuthMethodInvitation: string = "invitation";
+
   id: string;
   email: string;
   firstname: string;
