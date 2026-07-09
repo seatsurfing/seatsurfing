@@ -360,14 +360,13 @@ export default class DateUtil {
 
   /**
    * Parses a string into a time string in format "HH:MM" (24h).
-   * Accepts "HH:MM" or just "HH" (in which case minutes default to "00").
    * Hours may be 0-23, minutes 0-59.
    *
    * @param s string to parse into time string
    * @returns time string in format "HH:MM" (24h), or null if not parsable
    */
   static parseTimeString(s: string): string | null {
-    const match = s.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+    const match = s.match(/^(\d{2}):(\d{2})$/);
     if (!match) {
       return null;
     }

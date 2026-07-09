@@ -37,20 +37,15 @@ describe("DateUtil", () => {
       expect(DateUtil.parseTimeString("08:30")).toBe("08:30");
     });
 
-    it("should parse a valid single-digit HH:MM string", () => {
-      expect(DateUtil.parseTimeString("8:30")).toBe("08:30");
+    it("should parse an hour-only string as null", () => {
+      expect(DateUtil.parseTimeString("8")).toBeNull();
     });
 
-    it("should parse an hour-only string as HH:00", () => {
-      expect(DateUtil.parseTimeString("8")).toBe("08:00");
-    });
-
-    it("should parse a two-digit hour-only string as HH:00", () => {
-      expect(DateUtil.parseTimeString("18")).toBe("18:00");
+    it("should parse a two-digit hour-only string as null", () => {
+      expect(DateUtil.parseTimeString("18")).toBeNull();
     });
 
     it("should accept hour 23 as the maximum", () => {
-      expect(DateUtil.parseTimeString("23")).toBe("23:00");
       expect(DateUtil.parseTimeString("23:59")).toBe("23:59");
     });
 
@@ -66,6 +61,18 @@ describe("DateUtil", () => {
     });
 
     it("should return null if minute is greater than 59", () => {
+      expect(DateUtil.parseTimeString("12:60")).toBeNull();
+    });
+
+    it("should return null if hour is single-digit", () => {
+      expect(DateUtil.parseTimeString("8:30")).toBeNull();
+    });
+
+    it("should return null if minute is single-digit", () => {
+      expect(DateUtil.parseTimeString("08:3")).toBeNull();
+    });
+
+    it("should return null if minute is not two-digit", () => {
       expect(DateUtil.parseTimeString("12:60")).toBeNull();
     });
 
