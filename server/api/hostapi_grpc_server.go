@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"math"
 
 	"github.com/seatsurfing/seatsurfing/server/api/commonpb"
 	"github.com/seatsurfing/seatsurfing/server/api/hostapipb"
@@ -32,7 +34,13 @@ func (s *HostAPIGRPCServer) SettingsGetBool(ctx context.Context, a *hostapipb.Se
 }
 func (s *HostAPIGRPCServer) SettingsGetInt(ctx context.Context, a *hostapipb.SettingsGetArgs) (*hostapipb.IntReply, error) {
 	v, err := s.impl.GetSettingsRepository().GetInt(a.OrgId, a.Name)
-	return &hostapipb.IntReply{V: int32(v), Err: errStr(err)}, nil
+	if err != nil {
+		return &hostapipb.IntReply{V: 0, Err: errStr(err)}, nil
+	}
+	if v < math.MinInt32 || v > math.MaxInt32 {
+		return &hostapipb.IntReply{V: 0, Err: errStr(fmt.Errorf("settings value out of int32 range"))}, nil
+	}
+	return &hostapipb.IntReply{V: int32(v), Err: ""}, nil
 }
 func (s *HostAPIGRPCServer) SettingsGetNullUUID(ctx context.Context, _ *commonpb.Empty) (*hostapipb.StringReply, error) {
 	return &hostapipb.StringReply{V: s.impl.GetSettingsRepository().GetNullUUID()}, nil
