@@ -7,37 +7,50 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path"
-	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
-	goPlugin "github.com/hashicorp/go-plugin"
 	"github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/api/hostapipb"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/util"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 )
 
 var _appInstance *App
 var _appOnce sync.Once
 
-//var registeredPlugins []SeatsurfingPlugin
-
+// PluginInstance represents one connected (or reconnecting) plugin. Unlike
+// the old net/rpc/go-plugin subprocess model, a plugin here is an
+// independent network process the host dials as a gRPC client - Ready
+// reflects whether the connect-driven registration sequence
+// (RunSchemaUpdates -> unauthorized routes -> OnInit) has succeeded on the
+// current connection; forwardToPlugin/hooks treat a not-ready instance as
+// unavailable rather than crashing or silently dropping it.
 type PluginInstance struct {
-	Instance api.SeatsurfingPlugin
-	Client   *goPlugin.Client
-	BrokerID uint32
-	Name     string
+	Instance   api.SeatsurfingPlugin
+	client     *api.PluginGRPC // same value as Instance, typed concretely for RunSchemaUpdatesErr/OnInitErr
+	Conn       *grpc.ClientConn
+	Name       string
+	Config     RemotePluginConfig
+	Ready      atomic.Bool
+	registered atomic.Bool // guards the one-time api.RegisterPlugin call
 }
 
 func GetApp() *App {
@@ -48,17 +61,22 @@ func GetApp() *App {
 }
 
 type App struct {
-	Router           *mux.Router
-	PublicHttpServer *http.Server
-	CleanupTicker    *time.Ticker
-	PluginInstances  []*PluginInstance
+	Router            *mux.Router
+	PublicHttpServer  *http.Server
+	CleanupTicker     *time.Ticker
+	PluginInstances   []*PluginInstance
+	hostAPIGRPCServer *grpc.Server
 }
 
 func (a *App) InitializeDatabases() {
 	RunDBSchemaUpdates()
-	for _, inst := range a.PluginInstances {
-		inst.Instance.RunSchemaUpdates()
-	}
+	// Plugin schema updates are NOT run here anymore: this ran synchronously
+	// against every plugin in the old subprocess model, but now plugins are
+	// independent gRPC connections that may not even be dialed yet (see
+	// loadGRPCPlugin's comment - Connect() is deferred to NotifyPlugins).
+	// Plugin schema updates now happen inside registerPluginOnConnect, gated
+	// by actual connection readiness, once NotifyPlugins starts the
+	// connection watchers.
 	InitDefaultOrgSettings()
 	InitDefaultUserPreferences()
 	// Set up email logging callback
@@ -71,74 +89,121 @@ func (a *App) InitializeDatabases() {
 	})
 }
 
+// InitializePlugins dials every plugin listed in PLUGINS_CONFIG over gRPC.
+// Unlike the old directory-scan model, dialing is non-blocking (grpc.NewClient
+// does not wait for the connection to become ready) and each plugin's
+// registration (schema updates, unauthorized routes, OnInit) happens
+// asynchronously once connected, driven by watchPluginConnection - so a
+// plugin that is down at host startup, or restarts later, does not block
+// host startup and recovers on its own once reachable again.
 func (a *App) InitializePlugins() {
-	files, err := os.ReadDir(filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath))
-	if err != nil {
-		return
+	for _, pc := range GetConfig().Plugins {
+		a.loadGRPCPlugin(pc)
 	}
-	for _, f := range files {
-		info, err := f.Info()
-		if err != nil {
-			log.Println("Error while reading plugin file info:", err)
-			continue
-		}
-		if !f.IsDir() && info.Mode()&0100 != 0 {
-			a.loadPlugin(f)
-		}
-	}
-
 }
 
-func (a *App) loadPlugin(f os.DirEntry) {
-	handshakeConfig := goPlugin.HandshakeConfig{
-		ProtocolVersion:  1,
-		MagicCookieKey:   "SEATSURFING_PLUGIN",
-		MagicCookieValue: "b929e613-f1b6-4cca-9fc0-04cfc007e9c6",
+func (a *App) loadGRPCPlugin(pc RemotePluginConfig) {
+	log.Println("Loading plugin", pc.Name, "at", pc.Address)
+
+	var transportCreds credentials.TransportCredentials
+	if pc.TLS {
+		transportCreds = credentials.NewTLS(nil)
+	} else {
+		transportCreds = insecure.NewCredentials()
 	}
-	var pluginMap = map[string]goPlugin.Plugin{
-		"seatsurfing": &api.SeatsurfingPluginImpl{},
-	}
-	log.Println("Loading plugin", f.Name())
-	cmd := filepath.Join(GetConfig().FilesystemBasePath, GetConfig().PluginsSubPath, f.Name())
-	client := goPlugin.NewClient(&goPlugin.ClientConfig{
-		HandshakeConfig: handshakeConfig,
-		Plugins:         pluginMap,
-		Cmd:             exec.Command(cmd),
-	})
-	rpcClient, err := client.Client()
+
+	conn, err := grpc.NewClient(pc.Address,
+		grpc.WithTransportCredentials(transportCreds),
+		grpc.WithPerRPCCredentials(api.NewTokenCredentials(pc.Token, pc.TLS)),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(GetConfig().PluginMaxMsgSize),
+			grpc.MaxCallSendMsgSize(GetConfig().PluginMaxMsgSize),
+		),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                20 * time.Second,
+			Timeout:             10 * time.Second,
+			PermitWithoutStream: true,
+		}),
+	)
 	if err != nil {
-		log.Println("Error initializing plugin client:", err)
-		client.Kill()
+		log.Println("Error creating gRPC client for plugin", pc.Name, ":", err)
 		return
 	}
-	raw, err := rpcClient.Dispense("seatsurfing")
-	if err != nil {
-		log.Println("Error dispensing plugin:", err)
-		client.Kill()
-		return
-	}
-	pluginRPC, ok := raw.(*api.PluginRPC)
-	if !ok {
-		log.Println("Error asserting PluginRPC type")
-		client.Kill()
-		return
-	}
-	plg := api.SeatsurfingPlugin(pluginRPC)
 
-	// Reserve broker ID now; AcceptAndServe starts in NotifyPlugins just before OnInit
-	// to avoid the 5-second Accept timeout firing during DB initialisation.
-	brokerID := pluginRPC.Broker.NextId()
-
-	api.RegisterPlugin(plg)
-	AddUnauthorizedRoutes(plg.GetUnauthorizedRoutes())
-
+	plg := api.NewPluginGRPC(conn, GetConfig().PluginCallTimeout)
 	instance := &PluginInstance{
 		Instance: plg,
-		Client:   client,
-		BrokerID: brokerID,
-		Name:     f.Name(),
+		client:   plg,
+		Conn:     conn,
+		Name:     pc.Name,
+		Config:   pc,
 	}
+	// Deliberately do not Connect()/start the connection watcher yet: that
+	// happens in NotifyPlugins, which main.go calls only after the host's
+	// own database migrations/default org/settings are initialized, so a
+	// plugin's OnInit (which may call back into HostAPI) can never race
+	// ahead of the host's own startup sequence.
 	a.PluginInstances = append(a.PluginInstances, instance)
+}
+
+// watchPluginConnection runs for the lifetime of the process, observing the
+// plugin's gRPC connection state. Every time the connection (re)enters
+// READY - including the very first connect - it re-runs the registration
+// sequence and only then marks the instance Ready; every time it leaves
+// READY, the instance is immediately marked not-ready so forwardToPlugin and
+// hook call sites stop routing to it until it recovers.
+func (a *App) watchPluginConnection(inst *PluginInstance) {
+	ctx := context.Background()
+	state := inst.Conn.GetState()
+	for {
+		for state != connectivity.Ready {
+			if state == connectivity.Idle {
+				inst.Conn.Connect()
+			}
+			if !inst.Conn.WaitForStateChange(ctx, state) {
+				return
+			}
+			state = inst.Conn.GetState()
+		}
+		a.registerPluginOnConnect(inst)
+		for state == connectivity.Ready {
+			if !inst.Conn.WaitForStateChange(ctx, state) {
+				return
+			}
+			state = inst.Conn.GetState()
+		}
+		if inst.Ready.Swap(false) {
+			log.Printf("Plugin %s: connection lost, marking not ready", inst.Name)
+		}
+	}
+}
+
+// registerPluginOnConnect runs RunSchemaUpdates -> unauthorized routes ->
+// OnInit against a freshly (re)connected plugin. If schema updates fail, the
+// instance is left not-ready (rather than silently treated as succeeded) and
+// the next reconnect will retry - RunSchemaUpdates has no error return on
+// the SeatsurfingPlugin interface itself, so PluginGRPC exposes
+// RunSchemaUpdatesErr for exactly this purpose.
+func (a *App) registerPluginOnConnect(inst *PluginInstance) {
+	log.Printf("Plugin %s: connected, running registration...", inst.Name)
+
+	if err := inst.client.RunSchemaUpdatesErr(); err != nil {
+		log.Printf("Plugin %s: RunSchemaUpdates failed, will retry on next reconnect: %v", inst.Name, err)
+		return
+	}
+
+	AddUnauthorizedRoutes(inst.Instance.GetUnauthorizedRoutes())
+	if inst.registered.CompareAndSwap(false, true) {
+		api.RegisterPlugin(inst.Instance)
+	}
+
+	if err := inst.client.OnInitErr(); err != nil {
+		log.Printf("Plugin %s: OnInit failed, will retry on next reconnect: %v", inst.Name, err)
+		return
+	}
+
+	inst.Ready.Store(true)
+	log.Printf("Plugin %s: ready", inst.Name)
 }
 
 // hostAPIImpl is the host-side implementation of pluginapi.HostAPI.
@@ -187,8 +252,22 @@ func (h *hostAPIImpl) IsValidLanguageCode(code string) bool {
 func (h *hostAPIImpl) DisablePasswordLogin() bool {
 	return GetConfig().DisablePasswordLogin
 }
+func (h *hostAPIImpl) FormatPublicURL(domain string) string {
+	return FormatURL(domain)
+}
+func (h *hostAPIImpl) IsDevelopmentMode() bool {
+	return GetConfig().Development
+}
+func (h *hostAPIImpl) GetPostgresURL() string {
+	return GetConfig().PostgresURL
+}
 
-func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, r *http.Request) {
+func (a *App) forwardToPlugin(inst *PluginInstance, w http.ResponseWriter, r *http.Request) {
+	if !inst.Ready.Load() {
+		http.Error(w, "plugin unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	plg := inst.Instance
 	var body []byte
 	if r.Body != nil {
 		var err error
@@ -226,23 +305,57 @@ func (a *App) forwardToPlugin(plg api.SeatsurfingPlugin, w http.ResponseWriter, 
 	w.Write(resp.Body)
 }
 
+// NotifyPlugins starts the HostAPI gRPC server (so plugins have somewhere to
+// call back into once they connect) and then kicks off connection and
+// registration for every configured plugin. Called from main.go only after
+// the host's own database migrations/default org/settings are initialized,
+// so a plugin's OnInit can never race ahead of the host's own startup.
 func (a *App) NotifyPlugins() {
+	a.StartHostAPIGRPCServer()
 	for _, inst := range a.PluginInstances {
-		pluginRPC := inst.Instance.(*api.PluginRPC)
-		go func(pr *api.PluginRPC, brokerID uint32, name string) {
-			log.Printf("Plugin %s: HostAPI broker stream %d: waiting for plugin to dial", name, brokerID)
-			pr.Broker.AcceptAndServe(brokerID, api.NewHostAPIRPCServer(&hostAPIImpl{}))
-			log.Printf("Plugin %s: HostAPI broker stream %d: AcceptAndServe returned", name, brokerID)
-		}(pluginRPC, inst.BrokerID, inst.Name)
-		inst.Instance.OnInit(inst.BrokerID)
+		inst.Conn.Connect()
+		go a.watchPluginConnection(inst)
 	}
+}
+
+// StartHostAPIGRPCServer binds GetConfig().HostAPIListenAddr and serves
+// HostAPI over gRPC so any number of plugin processes can dial in and call
+// back into the host. A no-op when no plugins are configured.
+func (a *App) StartHostAPIGRPCServer() {
+	if len(GetConfig().Plugins) == 0 {
+		return
+	}
+	lis, err := net.Listen("tcp", GetConfig().HostAPIListenAddr)
+	if err != nil {
+		log.Println("Error starting HostAPI gRPC listener:", err)
+		return
+	}
+	a.hostAPIGRPCServer = grpc.NewServer(
+		grpc.UnaryInterceptor(api.TokenAuthUnaryInterceptor(GetConfig().HostAPIToken)),
+		grpc.MaxRecvMsgSize(GetConfig().PluginMaxMsgSize),
+		grpc.MaxSendMsgSize(GetConfig().PluginMaxMsgSize),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			Time:    20 * time.Second,
+			Timeout: 10 * time.Second,
+		}),
+	)
+	hostapipb.RegisterHostAPIServiceServer(a.hostAPIGRPCServer, api.NewHostAPIGRPCServer(&hostAPIImpl{}))
+	go func() {
+		log.Println("HostAPI gRPC server listening on", GetConfig().HostAPIListenAddr)
+		if err := a.hostAPIGRPCServer.Serve(lis); err != nil {
+			log.Println("HostAPI gRPC server stopped:", err)
+		}
+	}()
 }
 
 func (a *App) KillPlugins() {
 	log.Println("Killing plugins …")
 	for _, plg := range a.PluginInstances {
-		log.Println("Killing plugin", plg.Instance)
-		plg.Client.Kill()
+		log.Println("Killing plugin", plg.Name)
+		plg.Conn.Close()
+	}
+	if a.hostAPIGRPCServer != nil {
+		a.hostAPIGRPCServer.GracefulStop()
 	}
 }
 
@@ -329,8 +442,13 @@ func (a *App) InitializeRouter() {
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
 	}
+	// Route prefixes come from PLUGINS_CONFIG, not a live call to the plugin,
+	// so the router is complete even when a plugin is unreachable at startup
+	// - forwardToPlugin's Ready gate serves 503 for those routes until the
+	// plugin connects (see the connect-driven lifecycle in InitializePlugins/
+	// NotifyPlugins).
 	for _, inst := range a.PluginInstances {
-		for _, prefix := range inst.Instance.GetRoutePrefix() {
+		for _, prefix := range inst.Config.RoutePrefixes {
 			if pluginPrefixConflicts(prefix, builtInPrefixes) {
 				log.Printf("Plugin route prefix %q conflicts with a built-in route and will not be registered", prefix)
 				continue
@@ -340,7 +458,7 @@ func (a *App) InitializeRouter() {
 			subRouter := a.Router.PathPrefix(prefix).Subrouter()
 			subRouter.Methods("OPTIONS").PathPrefix("/").HandlerFunc(CorsHandler)
 			subRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				a.forwardToPlugin(inst.Instance, w, r)
+				a.forwardToPlugin(inst, w, r)
 			})
 		}
 	}

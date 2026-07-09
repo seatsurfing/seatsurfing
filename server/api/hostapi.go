@@ -1,5 +1,27 @@
 package api
 
+import "errors"
+
+// errStr/strErr convert between a Go error and the string-based error
+// convention used in gRPC reply messages for application-level errors (see
+// grpc_auth.go's package comment / the design doc's error-semantics note):
+// real gRPC status codes are reserved for transport/connectivity failures,
+// while app errors travel as a plain string field in the reply message,
+// mirroring the net/rpc-era convention this replaces.
+func errStr(err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+func strErr(s string) error {
+	if s != "" {
+		return errors.New(s)
+	}
+	return nil
+}
+
 // SettingsRepository covers the settings methods the plugin calls.
 type SettingsRepository interface {
 	Get(organizationID, name string) (string, error)
@@ -101,4 +123,22 @@ type HostAPI interface {
 	Decrypt(ciphertext string) (string, error)
 	IsValidLanguageCode(code string) bool
 	DisablePasswordLogin() bool
+
+	// FormatPublicURL builds a full public-facing URL for domain using the
+	// host's actual PUBLIC_SCHEME/PUBLIC_PORT config (see
+	// util.FormatURL) - exposed dynamically so plugins don't need to
+	// duplicate these settings in their own environment, which would risk
+	// drifting from the host's real, running configuration.
+	FormatPublicURL(domain string) string
+	// IsDevelopmentMode reports the host's actual DEV/Development config,
+	// for the same reason: a plugin's own environment could otherwise
+	// silently disagree with the host's live setting.
+	IsDevelopmentMode() bool
+	// GetPostgresURL returns the host's POSTGRES_URL so a plugin can open
+	// its own separate connection to the SAME database without needing its
+	// own copy of POSTGRES_URL configured (and potentially drifting from
+	// the host's actual value). NOTE: unlike FormatPublicURL/
+	// IsDevelopmentMode, this crosses the network carrying DB credentials -
+	// see the security note where PluginDatabase.GetDatabase() calls this.
+	GetPostgresURL() string
 }

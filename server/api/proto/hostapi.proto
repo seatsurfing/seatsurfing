@@ -1,0 +1,185 @@
+syntax = "proto3";
+
+// Plugin -> host RPCs: mirrors the api.HostAPI interface and its RPC
+// Args/Reply structs one-to-one so the mapping stays easy to cross-reference.
+//
+// IMPORTANT: field numbers must never be renumbered or reused once released.
+// Host and plugin(s) are deployed independently, so wire compatibility across
+// versions depends entirely on additive changes (new fields get new numbers).
+package seatsurfing.plugin.v1;
+
+option go_package = "github.com/seatsurfing/seatsurfing/server/api/hostapipb";
+
+import "common.proto";
+
+service HostAPIService {
+  // Settings
+  rpc SettingsGet(SettingsGetArgs) returns (SettingsGetReply);
+  rpc SettingsGetBool(SettingsGetArgs) returns (SettingsGetBoolReply);
+  rpc SettingsGetInt(SettingsGetArgs) returns (IntReply);
+  rpc SettingsGetNullUUID(seatsurfing.plugin.v1.Empty) returns (StringReply);
+  rpc SettingsGetOrgIDsByValue(SettingsGetOrgIDsArgs) returns (StringSliceReply);
+  rpc SettingsSet(SettingsSetArgs) returns (ErrorReply);
+  rpc SettingsDelete(SettingsDeleteArgs) returns (ErrorReply);
+
+  // Users
+  rpc UserGetOne(UserGetOneArgs) returns (UserGetOneReply);
+  rpc UserGetAll(UserGetAllArgs) returns (UserGetAllReply);
+  rpc UserGetByEmail(UserGetByEmailArgs) returns (UserGetOneReply);
+  rpc UserGetCount(UserGetCountArgs) returns (IntReply);
+  rpc UserGetHashedPassword(UserHashPasswordArgs) returns (StringReply);
+  rpc UserGetUsersWithEmail(UserGetUsersWithEmailArgs) returns (UserGetUsersWithEmailReply);
+  rpc UserIsOrgAdmin(UserIsAdminArgs) returns (BoolReply);
+  rpc UserIsSuperAdmin(UserIsAdminArgs) returns (BoolReply);
+  rpc UserCreate(UserMutateArgs) returns (UserGetOneReply);
+  rpc UserUpdate(UserMutateArgs) returns (ErrorReply);
+  rpc UserDelete(UserMutateArgs) returns (ErrorReply);
+
+  // Organizations
+  rpc OrgGetOne(OrgGetOneArgs) returns (OrgGetOneReply);
+  rpc OrgGetAll(seatsurfing.plugin.v1.Empty) returns (OrgGetAllReply);
+  rpc OrgGetOneByDomain(OrgGetByDomainArgs) returns (OrgGetOneReply);
+  rpc OrgGetByEmail(OrgGetByEmailArgs) returns (OrgGetOneReply);
+  rpc OrgGetAllDaysPassedSinceSignup(OrgGetDaysPassedArgs) returns (OrgGetAllReply);
+  rpc OrgGetPrimaryDomain(OrgGetPrimaryDomainArgs) returns (OrgGetPrimaryDomainReply);
+  rpc OrgCreate(OrgMutateArgs) returns (OrgGetOneReply);
+  rpc OrgUpdate(OrgMutateArgs) returns (ErrorReply);
+  rpc OrgDelete(OrgMutateArgs) returns (ErrorReply);
+  rpc OrgAddDomain(OrgAddDomainArgs) returns (ErrorReply);
+  rpc OrgSetPrimaryDomain(OrgSetPrimaryDomainArgs) returns (ErrorReply);
+  rpc OrgCreateSampleData(OrgCreateSampleDataArgs) returns (ErrorReply);
+
+  // Groups
+  rpc GroupGetOne(GroupGetOneArgs) returns (GroupGetOneReply);
+  rpc GroupGetAll(GroupGetAllArgs) returns (GroupGetAllReply);
+  rpc GroupGetByName(GroupGetByNameArgs) returns (GroupGetOneReply);
+  rpc GroupGetMemberUserIDs(GroupGetMemberIDsArgs) returns (GroupGetMemberIDsReply);
+  rpc GroupAddMembers(GroupMembersArgs) returns (ErrorReply);
+  rpc GroupRemoveMembers(GroupMembersArgs) returns (ErrorReply);
+  rpc GroupCreate(GroupMutateArgs) returns (ErrorReply);
+  rpc GroupUpdate(GroupMutateArgs) returns (ErrorReply);
+  rpc GroupDelete(GroupMutateArgs) returns (ErrorReply);
+
+  // Bookings
+  rpc BookingGetOne(BookingGetOneArgs) returns (BookingGetOneReply);
+
+  // Spaces
+  rpc SpaceGetOne(SpaceGetOneArgs) returns (SpaceGetOneReply);
+  rpc SpaceGetCount(SpaceGetCountArgs) returns (IntReply);
+
+  // Locations
+  rpc LocationGetOne(LocationGetOneArgs) returns (LocationGetOneReply);
+  rpc LocationGetCount(LocationGetCountArgs) returns (IntReply);
+  rpc LocationGetTimezone(LocationGetTimezoneArgs) returns (StringReply);
+
+  // AuthProvider
+  rpc AuthProviderCreate(AuthProviderMutateArgs) returns (ErrorReply);
+  rpc AuthProviderUpdate(AuthProviderMutateArgs) returns (ErrorReply);
+
+  // AuthState
+  rpc AuthStateCreate(AuthStateMutateArgs) returns (AuthStateGetOneReply);
+
+  // General
+  rpc SendEmail(SendEmailArgs) returns (ErrorReply);
+  rpc Encrypt(EncryptArgs) returns (EncryptReply);
+  rpc Decrypt(DecryptArgs) returns (EncryptReply);
+  rpc IsValidLanguageCode(IsValidLangArgs) returns (BoolReply);
+  rpc DisablePasswordLogin(seatsurfing.plugin.v1.Empty) returns (BoolReply);
+  rpc FormatPublicURL(FormatPublicURLArgs) returns (StringReply);
+  rpc IsDevelopmentMode(seatsurfing.plugin.v1.Empty) returns (BoolReply);
+  rpc GetPostgresURL(seatsurfing.plugin.v1.Empty) returns (StringReply);
+}
+
+// ─── Generic replies ─────────────────────────────────────────────────────────
+
+message BoolReply { bool v = 1; }
+message IntReply { int32 v = 1; string err = 2; }
+message StringReply { string v = 1; }
+message StringSliceReply { repeated string v = 1; string err = 2; }
+message ErrorReply { string err = 1; }
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+message SettingsGetArgs { string org_id = 1; string name = 2; }
+message SettingsGetReply { string value = 1; string err = 2; }
+message SettingsGetBoolReply { bool value = 1; string err = 2; }
+message SettingsGetOrgIDsArgs { string name = 1; string value = 2; }
+message SettingsSetArgs { string org_id = 1; string name = 2; string value = 3; }
+message SettingsDeleteArgs { string org_id = 1; string name = 2; }
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+message UserGetOneArgs { string id = 1; }
+message UserGetOneReply { seatsurfing.plugin.v1.User user = 1; string err = 2; }
+message UserGetAllArgs { string org_id = 1; int32 max_results = 2; int32 offset = 3; }
+message UserGetAllReply { repeated seatsurfing.plugin.v1.User users = 1; string err = 2; }
+message UserGetByEmailArgs { string org_id = 1; string email = 2; }
+message UserGetUsersWithEmailArgs { string email = 1; }
+message UserGetUsersWithEmailReply { repeated seatsurfing.plugin.v1.User users = 1; string err = 2; }
+message UserGetCountArgs { string org_id = 1; }
+message UserHashPasswordArgs { string password = 1; }
+message UserIsAdminArgs { seatsurfing.plugin.v1.User user = 1; }
+message UserMutateArgs { seatsurfing.plugin.v1.User user = 1; }
+
+// ─── Organizations ────────────────────────────────────────────────────────────
+
+message OrgGetOneArgs { string id = 1; }
+message OrgGetOneReply { seatsurfing.plugin.v1.Organization org = 1; string err = 2; }
+message OrgGetAllReply { repeated seatsurfing.plugin.v1.Organization orgs = 1; string err = 2; }
+message OrgGetByDomainArgs { string domain = 1; }
+message OrgGetByEmailArgs { string email = 1; }
+message OrgGetDaysPassedArgs { int32 days_passed = 1; string setting_exists = 2; }
+message OrgGetPrimaryDomainArgs { seatsurfing.plugin.v1.Organization org = 1; }
+message OrgGetPrimaryDomainReply { seatsurfing.plugin.v1.Domain domain = 1; string err = 2; }
+message OrgMutateArgs { seatsurfing.plugin.v1.Organization org = 1; }
+message OrgAddDomainArgs { seatsurfing.plugin.v1.Organization org = 1; string domain = 2; bool active = 3; }
+message OrgSetPrimaryDomainArgs { seatsurfing.plugin.v1.Organization org = 1; string domain = 2; }
+message OrgCreateSampleDataArgs { seatsurfing.plugin.v1.Organization org = 1; }
+
+// ─── Groups ───────────────────────────────────────────────────────────────────
+
+message GroupGetOneArgs { string id = 1; }
+message GroupGetOneReply { seatsurfing.plugin.v1.Group group = 1; string err = 2; }
+message GroupGetAllArgs { string org_id = 1; }
+message GroupGetAllReply { repeated seatsurfing.plugin.v1.Group groups = 1; string err = 2; }
+message GroupGetByNameArgs { string org_id = 1; string name = 2; }
+message GroupGetMemberIDsArgs { seatsurfing.plugin.v1.Group group = 1; }
+message GroupGetMemberIDsReply { repeated string ids = 1; string err = 2; }
+message GroupMembersArgs { seatsurfing.plugin.v1.Group group = 1; repeated string user_ids = 2; }
+message GroupMutateArgs { seatsurfing.plugin.v1.Group group = 1; }
+
+// ─── Bookings ─────────────────────────────────────────────────────────────────
+
+message BookingGetOneArgs { string id = 1; }
+message BookingGetOneReply { seatsurfing.plugin.v1.BookingDetails booking = 1; string err = 2; }
+
+// ─── Spaces ───────────────────────────────────────────────────────────────────
+
+message SpaceGetOneArgs { string id = 1; }
+message SpaceGetOneReply { seatsurfing.plugin.v1.Space space = 1; string err = 2; }
+message SpaceGetCountArgs { string org_id = 1; }
+
+// ─── Locations ────────────────────────────────────────────────────────────────
+
+message LocationGetOneArgs { string id = 1; }
+message LocationGetOneReply { seatsurfing.plugin.v1.Location location = 1; string err = 2; }
+message LocationGetCountArgs { string org_id = 1; }
+message LocationGetTimezoneArgs { seatsurfing.plugin.v1.Location location = 1; }
+
+// ─── AuthProvider ─────────────────────────────────────────────────────────────
+
+message AuthProviderMutateArgs { seatsurfing.plugin.v1.AuthProvider auth_provider = 1; }
+
+// ─── AuthState ────────────────────────────────────────────────────────────────
+
+message AuthStateMutateArgs { seatsurfing.plugin.v1.AuthState auth_state = 1; }
+message AuthStateGetOneReply { seatsurfing.plugin.v1.AuthState auth_state = 1; string err = 2; }
+
+// ─── General ──────────────────────────────────────────────────────────────────
+
+message SendEmailArgs { string recipient = 1; string subject = 2; string body = 3; string language = 4; string org_id = 5; }
+message EncryptArgs { string plaintext = 1; }
+message EncryptReply { string result = 1; string err = 2; }
+message DecryptArgs { string ciphertext = 1; }
+message IsValidLangArgs { string code = 1; }
+message FormatPublicURLArgs { string domain = 1; }

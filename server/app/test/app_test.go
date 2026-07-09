@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/app"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 	. "github.com/seatsurfing/seatsurfing/server/util"

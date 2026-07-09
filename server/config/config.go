@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"log"
@@ -13,7 +14,20 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
+
+// RemotePluginConfig describes one remote plugin the host should connect to over
+// gRPC. Replaces the old directory-scan discovery (FilesystemBasePath /
+// PluginsSubPath) since there is no local binary to discover once plugins
+// are separate processes/containers - see PLUGINS_CONFIG below.
+type RemotePluginConfig struct {
+	Name          string   `json:"name"`
+	Address       string   `json:"address"`       // e.g. "subscription-plugin:50051"
+	RoutePrefixes []string `json:"routePrefixes"` // e.g. ["/subscription/"] - the host's router is built from this at startup, independent of plugin liveness
+	Token         string   `json:"token"`         // shared secret the host presents when dialing this plugin
+	TLS           bool     `json:"tls"`
+}
 
 type Config struct {
 	PublicListenAddr                    string
@@ -46,7 +60,11 @@ type Config struct {
 	LoginProtectionBanMinutes           int
 	CryptKey                            string
 	FilesystemBasePath                  string
-	PluginsSubPath                      string
+	Plugins                             []RemotePluginConfig
+	HostAPIListenAddr                   string
+	HostAPIToken                        string
+	PluginCallTimeout                   time.Duration
+	PluginMaxMsgSize                    int
 	PublicScheme                        string
 	PublicPort                          int
 	CacheType                           string // "valkey" or "default"
@@ -150,7 +168,14 @@ func (c *Config) ReadConfig() {
 	}
 	pwd, _ := os.Getwd()
 	c.FilesystemBasePath = c.getEnv("FILESYSTEM_BASE_PATH", pwd)
-	c.PluginsSubPath = c.getEnv("PLUGINS_SUB_PATH", "plugins")
+	c.Plugins = c.parsePluginsConfig(c.getEnv("PLUGINS_CONFIG", ""))
+	c.HostAPIListenAddr = c.getEnv("HOSTAPI_LISTEN_ADDR", "0.0.0.0:50052")
+	c.HostAPIToken = c.getEnv("HOSTAPI_TOKEN", "")
+	if len(c.Plugins) > 0 && c.HostAPIToken == "" {
+		log.Println("⚠️  Warning: PLUGINS_CONFIG is set but HOSTAPI_TOKEN is empty - the HostAPI gRPC listener will accept an empty token from any caller that can reach it. Set HOSTAPI_TOKEN to a random secret shared with your plugin(s).")
+	}
+	c.PluginCallTimeout = time.Duration(c.getEnvInt("PLUGIN_CALL_TIMEOUT_SECONDS", 30)) * time.Second
+	c.PluginMaxMsgSize = c.getEnvInt("PLUGIN_MAX_MSG_SIZE", 16<<20)
 	c.PublicScheme = c.getEnv("PUBLIC_SCHEME", "https")
 	c.PublicPort = c.getEnvInt("PUBLIC_PORT", 443)
 	c.CacheType = c.getEnv("CACHE_TYPE", "default")
@@ -206,6 +231,25 @@ func (c *Config) ReadConfig() {
 	if c.getEnv("DISABLE_UI_PROXY", "") != "" {
 		log.Println("⚠️  Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
 	}
+}
+
+// parsePluginsConfig parses the PLUGINS_CONFIG env var, a JSON array of
+// RemotePluginConfig entries, e.g.:
+//
+//	[{"name":"subscription","address":"subscription-plugin:50051","routePrefixes":["/subscription/"],"token":"<secret>","tls":false}]
+//
+// A single env var supports an arbitrary-length list of plugins - unset or
+// empty means zero plugins loaded, matching the old behavior of a missing
+// plugins directory being a non-fatal, valid state.
+func (c *Config) parsePluginsConfig(raw string) []RemotePluginConfig {
+	if raw == "" {
+		return nil
+	}
+	var plugins []RemotePluginConfig
+	if err := json.Unmarshal([]byte(raw), &plugins); err != nil {
+		log.Fatalln("Error: Could not parse PLUGINS_CONFIG as JSON:", err)
+	}
+	return plugins
 }
 
 func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {

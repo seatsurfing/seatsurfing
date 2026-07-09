@@ -409,20 +409,20 @@ func (r *BookingStore) SetReminderSent(id string, t *time.Time) error {
 
 func (r *BookingStore) GetBookingsDueForReminder(batchSize int) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
-		"spaces.id, spaces.location_id, spaces.name, " +
-		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
-		"users.email, users.firstname, users.lastname " +
-		"FROM bookings " +
-		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
-		"INNER JOIN locations ON spaces.location_id = locations.id " +
-		"INNER JOIN users ON bookings.user_id = users.id " +
-		"WHERE bookings.reminder_sent_at_utc IS NULL " +
-		"AND bookings.approved = true " +
-		"AND bookings.enter_time > (NOW() AT TIME ZONE 'UTC') + INTERVAL '20 hours' " +
-		"AND bookings.enter_time <= (NOW() AT TIME ZONE 'UTC') + INTERVAL '25 hours' " +
-		"AND (bookings.last_info_mail_sent_at_utc IS NULL OR bookings.last_info_mail_sent_at_utc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '24 hours') " +
-		"ORDER BY bookings.enter_time ASC " +
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
+		"spaces.id, spaces.location_id, spaces.name, "+
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
+		"users.email, users.firstname, users.lastname "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
+		"INNER JOIN locations ON spaces.location_id = locations.id "+
+		"INNER JOIN users ON bookings.user_id = users.id "+
+		"WHERE bookings.reminder_sent_at_utc IS NULL "+
+		"AND bookings.approved = true "+
+		"AND bookings.enter_time > (NOW() AT TIME ZONE 'UTC') + INTERVAL '20 hours' "+
+		"AND bookings.enter_time <= (NOW() AT TIME ZONE 'UTC') + INTERVAL '25 hours' "+
+		"AND (bookings.last_info_mail_sent_at_utc IS NULL OR bookings.last_info_mail_sent_at_utc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '24 hours') "+
+		"ORDER BY bookings.enter_time ASC "+
 		"LIMIT $1",
 		batchSize)
 	if err != nil {
