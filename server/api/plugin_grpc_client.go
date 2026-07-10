@@ -95,11 +95,9 @@ func (p *PluginGRPC) OnTimer() {
 	}
 }
 
-// OnInit's brokerID parameter is unused: the plugin already knows the
-// host's HostAPI address from its own static config and dials it eagerly
-// at startup, independent of this call. OnInit must be safe to call more
-// than once - the host re-invokes it on every reconnection (see OnInitErr).
-func (p *PluginGRPC) OnInit(_ uint32) {
+// OnInit must be safe to call more than once - the host re-invokes it on
+// every reconnection (see OnInitErr).
+func (p *PluginGRPC) OnInit() {
 	if err := p.OnInitErr(); err != nil {
 		log.Println("OnInit RPC error:", err)
 	}

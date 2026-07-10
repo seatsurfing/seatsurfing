@@ -21,11 +21,9 @@ type SeatsurfingPlugin interface {
 	RunSchemaUpdates()
 	GetAdminUIMenuItems() []AdminUIMenuItem
 	OnTimer()
-	// hostAPIBrokerID is unused; the plugin learns the host's HostAPI
-	// address from its own static config instead. Implementations must be
-	// safe to call more than once: the host re-invokes OnInit on every
-	// reconnection, not only once at startup.
-	OnInit(hostAPIBrokerID uint32)
+	// Implementations must be safe to call more than once: the host
+	// re-invokes OnInit on every reconnection, not only once at startup.
+	OnInit()
 	GetAdminWelcomeScreen() *AdminWelcomeScreen
 	GetPublicSettings(organizationID string) []*PluginSetting
 	HandleHTTPRequest(req PluginHTTPRequest) PluginHTTPResponse
