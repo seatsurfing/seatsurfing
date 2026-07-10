@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.114.0](https://github.com/seatsurfing/seatsurfing/compare/v1.113.5...v1.114.0) (2026-07-10)
+
+
+### ✨ Features
+
+* **admin-ui:** define bookable weekdays per location ([#2354](https://github.com/seatsurfing/seatsurfing/issues/2354)) ([9ae8a7e](https://github.com/seatsurfing/seatsurfing/commit/9ae8a7e89df7e754d9c95ee8a16c46d727020bfa))
+* **server:** use gRPC for plugin communication ([#2388](https://github.com/seatsurfing/seatsurfing/issues/2388)) ([5689414](https://github.com/seatsurfing/seatsurfing/commit/5689414747f7e37d59bdf957b3720f6881676805))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `57c1e4c` to `7c4468d` ([#2384](https://github.com/seatsurfing/seatsurfing/issues/2384)) ([0111a5d](https://github.com/seatsurfing/seatsurfing/commit/0111a5d960b63254d1ffacba03daaaca5a2fd939))
+* **deps:** bump next from 16.2.9 to 16.2.10 in /ui in the production-dependencies group across 1 directory ([#2386](https://github.com/seatsurfing/seatsurfing/issues/2386)) ([a8181ce](https://github.com/seatsurfing/seatsurfing/commit/a8181ce48d86bf9ab8adcd1372168bded5dca540))
+
 ## [1.113.5](https://github.com/seatsurfing/seatsurfing/compare/v1.113.4...v1.113.5) (2026-07-09)
 
 
