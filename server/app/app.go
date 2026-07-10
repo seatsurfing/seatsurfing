@@ -261,6 +261,9 @@ func (h *hostAPIImpl) IsDevelopmentMode() bool {
 func (h *hostAPIImpl) GetPostgresURL() string {
 	return GetConfig().PostgresURL
 }
+func (h *hostAPIImpl) GetEmailHTMLLayout() (string, error) {
+	return GetEmailHTMLLayout()
+}
 
 func (a *App) forwardToPlugin(inst *PluginInstance, w http.ResponseWriter, r *http.Request) {
 	if !inst.Ready.Load() {

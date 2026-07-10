@@ -218,13 +218,24 @@ func GetEmailTemplatePathFooter() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-footer.json")
 }
 
-func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
+// GetEmailHTMLLayout returns the raw res/email.html layout wrapper. It is
+// also exposed to plugins over HostAPI.GetEmailHTMLLayout, since plugins run
+// in their own process/container and have no access to the host's res/
+// directory on the local filesystem.
+func GetEmailHTMLLayout() (string, error) {
 	path := filepath.Join(GetConfig().FilesystemBasePath, "./res/email.html")
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, "", fmt.Errorf("error reading email template file: %v", err)
+		return "", fmt.Errorf("error reading email template file: %v", err)
 	}
-	s := string(data)
+	return string(data), nil
+}
+
+func GetHTMLMailTemplate(jsonTemplate []byte) (*MailTemplate, string, error) {
+	s, err := GetEmailHTMLLayout()
+	if err != nil {
+		return nil, "", err
+	}
 	var jsonContent MailTemplate
 	if err := json.Unmarshal(jsonTemplate, &jsonContent); err != nil {
 		return nil, "", fmt.Errorf("error unmarshaling json template: %v", err)

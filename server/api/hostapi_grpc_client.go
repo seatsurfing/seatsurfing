@@ -113,6 +113,13 @@ func (h *HostAPIGRPC) GetPostgresURL() string {
 	}
 	return r.V
 }
+func (h *HostAPIGRPC) GetEmailHTMLLayout() (string, error) {
+	r, err := h.client.GetEmailHTMLLayout(context.Background(), &commonpb.Empty{})
+	if err != nil {
+		return "", err
+	}
+	return r.Html, strErr(r.Err)
+}
 
 // ─── Per-repository gRPC proxies (plugin side) ───────────────────────────────
 

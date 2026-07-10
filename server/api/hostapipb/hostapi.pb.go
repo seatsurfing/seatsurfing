@@ -3001,6 +3001,58 @@ func (x *FormatPublicURLArgs) GetDomain() string {
 	return ""
 }
 
+type GetEmailHTMLLayoutReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Html          string                 `protobuf:"bytes,1,opt,name=html,proto3" json:"html,omitempty"`
+	Err           string                 `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEmailHTMLLayoutReply) Reset() {
+	*x = GetEmailHTMLLayoutReply{}
+	mi := &file_hostapi_proto_msgTypes[61]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEmailHTMLLayoutReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEmailHTMLLayoutReply) ProtoMessage() {}
+
+func (x *GetEmailHTMLLayoutReply) ProtoReflect() protoreflect.Message {
+	mi := &file_hostapi_proto_msgTypes[61]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEmailHTMLLayoutReply.ProtoReflect.Descriptor instead.
+func (*GetEmailHTMLLayoutReply) Descriptor() ([]byte, []int) {
+	return file_hostapi_proto_rawDescGZIP(), []int{61}
+}
+
+func (x *GetEmailHTMLLayoutReply) GetHtml() string {
+	if x != nil {
+		return x.Html
+	}
+	return ""
+}
+
+func (x *GetEmailHTMLLayoutReply) GetErr() string {
+	if x != nil {
+		return x.Err
+	}
+	return ""
+}
+
 var File_hostapi_proto protoreflect.FileDescriptor
 
 const file_hostapi_proto_rawDesc = "" +
@@ -3170,7 +3222,10 @@ const file_hostapi_proto_rawDesc = "" +
 	"\x0fIsValidLangArgs\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\"-\n" +
 	"\x13FormatPublicURLArgs\x12\x16\n" +
-	"\x06domain\x18\x01 \x01(\tR\x06domain2\xbc*\n" +
+	"\x06domain\x18\x01 \x01(\tR\x06domain\"?\n" +
+	"\x17GetEmailHTMLLayoutReply\x12\x12\n" +
+	"\x04html\x18\x01 \x01(\tR\x04html\x12\x10\n" +
+	"\x03err\x18\x02 \x01(\tR\x03err2\xa0+\n" +
 	"\x0eHostAPIService\x12^\n" +
 	"\vSettingsGet\x12&.seatsurfing.plugin.v1.SettingsGetArgs\x1a'.seatsurfing.plugin.v1.SettingsGetReply\x12f\n" +
 	"\x0fSettingsGetBool\x12&.seatsurfing.plugin.v1.SettingsGetArgs\x1a+.seatsurfing.plugin.v1.SettingsGetBoolReply\x12Y\n" +
@@ -3232,7 +3287,8 @@ const file_hostapi_proto_rawDesc = "" +
 	"\x14DisablePasswordLogin\x12\x1c.seatsurfing.plugin.v1.Empty\x1a .seatsurfing.plugin.v1.BoolReply\x12a\n" +
 	"\x0fFormatPublicURL\x12*.seatsurfing.plugin.v1.FormatPublicURLArgs\x1a\".seatsurfing.plugin.v1.StringReply\x12S\n" +
 	"\x11IsDevelopmentMode\x12\x1c.seatsurfing.plugin.v1.Empty\x1a .seatsurfing.plugin.v1.BoolReply\x12R\n" +
-	"\x0eGetPostgresURL\x12\x1c.seatsurfing.plugin.v1.Empty\x1a\".seatsurfing.plugin.v1.StringReplyB9Z7github.com/seatsurfing/seatsurfing/server/api/hostapipbb\x06proto3"
+	"\x0eGetPostgresURL\x12\x1c.seatsurfing.plugin.v1.Empty\x1a\".seatsurfing.plugin.v1.StringReply\x12b\n" +
+	"\x12GetEmailHTMLLayout\x12\x1c.seatsurfing.plugin.v1.Empty\x1a..seatsurfing.plugin.v1.GetEmailHTMLLayoutReplyB9Z7github.com/seatsurfing/seatsurfing/server/api/hostapipbb\x06proto3"
 
 var (
 	file_hostapi_proto_rawDescOnce sync.Once
@@ -3246,7 +3302,7 @@ func file_hostapi_proto_rawDescGZIP() []byte {
 	return file_hostapi_proto_rawDescData
 }
 
-var file_hostapi_proto_msgTypes = make([]protoimpl.MessageInfo, 61)
+var file_hostapi_proto_msgTypes = make([]protoimpl.MessageInfo, 62)
 var file_hostapi_proto_goTypes = []any{
 	(*BoolReply)(nil),                  // 0: seatsurfing.plugin.v1.BoolReply
 	(*IntReply)(nil),                   // 1: seatsurfing.plugin.v1.IntReply
@@ -3309,47 +3365,48 @@ var file_hostapi_proto_goTypes = []any{
 	(*DecryptArgs)(nil),                // 58: seatsurfing.plugin.v1.DecryptArgs
 	(*IsValidLangArgs)(nil),            // 59: seatsurfing.plugin.v1.IsValidLangArgs
 	(*FormatPublicURLArgs)(nil),        // 60: seatsurfing.plugin.v1.FormatPublicURLArgs
-	(*commonpb.User)(nil),              // 61: seatsurfing.plugin.v1.User
-	(*commonpb.Organization)(nil),      // 62: seatsurfing.plugin.v1.Organization
-	(*commonpb.Domain)(nil),            // 63: seatsurfing.plugin.v1.Domain
-	(*commonpb.Group)(nil),             // 64: seatsurfing.plugin.v1.Group
-	(*commonpb.BookingDetails)(nil),    // 65: seatsurfing.plugin.v1.BookingDetails
-	(*commonpb.Space)(nil),             // 66: seatsurfing.plugin.v1.Space
-	(*commonpb.Location)(nil),          // 67: seatsurfing.plugin.v1.Location
-	(*commonpb.AuthProvider)(nil),      // 68: seatsurfing.plugin.v1.AuthProvider
-	(*commonpb.AuthState)(nil),         // 69: seatsurfing.plugin.v1.AuthState
-	(*commonpb.Empty)(nil),             // 70: seatsurfing.plugin.v1.Empty
+	(*GetEmailHTMLLayoutReply)(nil),    // 61: seatsurfing.plugin.v1.GetEmailHTMLLayoutReply
+	(*commonpb.User)(nil),              // 62: seatsurfing.plugin.v1.User
+	(*commonpb.Organization)(nil),      // 63: seatsurfing.plugin.v1.Organization
+	(*commonpb.Domain)(nil),            // 64: seatsurfing.plugin.v1.Domain
+	(*commonpb.Group)(nil),             // 65: seatsurfing.plugin.v1.Group
+	(*commonpb.BookingDetails)(nil),    // 66: seatsurfing.plugin.v1.BookingDetails
+	(*commonpb.Space)(nil),             // 67: seatsurfing.plugin.v1.Space
+	(*commonpb.Location)(nil),          // 68: seatsurfing.plugin.v1.Location
+	(*commonpb.AuthProvider)(nil),      // 69: seatsurfing.plugin.v1.AuthProvider
+	(*commonpb.AuthState)(nil),         // 70: seatsurfing.plugin.v1.AuthState
+	(*commonpb.Empty)(nil),             // 71: seatsurfing.plugin.v1.Empty
 }
 var file_hostapi_proto_depIdxs = []int32{
-	61, // 0: seatsurfing.plugin.v1.UserGetOneReply.user:type_name -> seatsurfing.plugin.v1.User
-	61, // 1: seatsurfing.plugin.v1.UserGetAllReply.users:type_name -> seatsurfing.plugin.v1.User
-	61, // 2: seatsurfing.plugin.v1.UserGetUsersWithEmailReply.users:type_name -> seatsurfing.plugin.v1.User
-	61, // 3: seatsurfing.plugin.v1.UserIsAdminArgs.user:type_name -> seatsurfing.plugin.v1.User
-	61, // 4: seatsurfing.plugin.v1.UserMutateArgs.user:type_name -> seatsurfing.plugin.v1.User
-	62, // 5: seatsurfing.plugin.v1.OrgGetOneReply.org:type_name -> seatsurfing.plugin.v1.Organization
-	62, // 6: seatsurfing.plugin.v1.OrgGetAllReply.orgs:type_name -> seatsurfing.plugin.v1.Organization
-	62, // 7: seatsurfing.plugin.v1.OrgGetPrimaryDomainArgs.org:type_name -> seatsurfing.plugin.v1.Organization
-	63, // 8: seatsurfing.plugin.v1.OrgGetPrimaryDomainReply.domain:type_name -> seatsurfing.plugin.v1.Domain
-	62, // 9: seatsurfing.plugin.v1.OrgMutateArgs.org:type_name -> seatsurfing.plugin.v1.Organization
-	62, // 10: seatsurfing.plugin.v1.OrgAddDomainArgs.org:type_name -> seatsurfing.plugin.v1.Organization
-	62, // 11: seatsurfing.plugin.v1.OrgSetPrimaryDomainArgs.org:type_name -> seatsurfing.plugin.v1.Organization
-	62, // 12: seatsurfing.plugin.v1.OrgCreateSampleDataArgs.org:type_name -> seatsurfing.plugin.v1.Organization
-	64, // 13: seatsurfing.plugin.v1.GroupGetOneReply.group:type_name -> seatsurfing.plugin.v1.Group
-	64, // 14: seatsurfing.plugin.v1.GroupGetAllReply.groups:type_name -> seatsurfing.plugin.v1.Group
-	64, // 15: seatsurfing.plugin.v1.GroupGetMemberIDsArgs.group:type_name -> seatsurfing.plugin.v1.Group
-	64, // 16: seatsurfing.plugin.v1.GroupMembersArgs.group:type_name -> seatsurfing.plugin.v1.Group
-	64, // 17: seatsurfing.plugin.v1.GroupMutateArgs.group:type_name -> seatsurfing.plugin.v1.Group
-	65, // 18: seatsurfing.plugin.v1.BookingGetOneReply.booking:type_name -> seatsurfing.plugin.v1.BookingDetails
-	66, // 19: seatsurfing.plugin.v1.SpaceGetOneReply.space:type_name -> seatsurfing.plugin.v1.Space
-	67, // 20: seatsurfing.plugin.v1.LocationGetOneReply.location:type_name -> seatsurfing.plugin.v1.Location
-	67, // 21: seatsurfing.plugin.v1.LocationGetTimezoneArgs.location:type_name -> seatsurfing.plugin.v1.Location
-	68, // 22: seatsurfing.plugin.v1.AuthProviderMutateArgs.auth_provider:type_name -> seatsurfing.plugin.v1.AuthProvider
-	69, // 23: seatsurfing.plugin.v1.AuthStateMutateArgs.auth_state:type_name -> seatsurfing.plugin.v1.AuthState
-	69, // 24: seatsurfing.plugin.v1.AuthStateGetOneReply.auth_state:type_name -> seatsurfing.plugin.v1.AuthState
+	62, // 0: seatsurfing.plugin.v1.UserGetOneReply.user:type_name -> seatsurfing.plugin.v1.User
+	62, // 1: seatsurfing.plugin.v1.UserGetAllReply.users:type_name -> seatsurfing.plugin.v1.User
+	62, // 2: seatsurfing.plugin.v1.UserGetUsersWithEmailReply.users:type_name -> seatsurfing.plugin.v1.User
+	62, // 3: seatsurfing.plugin.v1.UserIsAdminArgs.user:type_name -> seatsurfing.plugin.v1.User
+	62, // 4: seatsurfing.plugin.v1.UserMutateArgs.user:type_name -> seatsurfing.plugin.v1.User
+	63, // 5: seatsurfing.plugin.v1.OrgGetOneReply.org:type_name -> seatsurfing.plugin.v1.Organization
+	63, // 6: seatsurfing.plugin.v1.OrgGetAllReply.orgs:type_name -> seatsurfing.plugin.v1.Organization
+	63, // 7: seatsurfing.plugin.v1.OrgGetPrimaryDomainArgs.org:type_name -> seatsurfing.plugin.v1.Organization
+	64, // 8: seatsurfing.plugin.v1.OrgGetPrimaryDomainReply.domain:type_name -> seatsurfing.plugin.v1.Domain
+	63, // 9: seatsurfing.plugin.v1.OrgMutateArgs.org:type_name -> seatsurfing.plugin.v1.Organization
+	63, // 10: seatsurfing.plugin.v1.OrgAddDomainArgs.org:type_name -> seatsurfing.plugin.v1.Organization
+	63, // 11: seatsurfing.plugin.v1.OrgSetPrimaryDomainArgs.org:type_name -> seatsurfing.plugin.v1.Organization
+	63, // 12: seatsurfing.plugin.v1.OrgCreateSampleDataArgs.org:type_name -> seatsurfing.plugin.v1.Organization
+	65, // 13: seatsurfing.plugin.v1.GroupGetOneReply.group:type_name -> seatsurfing.plugin.v1.Group
+	65, // 14: seatsurfing.plugin.v1.GroupGetAllReply.groups:type_name -> seatsurfing.plugin.v1.Group
+	65, // 15: seatsurfing.plugin.v1.GroupGetMemberIDsArgs.group:type_name -> seatsurfing.plugin.v1.Group
+	65, // 16: seatsurfing.plugin.v1.GroupMembersArgs.group:type_name -> seatsurfing.plugin.v1.Group
+	65, // 17: seatsurfing.plugin.v1.GroupMutateArgs.group:type_name -> seatsurfing.plugin.v1.Group
+	66, // 18: seatsurfing.plugin.v1.BookingGetOneReply.booking:type_name -> seatsurfing.plugin.v1.BookingDetails
+	67, // 19: seatsurfing.plugin.v1.SpaceGetOneReply.space:type_name -> seatsurfing.plugin.v1.Space
+	68, // 20: seatsurfing.plugin.v1.LocationGetOneReply.location:type_name -> seatsurfing.plugin.v1.Location
+	68, // 21: seatsurfing.plugin.v1.LocationGetTimezoneArgs.location:type_name -> seatsurfing.plugin.v1.Location
+	69, // 22: seatsurfing.plugin.v1.AuthProviderMutateArgs.auth_provider:type_name -> seatsurfing.plugin.v1.AuthProvider
+	70, // 23: seatsurfing.plugin.v1.AuthStateMutateArgs.auth_state:type_name -> seatsurfing.plugin.v1.AuthState
+	70, // 24: seatsurfing.plugin.v1.AuthStateGetOneReply.auth_state:type_name -> seatsurfing.plugin.v1.AuthState
 	5,  // 25: seatsurfing.plugin.v1.HostAPIService.SettingsGet:input_type -> seatsurfing.plugin.v1.SettingsGetArgs
 	5,  // 26: seatsurfing.plugin.v1.HostAPIService.SettingsGetBool:input_type -> seatsurfing.plugin.v1.SettingsGetArgs
 	5,  // 27: seatsurfing.plugin.v1.HostAPIService.SettingsGetInt:input_type -> seatsurfing.plugin.v1.SettingsGetArgs
-	70, // 28: seatsurfing.plugin.v1.HostAPIService.SettingsGetNullUUID:input_type -> seatsurfing.plugin.v1.Empty
+	71, // 28: seatsurfing.plugin.v1.HostAPIService.SettingsGetNullUUID:input_type -> seatsurfing.plugin.v1.Empty
 	8,  // 29: seatsurfing.plugin.v1.HostAPIService.SettingsGetOrgIDsByValue:input_type -> seatsurfing.plugin.v1.SettingsGetOrgIDsArgs
 	9,  // 30: seatsurfing.plugin.v1.HostAPIService.SettingsSet:input_type -> seatsurfing.plugin.v1.SettingsSetArgs
 	10, // 31: seatsurfing.plugin.v1.HostAPIService.SettingsDelete:input_type -> seatsurfing.plugin.v1.SettingsDeleteArgs
@@ -3365,7 +3422,7 @@ var file_hostapi_proto_depIdxs = []int32{
 	21, // 41: seatsurfing.plugin.v1.HostAPIService.UserUpdate:input_type -> seatsurfing.plugin.v1.UserMutateArgs
 	21, // 42: seatsurfing.plugin.v1.HostAPIService.UserDelete:input_type -> seatsurfing.plugin.v1.UserMutateArgs
 	22, // 43: seatsurfing.plugin.v1.HostAPIService.OrgGetOne:input_type -> seatsurfing.plugin.v1.OrgGetOneArgs
-	70, // 44: seatsurfing.plugin.v1.HostAPIService.OrgGetAll:input_type -> seatsurfing.plugin.v1.Empty
+	71, // 44: seatsurfing.plugin.v1.HostAPIService.OrgGetAll:input_type -> seatsurfing.plugin.v1.Empty
 	25, // 45: seatsurfing.plugin.v1.HostAPIService.OrgGetOneByDomain:input_type -> seatsurfing.plugin.v1.OrgGetByDomainArgs
 	26, // 46: seatsurfing.plugin.v1.HostAPIService.OrgGetByEmail:input_type -> seatsurfing.plugin.v1.OrgGetByEmailArgs
 	27, // 47: seatsurfing.plugin.v1.HostAPIService.OrgGetAllDaysPassedSinceSignup:input_type -> seatsurfing.plugin.v1.OrgGetDaysPassedArgs
@@ -3398,68 +3455,70 @@ var file_hostapi_proto_depIdxs = []int32{
 	56, // 74: seatsurfing.plugin.v1.HostAPIService.Encrypt:input_type -> seatsurfing.plugin.v1.EncryptArgs
 	58, // 75: seatsurfing.plugin.v1.HostAPIService.Decrypt:input_type -> seatsurfing.plugin.v1.DecryptArgs
 	59, // 76: seatsurfing.plugin.v1.HostAPIService.IsValidLanguageCode:input_type -> seatsurfing.plugin.v1.IsValidLangArgs
-	70, // 77: seatsurfing.plugin.v1.HostAPIService.DisablePasswordLogin:input_type -> seatsurfing.plugin.v1.Empty
+	71, // 77: seatsurfing.plugin.v1.HostAPIService.DisablePasswordLogin:input_type -> seatsurfing.plugin.v1.Empty
 	60, // 78: seatsurfing.plugin.v1.HostAPIService.FormatPublicURL:input_type -> seatsurfing.plugin.v1.FormatPublicURLArgs
-	70, // 79: seatsurfing.plugin.v1.HostAPIService.IsDevelopmentMode:input_type -> seatsurfing.plugin.v1.Empty
-	70, // 80: seatsurfing.plugin.v1.HostAPIService.GetPostgresURL:input_type -> seatsurfing.plugin.v1.Empty
-	6,  // 81: seatsurfing.plugin.v1.HostAPIService.SettingsGet:output_type -> seatsurfing.plugin.v1.SettingsGetReply
-	7,  // 82: seatsurfing.plugin.v1.HostAPIService.SettingsGetBool:output_type -> seatsurfing.plugin.v1.SettingsGetBoolReply
-	1,  // 83: seatsurfing.plugin.v1.HostAPIService.SettingsGetInt:output_type -> seatsurfing.plugin.v1.IntReply
-	2,  // 84: seatsurfing.plugin.v1.HostAPIService.SettingsGetNullUUID:output_type -> seatsurfing.plugin.v1.StringReply
-	3,  // 85: seatsurfing.plugin.v1.HostAPIService.SettingsGetOrgIDsByValue:output_type -> seatsurfing.plugin.v1.StringSliceReply
-	4,  // 86: seatsurfing.plugin.v1.HostAPIService.SettingsSet:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 87: seatsurfing.plugin.v1.HostAPIService.SettingsDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
-	12, // 88: seatsurfing.plugin.v1.HostAPIService.UserGetOne:output_type -> seatsurfing.plugin.v1.UserGetOneReply
-	14, // 89: seatsurfing.plugin.v1.HostAPIService.UserGetAll:output_type -> seatsurfing.plugin.v1.UserGetAllReply
-	12, // 90: seatsurfing.plugin.v1.HostAPIService.UserGetByEmail:output_type -> seatsurfing.plugin.v1.UserGetOneReply
-	1,  // 91: seatsurfing.plugin.v1.HostAPIService.UserGetCount:output_type -> seatsurfing.plugin.v1.IntReply
-	2,  // 92: seatsurfing.plugin.v1.HostAPIService.UserGetHashedPassword:output_type -> seatsurfing.plugin.v1.StringReply
-	17, // 93: seatsurfing.plugin.v1.HostAPIService.UserGetUsersWithEmail:output_type -> seatsurfing.plugin.v1.UserGetUsersWithEmailReply
-	0,  // 94: seatsurfing.plugin.v1.HostAPIService.UserIsOrgAdmin:output_type -> seatsurfing.plugin.v1.BoolReply
-	0,  // 95: seatsurfing.plugin.v1.HostAPIService.UserIsSuperAdmin:output_type -> seatsurfing.plugin.v1.BoolReply
-	12, // 96: seatsurfing.plugin.v1.HostAPIService.UserCreate:output_type -> seatsurfing.plugin.v1.UserGetOneReply
-	4,  // 97: seatsurfing.plugin.v1.HostAPIService.UserUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 98: seatsurfing.plugin.v1.HostAPIService.UserDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
-	23, // 99: seatsurfing.plugin.v1.HostAPIService.OrgGetOne:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
-	24, // 100: seatsurfing.plugin.v1.HostAPIService.OrgGetAll:output_type -> seatsurfing.plugin.v1.OrgGetAllReply
-	23, // 101: seatsurfing.plugin.v1.HostAPIService.OrgGetOneByDomain:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
-	23, // 102: seatsurfing.plugin.v1.HostAPIService.OrgGetByEmail:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
-	24, // 103: seatsurfing.plugin.v1.HostAPIService.OrgGetAllDaysPassedSinceSignup:output_type -> seatsurfing.plugin.v1.OrgGetAllReply
-	29, // 104: seatsurfing.plugin.v1.HostAPIService.OrgGetPrimaryDomain:output_type -> seatsurfing.plugin.v1.OrgGetPrimaryDomainReply
-	23, // 105: seatsurfing.plugin.v1.HostAPIService.OrgCreate:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
-	4,  // 106: seatsurfing.plugin.v1.HostAPIService.OrgUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 107: seatsurfing.plugin.v1.HostAPIService.OrgDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 108: seatsurfing.plugin.v1.HostAPIService.OrgAddDomain:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 109: seatsurfing.plugin.v1.HostAPIService.OrgSetPrimaryDomain:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 110: seatsurfing.plugin.v1.HostAPIService.OrgCreateSampleData:output_type -> seatsurfing.plugin.v1.ErrorReply
-	35, // 111: seatsurfing.plugin.v1.HostAPIService.GroupGetOne:output_type -> seatsurfing.plugin.v1.GroupGetOneReply
-	37, // 112: seatsurfing.plugin.v1.HostAPIService.GroupGetAll:output_type -> seatsurfing.plugin.v1.GroupGetAllReply
-	35, // 113: seatsurfing.plugin.v1.HostAPIService.GroupGetByName:output_type -> seatsurfing.plugin.v1.GroupGetOneReply
-	40, // 114: seatsurfing.plugin.v1.HostAPIService.GroupGetMemberUserIDs:output_type -> seatsurfing.plugin.v1.GroupGetMemberIDsReply
-	4,  // 115: seatsurfing.plugin.v1.HostAPIService.GroupAddMembers:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 116: seatsurfing.plugin.v1.HostAPIService.GroupRemoveMembers:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 117: seatsurfing.plugin.v1.HostAPIService.GroupCreate:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 118: seatsurfing.plugin.v1.HostAPIService.GroupUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 119: seatsurfing.plugin.v1.HostAPIService.GroupDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
-	44, // 120: seatsurfing.plugin.v1.HostAPIService.BookingGetOne:output_type -> seatsurfing.plugin.v1.BookingGetOneReply
-	46, // 121: seatsurfing.plugin.v1.HostAPIService.SpaceGetOne:output_type -> seatsurfing.plugin.v1.SpaceGetOneReply
-	1,  // 122: seatsurfing.plugin.v1.HostAPIService.SpaceGetCount:output_type -> seatsurfing.plugin.v1.IntReply
-	49, // 123: seatsurfing.plugin.v1.HostAPIService.LocationGetOne:output_type -> seatsurfing.plugin.v1.LocationGetOneReply
-	1,  // 124: seatsurfing.plugin.v1.HostAPIService.LocationGetCount:output_type -> seatsurfing.plugin.v1.IntReply
-	2,  // 125: seatsurfing.plugin.v1.HostAPIService.LocationGetTimezone:output_type -> seatsurfing.plugin.v1.StringReply
-	4,  // 126: seatsurfing.plugin.v1.HostAPIService.AuthProviderCreate:output_type -> seatsurfing.plugin.v1.ErrorReply
-	4,  // 127: seatsurfing.plugin.v1.HostAPIService.AuthProviderUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
-	54, // 128: seatsurfing.plugin.v1.HostAPIService.AuthStateCreate:output_type -> seatsurfing.plugin.v1.AuthStateGetOneReply
-	4,  // 129: seatsurfing.plugin.v1.HostAPIService.SendEmail:output_type -> seatsurfing.plugin.v1.ErrorReply
-	57, // 130: seatsurfing.plugin.v1.HostAPIService.Encrypt:output_type -> seatsurfing.plugin.v1.EncryptReply
-	57, // 131: seatsurfing.plugin.v1.HostAPIService.Decrypt:output_type -> seatsurfing.plugin.v1.EncryptReply
-	0,  // 132: seatsurfing.plugin.v1.HostAPIService.IsValidLanguageCode:output_type -> seatsurfing.plugin.v1.BoolReply
-	0,  // 133: seatsurfing.plugin.v1.HostAPIService.DisablePasswordLogin:output_type -> seatsurfing.plugin.v1.BoolReply
-	2,  // 134: seatsurfing.plugin.v1.HostAPIService.FormatPublicURL:output_type -> seatsurfing.plugin.v1.StringReply
-	0,  // 135: seatsurfing.plugin.v1.HostAPIService.IsDevelopmentMode:output_type -> seatsurfing.plugin.v1.BoolReply
-	2,  // 136: seatsurfing.plugin.v1.HostAPIService.GetPostgresURL:output_type -> seatsurfing.plugin.v1.StringReply
-	81, // [81:137] is the sub-list for method output_type
-	25, // [25:81] is the sub-list for method input_type
+	71, // 79: seatsurfing.plugin.v1.HostAPIService.IsDevelopmentMode:input_type -> seatsurfing.plugin.v1.Empty
+	71, // 80: seatsurfing.plugin.v1.HostAPIService.GetPostgresURL:input_type -> seatsurfing.plugin.v1.Empty
+	71, // 81: seatsurfing.plugin.v1.HostAPIService.GetEmailHTMLLayout:input_type -> seatsurfing.plugin.v1.Empty
+	6,  // 82: seatsurfing.plugin.v1.HostAPIService.SettingsGet:output_type -> seatsurfing.plugin.v1.SettingsGetReply
+	7,  // 83: seatsurfing.plugin.v1.HostAPIService.SettingsGetBool:output_type -> seatsurfing.plugin.v1.SettingsGetBoolReply
+	1,  // 84: seatsurfing.plugin.v1.HostAPIService.SettingsGetInt:output_type -> seatsurfing.plugin.v1.IntReply
+	2,  // 85: seatsurfing.plugin.v1.HostAPIService.SettingsGetNullUUID:output_type -> seatsurfing.plugin.v1.StringReply
+	3,  // 86: seatsurfing.plugin.v1.HostAPIService.SettingsGetOrgIDsByValue:output_type -> seatsurfing.plugin.v1.StringSliceReply
+	4,  // 87: seatsurfing.plugin.v1.HostAPIService.SettingsSet:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 88: seatsurfing.plugin.v1.HostAPIService.SettingsDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
+	12, // 89: seatsurfing.plugin.v1.HostAPIService.UserGetOne:output_type -> seatsurfing.plugin.v1.UserGetOneReply
+	14, // 90: seatsurfing.plugin.v1.HostAPIService.UserGetAll:output_type -> seatsurfing.plugin.v1.UserGetAllReply
+	12, // 91: seatsurfing.plugin.v1.HostAPIService.UserGetByEmail:output_type -> seatsurfing.plugin.v1.UserGetOneReply
+	1,  // 92: seatsurfing.plugin.v1.HostAPIService.UserGetCount:output_type -> seatsurfing.plugin.v1.IntReply
+	2,  // 93: seatsurfing.plugin.v1.HostAPIService.UserGetHashedPassword:output_type -> seatsurfing.plugin.v1.StringReply
+	17, // 94: seatsurfing.plugin.v1.HostAPIService.UserGetUsersWithEmail:output_type -> seatsurfing.plugin.v1.UserGetUsersWithEmailReply
+	0,  // 95: seatsurfing.plugin.v1.HostAPIService.UserIsOrgAdmin:output_type -> seatsurfing.plugin.v1.BoolReply
+	0,  // 96: seatsurfing.plugin.v1.HostAPIService.UserIsSuperAdmin:output_type -> seatsurfing.plugin.v1.BoolReply
+	12, // 97: seatsurfing.plugin.v1.HostAPIService.UserCreate:output_type -> seatsurfing.plugin.v1.UserGetOneReply
+	4,  // 98: seatsurfing.plugin.v1.HostAPIService.UserUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 99: seatsurfing.plugin.v1.HostAPIService.UserDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
+	23, // 100: seatsurfing.plugin.v1.HostAPIService.OrgGetOne:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
+	24, // 101: seatsurfing.plugin.v1.HostAPIService.OrgGetAll:output_type -> seatsurfing.plugin.v1.OrgGetAllReply
+	23, // 102: seatsurfing.plugin.v1.HostAPIService.OrgGetOneByDomain:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
+	23, // 103: seatsurfing.plugin.v1.HostAPIService.OrgGetByEmail:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
+	24, // 104: seatsurfing.plugin.v1.HostAPIService.OrgGetAllDaysPassedSinceSignup:output_type -> seatsurfing.plugin.v1.OrgGetAllReply
+	29, // 105: seatsurfing.plugin.v1.HostAPIService.OrgGetPrimaryDomain:output_type -> seatsurfing.plugin.v1.OrgGetPrimaryDomainReply
+	23, // 106: seatsurfing.plugin.v1.HostAPIService.OrgCreate:output_type -> seatsurfing.plugin.v1.OrgGetOneReply
+	4,  // 107: seatsurfing.plugin.v1.HostAPIService.OrgUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 108: seatsurfing.plugin.v1.HostAPIService.OrgDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 109: seatsurfing.plugin.v1.HostAPIService.OrgAddDomain:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 110: seatsurfing.plugin.v1.HostAPIService.OrgSetPrimaryDomain:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 111: seatsurfing.plugin.v1.HostAPIService.OrgCreateSampleData:output_type -> seatsurfing.plugin.v1.ErrorReply
+	35, // 112: seatsurfing.plugin.v1.HostAPIService.GroupGetOne:output_type -> seatsurfing.plugin.v1.GroupGetOneReply
+	37, // 113: seatsurfing.plugin.v1.HostAPIService.GroupGetAll:output_type -> seatsurfing.plugin.v1.GroupGetAllReply
+	35, // 114: seatsurfing.plugin.v1.HostAPIService.GroupGetByName:output_type -> seatsurfing.plugin.v1.GroupGetOneReply
+	40, // 115: seatsurfing.plugin.v1.HostAPIService.GroupGetMemberUserIDs:output_type -> seatsurfing.plugin.v1.GroupGetMemberIDsReply
+	4,  // 116: seatsurfing.plugin.v1.HostAPIService.GroupAddMembers:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 117: seatsurfing.plugin.v1.HostAPIService.GroupRemoveMembers:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 118: seatsurfing.plugin.v1.HostAPIService.GroupCreate:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 119: seatsurfing.plugin.v1.HostAPIService.GroupUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 120: seatsurfing.plugin.v1.HostAPIService.GroupDelete:output_type -> seatsurfing.plugin.v1.ErrorReply
+	44, // 121: seatsurfing.plugin.v1.HostAPIService.BookingGetOne:output_type -> seatsurfing.plugin.v1.BookingGetOneReply
+	46, // 122: seatsurfing.plugin.v1.HostAPIService.SpaceGetOne:output_type -> seatsurfing.plugin.v1.SpaceGetOneReply
+	1,  // 123: seatsurfing.plugin.v1.HostAPIService.SpaceGetCount:output_type -> seatsurfing.plugin.v1.IntReply
+	49, // 124: seatsurfing.plugin.v1.HostAPIService.LocationGetOne:output_type -> seatsurfing.plugin.v1.LocationGetOneReply
+	1,  // 125: seatsurfing.plugin.v1.HostAPIService.LocationGetCount:output_type -> seatsurfing.plugin.v1.IntReply
+	2,  // 126: seatsurfing.plugin.v1.HostAPIService.LocationGetTimezone:output_type -> seatsurfing.plugin.v1.StringReply
+	4,  // 127: seatsurfing.plugin.v1.HostAPIService.AuthProviderCreate:output_type -> seatsurfing.plugin.v1.ErrorReply
+	4,  // 128: seatsurfing.plugin.v1.HostAPIService.AuthProviderUpdate:output_type -> seatsurfing.plugin.v1.ErrorReply
+	54, // 129: seatsurfing.plugin.v1.HostAPIService.AuthStateCreate:output_type -> seatsurfing.plugin.v1.AuthStateGetOneReply
+	4,  // 130: seatsurfing.plugin.v1.HostAPIService.SendEmail:output_type -> seatsurfing.plugin.v1.ErrorReply
+	57, // 131: seatsurfing.plugin.v1.HostAPIService.Encrypt:output_type -> seatsurfing.plugin.v1.EncryptReply
+	57, // 132: seatsurfing.plugin.v1.HostAPIService.Decrypt:output_type -> seatsurfing.plugin.v1.EncryptReply
+	0,  // 133: seatsurfing.plugin.v1.HostAPIService.IsValidLanguageCode:output_type -> seatsurfing.plugin.v1.BoolReply
+	0,  // 134: seatsurfing.plugin.v1.HostAPIService.DisablePasswordLogin:output_type -> seatsurfing.plugin.v1.BoolReply
+	2,  // 135: seatsurfing.plugin.v1.HostAPIService.FormatPublicURL:output_type -> seatsurfing.plugin.v1.StringReply
+	0,  // 136: seatsurfing.plugin.v1.HostAPIService.IsDevelopmentMode:output_type -> seatsurfing.plugin.v1.BoolReply
+	2,  // 137: seatsurfing.plugin.v1.HostAPIService.GetPostgresURL:output_type -> seatsurfing.plugin.v1.StringReply
+	61, // 138: seatsurfing.plugin.v1.HostAPIService.GetEmailHTMLLayout:output_type -> seatsurfing.plugin.v1.GetEmailHTMLLayoutReply
+	82, // [82:139] is the sub-list for method output_type
+	25, // [25:82] is the sub-list for method input_type
 	25, // [25:25] is the sub-list for extension type_name
 	25, // [25:25] is the sub-list for extension extendee
 	0,  // [0:25] is the sub-list for field type_name
@@ -3476,7 +3535,7 @@ func file_hostapi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_hostapi_proto_rawDesc), len(file_hostapi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   61,
+			NumMessages:   62,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

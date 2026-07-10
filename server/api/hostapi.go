@@ -141,4 +141,10 @@ type HostAPI interface {
 	// IsDevelopmentMode, this crosses the network carrying DB credentials -
 	// see the security note where PluginDatabase.GetDatabase() calls this.
 	GetPostgresURL() string
+
+	// GetEmailHTMLLayout returns the contents of the host's res/email.html
+	// layout wrapper, so plugins can assemble HTML mail bodies identical to
+	// the host's own without needing local filesystem access to a res/
+	// directory that doesn't exist in the plugin's own container/process.
+	GetEmailHTMLLayout() (string, error)
 }

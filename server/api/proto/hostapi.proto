@@ -88,6 +88,11 @@ service HostAPIService {
   rpc FormatPublicURL(FormatPublicURLArgs) returns (StringReply);
   rpc IsDevelopmentMode(seatsurfing.plugin.v1.Empty) returns (BoolReply);
   rpc GetPostgresURL(seatsurfing.plugin.v1.Empty) returns (StringReply);
+  // GetEmailHTMLLayout returns the host's res/email.html layout wrapper, so
+  // plugins can assemble HTML mail bodies identical to the host's own
+  // without needing local filesystem access to the host's res/ directory
+  // (which does not exist in the plugin's own container/process).
+  rpc GetEmailHTMLLayout(seatsurfing.plugin.v1.Empty) returns (GetEmailHTMLLayoutReply);
 }
 
 // ─── Generic replies ─────────────────────────────────────────────────────────
@@ -183,3 +188,4 @@ message EncryptReply { string result = 1; string err = 2; }
 message DecryptArgs { string ciphertext = 1; }
 message IsValidLangArgs { string code = 1; }
 message FormatPublicURLArgs { string domain = 1; }
+message GetEmailHTMLLayoutReply { string html = 1; string err = 2; }

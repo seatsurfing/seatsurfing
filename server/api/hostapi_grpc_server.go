@@ -274,3 +274,7 @@ func (s *HostAPIGRPCServer) IsDevelopmentMode(ctx context.Context, _ *commonpb.E
 func (s *HostAPIGRPCServer) GetPostgresURL(ctx context.Context, _ *commonpb.Empty) (*hostapipb.StringReply, error) {
 	return &hostapipb.StringReply{V: s.impl.GetPostgresURL()}, nil
 }
+func (s *HostAPIGRPCServer) GetEmailHTMLLayout(ctx context.Context, _ *commonpb.Empty) (*hostapipb.GetEmailHTMLLayoutReply, error) {
+	html, err := s.impl.GetEmailHTMLLayout()
+	return &hostapipb.GetEmailHTMLLayoutReply{Html: html, Err: errStr(err)}, nil
+}

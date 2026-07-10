@@ -83,6 +83,7 @@ const (
 	HostAPIService_FormatPublicURL_FullMethodName                = "/seatsurfing.plugin.v1.HostAPIService/FormatPublicURL"
 	HostAPIService_IsDevelopmentMode_FullMethodName              = "/seatsurfing.plugin.v1.HostAPIService/IsDevelopmentMode"
 	HostAPIService_GetPostgresURL_FullMethodName                 = "/seatsurfing.plugin.v1.HostAPIService/GetPostgresURL"
+	HostAPIService_GetEmailHTMLLayout_FullMethodName             = "/seatsurfing.plugin.v1.HostAPIService/GetEmailHTMLLayout"
 )
 
 // HostAPIServiceClient is the client API for HostAPIService service.
@@ -155,6 +156,11 @@ type HostAPIServiceClient interface {
 	FormatPublicURL(ctx context.Context, in *FormatPublicURLArgs, opts ...grpc.CallOption) (*StringReply, error)
 	IsDevelopmentMode(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BoolReply, error)
 	GetPostgresURL(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*StringReply, error)
+	// GetEmailHTMLLayout returns the host's res/email.html layout wrapper, so
+	// plugins can assemble HTML mail bodies identical to the host's own
+	// without needing local filesystem access to the host's res/ directory
+	// (which does not exist in the plugin's own container/process).
+	GetEmailHTMLLayout(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*GetEmailHTMLLayoutReply, error)
 }
 
 type hostAPIServiceClient struct {
@@ -725,6 +731,16 @@ func (c *hostAPIServiceClient) GetPostgresURL(ctx context.Context, in *commonpb.
 	return out, nil
 }
 
+func (c *hostAPIServiceClient) GetEmailHTMLLayout(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*GetEmailHTMLLayoutReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetEmailHTMLLayoutReply)
+	err := c.cc.Invoke(ctx, HostAPIService_GetEmailHTMLLayout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HostAPIServiceServer is the server API for HostAPIService service.
 // All implementations must embed UnimplementedHostAPIServiceServer
 // for forward compatibility.
@@ -795,6 +811,11 @@ type HostAPIServiceServer interface {
 	FormatPublicURL(context.Context, *FormatPublicURLArgs) (*StringReply, error)
 	IsDevelopmentMode(context.Context, *commonpb.Empty) (*BoolReply, error)
 	GetPostgresURL(context.Context, *commonpb.Empty) (*StringReply, error)
+	// GetEmailHTMLLayout returns the host's res/email.html layout wrapper, so
+	// plugins can assemble HTML mail bodies identical to the host's own
+	// without needing local filesystem access to the host's res/ directory
+	// (which does not exist in the plugin's own container/process).
+	GetEmailHTMLLayout(context.Context, *commonpb.Empty) (*GetEmailHTMLLayoutReply, error)
 	mustEmbedUnimplementedHostAPIServiceServer()
 }
 
@@ -972,6 +993,9 @@ func (UnimplementedHostAPIServiceServer) IsDevelopmentMode(context.Context, *com
 }
 func (UnimplementedHostAPIServiceServer) GetPostgresURL(context.Context, *commonpb.Empty) (*StringReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPostgresURL not implemented")
+}
+func (UnimplementedHostAPIServiceServer) GetEmailHTMLLayout(context.Context, *commonpb.Empty) (*GetEmailHTMLLayoutReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetEmailHTMLLayout not implemented")
 }
 func (UnimplementedHostAPIServiceServer) mustEmbedUnimplementedHostAPIServiceServer() {}
 func (UnimplementedHostAPIServiceServer) testEmbeddedByValue()                        {}
@@ -2002,6 +2026,24 @@ func _HostAPIService_GetPostgresURL_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HostAPIService_GetEmailHTMLLayout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(commonpb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).GetEmailHTMLLayout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_GetEmailHTMLLayout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).GetEmailHTMLLayout(ctx, req.(*commonpb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // HostAPIService_ServiceDesc is the grpc.ServiceDesc for HostAPIService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -2232,6 +2274,10 @@ var HostAPIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPostgresURL",
 			Handler:    _HostAPIService_GetPostgresURL_Handler,
+		},
+		{
+			MethodName: "GetEmailHTMLLayout",
+			Handler:    _HostAPIService_GetEmailHTMLLayout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
