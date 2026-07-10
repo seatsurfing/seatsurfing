@@ -6,8 +6,7 @@ import "github.com/seatsurfing/seatsurfing/server/api/pluginpb"
 // AdminUIMenuItem/etc. types (api.go) and their generated protobuf wire
 // counterparts in pluginpb. Exported (unlike entity_grpc_convert.go's
 // helpers) because both the host's plugin_grpc_client.go (package api) and
-// the plugin binary's grpc_server.go (package main, in plugin-cloud-features,
-// a different module importing this package) need them.
+// plugin binaries in other modules that import this package need them.
 
 func headerValuesToProto(h map[string][]string) map[string]*pluginpb.HeaderValues {
 	out := make(map[string]*pluginpb.HeaderValues, len(h))

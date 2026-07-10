@@ -36,10 +36,9 @@ import (
 var _appInstance *App
 var _appOnce sync.Once
 
-// PluginInstance represents one connected (or reconnecting) plugin. Unlike
-// the old net/rpc/go-plugin subprocess model, a plugin here is an
-// independent network process the host dials as a gRPC client - Ready
-// reflects whether the connect-driven registration sequence
+// PluginInstance represents one connected (or reconnecting) plugin. A
+// plugin is an independent network process the host dials as a gRPC
+// client - Ready reflects whether the connect-driven registration sequence
 // (RunSchemaUpdates -> unauthorized routes -> OnInit) has succeeded on the
 // current connection; forwardToPlugin/hooks treat a not-ready instance as
 // unavailable rather than crashing or silently dropping it.
@@ -70,13 +69,12 @@ type App struct {
 
 func (a *App) InitializeDatabases() {
 	RunDBSchemaUpdates()
-	// Plugin schema updates are NOT run here anymore: this ran synchronously
-	// against every plugin in the old subprocess model, but now plugins are
-	// independent gRPC connections that may not even be dialed yet (see
-	// loadGRPCPlugin's comment - Connect() is deferred to NotifyPlugins).
-	// Plugin schema updates now happen inside registerPluginOnConnect, gated
-	// by actual connection readiness, once NotifyPlugins starts the
-	// connection watchers.
+	// Plugin schema updates are NOT run here: plugins are independent gRPC
+	// connections that may not even be dialed yet (see loadGRPCPlugin's
+	// comment - Connect() is deferred to NotifyPlugins). Plugin schema
+	// updates happen inside registerPluginOnConnect, gated by actual
+	// connection readiness, once NotifyPlugins starts the connection
+	// watchers.
 	InitDefaultOrgSettings()
 	InitDefaultUserPreferences()
 	// Set up email logging callback
@@ -90,12 +88,12 @@ func (a *App) InitializeDatabases() {
 }
 
 // InitializePlugins dials every plugin listed in PLUGINS_CONFIG over gRPC.
-// Unlike the old directory-scan model, dialing is non-blocking (grpc.NewClient
-// does not wait for the connection to become ready) and each plugin's
-// registration (schema updates, unauthorized routes, OnInit) happens
-// asynchronously once connected, driven by watchPluginConnection - so a
-// plugin that is down at host startup, or restarts later, does not block
-// host startup and recovers on its own once reachable again.
+// Dialing is non-blocking (grpc.NewClient does not wait for the connection
+// to become ready) and each plugin's registration (schema updates,
+// unauthorized routes, OnInit) happens asynchronously once connected,
+// driven by watchPluginConnection - so a plugin that is down at host
+// startup, or restarts later, does not block host startup and recovers on
+// its own once reachable again.
 func (a *App) InitializePlugins() {
 	for _, pc := range GetConfig().Plugins {
 		a.loadGRPCPlugin(pc)

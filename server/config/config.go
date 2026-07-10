@@ -17,10 +17,8 @@ import (
 	"time"
 )
 
-// RemotePluginConfig describes one remote plugin the host should connect to over
-// gRPC. Replaces the old directory-scan discovery (FilesystemBasePath /
-// PluginsSubPath) since there is no local binary to discover once plugins
-// are separate processes/containers - see PLUGINS_CONFIG below.
+// RemotePluginConfig describes one remote plugin the host should connect to
+// over gRPC - see PLUGINS_CONFIG below.
 type RemotePluginConfig struct {
 	Name          string   `json:"name"`
 	Address       string   `json:"address"`       // e.g. "subscription-plugin:50051"
@@ -239,8 +237,7 @@ func (c *Config) ReadConfig() {
 //	[{"name":"subscription","address":"subscription-plugin:50051","routePrefixes":["/subscription/"],"token":"<secret>","tls":false}]
 //
 // A single env var supports an arbitrary-length list of plugins - unset or
-// empty means zero plugins loaded, matching the old behavior of a missing
-// plugins directory being a non-fatal, valid state.
+// empty means zero plugins loaded, which is a non-fatal, valid state.
 func (c *Config) parsePluginsConfig(raw string) []RemotePluginConfig {
 	if raw == "" {
 		return nil

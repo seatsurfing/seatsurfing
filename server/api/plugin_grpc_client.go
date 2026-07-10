@@ -11,12 +11,11 @@ import (
 )
 
 // PluginGRPC runs in the HOST process. It implements SeatsurfingPlugin by
-// forwarding every call to a plugin process over gRPC, in place of the old
-// net/rpc-based PluginRPC. The SeatsurfingPlugin interface has no
-// context.Context parameter (kept as-is to avoid touching every call site),
-// so PluginGRPC synthesizes a deadline per call from callTimeout - without
-// one, a hung plugin across the network would block the calling host
-// goroutine indefinitely, a failure mode a local subprocess pipe never had.
+// forwarding every call to a plugin process over gRPC. The SeatsurfingPlugin
+// interface has no context.Context parameter (kept as-is to avoid touching
+// every call site), so PluginGRPC synthesizes a deadline per call from
+// callTimeout - without one, a hung plugin across the network would block
+// the calling host goroutine indefinitely.
 type PluginGRPC struct {
 	conn        *grpc.ClientConn
 	client      pluginpb.SeatsurfingPluginServiceClient
@@ -58,10 +57,10 @@ func (p *PluginGRPC) GetUnauthorizedRoutes() []string {
 }
 
 // RunSchemaUpdates deliberately has no error return on the SeatsurfingPlugin
-// interface (matching the historical net/rpc behavior), but its *caller* in
-// the connect-driven lifecycle watcher needs to know about failure so it can
-// keep the plugin instance not-ready rather than silently treating a failed
-// migration as success. RunSchemaUpdatesErr exposes that.
+// interface, but its *caller* in the connect-driven lifecycle watcher needs
+// to know about failure so it can keep the plugin instance not-ready rather
+// than silently treating a failed migration as success. RunSchemaUpdatesErr
+// exposes that.
 func (p *PluginGRPC) RunSchemaUpdates() {
 	if err := p.RunSchemaUpdatesErr(); err != nil {
 		log.Println("RunSchemaUpdates RPC error:", err)
@@ -96,11 +95,10 @@ func (p *PluginGRPC) OnTimer() {
 	}
 }
 
-// OnInit's brokerID parameter is a leftover from the net/rpc MuxBroker
-// design and is unused in gRPC mode: the plugin already knows the host's
-// HostAPI address from its own static config and dials it eagerly at
-// startup, independent of this call. OnInit must be safe to call more than
-// once - the host re-invokes it on every reconnection (see OnInitErr).
+// OnInit's brokerID parameter is unused: the plugin already knows the
+// host's HostAPI address from its own static config and dials it eagerly
+// at startup, independent of this call. OnInit must be safe to call more
+// than once - the host re-invokes it on every reconnection (see OnInitErr).
 func (p *PluginGRPC) OnInit(_ uint32) {
 	if err := p.OnInitErr(); err != nil {
 		log.Println("OnInit RPC error:", err)

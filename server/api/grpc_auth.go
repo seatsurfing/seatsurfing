@@ -11,9 +11,8 @@ import (
 )
 
 // Shared-secret token authorization for the host<->plugin gRPC connections.
-// This replaces the OS-process trust boundary that go-plugin's subprocess
-// model provided for free: once HostAPI/SeatsurfingPlugin are plain network
-// listeners, anything that can reach the port could otherwise call them.
+// HostAPI/SeatsurfingPlugin are plain network listeners, so anything that
+// can reach the port could otherwise call them.
 
 const tokenMetadataKey = "x-seatsurfing-token"
 

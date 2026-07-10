@@ -9,10 +9,8 @@ import (
 	"github.com/seatsurfing/seatsurfing/server/api/hostapipb"
 )
 
-// HostAPIGRPCServer runs in the HOST process and exposes the existing HostAPI
+// HostAPIGRPCServer runs in the HOST process and exposes the HostAPI
 // interface over gRPC so that any number of plugin processes can dial in.
-// It wraps the same HostAPI implementation the net/rpc HostAPIRPCServer used
-// to wrap - hostAPIImpl in app.go needs no changes.
 type HostAPIGRPCServer struct {
 	hostapipb.UnimplementedHostAPIServiceServer
 	impl HostAPI

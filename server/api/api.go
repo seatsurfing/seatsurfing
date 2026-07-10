@@ -21,9 +21,8 @@ type SeatsurfingPlugin interface {
 	RunSchemaUpdates()
 	GetAdminUIMenuItems() []AdminUIMenuItem
 	OnTimer()
-	// OnInit's parameter is a leftover from the net/rpc MuxBroker transport
-	// and is unused in gRPC mode (the plugin learns the host's HostAPI
-	// address from its own static config instead). Implementations must be
+	// hostAPIBrokerID is unused; the plugin learns the host's HostAPI
+	// address from its own static config instead. Implementations must be
 	// safe to call more than once: the host re-invokes OnInit on every
 	// reconnection, not only once at startup.
 	OnInit(hostAPIBrokerID uint32)

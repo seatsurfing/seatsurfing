@@ -3,11 +3,9 @@ package api
 import "errors"
 
 // errStr/strErr convert between a Go error and the string-based error
-// convention used in gRPC reply messages for application-level errors (see
-// grpc_auth.go's package comment / the design doc's error-semantics note):
+// convention used in gRPC reply messages for application-level errors:
 // real gRPC status codes are reserved for transport/connectivity failures,
-// while app errors travel as a plain string field in the reply message,
-// mirroring the net/rpc-era convention this replaces.
+// while app errors travel as a plain string field in the reply message.
 func errStr(err error) string {
 	if err != nil {
 		return err.Error()
