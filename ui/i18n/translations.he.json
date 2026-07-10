@@ -508,5 +508,7 @@
   "bigger": "Bigger",
   "normal": "Normal",
   "small": "Small",
-  "markdownSupported": "Markdown syntax is supported"
+  "markdownSupported": "Markdown syntax is supported",
+  "bookableDays": "Bookable weekdays",
+  "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday."
 }

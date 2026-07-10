@@ -51,6 +51,7 @@ var (
 	ResponseCodeBookingSubjectRequired           = 1010
 	ResponseCodeBookingInPast                    = 1011
 	ResponseCodeBookingInvalidSubject            = 1012
+	ResponseCodeBookingInvalidWeekday            = 1013
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
@@ -496,6 +497,41 @@ func CanSpaceAdminOrg(user *User, organizationID string) bool {
 		return true
 	}
 	return false
+}
+
+// IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)
+// falls on one of the location's bookable weekdays, honoring the org's
+// no-admin-restrictions setting for space admins.
+func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time.Time) bool {
+	if location.BookableDays == "" {
+		return true
+	}
+	if CanSpaceAdminOrg(user, location.OrganizationID) {
+		noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
+		if noAdminRestrictions {
+			return true
+		}
+	}
+	allowedDays := map[time.Weekday]bool{}
+	for _, s := range strings.Split(location.BookableDays, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil {
+			continue
+		}
+		allowedDays[time.Weekday(n)] = true
+	}
+	day := time.Date(enter.Year(), enter.Month(), enter.Day(), 0, 0, 0, 0, enter.Location())
+	// leave is exclusive: the last day to check is the calendar day just before leave,
+	// so a leave of exactly midnight does not pull in the following day.
+	lastInstant := leave.Add(-time.Nanosecond)
+	lastDay := time.Date(lastInstant.Year(), lastInstant.Month(), lastInstant.Day(), 0, 0, 0, 0, lastInstant.Location())
+	for !day.After(lastDay) {
+		if !allowedDays[day.Weekday()] {
+			return false
+		}
+		day = day.AddDate(0, 0, 1)
+	}
+	return true
 }
 
 func CanAdminOrg(user *User, organizationID string) bool {

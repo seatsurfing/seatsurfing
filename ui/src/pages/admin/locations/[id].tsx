@@ -46,11 +46,11 @@ import Space from "@/types/Space";
 import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
-
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
+import WeekdaySelection from "@/components/WeekdaySelection";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (
   <svg
@@ -409,6 +409,7 @@ interface State {
   maxConcurrentBookings: number;
   timezone: string;
   enabled: boolean;
+  bookableDays: number[];
   mapScale: number;
   mapScaleOnLoad: number;
   fileLabel: string;
@@ -468,6 +469,7 @@ class EditLocation extends React.Component<Props, State> {
       maxConcurrentBookings: 0,
       timezone: "",
       enabled: true,
+      bookableDays: [0, 1, 2, 3, 4, 5, 6],
       mapScale: 1.0,
       mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
@@ -552,6 +554,11 @@ class EditLocation extends React.Component<Props, State> {
                       maxConcurrentBookings: location.maxConcurrentBookings,
                       timezone: location.timezone,
                       enabled: location.enabled,
+                      bookableDays: location.bookableDays
+                        ? location.bookableDays
+                            .split(",")
+                            .map((d) => parseInt(d, 10))
+                        : [0, 1, 2, 3, 4, 5, 6],
                       mapScale: location.mapScale,
                       mapScaleOnLoad: location.mapScale,
                       mapType:
@@ -689,6 +696,7 @@ class EditLocation extends React.Component<Props, State> {
       });
     };
     e.preventDefault();
+
     this.setState({ submitting: true, errorSaving: false });
     this.entity.name = this.state.name;
     this.entity.description = this.state.description;
@@ -697,6 +705,10 @@ class EditLocation extends React.Component<Props, State> {
       : 0;
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
+    this.entity.bookableDays =
+      this.state.bookableDays.length === 7
+        ? ""
+        : this.state.bookableDays.join(",");
     this.entity.mapScale = this.state.mapScale;
     this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
@@ -2208,6 +2220,23 @@ class EditLocation extends React.Component<Props, State> {
                   disabled={!this.state.limitConcurrentBookings}
                 />
               </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("bookableDays")}
+            </Form.Label>
+            <Col sm="4">
+              <WeekdaySelection
+                id="location-bookable-days"
+                value={this.state.bookableDays}
+                onChange={(bookableDays: number[]) =>
+                  this.setState({
+                    bookableDays: [...bookableDays].sort((a, b) => a - b),
+                  })
+                }
+                preventEmpty={true}
+              />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

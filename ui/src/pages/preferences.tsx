@@ -1,14 +1,6 @@
 import React from "react";
 import Loading from "../components/Loading";
-import {
-  Alert,
-  Button,
-  ButtonGroup,
-  Form,
-  Modal,
-  Nav,
-  ToggleButton,
-} from "react-bootstrap";
+import { Alert, Button, ButtonGroup, Form, Modal, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
@@ -34,6 +26,7 @@ import RendererUtils from "@/util/RendererUtils";
 import ReloadModal from "@/components/ReloadModal";
 import { PreferencesTab } from "@/util/Navigation";
 import CONSTANT from "@/util/Contant";
+import WeekdaySelection from "@/components/WeekdaySelection";
 
 interface State {
   loading: boolean;
@@ -43,7 +36,7 @@ interface State {
   enterTime: number;
   workdayStart: string;
   workdayEnd: string;
-  workdays: boolean[];
+  workdays: number[];
   booked: string;
   notBooked: string;
   selfBooked: string;
@@ -104,8 +97,8 @@ class Preferences extends React.Component<Props, State> {
       saved: false,
       error: false,
       enterTime: 0,
-      workdayStart: "09:00",
-      workdayEnd: "17:00",
+      workdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      workdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       workdays: [],
       booked: COLOR_BOOKED,
       notBooked: COLOR_NOT_BOOKED,
@@ -168,19 +161,20 @@ class Preferences extends React.Component<Props, State> {
       if (typeof window !== "undefined") {
         if (s.name === UserPreference.PREF_ENTER_TIME)
           state.enterTime = window.parseInt(s.value);
-        if (s.name === UserPreference.PREF_WORKDAY_START)
-          state.workdayStart = s.value;
-        if (s.name === UserPreference.PREF_WORKDAY_END)
-          state.workdayEnd = s.value;
       }
+      if (s.name === UserPreference.PREF_WORKDAY_START)
+        state.workdayStart =
+          DateUtil.parseTimeString(s.value) ??
+          UserPreference.DEFAULT_WORKDAY_START;
+      if (s.name === UserPreference.PREF_WORKDAY_END)
+        state.workdayEnd =
+          DateUtil.parseTimeString(s.value) ??
+          UserPreference.DEFAULT_WORKDAY_END;
       if (s.name === UserPreference.PREF_WORKDAYS) {
-        state.workdays = [];
-        for (let i = 0; i <= 6; i++) {
-          state.workdays[i] = false;
-        }
-        s.value
+        state.workdays = s.value
           .split(",")
-          .forEach((val) => (state.workdays![parseInt(val)] = true));
+          .map((val) => parseInt(val))
+          .filter((val) => !isNaN(val));
       }
       if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
       if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
@@ -234,12 +228,6 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    const workdays: string[] = [];
-    this.state.workdays.forEach((val, day) => {
-      if (val) {
-        workdays.push(day.toString());
-      }
-    });
     const payload = [
       new UserPreference(
         UserPreference.PREF_ENTER_TIME,
@@ -253,7 +241,10 @@ class Preferences extends React.Component<Props, State> {
         UserPreference.PREF_WORKDAY_END,
         this.state.workdayEnd,
       ),
-      new UserPreference(UserPreference.PREF_WORKDAYS, workdays.join(",")),
+      new UserPreference(
+        UserPreference.PREF_WORKDAYS,
+        [...this.state.workdays].sort((a, b) => a - b).join(","),
+      ),
       new UserPreference(
         UserPreference.PREF_MAIL_NOTIFICATIONS,
         this.state.mailNotifications ? "1" : "0",
@@ -361,17 +352,8 @@ class Preferences extends React.Component<Props, State> {
     });
   };
 
-  onWorkdayCheck = (day: number, checked: boolean) => {
-    this.setState((prevState) => {
-      if (!checked && prevState.workdays.filter((val) => val).length <= 1) {
-        return { workdays: prevState.workdays };
-      }
-      return {
-        workdays: prevState.workdays.map((val, i) =>
-          i === day ? checked : val,
-        ),
-      };
-    });
+  onWorkdaysChange = (workdays: number[]) => {
+    this.setState({ workdays: [...workdays].sort((a, b) => a - b) });
   };
 
   connectCalDav = async () => {
@@ -700,29 +682,13 @@ class Preferences extends React.Component<Props, State> {
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
-                  <ButtonGroup>
-                    {[0, 1, 2, 3, 4, 5, 6]
-                      .map((offset) => (this.state.weekStartDay + offset) % 7)
-                      .map((day) => (
-                        <ToggleButton
-                          type="checkbox"
-                          variant={
-                            this.state.workdays[day]
-                              ? "primary"
-                              : "outline-secondary"
-                          }
-                          key={"workday-" + day}
-                          id={"workday-" + day}
-                          value={day}
-                          checked={this.state.workdays[day]}
-                          onChange={(e: any) =>
-                            this.onWorkdayCheck(day, e.target.checked)
-                          }
-                        >
-                          {this.props.t("workday-short-" + day)}
-                        </ToggleButton>
-                      ))}
-                  </ButtonGroup>
+                  <WeekdaySelection
+                    id="workdays"
+                    value={this.state.workdays}
+                    weekStartDay={this.state.weekStartDay}
+                    onChange={this.onWorkdaysChange}
+                    preventEmpty={true}
+                  />
                 </div>
               </Form.Group>
               <Form.Group className="margin-top-15">

@@ -102,6 +102,7 @@ type Location struct {
 	MaxConcurrentBookings uint
 	Timezone              string
 	Enabled               bool
+	BookableDays          string
 }
 
 // ─── Space ───────────────────────────────────────────────────────────────────

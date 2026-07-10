@@ -37,6 +37,7 @@ type CreateLocationRequest struct {
 	MapScale              float64  `json:"mapScale"`
 	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
 	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	BookableDays          string   `json:"bookableDays" validate:"max=13"`
 }
 
 type GetLocationResponse struct {
@@ -396,6 +397,12 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if m.BookableDays != "" {
+		if !IsValidWeekdaysList(m.BookableDays) {
+			SendBadRequest(w)
+			return
+		}
+	}
 	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
@@ -461,6 +468,12 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	if m.Timezone != "" {
 		if !IsValidTimeZone(m.Timezone) {
+			SendBadRequest(w)
+			return
+		}
+	}
+	if m.BookableDays != "" {
+		if !IsValidWeekdaysList(m.BookableDays) {
 			SendBadRequest(w)
 			return
 		}
@@ -701,6 +714,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Enabled = m.Enabled
 	e.MapScale = m.MapScale
 	e.MapType = m.MapType
+	e.BookableDays = m.BookableDays
 	return e
 }
 
@@ -718,6 +732,7 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
+	m.BookableDays = e.BookableDays
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}

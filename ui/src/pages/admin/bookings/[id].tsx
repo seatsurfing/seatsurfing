@@ -16,22 +16,23 @@ import Space from "@/types/Space";
 import User from "@/types/User";
 import Location from "@/types/Location";
 import Booking from "@/types/Booking";
-import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
 
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
-import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
 import ProfilePicture from "@/components/ProfilePicture";
 import Search, { SearchOptions } from "@/types/Search";
+import AjaxError from "@/util/AjaxError";
+import ErrorText from "@/types/ErrorText";
 
 interface State {
   loading: boolean;
   saved: boolean;
   error: boolean;
+  errorText: string;
   wasCreated: boolean;
   goBack: boolean;
   enter: Date;
@@ -98,6 +99,7 @@ class EditBooking extends React.Component<Props, State> {
       loading: true,
       saved: false,
       error: false,
+      errorText: "",
       wasCreated: false,
       goBack: false,
       enter: new Date(),
@@ -118,8 +120,8 @@ class EditBooking extends React.Component<Props, State> {
       canSave: false,
       canEdit: false,
       prefEnterTime: 0,
-      prefWorkdayStart: "09:00",
-      prefWorkdayEnd: "17:00",
+      prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       prefWorkdays: [],
       prefLocationId: "",
       selfEmail: "",
@@ -272,9 +274,13 @@ class EditBooking extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = s.value;
+                state.prefWorkdayStart =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_START;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = s.value;
+                state.prefWorkdayEnd =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_END;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
@@ -337,10 +343,9 @@ class EditBooking extends React.Component<Props, State> {
       let leave = new Date();
       leave = this.state.leave;
       leave.setHours(23, 59, 59, 0);
-
       this.setState({
-        enter: enter,
-        leave: leave,
+        enter,
+        leave,
       });
     } else {
       const enter = this.state.enter;
@@ -378,9 +383,16 @@ class EditBooking extends React.Component<Props, State> {
             selectedUserEmail: user,
           });
         })
-        .catch(() => {
+        .catch((e) => {
+          let code: number = 0;
+          if (e instanceof AjaxError) {
+            code = e.appErrorCode;
+          }
           this.setState({
             error: true,
+            errorText: code
+              ? ErrorText.getTextForAppCode(code, this.props.t)
+              : this.props.t("errorSave"),
             saved: false,
             wasCreated: true,
           });
@@ -406,9 +418,16 @@ class EditBooking extends React.Component<Props, State> {
             wasCreated: false,
           });
         })
-        .catch(() => {
+        .catch((e) => {
+          let code: number = 0;
+          if (e instanceof AjaxError) {
+            code = e.appErrorCode;
+          }
           this.setState({
             error: true,
+            errorText: code
+              ? ErrorText.getTextForAppCode(code, this.props.t)
+              : this.props.t("errorSave"),
             saved: false,
             wasCreated: false,
           });
@@ -531,8 +550,8 @@ class EditBooking extends React.Component<Props, State> {
       }
       this.setState(
         {
-          enter: enter,
-          leave: leave,
+          enter,
+          leave,
           isDisabledLocation: false,
           isDisabledSpace: true,
         },
@@ -721,7 +740,7 @@ class EditBooking extends React.Component<Props, State> {
         <Alert variant="danger">{this.props.t(this.state.canSearchHint)}</Alert>
       );
     } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     const buttonDelete = (

@@ -123,14 +123,17 @@ func IsValidDateFormat(s string) bool {
 }
 
 func IsValidWeekdaysList(s string) bool {
+	if len(s) > 13 {
+		return false
+	}
 	tokens := strings.Split(s, ",")
-	seen := make(map[int]bool)
+	prev := -1
 	for _, token := range tokens {
 		weekday, err := strconv.Atoi(token)
-		if err != nil || weekday < 0 || weekday > 6 || seen[weekday] {
+		if err != nil || weekday < 0 || weekday > 6 || weekday <= prev {
 			return false
 		}
-		seen[weekday] = true
+		prev = weekday
 	}
 	return true
 }

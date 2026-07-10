@@ -6,6 +6,9 @@ export type PreferenceEnterTimeType =
   (typeof UserPreference.PreferenceEnterTime)[keyof typeof UserPreference.PreferenceEnterTime];
 
 export default class UserPreference extends Entity {
+  static readonly DEFAULT_WORKDAY_START = "09:00";
+  static readonly DEFAULT_WORKDAY_END = "17:00";
+
   static readonly PreferenceEnterTime = {
     Now: 1,
     NextDay: 2,

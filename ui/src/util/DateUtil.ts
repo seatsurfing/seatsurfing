@@ -359,6 +359,29 @@ export default class DateUtil {
   }
 
   /**
+   * Parses a string into a time string in format "HH:MM" (24h).
+   * Hours may be 0-23, minutes 0-59.
+   *
+   * @param s string to parse into time string
+   * @returns time string in format "HH:MM" (24h), or null if not parsable
+   */
+  static parseTimeString(s: string): string | null {
+    const match = s.match(/^(\d{2}):(\d{2})$/);
+    if (!match) {
+      return null;
+    }
+
+    const hours = parseInt(match[1], 10);
+    const minutes = match[2] !== undefined ? parseInt(match[2], 10) : 0;
+
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return null;
+    }
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  }
+
+  /**
    * Calculates the next enter and leave time based on the user's
    * preferred (workday) times and the org's global (booking) settings
    *

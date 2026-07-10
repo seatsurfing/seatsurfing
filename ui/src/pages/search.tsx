@@ -210,8 +210,8 @@ class Search extends React.Component<Props, State> {
           "0",
         ) === "1")(),
       prefEnterTime: 0,
-      prefWorkdayStart: "09:00",
-      prefWorkdayEnd: "17:00",
+      prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       prefWorkdays: [],
       prefLocationId: "",
       prefBookedColor: "#ff453a",
@@ -412,9 +412,13 @@ class Search extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = s.value;
+                state.prefWorkdayStart =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_START;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = s.value;
+                state.prefWorkdayEnd =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_END;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
@@ -1321,6 +1325,24 @@ class Search extends React.Component<Props, State> {
           this.props.t("maxConcurrentBookings"),
           String(location.maxConcurrentBookings),
           "maxConcurrentBookings",
+        ),
+      );
+    }
+
+    // bookable weekdays
+    if (location.bookableDays) {
+      const bookableDaysValue = location.bookableDays
+        .split(",")
+        .map((d) => parseInt(d, 10))
+        .filter((d) => !isNaN(d))
+        .sort((a, b) => a - b)
+        .map((d) => this.props.t("workday-short-" + d))
+        .join(", ");
+      attributeRows.push(
+        createFormRow(
+          this.props.t("bookableDays"),
+          bookableDaysValue,
+          "bookableDays",
         ),
       );
     }

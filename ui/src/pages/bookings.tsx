@@ -58,7 +58,7 @@ class Bookings extends React.Component<Props, State> {
 
   constructor(props: any) {
     super(props);
-    this.workdayStart = "09:00";
+    this.workdayStart = UserPreference.DEFAULT_WORKDAY_START;
     this.data = [];
     this.state = {
       loading: true,
@@ -88,7 +88,7 @@ class Bookings extends React.Component<Props, State> {
       this.data = list;
       this.workdayStart = Validation.isValidTimeString(workDayStart)
         ? workDayStart
-        : "09:00";
+        : UserPreference.DEFAULT_WORKDAY_START;
       const parsedWorkdays = workdays
         ? workdays.split(",").map((v: string) => parseInt(v))
         : [];

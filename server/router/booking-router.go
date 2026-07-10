@@ -530,6 +530,18 @@ func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, l
 	if !router.isValidConcurrent(m, location, bookingID) {
 		return false, ResponseCodeBookingLocationMaxConcurrent
 	}
+	if valid, code := router.isValidBookingWeekday(&m.BookingRequest, location, requestUser); !valid {
+		return false, code
+	}
+	return true, 0
+}
+
+// isValidBookingWeekday checks the location's optional bookable-weekdays
+// restriction against every calendar day the booking spans.
+func (router *BookingRouter) isValidBookingWeekday(m *BookingRequest, location *Location, user *User) (bool, int) {
+	if !IsLocationWeekdayBookable(location, user, m.Enter, m.Leave) {
+		return false, ResponseCodeBookingInvalidWeekday
+	}
 	return true, 0
 }
 

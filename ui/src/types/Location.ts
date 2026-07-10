@@ -14,6 +14,7 @@ export default class Location extends Entity {
   mapScale: number;
   mapType: string;
   allowedBookerGroupIds: string[];
+  bookableDays: string;
 
   constructor() {
     super();
@@ -28,6 +29,7 @@ export default class Location extends Entity {
     this.mapScale = 1.0;
     this.mapType = "";
     this.allowedBookerGroupIds = [];
+    this.bookableDays = "";
   }
 
   serialize(): Object {
@@ -40,6 +42,7 @@ export default class Location extends Entity {
       mapScale: this.mapScale,
       mapType: this.mapType,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
+      bookableDays: this.bookableDays,
     });
   }
 
@@ -58,6 +61,7 @@ export default class Location extends Entity {
     if (input.allowedBookerGroupIds) {
       this.allowedBookerGroupIds = input.allowedBookerGroupIds;
     }
+    this.bookableDays = input.bookableDays || "";
   }
 
   getBackendUrl(): string {
@@ -111,7 +115,7 @@ export default class Location extends Entity {
   async getAttributes(): Promise<SpaceAttributeValue[]> {
     return Ajax.get(this.getBackendUrl() + this.id + "/attribute").then(
       (result) => {
-        let list: SpaceAttributeValue[] = [];
+        const list: SpaceAttributeValue[] = [];
         (result.json as []).forEach((item) => {
           let e: SpaceAttributeValue = new SpaceAttributeValue();
           e.deserialize(item);
@@ -123,7 +127,7 @@ export default class Location extends Entity {
   }
 
   async setAttribute(attributeId: string, value: string): Promise<void> {
-    let payload = {
+    const payload = {
       value: value,
     };
     return Ajax.postData(
