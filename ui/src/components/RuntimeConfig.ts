@@ -2,6 +2,7 @@ import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
+import Organization from "@/types/Organization";
 
 interface RuntimeUserInfos {
   username: string;
@@ -136,48 +137,48 @@ export default class RuntimeConfig {
     const settings = await OrgSettings.list();
     settings.forEach((s) => {
       if (typeof window !== "undefined") {
-        if (s.name === "max_bookings_per_user")
+        if (s.name === Organization.PREF_MAX_BOOKINGS_PER_USER)
           RuntimeConfig.INFOS.maxBookingsPerUser = window.parseInt(s.value);
-        if (s.name === "max_concurrent_bookings_per_user")
+        if (s.name === Organization.PREF_MAX_CONCURRENT_BOOKINGS_PER_USER)
           RuntimeConfig.INFOS.maxConcurrentBookingsPerUser = window.parseInt(
             s.value,
           );
-        if (s.name === "max_days_in_advance")
+        if (s.name === Organization.PREF_MAX_DAYS_IN_ADVANCE)
           RuntimeConfig.INFOS.maxDaysInAdvance = window.parseInt(s.value);
-        if (s.name === "max_booking_duration_hours")
+        if (s.name === Organization.PREF_MAX_BOOKING_DURATION_HOURS)
           RuntimeConfig.INFOS.maxBookingDurationHours = window.parseInt(
             s.value,
           );
-        if (s.name === "max_hours_before_delete")
+        if (s.name === Organization.PREF_MAX_HOURS_BEFORE_DELETE)
           RuntimeConfig.INFOS.maxHoursBeforeDelete = window.parseInt(s.value);
-        if (s.name === "max_hours_partially_booked")
+        if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED)
           RuntimeConfig.INFOS.maxHoursPartiallyBooked = window.parseInt(
             s.value,
           );
-        if (s.name === "min_booking_duration_hours")
+        if (s.name === Organization.PREF_MIN_BOOKING_DURATION_HOURS)
           RuntimeConfig.INFOS.minBookingDurationHours = window.parseInt(
             s.value,
           );
       }
-      if (s.name === "daily_basis_booking")
+      if (s.name === Organization.PREF_DAILY_BASIS_BOOKING)
         RuntimeConfig.INFOS.dailyBasisBooking = s.value === "1";
-      if (s.name === "no_admin_restrictions")
+      if (s.name === Organization.PREF_NO_ADMIN_RESTRICTIONS)
         RuntimeConfig.INFOS.noAdminRestrictions = s.value === "1";
-      if (s.name === "max_hours_partially_booked_enabled")
+      if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED_ENABLED)
         RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled = s.value === "1";
-      if (s.name === "show_names")
+      if (s.name === Organization.PREF_SHOW_NAMES)
         RuntimeConfig.INFOS.showNames = s.value === "1";
-      if (s.name === "disable_buddies")
+      if (s.name === Organization.PREF_DISABLE_BUDDIES)
         RuntimeConfig.INFOS.disableBuddies = s.value === "1";
-      if (s.name === "custom_logo_url")
+      if (s.name === Organization.PREF_CUSTOM_LOGO_URL)
         RuntimeConfig.INFOS.customLogoUrl = s.value;
-      if (s.name === "default_timezone")
+      if (s.name === Organization.PREF_DEFAULT_TIMEZONE)
         RuntimeConfig.INFOS.defaultTimezone = s.value;
       if (s.name === "_sys_org_language")
         RuntimeConfig.INFOS.orgLanguage = s.value;
       if (s.name === "feature_recurring_bookings")
         RuntimeConfig.INFOS.featureRecurringBookings = s.value === "1";
-      if (s.name === "allow_recurring_bookings")
+      if (s.name === Organization.PREF_ALLOW_RECURRING_BOOKINGS)
         RuntimeConfig.INFOS.allowRecurringBookings = s.value === "1";
       if (s.name === "_sys_admin_menu_items")
         RuntimeConfig.INFOS.pluginMenuItems = s.value
@@ -195,7 +196,7 @@ export default class RuntimeConfig {
           : [];
       if (s.name === "feature_kiosk_mode")
         RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
-      if (s.name === "kiosk_mode_enabled")
+      if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
         RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
       if (s.name === "cloud_hosted")
         RuntimeConfig.INFOS.cloudHosted = s.value ? JSON.parse(s.value) : [];
@@ -207,15 +208,15 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
       if (s.name === "_sys_disable_password_login")
         RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
-      if (s.name === "subject_default")
+      if (s.name === Organization.PREF_SUBJECT_DEFAULT)
         RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
-      if (s.name === "enforce_totp")
+      if (s.name === Organization.PREF_ENFORCE_TOTP)
         RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
-      if (s.name === "hide_reports")
+      if (s.name === Organization.PREF_HIDE_REPORTS)
         RuntimeConfig.INFOS.hideReports = s.value === "1";
-      if (s.name === "hide_stats")
+      if (s.name === Organization.PREF_HIDE_STATS)
         RuntimeConfig.INFOS.hideStats = s.value === "1";
-      if (s.name === "target_utilization_hours_per_week")
+      if (s.name === Organization.PREF_TARGET_UTILIZATION_HOURS_PER_WEEK)
         RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
           s.value,
         );

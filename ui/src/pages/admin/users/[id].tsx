@@ -25,6 +25,7 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import OrgSettings from "@/types/Settings";
+import Organization from "@/types/Organization";
 
 import AuthProvider from "@/types/AuthProvider";
 import ErrorText from "@/types/ErrorText";
@@ -111,7 +112,7 @@ class EditUser extends React.Component<Props, State> {
 
   loadData = () => {
     const promises: Promise<any>[] = [
-      OrgSettings.getOne("feature_no_user_limit"),
+      OrgSettings.getOne(Organization.PREF_FEATURE_NO_USER_LIMIT),
       User.getCount(),
       User.getSelf().then((me) => {
         return [me];

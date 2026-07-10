@@ -10,6 +10,7 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import OrgSettings from "@/types/Settings";
+import Organization from "@/types/Organization";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Space from "@/types/Space";
@@ -19,7 +20,6 @@ import Booking from "@/types/Booking";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
-
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import RendererUtils from "@/util/RendererUtils";
@@ -241,22 +241,22 @@ class EditBooking extends React.Component<Props, State> {
   loadSettings = async (): Promise<void> => {
     return OrgSettings.list().then((settings) => {
       settings.forEach((s) => {
-        if (s.name === "daily_basis_booking") {
+        if (s.name === Organization.PREF_DAILY_BASIS_BOOKING) {
           this.dailyBasisBooking = s.value === "1";
         }
-        if (s.name === "no_admin_restrictions") {
+        if (s.name === Organization.PREF_NO_ADMIN_RESTRICTIONS) {
           this.noAdminRestrictions = s.value === "1";
         }
-        if (s.name === "max_bookings_per_user") {
+        if (s.name === Organization.PREF_MAX_BOOKINGS_PER_USER) {
           this.maxBookingsPerUser = window.parseInt(s.value);
         }
-        if (s.name === "max_days_in_advance") {
+        if (s.name === Organization.PREF_MAX_DAYS_IN_ADVANCE) {
           this.maxDaysInAdvance = window.parseInt(s.value);
         }
-        if (s.name === "max_booking_duration_hours") {
+        if (s.name === Organization.PREF_MAX_BOOKING_DURATION_HOURS) {
           this.maxBookingDurationHours = window.parseInt(s.value);
         }
-        if (s.name === "min_booking_duration_hours") {
+        if (s.name === Organization.PREF_MIN_BOOKING_DURATION_HOURS) {
           this.minBookingDurationHours = window.parseInt(s.value);
         }
       });
