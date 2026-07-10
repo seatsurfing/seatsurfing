@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+// Host -> plugin RPCs: mirrors the api.SeatsurfingPlugin interface.
+//
+// IMPORTANT: field numbers must never be renumbered or reused once released.
+// Host and plugin(s) are deployed independently, so wire compatibility across
+// versions depends entirely on additive changes (new fields get new numbers).
+package seatsurfing.plugin.v1;
+
+option go_package = "github.com/seatsurfing/seatsurfing/server/api/pluginpb";
+
+import "common.proto";
+
+service SeatsurfingPluginService {
+  rpc GetRoutePrefix(seatsurfing.plugin.v1.Empty) returns (StringListReply);
+  rpc GetUnauthorizedRoutes(seatsurfing.plugin.v1.Empty) returns (StringListReply);
+  rpc RunSchemaUpdates(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
+  rpc GetAdminUIMenuItems(seatsurfing.plugin.v1.Empty) returns (AdminUIMenuItemsReply);
+  rpc OnTimer(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
+  // OnInit carries no broker id in gRPC mode - the plugin already knows the
+  // host's HostAPI address from its own static config and dials it eagerly
+  // at process startup, independent of this call. OnInit must be safe to
+  // call more than once: the host re-invokes it on every reconnection.
+  rpc OnInit(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
+  rpc GetAdminWelcomeScreen(seatsurfing.plugin.v1.Empty) returns (AdminWelcomeScreenReply);
+  rpc GetPublicSettings(GetPublicSettingsRequest) returns (PluginSettingsReply);
+  rpc HandleHTTPRequest(HttpRequest) returns (HttpResponse);
+  rpc OnUserCreated(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnUserUpdated(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnBeforeUserDelete(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnOrganizationCreated(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnOrganizationUpdated(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnBeforeOrganizationDelete(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnBookingCreated(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnBookingUpdated(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+  rpc OnBookingDeleted(IdRequest) returns (seatsurfing.plugin.v1.Empty);
+}
+
+message IdRequest {
+  string id = 1;
+}
+
+message StringListReply {
+  repeated string values = 1;
+}
+
+message AdminUIMenuItem {
+  string id = 1;
+  string title = 2;
+  string source = 3;
+  string visibility = 4;
+  string icon = 5;
+}
+
+message AdminUIMenuItemsReply {
+  repeated AdminUIMenuItem items = 1;
+}
+
+message AdminWelcomeScreen {
+  string source = 1;
+  string skip_on_setting_true = 2;
+}
+
+message AdminWelcomeScreenReply {
+  bool present = 1;
+  AdminWelcomeScreen screen = 2;
+}
+
+message GetPublicSettingsRequest {
+  string organization_id = 1;
+}
+
+message PluginSetting {
+  string name = 1;
+  string value = 2;
+  int32 setting_type = 3; // maps api.SettingType int constants
+}
+
+message PluginSettingsReply {
+  repeated PluginSetting settings = 1;
+}
+
+message HeaderValues {
+  repeated string values = 1;
+}
+
+message HttpRequest {
+  string method = 1;
+  string path = 2;
+  string raw_query = 3;
+  map<string, HeaderValues> headers = 4;
+  bytes body = 5;
+  string user_id = 6;
+}
+
+message HttpResponse {
+  int32 status_code = 1;
+  map<string, HeaderValues> headers = 2;
+  bytes body = 3;
+}
