@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.114.1](https://github.com/seatsurfing/seatsurfing/compare/v1.114.0...v1.114.1) (2026-07-11)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump google.golang.org/grpc from 1.81.1 to 1.82.0 in /server in the minor-and-patch group ([#2390](https://github.com/seatsurfing/seatsurfing/issues/2390)) ([b31b669](https://github.com/seatsurfing/seatsurfing/commit/b31b669a4f6c8b11b929ccedad29f6ad26489815))
+* **server:** add env var DEV_UI_PROXY_TARGET ([#2392](https://github.com/seatsurfing/seatsurfing/issues/2392)) ([88850a9](https://github.com/seatsurfing/seatsurfing/commit/88850a99ab0ade65148142c8a0fcefb371d24a70))
+* **server:** add plugin base path ([#2394](https://github.com/seatsurfing/seatsurfing/issues/2394)) ([f8f86aa](https://github.com/seatsurfing/seatsurfing/commit/f8f86aa1b6d00357c3e5e84ebcfcf025e4d8dcb4))
+
+
+### 🔧 Refactoring
+
+* **main:** refactor org settings ([#2391](https://github.com/seatsurfing/seatsurfing/issues/2391)) ([3884f87](https://github.com/seatsurfing/seatsurfing/commit/3884f87856d6faff1ef1c8a887bd90a09d57cc23))
+
 ## [1.114.0](https://github.com/seatsurfing/seatsurfing/compare/v1.113.5...v1.114.0) (2026-07-10)
 
 
