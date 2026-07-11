@@ -43,13 +43,21 @@ var _appOnce sync.Once
 // current connection; forwardToPlugin/hooks treat a not-ready instance as
 // unavailable rather than crashing or silently dropping it.
 type PluginInstance struct {
-	Instance   api.SeatsurfingPlugin
-	client     *api.PluginGRPC // same value as Instance, typed concretely for RunSchemaUpdatesErr/OnInitErr
-	Conn       *grpc.ClientConn
-	Name       string
-	Config     RemotePluginConfig
-	Ready      atomic.Bool
-	registered atomic.Bool // guards the one-time api.RegisterPlugin call
+	Instance api.SeatsurfingPlugin
+	client   *api.PluginGRPC // same value as Instance, typed concretely for RunSchemaUpdatesErr/OnInitErr
+	Conn     *grpc.ClientConn
+	Name     string
+	Config   RemotePluginConfig
+	// BasePath and LegacyPrefixes are fetched live over gRPC at startup (see
+	// resolvePluginRoutes), not read from PLUGINS_CONFIG - routing
+	// information is entirely API-hook-driven. BasePath is the plugin's
+	// single canonical URL prefix; LegacyPrefixes are its old flat top-level
+	// prefixes, kept mounted for backward compatibility with
+	// externally-configured URLs.
+	BasePath       string
+	LegacyPrefixes []string
+	Ready          atomic.Bool
+	registered     atomic.Bool // guards the one-time api.RegisterPlugin call
 }
 
 func GetApp() *App {
@@ -306,17 +314,70 @@ func (a *App) forwardToPlugin(inst *PluginInstance, w http.ResponseWriter, r *ht
 	w.Write(resp.Body)
 }
 
+// pluginStartupTimeout bounds how long the host waits, at process startup
+// only, for each plugin to become reachable and report its routing
+// information (base path + legacy prefixes) before InitializeRouter() builds
+// the mux router from it. This is the one place plugin liveness is
+// synchronous and startup-fatal: a plugin whose routes can never be learned
+// can never be routed to at all, so it's treated as a startup error rather
+// than a runtime 503. Once routes are resolved here, later outages/restarts
+// fall back to the async watchPluginConnection lifecycle and
+// forwardToPlugin's Ready gate (503), exactly as before.
+const pluginStartupTimeout = 30 * time.Second
+
 // NotifyPlugins starts the HostAPI gRPC server (so plugins have somewhere to
-// call back into once they connect) and then kicks off connection and
-// registration for every configured plugin. Called from main.go only after
-// the host's own database migrations/default org/settings are initialized,
-// so a plugin's OnInit can never race ahead of the host's own startup.
+// call back into once they connect), synchronously resolves each plugin's
+// routing information (see resolvePluginRoutes), and then kicks off the
+// ongoing connection/registration lifecycle for every configured plugin.
+// Called from main.go only after the host's own database
+// migrations/default org/settings are initialized, so a plugin's OnInit can
+// never race ahead of the host's own startup - and before InitializeRouter,
+// which depends on BasePath/LegacyPrefixes being populated.
 func (a *App) NotifyPlugins() {
 	a.StartHostAPIGRPCServer()
 	for _, inst := range a.PluginInstances {
 		inst.Conn.Connect()
+		a.resolvePluginRoutes(inst)
 		go a.watchPluginConnection(inst)
 	}
+}
+
+// resolvePluginRoutes blocks until inst's gRPC connection is ready and its
+// base path + legacy route prefixes have been fetched, or until
+// pluginStartupTimeout elapses, in which case it aborts host startup.
+func (a *App) resolvePluginRoutes(inst *PluginInstance) {
+	deadline := time.Now().Add(pluginStartupTimeout)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	defer cancel()
+
+	state := inst.Conn.GetState()
+	for state != connectivity.Ready {
+		if !inst.Conn.WaitForStateChange(ctx, state) {
+			log.Fatalf("Plugin %s: did not become reachable within %s at startup", inst.Name, pluginStartupTimeout)
+		}
+		state = inst.Conn.GetState()
+	}
+
+	var basePath string
+	var legacyPrefixes []string
+	var err error
+	for {
+		basePath, err = inst.client.GetBasePathErr()
+		if err == nil {
+			legacyPrefixes, err = inst.client.GetRoutePrefixErr()
+		}
+		if err == nil {
+			break
+		}
+		if time.Now().After(deadline) {
+			log.Fatalf("Plugin %s: could not fetch routing information at startup: %v", inst.Name, err)
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	inst.BasePath = basePath
+	inst.LegacyPrefixes = legacyPrefixes
+	log.Printf("Plugin %s: base path %q, %d legacy prefix(es)", inst.Name, basePath, len(legacyPrefixes))
 }
 
 // StartHostAPIGRPCServer binds GetConfig().HostAPIListenAddr and serves
@@ -443,17 +504,25 @@ func (a *App) InitializeRouter() {
 		subRouter := a.Router.PathPrefix(route).Subrouter()
 		router.SetupRoutes(subRouter)
 	}
-	// Route prefixes come from PLUGINS_CONFIG, not a live call to the plugin,
-	// so the router is complete even when a plugin is unreachable at startup
-	// - forwardToPlugin's Ready gate serves 503 for those routes until the
-	// plugin connects (see the connect-driven lifecycle in InitializePlugins/
-	// NotifyPlugins).
+	// Plugin route prefixes (BasePath + LegacyPrefixes) were fetched live
+	// over gRPC in NotifyPlugins/resolvePluginRoutes, which runs before this
+	// method and blocks host startup until every plugin's routing
+	// information is known - so by the time InitializeRouter runs, the
+	// router can be built completely, exactly as when prefixes came from
+	// static config. The difference is only at cold start: a plugin that
+	// never becomes reachable within pluginStartupTimeout now fails host
+	// startup outright, instead of silently registering unreachable routes.
+	// After startup, a plugin disconnecting/restarting behaves exactly as
+	// before - forwardToPlugin's Ready gate serves 503 until it reconnects.
+	registeredPrefixes := append([]string{}, builtInPrefixes...)
 	for _, inst := range a.PluginInstances {
-		for _, prefix := range inst.Config.RoutePrefixes {
-			if pluginPrefixConflicts(prefix, builtInPrefixes) {
-				log.Printf("Plugin route prefix %q conflicts with a built-in route and will not be registered", prefix)
+		prefixes := append([]string{inst.BasePath}, inst.LegacyPrefixes...)
+		for _, prefix := range prefixes {
+			if pluginPrefixConflicts(prefix, registeredPrefixes) {
+				log.Printf("Plugin route prefix %q conflicts with a built-in or another plugin's route and will not be registered", prefix)
 				continue
 			}
+			registeredPrefixes = append(registeredPrefixes, prefix)
 			prefix := prefix
 			inst := inst
 			subRouter := a.Router.PathPrefix(prefix).Subrouter()

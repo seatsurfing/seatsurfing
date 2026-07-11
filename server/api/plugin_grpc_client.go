@@ -37,13 +37,43 @@ func (p *PluginGRPC) ctx() (context.Context, context.CancelFunc) {
 }
 
 func (p *PluginGRPC) GetRoutePrefix() []string {
+	prefixes, err := p.GetRoutePrefixErr()
+	if err != nil {
+		log.Println("GetRoutePrefix RPC error:", err)
+		return []string{}
+	}
+	return prefixes
+}
+
+func (p *PluginGRPC) GetRoutePrefixErr() ([]string, error) {
 	ctx, cancel := p.ctx()
 	defer cancel()
 	resp, err := p.client.GetRoutePrefix(ctx, &commonpb.Empty{})
 	if err != nil {
-		return []string{}
+		return nil, err
 	}
-	return resp.Values
+	return resp.Values, nil
+}
+
+// GetBasePath is a best-effort wrapper; the startup path uses GetBasePathErr
+// instead so it can distinguish success from failure.
+func (p *PluginGRPC) GetBasePath() string {
+	basePath, err := p.GetBasePathErr()
+	if err != nil {
+		log.Println("GetBasePath RPC error:", err)
+		return ""
+	}
+	return basePath
+}
+
+func (p *PluginGRPC) GetBasePathErr() (string, error) {
+	ctx, cancel := p.ctx()
+	defer cancel()
+	resp, err := p.client.GetBasePath(ctx, &commonpb.Empty{})
+	if err != nil {
+		return "", err
+	}
+	return resp.Value, nil
 }
 
 func (p *PluginGRPC) GetUnauthorizedRoutes() []string {

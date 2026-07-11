@@ -26,6 +26,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	SeatsurfingPluginService_GetBasePath_FullMethodName                = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetBasePath"
 	SeatsurfingPluginService_GetRoutePrefix_FullMethodName             = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetRoutePrefix"
 	SeatsurfingPluginService_GetUnauthorizedRoutes_FullMethodName      = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetUnauthorizedRoutes"
 	SeatsurfingPluginService_RunSchemaUpdates_FullMethodName           = "/seatsurfing.plugin.v1.SeatsurfingPluginService/RunSchemaUpdates"
@@ -50,6 +51,13 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SeatsurfingPluginServiceClient interface {
+	// GetBasePath returns the single canonical URL prefix under which all of
+	// this plugin's endpoints are nested (e.g. "/cloud-features/"). GetRoutePrefix
+	// below still returns the plugin's legacy flat top-level prefixes, which the
+	// host keeps mounting alongside the base path for backward compatibility
+	// with externally-configured URLs (Stripe webhooks, OAuth redirect URIs,
+	// customer SCIM base URLs) that must not break on rollout.
+	GetBasePath(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BasePathReply, error)
 	GetRoutePrefix(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*StringListReply, error)
 	GetUnauthorizedRoutes(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*StringListReply, error)
 	RunSchemaUpdates(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*commonpb.Empty, error)
@@ -80,6 +88,16 @@ type seatsurfingPluginServiceClient struct {
 
 func NewSeatsurfingPluginServiceClient(cc grpc.ClientConnInterface) SeatsurfingPluginServiceClient {
 	return &seatsurfingPluginServiceClient{cc}
+}
+
+func (c *seatsurfingPluginServiceClient) GetBasePath(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BasePathReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BasePathReply)
+	err := c.cc.Invoke(ctx, SeatsurfingPluginService_GetBasePath_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *seatsurfingPluginServiceClient) GetRoutePrefix(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*StringListReply, error) {
@@ -266,6 +284,13 @@ func (c *seatsurfingPluginServiceClient) OnBookingDeleted(ctx context.Context, i
 // All implementations must embed UnimplementedSeatsurfingPluginServiceServer
 // for forward compatibility.
 type SeatsurfingPluginServiceServer interface {
+	// GetBasePath returns the single canonical URL prefix under which all of
+	// this plugin's endpoints are nested (e.g. "/cloud-features/"). GetRoutePrefix
+	// below still returns the plugin's legacy flat top-level prefixes, which the
+	// host keeps mounting alongside the base path for backward compatibility
+	// with externally-configured URLs (Stripe webhooks, OAuth redirect URIs,
+	// customer SCIM base URLs) that must not break on rollout.
+	GetBasePath(context.Context, *commonpb.Empty) (*BasePathReply, error)
 	GetRoutePrefix(context.Context, *commonpb.Empty) (*StringListReply, error)
 	GetUnauthorizedRoutes(context.Context, *commonpb.Empty) (*StringListReply, error)
 	RunSchemaUpdates(context.Context, *commonpb.Empty) (*commonpb.Empty, error)
@@ -298,6 +323,9 @@ type SeatsurfingPluginServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSeatsurfingPluginServiceServer struct{}
 
+func (UnimplementedSeatsurfingPluginServiceServer) GetBasePath(context.Context, *commonpb.Empty) (*BasePathReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBasePath not implemented")
+}
 func (UnimplementedSeatsurfingPluginServiceServer) GetRoutePrefix(context.Context, *commonpb.Empty) (*StringListReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRoutePrefix not implemented")
 }
@@ -372,6 +400,24 @@ func RegisterSeatsurfingPluginServiceServer(s grpc.ServiceRegistrar, srv Seatsur
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&SeatsurfingPluginService_ServiceDesc, srv)
+}
+
+func _SeatsurfingPluginService_GetBasePath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(commonpb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SeatsurfingPluginServiceServer).GetBasePath(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SeatsurfingPluginService_GetBasePath_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SeatsurfingPluginServiceServer).GetBasePath(ctx, req.(*commonpb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _SeatsurfingPluginService_GetRoutePrefix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -705,6 +751,10 @@ var SeatsurfingPluginService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "seatsurfing.plugin.v1.SeatsurfingPluginService",
 	HandlerType: (*SeatsurfingPluginServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetBasePath",
+			Handler:    _SeatsurfingPluginService_GetBasePath_Handler,
+		},
 		{
 			MethodName: "GetRoutePrefix",
 			Handler:    _SeatsurfingPluginService_GetRoutePrefix_Handler,
