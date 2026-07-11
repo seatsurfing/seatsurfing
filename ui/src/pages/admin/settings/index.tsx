@@ -184,64 +184,71 @@ class Settings extends React.Component<Props, State> {
     return OrgSettings.list().then((settings) => {
       const state: any = {};
       settings.forEach((s) => {
-        if (s.name === "allow_any_user") state.allowAnyUser = s.value === "1";
-        if (s.name === "default_timezone") state.defaultTimezone = s.value;
-        if (s.name === "confluence_server_shared_secret")
+        if (s.name === Organization.PREF_ALLOW_ANY_USER)
+          state.allowAnyUser = s.value === "1";
+        if (s.name === Organization.PREF_DEFAULT_TIMEZONE)
+          state.defaultTimezone = s.value;
+        if (s.name === Organization.PREF_CONFLUENCE_SERVER_SHARED_SECRET)
           state.confluenceServerSharedSecret = s.value;
-        if (s.name === "custom_logo_url") state.customLogoUrl = s.value;
-        if (s.name === "max_bookings_per_user")
+        if (s.name === Organization.PREF_CUSTOM_LOGO_URL)
+          state.customLogoUrl = s.value;
+        if (s.name === Organization.PREF_MAX_BOOKINGS_PER_USER)
           state.maxBookingsPerUser = window.parseInt(s.value);
-        if (s.name === "max_concurrent_bookings_per_user")
+        if (s.name === Organization.PREF_MAX_CONCURRENT_BOOKINGS_PER_USER)
           state.maxConcurrentBookingsPerUser = window.parseInt(s.value);
-        if (s.name === "max_days_in_advance")
+        if (s.name === Organization.PREF_MAX_DAYS_IN_ADVANCE)
           state.maxDaysInAdvance = window.parseInt(s.value);
-        if (s.name === "booking_retention_enabled")
+        if (s.name === Organization.PREF_BOOKING_RETENTION_ENABLED)
           state.bookingRetentionEnabled = window.parseInt(s.value);
-        if (s.name === "booking_retention_days")
+        if (s.name === Organization.PREF_BOOKING_RETENTION_DAYS)
           state.bookingRetentionDays = window.parseInt(s.value);
-        if (s.name === "enable_max_hours_before_delete")
+        if (s.name === Organization.PREF_ENABLE_MAX_HOURS_BEFORE_DELETE)
           state.enableMaxHoursBeforeDelete = window.parseInt(s.value);
-        if (s.name === "max_hours_before_delete")
+        if (s.name === Organization.PREF_MAX_HOURS_BEFORE_DELETE)
           state.maxHoursBeforeDelete = window.parseInt(s.value);
-        if (s.name === "daily_basis_booking")
+        if (s.name === Organization.PREF_DAILY_BASIS_BOOKING)
           state.dailyBasisBooking = s.value === "1";
-        if (s.name === "max_booking_duration_hours")
+        if (s.name === Organization.PREF_MAX_BOOKING_DURATION_HOURS)
           state.maxBookingDuration = window.parseInt(s.value);
-        if (s.name === "min_booking_duration_hours")
+        if (s.name === Organization.PREF_MIN_BOOKING_DURATION_HOURS)
           state.minBookingDuration = window.parseInt(s.value);
-        if (s.name === "target_utilization_hours_per_week")
+        if (s.name === Organization.PREF_TARGET_UTILIZATION_HOURS_PER_WEEK)
           state.targetUtilizationHoursPerWeek = window.parseInt(s.value);
-        if (s.name === "subject_default")
+        if (s.name === Organization.PREF_SUBJECT_DEFAULT)
           state.subjectDefault = window.parseInt(s.value);
-        if (s.name === "no_admin_restrictions")
+        if (s.name === Organization.PREF_NO_ADMIN_RESTRICTIONS)
           state.noAdminRestrictions = s.value === "1";
-        if (s.name === "show_names") state.showNames = s.value === "1";
-        if (s.name === "allow_booking_nonexist_users")
+        if (s.name === Organization.PREF_SHOW_NAMES)
+          state.showNames = s.value === "1";
+        if (s.name === Organization.PREF_ALLOW_BOOKING_NONEXIST_USERS)
           state.allowBookingNonExistUsers = s.value === "1";
-        if (s.name === "disable_buddies")
+        if (s.name === Organization.PREF_DISABLE_BUDDIES)
           state.disableBuddies = s.value === "1";
-        if (s.name === "max_hours_partially_booked_enabled")
+        if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED_ENABLED)
           state.maxHoursPartiallyBookedEnabled = s.value === "1";
-        if (s.name === "max_hours_partially_booked")
+        if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED)
           state.maxHoursPartiallyBooked = window.parseInt(s.value);
-        if (s.name === "feature_no_user_limit")
+        if (s.name === Organization.PREF_FEATURE_NO_USER_LIMIT)
           state.featureNoUserLimit = s.value === "1";
-        if (s.name === "feature_custom_domains")
+        if (s.name === Organization.PREF_FEATURE_CUSTOM_DOMAINS)
           state.featureCustomDomains = s.value === "1";
-        if (s.name === "allow_recurring_bookings")
+        if (s.name === Organization.PREF_ALLOW_RECURRING_BOOKINGS)
           state.allowRecurringBookings = s.value === "1";
-        if (s.name === "new_user_default_mail_notification")
+        if (s.name === Organization.PREF_NEW_USER_DEFAULT_MAIL_NOTIFICATION)
           state.newUserDefaultMailNotification = s.value === "1";
-        if (s.name === "enforce_totp") state.enforceTOTP = s.value === "1";
-        if (s.name === "kiosk_mode_enabled")
+        if (s.name === Organization.PREF_ENFORCE_TOTP)
+          state.enforceTOTP = s.value === "1";
+        if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
           state.kioskModeEnabled = s.value === "1";
-        if (s.name === "kiosk_access_secret")
+        if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
-        if (s.name === "_sys_org_signup_delete")
+        if (s.name === Organization.PREF_SYS_ORG_SIGNUP_DELETE)
           state.allowOrgDelete = s.value === "1";
-        if (s.name === "hide_reports") state.hideReports = s.value === "1";
-        if (s.name === "hide_stats") state.hideStats = s.value === "1";
+        if (s.name === Organization.PREF_HIDE_REPORTS)
+          state.hideReports = s.value === "1";
+        if (s.name === Organization.PREF_HIDE_STATS)
+          state.hideStats = s.value === "1";
       });
 
       const convert = (value: number): number => {
@@ -266,7 +273,10 @@ class Settings extends React.Component<Props, State> {
 
   saveKioskSecret = (e: any) => {
     e.preventDefault();
-    OrgSettings.setOne("kiosk_access_secret", this.state.kioskSecret)
+    OrgSettings.setOne(
+      Organization.PREF_KIOSK_ACCESS_SECRET,
+      this.state.kioskSecret,
+    )
       .then(() => {
         this.setState({
           kioskSecret: RendererUtils.SECRET_PLACEHOLDER,
@@ -290,100 +300,127 @@ class Settings extends React.Component<Props, State> {
       error: false,
     });
     const payload = [
-      new OrgSettings("allow_any_user", this.state.allowAnyUser ? "1" : "0"),
-      new OrgSettings("default_timezone", this.state.defaultTimezone),
       new OrgSettings(
-        "confluence_server_shared_secret",
+        Organization.PREF_ALLOW_ANY_USER,
+        this.state.allowAnyUser ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_DEFAULT_TIMEZONE,
+        this.state.defaultTimezone,
+      ),
+      new OrgSettings(
+        Organization.PREF_CONFLUENCE_SERVER_SHARED_SECRET,
         this.state.confluenceServerSharedSecret,
       ),
-      new OrgSettings("custom_logo_url", this.state.customLogoUrl),
       new OrgSettings(
-        "daily_basis_booking",
+        Organization.PREF_CUSTOM_LOGO_URL,
+        this.state.customLogoUrl,
+      ),
+      new OrgSettings(
+        Organization.PREF_DAILY_BASIS_BOOKING,
         this.state.dailyBasisBooking ? "1" : "0",
       ),
       new OrgSettings(
-        "no_admin_restrictions",
+        Organization.PREF_NO_ADMIN_RESTRICTIONS,
         this.state.noAdminRestrictions ? "1" : "0",
       ),
-      new OrgSettings("show_names", this.state.showNames ? "1" : "0"),
       new OrgSettings(
-        "allow_booking_nonexist_users",
+        Organization.PREF_SHOW_NAMES,
+        this.state.showNames ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_ALLOW_BOOKING_NONEXIST_USERS,
         this.state.allowBookingNonExistUsers ? "1" : "0",
       ),
-      new OrgSettings("disable_buddies", this.state.disableBuddies ? "1" : "0"),
       new OrgSettings(
-        "max_bookings_per_user",
+        Organization.PREF_DISABLE_BUDDIES,
+        this.state.disableBuddies ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_MAX_BOOKINGS_PER_USER,
         this.state.maxBookingsPerUser.toString(),
       ),
       new OrgSettings(
-        "max_concurrent_bookings_per_user",
+        Organization.PREF_MAX_CONCURRENT_BOOKINGS_PER_USER,
         this.state.maxConcurrentBookingsPerUser.toString(),
       ),
       new OrgSettings(
-        "max_days_in_advance",
+        Organization.PREF_MAX_DAYS_IN_ADVANCE,
         this.state.maxDaysInAdvance.toString(),
       ),
       new OrgSettings(
-        "booking_retention_enabled",
+        Organization.PREF_BOOKING_RETENTION_ENABLED,
         this.state.bookingRetentionEnabled ? "1" : "0",
       ),
       new OrgSettings(
-        "booking_retention_days",
+        Organization.PREF_BOOKING_RETENTION_DAYS,
         this.state.bookingRetentionDays.toString(),
       ),
       new OrgSettings(
-        "enable_max_hours_before_delete",
+        Organization.PREF_ENABLE_MAX_HOURS_BEFORE_DELETE,
         this.state.enableMaxHoursBeforeDelete ? "1" : "0",
       ),
       new OrgSettings(
-        "max_hours_before_delete",
+        Organization.PREF_MAX_HOURS_BEFORE_DELETE,
         this.state.maxHoursBeforeDelete.toString(),
       ),
       new OrgSettings(
-        "max_booking_duration_hours",
+        Organization.PREF_MAX_BOOKING_DURATION_HOURS,
         (
           Math.max(Math.round(this.state.maxBookingDuration), 1) *
           (this.state.dailyBasisBooking ? 24 : 1)
         ).toString(),
       ),
       new OrgSettings(
-        "max_hours_partially_booked_enabled",
+        Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED_ENABLED,
         this.state.maxHoursPartiallyBookedEnabled ? "1" : "0",
       ),
       new OrgSettings(
-        "max_hours_partially_booked",
+        Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED,
         this.state.maxHoursPartiallyBooked.toString(),
       ),
       new OrgSettings(
-        "min_booking_duration_hours",
+        Organization.PREF_MIN_BOOKING_DURATION_HOURS,
         (
           Math.round(this.state.minBookingDuration) *
           (this.state.dailyBasisBooking ? 24 : 1)
         ).toString(),
       ),
       new OrgSettings(
-        "target_utilization_hours_per_week",
+        Organization.PREF_TARGET_UTILIZATION_HOURS_PER_WEEK,
         (
           Math.max(Math.round(this.state.targetUtilizationHoursPerWeek), 1) *
           (this.state.dailyBasisBooking ? 24 : 1)
         ).toString(),
       ),
       new OrgSettings(
-        "allow_recurring_bookings",
+        Organization.PREF_ALLOW_RECURRING_BOOKINGS,
         this.state.allowRecurringBookings ? "1" : "0",
       ),
       new OrgSettings(
-        "new_user_default_mail_notification",
+        Organization.PREF_NEW_USER_DEFAULT_MAIL_NOTIFICATION,
         this.state.newUserDefaultMailNotification ? "1" : "0",
       ),
-      new OrgSettings("enforce_totp", this.state.enforceTOTP ? "1" : "0"),
-      new OrgSettings("subject_default", this.state.subjectDefault.toString()),
       new OrgSettings(
-        "kiosk_mode_enabled",
+        Organization.PREF_ENFORCE_TOTP,
+        this.state.enforceTOTP ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_SUBJECT_DEFAULT,
+        this.state.subjectDefault.toString(),
+      ),
+      new OrgSettings(
+        Organization.PREF_KIOSK_MODE_ENABLED,
         this.state.kioskModeEnabled ? "1" : "0",
       ),
-      new OrgSettings("hide_reports", this.state.hideReports ? "1" : "0"),
-      new OrgSettings("hide_stats", this.state.hideStats ? "1" : "0"),
+      new OrgSettings(
+        Organization.PREF_HIDE_REPORTS,
+        this.state.hideReports ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_HIDE_STATS,
+        this.state.hideStats ? "1" : "0",
+      ),
     ];
     try {
       await OrgSettings.setAll(payload);

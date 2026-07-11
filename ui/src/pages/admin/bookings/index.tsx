@@ -20,7 +20,7 @@ import Booking from "@/types/Booking";
 import DateUtil from "@/util/DateUtil";
 import Formatting from "@/util/Formatting";
 import OrgSettings from "@/types/Settings";
-import Ajax from "@/util/Ajax";
+import Organization from "@/types/Organization";
 import AjaxError from "@/util/AjaxError";
 
 import DateTimePicker from "@/components/DateTimePicker";
@@ -208,7 +208,7 @@ class Bookings extends React.Component<Props, State> {
   loadSettings = async (): Promise<void> => {
     const settings = await OrgSettings.list();
     settings.forEach((s) => {
-      if (s.name === "max_hours_before_delete") {
+      if (s.name === Organization.PREF_MAX_HOURS_BEFORE_DELETE) {
         this.maxHoursBeforeDelete = window.parseInt(s.value);
       }
     });
