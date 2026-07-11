@@ -393,7 +393,7 @@ func (a *App) globalNotFoundMiddleware(next http.Handler) http.Handler {
 		}
 
 		if GetConfig().Development {
-			a.proxyHandler(w, r, "localhost:3000/ui/404/")
+			a.proxyHandler(w, r, GetConfig().DevUIProxyTarget+"/ui/404/")
 			return
 		}
 		if content404Err != nil {
@@ -797,7 +797,7 @@ func (a *App) setupStaticUIRoutes(router *mux.Router) {
 	const basePath = "/ui"
 	if GetConfig().Development {
 		router.PathPrefix(basePath + "/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			a.proxyHandler(w, r, "localhost:3000")
+			a.proxyHandler(w, r, GetConfig().DevUIProxyTarget)
 		})
 		return
 	}

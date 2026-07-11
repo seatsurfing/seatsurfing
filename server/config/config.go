@@ -47,6 +47,7 @@ type Config struct {
 	ACSAccessKey                        string
 	MockSendmail                        bool
 	Development                         bool
+	DevUIProxyTarget                    string // host:port of the UI dev server that /ui/* is proxied to when Development is enabled
 	InitOrgName                         string
 	InitOrgUser                         string
 	InitOrgPass                         string
@@ -98,6 +99,7 @@ func (c *Config) ReadConfig() {
 	if c.Development {
 		log.Println("ℹ️  Development mode is enabled, do not use this in production environments!")
 	}
+	c.DevUIProxyTarget = c.getEnv("DEV_UI_PROXY_TARGET", "localhost:3000")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
 	c.StaticUiPath = strings.TrimSuffix(c.getEnv("STATIC_UI_PATH", "/app/ui"), "/") + "/"
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")
