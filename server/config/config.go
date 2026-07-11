@@ -18,13 +18,15 @@ import (
 )
 
 // RemotePluginConfig describes one remote plugin the host should connect to
-// over gRPC - see PLUGINS_CONFIG below.
+// over gRPC - see PLUGINS_CONFIG below. Routing information (base path,
+// legacy route prefixes) is not part of this config - it's fetched live
+// from the plugin itself over gRPC at startup (see app.resolvePluginRoutes),
+// so it never has to be hand-duplicated here.
 type RemotePluginConfig struct {
-	Name          string   `json:"name"`
-	Address       string   `json:"address"`       // e.g. "subscription-plugin:50051"
-	RoutePrefixes []string `json:"routePrefixes"` // e.g. ["/subscription/"] - the host's router is built from this at startup, independent of plugin liveness
-	Token         string   `json:"token"`         // shared secret the host presents when dialing this plugin
-	TLS           bool     `json:"tls"`
+	Name    string `json:"name"`
+	Address string `json:"address"` // e.g. "subscription-plugin:50051"
+	Token   string `json:"token"`   // shared secret the host presents when dialing this plugin
+	TLS     bool   `json:"tls"`
 }
 
 type Config struct {
@@ -236,7 +238,7 @@ func (c *Config) ReadConfig() {
 // parsePluginsConfig parses the PLUGINS_CONFIG env var, a JSON array of
 // RemotePluginConfig entries, e.g.:
 //
-//	[{"name":"subscription","address":"subscription-plugin:50051","routePrefixes":["/subscription/"],"token":"<secret>","tls":false}]
+//	[{"name":"subscription","address":"subscription-plugin:50051","token":"<secret>","tls":false}]
 //
 // A single env var supports an arbitrary-length list of plugins - unset or
 // empty means zero plugins loaded, which is a non-fatal, valid state.

@@ -12,6 +12,13 @@ option go_package = "github.com/seatsurfing/seatsurfing/server/api/pluginpb";
 import "common.proto";
 
 service SeatsurfingPluginService {
+  // GetBasePath returns the single canonical URL prefix under which all of
+  // this plugin's endpoints are nested (e.g. "/cloud-features/"). GetRoutePrefix
+  // below still returns the plugin's legacy flat top-level prefixes, which the
+  // host keeps mounting alongside the base path for backward compatibility
+  // with externally-configured URLs (Stripe webhooks, OAuth redirect URIs,
+  // customer SCIM base URLs) that must not break on rollout.
+  rpc GetBasePath(seatsurfing.plugin.v1.Empty) returns (BasePathReply);
   rpc GetRoutePrefix(seatsurfing.plugin.v1.Empty) returns (StringListReply);
   rpc GetUnauthorizedRoutes(seatsurfing.plugin.v1.Empty) returns (StringListReply);
   rpc RunSchemaUpdates(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
@@ -42,6 +49,10 @@ message IdRequest {
 
 message StringListReply {
   repeated string values = 1;
+}
+
+message BasePathReply {
+  string value = 1;
 }
 
 message AdminUIMenuItem {

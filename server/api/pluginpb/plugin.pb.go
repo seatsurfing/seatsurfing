@@ -116,6 +116,50 @@ func (x *StringListReply) GetValues() []string {
 	return nil
 }
 
+type BasePathReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         string                 `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BasePathReply) Reset() {
+	*x = BasePathReply{}
+	mi := &file_plugin_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BasePathReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BasePathReply) ProtoMessage() {}
+
+func (x *BasePathReply) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BasePathReply.ProtoReflect.Descriptor instead.
+func (*BasePathReply) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *BasePathReply) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
 type AdminUIMenuItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -129,7 +173,7 @@ type AdminUIMenuItem struct {
 
 func (x *AdminUIMenuItem) Reset() {
 	*x = AdminUIMenuItem{}
-	mi := &file_plugin_proto_msgTypes[2]
+	mi := &file_plugin_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -141,7 +185,7 @@ func (x *AdminUIMenuItem) String() string {
 func (*AdminUIMenuItem) ProtoMessage() {}
 
 func (x *AdminUIMenuItem) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[2]
+	mi := &file_plugin_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -154,7 +198,7 @@ func (x *AdminUIMenuItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUIMenuItem.ProtoReflect.Descriptor instead.
 func (*AdminUIMenuItem) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{2}
+	return file_plugin_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *AdminUIMenuItem) GetId() string {
@@ -201,7 +245,7 @@ type AdminUIMenuItemsReply struct {
 
 func (x *AdminUIMenuItemsReply) Reset() {
 	*x = AdminUIMenuItemsReply{}
-	mi := &file_plugin_proto_msgTypes[3]
+	mi := &file_plugin_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -213,7 +257,7 @@ func (x *AdminUIMenuItemsReply) String() string {
 func (*AdminUIMenuItemsReply) ProtoMessage() {}
 
 func (x *AdminUIMenuItemsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[3]
+	mi := &file_plugin_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -226,7 +270,7 @@ func (x *AdminUIMenuItemsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUIMenuItemsReply.ProtoReflect.Descriptor instead.
 func (*AdminUIMenuItemsReply) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{3}
+	return file_plugin_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AdminUIMenuItemsReply) GetItems() []*AdminUIMenuItem {
@@ -246,7 +290,7 @@ type AdminWelcomeScreen struct {
 
 func (x *AdminWelcomeScreen) Reset() {
 	*x = AdminWelcomeScreen{}
-	mi := &file_plugin_proto_msgTypes[4]
+	mi := &file_plugin_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -258,7 +302,7 @@ func (x *AdminWelcomeScreen) String() string {
 func (*AdminWelcomeScreen) ProtoMessage() {}
 
 func (x *AdminWelcomeScreen) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[4]
+	mi := &file_plugin_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -271,7 +315,7 @@ func (x *AdminWelcomeScreen) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminWelcomeScreen.ProtoReflect.Descriptor instead.
 func (*AdminWelcomeScreen) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{4}
+	return file_plugin_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *AdminWelcomeScreen) GetSource() string {
@@ -298,7 +342,7 @@ type AdminWelcomeScreenReply struct {
 
 func (x *AdminWelcomeScreenReply) Reset() {
 	*x = AdminWelcomeScreenReply{}
-	mi := &file_plugin_proto_msgTypes[5]
+	mi := &file_plugin_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -310,7 +354,7 @@ func (x *AdminWelcomeScreenReply) String() string {
 func (*AdminWelcomeScreenReply) ProtoMessage() {}
 
 func (x *AdminWelcomeScreenReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[5]
+	mi := &file_plugin_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,7 +367,7 @@ func (x *AdminWelcomeScreenReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminWelcomeScreenReply.ProtoReflect.Descriptor instead.
 func (*AdminWelcomeScreenReply) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{5}
+	return file_plugin_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *AdminWelcomeScreenReply) GetPresent() bool {
@@ -349,7 +393,7 @@ type GetPublicSettingsRequest struct {
 
 func (x *GetPublicSettingsRequest) Reset() {
 	*x = GetPublicSettingsRequest{}
-	mi := &file_plugin_proto_msgTypes[6]
+	mi := &file_plugin_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -361,7 +405,7 @@ func (x *GetPublicSettingsRequest) String() string {
 func (*GetPublicSettingsRequest) ProtoMessage() {}
 
 func (x *GetPublicSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[6]
+	mi := &file_plugin_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -374,7 +418,7 @@ func (x *GetPublicSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPublicSettingsRequest.ProtoReflect.Descriptor instead.
 func (*GetPublicSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{6}
+	return file_plugin_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetPublicSettingsRequest) GetOrganizationId() string {
@@ -395,7 +439,7 @@ type PluginSetting struct {
 
 func (x *PluginSetting) Reset() {
 	*x = PluginSetting{}
-	mi := &file_plugin_proto_msgTypes[7]
+	mi := &file_plugin_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -407,7 +451,7 @@ func (x *PluginSetting) String() string {
 func (*PluginSetting) ProtoMessage() {}
 
 func (x *PluginSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[7]
+	mi := &file_plugin_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -420,7 +464,7 @@ func (x *PluginSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PluginSetting.ProtoReflect.Descriptor instead.
 func (*PluginSetting) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{7}
+	return file_plugin_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *PluginSetting) GetName() string {
@@ -453,7 +497,7 @@ type PluginSettingsReply struct {
 
 func (x *PluginSettingsReply) Reset() {
 	*x = PluginSettingsReply{}
-	mi := &file_plugin_proto_msgTypes[8]
+	mi := &file_plugin_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -465,7 +509,7 @@ func (x *PluginSettingsReply) String() string {
 func (*PluginSettingsReply) ProtoMessage() {}
 
 func (x *PluginSettingsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[8]
+	mi := &file_plugin_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -478,7 +522,7 @@ func (x *PluginSettingsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PluginSettingsReply.ProtoReflect.Descriptor instead.
 func (*PluginSettingsReply) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{8}
+	return file_plugin_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PluginSettingsReply) GetSettings() []*PluginSetting {
@@ -497,7 +541,7 @@ type HeaderValues struct {
 
 func (x *HeaderValues) Reset() {
 	*x = HeaderValues{}
-	mi := &file_plugin_proto_msgTypes[9]
+	mi := &file_plugin_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -509,7 +553,7 @@ func (x *HeaderValues) String() string {
 func (*HeaderValues) ProtoMessage() {}
 
 func (x *HeaderValues) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[9]
+	mi := &file_plugin_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -522,7 +566,7 @@ func (x *HeaderValues) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeaderValues.ProtoReflect.Descriptor instead.
 func (*HeaderValues) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{9}
+	return file_plugin_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *HeaderValues) GetValues() []string {
@@ -546,7 +590,7 @@ type HttpRequest struct {
 
 func (x *HttpRequest) Reset() {
 	*x = HttpRequest{}
-	mi := &file_plugin_proto_msgTypes[10]
+	mi := &file_plugin_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -558,7 +602,7 @@ func (x *HttpRequest) String() string {
 func (*HttpRequest) ProtoMessage() {}
 
 func (x *HttpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[10]
+	mi := &file_plugin_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -571,7 +615,7 @@ func (x *HttpRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpRequest.ProtoReflect.Descriptor instead.
 func (*HttpRequest) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{10}
+	return file_plugin_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *HttpRequest) GetMethod() string {
@@ -627,7 +671,7 @@ type HttpResponse struct {
 
 func (x *HttpResponse) Reset() {
 	*x = HttpResponse{}
-	mi := &file_plugin_proto_msgTypes[11]
+	mi := &file_plugin_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -639,7 +683,7 @@ func (x *HttpResponse) String() string {
 func (*HttpResponse) ProtoMessage() {}
 
 func (x *HttpResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[11]
+	mi := &file_plugin_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -652,7 +696,7 @@ func (x *HttpResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpResponse.ProtoReflect.Descriptor instead.
 func (*HttpResponse) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{11}
+	return file_plugin_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *HttpResponse) GetStatusCode() int32 {
@@ -684,7 +728,9 @@ const file_plugin_proto_rawDesc = "" +
 	"\tIdRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\")\n" +
 	"\x0fStringListReply\x12\x16\n" +
-	"\x06values\x18\x01 \x03(\tR\x06values\"\x83\x01\n" +
+	"\x06values\x18\x01 \x03(\tR\x06values\"%\n" +
+	"\rBasePathReply\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\"\x83\x01\n" +
 	"\x0fAdminUIMenuItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -728,8 +774,9 @@ const file_plugin_proto_rawDesc = "" +
 	"\x04body\x18\x03 \x01(\fR\x04body\x1a_\n" +
 	"\fHeadersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x129\n" +
-	"\x05value\x18\x02 \x01(\v2#.seatsurfing.plugin.v1.HeaderValuesR\x05value:\x028\x012\xcc\f\n" +
-	"\x18SeatsurfingPluginService\x12V\n" +
+	"\x05value\x18\x02 \x01(\v2#.seatsurfing.plugin.v1.HeaderValuesR\x05value:\x028\x012\x9f\r\n" +
+	"\x18SeatsurfingPluginService\x12Q\n" +
+	"\vGetBasePath\x12\x1c.seatsurfing.plugin.v1.Empty\x1a$.seatsurfing.plugin.v1.BasePathReply\x12V\n" +
 	"\x0eGetRoutePrefix\x12\x1c.seatsurfing.plugin.v1.Empty\x1a&.seatsurfing.plugin.v1.StringListReply\x12]\n" +
 	"\x15GetUnauthorizedRoutes\x12\x1c.seatsurfing.plugin.v1.Empty\x1a&.seatsurfing.plugin.v1.StringListReply\x12N\n" +
 	"\x10RunSchemaUpdates\x12\x1c.seatsurfing.plugin.v1.Empty\x1a\x1c.seatsurfing.plugin.v1.Empty\x12a\n" +
@@ -761,70 +808,73 @@ func file_plugin_proto_rawDescGZIP() []byte {
 	return file_plugin_proto_rawDescData
 }
 
-var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_plugin_proto_goTypes = []any{
 	(*IdRequest)(nil),                // 0: seatsurfing.plugin.v1.IdRequest
 	(*StringListReply)(nil),          // 1: seatsurfing.plugin.v1.StringListReply
-	(*AdminUIMenuItem)(nil),          // 2: seatsurfing.plugin.v1.AdminUIMenuItem
-	(*AdminUIMenuItemsReply)(nil),    // 3: seatsurfing.plugin.v1.AdminUIMenuItemsReply
-	(*AdminWelcomeScreen)(nil),       // 4: seatsurfing.plugin.v1.AdminWelcomeScreen
-	(*AdminWelcomeScreenReply)(nil),  // 5: seatsurfing.plugin.v1.AdminWelcomeScreenReply
-	(*GetPublicSettingsRequest)(nil), // 6: seatsurfing.plugin.v1.GetPublicSettingsRequest
-	(*PluginSetting)(nil),            // 7: seatsurfing.plugin.v1.PluginSetting
-	(*PluginSettingsReply)(nil),      // 8: seatsurfing.plugin.v1.PluginSettingsReply
-	(*HeaderValues)(nil),             // 9: seatsurfing.plugin.v1.HeaderValues
-	(*HttpRequest)(nil),              // 10: seatsurfing.plugin.v1.HttpRequest
-	(*HttpResponse)(nil),             // 11: seatsurfing.plugin.v1.HttpResponse
-	nil,                              // 12: seatsurfing.plugin.v1.HttpRequest.HeadersEntry
-	nil,                              // 13: seatsurfing.plugin.v1.HttpResponse.HeadersEntry
-	(*commonpb.Empty)(nil),           // 14: seatsurfing.plugin.v1.Empty
+	(*BasePathReply)(nil),            // 2: seatsurfing.plugin.v1.BasePathReply
+	(*AdminUIMenuItem)(nil),          // 3: seatsurfing.plugin.v1.AdminUIMenuItem
+	(*AdminUIMenuItemsReply)(nil),    // 4: seatsurfing.plugin.v1.AdminUIMenuItemsReply
+	(*AdminWelcomeScreen)(nil),       // 5: seatsurfing.plugin.v1.AdminWelcomeScreen
+	(*AdminWelcomeScreenReply)(nil),  // 6: seatsurfing.plugin.v1.AdminWelcomeScreenReply
+	(*GetPublicSettingsRequest)(nil), // 7: seatsurfing.plugin.v1.GetPublicSettingsRequest
+	(*PluginSetting)(nil),            // 8: seatsurfing.plugin.v1.PluginSetting
+	(*PluginSettingsReply)(nil),      // 9: seatsurfing.plugin.v1.PluginSettingsReply
+	(*HeaderValues)(nil),             // 10: seatsurfing.plugin.v1.HeaderValues
+	(*HttpRequest)(nil),              // 11: seatsurfing.plugin.v1.HttpRequest
+	(*HttpResponse)(nil),             // 12: seatsurfing.plugin.v1.HttpResponse
+	nil,                              // 13: seatsurfing.plugin.v1.HttpRequest.HeadersEntry
+	nil,                              // 14: seatsurfing.plugin.v1.HttpResponse.HeadersEntry
+	(*commonpb.Empty)(nil),           // 15: seatsurfing.plugin.v1.Empty
 }
 var file_plugin_proto_depIdxs = []int32{
-	2,  // 0: seatsurfing.plugin.v1.AdminUIMenuItemsReply.items:type_name -> seatsurfing.plugin.v1.AdminUIMenuItem
-	4,  // 1: seatsurfing.plugin.v1.AdminWelcomeScreenReply.screen:type_name -> seatsurfing.plugin.v1.AdminWelcomeScreen
-	7,  // 2: seatsurfing.plugin.v1.PluginSettingsReply.settings:type_name -> seatsurfing.plugin.v1.PluginSetting
-	12, // 3: seatsurfing.plugin.v1.HttpRequest.headers:type_name -> seatsurfing.plugin.v1.HttpRequest.HeadersEntry
-	13, // 4: seatsurfing.plugin.v1.HttpResponse.headers:type_name -> seatsurfing.plugin.v1.HttpResponse.HeadersEntry
-	9,  // 5: seatsurfing.plugin.v1.HttpRequest.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
-	9,  // 6: seatsurfing.plugin.v1.HttpResponse.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
-	14, // 7: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:input_type -> seatsurfing.plugin.v1.Empty
-	14, // 8: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:input_type -> seatsurfing.plugin.v1.Empty
-	14, // 9: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:input_type -> seatsurfing.plugin.v1.Empty
-	14, // 10: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:input_type -> seatsurfing.plugin.v1.Empty
-	14, // 11: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:input_type -> seatsurfing.plugin.v1.Empty
-	14, // 12: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:input_type -> seatsurfing.plugin.v1.Empty
-	14, // 13: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:input_type -> seatsurfing.plugin.v1.Empty
-	6,  // 14: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:input_type -> seatsurfing.plugin.v1.GetPublicSettingsRequest
-	10, // 15: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:input_type -> seatsurfing.plugin.v1.HttpRequest
-	0,  // 16: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 17: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 18: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 19: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 20: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 21: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 22: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 23: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 24: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:input_type -> seatsurfing.plugin.v1.IdRequest
-	1,  // 25: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:output_type -> seatsurfing.plugin.v1.StringListReply
-	1,  // 26: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:output_type -> seatsurfing.plugin.v1.StringListReply
-	14, // 27: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:output_type -> seatsurfing.plugin.v1.Empty
-	3,  // 28: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:output_type -> seatsurfing.plugin.v1.AdminUIMenuItemsReply
-	14, // 29: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 30: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:output_type -> seatsurfing.plugin.v1.Empty
-	5,  // 31: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:output_type -> seatsurfing.plugin.v1.AdminWelcomeScreenReply
-	8,  // 32: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:output_type -> seatsurfing.plugin.v1.PluginSettingsReply
-	11, // 33: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:output_type -> seatsurfing.plugin.v1.HttpResponse
-	14, // 34: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 35: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 36: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 37: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 38: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 39: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 40: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 41: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:output_type -> seatsurfing.plugin.v1.Empty
-	14, // 42: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:output_type -> seatsurfing.plugin.v1.Empty
-	25, // [25:43] is the sub-list for method output_type
-	7,  // [7:25] is the sub-list for method input_type
+	3,  // 0: seatsurfing.plugin.v1.AdminUIMenuItemsReply.items:type_name -> seatsurfing.plugin.v1.AdminUIMenuItem
+	5,  // 1: seatsurfing.plugin.v1.AdminWelcomeScreenReply.screen:type_name -> seatsurfing.plugin.v1.AdminWelcomeScreen
+	8,  // 2: seatsurfing.plugin.v1.PluginSettingsReply.settings:type_name -> seatsurfing.plugin.v1.PluginSetting
+	13, // 3: seatsurfing.plugin.v1.HttpRequest.headers:type_name -> seatsurfing.plugin.v1.HttpRequest.HeadersEntry
+	14, // 4: seatsurfing.plugin.v1.HttpResponse.headers:type_name -> seatsurfing.plugin.v1.HttpResponse.HeadersEntry
+	10, // 5: seatsurfing.plugin.v1.HttpRequest.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
+	10, // 6: seatsurfing.plugin.v1.HttpResponse.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
+	15, // 7: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBasePath:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 8: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 9: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 10: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 11: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 12: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 13: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:input_type -> seatsurfing.plugin.v1.Empty
+	15, // 14: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:input_type -> seatsurfing.plugin.v1.Empty
+	7,  // 15: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:input_type -> seatsurfing.plugin.v1.GetPublicSettingsRequest
+	11, // 16: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:input_type -> seatsurfing.plugin.v1.HttpRequest
+	0,  // 17: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 18: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 19: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 20: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 21: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 22: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 23: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 24: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 25: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:input_type -> seatsurfing.plugin.v1.IdRequest
+	2,  // 26: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBasePath:output_type -> seatsurfing.plugin.v1.BasePathReply
+	1,  // 27: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:output_type -> seatsurfing.plugin.v1.StringListReply
+	1,  // 28: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:output_type -> seatsurfing.plugin.v1.StringListReply
+	15, // 29: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:output_type -> seatsurfing.plugin.v1.Empty
+	4,  // 30: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:output_type -> seatsurfing.plugin.v1.AdminUIMenuItemsReply
+	15, // 31: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 32: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:output_type -> seatsurfing.plugin.v1.Empty
+	6,  // 33: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:output_type -> seatsurfing.plugin.v1.AdminWelcomeScreenReply
+	9,  // 34: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:output_type -> seatsurfing.plugin.v1.PluginSettingsReply
+	12, // 35: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:output_type -> seatsurfing.plugin.v1.HttpResponse
+	15, // 36: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 37: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 38: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 39: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 40: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 41: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 42: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 43: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:output_type -> seatsurfing.plugin.v1.Empty
+	15, // 44: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:output_type -> seatsurfing.plugin.v1.Empty
+	26, // [26:45] is the sub-list for method output_type
+	7,  // [7:26] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
 	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name
@@ -841,7 +891,7 @@ func file_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plugin_proto_rawDesc), len(file_plugin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

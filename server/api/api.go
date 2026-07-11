@@ -16,6 +16,12 @@ type PluginHTTPResponse struct {
 }
 
 type SeatsurfingPlugin interface {
+	// GetBasePath returns the single canonical URL prefix under which all of
+	// this plugin's endpoints are nested
+	GetBasePath() string
+	// GetRoutePrefix returns the plugin's legacy flat top-level prefixes,
+	// kept mounted alongside the base path for backward compatibility with
+	// externally-configured URLs
 	GetRoutePrefix() []string
 	GetUnauthorizedRoutes() []string
 	RunSchemaUpdates()

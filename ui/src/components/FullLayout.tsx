@@ -18,7 +18,10 @@ export default class FullLayout extends React.Component<Props, State> {
       const data = event.data;
       if (data && data.type === "skipWelcomeScreen") {
         const iframe = event.source as Window;
-        if (iframe.location.pathname === "/subscription/static/welcome.html") {
+        if (
+          iframe.location.pathname ===
+          "/cloud-features/subscription/static/welcome.html"
+        ) {
           window.sessionStorage.setItem("skipWelcomeScreen", "true");
           window.location.reload();
         }
