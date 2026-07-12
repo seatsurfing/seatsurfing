@@ -330,7 +330,9 @@ Start the WebAuthn registration ceremony.
 ```json
 {
   "stateId": "uuid",
-  "challenge": {/* PublicKeyCredentialCreationOptions */}
+  "challenge": {
+    /* PublicKeyCredentialCreationOptions */
+  }
 }
 ```
 
@@ -363,7 +365,9 @@ Complete the WebAuthn registration ceremony.
 {
   "stateId": "uuid",
   "name": "MacBook Touch ID",
-  "credential": {/* AuthenticatorAttestationResponse */}
+  "credential": {
+    /* AuthenticatorAttestationResponse */
+  }
 }
 ```
 
@@ -460,7 +464,9 @@ Start a passwordless passkey authentication ceremony.
 ```json
 {
   "stateId": "uuid",
-  "challenge": {/* PublicKeyCredentialRequestOptions */}
+  "challenge": {
+    /* PublicKeyCredentialRequestOptions */
+  }
 }
 ```
 
@@ -491,7 +497,9 @@ Complete a passwordless passkey authentication ceremony.
 ```json
 {
   "stateId": "uuid",
-  "credential": {/* AuthenticatorAssertionResponse */}
+  "credential": {
+    /* AuthenticatorAssertionResponse */
+  }
 }
 ```
 
@@ -557,7 +565,9 @@ After successful password verification:
        {
          "requirePasskey": true,
          "stateId": "uuid",
-         "passkeyChallenge": {/* PublicKeyCredentialRequestOptions */},
+         "passkeyChallenge": {
+           /* PublicKeyCredentialRequestOptions */
+         },
          "allowTotpFallback": true
        }
        ```

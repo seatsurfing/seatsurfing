@@ -658,11 +658,13 @@ class EditLocation extends React.Component<Props, State> {
       }
     }
 
-    if (!(
-      creates.length > 0 ||
-      updates.length > 0 ||
-      this.state.deleteIds.length > 0
-    )) {
+    if (
+      !(
+        creates.length > 0 ||
+        updates.length > 0 ||
+        this.state.deleteIds.length > 0
+      )
+    ) {
       return;
     }
 

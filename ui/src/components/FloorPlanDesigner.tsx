@@ -26,7 +26,9 @@ const DEFAULT_WALL_THICKNESS = 8;
 
 type ElementType = "wall" | "plant" | "window" | "door" | "toilet";
 type Mode =
-  "select" | "draw-wall" | `add-entity:${Exclude<ElementType, "wall">}`;
+  | "select"
+  | "draw-wall"
+  | `add-entity:${Exclude<ElementType, "wall">}`;
 
 interface WallElement {
   id: string;
