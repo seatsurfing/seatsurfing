@@ -193,7 +193,7 @@ class EditOrganization extends React.Component<Props, State> {
       );
     }
 
-    const languages = ["de", "en"];
+    const languages = ["de", "en", "ru"];
 
     let adminSection = <></>;
     if (!this.entity.id) {

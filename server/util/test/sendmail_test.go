@@ -2,6 +2,7 @@ package test
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -12,6 +13,13 @@ func TestGetEmailTemplatePathExists(t *testing.T) {
 	res, err := GetEmailTemplatePath(GetEmailTemplatePathResetpassword(), "de")
 	CheckStringNotEmpty(t, res)
 	CheckTestBool(t, true, err == nil)
+}
+
+func TestGetEmailTemplatePathRussian(t *testing.T) {
+	res, err := GetEmailTemplatePath(GetEmailTemplatePathResetpassword(), "ru")
+	CheckStringNotEmpty(t, res)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, strings.HasSuffix(res, "_ru.json"))
 }
 
 func TestGetEmailTemplatePathFallback(t *testing.T) {

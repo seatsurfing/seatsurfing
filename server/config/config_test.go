@@ -10,6 +10,7 @@ import (
 func TestIsValidLanguageCodeLowercase(t *testing.T) {
 	c := &Config{}
 	CheckTestBool(t, true, c.IsValidLanguageCode("en"))
+	CheckTestBool(t, true, c.IsValidLanguageCode("ru"))
 }
 
 func TestIsValidLanguageCodeUppercase(t *testing.T) {

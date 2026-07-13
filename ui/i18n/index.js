@@ -13,6 +13,7 @@ const i18n = {
     pl: require("./translations.pl.json"),
     pt: require("./translations.pt.json"),
     ro: require("./translations.ro.json"),
+    ru: require("./translations.ru.json"),
     es: require("./translations.es.json"),
     "zh-TW": require("./translations.zh-TW.json"),
   },

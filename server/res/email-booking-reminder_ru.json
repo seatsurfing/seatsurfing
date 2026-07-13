@@ -1,0 +1,22 @@
+{
+  "subject": "Ваше бронирование в Seatsurfing: напоминание",
+  "headline": "Здравствуйте, {{recipientName}},",
+  "paragraphs": [
+    "Напоминаем о вашем предстоящем бронировании.",
+    "Дата: {{date}}",
+    "Зона: {{areaName}}",
+    "Место: {{spaceName}}",
+    "Тема: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Ваши бронирования",
+      "url": "{{orgDomain}}ui/bookings/"
+    }
+  ],
+  "finalInfo": {
+    "text": "Больше не хотите получать напоминания о бронированиях по электронной почте? Отключите их в интерфейсе Seatsurfing в разделе {{link}}.",
+    "label": "Настройки",
+    "url": "{{orgDomain}}ui/preferences/"
+  }
+}

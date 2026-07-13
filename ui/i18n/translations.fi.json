@@ -498,6 +498,7 @@
   "nameRequirements": "Nimi saa sisältää vain kirjaimia, numeroita, välilyöntejä, yhdysmerkkejä, heittomerkkejä ja pisteitä.",
   "language-de": "Saksa",
   "language-en": "Englanti",
+  "language-ru": "Venäjä",
   "mailLanguage": "Sähköpostien kieli",
   "mailNotificationsBookingInfo": "Booking information",
   "mailReminderBookingInfo": "Booking reminders",

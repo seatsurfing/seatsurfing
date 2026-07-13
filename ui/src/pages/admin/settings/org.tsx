@@ -180,7 +180,7 @@ class EditOrg extends React.Component<Props, State> {
       );
     }
 
-    const languages = ["de", "en"];
+    const languages = ["de", "en", "ru"];
     return (
       <FullLayout headline={this.props.t("editOrg")} buttons={buttons}>
         <Form
