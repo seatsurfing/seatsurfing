@@ -3,6 +3,7 @@ import AdminNavBar from "./AdminNavBar";
 import SideBar from "./SideBar";
 import RuntimeConfig from "./RuntimeConfig";
 import FeedbackButton from "./FeedbackButton";
+import PluginEmbed from "./PluginEmbed";
 
 interface Props {
   headline: string;
@@ -13,29 +14,10 @@ interface Props {
 interface State {}
 
 export default class FullLayout extends React.Component<Props, State> {
-  onMessage(event: MessageEvent) {
-    if (event !== null && event.data !== null && event.source !== null) {
-      const data = event.data;
-      if (data && data.type === "skipWelcomeScreen") {
-        const iframe = event.source as Window;
-        if (
-          iframe.location.pathname ===
-          "/cloud-features/subscription/static/welcome.html"
-        ) {
-          window.sessionStorage.setItem("skipWelcomeScreen", "true");
-          window.location.reload();
-        }
-      }
-    }
-  }
-
-  componentDidMount() {
-    window.addEventListener("message", this.onMessage, false);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("message", this.onMessage, false);
-  }
+  skipWelcomeScreen = () => {
+    window.sessionStorage.setItem("skipWelcomeScreen", "true");
+    window.location.reload();
+  };
 
   render() {
     if (
@@ -43,13 +25,16 @@ export default class FullLayout extends React.Component<Props, State> {
       RuntimeConfig.INFOS.pluginWelcomeScreens.length > 0 &&
       window.sessionStorage.getItem("skipWelcomeScreen") !== "true"
     ) {
+      const screen = RuntimeConfig.INFOS.pluginWelcomeScreens[0];
       return (
-        <div style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
-          <iframe
-            src={RuntimeConfig.INFOS.pluginWelcomeScreens[0].src}
-            style={{ width: "100%", height: "100vh", borderWidth: 0 }}
-            id="welcome-screen-iframe"
-          ></iframe>
+        <div style={{ minHeight: "100vh", width: "100%", overflowY: "auto" }}>
+          <PluginEmbed
+            id="welcome-screen-embed"
+            src={screen.src}
+            tagName={screen.tagName}
+            style={{ width: "100%", borderWidth: 0 }}
+            onSkipWelcomeScreen={this.skipWelcomeScreen}
+          />
         </div>
       );
     }

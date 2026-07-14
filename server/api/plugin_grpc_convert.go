@@ -79,6 +79,7 @@ func AdminUIMenuItemsToProto(items []AdminUIMenuItem) []*pluginpb.AdminUIMenuIte
 			Source:     it.Source,
 			Visibility: it.Visibility,
 			Icon:       it.Icon,
+			TagName:    it.TagName,
 		})
 	}
 	return out
@@ -96,6 +97,7 @@ func AdminUIMenuItemsFromProto(items []*pluginpb.AdminUIMenuItem) []AdminUIMenuI
 			Source:     it.Source,
 			Visibility: it.Visibility,
 			Icon:       it.Icon,
+			TagName:    it.TagName,
 		})
 	}
 	return out
@@ -110,6 +112,7 @@ func AdminWelcomeScreenToProto(s *AdminWelcomeScreen) *pluginpb.AdminWelcomeScre
 		Screen: &pluginpb.AdminWelcomeScreen{
 			Source:            s.Source,
 			SkipOnSettingTrue: s.SkipOnSettingTrue,
+			TagName:           s.TagName,
 		},
 	}
 }
@@ -121,6 +124,7 @@ func AdminWelcomeScreenFromProto(p *pluginpb.AdminWelcomeScreenReply) *AdminWelc
 	return &AdminWelcomeScreen{
 		Source:            p.Screen.Source,
 		SkipOnSettingTrue: p.Screen.SkipOnSettingTrue,
+		TagName:           p.Screen.TagName,
 	}
 }
 

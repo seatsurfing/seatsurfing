@@ -1,6 +1,7 @@
 import React from "react";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
+import PluginEmbed from "@/components/PluginEmbed";
 import withReadyRouter from "@/components/withReadyRouter";
 import { NextRouter } from "next/router";
 import RuntimeConfig from "@/components/RuntimeConfig";
@@ -8,7 +9,6 @@ import { withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 
 interface State {
-  iFrameLoaded: boolean;
   pluginId: string;
   pluginMenuItem: any;
 }
@@ -21,7 +21,6 @@ class PluginPage extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      iFrameLoaded: false,
       pluginId: "",
       pluginMenuItem: {},
     };
@@ -47,33 +46,14 @@ class PluginPage extends React.Component<Props, State> {
           pluginId: id as string,
           pluginMenuItem: item,
         });
-        this.checkiFrameHeight();
         return;
       }
     }
   };
 
-  checkiFrameHeight(): void {
-    window.setTimeout(() => {
-      if (!window.location.pathname.startsWith("/ui/admin/plugin/")) return;
-      this.checkiFrameHeight();
-      const iFrame = document.getElementById(
-        "plugin-iframe",
-      ) as HTMLIFrameElement;
-      if (
-        !iFrame ||
-        !iFrame.contentWindow ||
-        !iFrame.contentWindow.document ||
-        !iFrame.contentWindow.document.body
-      )
-        return;
-      const height = iFrame.contentWindow.document.body.scrollHeight;
-      iFrame.style.height = height + "px";
-      if (height > 0) {
-        this.setState({ iFrameLoaded: true });
-      }
-    }, 2000);
-  }
+  onNavigate = (path: string) => {
+    this.props.router.push(path);
+  };
 
   render() {
     if (
@@ -106,11 +86,13 @@ class PluginPage extends React.Component<Props, State> {
           this.state.pluginMenuItem ? this.state.pluginMenuItem.title : ""
         }
       >
-        <iframe
+        <PluginEmbed
+          id="plugin-embed"
           src={url}
-          style={{ width: "100%", height: "100vh", borderWidth: 0 }}
-          id="plugin-iframe"
-        ></iframe>
+          tagName={this.state.pluginMenuItem.tagName}
+          style={{ width: "100%", borderWidth: 0 }}
+          onNavigate={this.onNavigate}
+        />
       </FullLayout>
     );
   }

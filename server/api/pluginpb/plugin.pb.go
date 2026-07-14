@@ -161,12 +161,19 @@ func (x *BasePathReply) GetValue() string {
 }
 
 type AdminUIMenuItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Source        string                 `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
-	Visibility    string                 `protobuf:"bytes,4,opt,name=visibility,proto3" json:"visibility,omitempty"`
-	Icon          string                 `protobuf:"bytes,5,opt,name=icon,proto3" json:"icon,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	// source is the URL of the plugin's UI entry point. If tag_name is empty,
+	// it is an HTML page rendered in an iframe (legacy); if tag_name is set,
+	// it is a JS module that registers the given custom element tag.
+	Source     string `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	Visibility string `protobuf:"bytes,4,opt,name=visibility,proto3" json:"visibility,omitempty"`
+	Icon       string `protobuf:"bytes,5,opt,name=icon,proto3" json:"icon,omitempty"`
+	// tag_name is the custom element tag to mount for this menu item's UI
+	// once the JS module at source has been loaded. Empty means the host
+	// falls back to the legacy iframe embedding of source.
+	TagName       string `protobuf:"bytes,6,opt,name=tag_name,json=tagName,proto3" json:"tag_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -236,6 +243,13 @@ func (x *AdminUIMenuItem) GetIcon() string {
 	return ""
 }
 
+func (x *AdminUIMenuItem) GetTagName() string {
+	if x != nil {
+		return x.TagName
+	}
+	return ""
+}
+
 type AdminUIMenuItemsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Items         []*AdminUIMenuItem     `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
@@ -281,9 +295,12 @@ func (x *AdminUIMenuItemsReply) GetItems() []*AdminUIMenuItem {
 }
 
 type AdminWelcomeScreen struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Source            string                 `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
-	SkipOnSettingTrue string                 `protobuf:"bytes,2,opt,name=skip_on_setting_true,json=skipOnSettingTrue,proto3" json:"skip_on_setting_true,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// source is the URL of the plugin's welcome screen UI. See AdminUIMenuItem
+	// for the meaning of source/tag_name depending on whether tag_name is set.
+	Source            string `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	SkipOnSettingTrue string `protobuf:"bytes,2,opt,name=skip_on_setting_true,json=skipOnSettingTrue,proto3" json:"skip_on_setting_true,omitempty"`
+	TagName           string `protobuf:"bytes,3,opt,name=tag_name,json=tagName,proto3" json:"tag_name,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -328,6 +345,13 @@ func (x *AdminWelcomeScreen) GetSource() string {
 func (x *AdminWelcomeScreen) GetSkipOnSettingTrue() string {
 	if x != nil {
 		return x.SkipOnSettingTrue
+	}
+	return ""
+}
+
+func (x *AdminWelcomeScreen) GetTagName() string {
+	if x != nil {
+		return x.TagName
 	}
 	return ""
 }
@@ -730,7 +754,7 @@ const file_plugin_proto_rawDesc = "" +
 	"\x0fStringListReply\x12\x16\n" +
 	"\x06values\x18\x01 \x03(\tR\x06values\"%\n" +
 	"\rBasePathReply\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\tR\x05value\"\x83\x01\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\"\x9e\x01\n" +
 	"\x0fAdminUIMenuItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -738,12 +762,14 @@ const file_plugin_proto_rawDesc = "" +
 	"\n" +
 	"visibility\x18\x04 \x01(\tR\n" +
 	"visibility\x12\x12\n" +
-	"\x04icon\x18\x05 \x01(\tR\x04icon\"U\n" +
+	"\x04icon\x18\x05 \x01(\tR\x04icon\x12\x19\n" +
+	"\btag_name\x18\x06 \x01(\tR\atagName\"U\n" +
 	"\x15AdminUIMenuItemsReply\x12<\n" +
-	"\x05items\x18\x01 \x03(\v2&.seatsurfing.plugin.v1.AdminUIMenuItemR\x05items\"]\n" +
+	"\x05items\x18\x01 \x03(\v2&.seatsurfing.plugin.v1.AdminUIMenuItemR\x05items\"x\n" +
 	"\x12AdminWelcomeScreen\x12\x16\n" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12/\n" +
-	"\x14skip_on_setting_true\x18\x02 \x01(\tR\x11skipOnSettingTrue\"v\n" +
+	"\x14skip_on_setting_true\x18\x02 \x01(\tR\x11skipOnSettingTrue\x12\x19\n" +
+	"\btag_name\x18\x03 \x01(\tR\atagName\"v\n" +
 	"\x17AdminWelcomeScreenReply\x12\x18\n" +
 	"\apresent\x18\x01 \x01(\bR\apresent\x12A\n" +
 	"\x06screen\x18\x02 \x01(\v2).seatsurfing.plugin.v1.AdminWelcomeScreenR\x06screen\"C\n" +
