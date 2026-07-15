@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.115.0](https://github.com/seatsurfing/seatsurfing/compare/v1.114.1...v1.115.0) (2026-07-15)
+
+
+### ✨ Features
+
+* **main:** render plugins as web components ([#2400](https://github.com/seatsurfing/seatsurfing/issues/2400)) ([1e82e3f](https://github.com/seatsurfing/seatsurfing/commit/1e82e3fbed6e0a9d6486f2c32ba789ae33ffcb45))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `7c4468d` to `f4a335c` ([#2401](https://github.com/seatsurfing/seatsurfing/issues/2401)) ([93c8571](https://github.com/seatsurfing/seatsurfing/commit/93c8571bac099a1a29a03030afec02a50c1ac7aa))
+
 ## [1.114.1](https://github.com/seatsurfing/seatsurfing/compare/v1.114.0...v1.114.1) (2026-07-11)
 
 
