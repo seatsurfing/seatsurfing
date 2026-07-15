@@ -50,11 +50,15 @@ type AdminUIMenuItem struct {
 	Source     string
 	Visibility string // "admin", "spaceadmin"
 	Icon       string
+	// TagName is the custom element tag to mount for this menu item's UI
+	// once the JS module at Source has been loaded.
+	TagName string
 }
 
 type AdminWelcomeScreen struct {
 	Source            string
 	SkipOnSettingTrue string
+	TagName           string
 }
 
 type PluginSetting struct {

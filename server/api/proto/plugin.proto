@@ -58,9 +58,14 @@ message BasePathReply {
 message AdminUIMenuItem {
   string id = 1;
   string title = 2;
+  // source is the URL of the JS module that registers the plugin's UI as
+  // the custom element named by tag_name.
   string source = 3;
   string visibility = 4;
   string icon = 5;
+  // tag_name is the custom element tag to mount for this menu item's UI
+  // once the JS module at source has been loaded.
+  string tag_name = 6;
 }
 
 message AdminUIMenuItemsReply {
@@ -68,8 +73,10 @@ message AdminUIMenuItemsReply {
 }
 
 message AdminWelcomeScreen {
+  // source and tag_name have the same meaning as in AdminUIMenuItem.
   string source = 1;
   string skip_on_setting_true = 2;
+  string tag_name = 3;
 }
 
 message AdminWelcomeScreenReply {

@@ -34,10 +34,12 @@ type SettingsRouterAdminMenuItem struct {
 	Source     string `json:"src"`
 	Visibility string `json:"visibility"`
 	Icon       string `json:"icon"`
+	TagName    string `json:"tagName"`
 }
 
 type SettingsRouterWelcomeScreen struct {
-	Source string `json:"src"`
+	Source  string `json:"src"`
+	TagName string `json:"tagName"`
 }
 
 var (
@@ -545,7 +547,8 @@ func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *Ge
 			}
 			if !skip {
 				resItem := SettingsRouterWelcomeScreen{
-					Source: ws.Source,
+					Source:  ws.Source,
+					TagName: ws.TagName,
 				}
 				res = append(res, resItem)
 			}
@@ -572,6 +575,7 @@ func (router *SettingsRouter) getAdminMenuItems() *GetSettingsResponse {
 				Source:     item.Source,
 				Visibility: item.Visibility,
 				Icon:       item.Icon,
+				TagName:    item.TagName,
 			}
 			res = append(res, resItem)
 		}
