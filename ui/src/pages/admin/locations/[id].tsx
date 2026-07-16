@@ -217,7 +217,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           height: space.height,
           transform: `rotate(${space.rotation}deg)`,
           zIndex: isSelected ? 1 : undefined,
-          opacity: space.enabled ? 1 : 0.6,
+          opacity: space.enabled ? 1 : 0.5,
         }}
         className={className}
         onMouseDown={() => {
