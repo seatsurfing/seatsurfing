@@ -225,6 +225,30 @@ func (r *GroupStore) GetMemberUserIDs(e *Group) ([]string, error) {
 	return result, nil
 }
 
+func (r *GroupStore) GetUserCountMap(organizationID string) (map[string]int, error) {
+	res := make(map[string]int)
+	rows, err := GetDatabase().DB().Query("SELECT users_groups.group_id, COUNT(users_groups.user_id) "+
+		"FROM users_groups "+
+		"INNER JOIN groups ON groups.id = users_groups.group_id "+
+		"WHERE groups.organization_id = $1 "+
+		"GROUP BY users_groups.group_id",
+		organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var groupID string
+		var count int
+		err = rows.Scan(&groupID, &count)
+		if err != nil {
+			return nil, err
+		}
+		res[groupID] = count
+	}
+	return res, nil
+}
+
 func (r *GroupStore) AddMembers(e *Group, userIDs []string) error {
 	sqlStr := "INSERT INTO users_groups (group_id, user_id) VALUES "
 	vals := []interface{}{}

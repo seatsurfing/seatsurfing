@@ -56,6 +56,7 @@ class Groups extends React.Component<Props, State> {
     return (
       <tr key={group.id} onClick={() => this.onItemSelect(group)}>
         <td>{group.name}</td>
+        <td>{group.userCount}</td>
       </tr>
     );
   };
@@ -84,7 +85,7 @@ class Groups extends React.Component<Props, State> {
       return <></>;
     }
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-groups.xlsx"
         href="#"
@@ -94,7 +95,7 @@ class Groups extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         <Link
@@ -133,6 +134,7 @@ class Groups extends React.Component<Props, State> {
           <thead>
             <tr>
               <th>{this.props.t("name")}</th>
+              <th>{this.props.t("members")}</th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

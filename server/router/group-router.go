@@ -21,6 +21,7 @@ type CreateGroupRequest struct {
 type GetGroupResponse struct {
 	ID             string `json:"id"`
 	OrganizationID string `json:"organizationId"`
+	UserCount      int    `json:"userCount"`
 	CreateGroupRequest
 }
 
@@ -64,9 +65,16 @@ func (router *GroupRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	userCounts, err := GetGroupRepository().GetUserCountMap(user.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetGroupResponse{}
 	for _, e := range list {
 		m := router.copyToRestModel(e)
+		m.UserCount = userCounts[e.ID]
 		res = append(res, m)
 	}
 	SendJSON(w, res)
