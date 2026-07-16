@@ -480,23 +480,7 @@ class Settings extends React.Component<Props, State> {
   };
 
   isValidDomain = () => {
-    if (this.state.newDomain.indexOf(".") < 3) {
-      return false;
-    }
-    if (
-      this.state.newDomain.toLowerCase().endsWith(".seatsurfing.app") ||
-      this.state.newDomain.toLowerCase().endsWith(".seatsurfing.io")
-    ) {
-      return false;
-    }
-    let lastIndex = this.state.newDomain.length - 3;
-    if (lastIndex < 3) {
-      lastIndex = 3;
-    }
-    if (this.state.newDomain.lastIndexOf(".") > lastIndex) {
-      return false;
-    }
-    return true;
+    return Validation.isValidDomain(this.state.newDomain);
   };
 
   addDomain = () => {
