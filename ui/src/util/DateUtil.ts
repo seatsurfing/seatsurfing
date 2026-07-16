@@ -211,13 +211,14 @@ export default class DateUtil {
   }
 
   /**
-   * @param date Date to modify (mutated in place)
+   * @param date Date to use as basis (not modified)
    * @param totalMinutes minutes since midnight (0-1440)
-   * @returns the same date, with hours/minutes set accordingly
+   * @returns a new date, based on the given date, with hours/minutes set accordingly
    */
   static setTimeFromMinutes(date: Date, totalMinutes: number): Date {
-    date.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
-    return date;
+    const result = new Date(date);
+    result.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+    return result;
   }
 
   /**
@@ -248,9 +249,9 @@ export default class DateUtil {
   }
 
   /**
-   * @param date Date to modify (mutated in place)
+   * @param date Date to use as basis (not modified)
    * @param s time string in the format "HH:MM" (24h)
-   * @returns the same date, with hours/minutes set accordingly
+   * @returns a new date, based on the given date, with hours/minutes set accordingly
    */
   static setTimeFromTimeString(date: Date, s: string): Date {
     return this.setTimeFromMinutes(date, this.timeStringToMinutes(s));
@@ -404,16 +405,16 @@ export default class DateUtil {
       const enterMinutes = enter.getHours() * 60 + enter.getMinutes();
       if (enterMinutes < prefWorkdayStartMinutes) {
         // preferred start time works for today
-        DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
+        enter = DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
       }
       if (enterMinutes >= prefWorkdayEndMinutes) {
         // todays next start time is after preferred end date -> switch to next day
         enter.setDate(enter.getDate() + 1);
-        DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
+        enter = DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
       }
     } else if (prefEnterTime === UserPreference.PreferenceEnterTime.NextDay) {
       enter.setDate(enter.getDate() + 1);
-      DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
+      enter = DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
     } else if (
       prefEnterTime === UserPreference.PreferenceEnterTime.NextWorkday
     ) {
@@ -433,11 +434,10 @@ export default class DateUtil {
         }
       }
       enter.setDate(enter.getDate() + add);
-      DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
+      enter = DateUtil.setTimeFromTimeString(enter, prefWorkdayStart);
     }
 
-    let leave = new Date(enter);
-    DateUtil.setTimeFromTimeString(leave, prefWorkdayEnd);
+    let leave = DateUtil.setTimeFromTimeString(enter, prefWorkdayEnd);
 
     if (dailyBasisBooking) {
       enter = DateUtil.setHoursToMin(enter);
