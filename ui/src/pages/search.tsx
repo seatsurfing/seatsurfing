@@ -576,18 +576,16 @@ class Search extends React.Component<Props, State> {
 
   loadSpaces = async (locationId: string) => {
     this.setState({ loading: true });
-    let leave = new Date(this.state.leave);
+    const leave = new Date(this.state.leave);
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
       leave.setSeconds(leave.getSeconds() - 1);
     }
-    return Space.listAvailability(
+    this.data = await Space.listAvailability(
       locationId,
       this.state.enter,
       leave,
       this.state.searchAttributesSpace,
-    ).then((list) => {
-      this.data = list;
-    });
+    );
   };
 
   updateCanSearch = async () => {
@@ -702,7 +700,6 @@ class Search extends React.Component<Props, State> {
   };
 
   /**
-   *
    * @param enter new enter time or null if enter time should remain unchanged
    * @param leave new leave time or null if enter time should remain unchanged
    */
@@ -961,15 +958,16 @@ class Search extends React.Component<Props, State> {
         })
       : "";
     let tooltipHtml: string;
-    let labelText: string;
+    let labelText = item.name;
     if (showBookerNames && bookedEntry) {
       tooltipHtml = `<div class="text-center">${RendererUtils.escapeHtml(item.name)}<br/>${freeFrom}</div>`;
       labelText = bookerName || item.name;
+    } else if (bookedEntry) {
+      tooltipHtml = `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`;
+    } else if (!item.enabled) {
+      tooltipHtml = this.props.t("disallowed");
     } else {
-      tooltipHtml = bookedEntry
-        ? `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`
-        : this.props.t("free");
-      labelText = item.name;
+      tooltipHtml = this.props.t("free");
     }
     return (
       <div
