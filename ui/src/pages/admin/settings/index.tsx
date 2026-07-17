@@ -527,7 +527,7 @@ class Settings extends React.Component<Props, State> {
     });
   };
 
-  removeDomain = (domainName: string) => {
+  removeDomain = async (domainName: string) => {
     if (
       !window.confirm(
         this.props.t("confirmDeleteDomain", { domain: domainName }),
@@ -535,18 +535,17 @@ class Settings extends React.Component<Props, State> {
     ) {
       return;
     }
-    this.state.domains.forEach((domain) => {
-      if (domain.domain === domainName) {
-        domain
-          .delete()
-          .then(() => {
-            Domain.list(this.org ? this.org.id : "").then((domains) =>
-              this.setState({ domains: domains }),
-            );
-          })
-          .catch(() => alert(this.props.t("errorDeleteDomain")));
-      }
-    });
+    const domain = this.state.domains.find((d) => d.domain === domainName);
+    if (!domain) {
+      return;
+    }
+    try {
+      await domain.delete();
+      const domains = await Domain.list(this.org ? this.org.id : "");
+      this.setState({ domains: domains });
+    } catch {
+      alert(this.props.t("errorDeleteDomain"));
+    }
   };
 
   handleNewDomainKeyDown = (target: any) => {
@@ -668,6 +667,7 @@ class Settings extends React.Component<Props, State> {
             variant="danger"
             size="sm"
             hidden={domain.domain.endsWith(".seatsurfing.app")}
+            disabled={this.state.domains.length <= 1}
             onClick={() => this.removeDomain(domain.domain)}
           >
             {this.props.t("remove")}

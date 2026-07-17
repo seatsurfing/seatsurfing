@@ -375,6 +375,16 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 		SendForbidden(w)
 		return
 	}
+	domains, err := GetOrganizationRepository().GetDomains(e)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if len(domains) <= 1 {
+		SendBadRequest(w)
+		return
+	}
 	err = GetOrganizationRepository().RemoveDomain(e, vars["domain"])
 	if err != nil {
 		log.Println(err)
