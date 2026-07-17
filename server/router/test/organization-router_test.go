@@ -764,6 +764,11 @@ func TestOrganizationsRemoveDomainNotFound(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	admin := CreateTestUserOrgAdmin(org)
+	// Add a second domain so the "last domain" protection doesn't mask this case
+	GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
+	if err := GetOrganizationRepository().AddDomain(org, "second.com", true); err != nil {
+		t.Fatal(err)
+	}
 
 	// Try to delete a non-existent domain → 500 (InternalServerError from DB)
 	req := NewHTTPRequest("DELETE", "/organization/"+org.ID+"/domain/nonexistent.example.com", admin.ID, nil)
@@ -773,6 +778,35 @@ func TestOrganizationsRemoveDomainNotFound(t *testing.T) {
 	if res.Code != http.StatusNoContent && res.Code != http.StatusInternalServerError {
 		t.Fatalf("Expected 204 or 500, got %d", res.Code)
 	}
+}
+
+func TestOrganizationsRemoveLastDomainForbidden(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	// Try to delete the only remaining domain → 400
+	req := NewHTTPRequest("DELETE", "/organization/"+org.ID+"/domain/test.com", admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Domain must still be present
+	domains, err := GetOrganizationRepository().GetDomains(org)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(domains) != 1 {
+		t.Fatalf("Expected 1 domain to remain, got %d", len(domains))
+	}
+
+	// Add a second domain, then removing the first one must succeed
+	GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
+	if err := GetOrganizationRepository().AddDomain(org, "second.com", true); err != nil {
+		t.Fatal(err)
+	}
+	req = NewHTTPRequest("DELETE", "/organization/"+org.ID+"/domain/test.com", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
 func TestOrganizationsVerifyEmailInvalidUUID(t *testing.T) {
