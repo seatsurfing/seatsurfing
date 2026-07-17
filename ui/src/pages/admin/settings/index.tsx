@@ -1020,7 +1020,9 @@ class Settings extends React.Component<Props, State> {
                       this.maxConcurrentBookingsPerUserLastValue = value;
                     }
                     this.setState({
-                      maxConcurrentBookingsPerUser: e.target.value,
+                      maxConcurrentBookingsPerUser: window.parseInt(
+                        e.target.value,
+                      ),
                     });
                   }}
                   min="1"
