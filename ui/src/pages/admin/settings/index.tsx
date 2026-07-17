@@ -1002,9 +1002,7 @@ class Settings extends React.Component<Props, State> {
                     }}
                     className="mt-0 me-2"
                   />
-                  <Form.Check.Label
-                    htmlFor="check-maxConcurrentBookingsPerUserUnlimited"
-                  >
+                  <Form.Check.Label htmlFor="check-maxConcurrentBookingsPerUserUnlimited">
                     {this.props.t("unlimited")}
                   </Form.Check.Label>
                 </InputGroup.Text>
