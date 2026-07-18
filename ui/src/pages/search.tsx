@@ -87,8 +87,7 @@ interface State {
   enter: Date;
   leave: Date;
   locationId: string;
-  canSearch: boolean;
-  canSearchHint: string;
+  bookingCount: number;
   showBookingNames: boolean;
   selectedSpace: Space | null;
   showConfirm: boolean;
@@ -154,7 +153,6 @@ class Search extends React.Component<Props, State> {
   data: Space[];
   locations: Location[];
   mapData: any;
-  curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
   transformWrapperRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   buddies: Buddy[];
@@ -187,8 +185,7 @@ class Search extends React.Component<Props, State> {
       enter: new Date(),
       leave: new Date(),
       locationId: "",
-      canSearch: false,
-      canSearchHint: "",
+      bookingCount: 0,
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
@@ -355,7 +352,11 @@ class Search extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    const promises = [this.loadLocations(), this.loadPreferences()];
+    const promises = [
+      this.loadLocations(),
+      this.loadPreferences(),
+      this.initCurrentBookingCount(),
+    ];
     if (!RuntimeConfig.INFOS.disableBuddies && RuntimeConfig.INFOS.showNames) {
       promises.push(this.loadBuddies());
     }
@@ -458,10 +459,11 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  initCurrentBookingCount = () => {
-    Booking.list().then((list) => {
-      this.curBookingCount = list.length;
-      this.updateCanSearch();
+  initCurrentBookingCount = (): Promise<void> => {
+    return Booking.list().then((list) => {
+      return new Promise<void>((resolve) => {
+        this.setState({ bookingCount: list.length }, () => resolve());
+      });
     });
   };
 
@@ -588,13 +590,13 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  updateCanSearch = async () => {
+  getCanSearch = (): { canSearch: boolean; canSearchHint: string } => {
     let res = true;
     let hint = "";
     const isAdmin =
       RuntimeConfig.INFOS.noAdminRestrictions && User.UserRoleSpaceAdmin;
     if (
-      this.curBookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
+      this.state.bookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
       !isAdmin
     ) {
       res = false;
@@ -652,16 +654,7 @@ class Search extends React.Component<Props, State> {
         num: RuntimeConfig.INFOS.minBookingDurationHours,
       });
     }
-    const self = this;
-    return new Promise<void>(function (resolve, _reject) {
-      self.setState(
-        {
-          canSearch: res,
-          canSearchHint: hint,
-        },
-        () => resolve(),
-      );
-    });
+    return { canSearch: res, canSearchHint: hint };
   };
 
   renderLocations = () => {
@@ -773,19 +766,18 @@ class Search extends React.Component<Props, State> {
     };
 
     const dateChangedCallback = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
+      const { canSearch } = this.getCanSearch();
+      if (!canSearch) {
+        this.setState({ loading: false });
+      } else {
+        const promises = [
+          this.initCurrentBookingCount(),
+          this.loadSpaces(this.state.locationId),
+        ];
+        Promise.all(promises).then(() => {
           this.setState({ loading: false });
-        } else {
-          const promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
-      });
+        });
+      }
     };
     this.setState(state, () => dateChangedCallback());
   };
@@ -1845,16 +1837,15 @@ class Search extends React.Component<Props, State> {
 
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
+    const { canSearch, canSearchHint } = this.getCanSearch();
 
     let hint = <></>;
-    if (!this.state.canSearch && this.state.canSearchHint) {
+    if (!canSearch && canSearchHint) {
       hint = (
         <Form.Group as={Row} className="margin-top-10">
           <Col xs="2"></Col>
           <Col xs="10">
-            <div className="invalid-search-config">
-              {this.state.canSearchHint}
-            </div>
+            <div className="invalid-search-config">{canSearchHint}</div>
           </Col>
         </Form.Group>
       );
@@ -3093,7 +3084,10 @@ class Search extends React.Component<Props, State> {
 
   refreshPage = async () => {
     this.setState({ loading: true });
-    await this.loadMap(this.state.locationId);
+    await Promise.all([
+      this.loadMap(this.state.locationId),
+      this.initCurrentBookingCount(),
+    ]);
     this.setState({ loading: false });
   };
 
