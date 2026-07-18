@@ -215,6 +215,7 @@
   "maxBookingsPerUser": "Buchungen je Nutzer",
   "maxConcurrentBookings": "Max. Buchungen",
   "maxConcurrentBookingsPerUser": "Maximale Anzahl gleichzeitiger Buchungen pro Benutzer",
+  "unlimited": "Unbegrenzt",
   "maxDaysInAdvance": "Max. Buchungs-Vorlauf",
   "bookingRetention": "Lösche Buchungen älter als",
   "maxHoursBeforeDelete": "Max. Stunden vor Beginn zum Löschen",

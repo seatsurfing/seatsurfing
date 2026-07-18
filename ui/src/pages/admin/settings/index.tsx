@@ -93,11 +93,13 @@ class Settings extends React.Component<Props, State> {
   org: Organization | null;
   authProviders: AuthProvider[];
   timezones: string[];
+  maxConcurrentBookingsPerUserLastValue: number;
 
   constructor(props: any) {
     super(props);
     this.org = null;
     this.authProviders = [];
+    this.maxConcurrentBookingsPerUserLastValue = 1;
     this.timezones = [];
     this.state = {
       allowAnyUser: true,
@@ -250,6 +252,11 @@ class Settings extends React.Component<Props, State> {
         if (s.name === Organization.PREF_HIDE_STATS)
           state.hideStats = s.value === "1";
       });
+
+      if (state.maxConcurrentBookingsPerUser > 0) {
+        this.maxConcurrentBookingsPerUserLastValue =
+          state.maxConcurrentBookingsPerUser;
+      }
 
       const convert = (value: number): number => {
         return state.dailyBasisBooking ? value / 24 : value;
@@ -973,18 +980,56 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("maxConcurrentBookingsPerUser")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
-                id="input-maxConcurrentBookingsPerUser"
-                type="number"
-                value={this.state.maxConcurrentBookingsPerUser}
-                onChange={(e: any) =>
-                  this.setState({
-                    maxConcurrentBookingsPerUser: e.target.value,
-                  })
-                }
-                min="0"
-                max="9999"
-              />
+              <InputGroup>
+                <InputGroup.Text>
+                  <Form.Check.Input
+                    type="checkbox"
+                    id="check-maxConcurrentBookingsPerUserUnlimited"
+                    checked={this.state.maxConcurrentBookingsPerUser === 0}
+                    onChange={(e: any) => {
+                      if (!e.target.checked) {
+                        this.setState({
+                          maxConcurrentBookingsPerUser:
+                            this.maxConcurrentBookingsPerUserLastValue,
+                        });
+                        return;
+                      }
+                      if (this.state.maxConcurrentBookingsPerUser > 0) {
+                        this.maxConcurrentBookingsPerUserLastValue =
+                          this.state.maxConcurrentBookingsPerUser;
+                      }
+                      this.setState({ maxConcurrentBookingsPerUser: 0 });
+                    }}
+                    className="mt-0 me-2"
+                  />
+                  <Form.Check.Label htmlFor="check-maxConcurrentBookingsPerUserUnlimited">
+                    {this.props.t("unlimited")}
+                  </Form.Check.Label>
+                </InputGroup.Text>
+                <Form.Control
+                  id="input-maxConcurrentBookingsPerUser"
+                  type="number"
+                  value={
+                    this.state.maxConcurrentBookingsPerUser === 0
+                      ? ""
+                      : this.state.maxConcurrentBookingsPerUser
+                  }
+                  onChange={(e: any) => {
+                    const value = window.parseInt(e.target.value);
+                    if (value > 0) {
+                      this.maxConcurrentBookingsPerUserLastValue = value;
+                    }
+                    this.setState({
+                      maxConcurrentBookingsPerUser: window.parseInt(
+                        e.target.value,
+                      ),
+                    });
+                  }}
+                  min="1"
+                  max="9999"
+                  disabled={this.state.maxConcurrentBookingsPerUser === 0}
+                />
+              </InputGroup>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

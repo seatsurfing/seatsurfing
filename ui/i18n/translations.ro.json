@@ -510,5 +510,6 @@
   "small": "Small",
   "markdownSupported": "Markdown syntax is supported",
   "bookableDays": "Bookable weekdays",
-  "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday."
+  "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
+  "unlimited": "Unlimited"
 }
