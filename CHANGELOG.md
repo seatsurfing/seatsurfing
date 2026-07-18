@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.116.0](https://github.com/seatsurfing/seatsurfing/compare/v1.115.0...v1.116.0) (2026-07-18)
+
+
+### ✨ Features
+
+* **admin-ui:** add user count column in group table ([#2408](https://github.com/seatsurfing/seatsurfing/issues/2408)) ([f4bf3c3](https://github.com/seatsurfing/seatsurfing/commit/f4bf3c3ac70ffc2b151662f1b8496eb6c3ffebde))
+* **admin-ui:** show user's last activity timestamp ([#2425](https://github.com/seatsurfing/seatsurfing/issues/2425)) ([f5b109b](https://github.com/seatsurfing/seatsurfing/commit/f5b109b6b5a3f3a1fe94d3c505d0e65b078e449f))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** consider user's week start day in weekday chart ([#2411](https://github.com/seatsurfing/seatsurfing/issues/2411)) ([67594b0](https://github.com/seatsurfing/seatsurfing/commit/67594b0192e8db1ef322e2ef95911c73e0c405af))
+* **admin-ui:** fix error handling when domain verification failed ([#2418](https://github.com/seatsurfing/seatsurfing/issues/2418)) ([70a2aad](https://github.com/seatsurfing/seatsurfing/commit/70a2aad6f1060a500bf9c40ea80b5a74542fd085))
+* **admin-ui:** improve date format on analysis page ([#2409](https://github.com/seatsurfing/seatsurfing/issues/2409)) ([33417e4](https://github.com/seatsurfing/seatsurfing/commit/33417e4235c9d3179d0d57cbb28831007639bfdf))
+* **admin-ui:** prevent removing last domain ([#2419](https://github.com/seatsurfing/seatsurfing/issues/2419)) ([a2b1410](https://github.com/seatsurfing/seatsurfing/commit/a2b1410ee28efb22811d684af4815222976b6d8d))
+* **admin-ui:** show inactive spaces transparent ([#2405](https://github.com/seatsurfing/seatsurfing/issues/2405)) ([17e3254](https://github.com/seatsurfing/seatsurfing/commit/17e3254f79740348f60c3b9cec60f75279a9ecb2))
+* **admin-ui:** show num records for attributes table ([#2427](https://github.com/seatsurfing/seatsurfing/issues/2427)) ([afa0c45](https://github.com/seatsurfing/seatsurfing/commit/afa0c456cdf4d5e77fd4caa20da8bb11a1152781))
+* **admin-ui:** show num records for group table ([#2407](https://github.com/seatsurfing/seatsurfing/issues/2407)) ([31359aa](https://github.com/seatsurfing/seatsurfing/commit/31359aab6c3c7b1694d147f3b838143c2d39ac33))
+* **admin-ui:** show num records for location table ([#2410](https://github.com/seatsurfing/seatsurfing/issues/2410)) ([f1fd2e1](https://github.com/seatsurfing/seatsurfing/commit/f1fd2e18a1824b831f13c19b061434a6a15e9269))
+* **admin-ui:** show unlimited checkbox for "Max. concurrent bookings per user" ([#2420](https://github.com/seatsurfing/seatsurfing/issues/2420)) ([7d4505a](https://github.com/seatsurfing/seatsurfing/commit/7d4505a4b86cf8485cb3307c61608e946e319831))
+* **booking-ui:** fix auto date calculation ([#2424](https://github.com/seatsurfing/seatsurfing/issues/2424)) ([9720586](https://github.com/seatsurfing/seatsurfing/commit/9720586b65a2e3e99111d987f62854214e69ba0a))
+* **booking-ui:** race condition in search dialog ([#2422](https://github.com/seatsurfing/seatsurfing/issues/2422)) ([ba70903](https://github.com/seatsurfing/seatsurfing/commit/ba709033cc2d956b0cf0394faa148e4a7eb51f49))
+* **booking-ui:** show disallowed information in tooltip ([#2421](https://github.com/seatsurfing/seatsurfing/issues/2421)) ([5593bf9](https://github.com/seatsurfing/seatsurfing/commit/5593bf90e77c6d679ca42df314da59313640a962))
+* **booking-ui:** use switch style for email and time format preference ([#2412](https://github.com/seatsurfing/seatsurfing/issues/2412)) ([84fde58](https://github.com/seatsurfing/seatsurfing/commit/84fde5815a5d2a0e178a2456f7fa537fec3897cc))
+* **deps:** bump golang.org/x/crypto from 0.53.0 to 0.54.0 in /server in the minor-and-patch group ([#2413](https://github.com/seatsurfing/seatsurfing/issues/2413)) ([eca8042](https://github.com/seatsurfing/seatsurfing/commit/eca8042de9a1d3fc477000b89f53895df7630688))
+* **deps:** use go 1.26 instead of 1.27-rc in dockerfile ([#2423](https://github.com/seatsurfing/seatsurfing/issues/2423)) ([e16b5e6](https://github.com/seatsurfing/seatsurfing/commit/e16b5e6fce7070a98a658f19c018075a041b71f3))
+
+
+### 🔧 Refactoring
+
+* **main:** do not change passed date in setTimeFromMinutes() and setTimeFromTimeString() ([#2415](https://github.com/seatsurfing/seatsurfing/issues/2415)) ([e7c72d5](https://github.com/seatsurfing/seatsurfing/commit/e7c72d525279f6e79d5818b57be5850259f6b73e))
+* **main:** extract isValidDomain() ([#2417](https://github.com/seatsurfing/seatsurfing/issues/2417)) ([9bc0c6e](https://github.com/seatsurfing/seatsurfing/commit/9bc0c6eb83af8d4843ffb67702495600e679d0cf))
+
 ## [1.115.0](https://github.com/seatsurfing/seatsurfing/compare/v1.114.1...v1.115.0) (2026-07-15)
 
 
