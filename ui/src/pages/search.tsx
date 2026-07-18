@@ -88,8 +88,7 @@ interface State {
   enter: Date;
   leave: Date;
   locationId: string;
-  canSearch: boolean;
-  canSearchHint: string;
+  bookingCount: number;
   showBookingNames: boolean;
   selectedSpace: Space | null;
   showConfirm: boolean;
@@ -155,7 +154,6 @@ class Search extends React.Component<Props, State> {
   data: Space[];
   locations: Location[];
   mapData: any;
-  curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
   transformWrapperRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   buddies: Buddy[];
@@ -188,8 +186,7 @@ class Search extends React.Component<Props, State> {
       enter: new Date(),
       leave: new Date(),
       locationId: "",
-      canSearch: false,
-      canSearchHint: "",
+      bookingCount: 0,
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
@@ -356,7 +353,11 @@ class Search extends React.Component<Props, State> {
   };
 
   loadItems = () => {
-    const promises = [this.loadLocations(), this.loadPreferences()];
+    const promises = [
+      this.loadLocations(),
+      this.loadPreferences(),
+      this.initCurrentBookingCount(),
+    ];
     if (!RuntimeConfig.INFOS.disableBuddies && RuntimeConfig.INFOS.showNames) {
       promises.push(this.loadBuddies());
     }
@@ -459,10 +460,11 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  initCurrentBookingCount = () => {
-    Booking.list().then((list) => {
-      this.curBookingCount = list.length;
-      this.updateCanSearch();
+  initCurrentBookingCount = (): Promise<void> => {
+    return Booking.list().then((list) => {
+      return new Promise<void>((resolve) => {
+        this.setState({ bookingCount: list.length }, () => resolve());
+      });
     });
   };
 
@@ -589,22 +591,19 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  updateCanSearch = async () => {
-    let res = true;
+  getSearchHint = (): string => {
     let hint = "";
     const isAdmin =
       RuntimeConfig.INFOS.noAdminRestrictions && User.UserRoleSpaceAdmin;
     if (
-      this.curBookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
+      this.state.bookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
       !isAdmin
     ) {
-      res = false;
       hint = this.props.t("errorBookingLimit", {
         num: RuntimeConfig.INFOS.maxBookingsPerUser,
       });
     }
     if (!this.state.locationId) {
-      res = false;
       hint = this.props.t("errorPickArea");
     }
     const today = DateUtil.getTodayStart();
@@ -613,11 +612,9 @@ class Search extends React.Component<Props, State> {
       enterTime = DateUtil.setHoursToMax(enterTime);
     }
     if (enterTime.getTime() < today.getTime()) {
-      res = false;
       hint = this.props.t("errorEnterFuture");
     }
     if (this.state.leave.getTime() <= this.state.enter.getTime()) {
-      res = false;
       hint = this.props.t("errorLeaveAfterEnter");
     }
 
@@ -625,7 +622,6 @@ class Search extends React.Component<Props, State> {
       (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
-      res = false;
       hint = this.props.t("errorDaysAdvance", {
         num: RuntimeConfig.INFOS.maxDaysInAdvance,
       });
@@ -639,7 +635,6 @@ class Search extends React.Component<Props, State> {
       bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours &&
       !isAdmin
     ) {
-      res = false;
       hint = this.props.t("errorMaxBookingDuration", {
         num: RuntimeConfig.INFOS.maxBookingDurationHours,
       });
@@ -648,21 +643,11 @@ class Search extends React.Component<Props, State> {
       bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours &&
       !isAdmin
     ) {
-      res = false;
       hint = this.props.t("errorMinBookingDuration", {
         num: RuntimeConfig.INFOS.minBookingDurationHours,
       });
     }
-    const self = this;
-    return new Promise<void>(function (resolve, _reject) {
-      self.setState(
-        {
-          canSearch: res,
-          canSearchHint: hint,
-        },
-        () => resolve(),
-      );
-    });
+    return hint;
   };
 
   renderLocations = () => {
@@ -729,18 +714,12 @@ class Search extends React.Component<Props, State> {
     };
 
     const dateChangedCallback = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
-          this.setState({ loading: false });
-        } else {
-          const promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
+      const promises = [
+        this.initCurrentBookingCount(),
+        this.loadSpaces(this.state.locationId),
+      ];
+      Promise.all(promises).then(() => {
+        this.setState({ loading: false });
       });
     };
     this.setState(state, () => dateChangedCallback());
@@ -1801,16 +1780,15 @@ class Search extends React.Component<Props, State> {
 
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
+    const searchHint = this.getSearchHint();
 
     let hint = <></>;
-    if (!this.state.canSearch && this.state.canSearchHint) {
+    if (searchHint) {
       hint = (
         <Form.Group as={Row} className="margin-top-10">
           <Col xs="2"></Col>
           <Col xs="10">
-            <div className="invalid-search-config">
-              {this.state.canSearchHint}
-            </div>
+            <div className="invalid-search-config">{searchHint}</div>
           </Col>
         </Form.Group>
       );
@@ -3053,7 +3031,10 @@ class Search extends React.Component<Props, State> {
 
   refreshPage = async () => {
     this.setState({ loading: true });
-    await this.loadMap(this.state.locationId);
+    await Promise.all([
+      this.loadMap(this.state.locationId),
+      this.initCurrentBookingCount(),
+    ]);
     this.setState({ loading: false });
   };
 
