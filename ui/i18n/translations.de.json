@@ -203,6 +203,7 @@
   "loginFailedDescription": "Möglicherweise ist das verwendete Konto nicht für diese Organisation freigeschaltet.",
   "loginMeans": "Anmeldung",
   "loginUseUsernamePassword": "Login mit Benutzername und Passwort",
+  "lastActivity": "Letzte Aktivität",
   "logout": "Abmelden",
   "mailNotifications": "E-Mail-Benachrichtigungen",
   "mailLanguage": "E-Mail-Sprache",

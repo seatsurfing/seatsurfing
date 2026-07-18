@@ -202,6 +202,7 @@
   "loginFailedDescription": "Possibly your account is not activated in this organization.",
   "loginMeans": "Login",
   "loginUseUsernamePassword": "Sign in with username and password",
+  "lastActivity": "Last activity",
   "logout": "Log out",
   "mailNotifications": "Mail notifications",
   "mailLanguage": "Mail language",
