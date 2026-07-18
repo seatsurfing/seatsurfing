@@ -154,10 +154,13 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   renderWeekdayChart = (bookingsByWeekday: number[]) => {
-    const labels = bookingsByWeekday.map((_, index) =>
-      this.props.t(`workday-${index}`),
+    const weekStartDay = RuntimeConfig.INFOS.weekStartDay ?? 1;
+    const order = [0, 1, 2, 3, 4, 5, 6].map(
+      (offset) => (weekStartDay + offset) % 7,
     );
-    return <WeekdayChart data={bookingsByWeekday} labels={labels} />;
+    const data = order.map((day) => bookingsByWeekday[day]);
+    const labels = order.map((day) => this.props.t(`workday-${day}`));
+    return <WeekdayChart data={data} labels={labels} />;
   };
 
   renderProgressBar = (num: number | undefined, title: string) => {
