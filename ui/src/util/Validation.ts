@@ -50,4 +50,25 @@ export default class Validation {
   static isValidTimeString(s: string): boolean {
     return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s);
   }
+
+  static isValidDomain(domain: string): boolean {
+    if (domain.indexOf(".") < 3) {
+      return false;
+    }
+    const lowerCaseDomain = domain.toLowerCase();
+    if (
+      lowerCaseDomain.endsWith(".seatsurfing.app") ||
+      lowerCaseDomain.endsWith(".seatsurfing.io")
+    ) {
+      return false;
+    }
+    let lastIndex = domain.length - 3;
+    if (lastIndex < 3) {
+      lastIndex = 3;
+    }
+    if (domain.lastIndexOf(".") > lastIndex) {
+      return false;
+    }
+    return true;
+  }
 }
