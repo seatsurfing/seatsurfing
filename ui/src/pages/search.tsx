@@ -611,7 +611,7 @@ class Search extends React.Component<Props, State> {
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
       enterTime = DateUtil.setHoursToMax(enterTime);
     }
-    if (enterTime.getTime() <= today.getTime()) {
+    if (enterTime.getTime() < today.getTime()) {
       res = false;
       hint = this.props.t("errorEnterFuture");
     }
@@ -725,6 +725,12 @@ class Search extends React.Component<Props, State> {
       const diff = this.state.leave.getTime() - this.state.enter.getTime();
       newLeave = new Date();
       newLeave.setTime(enter.getTime() + diff);
+      if (
+        !this.state.selectionMultiDay &&
+        !DateUtil.isSameDay(newLeave, enter)
+      ) {
+        newLeave = DateUtil.setHoursToMax(new Date(enter));
+      }
 
       // only leave change
     } else if (leave !== null) {
@@ -2261,10 +2267,14 @@ class Search extends React.Component<Props, State> {
                 }}
                 onClick={() => {
                   if (this.state.selectionMultiDay) {
-                    this.updateEnterAndLeaveDate(
-                      null,
-                      DateUtil.copyDate(this.state.enter, this.state.leave),
+                    let newLeave = DateUtil.copyDate(
+                      this.state.enter,
+                      this.state.leave,
                     );
+                    if (newLeave.getTime() < this.state.enter.getTime()) {
+                      newLeave = DateUtil.setHoursToMax(newLeave);
+                    }
+                    this.updateEnterAndLeaveDate(null, newLeave);
                   }
                   this.setState({
                     selectionMultiDay: !this.state.selectionMultiDay,
