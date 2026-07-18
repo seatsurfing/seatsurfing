@@ -78,6 +78,7 @@ import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
 import IconTextButton from "@/components/IconTextButton";
 import DateUtil from "@/util/DateUtil";
+import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
@@ -704,72 +705,21 @@ class Search extends React.Component<Props, State> {
    * @param leave new leave time or null if enter time should remain unchanged
    */
   updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
-    if (enter === null && leave === null) return;
+    const result = SearchUtil.calculateNewEnterAndLeave(
+      this.state.enter,
+      this.state.leave,
+      this.state.selectionMultiDay,
+      RuntimeConfig.INFOS.dailyBasisBooking,
+      this.autoUpdateEnterTimeToPrefWorkdayStart,
+      this.state.prefWorkdayStart,
+      enter,
+      leave,
+    );
+    if (result === null) return;
 
-    let newEnter, newLeave;
-
-    // enter and leave change
-    if (enter !== null && leave !== null) {
-      if (
-        DateUtil.equal(enter, this.state.enter) &&
-        DateUtil.equal(leave, this.state.leave)
-      )
-        return;
-      newEnter = enter;
-      newLeave = leave;
-
-      // only enter change
-    } else if (enter !== null) {
-      if (DateUtil.equal(enter, this.state.enter)) return;
-      newEnter = enter;
-      const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      newLeave = new Date();
-      newLeave.setTime(enter.getTime() + diff);
-      if (
-        !this.state.selectionMultiDay &&
-        !DateUtil.isSameDay(newLeave, enter)
-      ) {
-        newLeave = DateUtil.setHoursToMax(new Date(enter));
-      }
-
-      // only leave change
-    } else if (leave !== null) {
-      if (DateUtil.equal(leave, this.state.leave)) return;
-      newLeave = leave;
-    }
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
-      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
-    } else if (this.autoUpdateEnterTimeToPrefWorkdayStart) {
-      if (
-        newEnter &&
-        DateUtil.isSameTime(newEnter, this.state.enter) &&
-        !DateUtil.isSameDay(newEnter, this.state.enter)
-      ) {
-        // enter date changed and enter time remains unchanged but -> set enter time to preferred time or next possible time
-        if (DateUtil.isAfterToday(newEnter)) {
-          newEnter = DateUtil.setTimeFromTimeString(
-            newEnter,
-            this.state.prefWorkdayStart,
-          );
-        } else {
-          newEnter = DateUtil.setTimeFromMinutes(
-            newEnter,
-            Math.max(
-              DateUtil.timeStringToMinutes(this.state.prefWorkdayStart),
-              (new Date().getHours() + 1) * 60,
-            ),
-          );
-        }
-      } else if (
-        (newEnter && !DateUtil.isSameTime(newEnter, this.state.enter)) ||
-        (newLeave && !DateUtil.isSameTime(newLeave, this.state.leave))
-      ) {
-        // user changed time -> no longer auto update time to preferred time
-        this.autoUpdateEnterTimeToPrefWorkdayStart = false;
-      }
-    }
+    const { newEnter, newLeave } = result;
+    this.autoUpdateEnterTimeToPrefWorkdayStart =
+      result.autoUpdateEnterTimeToPrefWorkdayStart;
 
     const stateEnter = newEnter ?? this.state.enter;
     const stateLeave = newLeave ?? this.state.leave;
