@@ -217,6 +217,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           height: space.height,
           transform: `rotate(${space.rotation}deg)`,
           zIndex: isSelected ? 1 : undefined,
+          opacity: space.enabled ? 1 : 0.5,
         }}
         className={className}
         onMouseDown={() => {
@@ -1838,7 +1839,7 @@ class EditLocation extends React.Component<Props, State> {
             ")"
           : "",
       };
-      let spaces = this.state.spaces.map((_item, i) => {
+      const spaces = this.state.spaces.map((_item, i) => {
         return this.renderRect(i);
       });
       let buttonEditSpaceDetails = <></>;
