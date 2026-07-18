@@ -20,6 +20,7 @@ import ErrorText from "@/types/ErrorText";
 import DateTimePicker from "@/components/DateTimePicker";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
@@ -275,11 +276,18 @@ class ReportAnalysis extends React.Component<Props, State> {
           <thead>
             <tr>
               <th className="no-wrap">{this.props.t("name")}</th>
-              {this.data.dates.map((date: string) => (
-                <th key={"date-" + date} className="no-wrap">
-                  {date}
-                </th>
-              ))}
+              {this.data.dates.map((date: string) => {
+                const d = new Date(date);
+                return (
+                  <th
+                    key={"date-" + date}
+                    className="no-wrap"
+                    title={this.props.t("workday-" + d.getUTCDay())}
+                  >
+                    {Formatting.getFormatterDate().format(d)}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>{this.getRows()}</tbody>
