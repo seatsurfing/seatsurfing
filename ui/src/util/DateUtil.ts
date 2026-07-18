@@ -401,7 +401,7 @@ export default class DateUtil {
 
     let enter = new Date();
     if (prefEnterTime === UserPreference.PreferenceEnterTime.Now) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
+      enter.setHours(enter.getHours() + 1, 0, 0, 0);
       const enterMinutes = enter.getHours() * 60 + enter.getMinutes();
       if (enterMinutes < prefWorkdayStartMinutes) {
         // preferred start time works for today
@@ -443,6 +443,9 @@ export default class DateUtil {
       enter = DateUtil.setHoursToMin(enter);
       leave = DateUtil.setHoursToMax(leave);
     }
+
+    enter.setSeconds(0, 0);
+    leave.setSeconds(59, 999);
 
     return { enter, leave };
   }
