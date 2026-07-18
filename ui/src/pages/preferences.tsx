@@ -717,7 +717,7 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Label>
                 <div className="text-left">
                   <Form.Check
-                    type="checkbox"
+                    type="switch"
                     id="mailNotifications"
                     label={this.props.t("mailNotificationsBookingInfo")}
                     checked={this.state.mailNotifications}
@@ -726,7 +726,7 @@ class Preferences extends React.Component<Props, State> {
                     }
                   />
                   <Form.Check
-                    type="checkbox"
+                    type="switch"
                     id="mailReminder"
                     label={this.props.t("mailReminderBookingInfo")}
                     checked={this.state.mailReminder}
@@ -767,7 +767,7 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Label>
                 <div className="text-left">
                   <Form.Check
-                    type="checkbox"
+                    type="switch"
                     id="use24HourTime"
                     label={this.props.t("use24HourTime")}
                     checked={this.state.use24HourTime}
