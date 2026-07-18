@@ -359,14 +359,14 @@ func (router *OrganizationRouter) setPrimaryDomain(w http.ResponseWriter, r *htt
 
 func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	e, err := GetOrganizationRepository().GetOne(vars["id"])
+	org, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		log.Println(err)
 		SendNotFound(w)
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, org.ID)) {
 		SendForbidden(w)
 		return
 	}
@@ -375,13 +375,23 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 		SendForbidden(w)
 		return
 	}
-	err = GetOrganizationRepository().RemoveDomain(e, vars["domain"])
+	domains, err := GetOrganizationRepository().GetDomains(org)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	router.ensureOrgHasPrimaryDomain(e, "")
+	if len(domains) <= 1 {
+		SendBadRequest(w)
+		return
+	}
+	err = GetOrganizationRepository().RemoveDomain(org, vars["domain"])
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	router.ensureOrgHasPrimaryDomain(org, "")
 	SendUpdated(w)
 }
 
