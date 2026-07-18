@@ -6,12 +6,14 @@ export default class Group extends Entity {
   id: string;
   organizationId: string;
   name: string;
+  userCount: number;
 
   constructor() {
     super();
     this.id = "";
     this.organizationId = "";
     this.name = "";
+    this.userCount = 0;
   }
 
   serialize(): Object {
@@ -25,6 +27,7 @@ export default class Group extends Entity {
     super.deserialize(input);
     this.organizationId = input.organizationId;
     this.name = input.name;
+    this.userCount = input.userCount;
   }
 
   getBackendUrl(): string {
