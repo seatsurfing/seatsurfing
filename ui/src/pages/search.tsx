@@ -590,8 +590,7 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  getCanSearch = (): { canSearch: boolean; canSearchHint: string } => {
-    let res = true;
+  getSearchHint = (): string => {
     let hint = "";
     const isAdmin =
       RuntimeConfig.INFOS.noAdminRestrictions && User.UserRoleSpaceAdmin;
@@ -599,13 +598,11 @@ class Search extends React.Component<Props, State> {
       this.state.bookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
       !isAdmin
     ) {
-      res = false;
       hint = this.props.t("errorBookingLimit", {
         num: RuntimeConfig.INFOS.maxBookingsPerUser,
       });
     }
     if (!this.state.locationId) {
-      res = false;
       hint = this.props.t("errorPickArea");
     }
     const today = DateUtil.getTodayStart();
@@ -614,11 +611,9 @@ class Search extends React.Component<Props, State> {
       enterTime = DateUtil.setHoursToMax(enterTime);
     }
     if (enterTime.getTime() <= today.getTime()) {
-      res = false;
       hint = this.props.t("errorEnterFuture");
     }
     if (this.state.leave.getTime() <= this.state.enter.getTime()) {
-      res = false;
       hint = this.props.t("errorLeaveAfterEnter");
     }
 
@@ -626,7 +621,6 @@ class Search extends React.Component<Props, State> {
       (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
-      res = false;
       hint = this.props.t("errorDaysAdvance", {
         num: RuntimeConfig.INFOS.maxDaysInAdvance,
       });
@@ -640,7 +634,6 @@ class Search extends React.Component<Props, State> {
       bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours &&
       !isAdmin
     ) {
-      res = false;
       hint = this.props.t("errorMaxBookingDuration", {
         num: RuntimeConfig.INFOS.maxBookingDurationHours,
       });
@@ -649,12 +642,11 @@ class Search extends React.Component<Props, State> {
       bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours &&
       !isAdmin
     ) {
-      res = false;
       hint = this.props.t("errorMinBookingDuration", {
         num: RuntimeConfig.INFOS.minBookingDurationHours,
       });
     }
-    return { canSearch: res, canSearchHint: hint };
+    return hint;
   };
 
   renderLocations = () => {
@@ -766,18 +758,13 @@ class Search extends React.Component<Props, State> {
     };
 
     const dateChangedCallback = () => {
-      const { canSearch } = this.getCanSearch();
-      if (!canSearch) {
+      const promises = [
+        this.initCurrentBookingCount(),
+        this.loadSpaces(this.state.locationId),
+      ];
+      Promise.all(promises).then(() => {
         this.setState({ loading: false });
-      } else {
-        const promises = [
-          this.initCurrentBookingCount(),
-          this.loadSpaces(this.state.locationId),
-        ];
-        Promise.all(promises).then(() => {
-          this.setState({ loading: false });
-        });
-      }
+      });
     };
     this.setState(state, () => dateChangedCallback());
   };
@@ -1837,15 +1824,15 @@ class Search extends React.Component<Props, State> {
 
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
-    const { canSearch, canSearchHint } = this.getCanSearch();
+    const searchHint = this.getSearchHint();
 
     let hint = <></>;
-    if (!canSearch && canSearchHint) {
+    if (searchHint) {
       hint = (
         <Form.Group as={Row} className="margin-top-10">
           <Col xs="2"></Col>
           <Col xs="10">
-            <div className="invalid-search-config">{canSearchHint}</div>
+            <div className="invalid-search-config">{searchHint}</div>
           </Col>
         </Form.Group>
       );
