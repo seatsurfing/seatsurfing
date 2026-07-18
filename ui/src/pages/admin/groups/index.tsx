@@ -9,7 +9,6 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
-import Ajax from "@/util/Ajax";
 import Group from "@/types/Group";
 
 interface State {
@@ -34,10 +33,8 @@ class Groups extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
-    import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
-    );
+  componentDidMount = async () => {
+    this.ExcellentExport = (await import("excellentexport")).default;
     this.loadItems();
   };
 
@@ -127,9 +124,12 @@ class Groups extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table"
+          className="clickable-table caption-top"
           id="datatable"
         >
+          <caption>
+            {this.props.t("numRecords")}: {rows.length}
+          </caption>
           <thead>
             <tr>
               <th>{this.props.t("name")}</th>
