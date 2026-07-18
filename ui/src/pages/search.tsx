@@ -743,9 +743,12 @@ class Search extends React.Component<Props, State> {
       ) {
         // enter date changed and enter time remains unchanged but -> set enter time to preferred time or next possible time
         if (DateUtil.isAfterToday(newEnter)) {
-          DateUtil.setTimeFromTimeString(newEnter, this.state.prefWorkdayStart);
+          newEnter = DateUtil.setTimeFromTimeString(
+            newEnter,
+            this.state.prefWorkdayStart,
+          );
         } else {
-          DateUtil.setTimeFromMinutes(
+          newEnter = DateUtil.setTimeFromMinutes(
             newEnter,
             Math.max(
               DateUtil.timeStringToMinutes(this.state.prefWorkdayStart),
@@ -860,16 +863,14 @@ class Search extends React.Component<Props, State> {
       RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled &&
       bookings.length > 0
     ) {
-      let prefWorkdayStartDate = new Date(this.state.enter);
-      DateUtil.setTimeFromTimeString(
-        prefWorkdayStartDate,
+      let prefWorkdayStartDate = DateUtil.setTimeFromTimeString(
+        this.state.enter,
         this.state.prefWorkdayStart,
       );
       prefWorkdayStartDate =
         DateUtil.convertToFakeUTCDate(prefWorkdayStartDate);
-      let prefWorkdayEndDate = new Date(this.state.leave);
-      DateUtil.setTimeFromTimeString(
-        prefWorkdayEndDate,
+      let prefWorkdayEndDate = DateUtil.setTimeFromTimeString(
+        this.state.leave,
         this.state.prefWorkdayEnd,
       );
       prefWorkdayEndDate = DateUtil.convertToFakeUTCDate(prefWorkdayEndDate);
