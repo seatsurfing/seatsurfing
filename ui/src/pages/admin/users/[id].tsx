@@ -31,6 +31,7 @@ import AuthProvider from "@/types/AuthProvider";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import Validation from "@/util/Validation";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
@@ -56,6 +57,7 @@ interface State {
   apiTokenConfigured: boolean;
   showApiTokenModal: boolean;
   generatedToken: string;
+  lastActivity: Date | null;
 }
 
 interface Props {
@@ -96,6 +98,7 @@ class EditUser extends React.Component<Props, State> {
       apiTokenConfigured: false,
       showApiTokenModal: false,
       generatedToken: "",
+      lastActivity: null,
     };
   }
 
@@ -158,6 +161,7 @@ class EditUser extends React.Component<Props, State> {
           totpEnabled: user.totpEnabled,
           hasPasskeys: user.hasPasskeys,
           apiTokenConfigured,
+          lastActivity: user.lastActivity,
         });
       }
       this.setState({
@@ -704,6 +708,27 @@ class EditUser extends React.Component<Props, State> {
                   hidden={!this.isServiceAccount(this.state.role)}
                 />
               </InputGroup>
+            </Col>
+          </Form.Group>
+
+          {/* Last activity — only shown for existing users */}
+          <Form.Group as={Row} hidden={!this.entity.id}>
+            <Form.Label htmlFor="lastActivity" column sm="2">
+              {this.props.t("lastActivity")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                id="lastActivity"
+                plaintext={true}
+                readOnly={true}
+                value={
+                  this.state.lastActivity
+                    ? Formatting.getFormatterShort(true).format(
+                        this.state.lastActivity,
+                      )
+                    : "-"
+                }
+              />
             </Col>
           </Form.Group>
 

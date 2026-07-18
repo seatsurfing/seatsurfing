@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import DateUtil from "./DateUtil";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import UserPreference, {
+  PreferenceEnterTimeType,
+} from "@/types/UserPreference";
 
 describe("DateUtil", () => {
   describe("setHoursToMin", () => {
@@ -100,6 +103,42 @@ describe("DateUtil", () => {
       const leave = new Date("2026-04-24T16:59:59.000Z");
       const result = DateUtil.getNextFreeEnterTime(leave);
       expect(result.toISOString()).toBe("2026-04-25T00:00:00.000Z");
+    });
+  });
+
+  describe("getNextPreferredEnterAndLeaveTime", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should always return enter with seconds=0/milliseconds=0 and leave with seconds=59/milliseconds=999", () => {
+      // "now" has non-zero seconds/milliseconds to make sure they aren't leaked into the result
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 6, 15, 10, 30, 45, 123));
+
+      const combinations: Array<[PreferenceEnterTimeType, boolean]> = [
+        [UserPreference.PreferenceEnterTime.Now, false],
+        [UserPreference.PreferenceEnterTime.Now, true],
+        [UserPreference.PreferenceEnterTime.NextDay, false],
+        [UserPreference.PreferenceEnterTime.NextDay, true],
+        [UserPreference.PreferenceEnterTime.NextWorkday, false],
+        [UserPreference.PreferenceEnterTime.NextWorkday, true],
+      ];
+
+      for (const [prefEnterTime, dailyBasisBooking] of combinations) {
+        const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+          prefEnterTime,
+          "00:00",
+          "23:59",
+          [0, 1, 2, 3, 4, 5, 6],
+          dailyBasisBooking,
+        );
+
+        expect(enter.getSeconds()).toBe(0);
+        expect(enter.getMilliseconds()).toBe(0);
+        expect(leave.getSeconds()).toBe(59);
+        expect(leave.getMilliseconds()).toBe(999);
+      }
     });
   });
 });

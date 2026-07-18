@@ -8,7 +8,6 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
-import Ajax from "@/util/Ajax";
 
 import RendererUtils from "@/util/RendererUtils";
 
@@ -34,18 +33,14 @@ class Attributes extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
-    import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
-    );
+  componentDidMount = async () => {
+    this.ExcellentExport = (await import("excellentexport")).default;
     this.loadItems();
   };
 
-  loadItems = () => {
-    SpaceAttribute.list().then((list) => {
-      this.data = list;
-      this.setState({ loading: false });
-    });
+  loadItems = async () => {
+    this.data = await SpaceAttribute.list();
+    this.setState({ loading: false });
   };
 
   onItemSelect = (e: SpaceAttribute) => {
@@ -92,7 +87,7 @@ class Attributes extends React.Component<Props, State> {
     }
 
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-attributes.xlsx"
         href="#"
@@ -102,7 +97,7 @@ class Attributes extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         <Link
@@ -122,7 +117,7 @@ class Attributes extends React.Component<Props, State> {
       );
     }
 
-    let rows = this.data.map((item) => this.renderItem(item));
+    const rows = this.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("attributes")} buttons={buttons}>
@@ -135,9 +130,12 @@ class Attributes extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table"
+          className="clickable-table caption-top"
           id="datatable"
         >
+          <caption>
+            {this.props.t("numRecords")}: {rows.length}
+          </caption>
           <thead>
             <tr>
               <th>{this.props.t("name")}</th>
