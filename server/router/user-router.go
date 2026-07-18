@@ -86,6 +86,7 @@ type GetUserResponse struct {
 	TotpEnabled     bool                    `json:"totpEnabled"`
 	HasPasskeys     bool                    `json:"hasPasskeys"`
 	IsPrimaryDomain bool                    `json:"isPrimaryDomain"`
+	LastActivity    *time.Time              `json:"lastActivity"`
 	CreateUserRequest
 }
 
@@ -920,6 +921,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.PasswordPending = e.PasswordPending
 	m.TotpEnabled = (e.TotpSecret != "")
 	m.HasPasskeys = GetPasskeyRepository().GetCountByUserID(e.ID) > 0
+	m.LastActivity = e.LastActivityAtUTC
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
 	}

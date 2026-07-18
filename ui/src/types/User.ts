@@ -36,6 +36,7 @@ export default class User extends Entity {
   totpEnabled: boolean;
   hasPasskeys: boolean;
   isPrimaryDomain: boolean;
+  lastActivity: Date | null;
 
   constructor() {
     super();
@@ -59,6 +60,7 @@ export default class User extends Entity {
     this.totpEnabled = false;
     this.hasPasskeys = false;
     this.isPrimaryDomain = false;
+    this.lastActivity = null;
   }
 
   serialize(): Object {
@@ -102,6 +104,9 @@ export default class User extends Entity {
     this.totpEnabled = input.totpEnabled;
     this.hasPasskeys = input.hasPasskeys ?? false;
     this.isPrimaryDomain = input.isPrimaryDomain ?? false;
+    this.lastActivity = input.lastActivity
+      ? new Date(input.lastActivity)
+      : null;
   }
 
   getBackendUrl(): string {
