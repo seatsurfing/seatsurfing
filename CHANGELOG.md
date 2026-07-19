@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.116.1](https://github.com/seatsurfing/seatsurfing/compare/v1.116.0...v1.116.1) (2026-07-19)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** improve search hint and fix "is admin" check ([#2429](https://github.com/seatsurfing/seatsurfing/issues/2429)) ([ba071ae](https://github.com/seatsurfing/seatsurfing/commit/ba071ae52461ecb01b30ff7103aaf3b9226c3d96))
+
 ## [1.116.0](https://github.com/seatsurfing/seatsurfing/compare/v1.115.0...v1.116.0) (2026-07-18)
 
 
