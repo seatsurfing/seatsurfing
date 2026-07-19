@@ -23,7 +23,6 @@ export default class SearchUtil {
     enter: Date,
     leave: Date,
   ): string {
-
     if (!locationId) {
       return t("errorPickArea");
     }
@@ -61,16 +60,12 @@ export default class SearchUtil {
     const bookingDurationHours =
       Math.floor((leave.getTime() - enter.getTime()) / DateUtil.MS_PER_MINUTE) /
       60;
-    if (
-      bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours 
-    ) {
+    if (bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours) {
       return t("errorMaxBookingDuration", {
         num: RuntimeConfig.INFOS.maxBookingDurationHours,
       });
     }
-    if (
-      bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours 
-    ) {
+    if (bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours) {
       return t("errorMinBookingDuration", {
         num: RuntimeConfig.INFOS.minBookingDurationHours,
       });
