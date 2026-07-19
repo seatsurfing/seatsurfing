@@ -8,20 +8,20 @@ export default class SearchUtil {
    * search selection can't be booked, e.g. because no area is picked,
    * the booking limit is reached, or the selected duration is invalid.
    *
+   * @param enter currently selected enter date
+   * @param leave currently selected leave date
    * @param t translation function
    * @param bookingCount number of bookings the user currently has
    * @param locationId currently selected area/location id, or empty if none
-   * @param enter currently selected enter date
-   * @param leave currently selected leave date
    * @returns the hint text to display, or an empty string if the
    *          current selection is valid
    */
   static getSearchHint(
+    enter: Date,
+    leave: Date,
     t: TranslationFunc,
     bookingCount: number,
     locationId: string,
-    enter: Date,
-    leave: Date,
   ): string {
     if (!locationId) {
       return t("errorPickArea");

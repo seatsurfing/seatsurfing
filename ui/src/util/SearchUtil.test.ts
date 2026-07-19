@@ -19,7 +19,7 @@ describe("SearchUtil", () => {
     });
 
     it("should return no hint for a valid selection", () => {
-      const result = SearchUtil.getSearchHint(t, 0, locationId, enter, leave);
+      const result = SearchUtil.getSearchHint(enter, leave, t, 0, locationId);
       expect(result).toBe("");
     });
 
@@ -28,7 +28,7 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = false;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
-      const result = SearchUtil.getSearchHint(t, 1, locationId, enter, leave);
+      const result = SearchUtil.getSearchHint(enter, leave, t, 1, locationId);
       expect(result).toBe("errorBookingLimit");
     });
 
@@ -40,7 +40,7 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
-      const result = SearchUtil.getSearchHint(t, 1, locationId, enter, leave);
+      const result = SearchUtil.getSearchHint(enter, leave, t, 1, locationId);
       expect(result).toBe("errorBookingLimit");
     });
 
@@ -49,7 +49,7 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
-      const result = SearchUtil.getSearchHint(t, 1, locationId, enter, leave);
+      const result = SearchUtil.getSearchHint(enter, leave, t, 1, locationId);
       expect(result).toBe("");
     });
 
@@ -58,7 +58,7 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingDurationHours = 1; // selection is 3h, would normally fail
 
-      const result = SearchUtil.getSearchHint(t, 0, locationId, enter, leave);
+      const result = SearchUtil.getSearchHint(enter, leave, t, 0, locationId);
       expect(result).toBe("");
     });
 
@@ -66,7 +66,7 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.spaceAdmin = true;
       RuntimeConfig.INFOS.noAdminRestrictions = true;
 
-      const result = SearchUtil.getSearchHint(t, 0, "", enter, leave);
+      const result = SearchUtil.getSearchHint(enter, leave, t, 0, "");
       expect(result).toBe("errorPickArea");
     });
   });

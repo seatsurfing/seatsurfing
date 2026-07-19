@@ -1722,11 +1722,11 @@ class Search extends React.Component<Props, State> {
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
     const searchHint = SearchUtil.getSearchHint(
+      this.state.enter,
+      this.state.leave,
       this.props.t,
       this.state.bookingCount,
       this.state.locationId,
-      this.state.enter,
-      this.state.leave,
     );
 
     let hint = <></>;
