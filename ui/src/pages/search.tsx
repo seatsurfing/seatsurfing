@@ -591,65 +591,6 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  getSearchHint = (): string => {
-    let hint = "";
-    const isAdmin =
-      RuntimeConfig.INFOS.noAdminRestrictions && User.UserRoleSpaceAdmin;
-    if (
-      this.state.bookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
-      !isAdmin
-    ) {
-      hint = this.props.t("errorBookingLimit", {
-        num: RuntimeConfig.INFOS.maxBookingsPerUser,
-      });
-    }
-    if (!this.state.locationId) {
-      hint = this.props.t("errorPickArea");
-    }
-    const today = DateUtil.getTodayStart();
-    let enterTime = new Date(this.state.enter);
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterTime = DateUtil.setHoursToMax(enterTime);
-    }
-    if (enterTime.getTime() < today.getTime()) {
-      hint = this.props.t("errorEnterFuture");
-    }
-    if (this.state.leave.getTime() <= this.state.enter.getTime()) {
-      hint = this.props.t("errorLeaveAfterEnter");
-    }
-
-    const bookingAdvanceDays = Math.floor(
-      (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
-    );
-    if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
-      hint = this.props.t("errorDaysAdvance", {
-        num: RuntimeConfig.INFOS.maxDaysInAdvance,
-      });
-    }
-    const bookingDurationHours =
-      Math.floor(
-        (this.state.leave.getTime() - this.state.enter.getTime()) /
-          DateUtil.MS_PER_MINUTE,
-      ) / 60;
-    if (
-      bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours &&
-      !isAdmin
-    ) {
-      hint = this.props.t("errorMaxBookingDuration", {
-        num: RuntimeConfig.INFOS.maxBookingDurationHours,
-      });
-    }
-    if (
-      bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours &&
-      !isAdmin
-    ) {
-      hint = this.props.t("errorMinBookingDuration", {
-        num: RuntimeConfig.INFOS.minBookingDurationHours,
-      });
-    }
-    return hint;
-  };
-
   renderLocations = () => {
     return this.locations.map((location) => {
       return (
@@ -1780,17 +1721,20 @@ class Search extends React.Component<Props, State> {
 
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
-    const searchHint = this.getSearchHint();
+    const searchHint = SearchUtil.getSearchHint(
+      this.props.t,
+      this.state.bookingCount,
+      this.state.locationId,
+      this.state.enter,
+      this.state.leave,
+    );
 
     let hint = <></>;
     if (searchHint) {
       hint = (
-        <Form.Group as={Row} className="margin-top-10">
-          <Col xs="2"></Col>
-          <Col xs="10">
-            <div className="invalid-search-config">{searchHint}</div>
-          </Col>
-        </Form.Group>
+        <div className="search-hint-banner">
+          <div className="invalid-search-config">{searchHint}</div>
+        </div>
       );
     }
 
@@ -2008,84 +1952,41 @@ class Search extends React.Component<Props, State> {
     }
 
     const configContainer = (
-      <div className="container-search-config" ref={this.searchContainerRef}>
-        <div
-          className="collapse-bar"
-          onClick={() => this.toggleSearchContainer()}
-        >
-          <CollapseIcon
-            color={"#000"}
-            height="20px"
-            width="20px"
-            className="collapse-icon collapse-icon-bigscreen"
-          />
-          <CollapseIcon2
-            color={"#000"}
-            height="20px"
-            width="20px"
-            className="collapse-icon collapse-icon-smallscreen"
-          />
-          <SettingsIcon
-            color={"#555"}
-            height="26px"
-            width="26px"
-            className="expand-icon expand-icon-bigscreen"
-          />
-          <CollapseIcon
-            color={"#555"}
-            height="20px"
-            width="20px"
-            className="expand-icon expand-icon-smallscreen"
-          />
-        </div>
-        <div className="content-minimized">
-          <div className="d-flex">
-            <div className="me-2">
-              <LocationIcon
-                title={this.props.t("area")}
-                color={"#555"}
-                height="20px"
-                width="20px"
-              />
-            </div>
-            <div className="ms-2 w-100">{this.getLocationName()}</div>
+      <div className="search-config-outer">
+        {hint}
+        <div className="container-search-config" ref={this.searchContainerRef}>
+          <div
+            className="collapse-bar"
+            onClick={() => this.toggleSearchContainer()}
+          >
+            <CollapseIcon
+              color={"#000"}
+              height="20px"
+              width="20px"
+              className="collapse-icon collapse-icon-bigscreen"
+            />
+            <CollapseIcon2
+              color={"#000"}
+              height="20px"
+              width="20px"
+              className="collapse-icon collapse-icon-smallscreen"
+            />
+            <SettingsIcon
+              color={"#555"}
+              height="26px"
+              width="26px"
+              className="expand-icon expand-icon-bigscreen"
+            />
+            <CollapseIcon
+              color={"#555"}
+              height="20px"
+              width="20px"
+              className="expand-icon expand-icon-smallscreen"
+            />
           </div>
-          <div className="d-flex">
-            <div className="me-2">
-              <EnterIcon
-                title={this.props.t("enter")}
-                color={"#555"}
-                height="20px"
-                width="20px"
-              />
-            </div>
-            <div className="ms-2 w-100">
-              {Formatting.getFormatterShort().format(
-                DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
-              )}
-            </div>
-          </div>
-          <div className="d-flex">
-            <div className="me-2">
-              <ExitIcon
-                title={this.props.t("leave")}
-                color={"#555"}
-                height="20px"
-                width="20px"
-              />
-            </div>
-            <div className="ms-2 w-100">
-              {Formatting.getFormatterShort().format(
-                DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="content">
-          <Form>
-            {/* Location selection */}
-            <Form.Group className="d-flex">
-              <div className="pt-1 me-2">
+          <div className="content-minimized">
+            <div className="d-flex">
+              <div className="me-2">
                 <LocationIcon
                   title={this.props.t("area")}
                   color={"#555"}
@@ -2093,248 +1994,294 @@ class Search extends React.Component<Props, State> {
                   width="20px"
                 />
               </div>
-              <div className="ms-2 w-100">
-                <InputGroup>
-                  <Form.Select
-                    required={true}
-                    value={this.state.locationId}
-                    onChange={(e) => this.changeLocation(e.target.value)}
-                    disabled={this.locations.length === 0}
-                    aria-label="Select location"
-                  >
-                    {this.renderLocations()}
-                  </Form.Select>
-                  <Button
-                    variant="outline-secondary"
-                    className="addon-button"
-                    disabled={!this.state.locationId}
-                    onClick={() => this.setState({ showLocationDetails: true })}
-                    aria-label="Show location details"
-                  >
-                    <InfoIcon />
-                  </Button>
-                  <Button
-                    variant={
-                      this.state.searchAttributesLocation.length === 0 &&
-                      this.state.searchAttributesSpace.length === 0
-                        ? "outline-secondary"
-                        : "primary"
-                    }
-                    className="addon-button"
-                    onClick={() => this.setState({ showSearchModal: true })}
-                    aria-label="Show location filters"
-                  >
-                    <FilterIcon
-                      color={
-                        this.state.searchAttributesLocation.length === 0 &&
-                        this.state.searchAttributesSpace.length === 0
-                          ? undefined
-                          : "white"
-                      }
-                    />
-                  </Button>
-                </InputGroup>
-              </div>
-            </Form.Group>
-
-            {/* Date selection */}
-            <Form.Group className="d-flex margin-top-10">
+              <div className="ms-2 w-100">{this.getLocationName()}</div>
+            </div>
+            <div className="d-flex">
               <div className="me-2">
-                <WeekIcon
-                  title={this.props.t("date")}
+                <EnterIcon
+                  title={this.props.t("enter")}
                   color={"#555"}
                   height="20px"
                   width="20px"
                 />
               </div>
-
-              <IconTextButton
-                text="❮"
-                title={this.props.t("previousDay")}
-                disabled={DateUtil.isSameDay(
-                  this.state.enter,
-                  earliestEnterDate,
+              <div className="ms-2 w-100">
+                {Formatting.getFormatterShort().format(
+                  DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
                 )}
-                onClick={() => {
-                  this.updateEnterAndLeaveDate(
-                    DateUtil.prevDay(this.state.enter),
-                    DateUtil.prevDay(this.state.leave),
-                  );
-                }}
-              />
-
-              <div
-                className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
-              >
-                {dateEnterPicker}
               </div>
-
-              {this.state.selectionMultiDay && (
-                <div className="ms-2 w-50">{dateLeavePicker}</div>
-              )}
-
-              <IconTextButton
-                text="❯"
-                title={this.props.t("nextDay")}
-                onClick={() => {
-                  this.updateEnterAndLeaveDate(
-                    DateUtil.nextDay(this.state.enter),
-                    DateUtil.nextDay(this.state.leave),
-                  );
-                }}
-              />
-
-              <button
-                type="button"
-                className={`ms-2 btn d-flex align-items-center ${
-                  this.state.selectionMultiDay ? "btn-primary" : "btn-light"
-                }`}
-                style={{
-                  padding: "4px 8px",
-                  borderColor: "#CED4DA",
-                }}
-                onClick={() => {
-                  if (this.state.selectionMultiDay) {
-                    let newLeave = DateUtil.copyDate(
-                      this.state.enter,
-                      this.state.leave,
-                    );
-                    if (newLeave.getTime() < this.state.enter.getTime()) {
-                      newLeave = DateUtil.setHoursToMax(newLeave);
-                    }
-                    this.updateEnterAndLeaveDate(null, newLeave);
-                  }
-                  this.setState({
-                    selectionMultiDay: !this.state.selectionMultiDay,
-                  });
-                }}
-                title={this.props.t("multiDay")}
-              >
-                <CalendarIcon
-                  title={this.props.t("multiDay")}
-                  color={this.state.selectionMultiDay ? "#fff" : "#555"}
+            </div>
+            <div className="d-flex">
+              <div className="me-2">
+                <ExitIcon
+                  title={this.props.t("leave")}
+                  color={"#555"}
                   height="20px"
                   width="20px"
                 />
-              </button>
-            </Form.Group>
-
-            {/* Time selection */}
-            {!RuntimeConfig.INFOS.dailyBasisBooking && (
-              <Form.Group className="d-flex margin-top-10">
-                <div className="me-2">
-                  <TimeIcon
-                    title={this.props.t("time")}
+              </div>
+              <div className="ms-2 w-100">
+                {Formatting.getFormatterShort().format(
+                  DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="content">
+            <Form>
+              {/* Location selection */}
+              <Form.Group className="d-flex">
+                <div className="pt-1 me-2">
+                  <LocationIcon
+                    title={this.props.t("area")}
                     color={"#555"}
                     height="20px"
                     width="20px"
                   />
                 </div>
-                <div className="ms-2 w-50">{timeEnterPicker}</div>
-                <div className="ms-2 w-50">{timeLeavePicker}</div>
+                <div className="ms-2 w-100">
+                  <InputGroup>
+                    <Form.Select
+                      required={true}
+                      value={this.state.locationId}
+                      onChange={(e) => this.changeLocation(e.target.value)}
+                      disabled={this.locations.length === 0}
+                      aria-label="Select location"
+                    >
+                      {this.renderLocations()}
+                    </Form.Select>
+                    <Button
+                      variant="outline-secondary"
+                      className="addon-button"
+                      disabled={!this.state.locationId}
+                      onClick={() =>
+                        this.setState({ showLocationDetails: true })
+                      }
+                      aria-label="Show location details"
+                    >
+                      <InfoIcon />
+                    </Button>
+                    <Button
+                      variant={
+                        this.state.searchAttributesLocation.length === 0 &&
+                        this.state.searchAttributesSpace.length === 0
+                          ? "outline-secondary"
+                          : "primary"
+                      }
+                      className="addon-button"
+                      onClick={() => this.setState({ showSearchModal: true })}
+                      aria-label="Show location filters"
+                    >
+                      <FilterIcon
+                        color={
+                          this.state.searchAttributesLocation.length === 0 &&
+                          this.state.searchAttributesSpace.length === 0
+                            ? undefined
+                            : "white"
+                        }
+                      />
+                    </Button>
+                  </InputGroup>
+                </div>
+              </Form.Group>
+
+              {/* Date selection */}
+              <Form.Group className="d-flex margin-top-10">
+                <div className="me-2">
+                  <WeekIcon
+                    title={this.props.t("date")}
+                    color={"#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </div>
+
+                <IconTextButton
+                  text="❮"
+                  title={this.props.t("previousDay")}
+                  disabled={DateUtil.isSameDay(
+                    this.state.enter,
+                    earliestEnterDate,
+                  )}
+                  onClick={() => {
+                    this.updateEnterAndLeaveDate(
+                      DateUtil.prevDay(this.state.enter),
+                      DateUtil.prevDay(this.state.leave),
+                    );
+                  }}
+                />
+
+                <div
+                  className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
+                >
+                  {dateEnterPicker}
+                </div>
+
+                {this.state.selectionMultiDay && (
+                  <div className="ms-2 w-50">{dateLeavePicker}</div>
+                )}
+
+                <IconTextButton
+                  text="❯"
+                  title={this.props.t("nextDay")}
+                  onClick={() => {
+                    this.updateEnterAndLeaveDate(
+                      DateUtil.nextDay(this.state.enter),
+                      DateUtil.nextDay(this.state.leave),
+                    );
+                  }}
+                />
+
                 <button
                   type="button"
                   className={`ms-2 btn d-flex align-items-center ${
-                    this.state.selectionAllDay ? "btn-primary" : "btn-light"
+                    this.state.selectionMultiDay ? "btn-primary" : "btn-light"
                   }`}
                   style={{
                     padding: "4px 8px",
                     borderColor: "#CED4DA",
                   }}
                   onClick={() => {
-                    if (!this.state.selectionAllDay) {
-                      this.resetEnterTime = new Date(this.state.enter);
-                      this.resetLeaveTime = new Date(this.state.leave);
-                      this.updateEnterAndLeaveDate(
-                        DateUtil.setHoursToMin(this.state.enter),
-                        DateUtil.setHoursToMax(this.state.leave),
+                    if (this.state.selectionMultiDay) {
+                      let newLeave = DateUtil.copyDate(
+                        this.state.enter,
+                        this.state.leave,
                       );
-                    } else {
-                      this.updateEnterAndLeaveDate(
-                        this.resetEnterTime ?? null,
-                        this.resetLeaveTime ?? null,
-                      );
+                      if (newLeave.getTime() < this.state.enter.getTime()) {
+                        newLeave = DateUtil.setHoursToMax(newLeave);
+                      }
+                      this.updateEnterAndLeaveDate(null, newLeave);
                     }
                     this.setState({
-                      selectionAllDay: !this.state.selectionAllDay,
+                      selectionMultiDay: !this.state.selectionMultiDay,
                     });
                   }}
-                  title={this.props.t("allDay")}
+                  title={this.props.t("multiDay")}
                 >
-                  <TimerIcon
-                    title={this.props.t("allDay")}
-                    color={this.state.selectionAllDay ? "#fff" : "#555"}
+                  <CalendarIcon
+                    title={this.props.t("multiDay")}
+                    color={this.state.selectionMultiDay ? "#fff" : "#555"}
                     height="20px"
                     width="20px"
                   />
                 </button>
               </Form.Group>
-            )}
 
-            {hint}
-
-            <Form.Group className="d-flex margin-top-10">
-              <div className="me-2">
-                <MapIcon
-                  title={this.props.t("map")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div
-                className={`ms-2 ${
-                  RuntimeConfig.INFOS.showNames && !this.state.listView
-                    ? "w-50"
-                    : "w-100"
-                }`}
-              >
-                <Form.Check
-                  disabled={!this.state.locationId}
-                  type="switch"
-                  checked={!this.state.listView}
-                  onChange={() => this.toggleListView()}
-                  label={this.props.t("map")}
-                  aria-label={this.props.t("map")}
-                  id="switch-control"
-                />
-              </div>
-              {RuntimeConfig.INFOS.showNames && !this.state.listView && (
-                <>
-                  <div className="me-2 ms-3">
-                    <NamesIcon
-                      title={this.props.t("names")}
+              {/* Time selection */}
+              {!RuntimeConfig.INFOS.dailyBasisBooking && (
+                <Form.Group className="d-flex margin-top-10">
+                  <div className="me-2">
+                    <TimeIcon
+                      title={this.props.t("time")}
                       color={"#555"}
                       height="20px"
                       width="20px"
                     />
                   </div>
-                  <div className="ms-2 w-50">
-                    <Form.Check
-                      type="switch"
-                      checked={this.state.showBookerNamesOnMap}
-                      onChange={() =>
-                        this.setState(
-                          {
-                            showBookerNamesOnMap:
-                              !this.state.showBookerNamesOnMap,
-                          },
-                          () =>
-                            BrowserUtil.tryLocalStorageSetItem(
-                              BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
-                              this.state.showBookerNamesOnMap ? "1" : "0",
-                            ),
-                        )
+                  <div className="ms-2 w-50">{timeEnterPicker}</div>
+                  <div className="ms-2 w-50">{timeLeavePicker}</div>
+                  <button
+                    type="button"
+                    className={`ms-2 btn d-flex align-items-center ${
+                      this.state.selectionAllDay ? "btn-primary" : "btn-light"
+                    }`}
+                    style={{
+                      padding: "4px 8px",
+                      borderColor: "#CED4DA",
+                    }}
+                    onClick={() => {
+                      if (!this.state.selectionAllDay) {
+                        this.resetEnterTime = new Date(this.state.enter);
+                        this.resetLeaveTime = new Date(this.state.leave);
+                        this.updateEnterAndLeaveDate(
+                          DateUtil.setHoursToMin(this.state.enter),
+                          DateUtil.setHoursToMax(this.state.leave),
+                        );
+                      } else {
+                        this.updateEnterAndLeaveDate(
+                          this.resetEnterTime ?? null,
+                          this.resetLeaveTime ?? null,
+                        );
                       }
-                      label={this.props.t("names")}
-                      aria-label={this.props.t("names")}
-                      id="switch-booker-names"
+                      this.setState({
+                        selectionAllDay: !this.state.selectionAllDay,
+                      });
+                    }}
+                    title={this.props.t("allDay")}
+                  >
+                    <TimerIcon
+                      title={this.props.t("allDay")}
+                      color={this.state.selectionAllDay ? "#fff" : "#555"}
+                      height="20px"
+                      width="20px"
                     />
-                  </div>
-                </>
+                  </button>
+                </Form.Group>
               )}
-            </Form.Group>
-          </Form>
+
+              <Form.Group className="d-flex margin-top-10">
+                <div className="me-2">
+                  <MapIcon
+                    title={this.props.t("map")}
+                    color={"#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </div>
+                <div
+                  className={`ms-2 ${
+                    RuntimeConfig.INFOS.showNames && !this.state.listView
+                      ? "w-50"
+                      : "w-100"
+                  }`}
+                >
+                  <Form.Check
+                    disabled={!this.state.locationId}
+                    type="switch"
+                    checked={!this.state.listView}
+                    onChange={() => this.toggleListView()}
+                    label={this.props.t("map")}
+                    aria-label={this.props.t("map")}
+                    id="switch-control"
+                  />
+                </div>
+                {RuntimeConfig.INFOS.showNames && !this.state.listView && (
+                  <>
+                    <div className="me-2 ms-3">
+                      <NamesIcon
+                        title={this.props.t("names")}
+                        color={"#555"}
+                        height="20px"
+                        width="20px"
+                      />
+                    </div>
+                    <div className="ms-2 w-50">
+                      <Form.Check
+                        type="switch"
+                        checked={this.state.showBookerNamesOnMap}
+                        onChange={() =>
+                          this.setState(
+                            {
+                              showBookerNamesOnMap:
+                                !this.state.showBookerNamesOnMap,
+                            },
+                            () =>
+                              BrowserUtil.tryLocalStorageSetItem(
+                                BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+                                this.state.showBookerNamesOnMap ? "1" : "0",
+                              ),
+                          )
+                        }
+                        label={this.props.t("names")}
+                        aria-label={this.props.t("names")}
+                        id="switch-booker-names"
+                      />
+                    </div>
+                  </>
+                )}
+              </Form.Group>
+            </Form>
+          </div>
         </div>
       </div>
     );
