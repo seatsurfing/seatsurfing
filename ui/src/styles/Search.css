@@ -206,6 +206,16 @@
   margin-left: 0;
 }
 
+.invalid-search-config-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.invalid-search-config-list .invalid-search-config:not(:last-child) {
+  margin-bottom: 4px;
+}
+
 .space-list.maximized {
   padding-bottom: 130px;
 }
