@@ -1727,7 +1727,7 @@ class Search extends React.Component<Props, State> {
     );
 
     let hint = <></>;
-    if (searchHints.length > 0) {
+    if (searchHints.length > 0 && !this.state.loading) {
       hint = (
         <div className="search-hint-banner">
           <ul className="invalid-search-config-list">
