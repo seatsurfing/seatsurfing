@@ -11,7 +11,7 @@ import (
 )
 
 type SearchAttribute struct {
-	AttributeID string `json:"attributeId" validate:"omitempty,uuid"`
+	AttributeID string `json:"attributeId" validate:"omitempty,uuid|oneof=numSpaces numFreeSpaces buddyOnSite"`
 	Comparator  string `json:"comparator" validate:"omitempty,oneof=eq neq contains ncontains gt gte lt lte"`
 	Value       string `json:"value" validate:"max=256"`
 }
