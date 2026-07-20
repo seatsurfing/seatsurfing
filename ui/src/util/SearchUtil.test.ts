@@ -4,7 +4,7 @@ import DateUtil from "./DateUtil";
 import RuntimeConfig from "@/components/RuntimeConfig";
 
 describe("SearchUtil", () => {
-  describe("getSearchHint", () => {
+  describe("getSearchHints", () => {
     const t = (key: string) => key;
     const locationId = "location-1";
     const enter = new Date(2026, 6, 20, 9, 0, 0, 0); // future, within advance/duration limits
@@ -18,9 +18,9 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.minBookingDurationHours = 1;
     });
 
-    it("should return no hint for a valid selection", () => {
-      const result = SearchUtil.getSearchHint(enter, leave, t, 0, locationId);
-      expect(result).toBe("");
+    it("should return no hints for a valid selection", () => {
+      const result = SearchUtil.getSearchHints(enter, leave, t, 0, locationId);
+      expect(result).toEqual([]);
     });
 
     it("should still enforce the booking limit for a plain space admin without noAdminRestrictions", () => {
@@ -28,8 +28,8 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = false;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
-      const result = SearchUtil.getSearchHint(enter, leave, t, 1, locationId);
-      expect(result).toBe("errorBookingLimit");
+      const result = SearchUtil.getSearchHints(enter, leave, t, 1, locationId);
+      expect(result).toEqual(["errorBookingLimit"]);
     });
 
     it("should still enforce the booking limit when noAdminRestrictions is on but the user is not a space admin", () => {
@@ -40,8 +40,8 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
-      const result = SearchUtil.getSearchHint(enter, leave, t, 1, locationId);
-      expect(result).toBe("errorBookingLimit");
+      const result = SearchUtil.getSearchHints(enter, leave, t, 1, locationId);
+      expect(result).toEqual(["errorBookingLimit"]);
     });
 
     it("should bypass the booking limit for a space admin when noAdminRestrictions is on", () => {
@@ -49,8 +49,8 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
-      const result = SearchUtil.getSearchHint(enter, leave, t, 1, locationId);
-      expect(result).toBe("");
+      const result = SearchUtil.getSearchHints(enter, leave, t, 1, locationId);
+      expect(result).toEqual([]);
     });
 
     it("should bypass the max booking duration restriction for a space admin when noAdminRestrictions is on", () => {
@@ -58,16 +58,28 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingDurationHours = 1; // selection is 3h, would normally fail
 
-      const result = SearchUtil.getSearchHint(enter, leave, t, 0, locationId);
-      expect(result).toBe("");
+      const result = SearchUtil.getSearchHints(enter, leave, t, 0, locationId);
+      expect(result).toEqual([]);
     });
 
     it("should still return errorPickArea for a space admin with noAdminRestrictions when no area is selected", () => {
       RuntimeConfig.INFOS.spaceAdmin = true;
       RuntimeConfig.INFOS.noAdminRestrictions = true;
 
-      const result = SearchUtil.getSearchHint(enter, leave, t, 0, "");
-      expect(result).toBe("errorPickArea");
+      const result = SearchUtil.getSearchHints(enter, leave, t, 0, "");
+      expect(result).toEqual(["errorPickArea"]);
+    });
+
+    it("should return all applicable hints at once instead of only the first match", () => {
+      RuntimeConfig.INFOS.maxBookingsPerUser = 1;
+      RuntimeConfig.INFOS.maxBookingDurationHours = 1; // selection is 3h -> also fails
+
+      const result = SearchUtil.getSearchHints(enter, leave, t, 1, "");
+      expect(result).toEqual([
+        "errorPickArea",
+        "errorBookingLimit",
+        "errorMaxBookingDuration",
+      ]);
     });
   });
 

@@ -1721,7 +1721,7 @@ class Search extends React.Component<Props, State> {
 
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
-    const searchHint = SearchUtil.getSearchHint(
+    const searchHints = SearchUtil.getSearchHints(
       this.state.enter,
       this.state.leave,
       this.props.t,
@@ -1730,10 +1730,16 @@ class Search extends React.Component<Props, State> {
     );
 
     let hint = <></>;
-    if (searchHint) {
+    if (searchHints.length > 0) {
       hint = (
         <div className="search-hint-banner">
-          <div className="invalid-search-config">{searchHint}</div>
+          <ul className="invalid-search-config-list">
+            {searchHints.map((searchHint, index) => (
+              <li key={index} className="invalid-search-config">
+                {searchHint}
+              </li>
+            ))}
+          </ul>
         </div>
       );
     }
