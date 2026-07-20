@@ -240,7 +240,9 @@ describe("SearchUtil", () => {
     });
 
     it("should set enter to preferred workday start when the date changes with unchanged time and the new date is in the future", () => {
-      const enter = new Date(2026, 6, 20, 9, 0, 0, 0); // same time (9:00), different (future) day
+      const enter = new Date();
+      enter.setDate(enter.getDate() + 5);
+      enter.setHours(9, 0, 0, 0);
       const result = SearchUtil.calculateNewEnterAndLeave(
         currentEnter,
         currentLeave,
