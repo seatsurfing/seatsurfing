@@ -861,7 +861,9 @@ class Settings extends React.Component<Props, State> {
                 id="input-enforceTOTP"
                 value={this.state.enforceTOTP}
                 onChange={(e: any) =>
-                  this.setState({ enforceTOTP: window.parseInt(e.target.value) })
+                  this.setState({
+                    enforceTOTP: window.parseInt(e.target.value),
+                  })
                 }
               >
                 <option value={Organization.ENFORCE_TOTP_DISABLED}>
