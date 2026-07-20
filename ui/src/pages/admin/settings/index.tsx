@@ -963,6 +963,7 @@ class Settings extends React.Component<Props, State> {
                 onChange={(e: any) =>
                   this.setState({ maxBookingsPerUser: e.target.value })
                 }
+                required={true}
                 min="1"
                 max="9999"
               />
@@ -1042,6 +1043,7 @@ class Settings extends React.Component<Props, State> {
                   onChange={(e: any) =>
                     this.setState({ maxDaysInAdvance: e.target.value })
                   }
+                  required={true}
                   min="0"
                   max="9999"
                 />
@@ -1176,6 +1178,7 @@ class Settings extends React.Component<Props, State> {
                   onChange={(e: any) =>
                     this.setState({ minBookingDuration: e.target.value })
                   }
+                  required={true}
                   min="0"
                   max="9999"
                 />
@@ -1200,6 +1203,7 @@ class Settings extends React.Component<Props, State> {
                   onChange={(e: any) =>
                     this.setState({ maxBookingDuration: e.target.value })
                   }
+                  required={true}
                   min="0"
                   max="9999"
                 />
