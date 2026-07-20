@@ -77,7 +77,7 @@ interface State {
   featureCustomDomains: boolean;
   allowRecurringBookings: boolean;
   newUserDefaultMailNotification: boolean;
-  enforceTOTP: boolean;
+  enforceTOTP: number;
   kioskSecret: string;
   kioskModeEnabled: boolean;
   hideReports: boolean;
@@ -137,7 +137,7 @@ class Settings extends React.Component<Props, State> {
       featureCustomDomains: false,
       allowRecurringBookings: true,
       newUserDefaultMailNotification: false,
-      enforceTOTP: false,
+      enforceTOTP: Organization.ENFORCE_TOTP_DISABLED,
       kioskSecret: "",
       kioskModeEnabled: false,
       hideReports: false,
@@ -239,7 +239,7 @@ class Settings extends React.Component<Props, State> {
         if (s.name === Organization.PREF_NEW_USER_DEFAULT_MAIL_NOTIFICATION)
           state.newUserDefaultMailNotification = s.value === "1";
         if (s.name === Organization.PREF_ENFORCE_TOTP)
-          state.enforceTOTP = s.value === "1";
+          state.enforceTOTP = window.parseInt(s.value);
         if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
           state.kioskModeEnabled = s.value === "1";
         if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
@@ -410,7 +410,7 @@ class Settings extends React.Component<Props, State> {
       ),
       new OrgSettings(
         Organization.PREF_ENFORCE_TOTP,
-        this.state.enforceTOTP ? "1" : "0",
+        this.state.enforceTOTP.toString(),
       ),
       new OrgSettings(
         Organization.PREF_SUBJECT_DEFAULT,
@@ -853,16 +853,27 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-enforceTOTP"
-                label={this.props.t("enforceTOTP")}
-                checked={this.state.enforceTOTP}
+            <Form.Label column sm="2" htmlFor="input-enforceTOTP">
+              {this.props.t("enforceTOTP")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                id="input-enforceTOTP"
+                value={this.state.enforceTOTP}
                 onChange={(e: any) =>
-                  this.setState({ enforceTOTP: e.target.checked })
+                  this.setState({ enforceTOTP: window.parseInt(e.target.value) })
                 }
-              />
+              >
+                <option value={Organization.ENFORCE_TOTP_DISABLED}>
+                  {this.props.t("disabled")}
+                </option>
+                <option value={Organization.ENFORCE_TOTP_ALL_USERS}>
+                  {this.props.t("enforceTOTPAllUsers")}
+                </option>
+                <option value={Organization.ENFORCE_TOTP_ADMINS_ONLY}>
+                  {this.props.t("enforceTOTPAdminsOnly")}
+                </option>
+              </Form.Select>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

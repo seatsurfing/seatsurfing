@@ -2,6 +2,10 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 
 export default class Organization extends Entity {
+  static readonly ENFORCE_TOTP_DISABLED = 0;
+  static readonly ENFORCE_TOTP_ALL_USERS = 1;
+  static readonly ENFORCE_TOTP_ADMINS_ONLY = 2;
+
   static readonly PREF_ALLOW_ANY_USER = "allow_any_user";
   static readonly PREF_DEFAULT_TIMEZONE = "default_timezone";
   static readonly PREF_CONFLUENCE_SERVER_SHARED_SECRET =
