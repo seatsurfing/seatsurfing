@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.116.2](https://github.com/seatsurfing/seatsurfing/compare/v1.116.1...v1.116.2) (2026-07-20)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** fix config container layout on bookings page ([#2431](https://github.com/seatsurfing/seatsurfing/issues/2431)) ([08ade90](https://github.com/seatsurfing/seatsurfing/commit/08ade90a93cba34090c94a96e8a0441b9aa2cd1c))
+
 ## [1.116.1](https://github.com/seatsurfing/seatsurfing/compare/v1.116.0...v1.116.1) (2026-07-19)
 
 
