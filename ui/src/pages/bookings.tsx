@@ -235,43 +235,45 @@ class Bookings extends React.Component<Props, State> {
       <>
         <NavBar />
         <div className="container-signin">
-          <div className="d-lg-block d-none container-search-config">
-            <div className="content" style={{ paddingTop: "5px" }}>
-              <Form>
-                <Form.Group className="d-flex margin-top-10">
-                  <div className="me-2">
-                    <CalendarIcon
-                      title={this.props.t("map")}
-                      color={"#555"}
-                      height="20px"
-                      width="20px"
-                    />
-                  </div>
-                  <div className="ms-2 w-100">
-                    <Form.Check
-                      style={{ textAlign: "start" }}
-                      type="switch"
-                      checked={this.state.calendarShow}
-                      onChange={() => {
-                        this.setState(
-                          {
-                            calendarShow: !this.state.calendarShow,
-                          },
-                          () => {
-                            BrowserUtil.tryLocalStorageSetItem(
-                              BrowserUtil.LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW,
-                              this.state.calendarShow ? "1" : "0",
-                            );
-                          },
-                        );
-                      }}
-                      label={this.props.t("calendar")}
-                      aria-label={this.props.t("calendar")}
-                      id="switch-control"
-                    />
-                  </div>
-                </Form.Group>
-              </Form>
+          <div className="d-lg-block d-none search-config-outer">
+            <div className="container-search-config">
+              <div className="content" style={{ paddingTop: "5px" }}>
+                <Form>
+                  <Form.Group className="d-flex margin-top-10">
+                    <div className="me-2">
+                      <CalendarIcon
+                        title={this.props.t("map")}
+                        color={"#555"}
+                        height="20px"
+                        width="20px"
+                      />
+                    </div>
+                    <div className="ms-2 w-100">
+                      <Form.Check
+                        style={{ textAlign: "start" }}
+                        type="switch"
+                        checked={this.state.calendarShow}
+                        onChange={() => {
+                          this.setState(
+                            {
+                              calendarShow: !this.state.calendarShow,
+                            },
+                            () => {
+                              BrowserUtil.tryLocalStorageSetItem(
+                                BrowserUtil.LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW,
+                                this.state.calendarShow ? "1" : "0",
+                              );
+                            },
+                          );
+                        }}
+                        label={this.props.t("calendar")}
+                        aria-label={this.props.t("calendar")}
+                        id="switch-control"
+                      />
+                    </div>
+                  </Form.Group>
+                </Form>
+              </div>
             </div>
           </div>
 
