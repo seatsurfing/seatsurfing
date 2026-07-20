@@ -15,12 +15,9 @@ import FullWidthModal from "../components/FullWidthModal";
 import {
   IoFilter as FilterIcon,
   IoInformation as InfoIcon,
-  IoEnter as EnterIcon,
-  IoExit as ExitIcon,
   IoLocation as LocationIcon,
   IoChevronUp as CollapseIcon,
   IoChevronDown as CollapseIcon2,
-  IoSettings as SettingsIcon,
   IoMap as MapIcon,
   IoCalendar as WeekIcon,
   IoScan as ScanIcon,
@@ -1965,78 +1962,23 @@ class Search extends React.Component<Props, State> {
             className="collapse-bar"
             onClick={() => this.toggleSearchContainer()}
           >
-            <CollapseIcon
-              color={"#000"}
-              height="20px"
-              width="20px"
-              className="collapse-icon collapse-icon-bigscreen"
-            />
             <CollapseIcon2
               color={"#000"}
               height="20px"
               width="20px"
-              className="collapse-icon collapse-icon-smallscreen"
-            />
-            <SettingsIcon
-              color={"#555"}
-              height="26px"
-              width="26px"
-              className="expand-icon expand-icon-bigscreen"
+              className="collapse-icon"
             />
             <CollapseIcon
               color={"#555"}
               height="20px"
               width="20px"
-              className="expand-icon expand-icon-smallscreen"
+              className="expand-icon"
             />
-          </div>
-          <div className="content-minimized">
-            <div className="d-flex">
-              <div className="me-2">
-                <LocationIcon
-                  title={this.props.t("area")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">{this.getLocationName()}</div>
-            </div>
-            <div className="d-flex">
-              <div className="me-2">
-                <EnterIcon
-                  title={this.props.t("enter")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">
-                {Formatting.getFormatterShort().format(
-                  DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
-                )}
-              </div>
-            </div>
-            <div className="d-flex">
-              <div className="me-2">
-                <ExitIcon
-                  title={this.props.t("leave")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">
-                {Formatting.getFormatterShort().format(
-                  DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
-                )}
-              </div>
-            </div>
           </div>
           <div className="content">
             <Form>
               {/* Location selection */}
-              <Form.Group className="d-flex">
+              <Form.Group className="d-flex minimized-hide">
                 <div className="pt-1 me-2">
                   <LocationIcon
                     title={this.props.t("area")}
@@ -2225,7 +2167,7 @@ class Search extends React.Component<Props, State> {
                 </Form.Group>
               )}
 
-              <Form.Group className="d-flex margin-top-10">
+              <Form.Group className="d-flex margin-top-10 minimized-hide">
                 <div className="me-2">
                   <MapIcon
                     title={this.props.t("map")}
