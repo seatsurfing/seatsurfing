@@ -438,8 +438,7 @@ func (router *UserRouter) deletePasskey(w http.ResponseWriter, r *http.Request) 
 	}
 	// Spec §5.4: if enforce_totp is enabled and this is the user's last passkey
 	// and TOTP is not configured, refuse deletion (would violate 2FA enforcement).
-	enforceTotp, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingEnforceTOTP.Name)
-	if enforceTotp && user.TotpSecret == "" {
+	if IsTotpEnforcedForUser(user) && user.TotpSecret == "" {
 		passkeyCount := GetPasskeyRepository().GetCountByUserID(user.ID)
 		if passkeyCount <= 1 {
 			SendForbidden(w)

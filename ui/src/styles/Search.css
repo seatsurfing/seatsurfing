@@ -77,6 +77,7 @@
   width: 100%;
   max-height: 350px;
   padding: 20px;
+  padding-bottom: 10px;
   padding-top: 0px;
   border-radius: 10px;
   border-bottom-left-radius: 0px;
@@ -87,24 +88,16 @@
   transition: all 0.2s;
 }
 
-.container-search-config .content-minimized {
-  display: none;
-}
-
 .container-search-config .btn-outline-dark:hover {
   background-color: #eee;
 }
 
 .container-search-config.minimized {
-  width: 100%;
-  height: 130px;
-  padding: 20px;
-  padding-top: 0px;
   transition: all 0.2s;
 }
 
-.container-search-config.minimized .content {
-  display: none;
+.container-search-config.minimized .content .minimized-hide {
+  display: none !important;
 }
 
 .container-search-config .collapse-bar {
@@ -116,32 +109,21 @@
   cursor: pointer;
 }
 
-.container-search-config.minimized .collapse-bar {
-  text-align: center;
-  padding-top: 0px;
-  padding-bottom: 0px;
-}
-
 .container-search-config .input-group .btn.disabled,
 .container-search-config .input-group .btn:disabled {
   border-color: var(--bs-border-color);
 }
 
 .container-search-config .collapse-bar .expand-icon,
-.container-search-config .collapse-bar .expand-icon-bigscreen,
-.container-search-config .collapse-bar .expand-icon-smallscreen,
-.container-search-config .collapse-bar .collapse-icon-bigscreen,
-.container-search-config.minimized .collapse-bar .expand-icon-bigscreen,
 .container-search-config.minimized .collapse-bar .collapse-icon {
   display: none;
 }
 
-.container-search-config.minimized .content-minimized,
-.container-search-config .collapse-bar .collapse-icon-smallscreen {
+.container-search-config .collapse-bar .collapse-icon {
   display: block;
 }
 
-.container-search-config.minimized .collapse-bar .expand-icon-smallscreen {
+.container-search-config.minimized .collapse-bar .expand-icon {
   display: inline;
 }
 
@@ -204,6 +186,16 @@
 
 .search-hint-banner .invalid-search-config {
   margin-left: 0;
+}
+
+.invalid-search-config-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.invalid-search-config-list .invalid-search-config:not(:last-child) {
+  margin-bottom: 4px;
 }
 
 .space-list.maximized {

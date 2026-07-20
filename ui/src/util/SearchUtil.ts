@@ -4,7 +4,7 @@ import { TranslationFunc } from "@/components/withTranslation";
 
 export default class SearchUtil {
   /**
-   * Determines the hint to show the user explaining why the current
+   * Determines all hints to show the user explaining why the current
    * search selection can't be booked, e.g. because no area is picked,
    * the booking limit is reached, or the selected duration is invalid.
    *
@@ -13,18 +13,19 @@ export default class SearchUtil {
    * @param t translation function
    * @param bookingCount number of bookings the user currently has
    * @param locationId currently selected area/location id, or empty if none
-   * @returns the hint text to display, or an empty string if the
+   * @returns the hint texts to display, or an empty array if the
    *          current selection is valid
    */
-  static getSearchHint(
+  static getSearchHints(
     enter: Date,
     leave: Date,
     t: TranslationFunc,
     bookingCount: number,
     locationId: string,
-  ): string {
+  ): string[] {
+    const hints: string[] = [];
     if (!locationId) {
-      return t("errorPickArea");
+      hints.push(t("errorPickArea"));
     }
     const today = DateUtil.getTodayStart();
     let enterTime = new Date(enter);
@@ -32,45 +33,53 @@ export default class SearchUtil {
       enterTime = DateUtil.setHoursToMax(enterTime);
     }
     if (enterTime.getTime() < today.getTime()) {
-      return t("errorEnterFuture");
+      hints.push(t("errorEnterFuture"));
     }
     if (leave.getTime() <= enter.getTime()) {
-      return t("errorLeaveAfterEnter");
+      hints.push(t("errorLeaveAfterEnter"));
     }
 
     if (
       RuntimeConfig.INFOS.noAdminRestrictions &&
       RuntimeConfig.INFOS.spaceAdmin
     )
-      return "";
+      return hints;
 
     if (bookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser) {
-      return t("errorBookingLimit", {
-        num: RuntimeConfig.INFOS.maxBookingsPerUser,
-      });
+      hints.push(
+        t("errorBookingLimit", {
+          num: RuntimeConfig.INFOS.maxBookingsPerUser,
+        }),
+      );
     }
 
     const bookingAdvanceDays = Math.floor(
       (enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
     if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance)
-      return t("errorDaysAdvance", {
-        num: RuntimeConfig.INFOS.maxDaysInAdvance,
-      });
+      hints.push(
+        t("errorDaysAdvance", {
+          num: RuntimeConfig.INFOS.maxDaysInAdvance,
+        }),
+      );
     const bookingDurationHours =
       Math.floor((leave.getTime() - enter.getTime()) / DateUtil.MS_PER_MINUTE) /
       60;
     if (bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours) {
-      return t("errorMaxBookingDuration", {
-        num: RuntimeConfig.INFOS.maxBookingDurationHours,
-      });
+      hints.push(
+        t("errorMaxBookingDuration", {
+          num: RuntimeConfig.INFOS.maxBookingDurationHours,
+        }),
+      );
     }
     if (bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours) {
-      return t("errorMinBookingDuration", {
-        num: RuntimeConfig.INFOS.minBookingDurationHours,
-      });
+      hints.push(
+        t("errorMinBookingDuration", {
+          num: RuntimeConfig.INFOS.minBookingDurationHours,
+        }),
+      );
     }
-    return "";
+    return hints;
   }
 
   /**

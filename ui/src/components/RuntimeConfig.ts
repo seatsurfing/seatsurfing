@@ -210,8 +210,15 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
       if (s.name === Organization.PREF_SUBJECT_DEFAULT)
         RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
-      if (s.name === Organization.PREF_ENFORCE_TOTP)
-        RuntimeConfig.INFOS.enforceTOTP = s.value === "1";
+      if (s.name === Organization.PREF_ENFORCE_TOTP) {
+        const enforceTotpSetting = window.parseInt(s.value);
+        RuntimeConfig.INFOS.enforceTOTP =
+          enforceTotpSetting === Organization.ENFORCE_TOTP_ALL_USERS ||
+          (enforceTotpSetting === Organization.ENFORCE_TOTP_ADMINS_ONLY &&
+            (RuntimeConfig.INFOS.spaceAdmin ||
+              RuntimeConfig.INFOS.orgAdmin ||
+              RuntimeConfig.INFOS.superAdmin));
+      }
       if (s.name === Organization.PREF_HIDE_REPORTS)
         RuntimeConfig.INFOS.hideReports = s.value === "1";
       if (s.name === Organization.PREF_HIDE_STATS)

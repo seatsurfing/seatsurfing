@@ -200,6 +200,8 @@ class EditOrg extends React.Component<Props, State> {
                 value={this.state.name}
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
+                minLength={2}
+                maxLength={64}
                 autoFocus={true}
               />
             </Col>
@@ -225,11 +227,12 @@ class EditOrg extends React.Component<Props, State> {
               </Form.Select>
             </Col>
           </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="6" className="lead text-uppercase">
-              {this.props.t("primaryContact")}
-            </Form.Label>
-          </Form.Group>
+
+          {/* PRIMARY CONTACT */}
+
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>{this.props.t("primaryContact")}</h4>
+          </div>
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="org-firstname">
               {this.props.t("firstname")}
