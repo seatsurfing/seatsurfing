@@ -226,6 +226,12 @@ const (
 	SettingSubjectDefaultRequired = 3
 )
 
+const (
+	SettingEnforceTOTPDisabled   = 0
+	SettingEnforceTOTPAllUsers   = 1
+	SettingEnforceTOTPAdminsOnly = 2
+)
+
 var (
 	SettingInstallID                      SettingName = SettingName{Name: "install_id", Type: SettingTypeString}
 	SettingDatabaseVersion                SettingName = SettingName{Name: "db_version", Type: SettingTypeInt}
@@ -260,7 +266,7 @@ var (
 	SettingFeatureGroups                  SettingName = SettingName{Name: "feature_groups", Type: SettingTypeBool}
 	SettingFeatureAuthProviders           SettingName = SettingName{Name: "feature_auth_providers", Type: SettingTypeBool}
 	SettingFeatureRecurringBookings       SettingName = SettingName{Name: "feature_recurring_bookings", Type: SettingTypeBool}
-	SettingEnforceTOTP                    SettingName = SettingName{Name: "enforce_totp", Type: SettingTypeBool}
+	SettingEnforceTOTP                    SettingName = SettingName{Name: "enforce_totp", Type: SettingTypeInt}
 	SettingKioskSecret                    SettingName = SettingName{Name: "kiosk_access_secret", Type: SettingTypeString}
 	SettingKioskModeEnabled               SettingName = SettingName{Name: "kiosk_mode_enabled", Type: SettingTypeBool}
 	SettingFeatureKioskMode               SettingName = SettingName{Name: "feature_kiosk_mode", Type: SettingTypeBool}

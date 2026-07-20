@@ -223,8 +223,7 @@ func (router *UserRouter) disableTotp(w http.ResponseWriter, r *http.Request) {
 		SendUnauthorized(w)
 		return
 	}
-	enforceTotp, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingEnforceTOTP.Name)
-	if enforceTotp {
+	if IsTotpEnforcedForUser(user) {
 		SendForbidden(w)
 		return
 	}

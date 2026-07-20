@@ -242,6 +242,33 @@ func TestPasskeyDeleteLastWithEnforceTOTPButTOTPConfigured(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
+func TestPasskeyDeleteLastWithEnforceTOTPAdminsOnlyForAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingEnforceTOTP.Name, "2")
+
+	user := CreateTestUserInOrgWithName(org, uuid.New().String()+"@test.com", UserRoleSpaceAdmin)
+	pk := createRouterTestPasskey(user, "Only Key")
+
+	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user.ID))
+}
+
+func TestPasskeyDeleteLastWithEnforceTOTPAdminsOnlyForRegularUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingEnforceTOTP.Name, "2")
+
+	user := CreateTestUserInOrg(org)
+	pk := createRouterTestPasskey(user, "Only Key")
+
+	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
 func TestPasskeyRegistrationBeginNonPrimaryDomain(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

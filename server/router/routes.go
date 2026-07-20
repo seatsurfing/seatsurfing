@@ -544,6 +544,18 @@ func CanAdminOrg(user *User, organizationID string) bool {
 	return false
 }
 
+func IsTotpEnforcedForUser(user *User) bool {
+	enforceTotp, _ := GetSettingsRepository().GetInt(user.OrganizationID, SettingEnforceTOTP.Name)
+	switch enforceTotp {
+	case SettingEnforceTOTPAllUsers:
+		return true
+	case SettingEnforceTOTPAdminsOnly:
+		return GetUserRepository().IsSpaceAdmin(user)
+	default:
+		return false
+	}
+}
+
 func GetValidator() *validator.Validate {
 	v := validator.New()
 	v.RegisterValidation("jsDate", func(fl validator.FieldLevel) bool {

@@ -530,6 +530,14 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 			return false
 		}
 	}
+	if name == SettingEnforceTOTP.Name {
+		intVal, _ := strconv.Atoi(value)
+		if intVal != SettingEnforceTOTPDisabled &&
+			intVal != SettingEnforceTOTPAllUsers &&
+			intVal != SettingEnforceTOTPAdminsOnly {
+			return false
+		}
+	}
 	return true
 }
 
