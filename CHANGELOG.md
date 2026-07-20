@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.117.0](https://github.com/seatsurfing/seatsurfing/compare/v1.116.2...v1.117.0) (2026-07-20)
+
+
+### ✨ Features
+
+* **admin-ui:** add option to enforce MFA for admins ([#2437](https://github.com/seatsurfing/seatsurfing/issues/2437)) ([1ff3b4e](https://github.com/seatsurfing/seatsurfing/commit/1ff3b4e14f9b20016f209e533e46d3fe79ed56e0))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add missing required flags on settings page ([#2434](https://github.com/seatsurfing/seatsurfing/issues/2434)) ([751cdd9](https://github.com/seatsurfing/seatsurfing/commit/751cdd9dd3f3cf6857e0e878d381bac38c003665))
+* **admin-ui:** add validation for org name and improve headline style ([#2436](https://github.com/seatsurfing/seatsurfing/issues/2436)) ([16481a1](https://github.com/seatsurfing/seatsurfing/commit/16481a1c5a6df3c7b1a9842749409e7c0c7e70eb))
+* **booking-ui:** fix flickering of search hint ([#2435](https://github.com/seatsurfing/seatsurfing/issues/2435)) ([888475e](https://github.com/seatsurfing/seatsurfing/commit/888475efdef5e06f3abf812e2e38d53185d26812))
+* **booking-ui:** fix searching by num spaces, free seats and buddy on site ([#2441](https://github.com/seatsurfing/seatsurfing/issues/2441)) ([e5560ec](https://github.com/seatsurfing/seatsurfing/commit/e5560ec80499272e9681142fb8074459ae4d2a07))
+* **booking-ui:** optimize minimized config container on search page ([#2433](https://github.com/seatsurfing/seatsurfing/issues/2433)) ([532ed9b](https://github.com/seatsurfing/seatsurfing/commit/532ed9b3f254a30b4adf30cc3193492217743ab2))
+* **booking-ui:** show multiple search hints ([#2439](https://github.com/seatsurfing/seatsurfing/issues/2439)) ([35d4828](https://github.com/seatsurfing/seatsurfing/commit/35d4828cef2c565969fd7dc9118c14bf12a4764d))
+
 ## [1.116.2](https://github.com/seatsurfing/seatsurfing/compare/v1.116.1...v1.116.2) (2026-07-20)
 
 
