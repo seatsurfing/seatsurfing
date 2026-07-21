@@ -295,6 +295,7 @@ export default class RuntimeConfig {
       "pl",
       "pt",
       "ro",
+      "ru",
       "es",
       "zh-TW",
     ];

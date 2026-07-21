@@ -1,0 +1,22 @@
+{
+  "subject": "Ваше бронирование в Seatsurfing: отклонено",
+  "headline": "Здравствуйте, {{recipientName}},",
+  "paragraphs": [
+    "Ваш запрос на бронирование был отклонён.",
+    "Дата: {{date}}",
+    "Зона: {{areaName}}",
+    "Место: {{spaceName}}",
+    "Тема: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Ваши бронирования",
+      "url": "{{orgDomain}}ui/bookings/"
+    }
+  ],
+  "finalInfo": {
+    "text": "Больше не хотите получать информацию о бронированиях по электронной почте? Отключите это в интерфейсе Seatsurfing в разделе {{link}}.",
+    "label": "Настройки",
+    "url": "{{orgDomain}}ui/preferences/"
+  }
+}

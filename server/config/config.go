@@ -287,7 +287,7 @@ func (c *Config) loadPublicKey(path string) (*rsa.PublicKey, error) {
 }
 
 func (c *Config) IsValidLanguageCode(isoLanguageCode string) bool {
-	validLanguageCodes := []string{"de", "en"}
+	validLanguageCodes := []string{"de", "en", "ru"}
 	for _, s := range validLanguageCodes {
 		if isoLanguageCode == s {
 			return true
