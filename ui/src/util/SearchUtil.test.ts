@@ -7,8 +7,11 @@ describe("SearchUtil", () => {
   describe("getSearchHints", () => {
     const t = (key: string) => key;
     const locationId = "location-1";
-    const enter = new Date(2026, 6, 20, 9, 0, 0, 0); // future, within advance/duration limits
-    const leave = new Date(2026, 6, 20, 12, 0, 0, 0); // 3h duration
+    const enter = new Date(); // future, within advance/duration limits
+    enter.setDate(enter.getDate() + 5);
+    enter.setHours(9, 0, 0, 0);
+    const leave = new Date(enter);
+    leave.setHours(12, 0, 0, 0); // 3h duration
 
     beforeEach(() => {
       RuntimeConfig.resetInfos();
