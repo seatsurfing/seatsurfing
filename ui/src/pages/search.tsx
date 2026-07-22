@@ -2185,6 +2185,7 @@ class Search extends React.Component<Props, State> {
                       <Form.Check
                         type="switch"
                         checked={this.state.showBookerNamesOnMap}
+                        disabled={!this.state.locationId}
                         onChange={() =>
                           this.setState(
                             {
