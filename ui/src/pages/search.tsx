@@ -2047,10 +2047,10 @@ class Search extends React.Component<Props, State> {
                 <IconTextButton
                   text="❮"
                   title={this.props.t("previousDay")}
-                  disabled={DateUtil.isSameDay(
-                    this.state.enter,
-                    earliestEnterDate,
-                  )}
+                  disabled={
+                    DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
+                    !this.state.locationId
+                  }
                   onClick={() => {
                     this.updateEnterAndLeaveDate(
                       DateUtil.prevDay(this.state.enter),
@@ -2072,6 +2072,7 @@ class Search extends React.Component<Props, State> {
                 <IconTextButton
                   text="❯"
                   title={this.props.t("nextDay")}
+                  disabled={!this.state.locationId}
                   onClick={() => {
                     this.updateEnterAndLeaveDate(
                       DateUtil.nextDay(this.state.enter),
@@ -2088,7 +2089,12 @@ class Search extends React.Component<Props, State> {
                   style={{
                     padding: "4px 8px",
                     borderColor: "#CED4DA",
+                    backgroundColor: !this.state.locationId
+                      ? "var(--bs-secondary-bg)"
+                      : undefined,
+                    opacity: !this.state.locationId ? 1 : undefined,
                   }}
+                  disabled={!this.state.locationId}
                   onClick={() => {
                     if (this.state.selectionMultiDay) {
                       let newLeave = DateUtil.copyDate(
@@ -2136,7 +2142,12 @@ class Search extends React.Component<Props, State> {
                     style={{
                       padding: "4px 8px",
                       borderColor: "#CED4DA",
+                      backgroundColor: !this.state.locationId
+                        ? "var(--bs-secondary-bg)"
+                        : undefined,
+                      opacity: !this.state.locationId ? 1 : undefined,
                     }}
+                    disabled={!this.state.locationId}
                     onClick={() => {
                       if (!this.state.selectionAllDay) {
                         this.resetEnterTime = new Date(this.state.enter);

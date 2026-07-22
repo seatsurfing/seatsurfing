@@ -20,6 +20,8 @@ const IconTextButton: React.FC<Props> = ({
       style={{
         padding: "4px 8px",
         borderColor: "#CED4DA",
+        backgroundColor: disabled ? "var(--bs-secondary-bg)" : undefined,
+        opacity: disabled ? 1 : undefined,
       }}
       disabled={disabled}
       onClick={onClick}
