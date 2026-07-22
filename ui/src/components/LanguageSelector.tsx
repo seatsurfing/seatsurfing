@@ -28,62 +28,49 @@ class LanguageSelector extends React.Component<Props, State> {
       </svg>
     );
 
+    const title = (
+      <>
+        {icon}
+        {RuntimeConfig.getLanguage()}
+      </>
+    );
+
+    const ItemComponent = this.props.inNavbar
+      ? NavDropdown.Item
+      : Dropdown.Item;
+
+    const items = RuntimeConfig.getAvailableLanguages()
+      .sort()
+      .filter((l) => l !== "default")
+      .map((l) => (
+        <LanguageSwitcher key={"lng-" + l} lang={l}>
+          <ItemComponent
+            key={"lng-btn-" + l}
+            active={l === RuntimeConfig.getLanguage()}
+          >
+            {l}
+          </ItemComponent>
+        </LanguageSwitcher>
+      ));
+
     if (this.props.inNavbar) {
       return (
-        <NavDropdown
-          title={
-            <>
-              {icon}
-              {RuntimeConfig.getLanguage()}
-            </>
-          }
-        >
-          {RuntimeConfig.getAvailableLanguages()
-            .sort()
-            .filter((l) => l !== "default")
-            .map((l) => (
-              <LanguageSwitcher key={"lng-" + l} lang={l}>
-                <NavDropdown.Item
-                  key={"lng-btn-" + l}
-                  active={l === RuntimeConfig.getLanguage()}
-                >
-                  {l}
-                </NavDropdown.Item>
-              </LanguageSwitcher>
-            ))}
+        <NavDropdown align="end" title={title}>
+          {items}
         </NavDropdown>
       );
     }
 
     return (
-      <>
-        <DropdownButton
-          title={
-            <>
-              {icon}
-              {RuntimeConfig.getLanguage()}
-            </>
-          }
-          className="lng-selector"
-          size="sm"
-          variant="outline-secondary"
-          drop="up"
-        >
-          {RuntimeConfig.getAvailableLanguages()
-            .sort()
-            .filter((l) => l !== "default")
-            .map((l) => (
-              <LanguageSwitcher key={"lng-" + l} lang={l}>
-                <Dropdown.Item
-                  key={"lng-btn-" + l}
-                  active={l === RuntimeConfig.getLanguage()}
-                >
-                  {l}
-                </Dropdown.Item>
-              </LanguageSwitcher>
-            ))}
-        </DropdownButton>
-      </>
+      <DropdownButton
+        title={title}
+        className="lng-selector"
+        size="sm"
+        variant="outline-secondary"
+        drop="up"
+      >
+        {items}
+      </DropdownButton>
     );
   }
 }
