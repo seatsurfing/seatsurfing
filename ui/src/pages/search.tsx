@@ -237,8 +237,8 @@ class Search extends React.Component<Props, State> {
         precheckErrorCodes: [],
       },
 
-      selectionAllDay: false,
-      selectionMultiDay: false,
+      selectionAllDay: this.props.router.query["allDay"] === "1",
+      selectionMultiDay: this.props.router.query["multiDay"] === "1",
 
       showSpaceCalendar: false,
       spaceCalendarDate: new Date(),
@@ -368,7 +368,7 @@ class Search extends React.Component<Props, State> {
         const sidParam = (this.props.router.query["sid"] as string) || "";
         this.setState({ locationId: defaultLocationId }, () => {
           if (!defaultLocationId) {
-            this.setState({ loading: false });
+            this.setState({ loading: false }, () => this.updateUrlParams());
             return;
           }
           this.getLocation()
@@ -385,6 +385,7 @@ class Search extends React.Component<Props, State> {
                     // before map data is loaded, causing centering with 0-size content.
                     // Instead, center explicitly after data is loaded and React has painted.
                     requestAnimationFrame(() => this.centerMap());
+                    this.updateUrlParams();
                   },
                 );
                 if (sidParam) {
@@ -395,7 +396,7 @@ class Search extends React.Component<Props, State> {
             });
         });
       } else {
-        this.setState({ loading: false });
+        this.setState({ loading: false }, () => this.updateUrlParams());
       }
     });
   };
@@ -490,6 +491,29 @@ class Search extends React.Component<Props, State> {
     return "";
   };
 
+  getDateTimeFromQuery = (paramName: string): Date | undefined => {
+    const value = this.props.router.query[paramName];
+    if (typeof value === "string" && DateUtil.isValidDateTime(value)) {
+      return new Date(value);
+    }
+    return undefined;
+  };
+
+  updateUrlParams = () => {
+    const query: Record<string, string> = {
+      ...(this.state.locationId && { lid: this.state.locationId }),
+      enter: DateUtil.formatToDateTimeString(this.state.enter),
+      leave: DateUtil.formatToDateTimeString(this.state.leave),
+      ...(this.state.selectionAllDay && { allDay: "1" }),
+      ...(this.state.selectionMultiDay && { multiDay: "1" }),
+    };
+    this.props.router.replace(
+      { pathname: this.props.router.pathname, query },
+      undefined,
+      { shallow: true },
+    );
+  };
+
   initDates = () => {
     const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
       this.state.prefEnterTime,
@@ -501,8 +525,8 @@ class Search extends React.Component<Props, State> {
 
     this.setState({
       earliestEnterDate: enter,
-      enter,
-      leave,
+      enter: this.getDateTimeFromQuery("enter") ?? enter,
+      leave: this.getDateTimeFromQuery("leave") ?? leave,
     });
   };
 
@@ -659,6 +683,7 @@ class Search extends React.Component<Props, State> {
       Promise.all(promises).then(() => {
         this.setState({ loading: false });
       });
+      this.updateUrlParams();
     };
     this.setState(state, () => dateChangedCallback());
   };
@@ -670,6 +695,7 @@ class Search extends React.Component<Props, State> {
         loading: true,
       },
       () => {
+        this.updateUrlParams();
         this.getLocation()
           ?.getAttributes()
           .then((attributes) => {
@@ -2100,9 +2126,12 @@ class Search extends React.Component<Props, State> {
                       }
                       this.updateEnterAndLeaveDate(null, newLeave);
                     }
-                    this.setState({
-                      selectionMultiDay: !this.state.selectionMultiDay,
-                    });
+                    this.setState(
+                      {
+                        selectionMultiDay: !this.state.selectionMultiDay,
+                      },
+                      () => this.updateUrlParams(),
+                    );
                   }}
                   title={this.props.t("multiDay")}
                 >
@@ -2151,9 +2180,12 @@ class Search extends React.Component<Props, State> {
                           this.resetLeaveTime ?? null,
                         );
                       }
-                      this.setState({
-                        selectionAllDay: !this.state.selectionAllDay,
-                      });
+                      this.setState(
+                        {
+                          selectionAllDay: !this.state.selectionAllDay,
+                        },
+                        () => this.updateUrlParams(),
+                      );
                     }}
                     title={this.props.t("allDay")}
                   >
