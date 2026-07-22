@@ -546,11 +546,21 @@ class Search extends React.Component<Props, State> {
       RuntimeConfig.INFOS.dailyBasisBooking,
     );
 
+    const selectionAllDay =
+      this.props.router.query["allDay"] === "1" &&
+      !RuntimeConfig.INFOS.dailyBasisBooking;
+    let queryEnter = this.getDateTimeFromQuery("enter") ?? enter;
+    let queryLeave = this.getDateTimeFromQuery("leave") ?? leave;
+    if (selectionAllDay) {
+      queryEnter = DateUtil.setHoursToMin(queryEnter);
+      queryLeave = DateUtil.setHoursToMax(queryLeave);
+    }
+
     this.setState({
       earliestEnterDate: enter,
-      enter: this.getDateTimeFromQuery("enter") ?? enter,
-      leave: this.getDateTimeFromQuery("leave") ?? leave,
-      selectionAllDay: this.props.router.query["allDay"] === "1",
+      enter: queryEnter,
+      leave: queryLeave,
+      selectionAllDay: selectionAllDay,
       selectionMultiDay: this.props.router.query["multiDay"] === "1",
     });
   };
