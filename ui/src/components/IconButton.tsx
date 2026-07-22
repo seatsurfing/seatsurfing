@@ -1,14 +1,17 @@
 import React from "react";
+import { IconType } from "react-icons";
 
 interface Props {
-  text: string;
+  icon: IconType;
+  active: boolean;
   title: string;
   onClick: () => void;
   disabled?: boolean;
 }
 
-const IconTextButton: React.FC<Props> = ({
-  text,
+const IconButton: React.FC<Props> = ({
+  icon: Icon,
+  active,
   title,
   onClick,
   disabled,
@@ -16,7 +19,9 @@ const IconTextButton: React.FC<Props> = ({
   return (
     <button
       type="button"
-      className="ms-2 btn d-flex align-items-center"
+      className={`ms-2 btn d-flex align-items-center ${
+        active ? "btn-primary" : "btn-light"
+      }`}
       style={{
         padding: "4px 8px",
         borderColor: "#CED4DA",
@@ -27,9 +32,14 @@ const IconTextButton: React.FC<Props> = ({
       onClick={onClick}
       title={title}
     >
-      {text}
+      <Icon
+        title={title}
+        color={active ? "#fff" : "#555"}
+        height="20px"
+        width="20px"
+      />
     </button>
   );
 };
 
-export default IconTextButton;
+export default IconButton;

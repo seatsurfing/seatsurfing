@@ -74,6 +74,7 @@ import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
 import IconTextButton from "@/components/IconTextButton";
+import IconButton from "@/components/IconButton";
 import DateUtil from "@/util/DateUtil";
 import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
@@ -2073,10 +2074,10 @@ class Search extends React.Component<Props, State> {
                 <IconTextButton
                   text="❮"
                   title={this.props.t("previousDay")}
-                  disabled={DateUtil.isSameDay(
-                    this.state.enter,
-                    earliestEnterDate,
-                  )}
+                  disabled={
+                    DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
+                    !this.state.locationId
+                  }
                   onClick={() => {
                     this.updateEnterAndLeaveDate(
                       DateUtil.prevDay(this.state.enter),
@@ -2098,6 +2099,7 @@ class Search extends React.Component<Props, State> {
                 <IconTextButton
                   text="❯"
                   title={this.props.t("nextDay")}
+                  disabled={!this.state.locationId}
                   onClick={() => {
                     this.updateEnterAndLeaveDate(
                       DateUtil.nextDay(this.state.enter),
@@ -2106,15 +2108,11 @@ class Search extends React.Component<Props, State> {
                   }}
                 />
 
-                <button
-                  type="button"
-                  className={`ms-2 btn d-flex align-items-center ${
-                    this.state.selectionMultiDay ? "btn-primary" : "btn-light"
-                  }`}
-                  style={{
-                    padding: "4px 8px",
-                    borderColor: "#CED4DA",
-                  }}
+                <IconButton
+                  icon={CalendarIcon}
+                  active={this.state.selectionMultiDay}
+                  disabled={!this.state.locationId}
+                  title={this.props.t("multiDay")}
                   onClick={() => {
                     if (this.state.selectionMultiDay) {
                       let newLeave = DateUtil.copyDate(
@@ -2133,15 +2131,7 @@ class Search extends React.Component<Props, State> {
                       () => this.updateUrlParams(),
                     );
                   }}
-                  title={this.props.t("multiDay")}
-                >
-                  <CalendarIcon
-                    title={this.props.t("multiDay")}
-                    color={this.state.selectionMultiDay ? "#fff" : "#555"}
-                    height="20px"
-                    width="20px"
-                  />
-                </button>
+                />
               </Form.Group>
 
               {/* Time selection */}
@@ -2157,15 +2147,11 @@ class Search extends React.Component<Props, State> {
                   </div>
                   <div className="ms-2 w-50">{timeEnterPicker}</div>
                   <div className="ms-2 w-50">{timeLeavePicker}</div>
-                  <button
-                    type="button"
-                    className={`ms-2 btn d-flex align-items-center ${
-                      this.state.selectionAllDay ? "btn-primary" : "btn-light"
-                    }`}
-                    style={{
-                      padding: "4px 8px",
-                      borderColor: "#CED4DA",
-                    }}
+                  <IconButton
+                    icon={TimerIcon}
+                    active={this.state.selectionAllDay}
+                    disabled={!this.state.locationId}
+                    title={this.props.t("allDay")}
                     onClick={() => {
                       if (!this.state.selectionAllDay) {
                         this.resetEnterTime = new Date(this.state.enter);
@@ -2187,15 +2173,7 @@ class Search extends React.Component<Props, State> {
                         () => this.updateUrlParams(),
                       );
                     }}
-                    title={this.props.t("allDay")}
-                  >
-                    <TimerIcon
-                      title={this.props.t("allDay")}
-                      color={this.state.selectionAllDay ? "#fff" : "#555"}
-                      height="20px"
-                      width="20px"
-                    />
-                  </button>
+                  />
                 </Form.Group>
               )}
 
@@ -2239,6 +2217,7 @@ class Search extends React.Component<Props, State> {
                       <Form.Check
                         type="switch"
                         checked={this.state.showBookerNamesOnMap}
+                        disabled={!this.state.locationId}
                         onChange={() =>
                           this.setState(
                             {
