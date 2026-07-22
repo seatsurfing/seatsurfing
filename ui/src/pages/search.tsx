@@ -238,8 +238,8 @@ class Search extends React.Component<Props, State> {
         precheckErrorCodes: [],
       },
 
-      selectionAllDay: this.props.router.query["allDay"] === "1",
-      selectionMultiDay: this.props.router.query["multiDay"] === "1",
+      selectionAllDay: false,
+      selectionMultiDay: false,
 
       showSpaceCalendar: false,
       spaceCalendarDate: new Date(),
@@ -500,14 +500,36 @@ class Search extends React.Component<Props, State> {
     return undefined;
   };
 
+  managedUrlParams = ["lid", "enter", "leave", "allDay", "multiDay"];
+
   updateUrlParams = () => {
+    const currentQuery = this.props.router.query;
+    const preserved: Record<string, string> = {};
+    Object.entries(currentQuery).forEach(([key, value]) => {
+      if (this.managedUrlParams.includes(key) || typeof value !== "string") {
+        return;
+      }
+      preserved[key] = value;
+    });
     const query: Record<string, string> = {
+      ...preserved,
       ...(this.state.locationId && { lid: this.state.locationId }),
       enter: DateUtil.formatToDateTimeString(this.state.enter),
       leave: DateUtil.formatToDateTimeString(this.state.leave),
       ...(this.state.selectionAllDay && { allDay: "1" }),
       ...(this.state.selectionMultiDay && { multiDay: "1" }),
     };
+    const sortedQueryString = (params: Record<string, string>) =>
+      Object.keys(params)
+        .sort()
+        .map((key) => `${key}=${params[key]}`)
+        .join("&");
+    if (
+      sortedQueryString(query) ===
+      sortedQueryString(currentQuery as Record<string, string>)
+    ) {
+      return;
+    }
     this.props.router.replace(
       { pathname: this.props.router.pathname, query },
       undefined,
@@ -528,6 +550,8 @@ class Search extends React.Component<Props, State> {
       earliestEnterDate: enter,
       enter: this.getDateTimeFromQuery("enter") ?? enter,
       leave: this.getDateTimeFromQuery("leave") ?? leave,
+      selectionAllDay: this.props.router.query["allDay"] === "1",
+      selectionMultiDay: this.props.router.query["multiDay"] === "1",
     });
   };
 
