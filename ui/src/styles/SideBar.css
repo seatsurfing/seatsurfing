@@ -32,6 +32,11 @@
   margin-top: auto;
 }
 
+/* Align dropup menu with the nav-link's padded content instead of its outer edge */
+.sidebar-footer .dropdown-menu {
+  margin-left: 1rem;
+}
+
 @supports ((position: -webkit-sticky) or (position: sticky)) {
   .sidebar-sticky {
     position: -webkit-sticky;
