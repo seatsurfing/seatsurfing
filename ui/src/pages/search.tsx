@@ -549,11 +549,15 @@ class Search extends React.Component<Props, State> {
     const selectionAllDay =
       this.props.router.query["allDay"] === "1" &&
       !RuntimeConfig.INFOS.dailyBasisBooking;
+    const selectionMultiDay = this.props.router.query["multiDay"] === "1";
     let queryEnter = this.getDateTimeFromQuery("enter") ?? enter;
     let queryLeave = this.getDateTimeFromQuery("leave") ?? leave;
     if (selectionAllDay) {
       queryEnter = DateUtil.setHoursToMin(queryEnter);
       queryLeave = DateUtil.setHoursToMax(queryLeave);
+    }
+    if (!selectionMultiDay && !DateUtil.isSameDay(queryEnter, queryLeave)) {
+      queryLeave = DateUtil.setHoursToMax(new Date(queryEnter));
     }
 
     this.setState({
@@ -561,7 +565,7 @@ class Search extends React.Component<Props, State> {
       enter: queryEnter,
       leave: queryLeave,
       selectionAllDay: selectionAllDay,
-      selectionMultiDay: this.props.router.query["multiDay"] === "1",
+      selectionMultiDay: selectionMultiDay,
     });
   };
 
