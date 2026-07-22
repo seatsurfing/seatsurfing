@@ -393,7 +393,7 @@ class SideBar extends React.Component<Props, State> {
             </li>
           </ul>
           <div className="sidebar-footer d-none d-md-block">
-            <LanguageSelector inNavbar={true} />
+            <LanguageSelector inNavbar={true} drop="up" />
           </div>
         </div>
       </Nav>
