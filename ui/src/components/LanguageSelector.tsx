@@ -8,6 +8,7 @@ interface State {}
 
 interface Props {
   inNavbar?: boolean;
+  drop?: "up" | "down" | "start" | "end";
   t: TranslationFunc;
 }
 
@@ -37,6 +38,7 @@ class LanguageSelector extends React.Component<Props, State> {
               {RuntimeConfig.getLanguage()}
             </>
           }
+          drop={this.props.drop}
         >
           {RuntimeConfig.getAvailableLanguages()
             .sort()
