@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.118.0](https://github.com/seatsurfing/seatsurfing/compare/v1.117.0...v1.118.0) (2026-07-23)
+
+
+### ✨ Features
+
+* **admin-ui:** add language selector in admin UI ([#2447](https://github.com/seatsurfing/seatsurfing/issues/2447)) ([a423871](https://github.com/seatsurfing/seatsurfing/commit/a4238713774df30e24420773e3a594fe96626694))
+* **booking-ui:** deeplinking for date state ([#2444](https://github.com/seatsurfing/seatsurfing/issues/2444)) ([9be6855](https://github.com/seatsurfing/seatsurfing/commit/9be68559f6d8819302c19456ee19d75739b55feb))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** disable buttons if no location is selected ([#2443](https://github.com/seatsurfing/seatsurfing/issues/2443)) ([d5b1ffe](https://github.com/seatsurfing/seatsurfing/commit/d5b1ffeea3762f1976825f8a0174130235cf9ca2))
+* **booking-ui:** improve  language selector dropdown position in navbar ([#2448](https://github.com/seatsurfing/seatsurfing/issues/2448)) ([b363856](https://github.com/seatsurfing/seatsurfing/commit/b3638566ea2c05b29bbb1b810f32bb7f110833a7))
+* **booking-ui:** unify button styles in search config container ([#2446](https://github.com/seatsurfing/seatsurfing/issues/2446)) ([f9b08f6](https://github.com/seatsurfing/seatsurfing/commit/f9b08f6295202fafde60f0ff0c87899b40c787bf))
+
 ## [1.117.0](https://github.com/seatsurfing/seatsurfing/compare/v1.116.2...v1.117.0) (2026-07-20)
 
 
