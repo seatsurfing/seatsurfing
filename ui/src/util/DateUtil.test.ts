@@ -104,6 +104,28 @@ describe("DateUtil", () => {
       const result = DateUtil.getNextFreeEnterTime(leave);
       expect(result.toISOString()).toBe("2026-04-25T00:00:00.000Z");
     });
+
+    it("should skip to the next bookable weekday if the following day is not bookable", () => {
+      // 2026-04-24 is a Friday, 2026-04-25/26 are Sat/Sun, 2026-04-27 is the next Monday
+      RuntimeConfig.INFOS = { ...RuntimeConfig.INFOS, dailyBasisBooking: true };
+      const leave = new Date("2026-04-24T16:59:59.000Z");
+      const result = DateUtil.getNextFreeEnterTime(leave, [1, 2, 3, 4, 5]);
+      expect(result.toISOString()).toBe("2026-04-27T00:00:00.000Z");
+    });
+
+    it("should not skip any day if the following day is already bookable", () => {
+      RuntimeConfig.INFOS = { ...RuntimeConfig.INFOS, dailyBasisBooking: true };
+      const leave = new Date("2026-04-23T16:59:59.000Z");
+      const result = DateUtil.getNextFreeEnterTime(leave, [1, 2, 3, 4, 5]);
+      expect(result.toISOString()).toBe("2026-04-24T00:00:00.000Z");
+    });
+
+    it("should ignore bookableDays when it is an empty array", () => {
+      RuntimeConfig.INFOS = { ...RuntimeConfig.INFOS, dailyBasisBooking: true };
+      const leave = new Date("2026-04-24T16:59:59.000Z");
+      const result = DateUtil.getNextFreeEnterTime(leave, []);
+      expect(result.toISOString()).toBe("2026-04-25T00:00:00.000Z");
+    });
   });
 
   describe("getNextPreferredEnterAndLeaveTime", () => {

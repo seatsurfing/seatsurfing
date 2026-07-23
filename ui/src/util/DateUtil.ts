@@ -345,18 +345,31 @@ export default class DateUtil {
    * calculates the "next free enter time" for a booking based on a leave date which is
    *  - next day if "dailyBasisBooking" is active, or
    *  - +1 minute otherwise
+   * If bookableDays is given (weekdays the location can be booked on, 0=Sunday..6=Saturday),
+   * the result is advanced to 00:00 of the next weekday the location is actually bookable on.
    *
    * @param leave Leave date of the last booking
+   * @param bookableDays weekdays the location can be booked on; empty/undefined means no restriction
    * @returns new date for "next free enter time"
    */
-  static getNextFreeEnterTime(leave: Date): Date {
+  static getNextFreeEnterTime(leave: Date, bookableDays?: number[]): Date {
+    let next: Date;
     if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      const nextDay = new Date(leave);
-      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-      nextDay.setUTCHours(0, 0, 0, 0);
-      return nextDay;
+      next = new Date(leave);
+      next.setUTCDate(next.getUTCDate() + 1);
+      next.setUTCHours(0, 0, 0, 0);
+    } else {
+      next = new Date(leave.getTime() + DateUtil.MS_PER_MINUTE);
     }
-    return new Date(leave.getTime() + DateUtil.MS_PER_MINUTE);
+
+    if (bookableDays && bookableDays.length > 0) {
+      while (!bookableDays.includes(next.getUTCDay())) {
+        next.setUTCDate(next.getUTCDate() + 1);
+        next.setUTCHours(0, 0, 0, 0);
+      }
+    }
+
+    return next;
   }
 
   /**

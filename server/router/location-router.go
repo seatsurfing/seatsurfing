@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -37,7 +38,7 @@ type CreateLocationRequest struct {
 	MapScale              float64  `json:"mapScale"`
 	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
 	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
-	BookableDays          string   `json:"bookableDays" validate:"max=13"`
+	BookableDays          []int    `json:"bookableDays" validate:"dive,min=0,max=6"`
 }
 
 type GetLocationResponse struct {
@@ -397,8 +398,8 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if m.BookableDays != "" {
-		if !IsValidWeekdaysList(m.BookableDays) {
+	if len(m.BookableDays) > 0 {
+		if !IsValidWeekdaysList(weekdaysToString(m.BookableDays)) {
 			SendBadRequest(w)
 			return
 		}
@@ -472,8 +473,8 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if m.BookableDays != "" {
-		if !IsValidWeekdaysList(m.BookableDays) {
+	if len(m.BookableDays) > 0 {
+		if !IsValidWeekdaysList(weekdaysToString(m.BookableDays)) {
 			SendBadRequest(w)
 			return
 		}
@@ -705,6 +706,34 @@ func (router *LocationRouter) loadSampleData(w http.ResponseWriter, r *http.Requ
 	GetOrganizationRepository().CreateSampleData(org)
 }
 
+func weekdaysToString(days []int) string {
+	if len(days) == 0 {
+		return ""
+	}
+	sorted := make([]int, len(days))
+	copy(sorted, days)
+	slices.Sort(sorted)
+	parts := make([]string, len(sorted))
+	for i, d := range sorted {
+		parts[i] = strconv.Itoa(d)
+	}
+	return strings.Join(parts, ",")
+}
+
+func weekdaysFromString(csv string) []int {
+	days := []int{}
+	if csv == "" {
+		return days
+	}
+	for _, part := range strings.Split(csv, ",") {
+		d, err := strconv.Atoi(part)
+		if err == nil {
+			days = append(days, d)
+		}
+	}
+	return days
+}
+
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
 	e := &Location{}
 	e.Name = m.Name
@@ -714,7 +743,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Enabled = m.Enabled
 	e.MapScale = m.MapScale
 	e.MapType = m.MapType
-	e.BookableDays = m.BookableDays
+	e.BookableDays = weekdaysToString(m.BookableDays)
 	return e
 }
 
@@ -732,7 +761,7 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
-	m.BookableDays = e.BookableDays
+	m.BookableDays = weekdaysFromString(e.BookableDays)
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}
