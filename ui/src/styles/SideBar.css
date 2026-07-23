@@ -22,8 +22,19 @@
   height: calc(100vh - 48px);
   padding-top: 0.5rem;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   /* Scrollable contents if viewport is shorter than content. */
+}
+
+.sidebar-footer {
+  margin-top: auto;
+}
+
+/* Align dropup menu with the nav-link's padded content instead of its outer edge */
+.sidebar-footer .dropdown-menu {
+  margin-left: 1rem;
 }
 
 @supports ((position: -webkit-sticky) or (position: sticky)) {

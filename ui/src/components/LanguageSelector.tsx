@@ -8,6 +8,7 @@ interface State {}
 
 interface Props {
   inNavbar?: boolean;
+  drop?: "up" | "down" | "start" | "end";
   t: TranslationFunc;
 }
 

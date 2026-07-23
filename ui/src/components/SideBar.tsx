@@ -20,6 +20,7 @@ import dynamic from "next/dynamic";
 import RuntimeConfig from "./RuntimeConfig";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import PremiumFeatureIcon from "./PremiumFeatureIcon";
+import LanguageSelector from "./LanguageSelector";
 import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
@@ -391,6 +392,9 @@ class SideBar extends React.Component<Props, State> {
               </Nav.Link>
             </li>
           </ul>
+          <div className="sidebar-footer d-none d-md-block">
+            <LanguageSelector inNavbar={true} drop="up" />
+          </div>
         </div>
       </Nav>
     );
