@@ -33,7 +33,8 @@ class LanguageSelector extends React.Component<Props, State> {
     const title = (
       <>
         {icon}
-        {RuntimeConfig.getLanguage()}
+        {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
+          RuntimeConfig.getLanguage()}
       </>
     );
 
@@ -41,16 +42,16 @@ class LanguageSelector extends React.Component<Props, State> {
       ? NavDropdown.Item
       : Dropdown.Item;
 
-    const items = RuntimeConfig.getAvailableLanguages()
-      .sort()
-      .filter((l) => l !== "default")
-      .map((l) => (
+    const items = Object.entries(RuntimeConfig.getAvailableLanguages())
+      .filter(([l]) => l !== "default")
+      .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
+      .map(([l, name]) => (
         <LanguageSwitcher key={"lng-" + l} lang={l}>
           <ItemComponent
             key={"lng-btn-" + l}
             active={l === RuntimeConfig.getLanguage()}
           >
-            {l}
+            {name}
           </ItemComponent>
         </LanguageSwitcher>
       ));

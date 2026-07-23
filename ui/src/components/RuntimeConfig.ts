@@ -280,24 +280,24 @@ export default class RuntimeConfig {
     return "en-GB";
   }
 
-  static getAvailableLanguages(): string[] {
-    return [
-      "en-GB",
-      "en-US",
-      "de",
-      "et",
-      "fi",
-      "fr",
-      "he",
-      "hu",
-      "it",
-      "nl",
-      "pl",
-      "pt",
-      "ro",
-      "es",
-      "zh-TW",
-    ];
+  static getAvailableLanguages(): { [key: string]: string } {
+    return {
+      "en-GB": "English (UK)",
+      "en-US": "English (US)",
+      de: "Deutsch",
+      et: "Eesti",
+      fi: "Suomi",
+      fr: "Français",
+      he: "עברית",
+      hu: "Magyar",
+      it: "Italiano",
+      nl: "Nederlands",
+      pl: "Polski",
+      pt: "Português",
+      ro: "Română",
+      es: "Español",
+      "zh-TW": "繁體中文",
+    };
   }
 
   static async logOut(): Promise<void> {
