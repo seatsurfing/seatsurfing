@@ -903,7 +903,7 @@ class Search extends React.Component<Props, State> {
       labelText = bookerName || item.name;
     } else if (bookedEntry) {
       tooltipHtml = `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`;
-    } else if (!item.enabled) {
+    } else if (!item.enabled || !item.allowed) {
       tooltipHtml = this.props.t("disallowed");
     } else {
       tooltipHtml = this.props.t("free");
