@@ -246,7 +246,7 @@ class NavBar extends React.Component<Props, State> {
               )}
             </span>
           </Nav.Link>
-          <LanguageSelector inNavbar={true} />
+          <LanguageSelector inNavbar={true} align="end" />
           {signOffButton}
         </Nav>
       </>

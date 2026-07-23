@@ -9,6 +9,7 @@ interface State {}
 interface Props {
   inNavbar?: boolean;
   drop?: "up" | "down" | "start" | "end";
+  align?: "start" | "end";
   t: TranslationFunc;
 }
 
@@ -56,7 +57,11 @@ class LanguageSelector extends React.Component<Props, State> {
 
     if (this.props.inNavbar) {
       return (
-        <NavDropdown align="end" title={title}>
+        <NavDropdown
+          align={this.props.align ?? "start"}
+          title={title}
+          drop={this.props.drop ?? "down"}
+        >
           {items}
         </NavDropdown>
       );
@@ -68,7 +73,7 @@ class LanguageSelector extends React.Component<Props, State> {
         className="lng-selector"
         size="sm"
         variant="outline-secondary"
-        drop="up"
+        drop={this.props.drop ?? "up"}
       >
         {items}
       </DropdownButton>
