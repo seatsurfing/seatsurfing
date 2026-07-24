@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.118.1](https://github.com/seatsurfing/seatsurfing/compare/v1.118.0...v1.118.1) (2026-07-24)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** fix language selector dropup position ([#2451](https://github.com/seatsurfing/seatsurfing/issues/2451)) ([0036e7d](https://github.com/seatsurfing/seatsurfing/commit/0036e7d767047fafe0c3b45cfa5e4848f8461450))
+* **booking-ui:** respect location's bookable days when calculation next bookable date ([#2457](https://github.com/seatsurfing/seatsurfing/issues/2457)) ([04c368d](https://github.com/seatsurfing/seatsurfing/commit/04c368d2751f91a240df97e4013846023d3b7431))
+* **booking-ui:** show disallowed tooltip if space is not allowed ([#2452](https://github.com/seatsurfing/seatsurfing/issues/2452)) ([9cff1d7](https://github.com/seatsurfing/seatsurfing/commit/9cff1d7de626b920712d25a59c195416ae0f3c71))
+* **deps:** bump google.golang.org/grpc from 1.82.0 to 1.82.1 in /server in the minor-and-patch group ([#2454](https://github.com/seatsurfing/seatsurfing/issues/2454)) ([8cd70cc](https://github.com/seatsurfing/seatsurfing/commit/8cd70cc60ed1772b9b3980aa3a5435f05baa445c))
+* **deps:** bump next from 16.2.10 to 16.2.11 in /ui ([#2456](https://github.com/seatsurfing/seatsurfing/issues/2456)) ([199f851](https://github.com/seatsurfing/seatsurfing/commit/199f851bceafa952470ff48dfc99274980165f0c))
+* **main:** show languages names instead of codes ([#2450](https://github.com/seatsurfing/seatsurfing/issues/2450)) ([dd00e66](https://github.com/seatsurfing/seatsurfing/commit/dd00e66fca8b929a981ccf59b545a5fc8ff97e5d))
+
 ## [1.118.0](https://github.com/seatsurfing/seatsurfing/compare/v1.117.0...v1.118.0) (2026-07-23)
 
 
