@@ -555,11 +555,10 @@ class EditLocation extends React.Component<Props, State> {
                       maxConcurrentBookings: location.maxConcurrentBookings,
                       timezone: location.timezone,
                       enabled: location.enabled,
-                      bookableDays: location.bookableDays
-                        ? location.bookableDays
-                            .split(",")
-                            .map((d) => parseInt(d, 10))
-                        : [0, 1, 2, 3, 4, 5, 6],
+                      bookableDays:
+                        location.bookableDays.length > 0
+                          ? location.bookableDays
+                          : [0, 1, 2, 3, 4, 5, 6],
                       mapScale: location.mapScale,
                       mapScaleOnLoad: location.mapScale,
                       mapType:
@@ -707,9 +706,7 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.timezone = this.state.timezone;
     this.entity.enabled = this.state.enabled;
     this.entity.bookableDays =
-      this.state.bookableDays.length === 7
-        ? ""
-        : this.state.bookableDays.join(",");
+      this.state.bookableDays.length === 7 ? [] : this.state.bookableDays;
     this.entity.mapScale = this.state.mapScale;
     this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups

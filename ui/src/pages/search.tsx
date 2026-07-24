@@ -892,7 +892,10 @@ class Search extends React.Component<Props, State> {
     const freeFrom = bookedEntry
       ? this.props.t("freeFrom", {
           time: Formatting.getBookingDateFormatter().format(
-            DateUtil.getNextFreeEnterTime(new Date(bookedEntry.leave)),
+            DateUtil.getNextFreeEnterTime(
+              new Date(bookedEntry.leave),
+              this.getLocation()?.bookableDays,
+            ),
           ),
         })
       : "";
@@ -1267,11 +1270,8 @@ class Search extends React.Component<Props, State> {
     }
 
     // bookable weekdays
-    if (location.bookableDays) {
-      const bookableDaysValue = location.bookableDays
-        .split(",")
-        .map((d) => parseInt(d, 10))
-        .filter((d) => !isNaN(d))
+    if (location.bookableDays.length > 0) {
+      const bookableDaysValue = [...location.bookableDays]
         .sort((a, b) => a - b)
         .map((d) => this.props.t("workday-short-" + d))
         .join(", ");
