@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.118.2](https://github.com/seatsurfing/seatsurfing/compare/v1.118.1...v1.118.2) (2026-07-26)
+
+
+### 🐛 Bug Fixes
+
+* **main:** make update from 1.113.3 more robust ([#2461](https://github.com/seatsurfing/seatsurfing/issues/2461)) ([5ccc762](https://github.com/seatsurfing/seatsurfing/commit/5ccc762c3b15d3810f7f7dbec5854022b3505516))
+
 ## [1.118.1](https://github.com/seatsurfing/seatsurfing/compare/v1.118.0...v1.118.1) (2026-07-24)
 
 
