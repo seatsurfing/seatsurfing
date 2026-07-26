@@ -73,10 +73,11 @@ func GetUserPreferencesRepository() *UserPreferencesRepository {
 func (r *UserPreferencesRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 48 {
 		// workday_start / workday_end used to be stored as a plain hour (0-24),
-		// now they are stored as a "HH:MM" time string
+		// now they are stored as a "HH:MM" time string; skip rows which are
+		// already in the new format
 		if _, err := GetDatabase().DB().Exec("UPDATE users_preferences SET value = "+
 			"(LPAD(LEAST(value::integer, 23)::text, 2, '0') || ':00') "+
-			"WHERE name IN ($1, $2)",
+			"WHERE name IN ($1, $2) AND value ~ '^[0-9]{1,2}$'",
 			PreferenceWorkdayStart.Name, PreferenceWorkdayEnd.Name); err != nil {
 			panic(err)
 		}
