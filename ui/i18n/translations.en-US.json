@@ -233,6 +233,7 @@
   "newPassword": "New password",
   "nextBooking": "Next booking",
   "nextDay": "Next day",
+  "nextEvent": "Next event",
   "nextWorkday": "Next business day",
   "no": "no",
   "noAdminRestrictions": "Don't restrict admins (bookings per user, duration, in advance)",

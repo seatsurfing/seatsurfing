@@ -213,6 +213,7 @@
   "newPassword": "Parolă nouă",
   "nextBooking": "Următoarea rezervare",
   "nextDay": "Ziua următoare",
+  "nextEvent": "Următorul eveniment",
   "nextWorkday": "Ziua lucrătoare următoare",
   "no": "no",
   "noAdminRestrictions": "Don't restrict admins (bookings per user, duration, in advance)",

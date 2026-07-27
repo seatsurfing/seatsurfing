@@ -222,6 +222,7 @@
   "newPassword": "Uusi salasana",
   "nextBooking": "Seuraava varaus",
   "nextDay": "Seuraava päivä",
+  "nextEvent": "Seuraava tapahtuma",
   "nextWorkday": "Seuraava työpäivä",
   "no": "ei",
   "noAdminRestrictions": "Älä rajoita ylläpitäjiä (varaukset per käyttäjä, kesto, ennakkovaraus)",

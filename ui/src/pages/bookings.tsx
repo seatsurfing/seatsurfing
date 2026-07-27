@@ -218,7 +218,11 @@ class Bookings extends React.Component<Props, State> {
     const formatter = Formatting.getBookingDateFormatter();
 
     const toolbar = (props: object) => (
-      <CustomToolbar toolbar={props as any} t={this.props.t} />
+      <CustomToolbar
+        toolbar={props as any}
+        t={this.props.t}
+        events={calendarEvents}
+      />
     );
 
     moment.tz.setDefault("UTC");
