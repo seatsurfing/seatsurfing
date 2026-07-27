@@ -222,7 +222,6 @@
   "newPassword": "Uusi salasana",
   "nextBooking": "Seuraava varaus",
   "nextDay": "Seuraava päivä",
-  "nextEvent": "Seuraava tapahtuma",
   "nextWorkday": "Seuraava työpäivä",
   "no": "ei",
   "noAdminRestrictions": "Älä rajoita ylläpitäjiä (varaukset per käyttäjä, kesto, ennakkovaraus)",
@@ -513,5 +512,6 @@
   "bookableDays": "Bookable weekdays",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
   "unlimited": "Unlimited",
-  "lastActivity": "Last activity"
+  "lastActivity": "Last activity",
+  "previousBooking": "Previous booking"
 }

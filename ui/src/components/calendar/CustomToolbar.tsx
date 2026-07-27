@@ -6,6 +6,7 @@ import {
   ArrowLeft as IconArrowLeft,
   ArrowRight as IconArrowRight,
   SkipForward as IconSkipForward,
+  SkipBack as IconSkipBack,
 } from "react-feather";
 import Formatting from "@/util/Formatting";
 import moment from "moment-timezone";
@@ -24,19 +25,36 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
   const formatter = Formatting.getFormatterDate();
   const isDayView = toolbar.view === "day";
 
+  const eventWeeks = (events ?? []).reduce((map, event) => {
+    const weekKey = moment(event.enter).startOf("week").valueOf();
+    const existing = map.get(weekKey);
+    if (!existing || event.enter.getTime() < existing.getTime()) {
+      map.set(weekKey, event.enter);
+    }
+    return map;
+  }, new Map<number, Date>());
+  const sortedEventWeeks = Array.from(eventWeeks.entries()).sort(
+    (a, b) => a[0] - b[0],
+  );
+  const currentWeekStartMs = weekStart.valueOf();
+  const nextEventWeek = sortedEventWeeks.find(
+    ([weekMs]) => weekMs > currentWeekStartMs,
+  );
+  const prevEventWeek = [...sortedEventWeeks]
+    .reverse()
+    .find(([weekMs]) => weekMs < currentWeekStartMs);
   const goToNextEvent = () => {
-    if (!events || events.length === 0) {
+    if (!nextEventWeek) {
       return;
     }
-    const sorted = [...events].sort(
-      (a, b) => a.enter.getTime() - b.enter.getTime(),
-    );
-    const currentDate = toolbar.date;
-    const nextEvent = sorted.find(
-      (event) => event.enter.getTime() > currentDate.getTime(),
-    );
-    const target = nextEvent ?? sorted[0];
-    toolbar.onNavigate("DATE", target.enter);
+    toolbar.onNavigate("DATE", nextEventWeek[1]);
+  };
+
+  const goToPreviousEvent = () => {
+    if (!prevEventWeek) {
+      return;
+    }
+    toolbar.onNavigate("DATE", prevEventWeek[1]);
   };
 
   return (
@@ -66,13 +84,24 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
         <IconArrowRight className="feather" />
       </Link>{" "}
       {events && events.length > 0 && (
-        <Link
-          href="#"
-          className="btn btn-sm btn-outline-secondary"
-          onClick={() => goToNextEvent()}
-        >
-          <IconSkipForward className="feather" /> {t("nextEvent")}
-        </Link>
+        <>
+          <Link
+            href="#"
+            className={`btn btn-sm btn-outline-secondary${prevEventWeek ? "" : " disabled"}`}
+            aria-disabled={!prevEventWeek}
+            onClick={() => goToPreviousEvent()}
+          >
+            <IconSkipBack className="feather" /> {t("previousBooking")}
+          </Link>{" "}
+          <Link
+            href="#"
+            className={`btn btn-sm btn-outline-secondary${nextEventWeek ? "" : " disabled"}`}
+            aria-disabled={!nextEventWeek}
+            onClick={() => goToNextEvent()}
+          >
+            <IconSkipForward className="feather" /> {t("nextBooking")}
+          </Link>
+        </>
       )}{" "}
       <span
         className="toolbar-label"

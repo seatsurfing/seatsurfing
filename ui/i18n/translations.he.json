@@ -213,7 +213,6 @@
   "newPassword": "סיסמה חדשה",
   "nextBooking": "ההזמנה הבאה",
   "nextDay": "ביום שלמחרת",
-  "nextEvent": "האירוע הבא",
   "nextWorkday": "יום העסקים הבא",
   "no": "no",
   "noAdminRestrictions": "לא להגביל מנהלים (הזמנות למשתמש, משך, מראש)",
@@ -515,5 +514,6 @@
   "bookableDays": "Bookable weekdays",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
   "unlimited": "Unlimited",
-  "lastActivity": "Last activity"
+  "lastActivity": "Last activity",
+  "previousBooking": "Previous booking"
 }

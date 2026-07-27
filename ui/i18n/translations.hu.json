@@ -213,7 +213,6 @@
   "newPassword": "Új jelszó",
   "nextBooking": "Következő foglalás",
   "nextDay": "Következő nap",
-  "nextEvent": "Következő esemény",
   "nextWorkday": "Következő munkanap",
   "no": "no",
   "noAdminRestrictions": "Don't restrict admins (bookings per user, duration, in advance)",
@@ -515,5 +514,6 @@
   "bookableDays": "Bookable weekdays",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
   "unlimited": "Unlimited",
-  "lastActivity": "Last activity"
+  "lastActivity": "Last activity",
+  "previousBooking": "Previous booking"
 }

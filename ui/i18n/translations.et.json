@@ -213,7 +213,6 @@
   "newPassword": "Uus parool",
   "nextBooking": "Järgmine broneering",
   "nextDay": "Järgmine päev",
-  "nextEvent": "Järgmine sündmus",
   "nextWorkday": "Järgmine tööpäev",
   "no": "no",
   "noAdminRestrictions": "Don't restrict admins (bookings per user, duration, in advance)",
@@ -515,5 +514,6 @@
   "bookableDays": "Bookable weekdays",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
   "unlimited": "Unlimited",
-  "lastActivity": "Last activity"
+  "lastActivity": "Last activity",
+  "previousBooking": "Previous booking"
 }

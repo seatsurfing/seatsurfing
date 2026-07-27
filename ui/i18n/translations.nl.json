@@ -213,7 +213,6 @@
   "newPassword": "Nieuw wachtwoord",
   "nextBooking": "Volgende boeking",
   "nextDay": "Volgende dag",
-  "nextEvent": "Volgend evenement",
   "nextWorkday": "Volgende werkdag",
   "no": "no",
   "noAdminRestrictions": "Beperk admins niet (boekingen per gebruiker, duur, vooraf)",
@@ -515,5 +514,6 @@
   "bookableDays": "Bookable weekdays",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
   "unlimited": "Unlimited",
-  "lastActivity": "Last activity"
+  "lastActivity": "Last activity",
+  "previousBooking": "Previous booking"
 }

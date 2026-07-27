@@ -213,7 +213,6 @@
   "newPassword": "Nova senha",
   "nextBooking": "Próxima reserva",
   "nextDay": "Próximo dia",
-  "nextEvent": "Próximo evento",
   "nextWorkday": "Próximo dia útil",
   "no": "não",
   "noAdminRestrictions": "Não restringir administradores (reservas por usuário, duração, antecedência)",
@@ -515,5 +514,6 @@
   "bookableDays": "Bookable weekdays",
   "errorInvalidWeekday": "Bookings for this location are not allowed on this weekday.",
   "unlimited": "Unlimited",
-  "lastActivity": "Last activity"
+  "lastActivity": "Last activity",
+  "previousBooking": "Previous booking"
 }
