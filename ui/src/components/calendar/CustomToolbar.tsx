@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import { ToolbarProps } from "react-big-calendar";
 import {
   Trello as IconTrello,
@@ -62,45 +61,45 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
       className="custom-toolbar"
       style={{ marginBottom: "5px", textAlign: "left" }}
     >
-      <Link
-        href="#"
+      <button
+        type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("TODAY")}
       >
         <IconTrello className="feather" /> {t("today")}
-      </Link>{" "}
-      <Link
-        href="#"
+      </button>{" "}
+      <button
+        type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("PREV")}
       >
         <IconArrowLeft className="feather" />
-      </Link>{" "}
-      <Link
-        href="#"
+      </button>{" "}
+      <button
+        type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("NEXT")}
       >
         <IconArrowRight className="feather" />
-      </Link>{" "}
+      </button>{" "}
       {events && events.length > 0 && (
         <>
-          <Link
-            href="#"
-            className={`btn btn-sm btn-outline-secondary${prevEventWeek ? "" : " disabled"}`}
-            aria-disabled={!prevEventWeek}
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={!prevEventWeek}
             onClick={() => goToPreviousEvent()}
           >
             <IconSkipBack className="feather" /> {t("previousBooking")}
-          </Link>{" "}
-          <Link
-            href="#"
-            className={`btn btn-sm btn-outline-secondary${nextEventWeek ? "" : " disabled"}`}
-            aria-disabled={!nextEventWeek}
+          </button>{" "}
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={!nextEventWeek}
             onClick={() => goToNextEvent()}
           >
             <IconSkipForward className="feather" /> {t("nextBooking")}
-          </Link>
+          </button>
         </>
       )}{" "}
       <span
