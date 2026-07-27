@@ -400,6 +400,10 @@ func (a *App) StartHostAPIGRPCServer() {
 			Time:    20 * time.Second,
 			Timeout: 10 * time.Second,
 		}),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             15 * time.Second,
+			PermitWithoutStream: true,
+		}),
 	)
 	hostapipb.RegisterHostAPIServiceServer(a.hostAPIGRPCServer, api.NewHostAPIGRPCServer(&hostAPIImpl{}))
 	go func() {
