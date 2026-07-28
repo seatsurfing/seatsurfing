@@ -654,11 +654,6 @@ func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(org *Organization) *
 	}
 }
 
-// getSysSettingInstallID exposes this host's unique install_id (generated
-// once on first organization setup - see SetGlobalInstallID in
-// server/repository/db-updates.go) so a self-hosted admin can copy it into
-// the plus-plugin license signup form. Plus-plugin license keys are bound to
-// this exact value - see ../plugin-paid-features/license.go.
 func (router *SettingsRouter) getSysSettingInstallID() *GetSettingsResponse {
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
 	return &GetSettingsResponse{
