@@ -82,6 +82,7 @@ interface State {
   kioskModeEnabled: boolean;
   hideReports: boolean;
   hideStats: boolean;
+  installId: string;
 }
 
 interface Props {
@@ -142,6 +143,7 @@ class Settings extends React.Component<Props, State> {
       kioskModeEnabled: false,
       hideReports: false,
       hideStats: false,
+      installId: "",
     };
   }
 
@@ -251,6 +253,8 @@ class Settings extends React.Component<Props, State> {
           state.hideReports = s.value === "1";
         if (s.name === Organization.PREF_HIDE_STATS)
           state.hideStats = s.value === "1";
+        if (s.name === Organization.PREF_SYS_INSTALL_ID)
+          state.installId = s.value;
       });
 
       if (state.maxConcurrentBookingsPerUser > 0) {
@@ -779,11 +783,28 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("orgId")}
             </Form.Label>
             <Col sm="4">
-              <Form.Control
-                plaintext={true}
-                readOnly={true}
-                defaultValue={this.org?.id}
-              />
+              <div className="d-flex align-items-center">
+                <Form.Control
+                  plaintext={true}
+                  readOnly={true}
+                  value={
+                    RuntimeConfig.INFOS.cloudHosted
+                      ? this.org?.id
+                      : this.state.installId
+                  }
+                  className="flex-grow-1"
+                />
+                <CopyToClipboardButton
+                  text={
+                    RuntimeConfig.INFOS.cloudHosted
+                      ? this.org
+                        ? this.org.id
+                        : ""
+                      : this.state.installId
+                  }
+                  small={true}
+                />
+              </div>
             </Col>
           </Form.Group>
           <Form.Group as={Row} hidden={RuntimeConfig.INFOS.cloudHosted}>

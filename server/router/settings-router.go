@@ -51,6 +51,7 @@ var (
 	SysSettingOrgPrimaryDomain     = "_sys_org_primary_domain"
 	SysSettingDisablePasswordLogin = "_sys_disable_password_login"
 	SysSettingOrgLanguage          = "_sys_org_language"
+	SysSettingInstallID            = "_sys_install_id"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -104,6 +105,10 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	if vars["name"] == SysSettingOrgLanguage {
 		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
 		SendJSON(w, router.getSysSettingOrgLanguage(org).Value)
+		return
+	}
+	if vars["name"] == SysSettingInstallID {
+		SendJSON(w, router.getSysSettingInstallID().Value)
 		return
 	}
 	// Kiosk secret: return "1" if configured, "" if not – never expose the stored hash.
@@ -202,6 +207,12 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 				Value: setting.Value,
 			})
 		}
+	}
+	if orgAdmin {
+		// Appended last, not grouped with the other orgAdmin-only sys
+		// settings above, so it doesn't shift the fixed indices existing
+		// callers/tests already rely on for those.
+		res = append(res, router.getSysSettingInstallID())
 	}
 	SendJSON(w, res)
 }
@@ -319,6 +330,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SysSettingOrgSignupDelete ||
 		name == SysSettingAdminMenuItems ||
 		name == SysSettingAdminWelcomeScreens ||
+		name == SysSettingInstallID ||
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SettingBookingRetentionDays.Name ||
@@ -639,6 +651,19 @@ func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(org *Organization) *
 	return &GetSettingsResponse{
 		Name:  SysSettingOrgPrimaryDomain,
 		Value: primaryDomainValue,
+	}
+}
+
+// getSysSettingInstallID exposes this host's unique install_id (generated
+// once on first organization setup - see SetGlobalInstallID in
+// server/repository/db-updates.go) so a self-hosted admin can copy it into
+// the plus-plugin license signup form. Plus-plugin license keys are bound to
+// this exact value - see ../plugin-paid-features/license.go.
+func (router *SettingsRouter) getSysSettingInstallID() *GetSettingsResponse {
+	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	return &GetSettingsResponse{
+		Name:  SysSettingInstallID,
+		Value: installID,
 	}
 }
 
