@@ -46,6 +46,7 @@ export default class Organization extends Entity {
   static readonly PREF_KIOSK_MODE_ENABLED = "kiosk_mode_enabled";
   static readonly PREF_KIOSK_ACCESS_SECRET = "kiosk_access_secret";
   static readonly PREF_SYS_ORG_SIGNUP_DELETE = "_sys_org_signup_delete";
+  static readonly PREF_SYS_INSTALL_ID = "_sys_install_id";
   static readonly PREF_HIDE_REPORTS = "hide_reports";
   static readonly PREF_HIDE_STATS = "hide_stats";
 
