@@ -788,7 +788,7 @@ class Settings extends React.Component<Props, State> {
                   plaintext={true}
                   readOnly={true}
                   value={
-                    RuntimeConfig.INFOS.cloudHosted
+                    RuntimeConfig.INFOS.cloudHosted || !this.state.installId
                       ? this.org?.id
                       : this.state.installId
                   }
@@ -796,7 +796,7 @@ class Settings extends React.Component<Props, State> {
                 />
                 <CopyToClipboardButton
                   text={
-                    RuntimeConfig.INFOS.cloudHosted
+                    RuntimeConfig.INFOS.cloudHosted || !this.state.installId
                       ? this.org
                         ? this.org.id
                         : ""

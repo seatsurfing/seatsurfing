@@ -82,6 +82,7 @@ type Config struct {
 	MaxPasskeysPerUser                  int  // Maximum number of passkeys a single user may register
 	DisableVersionCheck                 bool // Disable polling seatsurfing.io for latest version information
 	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
+	DisableInstallIDExposure            bool // Disable exposing the install ID via public API
 }
 
 var _configInstance *Config
@@ -222,6 +223,7 @@ func (c *Config) ReadConfig() {
 	}
 	c.DisableVersionCheck = (c.getEnv("DISABLE_VERSION_CHECK", "0") == "1")
 	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
+	c.DisableInstallIDExposure = (c.getEnv("DISABLE_INSTALL_ID_EXPOSURE", "0") == "1")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {

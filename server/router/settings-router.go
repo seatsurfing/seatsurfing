@@ -108,6 +108,10 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if vars["name"] == SysSettingInstallID {
+		if GetConfig().DisableInstallIDExposure {
+			SendJSON(w, "")
+			return
+		}
 		SendJSON(w, router.getSysSettingInstallID().Value)
 		return
 	}
@@ -212,7 +216,9 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		// Appended last, not grouped with the other orgAdmin-only sys
 		// settings above, so it doesn't shift the fixed indices existing
 		// callers/tests already rely on for those.
-		res = append(res, router.getSysSettingInstallID())
+		if !GetConfig().DisableInstallIDExposure {
+			res = append(res, router.getSysSettingInstallID())
+		}
 	}
 	SendJSON(w, res)
 }
@@ -656,6 +662,9 @@ func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(org *Organization) *
 
 func (router *SettingsRouter) getSysSettingInstallID() *GetSettingsResponse {
 	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	if GetConfig().DisableInstallIDExposure {
+		installID = ""
+	}
 	return &GetSettingsResponse{
 		Name:  SysSettingInstallID,
 		Value: installID,
