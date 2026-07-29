@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -375,6 +376,59 @@ func TestSettingsInvalidTimezone(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultTimezone.Name, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestSettingsInstallIDExposure(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	GetConfig().DisableInstallIDExposure = false
+	defer func() { GetConfig().DisableInstallIDExposure = false }()
+
+	req := NewHTTPRequest("GET", "/setting/"+SysSettingInstallID, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var installID string
+	json.Unmarshal(res.Body.Bytes(), &installID)
+	if installID == "" {
+		t.Fatal("Expected non-empty install ID when exposure is enabled")
+	}
+
+	req = NewHTTPRequest("GET", "/setting/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetSettingsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	found := false
+	for _, cur := range resBody {
+		if cur.Name == SysSettingInstallID {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("Expected install ID setting to be present in list when exposure is enabled")
+	}
+
+	GetConfig().DisableInstallIDExposure = true
+
+	req = NewHTTPRequest("GET", "/setting/"+SysSettingInstallID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &installID)
+	CheckTestString(t, "", installID)
+
+	req = NewHTTPRequest("GET", "/setting/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 []GetSettingsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	for _, cur := range resBody2 {
+		if cur.Name == SysSettingInstallID {
+			t.Fatal("Expected install ID setting to be absent from list when exposure is disabled")
+		}
+	}
 }
 
 func TestSettingsGetTimezones(t *testing.T) {
