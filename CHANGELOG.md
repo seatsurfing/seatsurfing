@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.119.0](https://github.com/seatsurfing/seatsurfing/compare/v1.118.2...v1.119.0) (2026-07-29)
+
+
+### ✨ Features
+
+* **booking-ui:** add previous and next booking buttons to booking calendar ([#2466](https://github.com/seatsurfing/seatsurfing/issues/2466)) ([69f1c4d](https://github.com/seatsurfing/seatsurfing/commit/69f1c4d9ef95b38773569c7da464a5d2412cf50a))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** incorrect menu item highlighting ([#2464](https://github.com/seatsurfing/seatsurfing/issues/2464)) ([9f48979](https://github.com/seatsurfing/seatsurfing/commit/9f48979f2080ff95d6a6a7e7948256b831757b53))
+* **admin-ui:** show and allow copying of install id instead of org id in self-hosted instances ([#2468](https://github.com/seatsurfing/seatsurfing/issues/2468)) ([68efc33](https://github.com/seatsurfing/seatsurfing/commit/68efc339456695ad85efb7bd229b564e6565a1d6))
+* **deps:** bump moment-timezone from 0.6.2 to 0.6.3 in /ui in the production-dependencies group across 1 directory ([#2467](https://github.com/seatsurfing/seatsurfing/issues/2467)) ([e862169](https://github.com/seatsurfing/seatsurfing/commit/e862169114cfcbd0cd885ec6018294e5826063f0))
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2472](https://github.com/seatsurfing/seatsurfing/issues/2472)) ([22e6f35](https://github.com/seatsurfing/seatsurfing/commit/22e6f356519e5e979a80d76c58951e255384bed4))
+* **server:** add env to disable install id exposure ([#2474](https://github.com/seatsurfing/seatsurfing/issues/2474)) ([e1d74be](https://github.com/seatsurfing/seatsurfing/commit/e1d74be0ba5b70271a06512e4054793dc37299ec))
+* **server:** add gRPC keepalive enforcement policy ([#2463](https://github.com/seatsurfing/seatsurfing/issues/2463)) ([b55c105](https://github.com/seatsurfing/seatsurfing/commit/b55c1059213d1d3f7764e4703c6f70814bb2333e))
+* **server:** improve gRPC startup resilience ([#2469](https://github.com/seatsurfing/seatsurfing/issues/2469)) ([bff3603](https://github.com/seatsurfing/seatsurfing/commit/bff3603ce6bf499624baba36e78d4b216211a075))
+
 ## [1.118.2](https://github.com/seatsurfing/seatsurfing/compare/v1.118.1...v1.118.2) (2026-07-26)
 
 
