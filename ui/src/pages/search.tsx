@@ -2875,6 +2875,18 @@ class Search extends React.Component<Props, State> {
                 }}
                 step={180}
                 timeslots={1}
+                dayPropGetter={(date: Date) => {
+                  const bookableDays = this.getLocation()?.bookableDays ?? [];
+                  if (
+                    bookableDays.length > 0 &&
+                    !bookableDays.includes(date.getUTCDay())
+                  ) {
+                    return {
+                      style: { backgroundColor: "rgba(0, 0, 0, 0.05)" },
+                    };
+                  }
+                  return {};
+                }}
               />
             </div>
           )}
