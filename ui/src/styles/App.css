@@ -197,3 +197,24 @@ h2 {
   top: 8px;
   right: 8px;
 }
+
+/* mark today with blue border */
+.rbc-time-header-content .rbc-header.rbc-today {
+  background-color: transparent;
+  border-top: 2px solid var(--bs-primary);
+  border-left: 2px solid var(--bs-primary);
+  border-right: 2px solid var(--bs-primary);
+  color: var(--bs-primary);
+  font-weight: 700;
+}
+.rbc-time-header-content .rbc-row-bg .rbc-day-bg.rbc-today {
+  background-color: transparent;
+  border-left: 2px solid var(--bs-primary);
+  border-right: 2px solid var(--bs-primary);
+}
+.rbc-time-content .rbc-day-slot.rbc-today {
+  background-color: transparent;
+  border-left: 2px solid var(--bs-primary);
+  border-right: 2px solid var(--bs-primary);
+  border-bottom: 2px solid var(--bs-primary);
+}
