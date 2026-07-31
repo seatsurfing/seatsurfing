@@ -15,3 +15,19 @@ export async function login(
     .fill(password);
   await page.getByRole("button", { name: "➤" }).click();
 }
+
+// Cancels all bookings of the currently logged-in user via the API.
+// Used to make tests independent of leftover bookings from a previous
+// failed/retried run (e.g. a different browser project sharing the same
+// backend within one test run).
+export async function cancelAllBookings(page: Page): Promise<void> {
+  const accessToken = await page.evaluate(() =>
+    window.localStorage.getItem("accessToken"),
+  );
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const res = await page.request.get(uiURL + "/booking/", { headers });
+  const bookings = await res.json();
+  for (const booking of bookings) {
+    await page.request.delete(uiURL + "/booking/" + booking.id, { headers });
+  }
+}
