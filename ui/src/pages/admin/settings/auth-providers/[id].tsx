@@ -28,6 +28,7 @@ import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import RendererUtils from "@/util/RendererUtils";
 import UrlInput from "@/components/form/UrlInput";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   loading: boolean;
@@ -52,6 +53,7 @@ interface State {
   logoutUrl: string;
   profilePageUrl: string;
   readOnly: boolean;
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -87,6 +89,7 @@ class EditAuthProvider extends React.Component<Props, State> {
       logoutUrl: "",
       profilePageUrl: "",
       readOnly: false,
+      showDeleteConfirm: false,
     };
   }
 
@@ -173,14 +176,17 @@ class EditAuthProvider extends React.Component<Props, State> {
     }
   };
 
-  deleteItem = async () => {
-    if (window.confirm(this.props.t("confirmDeleteAuthProvider"))) {
-      try {
-        await this.entity.delete();
-        this.setState({ goBack: true });
-      } catch {
-        this.setState({ error: true });
-      }
+  deleteItem = () => {
+    this.setState({ showDeleteConfirm: true });
+  };
+
+  confirmDeleteItem = async () => {
+    this.setState({ showDeleteConfirm: false });
+    try {
+      await this.entity.delete();
+      this.setState({ goBack: true });
+    } catch {
+      this.setState({ error: true });
     }
   };
 
@@ -612,6 +618,12 @@ class EditAuthProvider extends React.Component<Props, State> {
           </Form.Group>
           {callbackUrlInfo}
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteAuthProvider")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={this.confirmDeleteItem}
+        />
       </FullLayout>
     );
   }

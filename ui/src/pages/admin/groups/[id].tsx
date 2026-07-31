@@ -26,6 +26,7 @@ import User from "@/types/User";
 import Group from "@/types/Group";
 import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
+import ConfirmModal from "@/components/ConfirmModal";
 
 import RendererUtils from "@/util/RendererUtils";
 import AjaxError from "@/util/AjaxError";
@@ -44,6 +45,7 @@ interface State {
   addUserIds: string[];
   members: User[];
   removeUserIds: string[];
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -70,6 +72,7 @@ class EditUser extends React.Component<Props, State> {
       addUserIds: [],
       members: [],
       removeUserIds: [],
+      showDeleteConfirm: false,
     };
   }
 
@@ -136,11 +139,7 @@ class EditUser extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteGroup"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteConfirm: true });
   };
 
   filterSearch = () => {
@@ -406,6 +405,17 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
         </Form>
         {memberTable}
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteGroup")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showDeleteConfirm: false });
+            this.entity.delete().then(() => {
+              this.setState({ goBack: true });
+            });
+          }}
+        />
       </FullLayout>
     );
   }

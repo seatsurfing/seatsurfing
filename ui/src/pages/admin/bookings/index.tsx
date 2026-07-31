@@ -27,6 +27,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
 import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   selectedItem: string;
@@ -38,6 +39,7 @@ interface State {
   typeaheadOptions: any[];
   typeaheadLoading: boolean;
   filterLocation: string;
+  cancelBookingItem: Booking | null;
 }
 
 interface Props {
@@ -95,6 +97,7 @@ class Bookings extends React.Component<Props, State> {
       typeaheadOptions: [],
       typeaheadLoading: false,
       filterLocation: this.props.router.query["location"] as string,
+      cancelBookingItem: null,
     };
     this.loadSettings();
   }
@@ -171,14 +174,10 @@ class Bookings extends React.Component<Props, State> {
   };
 
   cancelBooking = (booking: Booking) => {
-    const formatter = Formatting.getBookingDateFormatter();
+    this.setState({ cancelBookingItem: booking });
+  };
 
-    const confirmMessage = this.props.t("confirmCancelBooking", {
-      enter: formatter.format(booking.enter),
-    });
-    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
-      return;
-    }
+  performCancelBooking = (booking: Booking) => {
     this.setState({
       loading: true,
     });
@@ -518,6 +517,28 @@ class Bookings extends React.Component<Props, State> {
           </thead>
           <tbody>{rows}</tbody>
         </Table>
+        <ConfirmModal
+          show={this.state.cancelBookingItem !== null}
+          message={
+            this.state.cancelBookingItem
+              ? RendererUtils.decodeHtmlEntities(
+                  this.props.t("confirmCancelBooking", {
+                    enter: Formatting.getBookingDateFormatter().format(
+                      this.state.cancelBookingItem.enter,
+                    ),
+                  }),
+                )
+              : ""
+          }
+          onCancel={() => this.setState({ cancelBookingItem: null })}
+          onConfirm={() => {
+            const booking = this.state.cancelBookingItem;
+            this.setState({ cancelBookingItem: null });
+            if (booking) {
+              this.performCancelBooking(booking);
+            }
+          }}
+        />
       </FullLayout>
     );
   }

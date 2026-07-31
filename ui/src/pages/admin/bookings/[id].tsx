@@ -27,6 +27,7 @@ import ProfilePicture from "@/components/ProfilePicture";
 import Search, { SearchOptions } from "@/types/Search";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   loading: boolean;
@@ -62,6 +63,7 @@ interface State {
   typeaheadOptions: any[];
   typeaheadLoading: boolean;
   typeaheadSelected: [{ email: string }];
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -129,6 +131,7 @@ class EditBooking extends React.Component<Props, State> {
       typeaheadOptions: [],
       typeaheadLoading: false,
       typeaheadSelected: [{ email: "" }],
+      showDeleteConfirm: false,
     };
   }
 
@@ -436,13 +439,11 @@ class EditBooking extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    const formatter = Formatting.getBookingDateFormatter();
-    const confirmMessage = this.props.t("confirmCancelBooking", {
-      enter: formatter.format(this.entity.enter),
-    });
-    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
-      return;
-    }
+    this.setState({ showDeleteConfirm: true });
+  };
+
+  confirmDeleteItem = () => {
+    this.setState({ showDeleteConfirm: false });
     this.entity.delete().then(() => {
       this.setState({ goBack: true });
     });
@@ -977,6 +978,18 @@ class EditBooking extends React.Component<Props, State> {
             </Col>
           </Form.Group>
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={RendererUtils.decodeHtmlEntities(
+            this.props.t("confirmCancelBooking", {
+              enter: Formatting.getBookingDateFormatter().format(
+                this.entity.enter,
+              ),
+            }),
+          )}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={this.confirmDeleteItem}
+        />
       </FullLayout>
     );
   }

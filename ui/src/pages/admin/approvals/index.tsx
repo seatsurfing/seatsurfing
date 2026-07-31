@@ -16,11 +16,11 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Booking from "@/types/Booking";
 import UserPreference from "@/types/UserPreference";
-import Ajax from "@/util/Ajax";
 import Formatting from "@/util/Formatting";
 
 import RendererUtils from "@/util/RendererUtils";
 import Event from "@/util/Event";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   data: Booking[];
@@ -28,6 +28,7 @@ interface State {
   updating: boolean;
   approvalNotifications: boolean;
   loadingPreference: boolean;
+  declineBooking: Booking | null;
 }
 
 interface Props {
@@ -46,6 +47,7 @@ class Approvals extends React.Component<Props, State> {
       loading: true,
       approvalNotifications: false,
       loadingPreference: true,
+      declineBooking: null,
     };
   }
 
@@ -91,13 +93,13 @@ class Approvals extends React.Component<Props, State> {
 
   approveBooking = (booking: Booking, approve: boolean) => {
     if (!approve) {
-      const formatter = Formatting.getBookingDateFormatter();
-      const confirmMessage = this.props.t("confirmCancelBooking", {
-        enter: formatter.format(booking.enter),
-      });
-      if (!confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) return;
+      this.setState({ declineBooking: booking });
+      return;
     }
+    this.performApproveBooking(booking, true);
+  };
 
+  performApproveBooking = (booking: Booking, approve: boolean) => {
     this.setState({
       updating: true,
     });
@@ -275,6 +277,28 @@ class Approvals extends React.Component<Props, State> {
           </thead>
           <tbody>{rows}</tbody>
         </Table>
+        <ConfirmModal
+          show={this.state.declineBooking !== null}
+          message={
+            this.state.declineBooking
+              ? RendererUtils.decodeHtmlEntities(
+                  this.props.t("confirmCancelBooking", {
+                    enter: Formatting.getBookingDateFormatter().format(
+                      this.state.declineBooking.enter,
+                    ),
+                  }),
+                )
+              : ""
+          }
+          onCancel={() => this.setState({ declineBooking: null })}
+          onConfirm={() => {
+            const booking = this.state.declineBooking;
+            this.setState({ declineBooking: null });
+            if (booking) {
+              this.performApproveBooking(booking, false);
+            }
+          }}
+        />
       </FullLayout>
     );
   }

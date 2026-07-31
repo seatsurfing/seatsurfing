@@ -51,6 +51,7 @@ import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
 import WeekdaySelection from "@/components/WeekdaySelection";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (
   <svg
@@ -437,6 +438,8 @@ interface State {
   showDesignerModal: boolean;
   gridEnabled: boolean;
   outline: boolean;
+  showDeleteAreaConfirm: boolean;
+  showDiscardConfirm: boolean;
 }
 
 interface Props {
@@ -497,6 +500,8 @@ class EditLocation extends React.Component<Props, State> {
       showDesignerModal: false,
       gridEnabled: false,
       outline: false,
+      showDeleteAreaConfirm: false,
+      showDiscardConfirm: false,
     };
   }
 
@@ -807,11 +812,14 @@ class EditLocation extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteArea"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteAreaConfirm: true });
+  };
+
+  confirmDeleteItem = () => {
+    this.setState({ showDeleteAreaConfirm: false });
+    this.entity.delete().then(() => {
+      this.setState({ goBack: true });
+    });
   };
 
   newSpaceName(baseName: string): string {
@@ -1048,9 +1056,8 @@ class EditLocation extends React.Component<Props, State> {
 
   onBackButtonClick = (e: any) => {
     if (this.state.changed) {
-      if (!window.confirm(this.props.t("confirmDiscard"))) {
-        e.preventDefault();
-      }
+      e.preventDefault();
+      this.setState({ showDiscardConfirm: true });
     }
   };
 
@@ -2382,6 +2389,20 @@ class EditLocation extends React.Component<Props, State> {
         {attributeTable}
         {spaceTable}
         {this.getEditSpaceDetailsModal()}
+        <ConfirmModal
+          show={this.state.showDeleteAreaConfirm}
+          message={this.props.t("confirmDeleteArea")}
+          onCancel={() => this.setState({ showDeleteAreaConfirm: false })}
+          onConfirm={this.confirmDeleteItem}
+        />
+        <ConfirmModal
+          show={this.state.showDiscardConfirm}
+          message={this.props.t("confirmDiscard")}
+          onCancel={() => this.setState({ showDiscardConfirm: false })}
+          onConfirm={() =>
+            this.setState({ showDiscardConfirm: false, goBack: true })
+          }
+        />
       </FullLayout>
     );
   }

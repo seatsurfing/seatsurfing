@@ -12,6 +12,7 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   loading: boolean;
@@ -23,6 +24,7 @@ interface State {
   type: number;
   spaceApplicable: boolean;
   locationApplicable: boolean;
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -45,6 +47,7 @@ class EditAttribute extends React.Component<Props, State> {
       type: 1,
       spaceApplicable: false,
       locationApplicable: false,
+      showDeleteConfirm: false,
     };
   }
 
@@ -92,11 +95,7 @@ class EditAttribute extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteAttribute"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteConfirm: true });
   };
 
   render() {
@@ -223,6 +222,17 @@ class EditAttribute extends React.Component<Props, State> {
             </Col>
           </Form.Group>
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteAttribute")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showDeleteConfirm: false });
+            this.entity.delete().then(() => {
+              this.setState({ goBack: true });
+            });
+          }}
+        />
       </FullLayout>
     );
   }

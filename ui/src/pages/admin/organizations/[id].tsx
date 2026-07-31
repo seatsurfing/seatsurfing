@@ -15,6 +15,7 @@ import Organization from "@/types/Organization";
 import Domain from "@/types/Domain";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
+import ConfirmModal from "@/components/ConfirmModal";
 
 import Validation from "@/util/Validation";
 
@@ -31,6 +32,7 @@ interface State {
   language: string;
   domain: string;
   password: string;
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -56,6 +58,7 @@ class EditOrganization extends React.Component<Props, State> {
       language: "de",
       domain: "",
       password: "",
+      showDeleteConfirm: false,
     };
   }
 
@@ -121,11 +124,7 @@ class EditOrganization extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteOrg"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteConfirm: true });
   };
 
   render() {
@@ -341,6 +340,17 @@ class EditOrganization extends React.Component<Props, State> {
           </Form.Group>
           {adminSection}
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteOrg")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showDeleteConfirm: false });
+            this.entity.delete().then(() => {
+              this.setState({ goBack: true });
+            });
+          }}
+        />
       </FullLayout>
     );
   }
