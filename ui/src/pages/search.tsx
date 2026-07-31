@@ -80,6 +80,7 @@ import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   earliestEnterDate: Date;
@@ -113,6 +114,7 @@ interface State {
   searchAttributesLocation: SearchAttribute[];
   searchAttributesSpace: SearchAttribute[];
   confirmingBooking: boolean;
+  showCancelBookingConfirm: boolean;
   activeTabFilterModal: string;
   createdBookingId: string;
   subject: string;
@@ -189,6 +191,7 @@ class Search extends React.Component<Props, State> {
       selectedSpace: null,
       showConfirm: false,
       confirmingBooking: false,
+      showCancelBookingConfirm: false,
       showLocationDetails: false,
       showSearchModal: false,
       showSuccess: false,
@@ -2693,6 +2696,7 @@ class Search extends React.Component<Props, State> {
       (b) => b.user.email === RuntimeConfig.INFOS.username,
     );
     let gotoBooking;
+    let cancelBookingConfirmModal;
     if (myBooking) {
       const confirmMessage = this.props.t("confirmCancelBooking", {
         enter: formatter.format(myBooking.enter),
@@ -2715,14 +2719,7 @@ class Search extends React.Component<Props, State> {
           <Button
             variant="danger"
             onClick={() => {
-              if (
-                !window.confirm(
-                  RendererUtils.decodeHtmlEntities(confirmMessage),
-                )
-              ) {
-                return;
-              }
-              this.cancelBooking(myBooking);
+              this.setState({ showCancelBookingConfirm: true });
             }}
             disabled={this.state.confirmingBooking}
           >
@@ -2738,11 +2735,26 @@ class Search extends React.Component<Props, State> {
           </Button>
         </>
       );
+      cancelBookingConfirmModal = (
+        <ConfirmModal
+          show={this.state.showCancelBookingConfirm}
+          title={this.props.t("cancelBooking")}
+          message={RendererUtils.decodeHtmlEntities(confirmMessage)}
+          confirmLabel={this.props.t("cancelBooking")}
+          onCancel={() => this.setState({ showCancelBookingConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showCancelBookingConfirm: false });
+            this.cancelBooking(myBooking);
+          }}
+        />
+      );
     }
     let isRecurring = false;
     const bookingNamesModal = (
       <Modal
-        show={this.state.showBookingNames}
+        show={
+          this.state.showBookingNames && !this.state.showCancelBookingConfirm
+        }
         onHide={() => this.setState({ showBookingNames: false })}
       >
         <Modal.Header closeButton>
@@ -2963,6 +2975,7 @@ class Search extends React.Component<Props, State> {
         {searchModal}
         {confirmModal}
         {bookingNamesModal}
+        {cancelBookingConfirmModal}
         {spaceCalendarModal}
         {successModal}
         {errorModal}
