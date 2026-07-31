@@ -15,6 +15,23 @@ interface Props {
 }
 
 class ConfirmModal extends React.Component<Props> {
+  private confirmClicked = false;
+
+  componentDidUpdate(prevProps: Props) {
+    // Reset the guard each time the modal is opened.
+    if (!prevProps.show && this.props.show) {
+      this.confirmClicked = false;
+    }
+  }
+
+  onConfirmClicked = () => {
+    if (this.confirmClicked) {
+      return;
+    }
+    this.confirmClicked = true;
+    this.props.onConfirm();
+  };
+
   render() {
     return (
       <Modal show={this.props.show} onHide={this.props.onCancel}>
@@ -22,9 +39,7 @@ class ConfirmModal extends React.Component<Props> {
           <Modal.Header closeButton>
             <Modal.Title>{this.props.title}</Modal.Title>
           </Modal.Header>
-        ) : (
-          <></>
-        )}
+        ) : null}
         <Modal.Body>{this.props.message}</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={this.props.onCancel}>
@@ -32,7 +47,7 @@ class ConfirmModal extends React.Component<Props> {
           </Button>
           <Button
             variant={this.props.confirmVariant || "danger"}
-            onClick={this.props.onConfirm}
+            onClick={this.onConfirmClicked}
           >
             {this.props.confirmLabel || this.props.t("ok")}
           </Button>
