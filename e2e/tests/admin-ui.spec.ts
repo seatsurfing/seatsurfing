@@ -12,6 +12,7 @@ test.beforeEach(async ({ page }) => {
 
   // Ensure we've reached the dashboard
   await expect(page).toHaveURL(/search\/$/);
+  await expect(page.getByText("Loading …")).not.toBeVisible();
 
   // Navigate to "Administration"
   await page.getByRole("link", { name: "Administration" }).click();
