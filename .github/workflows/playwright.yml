@@ -37,7 +37,7 @@ jobs:
       - name: Build server
         working-directory: ./server
         run: go build -buildvcs=false -o ./seatsurfing .
-      - uses: JarvusInnovations/background-action@v1
+      - uses: JarvusInnovations/background-action@v2
         name: Run server in background
         with:
           working-directory: ./server
