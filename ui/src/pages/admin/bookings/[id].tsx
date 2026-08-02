@@ -980,13 +980,17 @@ class EditBooking extends React.Component<Props, State> {
         </Form>
         <ConfirmModal
           show={this.state.showDeleteConfirm}
-          message={RendererUtils.decodeHtmlEntities(
-            this.props.t("confirmCancelBooking", {
-              enter: Formatting.getBookingDateFormatter().format(
-                this.entity.enter,
-              ),
-            }),
-          )}
+          message={
+            this.state.showDeleteConfirm
+              ? RendererUtils.decodeHtmlEntities(
+                  this.props.t("confirmCancelBooking", {
+                    enter: Formatting.getBookingDateFormatter().format(
+                      this.entity.enter,
+                    ),
+                  }),
+                )
+              : ""
+          }
           onCancel={() => this.setState({ showDeleteConfirm: false })}
           onConfirm={this.confirmDeleteItem}
         />
