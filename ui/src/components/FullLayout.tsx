@@ -1,4 +1,5 @@
 import React, { JSX, ReactNode } from "react";
+import Router from "next/router";
 import AdminNavBar from "./AdminNavBar";
 import SideBar from "./SideBar";
 import RuntimeConfig from "./RuntimeConfig";
@@ -19,6 +20,10 @@ export default class FullLayout extends React.Component<Props, State> {
     window.location.reload();
   };
 
+  navigateFromWelcomeScreen = (path: string) => {
+    Router.push(path);
+  };
+
   render() {
     if (
       RuntimeConfig.INFOS.pluginWelcomeScreens &&
@@ -33,6 +38,7 @@ export default class FullLayout extends React.Component<Props, State> {
             src={screen.src}
             tagName={screen.tagName}
             style={{ width: "100%", borderWidth: 0 }}
+            onNavigate={this.navigateFromWelcomeScreen}
             onSkipWelcomeScreen={this.skipWelcomeScreen}
           />
         </div>
