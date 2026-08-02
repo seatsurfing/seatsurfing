@@ -8,6 +8,7 @@ import "@/styles/EditLocation.css";
 import "@/styles/ConfluenceHint.css";
 import "@/styles/Login.css";
 import "@/styles/Search.css";
+import "@/styles/Calendar.css";
 import "@/styles/Settings.css";
 import "@/styles/SideBar.css";
 import "@/styles/FullLayout.css";

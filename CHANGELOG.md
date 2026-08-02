@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.119.1](https://github.com/seatsurfing/seatsurfing/compare/v1.119.0...v1.119.1) (2026-07-31)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** hide unused calendar all day row ([#2479](https://github.com/seatsurfing/seatsurfing/issues/2479)) ([f366566](https://github.com/seatsurfing/seatsurfing/commit/f366566e061f4971cd741a4b083bf25cef00e552))
+* **booking-ui:** improve marking today in calendar ([#2476](https://github.com/seatsurfing/seatsurfing/issues/2476)) ([dfe18f1](https://github.com/seatsurfing/seatsurfing/commit/dfe18f1242ddb79236b718b137234cdf31d086e4))
+* **booking-ui:** mark disabled days in room calendar ([#2480](https://github.com/seatsurfing/seatsurfing/issues/2480)) ([e49d0c8](https://github.com/seatsurfing/seatsurfing/commit/e49d0c8995d43173cab23b12e329426427421986))
+* **booking-ui:** use custom confirm modal when canceling booking ([#2478](https://github.com/seatsurfing/seatsurfing/issues/2478)) ([8d9f89a](https://github.com/seatsurfing/seatsurfing/commit/8d9f89a7e1ae03911b1c23d86414030b4998b845))
+
 ## [1.119.0](https://github.com/seatsurfing/seatsurfing/compare/v1.118.2...v1.119.0) (2026-07-29)
 
 

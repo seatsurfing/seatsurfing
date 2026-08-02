@@ -2,3 +2,5 @@
 build/**/*
 ../CHANGELOG.md
 ../.release-please-manifest.json
+../e2e/playwright-report
+../e2e/test-results
