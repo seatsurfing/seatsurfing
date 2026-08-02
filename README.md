@@ -15,6 +15,8 @@ We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-
 - **Automatic updates** - Always enjoy the latest features
 - **Managed infrastructure** - Servers in Germany (EU)
 
+If you prefer to self host, but want additional functionality, check out our [Plus Plugin](https://seatsurfing.io/docs/self-hosted/plus-plugin).
+
 ## 📖 Introduction
 
 Seatsurfing is a software which enables your organization's employees to book seats, desks and rooms.
