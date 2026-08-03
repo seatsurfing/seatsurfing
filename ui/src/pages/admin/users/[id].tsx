@@ -32,6 +32,10 @@ import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import Validation from "@/util/Validation";
 import Formatting from "@/util/Formatting";
+import ConfirmModal from "@/components/ConfirmModal";
+
+type PendingConfirmAction =
+  "delete" | "resetPasskeys" | "resetTotp" | "revokeApiToken";
 
 interface State {
   loading: boolean;
@@ -58,6 +62,7 @@ interface State {
   showApiTokenModal: boolean;
   generatedToken: string;
   lastActivity: Date | null;
+  pendingConfirmAction: PendingConfirmAction | null;
 }
 
 interface Props {
@@ -99,6 +104,7 @@ class EditUser extends React.Component<Props, State> {
       showApiTokenModal: false,
       generatedToken: "",
       lastActivity: null,
+      pendingConfirmAction: null,
     };
   }
 
@@ -229,25 +235,16 @@ class EditUser extends React.Component<Props, State> {
     }
   };
 
-  deleteItem = async () => {
-    if (window.confirm(this.props.t("confirmDeleteUser"))) {
-      await this.entity.delete();
-      this.setState({ goBack: true });
-    }
+  deleteItem = () => {
+    this.setState({ pendingConfirmAction: "delete" });
   };
 
-  resetPasskeys = async () => {
-    if (window.confirm(this.props.t("confirmResetPasskeys"))) {
-      await User.adminResetPasskeys(this.entity.id);
-      this.setState({ hasPasskeys: false });
-    }
+  resetPasskeys = () => {
+    this.setState({ pendingConfirmAction: "resetPasskeys" });
   };
 
-  resetTotp = async () => {
-    if (window.confirm(this.props.t("confirmResetTotp"))) {
-      await User.adminResetTotp(this.entity.id);
-      this.setState({ totpEnabled: false });
-    }
+  resetTotp = () => {
+    this.setState({ pendingConfirmAction: "resetTotp" });
   };
 
   generatePassword = () => {
@@ -274,10 +271,45 @@ class EditUser extends React.Component<Props, State> {
     });
   };
 
-  revokeApiToken = async () => {
-    if (window.confirm(this.props.t("confirmRevokeApiToken"))) {
-      await User.revokeApiToken(this.entity.id);
-      this.setState({ apiTokenConfigured: false });
+  revokeApiToken = () => {
+    this.setState({ pendingConfirmAction: "revokeApiToken" });
+  };
+
+  confirmPendingAction = async () => {
+    const action = this.state.pendingConfirmAction;
+    this.setState({ pendingConfirmAction: null });
+    switch (action) {
+      case "delete":
+        await this.entity.delete();
+        this.setState({ goBack: true });
+        break;
+      case "resetPasskeys":
+        await User.adminResetPasskeys(this.entity.id);
+        this.setState({ hasPasskeys: false });
+        break;
+      case "resetTotp":
+        await User.adminResetTotp(this.entity.id);
+        this.setState({ totpEnabled: false });
+        break;
+      case "revokeApiToken":
+        await User.revokeApiToken(this.entity.id);
+        this.setState({ apiTokenConfigured: false });
+        break;
+    }
+  };
+
+  getPendingConfirmMessage = () => {
+    switch (this.state.pendingConfirmAction) {
+      case "delete":
+        return this.props.t("confirmDeleteUser");
+      case "resetPasskeys":
+        return this.props.t("confirmResetPasskeys");
+      case "resetTotp":
+        return this.props.t("confirmResetTotp");
+      case "revokeApiToken":
+        return this.props.t("confirmRevokeApiToken");
+      default:
+        return "";
     }
   };
 
@@ -839,6 +871,13 @@ class EditUser extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
         </Modal>
+
+        <ConfirmModal
+          show={this.state.pendingConfirmAction !== null}
+          message={this.getPendingConfirmMessage()}
+          onCancel={() => this.setState({ pendingConfirmAction: null })}
+          onConfirm={this.confirmPendingAction}
+        />
       </FullLayout>
     );
   }

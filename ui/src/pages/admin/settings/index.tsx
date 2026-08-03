@@ -40,6 +40,7 @@ import ReloadModal from "@/components/ReloadModal";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import UpdateChecker from "@/util/UpdateChecker";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   allowAnyUser: boolean;
@@ -83,6 +84,8 @@ interface State {
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
+  removeDomainName: string | null;
+  deleteOrgConfirmStep: 0 | 1 | 2;
 }
 
 interface Props {
@@ -144,6 +147,8 @@ class Settings extends React.Component<Props, State> {
       hideReports: false,
       hideStats: false,
       installId: "",
+      removeDomainName: null,
+      deleteOrgConfirmStep: 0,
     };
   }
 
@@ -522,14 +527,13 @@ class Settings extends React.Component<Props, State> {
     });
   };
 
-  removeDomain = async (domainName: string) => {
-    if (
-      !window.confirm(
-        this.props.t("confirmDeleteDomain", { domain: domainName }),
-      )
-    ) {
-      return;
-    }
+  removeDomain = (domainName: string) => {
+    this.setState({ removeDomainName: domainName });
+  };
+
+  confirmRemoveDomain = async () => {
+    const domainName = this.state.removeDomainName;
+    this.setState({ removeDomainName: null });
     const domain = this.state.domains.find((d) => d.domain === domainName);
     if (!domain) {
       return;
@@ -551,15 +555,18 @@ class Settings extends React.Component<Props, State> {
   };
 
   deleteOrg = () => {
-    if (window.confirm(this.props.t("confirmDeleteOrgQuestion1"))) {
-      if (window.confirm(this.props.t("confirmDeleteOrgQuestion2"))) {
-        this.org?.delete().then((code) => {
-          window.alert(
-            this.props.t("confirmDeleteOrgConfirmMailSent", { code }),
-          );
-        });
-      }
-    }
+    this.setState({ deleteOrgConfirmStep: 1 });
+  };
+
+  confirmDeleteOrgStep1 = () => {
+    this.setState({ deleteOrgConfirmStep: 2 });
+  };
+
+  confirmDeleteOrgStep2 = () => {
+    this.setState({ deleteOrgConfirmStep: 0 });
+    this.org?.delete().then((code) => {
+      window.alert(this.props.t("confirmDeleteOrgConfirmMailSent", { code }));
+    });
   };
 
   onDailyBasisBookingChange = (enabled: boolean) => {
@@ -1462,6 +1469,26 @@ class Settings extends React.Component<Props, State> {
         <ReloadModal
           show={this.state.showSavedModal}
           title={this.props.t("settings")}
+        />
+        <ConfirmModal
+          show={this.state.removeDomainName !== null}
+          message={this.props.t("confirmDeleteDomain", {
+            domain: this.state.removeDomainName || "",
+          })}
+          onCancel={() => this.setState({ removeDomainName: null })}
+          onConfirm={this.confirmRemoveDomain}
+        />
+        <ConfirmModal
+          show={this.state.deleteOrgConfirmStep === 1}
+          message={this.props.t("confirmDeleteOrgQuestion1")}
+          onCancel={() => this.setState({ deleteOrgConfirmStep: 0 })}
+          onConfirm={this.confirmDeleteOrgStep1}
+        />
+        <ConfirmModal
+          show={this.state.deleteOrgConfirmStep === 2}
+          message={this.props.t("confirmDeleteOrgQuestion2")}
+          onCancel={() => this.setState({ deleteOrgConfirmStep: 0 })}
+          onConfirm={this.confirmDeleteOrgStep2}
         />
       </FullLayout>
     );
