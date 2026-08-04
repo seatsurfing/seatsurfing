@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.119.2](https://github.com/seatsurfing/seatsurfing/compare/v1.119.1...v1.119.2) (2026-08-04)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** use custom confirm dialogs in admin interface ([#2481](https://github.com/seatsurfing/seatsurfing/issues/2481)) ([152ad70](https://github.com/seatsurfing/seatsurfing/commit/152ad708b7985833175b9397b4f831f3c2f7bc07))
+* **deps:** bump next from 16.2.11 to 16.2.12 in /ui in the production-dependencies group across 1 directory ([#2489](https://github.com/seatsurfing/seatsurfing/issues/2489)) ([d40f157](https://github.com/seatsurfing/seatsurfing/commit/d40f157924360b31bddae7b5243ded02e9eecab2))
+* **deps:** bump undici from 7.28.0 to 7.29.0 in /ui ([#2492](https://github.com/seatsurfing/seatsurfing/issues/2492)) ([70ad84b](https://github.com/seatsurfing/seatsurfing/commit/70ad84be7188b5802fbee75a1fd88c0b4b3074e4))
+
+
+### 📚 Documentation
+
+* **main:** add plus plugin hint to readme ([#2475](https://github.com/seatsurfing/seatsurfing/issues/2475)) ([3016bb1](https://github.com/seatsurfing/seatsurfing/commit/3016bb1496d2aa8eec606de312efa36377183e7f))
+
 ## [1.119.1](https://github.com/seatsurfing/seatsurfing/compare/v1.119.0...v1.119.1) (2026-07-31)
 
 
