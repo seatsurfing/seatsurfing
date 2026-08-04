@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.119.3](https://github.com/seatsurfing/seatsurfing/compare/v1.119.2...v1.119.3) (2026-08-04)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** wire welcome screen navigation ([#2487](https://github.com/seatsurfing/seatsurfing/issues/2487)) ([9dfed33](https://github.com/seatsurfing/seatsurfing/commit/9dfed3395e237e5bb50d19c7028e4a4070fe4178))
+* **deps:** bump postcss and next in /ui ([#2493](https://github.com/seatsurfing/seatsurfing/issues/2493)) ([0845b5a](https://github.com/seatsurfing/seatsurfing/commit/0845b5aa64bb4b51816deffd93841b77df1366a4))
+
 ## [1.119.2](https://github.com/seatsurfing/seatsurfing/compare/v1.119.1...v1.119.2) (2026-08-04)
 
 
