@@ -7,7 +7,7 @@ interface Props {
   tagName: string;
   style?: React.CSSProperties;
   onNavigate?: (path: string) => void;
-  onSkipWelcomeScreen?: () => void;
+  onSkipWelcomeScreen?: (reload: boolean) => void;
 }
 
 // Plugin JS modules load asynchronously (<script type="module">), so the
@@ -97,9 +97,10 @@ export default class PluginEmbed extends React.Component<Props, State> {
     }
   };
 
-  private handleSkipWelcomeScreen = () => {
+  private handleSkipWelcomeScreen = (e: Event) => {
+    const detail = (e as CustomEvent).detail;
     if (this.props.onSkipWelcomeScreen) {
-      this.props.onSkipWelcomeScreen();
+      this.props.onSkipWelcomeScreen(detail.reload);
     }
   };
 

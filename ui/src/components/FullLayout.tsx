@@ -15,21 +15,21 @@ interface Props {
 interface State {}
 
 export default class FullLayout extends React.Component<Props, State> {
-  skipWelcomeScreen = () => {
-    window.sessionStorage.setItem("skipWelcomeScreen", "true");
-    window.location.reload();
-  };
-
-  navigateFromWelcomeScreen = (path: string) => {
-    Router.push(path);
-  };
-
   render() {
     if (
       RuntimeConfig.INFOS.pluginWelcomeScreens &&
       RuntimeConfig.INFOS.pluginWelcomeScreens.length > 0 &&
       window.sessionStorage.getItem("skipWelcomeScreen") !== "true"
     ) {
+      const skipWelcomeScreen = (reload: boolean) => {
+        window.sessionStorage.setItem("skipWelcomeScreen", "true");
+        if (reload) window.location.reload();
+      };
+
+      const navigateFromWelcomeScreen = (path: string) => {
+        Router.push(path);
+      };
+
       const screen = RuntimeConfig.INFOS.pluginWelcomeScreens[0];
       return (
         <div style={{ minHeight: "100vh", width: "100%", overflowY: "auto" }}>
@@ -38,8 +38,8 @@ export default class FullLayout extends React.Component<Props, State> {
             src={screen.src}
             tagName={screen.tagName}
             style={{ width: "100%", borderWidth: 0 }}
-            onNavigate={this.navigateFromWelcomeScreen}
-            onSkipWelcomeScreen={this.skipWelcomeScreen}
+            onNavigate={navigateFromWelcomeScreen}
+            onSkipWelcomeScreen={skipWelcomeScreen}
           />
         </div>
       );
