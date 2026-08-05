@@ -9,6 +9,7 @@ import Passkey, {
 import Formatting from "@/util/Formatting";
 import RuntimeConfig from "./RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
+import ConfirmModal from "./ConfirmModal";
 
 interface State {
   passkeys: PasskeyListItem[];
@@ -17,6 +18,7 @@ interface State {
   newName: string;
   error: string;
   passkeyPlatformAvailable: boolean;
+  passkeyPendingDelete: PasskeyListItem | null;
 }
 
 interface Props {
@@ -37,6 +39,7 @@ class PasskeySettings extends React.Component<Props, State> {
       error: "",
       // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
       passkeyPlatformAvailable: Passkey.isSupported(),
+      passkeyPendingDelete: null,
     };
   }
 
@@ -105,13 +108,21 @@ class PasskeySettings extends React.Component<Props, State> {
     }
   };
 
-  deletePasskey = (id: string, name: string) => {
-    if (!window.confirm(this.props.t("passkeyDeleteConfirm", { name }))) {
+  deletePasskey = (passkey: PasskeyListItem) => {
+    this.setState({ passkeyPendingDelete: passkey });
+  };
+
+  onDeletePasskeyConfirmed = () => {
+    const passkey = this.state.passkeyPendingDelete;
+    if (!passkey) {
       return;
     }
-    Passkey.deletePasskey(id)
+    this.setState({ passkeyPendingDelete: null });
+    Passkey.deletePasskey(passkey.id)
       .then(() => {
-        const passkeys = this.state.passkeys.filter((p) => p.id !== id);
+        const passkeys = this.state.passkeys.filter(
+          (p) => p.id !== passkey.id,
+        );
         this.setState({ passkeys });
         if (this.props.onPasskeyDeleted) {
           this.props.onPasskeyDeleted();
@@ -163,7 +174,7 @@ class PasskeySettings extends React.Component<Props, State> {
                     <Button
                       variant="outline-danger"
                       size="sm"
-                      onClick={() => this.deletePasskey(pk.id, pk.name)}
+                      onClick={() => this.deletePasskey(pk)}
                     >
                       {this.props.t("delete")}
                     </Button>
@@ -213,6 +224,14 @@ class PasskeySettings extends React.Component<Props, State> {
             )}
           </>
         )}
+        <ConfirmModal
+          show={this.state.passkeyPendingDelete != null}
+          message={this.props.t("passkeyDeleteConfirm", {
+            name: this.state.passkeyPendingDelete?.name ?? "",
+          })}
+          onCancel={() => this.setState({ passkeyPendingDelete: null })}
+          onConfirm={this.onDeletePasskeyConfirmed}
+        />
       </div>
     );
   }

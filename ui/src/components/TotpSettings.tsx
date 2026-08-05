@@ -3,12 +3,14 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Button } from "react-bootstrap";
 import User from "@/types/User";
 import TotpSetupModal from "./TotpSetupModal";
+import ConfirmModal from "./ConfirmModal";
 import RuntimeConfig from "./RuntimeConfig";
 
 interface State {
   qrCode: string;
   stateId: string;
   showTotpSetup: boolean;
+  showDisableTotpConfirm: boolean;
   totpEnabled?: boolean;
 }
 
@@ -24,6 +26,7 @@ class TotpSettings extends React.Component<Props, State> {
       qrCode: "",
       stateId: "",
       showTotpSetup: false,
+      showDisableTotpConfirm: false,
       totpEnabled: RuntimeConfig.INFOS.totpEnabled,
     };
   }
@@ -47,12 +50,15 @@ class TotpSettings extends React.Component<Props, State> {
   };
 
   disableTotp = () => {
-    if (window.confirm(this.props.t("disableTotpConfirm"))) {
-      User.disableTotp().then(() => {
-        RuntimeConfig.INFOS.totpEnabled = false;
-        this.setState({ totpEnabled: false });
-      });
-    }
+    this.setState({ showDisableTotpConfirm: true });
+  };
+
+  onDisableTotpConfirmed = () => {
+    this.setState({ showDisableTotpConfirm: false });
+    User.disableTotp().then(() => {
+      RuntimeConfig.INFOS.totpEnabled = false;
+      this.setState({ totpEnabled: false });
+    });
   };
 
   render() {
@@ -65,6 +71,12 @@ class TotpSettings extends React.Component<Props, State> {
           onHide={() => this.setState({ showTotpSetup: false })}
           onSuccess={this.onTotpSuccess}
           canClose={true}
+        />
+        <ConfirmModal
+          show={this.state.showDisableTotpConfirm}
+          message={this.props.t("disableTotpConfirm")}
+          onCancel={() => this.setState({ showDisableTotpConfirm: false })}
+          onConfirm={this.onDisableTotpConfirmed}
         />
         <h5 className="mt-5">{this.props.t("totp")}</h5>
         <p>{this.props.t("totpHint")}</p>
