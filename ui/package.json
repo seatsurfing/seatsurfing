@@ -43,7 +43,7 @@
     "@types/react-big-calendar": "1.16.3",
     "eslint": "10.8.0",
     "eslint-config-next": "16.2.12",
-    "jsdom": "30.0.0",
+    "jsdom": "30.0.1",
     "prettier": "3.9.6",
     "typescript": "6.0.3",
     "vite-tsconfig-paths": "6.1.1",
