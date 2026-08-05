@@ -39,7 +39,34 @@ vi.mock("react-bootstrap", () => {
         maxLength,
       }),
   };
-  return { Button, ListGroup, InputGroup, Form };
+  const Modal = ({ show, onHide, children }: any) =>
+    show
+      ? React.createElement(
+          "div",
+          { "data-testid": "modal", onClick: undefined },
+          children,
+        )
+      : null;
+  Modal.Header = ({ children, closeButton, ...rest }: any) =>
+    React.createElement(
+      "div",
+      { "data-testid": "modal-header" },
+      closeButton
+        ? React.createElement(
+            "button",
+            { "data-testid": "close-btn", onClick: rest.onHide },
+            "×",
+          )
+        : null,
+      children,
+    );
+  Modal.Title = ({ children }: any) =>
+    React.createElement("div", { "data-testid": "modal-title" }, children);
+  Modal.Body = ({ children }: any) =>
+    React.createElement("div", { "data-testid": "modal-body" }, children);
+  Modal.Footer = ({ children }: any) =>
+    React.createElement("div", { "data-testid": "modal-footer" }, children);
+  return { Button, ListGroup, InputGroup, Form, Modal };
 });
 
 vi.mock("@/util/Formatting", () => ({
