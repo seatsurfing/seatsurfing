@@ -120,9 +120,7 @@ class PasskeySettings extends React.Component<Props, State> {
     this.setState({ passkeyPendingDelete: null });
     Passkey.deletePasskey(passkey.id)
       .then(() => {
-        const passkeys = this.state.passkeys.filter(
-          (p) => p.id !== passkey.id,
-        );
+        const passkeys = this.state.passkeys.filter((p) => p.id !== passkey.id);
         this.setState({ passkeys });
         if (this.props.onPasskeyDeleted) {
           this.props.onPasskeyDeleted();
