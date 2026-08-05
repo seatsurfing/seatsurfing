@@ -1651,14 +1651,16 @@ class Search extends React.Component<Props, State> {
       this.setState(resetState, this.refreshPage);
     } catch (reason: any) {
       if (reason instanceof AjaxError && reason.appErrorCode != 0) {
-        this.setState({
-          alertMessage: ErrorText.getTextForAppCode(
-            reason.appErrorCode,
-            this.props.t,
-          ),
-        });
-        this.setState(resetState, this.refreshPage);
-      } else {
+        this.setState(
+          {
+            ...resetState,
+            alertMessage: ErrorText.getTextForAppCode(
+              reason.appErrorCode,
+              this.props.t,
+            ),
+          },
+          this.refreshPage,
+        );
         this.setState(resetState);
       }
     }
