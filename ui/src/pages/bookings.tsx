@@ -21,6 +21,7 @@ import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import AlertModal from "@/components/AlertModal";
 
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -45,6 +46,7 @@ interface State {
   calendarDate: Date;
   calendarShow: boolean;
   workdays: number[];
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -72,6 +74,7 @@ class Bookings extends React.Component<Props, State> {
           "1",
         ) === "1")(),
       workdays: [],
+      alertMessage: null,
     };
   }
 
@@ -128,11 +131,14 @@ class Bookings extends React.Component<Props, State> {
       },
       (reason: any) => {
         if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
-          window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
-          );
+          this.setState({
+            alertMessage: ErrorText.getTextForAppCode(
+              reason.appErrorCode,
+              this.props.t,
+            ),
+          });
         } else {
-          window.alert(this.props.t("errorDeleteBooking"));
+          this.setState({ alertMessage: this.props.t("errorDeleteBooking") });
         }
         this.setState(
           {
@@ -427,6 +433,11 @@ class Bookings extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
         </Modal>
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
+        />
       </>
     );
   }

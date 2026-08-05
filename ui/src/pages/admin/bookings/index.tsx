@@ -28,6 +28,7 @@ import Search, { SearchOptions } from "@/types/Search";
 import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
 import ConfirmModal from "@/components/ConfirmModal";
+import AlertModal from "@/components/AlertModal";
 
 interface State {
   selectedItem: string;
@@ -40,6 +41,7 @@ interface State {
   typeaheadLoading: boolean;
   filterLocation: string;
   cancelBookingItem: Booking | null;
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -98,6 +100,7 @@ class Bookings extends React.Component<Props, State> {
       typeaheadLoading: false,
       filterLocation: this.props.router.query["location"] as string,
       cancelBookingItem: null,
+      alertMessage: null,
     };
     this.loadSettings();
   }
@@ -191,13 +194,13 @@ class Bookings extends React.Component<Props, State> {
           reason.httpStatusCode === 403 &&
           reason.appErrorCode === 1007
         ) {
-          window.alert(
-            this.props.t("errorDeleteBookingBeforeMaxCancel", {
+          this.setState({
+            alertMessage: this.props.t("errorDeleteBookingBeforeMaxCancel", {
               num: this.maxHoursBeforeDelete,
             }),
-          );
+          });
         } else {
-          window.alert(this.props.t("errorDeleteBooking"));
+          this.setState({ alertMessage: this.props.t("errorDeleteBooking") });
         }
         this.loadItems();
       },
@@ -538,6 +541,11 @@ class Bookings extends React.Component<Props, State> {
               this.performCancelBooking(booking);
             }
           }}
+        />
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
         />
       </FullLayout>
     );
