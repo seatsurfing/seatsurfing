@@ -10,12 +10,17 @@
 We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS). [Start for free now](https://seatsurfing.io/sign-up)!
 
 - **No installation required** - Get started immediately
-- **Microsoft Teams integration** - See [Microsoft AppSource marketplace](https://appsource.microsoft.com/product/office/WA200008773)
 - **Get it free** - Free for up to 10 users
 - **Automatic updates** - Always enjoy the latest features
 - **Managed infrastructure** - Servers in Germany (EU)
+- **30 days free trail for Professional plan** - [Start free trial](https://seatsurfing.io/sign-up?paid)!
 
 If you prefer to self host, but want additional functionality, check out our [Plus Plugin](https://seatsurfing.io/docs/self-hosted/plus-plugin).
+
+## 🔗 Integrations
+
+- **[Microsoft Teams](https://appsource.microsoft.com/en-us/product/office/WA200008773)**
+- **[Atlassian Confluence](https://marketplace.atlassian.com/apps/1224242)** (Cloud-only feature)
 
 ## 📖 Introduction
 
