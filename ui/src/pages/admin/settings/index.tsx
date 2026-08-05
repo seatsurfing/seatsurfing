@@ -41,6 +41,7 @@ import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import UpdateChecker from "@/util/UpdateChecker";
 import ConfirmModal from "@/components/ConfirmModal";
+import AlertModal from "@/components/AlertModal";
 
 interface State {
   allowAnyUser: boolean;
@@ -86,6 +87,7 @@ interface State {
   installId: string;
   removeDomainName: string | null;
   deleteOrgConfirmStep: 0 | 1 | 2;
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -149,6 +151,7 @@ class Settings extends React.Component<Props, State> {
       installId: "",
       removeDomainName: null,
       deleteOrgConfirmStep: 0,
+      alertMessage: null,
     };
   }
 
@@ -489,7 +492,11 @@ class Settings extends React.Component<Props, State> {
             );
           })
           .catch((e) => {
-            alert(this.props.t("errorValidateDomain", { domain: domainName }));
+            this.setState({
+              alertMessage: this.props.t("errorValidateDomain", {
+                domain: domainName,
+              }),
+            });
           });
       }
     });
@@ -511,7 +518,7 @@ class Settings extends React.Component<Props, State> {
         this.setState({ newDomain: "" });
       })
       .catch(() => {
-        alert(this.props.t("errorAddDomain"));
+        this.setState({ alertMessage: this.props.t("errorAddDomain") });
       });
   };
 
@@ -543,7 +550,7 @@ class Settings extends React.Component<Props, State> {
       const domains = await Domain.list(this.org ? this.org.id : "");
       this.setState({ domains: domains });
     } catch {
-      alert(this.props.t("errorDeleteDomain"));
+      this.setState({ alertMessage: this.props.t("errorDeleteDomain") });
     }
   };
 
@@ -565,7 +572,11 @@ class Settings extends React.Component<Props, State> {
   confirmDeleteOrgStep2 = () => {
     this.setState({ deleteOrgConfirmStep: 0 });
     this.org?.delete().then((code) => {
-      window.alert(this.props.t("confirmDeleteOrgConfirmMailSent", { code }));
+      this.setState({
+        alertMessage: this.props.t("confirmDeleteOrgConfirmMailSent", {
+          code,
+        }),
+      });
     });
   };
 
@@ -1489,6 +1500,11 @@ class Settings extends React.Component<Props, State> {
           message={this.props.t("confirmDeleteOrgQuestion2")}
           onCancel={() => this.setState({ deleteOrgConfirmStep: 0 })}
           onConfirm={this.confirmDeleteOrgStep2}
+        />
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
         />
       </FullLayout>
     );

@@ -81,6 +81,7 @@ import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import ConfirmModal from "@/components/ConfirmModal";
+import AlertModal from "@/components/AlertModal";
 
 interface State {
   earliestEnterDate: Date;
@@ -143,6 +144,7 @@ interface State {
   spaceCalendarLoading: boolean;
   spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
   windowWidth: number;
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -197,6 +199,7 @@ class Search extends React.Component<Props, State> {
       showSuccess: false,
       showError: false,
       errorText: "",
+      alertMessage: null,
       loading: true,
       listView: (() =>
         BrowserUtil.tryLocalStorageGetItem(
@@ -1648,9 +1651,12 @@ class Search extends React.Component<Props, State> {
       this.setState(resetState, this.refreshPage);
     } catch (reason: any) {
       if (reason instanceof AjaxError && reason.appErrorCode != 0) {
-        window.alert(
-          ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
-        );
+        this.setState({
+          alertMessage: ErrorText.getTextForAppCode(
+            reason.appErrorCode,
+            this.props.t,
+          ),
+        });
         this.setState(resetState, this.refreshPage);
       } else {
         this.setState(resetState);
@@ -2994,6 +3000,11 @@ class Search extends React.Component<Props, State> {
         {listOrMap}
         <Loading visible={this.state.loading} />
         {configContainer}
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
+        />
       </>
     );
   }
