@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.120.0](https://github.com/seatsurfing/seatsurfing/compare/v1.119.3...v1.120.0) (2026-08-05)
+
+
+### ✨ Features
+
+* **booking-ui:** use custom confirm dialogs ([#2496](https://github.com/seatsurfing/seatsurfing/issues/2496)) ([0562bcf](https://github.com/seatsurfing/seatsurfing/commit/0562bcfe64ec11be97c51876526469d84ae95b47))
+* **main:** use custom alert dialogs ([#2495](https://github.com/seatsurfing/seatsurfing/issues/2495)) ([1b24980](https://github.com/seatsurfing/seatsurfing/commit/1b24980a0e36f7c4307fc2dc45277e9c9cceb28f))
+
+
+### 📚 Documentation
+
+* **main:** update integrations in README ([#2497](https://github.com/seatsurfing/seatsurfing/issues/2497)) ([c66cf7a](https://github.com/seatsurfing/seatsurfing/commit/c66cf7aa2089e9c70175b3520d89995dbb123a2c))
+
 ## [1.119.3](https://github.com/seatsurfing/seatsurfing/compare/v1.119.2...v1.119.3) (2026-08-04)
 
 
