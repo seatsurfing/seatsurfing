@@ -919,7 +919,11 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.RequirePassword = (e.HashedPassword != "")
 	m.PasswordPending = e.PasswordPending
 	m.TotpEnabled = (e.TotpSecret != "")
-	m.HasPasskeys = GetPasskeyRepository().GetCountByUserID(e.ID) > 0
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+	}
+	m.HasPasskeys = passkeyCount > 0
 	m.LastActivity = e.LastActivityAtUTC
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)

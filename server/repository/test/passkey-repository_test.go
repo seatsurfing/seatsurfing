@@ -65,11 +65,15 @@ func TestPasskeyRepositoryCRUD(t *testing.T) {
 	all, err := GetPasskeyRepository().GetAllByUserID(user.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(all))
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 
 	err = GetPasskeyRepository().Delete(pk)
 	CheckTestBool(t, true, err == nil)
-	CheckTestInt(t, 0, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err = GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, count)
 
 	_, err = GetPasskeyRepository().GetOne(pk.ID)
 	CheckTestBool(t, true, err != nil)
@@ -84,7 +88,9 @@ func TestPasskeyRepositoryMultiplePasskeys(t *testing.T) {
 	createTestPasskey(user, "Key 2", []byte(uuid.New().String()))
 	createTestPasskey(user, "Key 3", []byte(uuid.New().String()))
 
-	CheckTestInt(t, 3, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 3, count)
 
 	all, err := GetPasskeyRepository().GetAllByUserID(user.ID)
 	CheckTestBool(t, true, err == nil)
@@ -184,14 +190,22 @@ func TestPasskeyRepositoryDeleteAllByUserID(t *testing.T) {
 	createTestPasskey(user1, "U1 Key 2", []byte(uuid.New().String()))
 	createTestPasskey(user2, "U2 Key 1", []byte(uuid.New().String()))
 
-	CheckTestInt(t, 2, GetPasskeyRepository().GetCountByUserID(user1.ID))
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user2.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user1.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 2, count)
+	count, err = GetPasskeyRepository().GetCountByUserID(user2.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 
-	err := GetPasskeyRepository().DeleteAllByUserID(user1.ID)
+	err = GetPasskeyRepository().DeleteAllByUserID(user1.ID)
 	CheckTestBool(t, true, err == nil)
 
-	CheckTestInt(t, 0, GetPasskeyRepository().GetCountByUserID(user1.ID))
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user2.ID))
+	count, err = GetPasskeyRepository().GetCountByUserID(user1.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, count)
+	count, err = GetPasskeyRepository().GetCountByUserID(user2.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 }
 
 func TestPasskeyRepositoryCascadeDeleteOnUserDelete(t *testing.T) {
@@ -201,14 +215,18 @@ func TestPasskeyRepositoryCascadeDeleteOnUserDelete(t *testing.T) {
 
 	rawID := []byte(uuid.New().String())
 	pk := createTestPasskey(user, "Cascade Key", rawID)
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 
-	err := GetUserRepository().Delete(user)
+	err = GetUserRepository().Delete(user)
 	CheckTestBool(t, true, err == nil)
 
 	_, err = GetPasskeyRepository().GetOne(pk.ID)
 	CheckTestBool(t, true, err != nil)
-	CheckTestInt(t, 0, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err = GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, count)
 }
 
 func TestPasskeyRepositoryToWebAuthnCredentialRoundtrip(t *testing.T) {
@@ -265,7 +283,9 @@ func TestPasskeyRepositoryIsolationBetweenUsers(t *testing.T) {
 
 	createTestPasskey(user1, "User1 Key", []byte(uuid.New().String()))
 
-	CheckTestInt(t, 0, GetPasskeyRepository().GetCountByUserID(user2.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user2.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, count)
 	all, err := GetPasskeyRepository().GetAllByUserID(user2.ID)
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 0, len(all))

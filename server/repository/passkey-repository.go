@@ -200,13 +200,10 @@ func (r *PasskeyRepository) GetAllByUserID(userID string) ([]*Passkey, error) {
 	return result, nil
 }
 
-func (r *PasskeyRepository) GetCountByUserID(userID string) int {
+func (r *PasskeyRepository) GetCountByUserID(userID string) (int, error) {
 	var count int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM passkeys WHERE user_id = $1", userID).Scan(&count)
-	if err != nil {
-		return 0
-	}
-	return count
+	return count, err
 }
 
 func (r *PasskeyRepository) UpdateSignCount(e *Passkey) error {
