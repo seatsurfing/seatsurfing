@@ -200,6 +200,27 @@ func (r *PasskeyRepository) GetAllByUserID(userID string) ([]*Passkey, error) {
 	return result, nil
 }
 
+// GetUserIDsWithPasskeys returns the subset of the given user IDs that have at least one passkey.
+func (r *PasskeyRepository) GetUserIDsWithPasskeys(userIDs []string) (map[string]bool, error) {
+	result := make(map[string]bool)
+	if len(userIDs) == 0 {
+		return result, nil
+	}
+	rows, err := GetDatabase().DB().Query("SELECT DISTINCT user_id FROM passkeys WHERE user_id = ANY($1)", pq.Array(userIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userID string
+		if err := rows.Scan(&userID); err != nil {
+			return nil, err
+		}
+		result[userID] = true
+	}
+	return result, nil
+}
+
 func (r *PasskeyRepository) GetCountByUserID(userID string) int {
 	var count int
 	err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM passkeys WHERE user_id = $1", userID).Scan(&count)

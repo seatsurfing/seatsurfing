@@ -272,10 +272,20 @@ func (router *GroupRouter) getMembers(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	userIDs := make([]string, len(users))
+	for i, e := range users {
+		userIDs[i] = e.ID
+	}
+	hasPasskeysByUserID, err := GetPasskeyRepository().GetUserIDsWithPasskeys(userIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	ur := &UserRouter{}
 	res := []*GetUserResponse{}
 	for _, e := range users {
-		m := ur.copyToRestModel(e, true)
+		m := ur.copyToRestModel(e, true, hasPasskeysByUserID[e.ID])
 		res = append(res, m)
 	}
 	SendJSON(w, res)

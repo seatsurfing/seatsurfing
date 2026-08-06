@@ -536,7 +536,7 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, false)
+	res := router.copyToRestModel(e, false, GetPasskeyRepository().GetCountByUserID(e.ID) > 0)
 	res.Organization = GetOrganizationResponse{
 		ID: org.ID,
 		CreateOrganizationRequest: CreateOrganizationRequest{
@@ -576,7 +576,7 @@ func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) 
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e, true)
+	res := router.copyToRestModel(e, true, GetPasskeyRepository().GetCountByUserID(e.ID) > 0)
 	SendJSON(w, res)
 }
 
@@ -597,7 +597,7 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e, true)
+	res := router.copyToRestModel(e, true, GetPasskeyRepository().GetCountByUserID(e.ID) > 0)
 	SendJSON(w, res)
 }
 
@@ -620,9 +620,19 @@ func (router *UserRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	userIDs := make([]string, len(list))
+	for i, e := range list {
+		userIDs[i] = e.ID
+	}
+	hasPasskeysByUserID, err := GetPasskeyRepository().GetUserIDsWithPasskeys(userIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetUserResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e, true)
+		m := router.copyToRestModel(e, true, hasPasskeysByUserID[e.ID])
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -904,7 +914,7 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 	return e
 }
 
-func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse {
+func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool) *GetUserResponse {
 	m := &GetUserResponse{}
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
@@ -919,7 +929,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.RequirePassword = (e.HashedPassword != "")
 	m.PasswordPending = e.PasswordPending
 	m.TotpEnabled = (e.TotpSecret != "")
-	m.HasPasskeys = GetPasskeyRepository().GetCountByUserID(e.ID) > 0
+	m.HasPasskeys = hasPasskeys
 	m.LastActivity = e.LastActivityAtUTC
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
