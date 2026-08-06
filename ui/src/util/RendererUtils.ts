@@ -1,4 +1,5 @@
 import { TranslationFunc } from "@/components/withTranslation";
+import User from "@/types/User";
 
 export default class RendererUtils {
   static readonly BREAKPOINT_SMALL = 576;
@@ -45,6 +46,21 @@ export default class RendererUtils {
 
   static stateXls(state: boolean | undefined, t: TranslationFunc): string {
     return state ? t("yes") : t("no");
+  }
+
+  static roleName(role: number, t: TranslationFunc): string {
+    if (role === User.UserRoleSpaceAdmin) {
+      return t("roleSpaceAdmin");
+    } else if (role === User.UserRoleOrgAdmin) {
+      return t("roleOrgAdmin");
+    } else if (role === User.UserRoleServiceAccountRO) {
+      return t("roleServiceAccountRO");
+    } else if (role === User.UserRoleServiceAccountRW) {
+      return t("roleServiceAccountRW");
+    } else if (role === User.UserRoleSuperAdmin) {
+      return t("roleSuperAdmin");
+    }
+    return t("roleUser");
   }
 
   static numberPlus(number: number, max: number): string {

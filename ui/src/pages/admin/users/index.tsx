@@ -63,18 +63,7 @@ class Users extends React.Component<Props, State> {
     } else if (this.authProviders[user.authProviderId]) {
       authProvider = this.authProviders[user.authProviderId];
     }
-    let role = this.props.t("roleUser");
-    if (user.role === User.UserRoleSpaceAdmin) {
-      role = this.props.t("roleSpaceAdmin");
-    } else if (user.role === User.UserRoleOrgAdmin) {
-      role = this.props.t("roleOrgAdmin");
-    } else if (user.role === User.UserRoleServiceAccountRO) {
-      role = this.props.t("roleServiceAccountRO");
-    } else if (user.role === User.UserRoleServiceAccountRW) {
-      role = this.props.t("roleServiceAccountRW");
-    } else if (user.role === User.UserRoleSuperAdmin) {
-      role = this.props.t("roleSuperAdmin");
-    }
+    const role = RendererUtils.roleName(user.role, this.props.t);
     return (
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
