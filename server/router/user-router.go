@@ -536,7 +536,13 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, false, GetPasskeyRepository().GetCountByUserID(e.ID) > 0)
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, false, passkeyCount > 0)
 	res.Organization = GetOrganizationResponse{
 		ID: org.ID,
 		CreateOrganizationRequest: CreateOrganizationRequest{
@@ -576,7 +582,13 @@ func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) 
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e, true, GetPasskeyRepository().GetCountByUserID(e.ID) > 0)
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, true, passkeyCount > 0)
 	SendJSON(w, res)
 }
 
@@ -597,7 +609,13 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e, true, GetPasskeyRepository().GetCountByUserID(e.ID) > 0)
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, true, passkeyCount > 0)
 	SendJSON(w, res)
 }
 
