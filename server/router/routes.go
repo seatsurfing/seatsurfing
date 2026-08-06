@@ -143,7 +143,9 @@ func SendJSON(w http.ResponseWriter, v interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		log.Println(err)
+	}
 }
 
 func SendTextNotFound(w http.ResponseWriter, contentType string, b []byte) {
