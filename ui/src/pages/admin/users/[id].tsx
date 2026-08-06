@@ -32,6 +32,7 @@ import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import Validation from "@/util/Validation";
 import Formatting from "@/util/Formatting";
+import RendererUtils from "@/util/RendererUtils";
 import ConfirmModal from "@/components/ConfirmModal";
 
 type PendingConfirmAction =
@@ -431,22 +432,7 @@ class EditUser extends React.Component<Props, State> {
         </Form.Select>
       );
     } else {
-      let role = this.props.t("roleUser");
-      if (this.state.role === User.UserRoleSpaceAdmin) {
-        role = this.props.t("roleSpaceAdmin");
-      }
-      if (this.state.role === User.UserRoleOrgAdmin) {
-        role = this.props.t("roleOrgAdmin");
-      }
-      if (this.state.role === User.UserRoleServiceAccountRO) {
-        role = this.props.t("roleServiceAccountRO");
-      }
-      if (this.state.role === User.UserRoleServiceAccountRW) {
-        role = this.props.t("roleServiceAccountRW");
-      }
-      if (this.state.role === User.UserRoleSuperAdmin) {
-        role = this.props.t("roleSuperAdmin");
-      }
+      const role = RendererUtils.roleName(this.state.role, this.props.t);
       roleSelect = (
         <>
           <Form.Control

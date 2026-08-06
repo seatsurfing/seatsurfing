@@ -24,7 +24,6 @@ import ProfilePicture from "@/components/ProfilePicture";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Group from "@/types/Group";
-import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
 import ConfirmModal from "@/components/ConfirmModal";
 
@@ -212,7 +211,7 @@ class EditUser extends React.Component<Props, State> {
         </td>
         <td style={{ tableLayout: "auto" }}>
           <div style={{ marginLeft: "10px" }}>
-            {user.email}
+            {user.email} ({RendererUtils.roleName(user.role, this.props.t)})
             {fullname && (
               <>
                 <br />
