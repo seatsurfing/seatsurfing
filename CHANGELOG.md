@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.121.0](https://github.com/seatsurfing/seatsurfing/compare/v1.120.0...v1.121.0) (2026-08-07)
+
+
+### ✨ Features
+
+* **admin-ui:** show user role for group members ([dc45613](https://github.com/seatsurfing/seatsurfing/commit/dc45613ab3a20203744220b84e59a31e0c1a56fe))
+
+
+### 🐛 Bug Fixes
+
+* **server:** improve error logging ([#2501](https://github.com/seatsurfing/seatsurfing/issues/2501)) ([b028666](https://github.com/seatsurfing/seatsurfing/commit/b028666808101d135ffc02d7b91424ed9cbae3cb))
+* **server:** improve performance of user router ([a469175](https://github.com/seatsurfing/seatsurfing/commit/a469175abca53d12c6373c4c1dfe7bc6dbf96979))
+
 ## [1.120.0](https://github.com/seatsurfing/seatsurfing/compare/v1.119.3...v1.120.0) (2026-08-05)
 
 
