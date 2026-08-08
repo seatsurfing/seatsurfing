@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.121.1](https://github.com/seatsurfing/seatsurfing/compare/v1.121.0...v1.121.1) (2026-08-08)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump @types/react-dom from 19.2.3 to 19.2.4 in /ui in the production-dependencies group across 1 directory ([#2505](https://github.com/seatsurfing/seatsurfing/issues/2505)) ([ee57bd9](https://github.com/seatsurfing/seatsurfing/commit/ee57bd93e9ad9f6b8311b7cb8a5b42aff0e8beac))
+* **deps:** bump google.golang.org/grpc from 1.82.1 to 1.83.0 in /server in the minor-and-patch group ([#2504](https://github.com/seatsurfing/seatsurfing/issues/2504)) ([f80c16d](https://github.com/seatsurfing/seatsurfing/commit/f80c16ddc370c83173e67c31cfa777deb16b32a5))
+
 ## [1.121.0](https://github.com/seatsurfing/seatsurfing/compare/v1.120.0...v1.121.0) (2026-08-07)
 
 
