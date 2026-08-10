@@ -151,3 +151,22 @@ func TestLocationsMatchesSearchAttributesLteWrong(t *testing.T) {
 	}
 	CheckTestBool(t, false, MatchesSearchAttributes("1", &searchAttributes, attributeValues))
 }
+
+func TestSearchAttributeValidationAllowsMagicAttributeIDs(t *testing.T) {
+	validAttributeIDs := []string{
+		"",
+		"123e4567-e89b-12d3-a456-426614174000",
+		SearchAttributeNumSpaces,
+		SearchAttributeNumFreeSpaces,
+		SearchAttributeBuddyOnSite,
+	}
+	for _, attributeID := range validAttributeIDs {
+		searchAttribute := SearchAttribute{AttributeID: attributeID, Comparator: "eq", Value: "1"}
+		CheckTestBool(t, true, GetValidator().Struct(&searchAttribute) == nil)
+	}
+}
+
+func TestSearchAttributeValidationRejectsInvalidAttributeID(t *testing.T) {
+	searchAttribute := SearchAttribute{AttributeID: "not-a-uuid-or-magic-string", Comparator: "eq", Value: "1"}
+	CheckTestBool(t, false, GetValidator().Struct(&searchAttribute) == nil)
+}

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login } from "../util/helper";
+import { login, cancelAllBookings } from "../util/helper";
 
 test.beforeEach(async ({ page }) => {
   // Suppress the MFA encouragement modal
@@ -12,12 +12,17 @@ test.beforeEach(async ({ page }) => {
 
   // Ensure we've reached the dashboard
   await expect(page).toHaveURL(/search\/$/);
+
+  // Start with a clean slate: a previous failed/retried run (or another
+  // browser project sharing the same backend) may have left Desk 1 booked,
+  // which would make this test fail before it even gets to clean up itself.
+  await cancelAllBookings(page);
 });
 
 test("crud booking", async ({ page }) => {
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByRole("combobox").selectOption({ label: "Sample Floor" });
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByText("Desk 1", { exact: true }).click();
   await expect(
     page.getByRole("dialog").getByText("Book a space"),
@@ -28,7 +33,7 @@ test("crud booking", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("button", { name: "My bookings" }).click();
   await expect(page).toHaveURL(/bookings\/$/);
-  await expect(page.getByText("Loading...")).not.toBeVisible();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
   await page.getByLabel("Calendar", { exact: true }).click(); // switch to list view
   await page
     .getByText(/Sample Floor/)

@@ -18,6 +18,8 @@ type Cadence int
 const (
 	CadenceDaily  Cadence = 1
 	CadenceWeekly Cadence = 2
+
+	MaxRecurringBookings = 365
 )
 
 type RecurringBooking struct {
@@ -128,7 +130,7 @@ func (r *RecurringBookingRepository) Delete(e *RecurringBooking) error {
 	return err
 }
 
-func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) []*Booking {
+func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) ([]*Booking, error) {
 	res := make([]*Booking, 0)
 	cur := e.Enter
 
@@ -137,7 +139,7 @@ func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) []*Book
 		weekdays := e.Details.(*CadenceWeeklyDetails).Weekdays
 
 		if len(weekdays) == 0 {
-			return res
+			return res, nil
 		}
 
 		for {
@@ -150,6 +152,9 @@ func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) []*Book
 	}
 
 	for cur.Before(e.End) {
+		if len(res) >= MaxRecurringBookings {
+			return nil, errors.New("max recurring bookings limit exceeded")
+		}
 		booking := &Booking{
 			UserID:      e.UserID,
 			SpaceID:     e.SpaceID,
@@ -161,7 +166,7 @@ func (r *RecurringBookingRepository) CreateBookings(e *RecurringBooking) []*Book
 		res = append(res, booking)
 		cur = r.getNextBookingTime(e, cur)
 	}
-	return res
+	return res, nil
 }
 
 func (r *RecurringBookingRepository) getNextBookingTime(e *RecurringBooking, current time.Time) time.Time {

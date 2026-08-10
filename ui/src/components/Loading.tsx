@@ -13,16 +13,15 @@ interface Props {
 
 class Loading extends React.Component<Props, State> {
   render() {
-    let text = "Loading...";
-    let paddingTop = (this.props.paddingTop ?? true) ? "padding-top" : "";
-    let display =
+    const paddingTop = (this.props.paddingTop ?? true) ? "padding-top" : "";
+    const display =
       this.props.visible === undefined || this.props.visible === true
         ? "display-block"
         : "display-none";
     return (
       <div className={`${paddingTop} ${display} center loading-overlay`}>
         <IconLoad className="feather loader" />
-        {text}
+        &nbsp;Loading &hellip;
       </div>
     );
   }

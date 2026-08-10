@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -48,6 +49,28 @@ func TestStatsForbiddenForUser(t *testing.T) {
 	req := NewHTTPRequest("GET", "/stats/", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestWeekdayStatsInvalidLocationID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	req := NewHTTPRequest("GET", "/stats/weekday?location=not-a-uuid", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestLoadStatsInvalidLocationID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	req := NewHTTPRequest("GET", "/stats/load?location=not-a-uuid", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
 func TestStatsWithData(t *testing.T) {

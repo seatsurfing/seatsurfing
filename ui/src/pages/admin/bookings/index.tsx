@@ -20,14 +20,15 @@ import Booking from "@/types/Booking";
 import DateUtil from "@/util/DateUtil";
 import Formatting from "@/util/Formatting";
 import OrgSettings from "@/types/Settings";
-import Ajax from "@/util/Ajax";
+import Organization from "@/types/Organization";
 import AjaxError from "@/util/AjaxError";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import DateTimePicker from "@/components/DateTimePicker";
 import Search, { SearchOptions } from "@/types/Search";
-import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
+import ConfirmModal from "@/components/ConfirmModal";
+import AlertModal from "@/components/AlertModal";
 
 interface State {
   selectedItem: string;
@@ -39,6 +40,8 @@ interface State {
   typeaheadOptions: any[];
   typeaheadLoading: boolean;
   filterLocation: string;
+  cancelBookingItem: Booking | null;
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -96,15 +99,13 @@ class Bookings extends React.Component<Props, State> {
       typeaheadOptions: [],
       typeaheadLoading: false,
       filterLocation: this.props.router.query["location"] as string,
+      cancelBookingItem: null,
+      alertMessage: null,
     };
     this.loadSettings();
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     Location.list().then((locations) => (this.locations = locations));
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
@@ -113,23 +114,16 @@ class Bookings extends React.Component<Props, State> {
   };
 
   updateUrlParams = (
-    enter: string,
-    leave: string,
+    enter: string | null,
+    leave: string | null,
     filter: string | null,
     filterUser: string | null,
     filterLocation: string | null,
   ) => {
     const currentPath = this.props.router.pathname;
-    const {
-      filter: _,
-      user: __,
-      location: ___,
-      ...queryWithoutFilter
-    } = this.props.router.query;
     const currentQuery = {
-      ...queryWithoutFilter,
-      enter,
-      leave,
+      ...(enter !== null && { enter }),
+      ...(leave !== null && { leave }),
       ...(filter !== null && { filter }),
       ...(filterUser && { user: filterUser }),
       ...(filterLocation && { location: filterLocation }),
@@ -145,59 +139,48 @@ class Bookings extends React.Component<Props, State> {
     );
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const end = DateUtil.setSecondsToMax(this.state.end);
-
     const startOfToday = DateUtil.getTodayStart();
     const endOfToday = DateUtil.getTodayEnd();
 
-    const bookings =
-      this.state.filterOption === "enter_leave"
+    this.data = await (this.state.filterOption === "enter_leave"
+      ? Booking.listFiltered(
+          this.state.start,
+          end,
+          this.state.filterUser,
+          this.state.filterLocation,
+        )
+      : this.state.filterOption === "today"
         ? Booking.listFiltered(
-            this.state.start,
-            end,
+            startOfToday,
+            endOfToday,
             this.state.filterUser,
             this.state.filterLocation,
           )
-        : this.state.filterOption === "today"
-          ? Booking.listFiltered(
-              startOfToday,
-              endOfToday,
-              this.state.filterUser,
-              this.state.filterLocation,
-            )
-          : Booking.listCurrent(
-              this.state.filterUser,
-              this.state.filterLocation,
-            );
-
-    bookings.then((list) => {
-      this.data = list;
-      this.setState({ loading: false });
-      this.updateUrlParams(
-        DateUtil.formatToDateTimeString(this.state.start),
-        DateUtil.formatToDateTimeString(this.state.end),
-        this.state.filterOption === "enter_leave" ||
-          this.state.filterOption === "today"
-          ? this.state.filterOption
-          : null,
-        this.state.filterUser,
-        this.state.filterLocation,
-      );
-    });
+        : Booking.listCurrent(
+            this.state.filterUser,
+            this.state.filterLocation,
+          ));
+    this.setState({ loading: false });
+    this.updateUrlParams(
+      this.state.filterOption === "enter_leave"
+        ? DateUtil.formatToDateTimeString(this.state.start)
+        : null,
+      this.state.filterOption === "enter_leave"
+        ? DateUtil.formatToDateTimeString(this.state.end)
+        : null,
+      this.state.filterOption,
+      this.state.filterUser,
+      this.state.filterLocation,
+    );
   };
 
   cancelBooking = (booking: Booking) => {
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
+    this.setState({ cancelBookingItem: booking });
+  };
 
-    const confirmMessage = this.props.t("confirmCancelBooking", {
-      enter: formatter.format(booking.enter),
-    });
-    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
-      return;
-    }
+  performCancelBooking = (booking: Booking) => {
     this.setState({
       loading: true,
     });
@@ -211,13 +194,13 @@ class Bookings extends React.Component<Props, State> {
           reason.httpStatusCode === 403 &&
           reason.appErrorCode === 1007
         ) {
-          window.alert(
-            this.props.t("errorDeleteBookingBeforeMaxCancel", {
+          this.setState({
+            alertMessage: this.props.t("errorDeleteBookingBeforeMaxCancel", {
               num: this.maxHoursBeforeDelete,
             }),
-          );
+          });
         } else {
-          window.alert(this.props.t("errorDeleteBooking"));
+          this.setState({ alertMessage: this.props.t("errorDeleteBooking") });
         }
         this.loadItems();
       },
@@ -225,12 +208,11 @@ class Bookings extends React.Component<Props, State> {
   };
 
   loadSettings = async (): Promise<void> => {
-    return OrgSettings.list().then((settings) => {
-      settings.forEach((s) => {
-        if (s.name === "max_hours_before_delete") {
-          this.maxHoursBeforeDelete = window.parseInt(s.value);
-        }
-      });
+    const settings = await OrgSettings.list();
+    settings.forEach((s) => {
+      if (s.name === Organization.PREF_MAX_HOURS_BEFORE_DELETE) {
+        this.maxHoursBeforeDelete = window.parseInt(s.value);
+      }
     });
   };
 
@@ -244,22 +226,20 @@ class Bookings extends React.Component<Props, State> {
 
   renderItem = (booking: Booking) => {
     const btnStyle: CSS.Properties = {
-      ["padding" as any]: "0.1rem 0.3rem",
-      ["font-size" as any]: "0.875rem",
-      ["border-radius" as any]: "0.2rem",
+      padding: "0.1rem 0.3rem",
+      fontSize: "0.875rem",
+      borderRadius: "0.2rem",
     };
     return (
       <tr key={booking.id} onClick={() => this.onItemSelect(booking)}>
         <td>
           {booking.recurringId ? <IconRecurring className="feather" /> : <></>}
         </td>
-        <td
-          title={RendererUtils.fullname(
+        <td title={booking.user.email}>
+          {RendererUtils.fullname(
             booking.user.firstname,
             booking.user.lastname,
           )}
-        >
-          {booking.user.email}
         </td>
         <td>{booking.space.location.name}</td>
         <td>{booking.space.name}</td>
@@ -529,7 +509,7 @@ class Bookings extends React.Component<Props, State> {
           <thead>
             <tr>
               <th></th>
-              <th>{this.props.t("user")}</th>
+              <th>{this.props.t("name")}</th>
               <th>{this.props.t("area")}</th>
               <th>{this.props.t("space")}</th>
               <th>{this.props.t("enter")}</th>
@@ -540,6 +520,33 @@ class Bookings extends React.Component<Props, State> {
           </thead>
           <tbody>{rows}</tbody>
         </Table>
+        <ConfirmModal
+          show={this.state.cancelBookingItem !== null}
+          message={
+            this.state.cancelBookingItem
+              ? RendererUtils.decodeHtmlEntities(
+                  this.props.t("confirmCancelBooking", {
+                    enter: Formatting.getBookingDateFormatter().format(
+                      this.state.cancelBookingItem.enter,
+                    ),
+                  }),
+                )
+              : ""
+          }
+          onCancel={() => this.setState({ cancelBookingItem: null })}
+          onConfirm={() => {
+            const booking = this.state.cancelBookingItem;
+            this.setState({ cancelBookingItem: null });
+            if (booking) {
+              this.performCancelBooking(booking);
+            }
+          }}
+        />
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
+        />
       </FullLayout>
     );
   }

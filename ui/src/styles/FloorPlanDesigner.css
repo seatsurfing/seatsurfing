@@ -1,0 +1,54 @@
+.floor-plan-designer {
+  width: 100%;
+}
+
+/* Near-fullscreen modal for the floor plan designer */
+.fpd-modal-dialog {
+  max-width: 95vw;
+  margin: 2.5vh auto;
+}
+
+.fpd-modal-dialog .modal-content {
+  height: 90vh;
+}
+
+.fpd-modal-dialog .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.fpd-modal-dialog .modal-body .floor-plan-designer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px;
+  width: auto;
+}
+
+.fpd-modal-dialog .modal-body .mapScrollContainer {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.fpd-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.fpd-toolbar .btn-group {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.floor-plan-designer .mapScrollContainer svg {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #fff;
+}

@@ -13,7 +13,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
@@ -41,10 +41,6 @@ class Locations extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     import("excellentexport").then(
       (imp) => (this.ExcellentExport = imp.default),
     );
@@ -166,9 +162,12 @@ class Locations extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table"
+          className="clickable-table caption-top"
           id="datatable"
         >
+          <caption>
+            {this.props.t("numRecords")}: {rows.length}
+          </caption>
           <thead>
             <tr>
               <th>{this.props.t("name")}</th>

@@ -1,12 +1,20 @@
+import CONSTANT from "@/util/Contant";
+
+export type PreferencesTab = "security" | "style" | "booking" | "integration";
+
 export default class Navigation {
   // API
+  static readonly PATH_API_SETTINGS = "/setting/";
   static readonly PATH_API_USER_PREFERENCES = "/preference/";
   static readonly PATH_API_AUTH_INIT_PW_RESET = "/auth/initpwreset";
   static readonly PATH_API_AUTH_ORG = "/auth/org/";
   static readonly PATH_API_AUTH_SINGLE_ORG = "/auth/singleorg";
+  static readonly PATH_API_SEARCH = "/search";
+  static readonly PATH_API_UC = "/uc";
 
   // Pages
   static readonly PATH_PAGE_SEARCH: string = "/search";
+  static readonly PATH_PAGE_PREFERENCES: string = "/preferences";
 
   static isAdminPath(url: string): boolean {
     return url.startsWith("/admin/");
@@ -45,10 +53,22 @@ export default class Navigation {
   // -------------
 
   static spaceAbsolute(locationId: string, spaceId: string): string {
-    return `${window.location.origin}/ui/search/?lid=${encodeURIComponent(locationId)}&sid=${encodeURIComponent(spaceId)}`;
+    return `${window.location.origin}/ui${this.PATH_PAGE_SEARCH}/?lid=${encodeURIComponent(locationId)}&sid=${encodeURIComponent(spaceId)}`;
   }
 
   static locationAbsolute(locationId: string): string {
-    return `${window.location.origin}/ui/search/?lid=${encodeURIComponent(locationId)}`;
+    return `${window.location.origin}/ui${this.PATH_PAGE_SEARCH}/?lid=${encodeURIComponent(locationId)}`;
+  }
+
+  static preferences(tab: PreferencesTab | null = null) {
+    return `${this.PATH_PAGE_PREFERENCES}${tab ? `?tab=${tab}` : ""}`;
+  }
+
+  // ----------
+  // KIOSK MODE
+  // ----------
+
+  static kioskUrl(spaceId: string, variant: "color" | "mono"): string {
+    return `${window.location.origin}/ui/kiosk/${encodeURIComponent(spaceId)}/?variant=${encodeURIComponent(variant)}&lang=en&secret=${encodeURIComponent(CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER)}`;
   }
 }

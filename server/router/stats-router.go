@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 
@@ -20,21 +22,27 @@ type GetLoadResponse struct {
 	SpaceLoadLastMonth int `json:"spaceLoadLastMonth"`
 }
 
+type GetWeekdayResponse struct {
+	BookingsByWeekday [7]int `json:"bookingsByWeekday"`
+}
+
 type GetStatsResponse struct {
-	NumUsers             int `json:"numUsers"`
-	NumBookings          int `json:"numBookings"`
-	NumLocations         int `json:"numLocations"`
-	NumSpaces            int `json:"numSpaces"`
-	NumBookingsCurrent   int `json:"numBookingsCurrent"`
-	NumBookingsToday     int `json:"numBookingsToday"`
-	NumBookingsYesterday int `json:"numBookingsYesterday"`
-	NumBookingsThisWeek  int `json:"numBookingsThisWeek"`
+	NumUsers             int    `json:"numUsers"`
+	NumBookings          int    `json:"numBookings"`
+	NumLocations         int    `json:"numLocations"`
+	NumSpaces            int    `json:"numSpaces"`
+	NumBookingsCurrent   int    `json:"numBookingsCurrent"`
+	NumBookingsToday     int    `json:"numBookingsToday"`
+	NumBookingsYesterday int    `json:"numBookingsYesterday"`
+	NumBookingsThisWeek  int    `json:"numBookingsThisWeek"`
+	BookingsByWeekday    [7]int `json:"bookingsByWeekday"`
 	GetLoadResponse
 }
 
 func (router *StatsRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/", router.getStats).Methods("GET")
 	s.HandleFunc("/load", router.getLoad).Methods("GET")
+	s.HandleFunc("/weekday", router.getWeekday).Methods("GET")
 }
 
 func getDateRanges() (thisWeekEnter, thisWeekLeave, lastWeekEnter, lastWeekLeave, nextWeekEnter, nextWeekLeave, lastMonthEnter, lastMonthLeave time.Time) {
@@ -69,10 +77,19 @@ func (router *StatsRouter) getLoad(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	hideStats, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideStats.Name)
+	if hideStats {
+		SendNotFound(w)
+		return
+	}
 
 	locationId := r.URL.Query().Get("location")
 	var location *Location = nil
 	if locationId != "" {
+		if uuid.Validate(locationId) != nil {
+			SendBadRequest(w)
+			return
+		}
 		var err error
 		location, err = GetLocationRepository().GetOne(locationId)
 		if err != nil {
@@ -103,6 +120,11 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	hideStats, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideStats.Name)
+	if hideStats {
+		SendNotFound(w)
+		return
+	}
 
 	now := time.Now().UTC()
 	todayEnter := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
@@ -125,5 +147,62 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave, nil)
 	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave, nil)
 	m.SpaceLoadLastMonth, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastMonthEnter, lastMonthLeave, nil)
+	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, nil, nil, nil)
+	SendJSON(w, m)
+}
+
+func (router *StatsRouter) getWeekday(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	hideStats, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingHideStats.Name)
+	if hideStats {
+		SendNotFound(w)
+		return
+	}
+
+	locationId := r.URL.Query().Get("location")
+	var location *Location = nil
+	if locationId != "" {
+		if uuid.Validate(locationId) != nil {
+			SendBadRequest(w)
+			return
+		}
+		var err error
+		location, err = GetLocationRepository().GetOne(locationId)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		if location == nil || location.OrganizationID != user.OrganizationID {
+			SendBadRequest(w)
+			return
+		}
+	}
+
+	var enter, leave *time.Time
+	period := r.URL.Query().Get("period")
+	if period != "" {
+		thisWeekEnter, thisWeekLeave, lastWeekEnter, lastWeekLeave, nextWeekEnter, nextWeekLeave, lastMonthEnter, lastMonthLeave := getDateRanges()
+		switch period {
+		case "thisWeek":
+			enter, leave = &thisWeekEnter, &thisWeekLeave
+		case "lastWeek":
+			enter, leave = &lastWeekEnter, &lastWeekLeave
+		case "nextWeek":
+			enter, leave = &nextWeekEnter, &nextWeekLeave
+		case "lastMonth":
+			enter, leave = &lastMonthEnter, &lastMonthLeave
+		default:
+			SendBadRequest(w)
+			return
+		}
+	}
+
+	m := &GetWeekdayResponse{}
+	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, location, enter, leave)
 	SendJSON(w, m)
 }

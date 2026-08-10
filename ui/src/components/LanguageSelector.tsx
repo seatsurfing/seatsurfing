@@ -8,6 +8,8 @@ interface State {}
 
 interface Props {
   inNavbar?: boolean;
+  drop?: "up" | "down" | "start" | "end";
+  align?: "start" | "end";
   t: TranslationFunc;
 }
 
@@ -28,62 +30,54 @@ class LanguageSelector extends React.Component<Props, State> {
       </svg>
     );
 
+    const title = (
+      <>
+        {icon}
+        {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
+          RuntimeConfig.getLanguage()}
+      </>
+    );
+
+    const ItemComponent = this.props.inNavbar
+      ? NavDropdown.Item
+      : Dropdown.Item;
+
+    const items = Object.entries(RuntimeConfig.getAvailableLanguages())
+      .filter(([l]) => l !== "default")
+      .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
+      .map(([l, name]) => (
+        <LanguageSwitcher key={"lng-" + l} lang={l}>
+          <ItemComponent
+            key={"lng-btn-" + l}
+            active={l === RuntimeConfig.getLanguage()}
+          >
+            {name}
+          </ItemComponent>
+        </LanguageSwitcher>
+      ));
+
     if (this.props.inNavbar) {
       return (
         <NavDropdown
-          title={
-            <>
-              {icon}
-              {RuntimeConfig.getLanguage()}
-            </>
-          }
+          align={this.props.align ?? "start"}
+          title={title}
+          drop={this.props.drop ?? "down"}
         >
-          {RuntimeConfig.getAvailableLanguages()
-            .sort()
-            .filter((l) => l !== "default")
-            .map((l) => (
-              <LanguageSwitcher key={"lng-" + l} lang={l}>
-                <NavDropdown.Item
-                  key={"lng-btn-" + l}
-                  active={l === RuntimeConfig.getLanguage()}
-                >
-                  {l}
-                </NavDropdown.Item>
-              </LanguageSwitcher>
-            ))}
+          {items}
         </NavDropdown>
       );
     }
 
     return (
-      <>
-        <DropdownButton
-          title={
-            <>
-              {icon}
-              {RuntimeConfig.getLanguage()}
-            </>
-          }
-          className="lng-selector"
-          size="sm"
-          variant="outline-secondary"
-          drop="up"
-        >
-          {RuntimeConfig.getAvailableLanguages()
-            .sort()
-            .filter((l) => l !== "default")
-            .map((l) => (
-              <LanguageSwitcher key={"lng-" + l} lang={l}>
-                <Dropdown.Item
-                  key={"lng-btn-" + l}
-                  active={l === RuntimeConfig.getLanguage()}
-                >
-                  {l}
-                </Dropdown.Item>
-              </LanguageSwitcher>
-            ))}
-        </DropdownButton>
-      </>
+      <DropdownButton
+        title={title}
+        className="lng-selector"
+        size="sm"
+        variant="outline-secondary"
+        drop={this.props.drop ?? "up"}
+      >
+        {items}
+      </DropdownButton>
     );
   }
 }

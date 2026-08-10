@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -17,9 +18,9 @@ type UserPreferencesRouter struct {
 }
 
 type ListCaldavCalendarsRequest struct {
-	URL      string `json:"url" validate:"required,url"`
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	URL      string `json:"url" validate:"required,url,max=256"`
+	Username string `json:"username" validate:"required,max=256"`
+	Password string `json:"password" validate:"required,max=256"`
 }
 
 type ListCaldavCalendarsResponse struct {
@@ -36,13 +37,12 @@ func (router *UserPreferencesRouter) SetupRoutes(s *mux.Router) {
 }
 
 func (router *UserPreferencesRouter) caldavListCalendars(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		log.Println("Error: CalDAV integration requires a valid crypt key (CRYPT_KEY).")
-		SendInternalServerError(w)
-		return
-	}
 	var m ListCaldavCalendarsRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !ValidateURL(m.URL) {
 		SendBadRequest(w)
 		return
 	}
@@ -168,6 +168,9 @@ func (router *UserPreferencesRouter) doSetOne(userID, name, value string) error 
 }
 
 func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
+	if len(name) > 50 {
+		return false
+	}
 	if name == PreferenceEnterTime.Name ||
 		name == PreferenceWorkdayStart.Name ||
 		name == PreferenceWorkdayEnd.Name ||
@@ -184,9 +187,12 @@ func (router *UserPreferencesRouter) isValidPreferenceName(name string) bool {
 		name == PreferenceCalDAVPass.Name ||
 		name == PreferenceCalDAVPath.Name ||
 		name == PreferenceMailNotifications.Name ||
+		name == PreferenceMailReminder.Name ||
+		name == PreferenceMailLanguage.Name ||
 		name == PreferenceApprovalNotifications.Name ||
 		name == Preference24HourTime.Name ||
-		name == PreferenceDateFormat.Name {
+		name == PreferenceDateFormat.Name ||
+		name == PreferenceWeekStartDay.Name {
 		return true
 	}
 	return false
@@ -241,6 +247,12 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	if name == PreferenceMailNotifications.Name {
 		return PreferenceMailNotifications.Type
 	}
+	if name == PreferenceMailReminder.Name {
+		return PreferenceMailReminder.Type
+	}
+	if name == PreferenceMailLanguage.Name {
+		return PreferenceMailLanguage.Type
+	}
 	if name == PreferenceApprovalNotifications.Name {
 		return PreferenceApprovalNotifications.Type
 	}
@@ -249,6 +261,9 @@ func (router *UserPreferencesRouter) getPreferenceType(name string) SettingType 
 	}
 	if name == PreferenceDateFormat.Name {
 		return PreferenceDateFormat.Type
+	}
+	if name == PreferenceWeekStartDay.Name {
+		return PreferenceWeekStartDay.Type
 	}
 	return 0
 }
@@ -290,33 +305,26 @@ func (router *UserPreferencesRouter) isValidPreferenceValue(name string, value s
 			return false
 		}
 	}
-	if name == PreferenceWorkdayStart.Name {
-		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 24 {
-			return false
-		}
-	}
-	if name == PreferenceWorkdayEnd.Name {
-		i, _ := strconv.Atoi(value)
-		if i < 0 || i > 24 {
+	if name == PreferenceWorkdayStart.Name || name == PreferenceWorkdayEnd.Name {
+		if !ValidateTimeString(value) {
 			return false
 		}
 	}
 	if name == PreferenceWorkdays.Name {
-		tokens := strings.Split(value, ",")
-		ok := true
-		for _, token := range tokens {
-			if workday, err := strconv.Atoi(token); err != nil || workday < 0 || workday > 6 {
-				ok = false
-			}
-		}
-		return ok
+		return IsValidWeekdaysList(value)
 	}
 	if name == PreferenceDateFormat.Name {
-		switch value {
-		case "Y-m-d", "d.m.Y", "m/d/Y", "d/m/Y":
+		return IsValidDateFormat(value)
+	}
+	if name == PreferenceMailLanguage.Name {
+		if value == "" {
 			return true
-		default:
+		}
+		return GetConfig().IsValidLanguageCode(value)
+	}
+	if name == PreferenceWeekStartDay.Name {
+		i, _ := strconv.Atoi(value)
+		if i != 0 && i != 1 && i != 6 {
 			return false
 		}
 	}

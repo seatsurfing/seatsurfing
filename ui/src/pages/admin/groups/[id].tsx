@@ -24,9 +24,9 @@ import ProfilePicture from "@/components/ProfilePicture";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Group from "@/types/Group";
-import Ajax from "@/util/Ajax";
 import Search, { SearchOptions } from "@/types/Search";
-import RedirectUtil from "@/util/RedirectUtil";
+import ConfirmModal from "@/components/ConfirmModal";
+
 import RendererUtils from "@/util/RendererUtils";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
@@ -44,6 +44,7 @@ interface State {
   addUserIds: string[];
   members: User[];
   removeUserIds: string[];
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -70,14 +71,11 @@ class EditUser extends React.Component<Props, State> {
       addUserIds: [],
       members: [],
       removeUserIds: [],
+      showDeleteConfirm: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -134,17 +132,13 @@ class EditUser extends React.Component<Props, State> {
           error: true,
           errorText: code
             ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
+            : this.props.t("errorSave"),
         });
       });
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteGroup"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteConfirm: true });
   };
 
   filterSearch = () => {
@@ -217,7 +211,7 @@ class EditUser extends React.Component<Props, State> {
         </td>
         <td style={{ tableLayout: "auto" }}>
           <div style={{ marginLeft: "10px" }}>
-            {user.email}
+            {user.email} ({RendererUtils.roleName(user.role, this.props.t)})
             {fullname && (
               <>
                 <br />
@@ -276,11 +270,7 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = (
-        <Alert variant="danger">
-          {this.state.errorText ?? this.props.t("errorSave")}
-        </Alert>
-      );
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     let buttonDelete = (
@@ -414,6 +404,17 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
         </Form>
         {memberTable}
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteGroup")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showDeleteConfirm: false });
+            this.entity.delete().then(() => {
+              this.setState({ goBack: true });
+            });
+          }}
+        />
       </FullLayout>
     );
   }

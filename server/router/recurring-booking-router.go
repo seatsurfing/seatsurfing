@@ -11,6 +11,7 @@ import (
 	"github.com/emersion/go-ical"
 	"github.com/gorilla/mux"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -26,7 +27,7 @@ type CreateRecurringBookingRequest struct {
 	End      time.Time      `json:"end" validate:"required"`
 	Cadence  Cadence        `json:"cadence" validate:"required,min=1,max=2"`
 	Cycle    int            `json:"cycle" validate:"required,min=1"`
-	Weekdays []time.Weekday `json:"weekdays"`
+	Weekdays []time.Weekday `json:"weekdays" validate:"dive,min=0,max=6"`
 }
 
 type CreateRecurringBookingResponse struct {
@@ -83,7 +84,11 @@ func (router *RecurringBookingRouter) preBookingCreateCheck(w http.ResponseWrite
 		return
 	}
 	bookingRouter := &BookingRouter{}
-	bookings := GetRecurringBookingRepository().CreateBookings(e)
+	bookings, err := GetRecurringBookingRepository().CreateBookings(e)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
 	res := make([]CreateRecurringBookingResponse, 0)
 	for idx, b := range bookings {
 		bookingReq := &CreateBookingRequest{
@@ -235,11 +240,16 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 	}
 	bookingRouter := &BookingRouter{}
 	spaceRequiresApproval := bookingRouter.getSpaceRequiresApproval(location.OrganizationID, space)
-	bookings := GetRecurringBookingRepository().CreateBookings(e)
+	bookings, err := GetRecurringBookingRepository().CreateBookings(e)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
 	res := make([]CreateRecurringBookingResponse, 0)
 	for _, b := range bookings {
 		bookingReq := &CreateBookingRequest{
 			SpaceID: b.SpaceID,
+			Subject: b.Subject,
 			BookingRequest: BookingRequest{
 				Enter: b.Enter,
 				Leave: b.Leave,
@@ -420,7 +430,14 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 	if subject == "" {
 		subject = "—"
 	}
+
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	vars := map[string]string{
+		"orgDomain":     FormatURL(domain.DomainName) + "/",
 		"recipientName": user.GetSafeRecipientName(),
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
@@ -428,9 +445,19 @@ func (router *RecurringBookingRouter) sendMailNotification(e *RecurringBooking, 
 		"subject":       subject,
 	}
 	template := GetEmailTemplatePathRecurringBookingCreated()
-	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, org.Language, vars, attachments, org.ID); err != nil {
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
+	}
+	now := time.Now().UTC()
+	for _, b := range bookings {
+		if err := GetBookingRepository().UpdateLastInfoMailSentAt(b.ID, &now); err != nil {
+			log.Println(err)
+		}
 	}
 }
 

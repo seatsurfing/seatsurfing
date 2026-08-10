@@ -3,42 +3,19 @@ package repository
 import (
 	"sync"
 	"time"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
-type AuthStateRepository struct {
+type AuthStateStore struct {
 }
 
-type AuthStateType int
-
-const (
-	AuthRequestState         AuthStateType = 1 // Request login via OAuth / OIDC using an Auth Provider (fetch user info later)
-	AuthResponseCache        AuthStateType = 2 // Cache response from OAuth / OIDC (user info already fetched)
-	AuthAtlassian            AuthStateType = 3 // Atlassian Auth
-	AuthMergeRequest         AuthStateType = 4
-	AuthResetPasswordRequest AuthStateType = 5
-	AuthChangeOrgEmail       AuthStateType = 6
-	AuthDeleteOrg            AuthStateType = 7  // used for delete org email confirmation link
-	AuthTotpSetup            AuthStateType = 8  // used for TOTP setup process
-	AuthInviteUser           AuthStateType = 9  // used for user invitation to set initial password
-	AuthPasskeyRegistration  AuthStateType = 10 // used for WebAuthn passkey registration ceremony
-	AuthPasskeyLogin         AuthStateType = 11 // used for WebAuthn passkey authentication ceremony
-	AuthPasskey2FA           AuthStateType = 12 // used for WebAuthn passkey as second factor after password login
-)
-
-type AuthState struct {
-	ID             string
-	AuthProviderID string
-	Expiry         time.Time
-	AuthStateType  AuthStateType
-	Payload        string
-}
-
-var authStateRepository *AuthStateRepository
+var authStateRepository *AuthStateStore
 var authStateRepositoryOnce sync.Once
 
-func GetAuthStateRepository() *AuthStateRepository {
+func GetAuthStateRepository() *AuthStateStore {
 	authStateRepositoryOnce.Do(func() {
-		authStateRepository = &AuthStateRepository{}
+		authStateRepository = &AuthStateStore{}
 		_, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS auth_states (" +
 			"id uuid DEFAULT uuid_generate_v4(), " +
 			"auth_provider_id uuid NOT NULL, " +
@@ -53,11 +30,11 @@ func GetAuthStateRepository() *AuthStateRepository {
 	return authStateRepository
 }
 
-func (r *AuthStateRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+func (r *AuthStateStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	// No updates yet
 }
 
-func (r *AuthStateRepository) Create(e *AuthState) error {
+func (r *AuthStateStore) Create(e *AuthState) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO auth_states "+
 		"(auth_provider_id, expiry, auth_state_type, payload) "+
@@ -71,7 +48,7 @@ func (r *AuthStateRepository) Create(e *AuthState) error {
 	return nil
 }
 
-func (r *AuthStateRepository) GetOne(id string) (*AuthState, error) {
+func (r *AuthStateStore) GetOne(id string) (*AuthState, error) {
 	e := &AuthState{}
 	err := GetDatabase().DB().QueryRow("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
 		"FROM auth_states "+
@@ -83,12 +60,12 @@ func (r *AuthStateRepository) GetOne(id string) (*AuthState, error) {
 	return e, nil
 }
 
-func (r *AuthStateRepository) Delete(e *AuthState) error {
+func (r *AuthStateStore) Delete(e *AuthState) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_states WHERE id = $1", e.ID)
 	return err
 }
 
-func (r *AuthStateRepository) GetActiveByPayloadAndType(payload string, authStateType AuthStateType) ([]*AuthState, error) {
+func (r *AuthStateStore) GetActiveByPayloadAndType(payload string, authStateType AuthStateType) ([]*AuthState, error) {
 	var result []*AuthState
 	now := time.Now()
 	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
@@ -109,13 +86,13 @@ func (r *AuthStateRepository) GetActiveByPayloadAndType(payload string, authStat
 	return result, nil
 }
 
-func (r *AuthStateRepository) DeleteExpired() error {
+func (r *AuthStateStore) DeleteExpired() error {
 	now := time.Now()
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_states WHERE expiry < $1", now)
 	return err
 }
 
-func (r *AuthStateRepository) GetByAuthProviderID(authProviderID string) ([]*AuthState, error) {
+func (r *AuthStateStore) GetByAuthProviderID(authProviderID string) ([]*AuthState, error) {
 	var result []*AuthState
 	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
 		"FROM auth_states "+

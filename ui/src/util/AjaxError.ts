@@ -6,13 +6,9 @@ export default class AjaxError extends Error {
   constructor(
     httpStatusCode: number,
     appErrorCode: number,
-    m?: string,
     responseBody?: string,
   ) {
-    if (!m) {
-      m = `HTTP Status ${httpStatusCode} with app error code ${appErrorCode}`;
-    }
-    super(m);
+    super(`HTTP Status ${httpStatusCode} with app error code ${appErrorCode}`);
     Object.setPrototypeOf(this, AjaxError.prototype);
     this._httpStatusCode = httpStatusCode;
     this._appErrorCode = appErrorCode;

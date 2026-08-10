@@ -170,7 +170,9 @@ func TestPasskeyDeleteSuccess(t *testing.T) {
 	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-	CheckTestInt(t, 0, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, count)
 }
 
 func TestPasskeyDeleteNotFound(t *testing.T) {
@@ -194,7 +196,9 @@ func TestPasskeyDeleteForbidden(t *testing.T) {
 	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user2.ID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user1.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user1.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 }
 
 func TestPasskeyDeleteLastWithEnforceTOTP(t *testing.T) {
@@ -208,7 +212,9 @@ func TestPasskeyDeleteLastWithEnforceTOTP(t *testing.T) {
 	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 }
 
 func TestPasskeyDeleteNotLastWithEnforceTOTP(t *testing.T) {
@@ -223,7 +229,9 @@ func TestPasskeyDeleteNotLastWithEnforceTOTP(t *testing.T) {
 	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk1.ID, user.ID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-	CheckTestInt(t, 1, GetPasskeyRepository().GetCountByUserID(user.ID))
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
 }
 
 func TestPasskeyDeleteLastWithEnforceTOTPButTOTPConfigured(t *testing.T) {
@@ -235,6 +243,35 @@ func TestPasskeyDeleteLastWithEnforceTOTPButTOTPConfigured(t *testing.T) {
 	user.TotpSecret = NullString("JBSWY3DPEHPK3PXP")
 	GetUserRepository().Update(user)
 
+	pk := createRouterTestPasskey(user, "Only Key")
+
+	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestPasskeyDeleteLastWithEnforceTOTPAdminsOnlyForAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingEnforceTOTP.Name, "2")
+
+	user := CreateTestUserInOrgWithName(org, uuid.New().String()+"@test.com", UserRoleSpaceAdmin)
+	pk := createRouterTestPasskey(user, "Only Key")
+
+	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, count)
+}
+
+func TestPasskeyDeleteLastWithEnforceTOTPAdminsOnlyForRegularUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingEnforceTOTP.Name, "2")
+
+	user := CreateTestUserInOrg(org)
 	pk := createRouterTestPasskey(user, "Only Key")
 
 	req := NewHTTPRequest("DELETE", "/user/passkey/"+pk.ID, user.ID, nil)

@@ -6,7 +6,9 @@ import (
 
 	"github.com/gorilla/mux"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type GroupRouter struct {
@@ -19,6 +21,7 @@ type CreateGroupRequest struct {
 type GetGroupResponse struct {
 	ID             string `json:"id"`
 	OrganizationID string `json:"organizationId"`
+	UserCount      int    `json:"userCount"`
 	CreateGroupRequest
 }
 
@@ -62,9 +65,16 @@ func (router *GroupRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	userCounts, err := GetGroupRepository().GetUserCountMap(user.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetGroupResponse{}
 	for _, e := range list {
 		m := router.copyToRestModel(e)
+		m.UserCount = userCounts[e.ID]
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -175,6 +185,16 @@ func (router *GroupRouter) addMembers(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if len(members) > 64 {
+		SendBadRequest(w)
+		return
+	}
+	for _, id := range members {
+		if !util.ValidateGUID(id) {
+			SendBadRequest(w)
+			return
+		}
+	}
 	ok, err := GetUserRepository().UsersExistAndBelongToOrg(e.OrganizationID, members)
 	if err != nil {
 		log.Println(err)
@@ -210,6 +230,16 @@ func (router *GroupRouter) removeMembers(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if len(members) > 64 {
+		SendBadRequest(w)
+		return
+	}
+	for _, id := range members {
+		if !util.ValidateGUID(id) {
+			SendBadRequest(w)
+			return
+		}
+	}
 	if err := GetGroupRepository().RemoveMembers(e, members); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -242,10 +272,20 @@ func (router *GroupRouter) getMembers(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	userIDs := make([]string, len(users))
+	for i, e := range users {
+		userIDs[i] = e.ID
+	}
+	hasPasskeysByUserID, err := GetPasskeyRepository().GetUserIDsWithPasskeys(userIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	ur := &UserRouter{}
 	res := []*GetUserResponse{}
 	for _, e := range users {
-		m := ur.copyToRestModel(e, true)
+		m := ur.copyToRestModel(e, true, hasPasskeysByUserID[e.ID])
 		res = append(res, m)
 	}
 	SendJSON(w, res)

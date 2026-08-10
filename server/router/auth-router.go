@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -138,12 +139,6 @@ type PasswordUpdateRequest struct {
 
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken" validate:"required"`
-}
-
-type AuthStateLoginPayload struct {
-	UserID    string `json:"userId"`
-	LoginType string `json:"type"`
-	Redirect  string `json:"redirect,omitempty"`
 }
 
 type CreateAccessTokenOptions int
@@ -545,19 +540,23 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err == sql.ErrNoRows {
+		SendBadRequest(w)
+		return
+	}
 	if err != nil {
-		SendNotFound(w)
+		SendInternalServerError(w)
 		return
 	}
 
 	if !CanPasswordLogin(user) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
 		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
@@ -581,7 +580,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		// Check for replay attack
 		if totpCache.isCodeUsed(user.ID, m.Code) {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
@@ -594,7 +593,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), *TotpOptions)
 		if err != nil || !valid {
 			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
-			SendNotFound(w)
+			SendBadRequest(w)
 			return
 		}
 
@@ -627,19 +626,23 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	}
 
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
+	if err == sql.ErrNoRows {
+		SendBadRequest(w)
+		return
+	}
 	if err != nil {
-		SendNotFound(w)
+		SendInternalServerError(w)
 		return
 	}
 
 	// check if password update is allowed
 	if !CanUpdatePassword(user) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
-		SendNotFound(w)
+		SendBadRequest(w)
 		return
 	}
 
@@ -1103,29 +1106,36 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	// Extract email address from JSON response
 	var result map[string]interface{}
 	json.Unmarshal([]byte(contents), &result)
-	if (result[provider.UserInfoEmailField] == nil) || (strings.TrimSpace(result[provider.UserInfoEmailField].(string)) == "") {
-		return nil, nil, fmt.Errorf("could not read email address from field: %s", provider.UserInfoEmailField)
-	}
-	email := strings.TrimSpace(result[provider.UserInfoEmailField].(string))
-	firstname := ""
-	lastname := ""
-	if provider.UserInfoFirstnameField != "" {
-		if result[provider.UserInfoFirstnameField] != nil {
-			firstname = strings.TrimSpace(result[provider.UserInfoFirstnameField].(string))
-		}
-	}
-	if provider.UserInfoLastnameField != "" {
-		if result[provider.UserInfoLastnameField] != nil {
-			lastname = strings.TrimSpace(result[provider.UserInfoLastnameField].(string))
-		}
-	}
-	info := &IdPUserInfo{
-		Email:     email,
-		Firstname: firstname,
-		Lastname:  lastname,
+	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField)
+	if err != nil {
+		return nil, nil, err
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	return info, payload, nil
+}
+
+func ExtractUserInfoFields(result map[string]interface{}, emailField, firstnameField, lastnameField string) (*IdPUserInfo, error) {
+	emailVal, ok := result[emailField].(string)
+	if !ok || strings.TrimSpace(emailVal) == "" {
+		return nil, fmt.Errorf("could not read email address from field: %s", emailField)
+	}
+	firstname := ""
+	lastname := ""
+	if firstnameField != "" {
+		if val, ok := result[firstnameField].(string); ok {
+			firstname = strings.TrimSpace(val)
+		}
+	}
+	if lastnameField != "" {
+		if val, ok := result[lastnameField].(string); ok {
+			lastname = strings.TrimSpace(val)
+		}
+	}
+	return &IdPUserInfo{
+		Email:     strings.TrimSpace(emailVal),
+		Firstname: firstname,
+		Lastname:  lastname,
+	}, nil
 }
 
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {
@@ -1139,7 +1149,11 @@ func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Org
 		"confirmID":      ID,
 		"orgDomain":      FormatURL(domain.DomainName) + "/",
 	}
-	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), org.Language, vars, org.ID)
+	language := org.Language
+	if userLang, err := GetUserPreferencesRepository().Get(user.ID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+		language = userLang
+	}
+	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathResetpassword(), language, vars, org.ID)
 }
 
 func (router *AuthRouter) SendUserInvitationEmail(user *User, ID string, org *Organization) error {
@@ -1163,10 +1177,17 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 		log.Println("Error compiling config for auth provider " + provider.Name + ": No primary domain found for organization")
 		return nil
 	}
+
+	clientSecret, err := DecryptString(provider.ClientSecret)
+	if err != nil {
+		log.Printf("Error decrypting client secret for auth provider %s: %v\n", provider.ID, err)
+		return nil
+	}
+
 	config := &oauth2.Config{
 		RedirectURL:  FormatURL(primaryDomain.DomainName) + "/auth/" + provider.ID + "/callback",
 		ClientID:     provider.ClientID,
-		ClientSecret: provider.ClientSecret,
+		ClientSecret: clientSecret,
 		Scopes:       strings.Split(provider.Scopes, ","),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   provider.AuthURL,

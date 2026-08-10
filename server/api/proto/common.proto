@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+// Shared entity messages used by both plugin.proto (host -> plugin) and
+// hostapi.proto (plugin -> host).
+//
+// IMPORTANT: field numbers must never be renumbered or reused once released.
+// Host and plugin(s) are deployed independently, so wire compatibility across
+// versions depends entirely on additive changes (new fields get new numbers).
+package seatsurfing.plugin.v1;
+
+option go_package = "github.com/seatsurfing/seatsurfing/server/api/commonpb";
+
+import "google/protobuf/timestamp.proto";
+
+message Empty {}
+
+// NullString/NullUUID on the Go side are plain typed strings where an empty
+// string means "null" (see api.NullString / api.NullUUID) - no wrapper
+// message is needed, a plain string round-trips exactly.
+
+message User {
+  string id = 1;
+  string organization_id = 2;
+  string email = 3;
+  string firstname = 4;
+  string lastname = 5;
+  string atlassian_id = 6;
+  string hashed_password = 7;
+  string auth_provider_id = 8;
+  bool password_pending = 9;
+  bool password_update_required = 10;
+  int32 role = 11;
+  bool disabled = 12;
+  google.protobuf.Timestamp ban_expiry = 13;
+  google.protobuf.Timestamp last_activity_at_utc = 14;
+  string totp_secret = 15;
+  string api_token = 16;
+}
+
+message Organization {
+  string id = 1;
+  string name = 2;
+  string contact_firstname = 3;
+  string contact_lastname = 4;
+  string contact_email = 5;
+  string language = 6;
+  google.protobuf.Timestamp signup_date = 7;
+}
+
+message Domain {
+  string domain_name = 1;
+  string organization_id = 2;
+  bool active = 3;
+  string verify_token = 4;
+  bool primary = 5;
+  bool accessible = 6;
+  google.protobuf.Timestamp access_check = 7;
+}
+
+message Group {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+}
+
+message Location {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  uint32 map_width = 4;
+  uint32 map_height = 5;
+  double map_scale = 6;
+  string map_mime_type = 7;
+  string map_type = 8;
+  string description = 9;
+  uint32 max_concurrent_bookings = 10;
+  string timezone = 11;
+  bool enabled = 12;
+}
+
+message Space {
+  string id = 1;
+  string location_id = 2;
+  string name = 3;
+  uint32 x = 4;
+  uint32 y = 5;
+  uint32 width = 6;
+  uint32 height = 7;
+  uint32 rotation = 8;
+  bool require_subject = 9;
+  bool enabled = 10;
+  bool kiosk_enabled = 11;
+  string shape = 12;
+  string font_size = 13;
+}
+
+message SpaceDetails {
+  Location location = 1;
+  Space space = 2;
+}
+
+message Booking {
+  string id = 1;
+  string user_id = 2;
+  string space_id = 3;
+  google.protobuf.Timestamp enter = 4;
+  google.protobuf.Timestamp leave = 5;
+  string cal_dav_id = 6;
+  bool approved = 7;
+  string subject = 8;
+  string recurring_id = 9;
+  google.protobuf.Timestamp created_at_utc = 10;
+  google.protobuf.Timestamp last_info_mail_sent_at_utc = 11;
+  google.protobuf.Timestamp reminder_sent_at_utc = 12;
+}
+
+message BookingDetails {
+  SpaceDetails space = 1;
+  string user_email = 2;
+  string user_firstname = 3;
+  string user_lastname = 4;
+  Booking booking = 5;
+}
+
+message AuthProvider {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  int32 provider_type = 4;
+  string auth_url = 5;
+  string token_url = 6;
+  int32 auth_style = 7;
+  string scopes = 8;
+  string user_info_url = 9;
+  string user_info_email_field = 10;
+  string user_info_firstname_field = 11;
+  string user_info_lastname_field = 12;
+  string client_id = 13;
+  string client_secret = 14;
+  string logout_url = 15;
+  string profile_page_url = 16;
+  bool read_only = 17;
+}
+
+message AuthState {
+  string id = 1;
+  string auth_provider_id = 2;
+  google.protobuf.Timestamp expiry = 3;
+  int32 auth_state_type = 4;
+  string payload = 5;
+}

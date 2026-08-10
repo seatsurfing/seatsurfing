@@ -11,15 +11,13 @@ import {
   Alert,
 } from "react-bootstrap";
 import Loading from "../components/Loading";
+import FullWidthModal from "../components/FullWidthModal";
 import {
   IoFilter as FilterIcon,
   IoInformation as InfoIcon,
-  IoEnter as EnterIcon,
-  IoExit as ExitIcon,
   IoLocation as LocationIcon,
   IoChevronUp as CollapseIcon,
   IoChevronDown as CollapseIcon2,
-  IoSettings as SettingsIcon,
   IoMap as MapIcon,
   IoCalendar as WeekIcon,
   IoScan as ScanIcon,
@@ -28,6 +26,7 @@ import {
   IoTime as TimeIcon,
   IoTimerOutline as TimerIcon,
   IoCalendarOutline as CalendarIcon,
+  IoPerson as NamesIcon,
 } from "react-icons/io5";
 import ErrorText from "../types/ErrorText";
 import { NextRouter } from "next/router";
@@ -35,19 +34,29 @@ import NavBar from "@/components/NavBar";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import withReadyRouter from "@/components/withReadyRouter";
 import { Tooltip } from "react-tooltip";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 import {
   Loader as IconLoad,
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
-  UserCheck as IconUserCheck,
 } from "react-feather";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
+import createCustomEvent, {
+  bookingToCalendarEvent,
+  CalendarEvent,
+} from "@/components/calendar/CustomEvent";
+import moment from "moment-timezone";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
 import {
   TransformWrapper,
   TransformComponent,
   MiniMap,
+  ReactZoomPanPinchContentRef,
 } from "react-zoom-pan-pinch";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import CalendarButton from "@/components/button/CalendarButton";
 import SpaceAttributeValue from "@/types/SpaceAttributeValue";
 import SearchAttribute from "@/types/SearchAttribute";
 import Buddy from "@/types/Buddy";
@@ -65,16 +74,21 @@ import UserPreference from "@/types/UserPreference";
 import User from "@/types/User";
 import DateTimePicker from "@/components/DateTimePicker";
 import IconTextButton from "@/components/IconTextButton";
+import IconButton from "@/components/IconButton";
 import DateUtil from "@/util/DateUtil";
+import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
+import RendererUtils from "@/util/RendererUtils";
+import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
+import ConfirmModal from "@/components/ConfirmModal";
+import AlertModal from "@/components/AlertModal";
 
 interface State {
   earliestEnterDate: Date;
   enter: Date;
   leave: Date;
   locationId: string;
-  canSearch: boolean;
-  canSearchHint: string;
+  bookingCount: number;
   showBookingNames: boolean;
   selectedSpace: Space | null;
   showConfirm: boolean;
@@ -85,9 +99,10 @@ interface State {
   errorText: string;
   loading: boolean;
   listView: boolean;
+  showBookerNamesOnMap: boolean;
   prefEnterTime: number;
-  prefWorkdayStart: number;
-  prefWorkdayEnd: number;
+  prefWorkdayStart: string;
+  prefWorkdayEnd: string;
   prefWorkdays: number[];
   prefLocationId: string;
   prefBookedColor: string;
@@ -100,6 +115,7 @@ interface State {
   searchAttributesLocation: SearchAttribute[];
   searchAttributesSpace: SearchAttribute[];
   confirmingBooking: boolean;
+  showCancelBookingConfirm: boolean;
   activeTabFilterModal: string;
   createdBookingId: string;
   subject: string;
@@ -121,6 +137,14 @@ interface State {
 
   selectionMultiDay: boolean;
   selectionAllDay: boolean;
+
+  showSpaceCalendar: boolean;
+  spaceCalendarDate: Date;
+  spaceCalendarBookings: Booking[];
+  spaceCalendarLoading: boolean;
+  spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
+  windowWidth: number;
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -129,21 +153,21 @@ interface Props {
 }
 
 class Search extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
-
   data: Space[];
   locations: Location[];
   mapData: any;
-  curBookingCount: number = 0;
   searchContainerRef: RefObject<any>;
+  transformWrapperRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
 
+  // time set *before* allDay option was selected
   resetEnterTime: Date | undefined;
   resetLeaveTime: Date | undefined;
+
+  // whether to auto update the enter time (stopped after first manual time change)
+  autoUpdateEnterTimeToPrefWorkdayStart: boolean = true;
 
   constructor(props: any) {
     super(props);
@@ -153,6 +177,7 @@ class Search extends React.Component<Props, State> {
     this.buddies = [];
     this.availableAttributes = [];
     this.searchContainerRef = React.createRef();
+    this.transformWrapperRef = React.createRef();
     this.recurrenceMaxEndDate = new Date(
       new Date().valueOf() +
         RuntimeConfig.INFOS.maxDaysInAdvance * 24 * 60 * 60 * 1000,
@@ -163,26 +188,32 @@ class Search extends React.Component<Props, State> {
       enter: new Date(),
       leave: new Date(),
       locationId: "",
-      canSearch: false,
-      canSearchHint: "",
+      bookingCount: 0,
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
       confirmingBooking: false,
+      showCancelBookingConfirm: false,
       showLocationDetails: false,
       showSearchModal: false,
       showSuccess: false,
       showError: false,
       errorText: "",
+      alertMessage: null,
       loading: true,
       listView: (() =>
         BrowserUtil.tryLocalStorageGetItem(
           BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
           "0",
         ) === "1")(),
+      showBookerNamesOnMap: (() =>
+        BrowserUtil.tryLocalStorageGetItem(
+          BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+          "0",
+        ) === "1")(),
       prefEnterTime: 0,
-      prefWorkdayStart: 0,
-      prefWorkdayEnd: 0,
+      prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       prefWorkdays: [],
       prefLocationId: "",
       prefBookedColor: "#ff453a",
@@ -215,10 +246,101 @@ class Search extends React.Component<Props, State> {
 
       selectionAllDay: false,
       selectionMultiDay: false,
+
+      showSpaceCalendar: false,
+      spaceCalendarDate: new Date(),
+      spaceCalendarBookings: [],
+      spaceCalendarLoading: false,
+      spaceCalendarReturnTo: "showBookingNames",
+      windowWidth: typeof window !== "undefined" ? window.innerWidth : 1024,
     };
   }
 
+  onWindowResize = () => {
+    this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
+  };
+
+  onKeyDown = (e: KeyboardEvent) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) {
+      return;
+    }
+    if (
+      e.key !== "ArrowLeft" &&
+      e.key !== "ArrowRight" &&
+      e.key !== "ArrowUp" &&
+      e.key !== "ArrowDown"
+    ) {
+      return;
+    }
+    const target = e.target;
+    if (
+      target instanceof HTMLElement &&
+      (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    if (
+      this.state.showConfirm ||
+      this.state.showSearchModal ||
+      this.state.showLocationDetails ||
+      this.state.showSpaceCalendar ||
+      this.state.showBookingNames ||
+      this.state.showRecurringOptions
+    ) {
+      return;
+    }
+    if (document.querySelector(".flatpickr-calendar.open")) {
+      return;
+    }
+
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      if (!this.state.locationId) {
+        return;
+      }
+      e.preventDefault();
+      if (e.key === "ArrowLeft") {
+        if (DateUtil.isSameDay(this.state.enter, DateUtil.getTodayStart())) {
+          return;
+        }
+        this.updateEnterAndLeaveDate(
+          DateUtil.prevDay(this.state.enter),
+          DateUtil.prevDay(this.state.leave),
+        );
+      } else {
+        this.updateEnterAndLeaveDate(
+          DateUtil.nextDay(this.state.enter),
+          DateUtil.nextDay(this.state.leave),
+        );
+      }
+    } else {
+      e.preventDefault();
+      this.changeLocationRelative(e.key === "ArrowUp" ? -1 : 1);
+    }
+  };
+
+  changeLocationRelative = (direction: 1 | -1) => {
+    const enabledLocations = this.locations.filter((l) => l.enabled);
+    if (enabledLocations.length === 0) {
+      return;
+    }
+    const currentIndex = enabledLocations.findIndex(
+      (l) => l.id === this.state.locationId,
+    );
+    const newIndex =
+      currentIndex === -1
+        ? 0
+        : (currentIndex + direction + enabledLocations.length) %
+          enabledLocations.length;
+    const newLocation = enabledLocations[newIndex];
+    if (newLocation && newLocation.id !== this.state.locationId) {
+      this.changeLocation(newLocation.id);
+    }
+  };
+
   componentDidMount = () => {
+    window.addEventListener("resize", this.onWindowResize);
+    window.addEventListener("keydown", this.onKeyDown);
     if (!Ajax.hasAccessToken()) {
       this.props.router.push({
         pathname: "/login",
@@ -229,13 +351,21 @@ class Search extends React.Component<Props, State> {
     this.loadItems();
   };
 
+  componentWillUnmount = () => {
+    window.removeEventListener("resize", this.onWindowResize);
+    window.removeEventListener("keydown", this.onKeyDown);
+  };
+
   loadItems = () => {
     const promises = [
       this.loadLocations(),
       this.loadPreferences(),
-      this.loadBuddies(),
-      this.loadAvailableAttributes(),
+      this.initCurrentBookingCount(),
     ];
+    if (!RuntimeConfig.INFOS.disableBuddies && RuntimeConfig.INFOS.showNames) {
+      promises.push(this.loadBuddies());
+    }
+    promises.push(this.loadAvailableAttributes());
     Promise.all(promises).then(() => {
       this.initDates();
       if (this.state.locationId === "" && this.locations.length > 0) {
@@ -245,17 +375,26 @@ class Search extends React.Component<Props, State> {
         const sidParam = (this.props.router.query["sid"] as string) || "";
         this.setState({ locationId: defaultLocationId }, () => {
           if (!defaultLocationId) {
-            this.setState({ loading: false });
+            this.setState({ loading: false }, () => this.updateUrlParams());
             return;
           }
           this.getLocation()
             ?.getAttributes()
             .then((attributes) => {
               this.loadMap(this.state.locationId).then(() => {
-                this.setState({
-                  attributeValues: attributes,
-                  loading: false,
-                });
+                this.setState(
+                  {
+                    attributeValues: attributes,
+                    loading: false,
+                  },
+                  () => {
+                    // v4 centerOnInit is unreliable because TransformComponent may mount
+                    // before map data is loaded, causing centering with 0-size content.
+                    // Instead, center explicitly after data is loaded and React has painted.
+                    requestAnimationFrame(() => this.centerMap());
+                    this.updateUrlParams();
+                  },
+                );
                 if (sidParam) {
                   const space = this.data.find((item) => item.id == sidParam);
                   if (space) this.onSpaceSelect(space);
@@ -264,7 +403,7 @@ class Search extends React.Component<Props, State> {
             });
         });
       } else {
-        this.setState({ loading: false });
+        this.setState({ loading: false }, () => this.updateUrlParams());
       }
     });
   };
@@ -280,9 +419,13 @@ class Search extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = window.parseInt(s.value);
+                state.prefWorkdayStart =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_START;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = window.parseInt(s.value);
+                state.prefWorkdayEnd =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_END;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
@@ -304,8 +447,8 @@ class Search extends React.Component<Props, State> {
               state.prefDisallowedColor = s.value;
           });
           if (RuntimeConfig.INFOS.dailyBasisBooking) {
-            state.prefWorkdayStart = 0;
-            state.prefWorkdayEnd = 23;
+            state.prefWorkdayStart = "00:00";
+            state.prefWorkdayEnd = "23:59";
           }
           state.recurrence = {
             ...self.state.recurrence,
@@ -322,10 +465,11 @@ class Search extends React.Component<Props, State> {
     });
   };
 
-  initCurrentBookingCount = () => {
-    Booking.list().then((list) => {
-      this.curBookingCount = list.length;
-      this.updateCanSearch();
+  initCurrentBookingCount = (): Promise<void> => {
+    return Booking.list().then((list) => {
+      return new Promise<void>((resolve) => {
+        this.setState({ bookingCount: list.length }, () => resolve());
+      });
     });
   };
 
@@ -354,54 +498,80 @@ class Search extends React.Component<Props, State> {
     return "";
   };
 
-  initDates = () => {
-    let enter = new Date();
-    if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (this.state.prefEnterTime === Search.PreferenceEnterTimeNextDay) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === Search.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
+  getDateTimeFromQuery = (paramName: string): Date | undefined => {
+    const value = this.props.router.query[paramName];
+    if (typeof value === "string" && DateUtil.isValidDateTime(value)) {
+      return new Date(value);
     }
+    return undefined;
+  };
 
-    let leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
+  managedUrlParams = ["lid", "enter", "leave", "allDay", "multiDay"];
 
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enter = DateUtil.setHoursToMin(enter);
-      leave = DateUtil.setHoursToMax(leave);
+  updateUrlParams = () => {
+    const currentQuery = this.props.router.query;
+    const preserved: Record<string, string> = {};
+    Object.entries(currentQuery).forEach(([key, value]) => {
+      if (this.managedUrlParams.includes(key) || typeof value !== "string") {
+        return;
+      }
+      preserved[key] = value;
+    });
+    const query: Record<string, string> = {
+      ...preserved,
+      ...(this.state.locationId && { lid: this.state.locationId }),
+      enter: DateUtil.formatToDateTimeString(this.state.enter),
+      leave: DateUtil.formatToDateTimeString(this.state.leave),
+      ...(this.state.selectionAllDay && { allDay: "1" }),
+      ...(this.state.selectionMultiDay && { multiDay: "1" }),
+    };
+    const sortedQueryString = (params: Record<string, string>) =>
+      Object.keys(params)
+        .sort()
+        .map((key) => `${key}=${params[key]}`)
+        .join("&");
+    if (
+      sortedQueryString(query) ===
+      sortedQueryString(currentQuery as Record<string, string>)
+    ) {
+      return;
+    }
+    this.props.router.replace(
+      { pathname: this.props.router.pathname, query },
+      undefined,
+      { shallow: true },
+    );
+  };
+
+  initDates = () => {
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      RuntimeConfig.INFOS.dailyBasisBooking,
+    );
+
+    const selectionAllDay =
+      this.props.router.query["allDay"] === "1" &&
+      !RuntimeConfig.INFOS.dailyBasisBooking;
+    const selectionMultiDay = this.props.router.query["multiDay"] === "1";
+    let queryEnter = this.getDateTimeFromQuery("enter") ?? enter;
+    let queryLeave = this.getDateTimeFromQuery("leave") ?? leave;
+    if (selectionAllDay) {
+      queryEnter = DateUtil.setHoursToMin(queryEnter);
+      queryLeave = DateUtil.setHoursToMax(queryLeave);
+    }
+    if (!selectionMultiDay && !DateUtil.isSameDay(queryEnter, queryLeave)) {
+      queryLeave = DateUtil.setHoursToMax(new Date(queryEnter));
     }
 
     this.setState({
       earliestEnterDate: enter,
-      enter,
-      leave,
+      enter: queryEnter,
+      leave: queryLeave,
+      selectionAllDay: selectionAllDay,
+      selectionMultiDay: selectionMultiDay,
     });
   };
 
@@ -475,94 +645,16 @@ class Search extends React.Component<Props, State> {
 
   loadSpaces = async (locationId: string) => {
     this.setState({ loading: true });
-    let leave = new Date(this.state.leave);
+    const leave = new Date(this.state.leave);
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
       leave.setSeconds(leave.getSeconds() - 1);
     }
-    return Space.listAvailability(
+    this.data = await Space.listAvailability(
       locationId,
       this.state.enter,
       leave,
       this.state.searchAttributesSpace,
-    ).then((list) => {
-      this.data = list;
-    });
-  };
-
-  updateCanSearch = async () => {
-    let res = true;
-    let hint = "";
-    const isAdmin =
-      RuntimeConfig.INFOS.noAdminRestrictions && User.UserRoleSpaceAdmin;
-    if (
-      this.curBookingCount >= RuntimeConfig.INFOS.maxBookingsPerUser &&
-      !isAdmin
-    ) {
-      res = false;
-      hint = this.props.t("errorBookingLimit", {
-        num: RuntimeConfig.INFOS.maxBookingsPerUser,
-      });
-    }
-    if (!this.state.locationId) {
-      res = false;
-      hint = this.props.t("errorPickArea");
-    }
-    const today = DateUtil.getTodayStart();
-    let enterTime = new Date(this.state.enter);
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      enterTime = DateUtil.setHoursToMax(enterTime);
-    }
-    if (enterTime.getTime() <= today.getTime()) {
-      res = false;
-      hint = this.props.t("errorEnterFuture");
-    }
-    if (this.state.leave.getTime() <= this.state.enter.getTime()) {
-      res = false;
-      hint = this.props.t("errorLeaveAfterEnter");
-    }
-
-    const bookingAdvanceDays = Math.floor(
-      (this.state.enter.getTime() - new Date().getTime()) / DateUtil.MS_PER_DAY,
     );
-    if (bookingAdvanceDays > RuntimeConfig.INFOS.maxDaysInAdvance && !isAdmin) {
-      res = false;
-      hint = this.props.t("errorDaysAdvance", {
-        num: RuntimeConfig.INFOS.maxDaysInAdvance,
-      });
-    }
-    const bookingDurationHours =
-      Math.floor(
-        (this.state.leave.getTime() - this.state.enter.getTime()) /
-          DateUtil.MS_PER_MINUTE,
-      ) / 60;
-    if (
-      bookingDurationHours > RuntimeConfig.INFOS.maxBookingDurationHours &&
-      !isAdmin
-    ) {
-      res = false;
-      hint = this.props.t("errorMaxBookingDuration", {
-        num: RuntimeConfig.INFOS.maxBookingDurationHours,
-      });
-    }
-    if (
-      bookingDurationHours < RuntimeConfig.INFOS.minBookingDurationHours &&
-      !isAdmin
-    ) {
-      res = false;
-      hint = this.props.t("errorMinBookingDuration", {
-        num: RuntimeConfig.INFOS.minBookingDurationHours,
-      });
-    }
-    const self = this;
-    return new Promise<void>(function (resolve, _reject) {
-      self.setState(
-        {
-          canSearch: res,
-          canSearchHint: hint,
-        },
-        () => resolve(),
-      );
-    });
   };
 
   renderLocations = () => {
@@ -600,50 +692,26 @@ class Search extends React.Component<Props, State> {
     );
   };
 
+  /**
+   * @param enter new enter time or null if enter time should remain unchanged
+   * @param leave new leave time or null if enter time should remain unchanged
+   */
   updateEnterAndLeaveDate = (enter: Date | null, leave: Date | null) => {
-    const dateChangedCb = () => {
-      this.updateCanSearch().then(() => {
-        if (!this.state.canSearch) {
-          this.setState({ loading: false });
-        } else {
-          const promises = [
-            this.initCurrentBookingCount(),
-            this.loadSpaces(this.state.locationId),
-          ];
-          Promise.all(promises).then(() => {
-            this.setState({ loading: false });
-          });
-        }
-      });
-    };
+    const result = SearchUtil.calculateNewEnterAndLeave(
+      this.state.enter,
+      this.state.leave,
+      this.state.selectionMultiDay,
+      RuntimeConfig.INFOS.dailyBasisBooking,
+      this.autoUpdateEnterTimeToPrefWorkdayStart,
+      this.state.prefWorkdayStart,
+      enter,
+      leave,
+    );
+    if (result === null) return;
 
-    if (enter === null && leave === null) return;
-
-    let newEnter, newLeave;
-
-    if (enter !== null && leave !== null) {
-      if (
-        DateUtil.equal(enter, this.state.enter) &&
-        DateUtil.equal(leave, this.state.leave)
-      )
-        return;
-      newEnter = enter;
-      newLeave = leave;
-    } else if (enter !== null) {
-      if (DateUtil.equal(enter, this.state.enter)) return;
-      newEnter = enter;
-      const diff = this.state.leave.getTime() - this.state.enter.getTime();
-      newLeave = new Date();
-      newLeave.setTime(enter.getTime() + diff);
-    } else if (leave !== null) {
-      if (DateUtil.equal(leave, this.state.leave)) return;
-      newLeave = leave;
-    }
-
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      if (newEnter) newEnter = DateUtil.setHoursToMin(newEnter);
-      if (newLeave) newLeave = DateUtil.setHoursToMax(newLeave);
-    }
+    const { newEnter, newLeave } = result;
+    this.autoUpdateEnterTimeToPrefWorkdayStart =
+      result.autoUpdateEnterTimeToPrefWorkdayStart;
 
     const stateEnter = newEnter ?? this.state.enter;
     const stateLeave = newLeave ?? this.state.leave;
@@ -652,7 +720,17 @@ class Search extends React.Component<Props, State> {
       leave: stateLeave,
     };
 
-    this.setState(state, () => dateChangedCb());
+    const dateChangedCallback = () => {
+      const promises = [
+        this.initCurrentBookingCount(),
+        this.loadSpaces(this.state.locationId),
+      ];
+      Promise.all(promises).then(() => {
+        this.setState({ loading: false });
+      });
+      this.updateUrlParams();
+    };
+    this.setState(state, () => dateChangedCallback());
   };
 
   changeLocation = (id: string) => {
@@ -662,14 +740,18 @@ class Search extends React.Component<Props, State> {
         loading: true,
       },
       () => {
+        this.updateUrlParams();
         this.getLocation()
           ?.getAttributes()
           .then((attributes) => {
             this.loadMap(id).then(() => {
-              this.setState({
-                attributeValues: attributes,
-                loading: false,
-              });
+              this.setState(
+                {
+                  attributeValues: attributes,
+                  loading: false,
+                },
+                () => this.centerMap(),
+              );
             });
           });
       },
@@ -690,8 +772,8 @@ class Search extends React.Component<Props, State> {
         () => this.resetRecurrence(),
       );
     } else {
-      let bookings = Booking.createFromRawArray(item.rawBookings);
-      if (!item.available && bookings && bookings.length > 0) {
+      const bookings = Booking.createFromRawArray(item.rawBookings);
+      if (!item.available && bookings?.length > 0) {
         this.setState({
           showBookingNames: true,
           selectedSpace: item,
@@ -725,12 +807,16 @@ class Search extends React.Component<Props, State> {
       RuntimeConfig.INFOS.maxHoursPartiallyBookedEnabled &&
       bookings.length > 0
     ) {
-      let prefWorkdayStartDate = new Date(this.state.enter);
-      prefWorkdayStartDate.setHours(this.state.prefWorkdayStart, 0, 0);
+      let prefWorkdayStartDate = DateUtil.setTimeFromTimeString(
+        this.state.enter,
+        this.state.prefWorkdayStart,
+      );
       prefWorkdayStartDate =
         DateUtil.convertToFakeUTCDate(prefWorkdayStartDate);
-      let prefWorkdayEndDate = new Date(this.state.leave);
-      prefWorkdayEndDate.setHours(this.state.prefWorkdayEnd, 0, 0);
+      let prefWorkdayEndDate = DateUtil.setTimeFromTimeString(
+        this.state.leave,
+        this.state.prefWorkdayEnd,
+      );
       prefWorkdayEndDate = DateUtil.convertToFakeUTCDate(prefWorkdayEndDate);
 
       let leastEnter = bookings.reduce((a, b) =>
@@ -759,15 +845,6 @@ class Search extends React.Component<Props, State> {
       : this.state.prefBookedColor;
   };
 
-  getBookersList = (bookings: Booking[]) => {
-    if (!bookings.length) return "";
-    let str = "";
-    bookings.forEach((b) => {
-      str += (str ? ", " : "") + b.user.email;
-    });
-    return str;
-  };
-
   renderItem = (item: Space) => {
     const bookings = Booking.createFromRawArray(item.rawBookings);
     const boxStyle: React.CSSProperties = {
@@ -776,37 +853,83 @@ class Search extends React.Component<Props, State> {
       top: item.y,
       width: item.width,
       height: item.height,
-      transform: "rotate: " + item.rotation + "deg",
+      transform: `rotate(${item.rotation}deg)`,
       cursor:
         (item.enabled && item.allowed && item.available) ||
         (bookings && bookings.length > 0)
           ? "pointer"
           : "default",
       backgroundColor: this.getAvailabilityStyle(item, bookings),
+      borderRadius: item.shape === "circle" ? "50%" : undefined,
+      clipPath:
+        item.shape === "trapezoid"
+          ? "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)"
+          : undefined,
     };
     const textStyle: React.CSSProperties = {
       textAlign: "center",
+      fontSize: RendererUtils.spaceFontSizePx(item.fontSize),
+    };
+    const innerStyle: React.CSSProperties = {
+      transform: `rotate(${-item.rotation}deg)`,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      height: "100%",
     };
     const className =
       "space space-box" +
-      (item.width < item.height ? " space-box-vertical" : "");
+      (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
+        ? " space-box-vertical"
+        : "");
+    const showBookerNames =
+      this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
+    const bookedEntry = item.rawBookings[0];
+    const bookerName = bookedEntry
+      ? (RuntimeConfig.INFOS.showNames
+          ? RendererUtils.fullname(
+              bookedEntry.userFirstname,
+              bookedEntry.userLastname,
+            )
+          : "") || bookedEntry.userEmail
+      : "";
+    const freeFrom = bookedEntry
+      ? this.props.t("freeFrom", {
+          time: Formatting.getBookingDateFormatter().format(
+            DateUtil.getNextFreeEnterTime(
+              new Date(bookedEntry.leave),
+              this.getLocation()?.bookableDays,
+            ),
+          ),
+        })
+      : "";
+    let tooltipHtml: string;
+    let labelText = item.name;
+    if (showBookerNames && bookedEntry) {
+      tooltipHtml = `<div class="text-center">${RendererUtils.escapeHtml(item.name)}<br/>${freeFrom}</div>`;
+      labelText = bookerName || item.name;
+    } else if (bookedEntry) {
+      tooltipHtml = `<div class="text-center">${RendererUtils.suffixIfDefined(RendererUtils.escapeHtml(bookerName ?? ""), "<br/>")}${freeFrom}</div>`;
+    } else if (!item.enabled || !item.allowed) {
+      tooltipHtml = this.props.t("disallowed");
+    } else {
+      tooltipHtml = this.props.t("free");
+    }
     return (
       <div
         key={item.id}
         style={boxStyle}
         className={className}
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={
-          item.rawBookings[0] ? item.rawBookings[0].userEmail : "Free"
-        }
+        data-tooltip-id="space-tooltip"
+        data-tooltip-html-content={tooltipHtml}
         onClick={() => this.onSpaceSelect(item)}
-        title={this.getBookersList(bookings)}
       >
-        <Tooltip id="my-tooltip" />
-        {item.approvalRequired && (
-          <IconUserCheck size={16} className="position-absolute top-0 end-0" />
-        )}
-        <p style={textStyle}>{item.name}</p>
+        <div style={innerStyle}>
+          {item.approvalRequired && <SpaceApprovalIcon />}
+          <p style={textStyle}>{labelText}</p>
+        </div>
       </div>
     );
   };
@@ -835,14 +958,19 @@ class Search extends React.Component<Props, State> {
       >
         <div className="ms-2 me-auto space-list-item-div">
           <div className="fw-bold space-list-item-content">{item.name}</div>
-          {bookings.map((booking) => (
-            <div
-              key={booking.user.id}
-              className="space-list-item-content space-list-item-text"
-            >
-              {booking.user.email}
-            </div>
-          ))}
+          {RuntimeConfig.INFOS.showNames &&
+            bookings.map((booking) => (
+              <div
+                key={booking.user.id}
+                className="space-list-item-content space-list-item-text"
+              >
+                {RendererUtils.fullname(
+                  booking.user.firstname,
+                  booking.user.lastname,
+                  booking.user.email,
+                )}
+              </div>
+            ))}
         </div>
         <span className="badge badge-pill" style={{ backgroundColor: bgColor }}>
           {bookerCount}
@@ -876,8 +1004,19 @@ class Search extends React.Component<Props, State> {
             {this.props.t("subject")}: {booking.subject}
             <br />
           </span>
-          <span hidden={!booking.user.email}>
-            {this.props.t("user")}: {booking.user.email}
+          <span
+            hidden={
+              !booking.user.firstname &&
+              !booking.user.lastname &&
+              !booking.user.email
+            }
+          >
+            {this.props.t("user")}:{" "}
+            {RendererUtils.fullname(
+              booking.user.firstname,
+              booking.user.lastname,
+              booking.user.email,
+            )}
             <br />
           </span>
           {this.props.t("enter")}:{" "}
@@ -909,7 +1048,7 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  onConfirmBooking = (e: any) => {
+  onConfirmBooking = async (e: any) => {
     if (e) {
       e.preventDefault();
     }
@@ -943,26 +1082,24 @@ class Search extends React.Component<Props, State> {
       }
       booking.space = this.state.selectedSpace;
     }
-    booking
-      .save()
-      .then(() => {
-        this.setState({
-          createdBookingId: booking.id,
-          confirmingBooking: false,
-          showConfirm: false,
-          showSuccess: true,
-          subject: "",
-        });
-      })
-      .catch((e: any) => {
-        const code = AjaxError.getAppErrorCode(e);
-        this.setState({
-          confirmingBooking: false,
-          showConfirm: false,
-          showError: true,
-          errorText: ErrorText.getTextForAppCode(code, this.props.t),
-        });
+    try {
+      await booking.save();
+      this.setState({
+        createdBookingId: booking.id,
+        confirmingBooking: false,
+        showConfirm: false,
+        showSuccess: true,
+        subject: "",
       });
+    } catch (e: any) {
+      const code = AjaxError.getAppErrorCode(e);
+      this.setState({
+        confirmingBooking: false,
+        showConfirm: false,
+        showError: true,
+        errorText: ErrorText.getTextForAppCode(code, this.props.t),
+      });
+    }
   };
 
   onAddBuddy = (buddyUser: User) => {
@@ -973,7 +1110,7 @@ class Search extends React.Component<Props, State> {
       showBookingNames: false,
       loading: true,
     });
-    let buddy: Buddy = new Buddy();
+    const buddy: Buddy = new Buddy();
     buddy.buddy = buddyUser;
     buddy
       .save()
@@ -990,6 +1127,59 @@ class Search extends React.Component<Props, State> {
           errorText: ErrorText.getTextForAppCode(code, this.props.t),
         });
       });
+  };
+
+  loadSpaceCalendarBookings = async (date: Date) => {
+    const space = this.state.selectedSpace;
+    if (!space) return;
+
+    const weekStart = DateUtil.getWeekStart(date);
+    const weekEnd = DateUtil.getWeekEnd(date);
+
+    this.setState({ spaceCalendarLoading: true });
+    try {
+      const spaces = await Space.listSingleAvailability(
+        space.locationId,
+        space.id,
+        weekStart,
+        weekEnd,
+      );
+      const bookings = (
+        spaces.length > 0
+          ? Booking.createFromRawArray(spaces[0].rawBookings)
+          : []
+      ).map((e) => {
+        // populate data for calender view
+        e.space.name = space.name;
+        e.space.location.name =
+          this.locations.find((e) => e.id === this.state.locationId)?.name ??
+          "";
+        return e;
+      });
+
+      this.setState({
+        spaceCalendarBookings: bookings,
+        spaceCalendarLoading: false,
+      });
+    } catch {
+      this.setState({ spaceCalendarLoading: false });
+    }
+  };
+
+  openSpaceCalendar = (
+    returnTo: "showBookingNames" | "showConfirm" = "showBookingNames",
+  ) => {
+    const date = this.state.enter ?? new Date();
+    this.setState(
+      {
+        showSpaceCalendar: true,
+        spaceCalendarDate: date,
+        spaceCalendarReturnTo: returnTo,
+      },
+      () => {
+        this.loadSpaceCalendarBookings(date);
+      },
+    );
   };
 
   getLocation = (): Location | undefined => {
@@ -1021,26 +1211,27 @@ class Search extends React.Component<Props, State> {
         BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
         this.state.listView ? "1" : "0",
       );
+      if (!this.state.listView) {
+        requestAnimationFrame(() => this.centerMap());
+      }
     });
   };
 
   getLocationAttributeRows = () => {
     const location = this.getLocation();
     if (!location) {
-      return <></>;
+      return null;
     }
 
     const createFormRow = (
       label: string,
       value: string,
-      key?: string | number,
+      key: string | number,
     ) => (
-      <Form.Group as={Row} key={key}>
-        <Form.Label column sm="4">
-          {label}:
-        </Form.Label>
+      <Form.Group as={Row} key={key} style={{ marginBottom: "5px" }}>
+        <Col sm="4">{label}:</Col>
         <Col sm="8">
-          <Form.Control plaintext={true} readOnly={true} defaultValue={value} />
+          <MarkdownRenderer inline>{value}</MarkdownRenderer>
         </Col>
       </Form.Group>
     );
@@ -1051,14 +1242,16 @@ class Search extends React.Component<Props, State> {
         (attr) => attr.id === attributeValue.attributeId,
       );
       if (!attribute) {
-        return <></>;
+        return null;
       }
 
       const displayValue =
-        attribute.type === 2
-          ? attributeValue.value === "1"
-            ? this.props.t("yes")
-            : ""
+        attribute.type === SpaceAttribute.TYPE_BOOL
+          ? RendererUtils.capitalize(
+              attributeValue.value === "1"
+                ? this.props.t("yes")
+                : this.props.t("no"),
+            )
           : attributeValue.value;
 
       return createFormRow(attribute.label, displayValue, attribute.id);
@@ -1067,7 +1260,9 @@ class Search extends React.Component<Props, State> {
     // timezone
     const timezoneValue =
       location.timezone || RuntimeConfig.INFOS.defaultTimezone;
-    attributeRows.push(createFormRow(this.props.t("timezone"), timezoneValue));
+    attributeRows.push(
+      createFormRow(this.props.t("timezone"), timezoneValue, "timezone"),
+    );
 
     // max. concurrent bookings
     if (location.maxConcurrentBookings) {
@@ -1075,6 +1270,22 @@ class Search extends React.Component<Props, State> {
         createFormRow(
           this.props.t("maxConcurrentBookings"),
           String(location.maxConcurrentBookings),
+          "maxConcurrentBookings",
+        ),
+      );
+    }
+
+    // bookable weekdays
+    if (location.bookableDays.length > 0) {
+      const bookableDaysValue = [...location.bookableDays]
+        .sort((a, b) => a - b)
+        .map((d) => this.props.t("workday-short-" + d))
+        .join(", ");
+      attributeRows.push(
+        createFormRow(
+          this.props.t("bookableDays"),
+          bookableDaysValue,
+          "bookableDays",
         ),
       );
     }
@@ -1084,18 +1295,45 @@ class Search extends React.Component<Props, State> {
 
   getSearchFormComparator = (attribute: SpaceAttribute) => {
     const items = [];
-    items.push(<option value=""></option>);
-    if (attribute.type !== 4) {
-      items.push(<option value="eq">=</option>);
-      items.push(<option value="neq">≠</option>);
+    items.push(<option key="empty" value=""></option>);
+    if (attribute.type !== SpaceAttribute.TYPE_SELECT) {
+      items.push(
+        <option key="eq" value="eq">
+          =
+        </option>,
+      );
+      items.push(
+        <option key="neq" value="neq">
+          ≠
+        </option>,
+      );
     }
-    if (attribute.type === 1) {
-      items.push(<option value="gt">&gt;</option>);
-      items.push(<option value="lt">&lt;</option>);
+    if (attribute.type === SpaceAttribute.TYPE_INT) {
+      items.push(
+        <option key="gt" value="gt">
+          &gt;
+        </option>,
+      );
+      items.push(
+        <option key="lt" value="lt">
+          &lt;
+        </option>,
+      );
     }
-    if (attribute.type === 3 || attribute.type === 4) {
-      items.push(<option value="contains">∋</option>);
-      items.push(<option value="ncontains">∌</option>);
+    if (
+      attribute.type === SpaceAttribute.TYPE_STRING ||
+      attribute.type === SpaceAttribute.TYPE_SELECT
+    ) {
+      items.push(
+        <option key="contains" value="contains">
+          ∋
+        </option>,
+      );
+      items.push(
+        <option key="ncontains" value="ncontains">
+          ∌
+        </option>,
+      );
     }
     return items;
   };
@@ -1108,7 +1346,7 @@ class Search extends React.Component<Props, State> {
       type === "location"
         ? this.state.searchAttributesLocation
         : this.state.searchAttributesSpace;
-    if (attribute.type === 1) {
+    if (attribute.type === SpaceAttribute.TYPE_INT) {
       return (
         <Form.Control
           type="number"
@@ -1127,12 +1365,12 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 2) {
+    } else if (attribute.type === SpaceAttribute.TYPE_BOOL) {
       return (
         <Form.Check
           type="checkbox"
           style={{ paddingTop: "5px" }}
-          label={this.props.t("yes")}
+          label={RendererUtils.capitalize(this.props.t("yes"))}
           checked={
             searchAttributes.find((attr) => attr.attributeId === attribute.id)
               ?.value === "1" || false
@@ -1151,7 +1389,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 3) {
+    } else if (attribute.type === SpaceAttribute.TYPE_STRING) {
       return (
         <Form.Control
           type="text"
@@ -1169,7 +1407,7 @@ class Search extends React.Component<Props, State> {
           }
         />
       );
-    } else if (attribute.type === 4) {
+    } else if (attribute.type === SpaceAttribute.TYPE_SELECT) {
       let options: any[] = [];
       attribute.selectValues.forEach((v, k) => {
         options.push(
@@ -1277,10 +1515,10 @@ class Search extends React.Component<Props, State> {
     let attributesApplicable = false;
     const searchFormRows = this.availableAttributes.map((attribute) => {
       if (type === "location" && !attribute.locationApplicable) {
-        return <></>;
+        return null;
       }
       if (type === "space" && !attribute.spaceApplicable) {
-        return <></>;
+        return null;
       }
       attributesApplicable = true;
       const key = `${type}-attribute-${attribute.id}`;
@@ -1384,7 +1622,7 @@ class Search extends React.Component<Props, State> {
             this.getLocation()
               ?.getAttributes()
               .then((_attributes) => {
-                this.setState({ loading: false });
+                this.setState({ loading: false }, () => this.centerMap());
               });
           });
         },
@@ -1399,40 +1637,33 @@ class Search extends React.Component<Props, State> {
     this.setState({
       confirmingBooking: true,
     });
-    let deleteItem: any;
-    deleteItem = item;
+    let deleteItem: any = item;
     if (this.state.cancelSeries && item.isRecurring()) {
       deleteItem = await RecurringBooking.get(item.recurringId);
     }
-    deleteItem.delete().then(
-      () => {
+    const resetState = {
+      selectedSpace: null,
+      confirmingBooking: false,
+      showBookingNames: false,
+    };
+    try {
+      await deleteItem.delete();
+      this.setState(resetState, this.refreshPage);
+    } catch (reason: any) {
+      if (reason instanceof AjaxError && reason.appErrorCode != 0) {
         this.setState(
           {
-            selectedSpace: null,
-            confirmingBooking: false,
-            showBookingNames: false,
+            ...resetState,
+            alertMessage: ErrorText.getTextForAppCode(
+              reason.appErrorCode,
+              this.props.t,
+            ),
           },
           this.refreshPage,
         );
-      },
-      (reason: any) => {
-        if (reason instanceof AjaxError && reason.httpStatusCode === 403) {
-          window.alert(
-            ErrorText.getTextForAppCode(reason.appErrorCode, this.props.t),
-          );
-        } else {
-          window.alert(this.props.t("errorDeleteBooking"));
-        }
-        this.setState(
-          {
-            selectedSpace: null,
-            confirmingBooking: false,
-            showBookingNames: false,
-          },
-          this.refreshPage,
-        );
-      },
-    );
+        this.setState(resetState);
+      }
+    }
   };
 
   getRecurrenceObject = (): RecurringBooking => {
@@ -1563,18 +1794,26 @@ class Search extends React.Component<Props, State> {
 
   render() {
     const earliestEnterDate = DateUtil.getTodayStart();
+    const searchHints = SearchUtil.getSearchHints(
+      this.state.enter,
+      this.state.leave,
+      this.props.t,
+      this.state.bookingCount,
+      this.state.locationId,
+    );
 
     let hint = <></>;
-    if (!this.state.canSearch && this.state.canSearchHint) {
+    if (searchHints.length > 0 && !this.state.loading) {
       hint = (
-        <Form.Group as={Row} className="margin-top-10">
-          <Col xs="2"></Col>
-          <Col xs="10">
-            <div className="invalid-search-config">
-              {this.state.canSearchHint}
-            </div>
-          </Col>
-        </Form.Group>
+        <div className="search-hint-banner">
+          <ul className="invalid-search-config-list">
+            {searchHints.map((searchHint, index) => (
+              <li key={index} className="invalid-search-config">
+                {searchHint}
+              </li>
+            ))}
+          </ul>
+        </div>
       );
     }
 
@@ -1582,6 +1821,7 @@ class Search extends React.Component<Props, State> {
       <div aria-label="Reservation start date">
         <DateTimePicker
           enableTime={false}
+          showWeekday={!this.state.selectionMultiDay}
           disabled={!this.state.locationId}
           value={this.state.enter}
           required={true}
@@ -1601,6 +1841,7 @@ class Search extends React.Component<Props, State> {
       <div aria-label="Reservation start date">
         <DateTimePicker
           enableTime={false}
+          showWeekday={!this.state.selectionMultiDay}
           disabled={!this.state.locationId}
           value={this.state.leave}
           required={true}
@@ -1706,13 +1947,13 @@ class Search extends React.Component<Props, State> {
           style={{ position: "relative" }}
         >
           <TransformWrapper
+            ref={this.transformWrapperRef}
             initialScale={0.8}
-            initialPositionY={-100}
-            minScale={0.2}
-            maxScale={5}
-            centerOnInit={true}
+            minScale={0.1}
+            maxScale={4}
+            wheel={{ step: 0.003 }}
           >
-            {({ zoomIn, zoomOut, resetTransform }) => (
+            {({ zoomIn, zoomOut }) => (
               <>
                 {window.innerWidth >= 768 && (
                   <div
@@ -1724,6 +1965,7 @@ class Search extends React.Component<Props, State> {
                       border: "1px solid #ccc",
                       background: "#fff",
                       borderRadius: "5px",
+                      overflow: "hidden",
                     }}
                   >
                     <MiniMap>
@@ -1757,18 +1999,29 @@ class Search extends React.Component<Props, State> {
                     <RemoveIcon />
                   </button>
                   <button
-                    onClick={() => resetTransform()}
+                    onClick={() => this.centerMap()}
                     aria-label="Reset zoom"
                     className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <ScanIcon />
                   </button>
                 </div>
-                <TransformComponent
-                  wrapperClass="h-100 w-100"
-                  contentClass="border border-3"
-                >
+                <TransformComponent contentClass="border border-3">
                   <div style={floorPlanStyle}>{spaces}</div>
+                  <Tooltip
+                    id="space-tooltip"
+                    float={true}
+                    render={({ activeAnchor }) => (
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            activeAnchor?.getAttribute(
+                              "data-tooltip-html-content",
+                            ) ?? "",
+                        }}
+                      />
+                    )}
+                  />
                 </TransformComponent>
               </>
             )}
@@ -1778,298 +2031,270 @@ class Search extends React.Component<Props, State> {
     }
 
     const configContainer = (
-      <div className="container-search-config" ref={this.searchContainerRef}>
-        <div
-          className="collapse-bar"
-          onClick={() => this.toggleSearchContainer()}
-        >
-          <CollapseIcon
-            color={"#000"}
-            height="20px"
-            width="20px"
-            className="collapse-icon collapse-icon-bigscreen"
-          />
-          <CollapseIcon2
-            color={"#000"}
-            height="20px"
-            width="20px"
-            className="collapse-icon collapse-icon-smallscreen"
-          />
-          <SettingsIcon
-            color={"#555"}
-            height="26px"
-            width="26px"
-            className="expand-icon expand-icon-bigscreen"
-          />
-          <CollapseIcon
-            color={"#555"}
-            height="20px"
-            width="20px"
-            className="expand-icon expand-icon-smallscreen"
-          />
-        </div>
-        <div className="content-minimized">
-          <div className="d-flex">
-            <div className="me-2">
-              <LocationIcon
-                title={this.props.t("area")}
-                color={"#555"}
-                height="20px"
-                width="20px"
-              />
-            </div>
-            <div className="ms-2 w-100">{this.getLocationName()}</div>
+      <div className="search-config-outer">
+        {hint}
+        <div className="container-search-config" ref={this.searchContainerRef}>
+          <div
+            className="collapse-bar"
+            onClick={() => this.toggleSearchContainer()}
+          >
+            <CollapseIcon2
+              color={"#000"}
+              height="20px"
+              width="20px"
+              className="collapse-icon"
+            />
+            <CollapseIcon
+              color={"#555"}
+              height="20px"
+              width="20px"
+              className="expand-icon"
+            />
           </div>
-          <div className="d-flex">
-            <div className="me-2">
-              <EnterIcon
-                title={this.props.t("enter")}
-                color={"#555"}
-                height="20px"
-                width="20px"
-              />
-            </div>
-            <div className="ms-2 w-100">
-              {Formatting.getFormatterShort().format(
-                DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
-              )}
-            </div>
-          </div>
-          <div className="d-flex">
-            <div className="me-2">
-              <ExitIcon
-                title={this.props.t("leave")}
-                color={"#555"}
-                height="20px"
-                width="20px"
-              />
-            </div>
-            <div className="ms-2 w-100">
-              {Formatting.getFormatterShort().format(
-                DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="content">
-          <Form>
-            {/* Location selection */}
-            <Form.Group className="d-flex">
-              <div className="pt-1 me-2">
-                <LocationIcon
-                  title={this.props.t("area")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-              <div className="ms-2 w-100">
-                <InputGroup>
-                  <Form.Select
-                    required={true}
-                    value={this.state.locationId}
-                    onChange={(e) => this.changeLocation(e.target.value)}
-                    disabled={this.locations.length === 0}
-                    aria-label="Select location"
-                  >
-                    {this.renderLocations()}
-                  </Form.Select>
-                  <Button
-                    variant="outline-secondary"
-                    className="addon-button"
-                    disabled={!this.state.locationId}
-                    onClick={() => this.setState({ showLocationDetails: true })}
-                    aria-label="Show location details"
-                  >
-                    <InfoIcon />
-                  </Button>
-                  <Button
-                    variant={
-                      this.state.searchAttributesLocation.length === 0 &&
-                      this.state.searchAttributesSpace.length === 0
-                        ? "outline-secondary"
-                        : "primary"
-                    }
-                    className="addon-button"
-                    onClick={() => this.setState({ showSearchModal: true })}
-                    aria-label="Show location filters"
-                  >
-                    <FilterIcon
-                      color={
-                        this.state.searchAttributesLocation.length === 0 &&
-                        this.state.searchAttributesSpace.length === 0
-                          ? undefined
-                          : "white"
-                      }
-                    />
-                  </Button>
-                </InputGroup>
-              </div>
-            </Form.Group>
-
-            {/* Date selection */}
-            <Form.Group className="d-flex margin-top-10">
-              <div className="me-2">
-                <WeekIcon
-                  title={this.props.t("date")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </div>
-
-              <IconTextButton
-                text="❮"
-                title={this.props.t("previousDay")}
-                disabled={DateUtil.isSameDay(
-                  this.state.enter,
-                  earliestEnterDate,
-                )}
-                onClick={() => {
-                  this.updateEnterAndLeaveDate(
-                    DateUtil.prevDay(this.state.enter),
-                    DateUtil.prevDay(this.state.leave),
-                  );
-                }}
-              />
-
-              <div
-                className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
-              >
-                {dateEnterPicker}
-              </div>
-
-              {this.state.selectionMultiDay && (
-                <div className="ms-2 w-50">{dateLeavePicker}</div>
-              )}
-
-              <IconTextButton
-                text="❯"
-                title={this.props.t("nextDay")}
-                onClick={() => {
-                  this.updateEnterAndLeaveDate(
-                    DateUtil.nextDay(this.state.enter),
-                    DateUtil.nextDay(this.state.leave),
-                  );
-                }}
-              />
-
-              <button
-                type="button"
-                className={`ms-2 btn d-flex align-items-center ${
-                  this.state.selectionMultiDay ? "btn-primary" : "btn-light"
-                }`}
-                style={{
-                  padding: "4px 8px",
-                  borderColor: "#CED4DA",
-                }}
-                onClick={() => {
-                  if (this.state.selectionMultiDay) {
-                    this.updateEnterAndLeaveDate(
-                      null,
-                      DateUtil.copyDate(this.state.enter, this.state.leave),
-                    );
-                  }
-                  this.setState({
-                    selectionMultiDay: !this.state.selectionMultiDay,
-                  });
-                }}
-                title={this.props.t("multiDay")}
-              >
-                <CalendarIcon
-                  title={this.props.t("multiDay")}
-                  color={this.state.selectionMultiDay ? "#fff" : "#555"}
-                  height="20px"
-                  width="20px"
-                />
-              </button>
-            </Form.Group>
-
-            {/* Time selection */}
-            {!RuntimeConfig.INFOS.dailyBasisBooking && (
-              <Form.Group className="d-flex margin-top-10">
-                <div className="me-2">
-                  <TimeIcon
-                    title={this.props.t("time")}
+          <div className="content">
+            <Form>
+              {/* Location selection */}
+              <Form.Group className="d-flex minimized-hide">
+                <div className="pt-1 me-2">
+                  <LocationIcon
+                    title={this.props.t("area")}
                     color={"#555"}
                     height="20px"
                     width="20px"
                   />
                 </div>
-                <div className="ms-2 w-50">{timeEnterPicker}</div>
-                <div className="ms-2 w-50">{timeLeavePicker}</div>
-                <button
-                  type="button"
-                  className={`ms-2 btn d-flex align-items-center ${
-                    this.state.selectionAllDay ? "btn-primary" : "btn-light"
-                  }`}
-                  style={{
-                    padding: "4px 8px",
-                    borderColor: "#CED4DA",
-                  }}
-                  onClick={() => {
-                    if (!this.state.selectionAllDay) {
-                      this.resetEnterTime = new Date(this.state.enter);
-                      this.resetLeaveTime = new Date(this.state.leave);
-                      this.updateEnterAndLeaveDate(
-                        DateUtil.setHoursToMin(this.state.enter),
-                        DateUtil.setHoursToMax(this.state.leave),
-                      );
-                    } else {
-                      this.updateEnterAndLeaveDate(
-                        this.resetEnterTime ?? null,
-                        this.resetLeaveTime ?? null,
-                      );
-                    }
-                    this.setState({
-                      selectionAllDay: !this.state.selectionAllDay,
-                    });
-                  }}
-                  title={this.props.t("allDay")}
-                >
-                  <TimerIcon
-                    title={this.props.t("allDay")}
-                    color={this.state.selectionAllDay ? "#fff" : "#555"}
+                <div className="ms-2 w-100">
+                  <InputGroup>
+                    <Form.Select
+                      required={true}
+                      value={this.state.locationId}
+                      onChange={(e) => this.changeLocation(e.target.value)}
+                      disabled={this.locations.length === 0}
+                      aria-label="Select location"
+                    >
+                      {this.renderLocations()}
+                    </Form.Select>
+                    <Button
+                      variant="outline-secondary"
+                      className="addon-button"
+                      disabled={!this.state.locationId}
+                      onClick={() =>
+                        this.setState({ showLocationDetails: true })
+                      }
+                      aria-label="Show location details"
+                    >
+                      <InfoIcon />
+                    </Button>
+                    <Button
+                      variant={
+                        this.state.searchAttributesLocation.length === 0 &&
+                        this.state.searchAttributesSpace.length === 0
+                          ? "outline-secondary"
+                          : "primary"
+                      }
+                      className="addon-button"
+                      onClick={() => this.setState({ showSearchModal: true })}
+                      aria-label="Show location filters"
+                    >
+                      <FilterIcon
+                        color={
+                          this.state.searchAttributesLocation.length === 0 &&
+                          this.state.searchAttributesSpace.length === 0
+                            ? undefined
+                            : "white"
+                        }
+                      />
+                    </Button>
+                  </InputGroup>
+                </div>
+              </Form.Group>
+
+              {/* Date selection */}
+              <Form.Group className="d-flex margin-top-10">
+                <div className="me-2">
+                  <WeekIcon
+                    title={this.props.t("date")}
+                    color={"#555"}
                     height="20px"
                     width="20px"
                   />
-                </button>
-              </Form.Group>
-            )}
+                </div>
 
-            {hint}
-
-            <Form.Group className="d-flex margin-top-10">
-              <div className="me-2">
-                <MapIcon
-                  title={this.props.t("map")}
-                  color={"#555"}
-                  height="20px"
-                  width="20px"
+                <IconTextButton
+                  text="❮"
+                  title={this.props.t("previousDay")}
+                  disabled={
+                    DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
+                    !this.state.locationId
+                  }
+                  onClick={() => {
+                    this.updateEnterAndLeaveDate(
+                      DateUtil.prevDay(this.state.enter),
+                      DateUtil.prevDay(this.state.leave),
+                    );
+                  }}
                 />
-              </div>
-              <div className="ms-2 w-100">
-                <Form.Check
+
+                <div
+                  className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
+                >
+                  {dateEnterPicker}
+                </div>
+
+                {this.state.selectionMultiDay && (
+                  <div className="ms-2 w-50">{dateLeavePicker}</div>
+                )}
+
+                <IconTextButton
+                  text="❯"
+                  title={this.props.t("nextDay")}
                   disabled={!this.state.locationId}
-                  type="switch"
-                  checked={!this.state.listView}
-                  onChange={() => this.toggleListView()}
-                  label={this.props.t("map")}
-                  aria-label={this.props.t("map")}
-                  id="switch-control"
+                  onClick={() => {
+                    this.updateEnterAndLeaveDate(
+                      DateUtil.nextDay(this.state.enter),
+                      DateUtil.nextDay(this.state.leave),
+                    );
+                  }}
                 />
-              </div>
-            </Form.Group>
-          </Form>
+
+                <IconButton
+                  icon={CalendarIcon}
+                  active={this.state.selectionMultiDay}
+                  disabled={!this.state.locationId}
+                  title={this.props.t("multiDay")}
+                  onClick={() => {
+                    if (this.state.selectionMultiDay) {
+                      let newLeave = DateUtil.copyDate(
+                        this.state.enter,
+                        this.state.leave,
+                      );
+                      if (newLeave.getTime() < this.state.enter.getTime()) {
+                        newLeave = DateUtil.setHoursToMax(newLeave);
+                      }
+                      this.updateEnterAndLeaveDate(null, newLeave);
+                    }
+                    this.setState(
+                      {
+                        selectionMultiDay: !this.state.selectionMultiDay,
+                      },
+                      () => this.updateUrlParams(),
+                    );
+                  }}
+                />
+              </Form.Group>
+
+              {/* Time selection */}
+              {!RuntimeConfig.INFOS.dailyBasisBooking && (
+                <Form.Group className="d-flex margin-top-10">
+                  <div className="me-2">
+                    <TimeIcon
+                      title={this.props.t("time")}
+                      color={"#555"}
+                      height="20px"
+                      width="20px"
+                    />
+                  </div>
+                  <div className="ms-2 w-50">{timeEnterPicker}</div>
+                  <div className="ms-2 w-50">{timeLeavePicker}</div>
+                  <IconButton
+                    icon={TimerIcon}
+                    active={this.state.selectionAllDay}
+                    disabled={!this.state.locationId}
+                    title={this.props.t("allDay")}
+                    onClick={() => {
+                      if (!this.state.selectionAllDay) {
+                        this.resetEnterTime = new Date(this.state.enter);
+                        this.resetLeaveTime = new Date(this.state.leave);
+                        this.updateEnterAndLeaveDate(
+                          DateUtil.setHoursToMin(this.state.enter),
+                          DateUtil.setHoursToMax(this.state.leave),
+                        );
+                      } else {
+                        this.updateEnterAndLeaveDate(
+                          this.resetEnterTime ?? null,
+                          this.resetLeaveTime ?? null,
+                        );
+                      }
+                      this.setState(
+                        {
+                          selectionAllDay: !this.state.selectionAllDay,
+                        },
+                        () => this.updateUrlParams(),
+                      );
+                    }}
+                  />
+                </Form.Group>
+              )}
+
+              <Form.Group className="d-flex margin-top-10 minimized-hide">
+                <div className="me-2">
+                  <MapIcon
+                    title={this.props.t("map")}
+                    color={"#555"}
+                    height="20px"
+                    width="20px"
+                  />
+                </div>
+                <div
+                  className={`ms-2 ${
+                    RuntimeConfig.INFOS.showNames && !this.state.listView
+                      ? "w-50"
+                      : "w-100"
+                  }`}
+                >
+                  <Form.Check
+                    disabled={!this.state.locationId}
+                    type="switch"
+                    checked={!this.state.listView}
+                    onChange={() => this.toggleListView()}
+                    label={this.props.t("map")}
+                    aria-label={this.props.t("map")}
+                    id="switch-control"
+                  />
+                </div>
+                {RuntimeConfig.INFOS.showNames && !this.state.listView && (
+                  <>
+                    <div className="me-2 ms-3">
+                      <NamesIcon
+                        title={this.props.t("names")}
+                        color={"#555"}
+                        height="20px"
+                        width="20px"
+                      />
+                    </div>
+                    <div className="ms-2 w-50">
+                      <Form.Check
+                        type="switch"
+                        checked={this.state.showBookerNamesOnMap}
+                        disabled={!this.state.locationId}
+                        onChange={() =>
+                          this.setState(
+                            {
+                              showBookerNamesOnMap:
+                                !this.state.showBookerNamesOnMap,
+                            },
+                            () =>
+                              BrowserUtil.tryLocalStorageSetItem(
+                                BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES,
+                                this.state.showBookerNamesOnMap ? "1" : "0",
+                              ),
+                          )
+                        }
+                        label={this.props.t("names")}
+                        aria-label={this.props.t("names")}
+                        id="switch-booker-names"
+                      />
+                    </div>
+                  </>
+                )}
+              </Form.Group>
+            </Form>
+          </div>
         </div>
       </div>
     );
 
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
-
+    const formatter = Formatting.getBookingDateFormatter();
     const locationInfoModal = (
       <Modal
         show={this.state.showLocationDetails}
@@ -2080,7 +2305,9 @@ class Search extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>
           {this.getLocation()?.description && (
-            <p>{this.getLocation()?.description}</p>
+            <MarkdownRenderer>
+              {this.getLocation()?.description ?? ""}
+            </MarkdownRenderer>
           )}
           {this.getLocationAttributeRows()}
         </Modal.Body>
@@ -2159,9 +2386,11 @@ class Search extends React.Component<Props, State> {
     });
     confirmModalRows.push({
       label: this.props.t("approval"),
-      value: this.state.selectedSpace?.approvalRequired
-        ? this.props.t("yes")
-        : this.props.t("no"),
+      value: RendererUtils.capitalize(
+        this.state.selectedSpace?.approvalRequired
+          ? this.props.t("yes")
+          : this.props.t("no"),
+      ),
     });
     this.state.selectedSpace?.attributes.forEach((attribute) => {
       const attributeName = this.availableAttributes.find(
@@ -2170,10 +2399,12 @@ class Search extends React.Component<Props, State> {
       const attributeType = this.availableAttributes.find(
         (attr) => attr.id === attribute.attributeId,
       )?.type;
-      if (attributeType === 2) {
+      if (attributeType === SpaceAttribute.TYPE_BOOL) {
         confirmModalRows.push({
           label: attributeName,
-          value: attribute.value === "1" ? this.props.t("yes") : <>&mdash;</>,
+          value: RendererUtils.capitalize(
+            attribute.value === "1" ? this.props.t("yes") : this.props.t("no"),
+          ),
         });
       } else {
         confirmModalRows.push({ label: attributeName, value: attribute.value });
@@ -2203,7 +2434,11 @@ class Search extends React.Component<Props, State> {
                   style={{ marginBottom: "5px" }}
                 >
                   <Col sm="4">{row.label}:</Col>
-                  <Col sm="8">{row.value}</Col>
+                  <Col sm="8">
+                    <MarkdownRenderer inline>
+                      {row.value ?? ""}
+                    </MarkdownRenderer>
+                  </Col>
                 </Row>
               );
             })}
@@ -2369,13 +2604,6 @@ class Search extends React.Component<Props, State> {
           </Modal.Body>
           <Modal.Footer hidden={this.state.showRecurringOptions}>
             <Button
-              variant="secondary"
-              onClick={() => this.setState({ showConfirm: false })}
-              disabled={this.state.confirmingBooking}
-            >
-              {this.props.t("cancel")}
-            </Button>
-            <Button
               variant={this.state.recurrence.active ? "primary" : "secondary"}
               onClick={() => this.setState({ showRecurringOptions: true })}
               hidden={
@@ -2386,6 +2614,13 @@ class Search extends React.Component<Props, State> {
             >
               <IconRefresh className="feather" />
             </Button>
+            <CalendarButton
+              onClick={() => {
+                this.setState({ showConfirm: false });
+                this.openSpaceCalendar("showConfirm");
+              }}
+              disabled={this.state.confirmingBooking}
+            />
             <Button
               type="submit"
               variant="primary"
@@ -2469,7 +2704,11 @@ class Search extends React.Component<Props, State> {
       (b) => b.user.email === RuntimeConfig.INFOS.username,
     );
     let gotoBooking;
+    let cancelBookingConfirmModal;
     if (myBooking) {
+      const confirmMessage = this.props.t("confirmCancelBooking", {
+        enter: formatter.format(myBooking.enter),
+      });
       gotoBooking = (
         <>
           <Button
@@ -2483,11 +2722,13 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="danger"
-            onClick={() => this.cancelBooking(myBooking)}
+            onClick={() => {
+              this.setState({ showCancelBookingConfirm: true });
+            }}
             disabled={this.state.confirmingBooking}
           >
             {this.props.t("cancelBooking")}
@@ -2502,11 +2743,26 @@ class Search extends React.Component<Props, State> {
           </Button>
         </>
       );
+      cancelBookingConfirmModal = (
+        <ConfirmModal
+          show={this.state.showCancelBookingConfirm}
+          title={this.props.t("cancelBooking")}
+          message={RendererUtils.decodeHtmlEntities(confirmMessage)}
+          confirmLabel={this.props.t("cancelBooking")}
+          onCancel={() => this.setState({ showCancelBookingConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showCancelBookingConfirm: false });
+            this.cancelBooking(myBooking);
+          }}
+        />
+      );
     }
     let isRecurring = false;
     const bookingNamesModal = (
       <Modal
-        show={this.state.showBookingNames}
+        show={
+          this.state.showBookingNames && !this.state.showCancelBookingConfirm
+        }
         onHide={() => this.setState({ showBookingNames: false })}
       >
         <Modal.Header closeButton>
@@ -2519,7 +2775,7 @@ class Search extends React.Component<Props, State> {
               <span key={item.user.id}>{this.renderBookingNameRow(item)}</span>
             );
           })}
-          <p
+          <div
             hidden={!myBooking || !isRecurring}
             style={{ marginTop: "15px", marginBottom: "0" }}
           >
@@ -2532,19 +2788,133 @@ class Search extends React.Component<Props, State> {
               checked={this.state.cancelSeries}
               label={this.props.t("cancelAllUpcomingBookings")}
             />
-          </p>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant={myBooking ? "secondary" : "primary"}
-            onClick={() => this.setState({ showBookingNames: false })}
-          >
-            {this.props.t("back")}
-          </Button>
+          <CalendarButton
+            onClick={() => {
+              this.setState({ showBookingNames: false });
+              this.openSpaceCalendar();
+            }}
+          />
           {gotoBooking}
         </Modal.Footer>
       </Modal>
     );
+
+    const spaceCalendarEvents: CalendarEvent[] =
+      this.state.spaceCalendarBookings.map((b) =>
+        bookingToCalendarEvent(b, "space", this.props.t),
+      );
+
+    const spaceCalToolbar = (props: object) => (
+      <CustomToolbar toolbar={props as any} t={this.props.t} />
+    );
+
+    moment.tz.setDefault("UTC");
+    moment.locale(Formatting.Language);
+    const dow = RuntimeConfig.INFOS.weekStartDay;
+    if (moment.localeData().firstDayOfWeek() !== dow) {
+      moment.updateLocale(moment.locale(), {
+        week: { dow },
+      });
+    }
+    const spaceCalLocalizer = momentLocalizer(moment);
+
+    const spaceCalendarModal = (
+      <FullWidthModal
+        show={this.state.showSpaceCalendar}
+        onHide={() =>
+          this.setState({
+            showSpaceCalendar: false,
+            [this.state.spaceCalendarReturnTo]: true,
+          } as any)
+        }
+        maxWidth={1400}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {this.state.selectedSpace?.name} – {this.props.t("calendar")}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          style={{
+            height: "calc(100vh - 210px)",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          {this.state.spaceCalendarLoading ? (
+            <Loading visible={true} />
+          ) : (
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <Calendar
+                showMultiDayTimes={true}
+                getNow={() => DateUtil.getNowFakeUTC()}
+                localizer={spaceCalLocalizer}
+                events={spaceCalendarEvents}
+                startAccessor={(event: CalendarEvent) => event.enter}
+                endAccessor={(event: CalendarEvent) => event.leave}
+                style={{ height: "100%", width: "100%" }}
+                view={
+                  this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
+                    ? "day"
+                    : "week"
+                }
+                onView={() => {}}
+                views={["week", "day"]}
+                eventPropGetter={(event: CalendarEvent) => {
+                  if (event.approved === false) {
+                    return { style: { opacity: 0.5 } };
+                  }
+                  return {};
+                }}
+                date={this.state.spaceCalendarDate}
+                onNavigate={(newDate: Date) => {
+                  this.setState({ spaceCalendarDate: newDate }, () => {
+                    this.loadSpaceCalendarBookings(newDate);
+                  });
+                }}
+                culture={Formatting.Language}
+                components={{
+                  toolbar: spaceCalToolbar,
+                  event: createCustomEvent(),
+                }}
+                step={180}
+                timeslots={1}
+                dayPropGetter={(date: Date) => {
+                  const bookableDays = this.getLocation()?.bookableDays ?? [];
+                  if (
+                    bookableDays.length > 0 &&
+                    !bookableDays.includes(date.getUTCDay())
+                  ) {
+                    return {
+                      style: { backgroundColor: "rgba(0, 0, 0, 0.05)" },
+                    };
+                  }
+                  return {};
+                }}
+              />
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              this.setState({
+                showSpaceCalendar: false,
+                [this.state.spaceCalendarReturnTo]: true,
+              } as any)
+            }
+          >
+            {this.props.t("back")}
+          </Button>
+        </Modal.Footer>
+      </FullWidthModal>
+    );
+
     const successModal = (
       <Modal
         show={this.state.showSuccess}
@@ -2580,7 +2950,7 @@ class Search extends React.Component<Props, State> {
             }}
           >
             <IconCalendar className="feather" style={{ marginRight: "5px" }} />{" "}
-            Event
+            {this.props.t("event")}
           </Button>
           <Button
             variant="secondary"
@@ -2625,22 +2995,43 @@ class Search extends React.Component<Props, State> {
         {searchModal}
         {confirmModal}
         {bookingNamesModal}
+        {cancelBookingConfirmModal}
+        {spaceCalendarModal}
         {successModal}
         {errorModal}
         {listOrMap}
         <Loading visible={this.state.loading} />
         {configContainer}
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
+        />
       </>
     );
   }
 
-  refreshPage = () => {
-    this.setState({
-      loading: true,
-    });
-    this.loadMap(this.state.locationId).then(() => {
-      this.setState({ loading: false });
-    });
+  refreshPage = async () => {
+    this.setState({ loading: true });
+    await Promise.all([
+      this.loadMap(this.state.locationId),
+      this.initCurrentBookingCount(),
+    ]);
+    this.setState({ loading: false });
+  };
+
+  centerMap = () => {
+    const ref = this.transformWrapperRef.current;
+    if (!ref) return;
+    const wrapper = ref.instance.wrapperComponent;
+    const content = ref.instance.contentComponent;
+    if (wrapper && content) {
+      const scale = Math.min(
+        wrapper.offsetWidth / content.offsetWidth,
+        wrapper.offsetHeight / content.offsetHeight,
+      );
+      ref.centerView(scale, 0);
+    }
   };
 }
 

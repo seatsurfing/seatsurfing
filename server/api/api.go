@@ -1,20 +1,47 @@
 package api
 
+type PluginHTTPRequest struct {
+	Method   string
+	Path     string
+	RawQuery string
+	Headers  map[string][]string
+	Body     []byte
+	UserID   string
+}
+
+type PluginHTTPResponse struct {
+	StatusCode int
+	Headers    map[string][]string
+	Body       []byte
+}
+
 type SeatsurfingPlugin interface {
-	GetPublicRoutes() map[string]Route
+	// GetBasePath returns the single canonical URL prefix under which all of
+	// this plugin's endpoints are nested
+	GetBasePath() string
+	// GetRoutePrefix returns the plugin's legacy flat top-level prefixes,
+	// kept mounted alongside the base path for backward compatibility with
+	// externally-configured URLs
+	GetRoutePrefix() []string
 	GetUnauthorizedRoutes() []string
-	GetRepositories() []Repository
+	RunSchemaUpdates()
 	GetAdminUIMenuItems() []AdminUIMenuItem
 	OnTimer()
+	// Implementations must be safe to call more than once: the host
+	// re-invokes OnInit on every reconnection, not only once at startup.
 	OnInit()
 	GetAdminWelcomeScreen() *AdminWelcomeScreen
 	GetPublicSettings(organizationID string) []*PluginSetting
+	HandleHTTPRequest(req PluginHTTPRequest) PluginHTTPResponse
 	OnUserCreated(userID string)
 	OnUserUpdated(userID string)
 	OnBeforeUserDelete(userID string)
 	OnOrganizationCreated(organizationID string)
 	OnOrganizationUpdated(organizationID string)
 	OnBeforeOrganizationDelete(organizationID string)
+	OnBookingCreated(bookingID string)
+	OnBookingUpdated(bookingID string)
+	OnBookingDeleted(bookingID string)
 }
 
 type AdminUIMenuItem struct {
@@ -23,11 +50,15 @@ type AdminUIMenuItem struct {
 	Source     string
 	Visibility string // "admin", "spaceadmin"
 	Icon       string
+	// TagName is the custom element tag to mount for this menu item's UI
+	// once the JS module at Source has been loaded.
+	TagName string
 }
 
 type AdminWelcomeScreen struct {
 	Source            string
 	SkipOnSettingTrue string
+	TagName           string
 }
 
 type PluginSetting struct {

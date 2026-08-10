@@ -2,6 +2,8 @@ package router
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +18,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -47,6 +50,8 @@ var (
 	ResponseCodeBookingNotAllowedBooker          = 1009
 	ResponseCodeBookingSubjectRequired           = 1010
 	ResponseCodeBookingInPast                    = 1011
+	ResponseCodeBookingInvalidSubject            = 1012
+	ResponseCodeBookingInvalidWeekday            = 1013
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
@@ -55,6 +60,8 @@ var (
 	ResponseCodeGroupNameAlreadyExists = 4001
 
 	ResponseCodePasswordUpdateRequired = 5001
+
+	ResponseCodeAuthProviderAlreadyExists = 6001
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {
@@ -136,7 +143,9 @@ func SendJSON(w http.ResponseWriter, v interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		log.Println(err)
+	}
 }
 
 func SendTextNotFound(w http.ResponseWriter, contentType string, b []byte) {
@@ -292,35 +301,63 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 
 	var handleServiceAccountAuth = func(w http.ResponseWriter, r *http.Request) bool {
 		username, password, ok := r.BasicAuth()
-		if !ok {
+		if ok {
+			if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+				return false
+			}
+			organizationId := username[:36]
+			email := username[37:]
+			user, err := GetUserRepository().GetByEmail(organizationId, email)
+			if err != nil || user == nil {
+				return false
+			}
+			if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
+				return false
+			}
+			if user.HashedPassword == "" {
+				return false
+			}
+			if user.Disabled {
+				return false
+			}
+			if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
+				return false
+			}
+			if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
+				return false
+			}
+			ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
+			// Note: service accounts do not have sessions, so we do not set session ID in context
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return true
+		}
+
+		// Try Bearer token auth for service accounts
+		authHeader := r.Header.Get("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
 			return false
 		}
-		if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+		bearerValue := strings.TrimPrefix(authHeader, "Bearer ")
+		// JWTs start with "eyJ" — handled by handleTokenAuth, not here
+		if strings.HasPrefix(bearerValue, "eyJ") {
 			return false
 		}
-		organizationId := username[:36]
-		email := username[37:]
-		user, err := GetUserRepository().GetByEmail(organizationId, email)
+		hash := sha256.Sum256([]byte(bearerValue))
+		tokenHash := hex.EncodeToString(hash[:])
+		user, err := GetUserRepository().GetByApiToken(tokenHash)
 		if err != nil || user == nil {
 			return false
 		}
 		if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
 			return false
 		}
-		if user.HashedPassword == "" {
-			return false
-		}
 		if user.Disabled {
-			return false
-		}
-		if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
 			return false
 		}
 		if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
-		// Note: service accounts do not have sessions, so we do not set session ID in context
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return true
 	}
@@ -398,7 +435,7 @@ func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
 	if strings.ToLower(config.GetConfig().PublicScheme) == "https" {
 		w.Header().Set("Content-Security-Policy", "upgrade-insecure-requests")
 	}
-	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
+	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(self), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 }
@@ -416,6 +453,13 @@ func GetRequestSessionID(r *http.Request) string {
 	return sessionID.(string)
 }
 
+// SetRequestUserID injects a user ID into the context so GetRequestUser can retrieve it.
+// Used by plugin HTTP dispatchers that receive the user ID via RPC.
+func SetRequestUserID(r *http.Request, userID string) *http.Request {
+	ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
+	return r.WithContext(ctx)
+}
+
 func GetRequestUserID(r *http.Request) string {
 	userID := r.Context().Value(contextKeyUserID)
 	if userID == nil {
@@ -426,6 +470,9 @@ func GetRequestUserID(r *http.Request) string {
 
 func GetRequestUser(r *http.Request) *User {
 	ID := GetRequestUserID(r)
+	if ID == "" {
+		return nil
+	}
 	user, err := GetUserRepository().GetOne(ID)
 	if err != nil {
 		log.Println(err)
@@ -454,6 +501,41 @@ func CanSpaceAdminOrg(user *User, organizationID string) bool {
 	return false
 }
 
+// IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)
+// falls on one of the location's bookable weekdays, honoring the org's
+// no-admin-restrictions setting for space admins.
+func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time.Time) bool {
+	if location.BookableDays == "" {
+		return true
+	}
+	if CanSpaceAdminOrg(user, location.OrganizationID) {
+		noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
+		if noAdminRestrictions {
+			return true
+		}
+	}
+	allowedDays := map[time.Weekday]bool{}
+	for _, s := range strings.Split(location.BookableDays, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil {
+			continue
+		}
+		allowedDays[time.Weekday(n)] = true
+	}
+	day := time.Date(enter.Year(), enter.Month(), enter.Day(), 0, 0, 0, 0, enter.Location())
+	// leave is exclusive: the last day to check is the calendar day just before leave,
+	// so a leave of exactly midnight does not pull in the following day.
+	lastInstant := leave.Add(-time.Nanosecond)
+	lastDay := time.Date(lastInstant.Year(), lastInstant.Month(), lastInstant.Day(), 0, 0, 0, 0, lastInstant.Location())
+	for !day.After(lastDay) {
+		if !allowedDays[day.Weekday()] {
+			return false
+		}
+		day = day.AddDate(0, 0, 1)
+	}
+	return true
+}
+
 func CanAdminOrg(user *User, organizationID string) bool {
 	if (user.OrganizationID == organizationID) && (GetUserRepository().IsOrgAdmin(user)) {
 		return true
@@ -462,6 +544,18 @@ func CanAdminOrg(user *User, organizationID string) bool {
 		return true
 	}
 	return false
+}
+
+func IsTotpEnforcedForUser(user *User) bool {
+	enforceTotp, _ := GetSettingsRepository().GetInt(user.OrganizationID, SettingEnforceTOTP.Name)
+	switch enforceTotp {
+	case SettingEnforceTOTPAllUsers:
+		return true
+	case SettingEnforceTOTPAdminsOnly:
+		return GetUserRepository().IsSpaceAdmin(user)
+	default:
+		return false
+	}
 }
 
 func GetValidator() *validator.Validate {

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -66,6 +68,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingCustomLogoUrl.Name,
 		SysSettingVersion,
 		SysSettingOrgPrimaryDomain,
+		SysSettingOrgLanguage,
 		SysSettingDisablePasswordLogin,
 		SettingFeatureNoUserLimit.Name,
 		SettingFeatureGroups.Name,
@@ -73,6 +76,9 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingAllowRecurringBookings.Name,
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
+		SettingFeatureKioskMode.Name,
+		SettingHideReports.Name,
+		SettingHideStats.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -144,7 +150,9 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SysSettingAdminMenuItems,
 		SysSettingAdminWelcomeScreens,
 		SysSettingOrgPrimaryDomain,
+		SysSettingOrgLanguage,
 		SysSettingDisablePasswordLogin,
+		SysSettingInstallID,
 		SettingBookingRetentionEnabled.Name,
 		SettingBookingRetentionDays.Name,
 		SettingAllowRecurringBookings.Name,
@@ -152,6 +160,10 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
 		SettingTargetUtilizationHoursPerWeek.Name,
+		SettingFeatureKioskMode.Name,
+		SettingKioskModeEnabled.Name,
+		SettingHideReports.Name,
+		SettingHideStats.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -234,7 +246,7 @@ func TestSettingsCRUDMany(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 8, len(resBody))
+	CheckTestInt(t, 10, len(resBody))
 	CheckTestString(t, SettingAllowAnyUser.Name, resBody[0].Name)
 	CheckTestString(t, SettingMaxBookingsPerUser.Name, resBody[1].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody[2].Name)
@@ -255,7 +267,7 @@ func TestSettingsCRUDMany(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody2 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
-	CheckTestInt(t, 8, len(resBody2))
+	CheckTestInt(t, 10, len(resBody2))
 	CheckTestString(t, SettingAllowAnyUser.Name, resBody2[0].Name)
 	CheckTestString(t, SettingMaxBookingsPerUser.Name, resBody2[1].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody2[2].Name)
@@ -282,7 +294,7 @@ func TestSettingsMaxHoursBeforeDelete(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody3 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
-	CheckTestInt(t, 7, len(resBody3))
+	CheckTestInt(t, 9, len(resBody3))
 	CheckTestString(t, SettingMaxHoursBeforeDelete.Name, resBody3[0].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody3[1].Name)
 	CheckTestString(t, SysSettingVersion, resBody3[4].Name)
@@ -306,7 +318,7 @@ func TestSettingsMinHoursBookingDuration(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody3 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
-	CheckTestInt(t, 7, len(resBody3))
+	CheckTestInt(t, 9, len(resBody3))
 	CheckTestString(t, SettingMinBookingDurationHours.Name, resBody3[0].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody3[1].Name)
 	CheckTestString(t, SysSettingVersion, resBody3[4].Name)
@@ -364,6 +376,59 @@ func TestSettingsInvalidTimezone(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultTimezone.Name, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestSettingsInstallIDExposure(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	GetConfig().DisableInstallIDExposure = false
+	defer func() { GetConfig().DisableInstallIDExposure = false }()
+
+	req := NewHTTPRequest("GET", "/setting/"+SysSettingInstallID, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var installID string
+	json.Unmarshal(res.Body.Bytes(), &installID)
+	if installID == "" {
+		t.Fatal("Expected non-empty install ID when exposure is enabled")
+	}
+
+	req = NewHTTPRequest("GET", "/setting/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetSettingsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	found := false
+	for _, cur := range resBody {
+		if cur.Name == SysSettingInstallID {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("Expected install ID setting to be present in list when exposure is enabled")
+	}
+
+	GetConfig().DisableInstallIDExposure = true
+
+	req = NewHTTPRequest("GET", "/setting/"+SysSettingInstallID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &installID)
+	CheckTestString(t, "", installID)
+
+	req = NewHTTPRequest("GET", "/setting/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 []GetSettingsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	for _, cur := range resBody2 {
+		if cur.Name == SysSettingInstallID {
+			t.Fatal("Expected install ID setting to be absent from list when exposure is disabled")
+		}
+	}
 }
 
 func TestSettingsGetTimezones(t *testing.T) {

@@ -12,6 +12,10 @@ export default class User extends Entity {
   static UserRoleServiceAccountRW: number = 22;
   static UserRoleSuperAdmin: number = 90;
 
+  static AuthMethodPassword: string = "password";
+  static AuthMethodProvider: string = "provider";
+  static AuthMethodInvitation: string = "invitation";
+
   id: string;
   email: string;
   firstname: string;
@@ -32,6 +36,7 @@ export default class User extends Entity {
   totpEnabled: boolean;
   hasPasskeys: boolean;
   isPrimaryDomain: boolean;
+  lastActivity: Date | null;
 
   constructor() {
     super();
@@ -55,6 +60,7 @@ export default class User extends Entity {
     this.totpEnabled = false;
     this.hasPasskeys = false;
     this.isPrimaryDomain = false;
+    this.lastActivity = null;
   }
 
   serialize(): Object {
@@ -98,6 +104,9 @@ export default class User extends Entity {
     this.totpEnabled = input.totpEnabled;
     this.hasPasskeys = input.hasPasskeys ?? false;
     this.isPrimaryDomain = input.isPrimaryDomain ?? false;
+    this.lastActivity = input.lastActivity
+      ? new Date(input.lastActivity)
+      : null;
   }
 
   getBackendUrl(): string {
@@ -226,6 +235,22 @@ export default class User extends Entity {
 
   static async adminResetTotp(userId: string): Promise<void> {
     return Ajax.delete("/user/" + userId + "/totp").then(() => undefined);
+  }
+
+  static async getApiTokenStatus(userId: string): Promise<boolean> {
+    return Ajax.get("/user/" + userId + "/api-token").then(
+      (result) => result.json.configured as boolean,
+    );
+  }
+
+  static async generateApiToken(userId: string): Promise<string> {
+    return Ajax.postData("/user/" + userId + "/api-token", null).then(
+      (result) => result.json.token as string,
+    );
+  }
+
+  static async revokeApiToken(userId: string): Promise<void> {
+    return Ajax.delete("/user/" + userId + "/api-token").then(() => undefined);
   }
 }
 

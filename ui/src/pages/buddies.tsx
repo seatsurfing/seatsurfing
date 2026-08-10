@@ -10,17 +10,17 @@ import { NextRouter } from "next/router";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import AlertModal from "@/components/AlertModal";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Buddy from "@/types/Buddy";
-import Ajax from "@/util/Ajax";
 import User from "@/types/User";
 import Formatting from "@/util/Formatting";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   loading: boolean;
   selectedItem: Buddy | null;
   email: string;
+  alertMessage: string | null;
 }
 
 interface Props {
@@ -38,14 +38,11 @@ class Buddies extends React.Component<Props, State> {
       loading: true,
       selectedItem: null,
       email: "",
+      alertMessage: null,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     if (!RuntimeConfig.INFOS.showNames || RuntimeConfig.INFOS.disableBuddies) {
       this.props.router.push("/search");
       return;
@@ -104,7 +101,7 @@ class Buddies extends React.Component<Props, State> {
         });
       })
       .catch(() => {
-        alert(this.props.t("userNotFound"));
+        this.setState({ alertMessage: this.props.t("userNotFound") });
       });
   };
 
@@ -154,10 +151,7 @@ class Buddies extends React.Component<Props, State> {
       id,
       buddy: { email, firstBooking },
     } = item;
-    let formatter = Formatting.getFormatter();
-    if (RuntimeConfig.INFOS.dailyBasisBooking) {
-      formatter = Formatting.getFormatterNoTime();
-    }
+    const formatter = Formatting.getBookingDateFormatter();
     return (
       <ListGroup.Item key={id} style={{ minWidth: "300px" }}>
         <h5>{email}</h5>
@@ -194,6 +188,11 @@ class Buddies extends React.Component<Props, State> {
               {this.renderAddBuddy()}
             </Form>
           </div>
+          <AlertModal
+            show={this.state.alertMessage !== null}
+            message={this.state.alertMessage || ""}
+            onConfirm={() => this.setState({ alertMessage: null })}
+          />
         </>
       );
     }
@@ -233,6 +232,11 @@ class Buddies extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
         </Modal>
+        <AlertModal
+          show={this.state.alertMessage !== null}
+          message={this.state.alertMessage || ""}
+          onConfirm={() => this.setState({ alertMessage: null })}
+        />
       </>
     );
   }

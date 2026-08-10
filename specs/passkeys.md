@@ -330,9 +330,7 @@ Start the WebAuthn registration ceremony.
 ```json
 {
   "stateId": "uuid",
-  "challenge": {
-    /* PublicKeyCredentialCreationOptions */
-  }
+  "challenge": {/* PublicKeyCredentialCreationOptions */}
 }
 ```
 
@@ -341,7 +339,7 @@ The `options` object contains the standard WebAuthn `PublicKeyCredentialCreation
 - `rp`: `{ id, name }`
 - `user`: `{ id, name, displayName }`
 - `challenge`: random challenge
-- `pubKeyCredParams`: `[{type: "public-key", alg: -7}, {type: "public-key", alg: -257}]` (ES256> + RS256)
+- `pubKeyCredParams`: `[{type: "public-key", alg: -7}, {type: "public-key", alg: -257}]` (ES256 + RS256)
 - `authenticatorSelection`: `{ residentKey: "required", userVerification: "required" }`
 - `attestation`: `"none"` (no attestation needed for passkeys)
 - `excludeCredentials`: list of the user's already-registered credential IDs (prevents re-registration).
@@ -365,9 +363,7 @@ Complete the WebAuthn registration ceremony.
 {
   "stateId": "uuid",
   "name": "MacBook Touch ID",
-  "credential": {
-    /* AuthenticatorAttestationResponse */
-  }
+  "credential": {/* AuthenticatorAttestationResponse */}
 }
 ```
 
@@ -464,9 +460,7 @@ Start a passwordless passkey authentication ceremony.
 ```json
 {
   "stateId": "uuid",
-  "challenge": {
-    /* PublicKeyCredentialRequestOptions */
-  }
+  "challenge": {/* PublicKeyCredentialRequestOptions */}
 }
 ```
 
@@ -484,7 +478,6 @@ No user identification is needed at this stage (discoverable credentials).
 
 **Prerequisites and protection:**
 
-- `CanCrypt()` must return `true` (i.e., `CRYPT_KEY` must be configured). If not, the endpoint returns `500 Internal Server Error` immediately.
 - The endpoint is **rate-limited** to **10 requests per minute per client IP** (using `ulule/limiter` with an in-memory store). Clients that exceed the limit receive `429 Too Many Requests`. The client IP is extracted with `X-Forwarded-For` support for deployments behind a reverse proxy.
 
 ---
@@ -498,9 +491,7 @@ Complete a passwordless passkey authentication ceremony.
 ```json
 {
   "stateId": "uuid",
-  "credential": {
-    /* AuthenticatorAssertionResponse */
-  }
+  "credential": {/* AuthenticatorAssertionResponse */}
 }
 ```
 
@@ -566,9 +557,7 @@ After successful password verification:
        {
          "requirePasskey": true,
          "stateId": "uuid",
-         "passkeyChallenge": {
-           /* PublicKeyCredentialRequestOptions */
-         },
+         "passkeyChallenge": {/* PublicKeyCredentialRequestOptions */},
          "allowTotpFallback": true
        }
        ```

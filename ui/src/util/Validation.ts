@@ -1,25 +1,36 @@
 export default class Validation {
   static readonly PASSWORD_PATTERN =
     "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$";
+  static readonly HUMAN_NAME_PATTERN = "^[\\p{L}\\p{N} \\-'.]+$";
+
   static readonly PASSWORD_MIN_LENGTH = 8;
   static readonly PASSWORD_MAX_LENGTH = 64;
   static readonly PASSWORD_MIN_LENGTH_SA = 32;
 
   static isAbsoluteUrl(url: string): boolean {
-    return /^https?:\/\//i.test(url);
+    return /^(https?:)?\/\//i.test(url);
   }
 
-  static generatePassword(length: number = 32): string {
+  static isRelativeUrl(url: string): boolean {
+    return /^\/(?!\/)/.test(url) && !/[\\\u0000-\u001F\u007F]/.test(url);
+  }
+
+  static generatePassword(
+    length: number = 32,
+    excludeSpecial: boolean = false,
+  ): string {
     const lower = "abcdefghijklmnopqrstuvwxyz";
     const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const digits = "0123456789";
     const special = "!@#$%^&*()-_=+[]{}|;:,.<>?";
-    const all = lower + upper + digits + special;
+    const all = lower + upper + digits + (excludeSpecial ? "" : special);
     const required = [
       lower.charAt(Math.floor(Math.random() * lower.length)),
       upper.charAt(Math.floor(Math.random() * upper.length)),
       digits.charAt(Math.floor(Math.random() * digits.length)),
-      special.charAt(Math.floor(Math.random() * special.length)),
+      ...(excludeSpecial
+        ? []
+        : [special.charAt(Math.floor(Math.random() * special.length))]),
     ];
     const rest = Array.from({ length: length - required.length }, () =>
       all.charAt(Math.floor(Math.random() * all.length)),
@@ -30,5 +41,34 @@ export default class Validation {
       [chars[i], chars[j]] = [chars[j], chars[i]];
     }
     return chars.join("");
+  }
+
+  /**
+   * @param s time string in the format "HH:MM" (24h)
+   * @returns true if s is a valid "HH:MM" time string
+   */
+  static isValidTimeString(s: string): boolean {
+    return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s);
+  }
+
+  static isValidDomain(domain: string): boolean {
+    if (domain.indexOf(".") < 3) {
+      return false;
+    }
+    const lowerCaseDomain = domain.toLowerCase();
+    if (
+      lowerCaseDomain.endsWith(".seatsurfing.app") ||
+      lowerCaseDomain.endsWith(".seatsurfing.io")
+    ) {
+      return false;
+    }
+    let lastIndex = domain.length - 3;
+    if (lastIndex < 3) {
+      lastIndex = 3;
+    }
+    if (domain.lastIndexOf(".") > lastIndex) {
+      return false;
+    }
+    return true;
   }
 }

@@ -7,13 +7,12 @@ import (
 	"github.com/google/uuid"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 40
-	log.Printf("Initializing database with schema version %d...\n", targetVersion)
+	targetVersion := 49
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
+	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
 		curVersion = 0
 	}
@@ -32,18 +31,21 @@ func RunDBSchemaUpdates() {
 		GetSettingsRepository(),
 		GetRecurringBookingRepository(),
 		GetRefreshTokenRepository(),
-		GetDebugTimeIssuesRepository(),
 		GetSpaceAttributeRepository(),
 		GetSpaceAttributeValueRepository(),
 		GetMailLogRepository(),
 		GetSessionRepository(),
 		GetPasskeyRepository(),
-	}
-	for _, plg := range plugin.GetPlugins() {
-		repositories = append(repositories, (*plg).GetRepositories()...)
+		GetLocationFloorPlanRepository(),
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)
+	}
+
+	if curVersion < 43 {
+		if _, err := GetDatabase().DB().Exec("DROP TABLE IF EXISTS debug_time_issues"); err != nil {
+			panic(err)
+		}
 	}
 	GetSettingsRepository().SetGlobal(SettingDatabaseVersion.Name, strconv.Itoa(targetVersion))
 	SetGlobalInstallID()
@@ -57,7 +59,7 @@ func SetGlobalInstallID() {
 }
 
 func InitDefaultOrgSettings() {
-	log.Println("Configuring default settings for orgs...")
+	log.Println("Configuring default settings for orgs …")
 	list, err := GetOrganizationRepository().GetAllIDs()
 	if err != nil {
 		panic(err)
@@ -68,7 +70,7 @@ func InitDefaultOrgSettings() {
 }
 
 func InitDefaultUserPreferences() {
-	log.Println("Configuring default preferences for users...")
+	log.Println("Configuring default preferences for users …")
 	list, err := GetUserRepository().GetAllIDs()
 	if err != nil {
 		panic(err)

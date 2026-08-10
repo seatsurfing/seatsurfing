@@ -1,0 +1,8 @@
+{
+  "subject": "Änderung deiner Seatsurfing-E-Mail-Adresse",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "Bitte gib den folgenden Code ein, um die Änderung deiner E-Mail-Adresse abzuschließen:",
+    "{{code}}"
+  ]
+}

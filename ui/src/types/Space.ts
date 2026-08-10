@@ -16,6 +16,9 @@ export default class Space extends Entity {
   rotation: number;
   requireSubject: boolean;
   enabled: boolean;
+  kioskEnabled: boolean;
+  shape: string;
+  fontSize: string;
   attributes: SpaceAttributeValue[];
   approverGroupIds: string[];
   allowedBookerGroupIds: string[];
@@ -36,6 +39,9 @@ export default class Space extends Entity {
     this.rotation = 0;
     this.requireSubject = false;
     this.enabled = true;
+    this.kioskEnabled = false;
+    this.shape = "rect";
+    this.fontSize = "normal";
     this.attributes = [];
     this.approverGroupIds = [];
     this.allowedBookerGroupIds = [];
@@ -47,16 +53,80 @@ export default class Space extends Entity {
     this.approvalRequired = false;
   }
 
+  normalizePosition(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotation: number;
+  } {
+    const { x, y, width: w, height: h, rotation } = this;
+    const r = ((rotation % 360) + 360) % 360;
+
+    // Representation A: current (x, y), size (w, h), rotation r
+    // Representation B: same visual center, swapped dimensions, rotation r+90
+    // Both are visually identical (same center, same shape, just described differently).
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    const xB = cx - h / 2;
+    const yB = cy - w / 2;
+    const rB = (r + 90) % 360;
+
+    const aOk = x >= 0 && y >= 0;
+    const bOk = xB >= 0 && yB >= 0;
+
+    if (aOk)
+      return {
+        x: Math.round(x),
+        y: Math.round(y),
+        width: w,
+        height: h,
+        rotation: r,
+      };
+    if (bOk)
+      return {
+        x: Math.round(xB),
+        y: Math.round(yB),
+        width: h,
+        height: w,
+        rotation: rB,
+      };
+
+    // For arbitrary angles where neither representation gives non-negative coords,
+    // clamp as last resort — the space may shift slightly on screen.
+    const useB = xB + yB > x + y;
+    return useB
+      ? {
+          x: Math.max(0, Math.round(xB)),
+          y: Math.max(0, Math.round(yB)),
+          width: h,
+          height: w,
+          rotation: rB,
+        }
+      : {
+          x: Math.max(0, Math.round(x)),
+          y: Math.max(0, Math.round(y)),
+          width: w,
+          height: h,
+          rotation: r,
+        };
+  }
+
   serialize(): Object {
+    const { x, y, width, height, rotation } = this.normalizePosition();
     return Object.assign(super.serialize(), {
+      id: this.id,
       name: this.name,
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      rotation: this.rotation,
+      x,
+      y,
+      width,
+      height,
+      rotation,
       requireSubject: this.requireSubject,
       enabled: this.enabled,
+      kioskEnabled: this.kioskEnabled,
+      shape: this.shape,
+      fontSize: this.fontSize,
       attributes: this.attributes.map((a) => a.serialize()),
       approverGroupIds: this.approverGroupIds,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
@@ -74,6 +144,9 @@ export default class Space extends Entity {
     this.rotation = input.rotation;
     this.requireSubject = input.requireSubject;
     this.enabled = input.enabled;
+    this.kioskEnabled = input.kioskEnabled ?? false;
+    this.shape = input.shape || "rect";
+    this.fontSize = input.fontSize || "normal";
     if (input.allowed !== undefined) {
       this.allowed = input.allowed;
     }
@@ -105,93 +178,94 @@ export default class Space extends Entity {
   }
 
   getBackendUrl(): string {
-    return "/location/" + this.locationId + "/space/";
+    return `/location/${encodeURIComponent(this.locationId)}/space/`;
   }
 
   async save(): Promise<Space> {
-    return Ajax.saveEntity(this, this.getBackendUrl()).then(() => this);
+    await Ajax.saveEntity(this, this.getBackendUrl());
+    return this;
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    await Ajax.delete(`${this.getBackendUrl()}${encodeURIComponent(this.id)}`);
   }
 
   async getApprovers(): Promise<Group[]> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/approver").then(
-      (result) => {
-        const list: Group[] = [];
-        (result.json as []).forEach((item) => {
-          const e: Group = new Group();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
+    const result = await Ajax.get(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/approver`,
     );
+    const list: Group[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Group = new Group();
+      e.deserialize(item);
+      list.push(e);
+    });
+    return list;
   }
 
   async addApprovers(groupIds: string[]): Promise<void> {
-    return Ajax.putData(
-      this.getBackendUrl() + this.id + "/approver",
+    await Ajax.putData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/approver`,
       groupIds,
-    ).then(() => undefined);
+    );
   }
 
   async removeApprovers(groupIds: string[]): Promise<void> {
-    return Ajax.postData(
-      this.getBackendUrl() + this.id + "/approver/remove",
+    await Ajax.postData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/approver/remove`,
       groupIds,
-    ).then(() => undefined);
+    );
   }
 
   async getAllowedBookers(): Promise<Group[]> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/allowedbooker").then(
-      (result) => {
-        const list: Group[] = [];
-        (result.json as []).forEach((item) => {
-          const e: Group = new Group();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
+    const result = await Ajax.get(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/allowedbooker`,
     );
+    const list: Group[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Group = new Group();
+      e.deserialize(item);
+      list.push(e);
+    });
+    return list;
   }
 
   async addAllowedBookers(groupIds: string[]): Promise<void> {
-    return Ajax.putData(
-      this.getBackendUrl() + this.id + "/allowedbooker",
+    await Ajax.putData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/allowedbooker`,
       groupIds,
-    ).then(() => undefined);
-  }
-
-  async removeAllowedBookers(groupIds: string[]): Promise<void> {
-    return Ajax.postData(
-      this.getBackendUrl() + this.id + "/allowedbooker/remove",
-      groupIds,
-    ).then(() => undefined);
-  }
-
-  static async get(locationId: string, id: string): Promise<Space> {
-    return Ajax.get("/location/" + locationId + "/space/" + id).then(
-      (result) => {
-        const e: Space = new Space();
-        e.deserialize(result.json);
-        return e;
-      },
     );
   }
 
-  static async list(locationId: string): Promise<Space[]> {
-    return Ajax.get("/location/" + locationId + "/space/").then((result) => {
-      const list: Space[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Space = new Space();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
+  async removeAllowedBookers(groupIds: string[]): Promise<void> {
+    await Ajax.postData(
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/allowedbooker/remove`,
+      groupIds,
+    );
+  }
+
+  static async get(locationId: string, id: string): Promise<Space> {
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(id)}`,
+    );
+    const e = new Space();
+    e.deserialize(result.json);
+    return e;
+  }
+
+  private static deserializeList(json: []): Space[] {
+    return json.map((item) => {
+      const e = new Space();
+      e.deserialize(item);
+      return e;
     });
+  }
+
+  static async list(locationId: string): Promise<Space[]> {
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/`,
+    );
+    return Space.deserializeList(result.json as []);
   }
 
   static async listAvailability(
@@ -200,30 +274,28 @@ export default class Space extends Entity {
     leave: Date,
     attributes?: SearchAttribute[],
   ): Promise<Space[]> {
-    let params =
-      "enter=" +
-      encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString());
-    params +=
-      "&leave=" +
-      encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString());
+    let params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}`;
+    params += `&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
     if (attributes && attributes.length > 0) {
-      params +=
-        "&attributes=" +
-        encodeURIComponent(
-          JSON.stringify(attributes.map((a) => a.serialize())),
-        );
+      params += `&attributes=${encodeURIComponent(JSON.stringify(attributes.map((a) => a.serialize())))}`;
     }
-    return Ajax.get(
-      "/location/" + locationId + "/space/availability?" + params,
-    ).then((result) => {
-      const list: Space[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Space = new Space();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
-    });
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/availability?${params}`,
+    );
+    return Space.deserializeList(result.json as []);
+  }
+
+  static async listSingleAvailability(
+    locationId: string,
+    spaceId: string,
+    enter: Date,
+    leave: Date,
+  ): Promise<Space[]> {
+    const params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
+    const result = await Ajax.get(
+      `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(spaceId)}/availability?${params}`,
+    );
+    return Space.deserializeList(result.json as []);
   }
 
   static async bulkUpdate(
@@ -233,17 +305,16 @@ export default class Space extends Entity {
     deleteIds: string[],
   ): Promise<BulkUpdateResponse> {
     const payload = {
-      creates: creates,
-      updates: updates,
+      creates: creates.map((s) => s.serialize()),
+      updates: updates.map((s) => s.serialize()),
       deleteIds: deleteIds,
     };
-    return Ajax.postData(
-      "/location/" + locationId + "/space/bulk",
+    const result = await Ajax.postData(
+      `/location/${encodeURIComponent(locationId)}/space/bulk`,
       payload,
-    ).then((result) => {
-      const e = new BulkUpdateResponse();
-      e.deserialize(result);
-      return e;
-    });
+    );
+    const e = new BulkUpdateResponse();
+    e.deserialize(result);
+    return e;
   }
 }

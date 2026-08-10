@@ -11,6 +11,7 @@ export const enum ResponseCode {
   BookingInvalidMinBookingDuration = 1007,
   BookingMaxHoursBeforeDelete = 1008,
   BookingInPast = 1011,
+  BookingInvalidWeekday = 1013,
 
   PresenceReportDateRangeTooLong = 2001,
 
@@ -19,6 +20,8 @@ export const enum ResponseCode {
   GroupNameAlreadyExists = 4001,
 
   PasswordUpdateRequired = 5001,
+
+  AuthProviderNameExists = 6001,
 }
 
 export default class ErrorText {
@@ -46,11 +49,14 @@ export default class ErrorText {
           num: INFOS.maxHoursBeforeDelete,
         }),
       [ResponseCode.BookingInPast]: () => t("errorInPast"),
+      [ResponseCode.BookingInvalidWeekday]: () => t("errorInvalidWeekday"),
       [ResponseCode.PresenceReportDateRangeTooLong]: () =>
         t("errorDateRangeTooLong"),
       [ResponseCode.UsernameExists]: () => t("errorUsernameExists"),
       [ResponseCode.GroupNameAlreadyExists]: () =>
         t("errorGroupNameAlreadyExists"),
+      [ResponseCode.AuthProviderNameExists]: () =>
+        t("errorAuthProviderNameExists"),
     };
 
     return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");

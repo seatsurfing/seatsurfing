@@ -17,6 +17,7 @@ interface Props {
   noCalendar?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
+  showWeekday?: boolean | undefined;
   value: Date;
   minDate?: Date | undefined;
   maxDate?: Date | undefined;
@@ -40,7 +41,7 @@ class DateTimePicker extends React.Component<Props, State> {
     if (lang.indexOf("-") !== -1) {
       lang = lang.split("-")[0];
     }
-    if (lang === "en") {
+    if (lang === "en" || !/^[a-z]{2,3}$/.test(lang)) {
       this.setState({ locale: DefaultLocale });
       return;
     }
@@ -60,7 +61,9 @@ class DateTimePicker extends React.Component<Props, State> {
     }
     let formatting = this.props.noCalendar
       ? ""
-      : RuntimeConfig.INFOS.dateFormat + " ";
+      : RuntimeConfig.INFOS.dateFormat +
+        (this.props.showWeekday ? " (D)" : "") +
+        " ";
     if (this.props.enableTime) {
       if (RuntimeConfig.INFOS.use24HourTime) {
         formatting += "H:i";
@@ -85,7 +88,10 @@ class DateTimePicker extends React.Component<Props, State> {
           time_24hr: RuntimeConfig.INFOS.use24HourTime,
           minDate: this.props.minDate,
           maxDate: this.props.maxDate,
-          locale: this.state.locale,
+          locale: {
+            ...this.state.locale,
+            firstDayOfWeek: RuntimeConfig.INFOS.weekStartDay,
+          },
           noCalendar: this.props.noCalendar,
         }}
       />

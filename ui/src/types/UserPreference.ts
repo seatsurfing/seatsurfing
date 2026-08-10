@@ -2,7 +2,19 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import Navigation from "@/util/Navigation";
 
+export type PreferenceEnterTimeType =
+  (typeof UserPreference.PreferenceEnterTime)[keyof typeof UserPreference.PreferenceEnterTime];
+
 export default class UserPreference extends Entity {
+  static readonly DEFAULT_WORKDAY_START = "09:00";
+  static readonly DEFAULT_WORKDAY_END = "17:00";
+
+  static readonly PreferenceEnterTime = {
+    Now: 1,
+    NextDay: 2,
+    NextWorkday: 3,
+  };
+
   static readonly PREF_ENTER_TIME = "enter_time";
   static readonly PREF_WORKDAY_START = "workday_start";
   static readonly PREF_WORKDAY_END = "workday_end";
@@ -19,8 +31,11 @@ export default class UserPreference extends Entity {
   static readonly PREF_CALDAV_PASS = "caldav_pass";
   static readonly PREF_CALDAV_PATH = "caldav_path";
   static readonly PREF_MAIL_NOTIFICATIONS = "mail_notifications";
+  static readonly PREF_MAIL_REMINDER = "mail_reminder";
+  static readonly PREF_MAIL_LANGUAGE = "mail_language";
   static readonly PREF_USE_24_HOUR_TIME = "use_24_hour_time";
   static readonly PREF_DATE_FORMAT = "date_format";
+  static readonly PREF_WEEK_START_DAY = "week_start_day";
 
   name: string;
   value: string;

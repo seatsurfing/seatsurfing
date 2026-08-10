@@ -12,8 +12,7 @@ import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
-import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   loading: boolean;
@@ -25,6 +24,7 @@ interface State {
   type: number;
   spaceApplicable: boolean;
   locationApplicable: boolean;
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -47,14 +47,11 @@ class EditAttribute extends React.Component<Props, State> {
       type: 1,
       spaceApplicable: false,
       locationApplicable: false,
+      showDeleteConfirm: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -98,11 +95,7 @@ class EditAttribute extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteAttribute"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteConfirm: true });
   };
 
   render() {
@@ -111,7 +104,7 @@ class EditAttribute extends React.Component<Props, State> {
       return <></>;
     }
 
-    let backButton = (
+    const backButton = (
       <Link
         href="/admin/attributes"
         className="btn btn-sm btn-outline-secondary"
@@ -136,7 +129,7 @@ class EditAttribute extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
     }
 
-    let buttonDelete = (
+    const buttonDelete = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -146,7 +139,7 @@ class EditAttribute extends React.Component<Props, State> {
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
     );
-    let buttonSave = (
+    const buttonSave = (
       <Button
         className="btn-sm"
         variant="outline-secondary"
@@ -229,6 +222,17 @@ class EditAttribute extends React.Component<Props, State> {
             </Col>
           </Form.Group>
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteAttribute")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showDeleteConfirm: false });
+            this.entity.delete().then(() => {
+              this.setState({ goBack: true });
+            });
+          }}
+        />
       </FullLayout>
     );
   }

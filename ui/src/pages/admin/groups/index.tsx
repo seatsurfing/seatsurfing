@@ -9,9 +9,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
-import Ajax from "@/util/Ajax";
 import Group from "@/types/Group";
-import RedirectUtil from "@/util/RedirectUtil";
 
 interface State {
   selectedItem: string;
@@ -35,14 +33,8 @@ class Groups extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
-    import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
-    );
+  componentDidMount = async () => {
+    this.ExcellentExport = (await import("excellentexport")).default;
     this.loadItems();
   };
 
@@ -61,6 +53,7 @@ class Groups extends React.Component<Props, State> {
     return (
       <tr key={group.id} onClick={() => this.onItemSelect(group)}>
         <td>{group.name}</td>
+        <td>{group.userCount}</td>
       </tr>
     );
   };
@@ -89,7 +82,7 @@ class Groups extends React.Component<Props, State> {
       return <></>;
     }
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-groups.xlsx"
         href="#"
@@ -99,7 +92,7 @@ class Groups extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         <Link
@@ -132,12 +125,16 @@ class Groups extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table"
+          className="clickable-table caption-top"
           id="datatable"
         >
+          <caption>
+            {this.props.t("numRecords")}: {rows.length}
+          </caption>
           <thead>
             <tr>
               <th>{this.props.t("name")}</th>
+              <th>{this.props.t("members")}</th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

@@ -10,14 +10,15 @@ import (
 )
 
 func main() {
-	log.Println("Starting...")
+	log.Println("Starting …")
 	log.Println("Seatsurfing version " + GetProductVersion())
 	db := GetDatabase()
 	a := GetApp()
+	a.InitializePlugins()
 	a.InitializeDatabases()
 	a.InitializeDefaultOrg()
 	a.InitializeSingleOrgSettings()
-	a.InitializePlugins()
+	a.NotifyPlugins()
 	a.InitializeRouter()
 	a.InitializeTimers()
 	a.Run()

@@ -15,7 +15,8 @@ import Organization from "@/types/Organization";
 import Domain from "@/types/Domain";
 import Ajax from "@/util/Ajax";
 import User from "@/types/User";
-import RedirectUtil from "@/util/RedirectUtil";
+import ConfirmModal from "@/components/ConfirmModal";
+
 import Validation from "@/util/Validation";
 
 interface State {
@@ -31,6 +32,7 @@ interface State {
   language: string;
   domain: string;
   password: string;
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -56,14 +58,11 @@ class EditOrganization extends React.Component<Props, State> {
       language: "de",
       domain: "",
       password: "",
+      showDeleteConfirm: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -125,11 +124,7 @@ class EditOrganization extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteOrg"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ showDeleteConfirm: true });
   };
 
   render() {
@@ -197,7 +192,7 @@ class EditOrganization extends React.Component<Props, State> {
       );
     }
 
-    const languages = ["de", "en", "he"];
+    const languages = ["de", "en"];
 
     let adminSection = <></>;
     if (!this.entity.id) {
@@ -265,6 +260,8 @@ class EditOrganization extends React.Component<Props, State> {
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
                 autoFocus={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -281,7 +278,9 @@ class EditOrganization extends React.Component<Props, State> {
                 required={true}
               >
                 {languages.map((lc) => (
-                  <option key={lc}>{lc}</option>
+                  <option key={lc} value={lc}>
+                    {this.props.t("language-" + lc)}
+                  </option>
                 ))}
               </Form.Select>
             </Col>
@@ -303,6 +302,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -318,6 +319,8 @@ class EditOrganization extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
               />
             </Col>
           </Form.Group>
@@ -331,11 +334,23 @@ class EditOrganization extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+                maxLength={128}
               />
             </Col>
           </Form.Group>
           {adminSection}
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteOrg")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={() => {
+            this.setState({ showDeleteConfirm: false });
+            this.entity.delete().then(() => {
+              this.setState({ goBack: true });
+            });
+          }}
+        />
       </FullLayout>
     );
   }

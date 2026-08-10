@@ -2,43 +2,20 @@ package repository
 
 import (
 	"sync"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
-type AuthProviderRepository struct {
+type AuthProviderStore struct {
 }
 
-type AuthProviderType int
-
-const (
-	OAuth2 AuthProviderType = 1
-)
-
-type AuthProvider struct {
-	ID                     string
-	OrganizationID         string
-	Name                   string
-	ProviderType           int
-	AuthURL                string
-	TokenURL               string
-	AuthStyle              int
-	Scopes                 string
-	UserInfoURL            string
-	UserInfoEmailField     string
-	UserInfoFirstnameField string
-	UserInfoLastnameField  string
-	ClientID               string
-	ClientSecret           string
-	LogoutURL              string
-	ProfilePageURL         string
-	ReadOnly               bool
-}
-
-var authProviderRepository *AuthProviderRepository
+var authProviderRepository *AuthProviderStore
 var authProviderRepositoryOnce sync.Once
 
-func GetAuthProviderRepository() *AuthProviderRepository {
+func GetAuthProviderRepository() *AuthProviderStore {
 	authProviderRepositoryOnce.Do(func() {
-		authProviderRepository = &AuthProviderRepository{}
+		authProviderRepository = &AuthProviderStore{}
 		_, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS auth_providers (" +
 			"id uuid DEFAULT uuid_generate_v4(), " +
 			"organization_id uuid NOT NULL, " +
@@ -64,7 +41,7 @@ func GetAuthProviderRepository() *AuthProviderRepository {
 	return authProviderRepository
 }
 
-func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
+func (r *AuthProviderStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 17 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
 			"ADD COLUMN IF NOT EXISTS logout_url VARCHAR NOT NULL DEFAULT ''"); err != nil {
@@ -85,9 +62,41 @@ func (r *AuthProviderRepository) RunSchemaUpgrade(curVersion, targetVersion int)
 			panic(err)
 		}
 	}
+	if curVersion < 42 {
+		r.encryptExistingClientSecrets()
+	}
 }
 
-func (r *AuthProviderRepository) Create(e *AuthProvider) error {
+func (r *AuthProviderStore) encryptExistingClientSecrets() {
+	rows, err := GetDatabase().DB().Query("SELECT id, client_secret FROM auth_providers")
+	if err != nil {
+		panic(err)
+	}
+	type record struct {
+		id     string
+		secret string
+	}
+	var records []record
+	for rows.Next() {
+		var rec record
+		if err := rows.Scan(&rec.id, &rec.secret); err != nil {
+			panic(err)
+		}
+		records = append(records, rec)
+	}
+	rows.Close()
+	for _, rec := range records {
+		encrypted, err := EncryptString(rec.secret)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE auth_providers SET client_secret = $1 WHERE id = $2", encrypted, rec.id); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (r *AuthProviderStore) Create(e *AuthProvider) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO auth_providers "+
 		"(organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only) "+
@@ -101,7 +110,7 @@ func (r *AuthProviderRepository) Create(e *AuthProvider) error {
 	return nil
 }
 
-func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
+func (r *AuthProviderStore) GetOne(id string) (*AuthProvider, error) {
 	e := &AuthProvider{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
@@ -113,7 +122,7 @@ func (r *AuthProviderRepository) GetOne(id string) (*AuthProvider, error) {
 	return e, nil
 }
 
-func (r *AuthProviderRepository) GetOneByOrgId(id string, orgId string) (*AuthProvider, error) {
+func (r *AuthProviderStore) GetOneByOrgId(id string, orgId string) (*AuthProvider, error) {
 	e := &AuthProvider{}
 	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
@@ -125,7 +134,19 @@ func (r *AuthProviderRepository) GetOneByOrgId(id string, orgId string) (*AuthPr
 	return e, nil
 }
 
-func (r *AuthProviderRepository) GetAll(organizationID string) ([]*AuthProvider, error) {
+func (r *AuthProviderStore) GetByName(organizationID string, name string) (*AuthProvider, error) {
+	e := &AuthProvider{}
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+		"FROM auth_providers "+
+		"WHERE organization_id = $1 AND name = $2",
+		organizationID, name).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func (r *AuthProviderStore) GetAll(organizationID string) ([]*AuthProvider, error) {
 	var result []*AuthProvider
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
@@ -146,7 +167,7 @@ func (r *AuthProviderRepository) GetAll(organizationID string) ([]*AuthProvider,
 	return result, nil
 }
 
-func (r *AuthProviderRepository) Update(e *AuthProvider) error {
+func (r *AuthProviderStore) Update(e *AuthProvider) error {
 	_, err := GetDatabase().DB().Exec("UPDATE auth_providers SET "+
 		"organization_id = $1, "+
 		"name = $2, "+
@@ -169,12 +190,12 @@ func (r *AuthProviderRepository) Update(e *AuthProvider) error {
 	return err
 }
 
-func (r *AuthProviderRepository) Delete(e *AuthProvider) error {
+func (r *AuthProviderStore) Delete(e *AuthProvider) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_providers WHERE id = $1", e.ID)
 	return err
 }
 
-func (r *AuthProviderRepository) DeleteAll(organizationID string) error {
+func (r *AuthProviderStore) DeleteAll(organizationID string) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_providers WHERE organization_id = $1", organizationID)
 	return err
 }

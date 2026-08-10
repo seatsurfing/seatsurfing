@@ -23,8 +23,8 @@ type PreferenceName struct {
 
 var (
 	PreferenceEnterTime             PreferenceName = PreferenceName{Name: "enter_time", Type: SettingTypeInt}
-	PreferenceWorkdayStart          PreferenceName = PreferenceName{Name: "workday_start", Type: SettingTypeInt}
-	PreferenceWorkdayEnd            PreferenceName = PreferenceName{Name: "workday_end", Type: SettingTypeInt}
+	PreferenceWorkdayStart          PreferenceName = PreferenceName{Name: "workday_start", Type: SettingTypeString}
+	PreferenceWorkdayEnd            PreferenceName = PreferenceName{Name: "workday_end", Type: SettingTypeString}
 	PreferenceWorkdays              PreferenceName = PreferenceName{Name: "workdays", Type: SettingTypeIntArray}
 	PreferenceLocation              PreferenceName = PreferenceName{Name: "location_id", Type: SettingTypeString}
 	PreferenceBookedColor           PreferenceName = PreferenceName{Name: "booked_color", Type: SettingTypeString}
@@ -38,9 +38,12 @@ var (
 	PreferenceCalDAVPass            PreferenceName = PreferenceName{Name: "caldav_pass", Type: SettingTypeEncryptedString}
 	PreferenceCalDAVPath            PreferenceName = PreferenceName{Name: "caldav_path", Type: SettingTypeString}
 	PreferenceMailNotifications     PreferenceName = PreferenceName{Name: "mail_notifications", Type: SettingTypeBool}
+	PreferenceMailReminder          PreferenceName = PreferenceName{Name: "mail_reminder", Type: SettingTypeBool}
+	PreferenceMailLanguage          PreferenceName = PreferenceName{Name: "mail_language", Type: SettingTypeString}
 	PreferenceDateFormat            PreferenceName = PreferenceName{Name: "date_format", Type: SettingTypeString}
 	PreferenceApprovalNotifications PreferenceName = PreferenceName{Name: "approval_notifications", Type: SettingTypeBool}
 	Preference24HourTime            PreferenceName = PreferenceName{Name: "use_24_hour_time", Type: SettingTypeBool}
+	PreferenceWeekStartDay          PreferenceName = PreferenceName{Name: "week_start_day", Type: SettingTypeInt}
 )
 
 var (
@@ -68,7 +71,17 @@ func GetUserPreferencesRepository() *UserPreferencesRepository {
 }
 
 func (r *UserPreferencesRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// nothing yet
+	if curVersion < 48 {
+		// workday_start / workday_end used to be stored as a plain hour (0-24),
+		// now they are stored as a "HH:MM" time string; skip rows which are
+		// already in the new format
+		if _, err := GetDatabase().DB().Exec("UPDATE users_preferences SET value = "+
+			"(LPAD(LEAST(value::integer, 23)::text, 2, '0') || ':00') "+
+			"WHERE name IN ($1, $2) AND value ~ '^[0-9]{1,2}$'",
+			PreferenceWorkdayStart.Name, PreferenceWorkdayEnd.Name); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *UserPreferencesRepository) Set(userID string, name string, value string) error {
@@ -142,8 +155,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 	_, err := GetDatabase().DB().Exec("INSERT INTO users_preferences (user_id, name, value) "+
 		"VALUES "+
 		"($1, '"+PreferenceEnterTime.Name+"', '"+strconv.Itoa(PreferenceEnterTimeNow)+"'), "+
-		"($1, '"+PreferenceWorkdayStart.Name+"', '9'), "+
-		"($1, '"+PreferenceWorkdayEnd.Name+"', '17'), "+
+		"($1, '"+PreferenceWorkdayStart.Name+"', '09:00'), "+
+		"($1, '"+PreferenceWorkdayEnd.Name+"', '17:00'), "+
 		"($1, '"+PreferenceWorkdays.Name+"', '1,2,3,4,5'), "+
 		"($1, '"+PreferenceLocation.Name+"', ''), "+
 		"($1, '"+PreferenceBookedColor.Name+"', '#ff453a'), "+
@@ -154,7 +167,8 @@ func (r *UserPreferencesRepository) InitDefaultSettingsForUser(userID string) er
 		"($1, '"+PreferenceDisallowedColor.Name+"', '#eeeeee'), "+
 		"($1, '"+PreferenceApprovalNotifications.Name+"', '0'), "+
 		"($1, '"+Preference24HourTime.Name+"', '1'), "+
-		"($1, '"+PreferenceDateFormat.Name+"', 'Y-m-d') "+
+		"($1, '"+PreferenceDateFormat.Name+"', 'Y-m-d'), "+
+		"($1, '"+PreferenceWeekStartDay.Name+"', '1') "+
 		"ON CONFLICT (user_id, name) DO NOTHING",
 		userID)
 	return err

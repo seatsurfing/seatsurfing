@@ -1,5 +1,13 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert, InputGroup } from "react-bootstrap";
+import {
+  Form,
+  Col,
+  Row,
+  Button,
+  Alert,
+  InputGroup,
+  Modal,
+} from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
@@ -16,13 +24,19 @@ import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
-import Ajax from "@/util/Ajax";
 import OrgSettings from "@/types/Settings";
-import RedirectUtil from "@/util/RedirectUtil";
+import Organization from "@/types/Organization";
+
 import AuthProvider from "@/types/AuthProvider";
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import Validation from "@/util/Validation";
+import Formatting from "@/util/Formatting";
+import RendererUtils from "@/util/RendererUtils";
+import ConfirmModal from "@/components/ConfirmModal";
+
+type PendingConfirmAction =
+  "delete" | "resetPasskeys" | "resetTotp" | "revokeApiToken";
 
 interface State {
   loading: boolean;
@@ -38,13 +52,18 @@ interface State {
   requirePassword: boolean;
   password: string;
   changePassword: boolean;
-  authMethod: string; // "password" | "provider" | "invitation"
+  authMethod: string; // one of User.AuthMethodPassword | User.AuthMethodProvider | User.AuthMethodInvitation
   authProviderId: string;
   sendInvitation: boolean;
   resendInvitation: boolean;
   role: number;
   totpEnabled: boolean;
   hasPasskeys: boolean;
+  apiTokenConfigured: boolean;
+  showApiTokenModal: boolean;
+  generatedToken: string;
+  lastActivity: Date | null;
+  pendingConfirmAction: PendingConfirmAction | null;
 }
 
 interface Props {
@@ -75,21 +94,22 @@ class EditUser extends React.Component<Props, State> {
       requirePassword: false,
       password: "",
       changePassword: false,
-      authMethod: "password",
+      authMethod: User.AuthMethodPassword,
       authProviderId: "",
       sendInvitation: false,
       resendInvitation: false,
       role: User.UserRoleUser,
       totpEnabled: false,
       hasPasskeys: false,
+      apiTokenConfigured: false,
+      showApiTokenModal: false,
+      generatedToken: "",
+      lastActivity: null,
+      pendingConfirmAction: null,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -102,7 +122,7 @@ class EditUser extends React.Component<Props, State> {
 
   loadData = () => {
     const promises: Promise<any>[] = [
-      OrgSettings.getOne("feature_no_user_limit"),
+      OrgSettings.getOne(Organization.PREF_FEATURE_NO_USER_LIMIT),
       User.getCount(),
       User.getSelf().then((me) => {
         return [me];
@@ -113,34 +133,42 @@ class EditUser extends React.Component<Props, State> {
     if (id && typeof id === "string" && id !== "add") {
       promises.push(User.get(id));
     }
-    Promise.all(promises).then((values) => {
+    Promise.all(promises).then(async (values) => {
       this.usersMax = values[0] === "1" ? 1000000 : 10;
       this.usersCur = values[1];
       this.adminUserRole = values[2][0].role;
       this.authProviders = values[3];
       if (values.length >= 5) {
-        let user = values[4];
+        const user = values[4];
         this.entity = user;
         // Determine auth method from user data
-        let authMethod = "password";
+        let authMethod = User.AuthMethodPassword;
         if (user.passwordPending) {
-          authMethod = "invitation";
+          authMethod = User.AuthMethodInvitation;
         } else if (user.authProviderId) {
-          authMethod = "provider";
+          authMethod = User.AuthMethodProvider;
         } else if (user.requirePassword) {
-          authMethod = "password";
+          authMethod = User.AuthMethodPassword;
         }
+        const isServiceAccount =
+          user.role === User.UserRoleServiceAccountRO ||
+          user.role === User.UserRoleServiceAccountRW;
+        const apiTokenConfigured = isServiceAccount
+          ? await User.getApiTokenStatus(user.id).catch(() => false)
+          : false;
         this.setState({
           email: user.email,
           originalEmail: user.email,
           firstname: user.firstname,
           lastname: user.lastname,
           requirePassword: user.requirePassword,
-          authMethod: authMethod,
+          authMethod,
           authProviderId: user.authProviderId || "",
           role: user.role,
           totpEnabled: user.totpEnabled,
           hasPasskeys: user.hasPasskeys,
+          apiTokenConfigured,
+          lastActivity: user.lastActivity,
         });
       }
       this.setState({
@@ -149,7 +177,7 @@ class EditUser extends React.Component<Props, State> {
     });
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       error: false,
@@ -161,7 +189,7 @@ class EditUser extends React.Component<Props, State> {
     this.entity.role = this.state.role;
 
     // Set authentication fields based on selected auth method
-    if (this.state.authMethod === "invitation") {
+    if (this.state.authMethod === User.AuthMethodInvitation) {
       // Only send invitation if email changed or explicitly requested
       const emailChanged = this.state.email !== this.state.originalEmail;
       const isNewUser = !this.entity.id;
@@ -169,7 +197,7 @@ class EditUser extends React.Component<Props, State> {
         isNewUser || emailChanged || this.state.resendInvitation;
       this.entity.password = "";
       this.entity.authProviderId = "";
-    } else if (this.state.authMethod === "provider") {
+    } else if (this.state.authMethod === User.AuthMethodProvider) {
       this.entity.sendInvitation = false;
       this.entity.password = "";
       this.entity.authProviderId = this.state.authProviderId;
@@ -184,52 +212,40 @@ class EditUser extends React.Component<Props, State> {
       }
     }
 
-    this.entity
-      .save()
-      .then(() => {
-        this.props.router.push("/admin/users/" + this.entity.id);
-        this.setState({
-          saved: true,
-          resendInvitation: false,
-          originalEmail: this.entity.email, // don't (re)send invitation mails on second save
-        });
-      })
-      .catch((e) => {
-        let code: number = 0;
-        if (e instanceof AjaxError) {
-          code = e.appErrorCode;
-        }
-        this.setState({
-          error: true,
-          errorText: code
-            ? ErrorText.getTextForAppCode(code, this.props.t)
-            : "",
-        });
+    try {
+      await this.entity.save();
+      this.props.router.push(
+        `/admin/users/${encodeURIComponent(this.entity.id)}`,
+      );
+      this.setState({
+        saved: true,
+        resendInvitation: false,
+        originalEmail: this.entity.email, // don't (re)send invitation mails on second save
       });
+    } catch (e) {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
+      this.setState({
+        error: true,
+        errorText: code
+          ? ErrorText.getTextForAppCode(code, this.props.t)
+          : this.props.t("errorSave"),
+      });
+    }
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteUser"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
-    }
+    this.setState({ pendingConfirmAction: "delete" });
   };
 
   resetPasskeys = () => {
-    if (window.confirm(this.props.t("confirmResetPasskeys"))) {
-      User.adminResetPasskeys(this.entity.id).then(() => {
-        this.setState({ hasPasskeys: false });
-      });
-    }
+    this.setState({ pendingConfirmAction: "resetPasskeys" });
   };
 
   resetTotp = () => {
-    if (window.confirm(this.props.t("confirmResetTotp"))) {
-      User.adminResetTotp(this.entity.id).then(() => {
-        this.setState({ totpEnabled: false });
-      });
-    }
+    this.setState({ pendingConfirmAction: "resetTotp" });
   };
 
   generatePassword = () => {
@@ -244,6 +260,57 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ role: role, changePassword });
     if (changePassword) {
       this.generatePassword();
+    }
+  };
+
+  generateApiToken = async () => {
+    const token = await User.generateApiToken(this.entity.id);
+    this.setState({
+      apiTokenConfigured: true,
+      showApiTokenModal: true,
+      generatedToken: token,
+    });
+  };
+
+  revokeApiToken = () => {
+    this.setState({ pendingConfirmAction: "revokeApiToken" });
+  };
+
+  confirmPendingAction = async () => {
+    const action = this.state.pendingConfirmAction;
+    this.setState({ pendingConfirmAction: null });
+    switch (action) {
+      case "delete":
+        await this.entity.delete();
+        this.setState({ goBack: true });
+        break;
+      case "resetPasskeys":
+        await User.adminResetPasskeys(this.entity.id);
+        this.setState({ hasPasskeys: false });
+        break;
+      case "resetTotp":
+        await User.adminResetTotp(this.entity.id);
+        this.setState({ totpEnabled: false });
+        break;
+      case "revokeApiToken":
+        await User.revokeApiToken(this.entity.id);
+        this.setState({ apiTokenConfigured: false });
+        break;
+    }
+  };
+
+  getPendingConfirmMessage = () => {
+    switch (this.state.pendingConfirmAction) {
+      case "delete":
+        return this.props.t("confirmDeleteUser");
+      case "resetPasskeys":
+        return this.props.t("confirmResetPasskeys");
+      case "resetTotp":
+        return this.props.t("confirmResetTotp");
+      case "revokeApiToken":
+        return this.props.t("confirmRevokeApiToken");
+      default:
+        return "";
     }
   };
 
@@ -280,11 +347,7 @@ class EditUser extends React.Component<Props, State> {
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     } else if (this.state.error) {
-      hint = (
-        <Alert variant="danger">
-          {this.state.errorText ?? this.props.t("errorSave")}
-        </Alert>
-      );
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     const buttonDelete = (
@@ -369,22 +432,7 @@ class EditUser extends React.Component<Props, State> {
         </Form.Select>
       );
     } else {
-      let role = this.props.t("roleUser");
-      if (this.state.role === User.UserRoleSpaceAdmin) {
-        role = this.props.t("roleSpaceAdmin");
-      }
-      if (this.state.role === User.UserRoleOrgAdmin) {
-        role = this.props.t("roleOrgAdmin");
-      }
-      if (this.state.role === User.UserRoleServiceAccountRO) {
-        role = this.props.t("roleServiceAccountRO");
-      }
-      if (this.state.role === User.UserRoleServiceAccountRW) {
-        role = this.props.t("roleServiceAccountRW");
-      }
-      if (this.state.role === User.UserRoleSuperAdmin) {
-        role = this.props.t("roleSuperAdmin");
-      }
+      const role = RendererUtils.roleName(this.state.role, this.props.t);
       roleSelect = (
         <>
           <Form.Control
@@ -444,6 +492,10 @@ class EditUser extends React.Component<Props, State> {
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
@@ -461,6 +513,10 @@ class EditUser extends React.Component<Props, State> {
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
@@ -504,8 +560,10 @@ class EditUser extends React.Component<Props, State> {
                 id="auth-method-password"
                 name="authMethod"
                 label={this.props.t("authMethodPassword")}
-                checked={this.state.authMethod === "password"}
-                onChange={() => this.setState({ authMethod: "password" })}
+                checked={this.state.authMethod === User.AuthMethodPassword}
+                onChange={() =>
+                  this.setState({ authMethod: User.AuthMethodPassword })
+                }
               />
               {this.authProviders.length > 0 && (
                 <Form.Check
@@ -513,8 +571,10 @@ class EditUser extends React.Component<Props, State> {
                   id="auth-method-provider"
                   name="authMethod"
                   label={this.props.t("authMethodProvider")}
-                  checked={this.state.authMethod === "provider"}
-                  onChange={() => this.setState({ authMethod: "provider" })}
+                  checked={this.state.authMethod === User.AuthMethodProvider}
+                  onChange={() =>
+                    this.setState({ authMethod: User.AuthMethodProvider })
+                  }
                 />
               )}
               <Form.Check
@@ -522,8 +582,10 @@ class EditUser extends React.Component<Props, State> {
                 id="auth-method-invitation"
                 name="authMethod"
                 label={this.props.t("authMethodInvitation")}
-                checked={this.state.authMethod === "invitation"}
-                onChange={() => this.setState({ authMethod: "invitation" })}
+                checked={this.state.authMethod === User.AuthMethodInvitation}
+                onChange={() =>
+                  this.setState({ authMethod: User.AuthMethodInvitation })
+                }
               />
             </Col>
           </Form.Group>
@@ -533,7 +595,7 @@ class EditUser extends React.Component<Props, State> {
             as={Row}
             hidden={
               this.isServiceAccount(this.state.role) ||
-              this.state.authMethod !== "provider" ||
+              this.state.authMethod !== User.AuthMethodProvider ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
@@ -547,7 +609,7 @@ class EditUser extends React.Component<Props, State> {
                 onChange={(e: any) =>
                   this.setState({ authProviderId: e.target.value })
                 }
-                required={this.state.authMethod === "provider"}
+                required={this.state.authMethod === User.AuthMethodProvider}
               >
                 <option value="">{this.props.t("pleaseSelect")}</option>
                 {this.authProviders.map((provider) => (
@@ -565,7 +627,7 @@ class EditUser extends React.Component<Props, State> {
             hidden={
               this.isServiceAccount(this.state.role) ||
               !this.entity.id ||
-              this.state.authMethod !== "password" ||
+              this.state.authMethod !== User.AuthMethodPassword ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
@@ -588,7 +650,7 @@ class EditUser extends React.Component<Props, State> {
             hidden={
               this.isServiceAccount(this.state.role) ||
               !this.entity.id ||
-              this.state.authMethod !== "invitation"
+              this.state.authMethod !== User.AuthMethodInvitation
             }
           >
             <Col sm="6">
@@ -611,7 +673,7 @@ class EditUser extends React.Component<Props, State> {
               (RuntimeConfig.INFOS.disablePasswordLogin &&
                 !this.isServiceAccount(this.state.role)) ||
               (!this.isServiceAccount(this.state.role) &&
-                this.state.authMethod !== "password")
+                this.state.authMethod !== User.AuthMethodPassword)
             }
           >
             <Form.Label htmlFor="password" column sm="2">
@@ -632,10 +694,10 @@ class EditUser extends React.Component<Props, State> {
                     !!(
                       this.isServiceAccount(this.state.role) ||
                       (!this.entity.id &&
-                        this.state.authMethod === "password") ||
+                        this.state.authMethod === User.AuthMethodPassword) ||
                       (this.entity.id &&
                         this.state.changePassword &&
-                        this.state.authMethod === "password")
+                        this.state.authMethod === User.AuthMethodPassword)
                     )
                   }
                   disabled={
@@ -664,6 +726,27 @@ class EditUser extends React.Component<Props, State> {
                   hidden={!this.isServiceAccount(this.state.role)}
                 />
               </InputGroup>
+            </Col>
+          </Form.Group>
+
+          {/* Last activity — only shown for existing users */}
+          <Form.Group as={Row} hidden={!this.entity.id}>
+            <Form.Label htmlFor="lastActivity" column sm="2">
+              {this.props.t("lastActivity")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                id="lastActivity"
+                plaintext={true}
+                readOnly={true}
+                value={
+                  this.state.lastActivity
+                    ? Formatting.getFormatterShort(true).format(
+                        this.state.lastActivity,
+                      )
+                    : "-"
+                }
+              />
             </Col>
           </Form.Group>
 
@@ -701,7 +784,86 @@ class EditUser extends React.Component<Props, State> {
               )}
             </Col>
           </Form.Group>
+
+          {/* API Token section — only shown for existing service accounts */}
+          {this.entity.id && this.isServiceAccount(this.state.role) && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("apiToken")}
+              </Form.Label>
+              <Col sm="4" className="d-flex gap-2 align-items-center">
+                <span
+                  className={
+                    this.state.apiTokenConfigured
+                      ? "text-success"
+                      : "text-secondary"
+                  }
+                >
+                  {this.state.apiTokenConfigured
+                    ? this.props.t("apiTokenConfigured")
+                    : this.props.t("apiTokenNotConfigured")}
+                </span>
+                <Button
+                  className="btn-sm"
+                  variant="outline-secondary"
+                  onClick={this.generateApiToken}
+                >
+                  {this.props.t("generateApiToken")}
+                </Button>
+                {this.state.apiTokenConfigured && (
+                  <Button
+                    className="btn-sm"
+                    variant="outline-danger"
+                    onClick={this.revokeApiToken}
+                  >
+                    {this.props.t("revokeApiToken")}
+                  </Button>
+                )}
+              </Col>
+            </Form.Group>
+          )}
         </Form>
+
+        <Modal
+          show={this.state.showApiTokenModal}
+          onHide={() =>
+            this.setState({ showApiTokenModal: false, generatedToken: "" })
+          }
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>{this.props.t("apiToken")}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Alert variant="warning">
+              {this.props.t("apiTokenOnceWarning")}
+            </Alert>
+            <InputGroup>
+              <Form.Control
+                type="text"
+                readOnly
+                value={this.state.generatedToken}
+              />
+              <CopyToClipboardButton text={this.state.generatedToken} />
+            </InputGroup>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                this.setState({ showApiTokenModal: false, generatedToken: "" })
+              }
+            >
+              {this.props.t("close")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        <ConfirmModal
+          show={this.state.pendingConfirmAction !== null}
+          message={this.getPendingConfirmMessage()}
+          onCancel={() => this.setState({ pendingConfirmAction: null })}
+          onConfirm={this.confirmPendingAction}
+        />
       </FullLayout>
     );
   }

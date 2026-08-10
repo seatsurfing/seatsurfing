@@ -31,47 +31,42 @@ export default class Domain {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(
-      "/organization/" + this.organizationId + "/domain/" + this.domain,
-    ).then(() => undefined);
+    await Ajax.delete(
+      `/organization/${encodeURIComponent(this.organizationId)}/domain/${encodeURIComponent(this.domain)}`,
+    );
   }
 
   async setPrimary(): Promise<void> {
-    return Ajax.postData(
-      "/organization/" +
-        this.organizationId +
-        "/domain/" +
-        this.domain +
-        "/primary",
-    ).then(() => undefined);
+    await Ajax.postData(
+      `/organization/${encodeURIComponent(this.organizationId)}/domain/${encodeURIComponent(this.domain)}/primary`,
+    );
   }
 
   async verify(): Promise<void> {
-    return Ajax.postData(
-      "/organization/" +
-        this.organizationId +
-        "/domain/" +
-        this.domain +
-        "/verify",
-    ).then(() => undefined);
+    await Ajax.postData(
+      `/organization/${encodeURIComponent(this.organizationId)}/domain/${encodeURIComponent(this.domain)}/verify`,
+      null,
+      (status) => status === 400,
+    );
   }
 
   static async add(orgId: string, domain: string): Promise<void> {
-    return Ajax.postData("/organization/" + orgId + "/domain/" + domain).then(
-      () => undefined,
+    await Ajax.postData(
+      `/organization/${encodeURIComponent(orgId)}/domain/${encodeURIComponent(domain)}`,
     );
   }
 
   static async list(orgId: string): Promise<Domain[]> {
-    return Ajax.get("/organization/" + orgId + "/domain/").then((result) => {
-      let list: Domain[] = [];
-      (result.json as []).forEach((item) => {
-        let e: Domain = new Domain();
-        e.deserialize(item);
-        e.organizationId = orgId;
-        list.push(e);
-      });
-      return list;
+    const result = await Ajax.get(
+      `/organization/${encodeURIComponent(orgId)}/domain/`,
+    );
+    const list: Domain[] = [];
+    (result.json as []).forEach((item) => {
+      const e: Domain = new Domain();
+      e.deserialize(item);
+      e.organizationId = orgId;
+      list.push(e);
     });
+    return list;
   }
 }

@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:17-alpine
         env:
           POSTGRES_PASSWORD: root
           POSTGRES_DB: seatsurfing_test
@@ -22,7 +22,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7.0.1
       - name: Install Node
         run: curl -fsSL https://deb.nodesource.com/setup_24.x -o - | bash && apt-get install -y nodejs
       - name: Install dependencies
@@ -34,12 +34,16 @@ jobs:
       - name: Install server dependencies
         working-directory: ./server
         run: go get -v ./...
-      - uses: JarvusInnovations/background-action@v1
+      - name: Build server
+        working-directory: ./server
+        run: go build -buildvcs=false -o ./seatsurfing .
+      - uses: JarvusInnovations/background-action@v2
         name: Run server in background
         with:
           working-directory: ./server
-          run: STATIC_UI_PATH=../ui/build PUBLIC_SCHEME=http PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable go run `ls *.go | grep -v _test.go`
+          run: STATIC_UI_PATH=../ui/build PUBLIC_SCHEME=http PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@postgres/seatsurfing_test?sslmode=disable CRYPT_KEY=rC8REJftxMcdhzTvu9Tk6RqgygBRctZC ./seatsurfing
           wait-on: http-get://localhost:8080/auth/singleorg
+          wait-for: 60s
 
       - name: Install dependencies
         working-directory: ./e2e
@@ -54,5 +58,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
-          path: playwright-report/
+          path: e2e/playwright-report/
           retention-days: 30

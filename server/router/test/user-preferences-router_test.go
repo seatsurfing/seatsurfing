@@ -49,7 +49,7 @@ func TestUserPreferencesCRUDMany(t *testing.T) {
 	loginResponse := LoginTestUser(user.ID)
 	GetDatabase().DB().Exec("TRUNCATE users_preferences")
 
-	payload := `[{"name": "enter_time", "value": "1"}, {"name": "workday_start", "value": "5"}]`
+	payload := `[{"name": "enter_time", "value": "1"}, {"name": "workday_start", "value": "05:00"}]`
 	req := NewHTTPRequest("PUT", "/preference/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -63,9 +63,9 @@ func TestUserPreferencesCRUDMany(t *testing.T) {
 	CheckTestString(t, PreferenceEnterTime.Name, resBody[0].Name)
 	CheckTestString(t, PreferenceWorkdayStart.Name, resBody[1].Name)
 	CheckTestString(t, "1", resBody[0].Value)
-	CheckTestString(t, "5", resBody[1].Value)
+	CheckTestString(t, "05:00", resBody[1].Value)
 
-	payload = `[{"name": "enter_time", "value": "2"}, {"name": "workday_start", "value": "3"}]`
+	payload = `[{"name": "enter_time", "value": "2"}, {"name": "workday_start", "value": "03:00"}]`
 	req = NewHTTPRequest("PUT", "/preference/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -79,7 +79,7 @@ func TestUserPreferencesCRUDMany(t *testing.T) {
 	CheckTestString(t, PreferenceEnterTime.Name, resBody2[0].Name)
 	CheckTestString(t, PreferenceWorkdayStart.Name, resBody2[1].Name)
 	CheckTestString(t, "2", resBody2[0].Value)
-	CheckTestString(t, "3", resBody2[1].Value)
+	CheckTestString(t, "03:00", resBody2[1].Value)
 }
 
 func TestUserPreferencesApprovalNotifications(t *testing.T) {
@@ -155,6 +155,37 @@ func TestPreferencesPutInvalidColor(t *testing.T) {
 	// Invalid color values → 400
 	payload := `[{"name": "booked_color", "value": "this is invalid"}, {"name": "disallowed_color", "value": "` + CreateTestString(1000) + `"}]`
 	req := NewHTTPRequest("PUT", "/preference/", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestPreferencesPutWorkdaysValid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"value": "1,2,3"}`
+	req := NewHTTPRequest("PUT", "/preference/"+PreferenceWorkdays.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/preference/"+PreferenceWorkdays.Name, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody string
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "1,2,3", resBody)
+}
+
+func TestPreferencesPutWorkdaysDuplicate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	// Duplicate weekday values → 400
+	payload := `{"value": "1,2,2"}`
+	req := NewHTTPRequest("PUT", "/preference/"+PreferenceWorkdays.Name, user.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }

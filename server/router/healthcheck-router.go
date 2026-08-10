@@ -1,10 +1,10 @@
 package router
 
 import (
-	"net/http"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"net/http"
 )
 
 type HealthcheckRouter struct{}
@@ -20,9 +20,9 @@ var CheckDatabase = func() error {
 
 func HealthcheckHandler(w http.ResponseWriter, req *http.Request) {
 	type HealthcheckResponse struct {
-		Status string        `json:"status"`
-		Code   int           `json:"code"`
-		Errors []string      `json:"errors"`
+		Status string   `json:"status"`
+		Code   int      `json:"code"`
+		Errors []string `json:"errors"`
 	}
 
 	err := CheckDatabase()

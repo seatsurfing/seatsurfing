@@ -12,6 +12,7 @@ test.beforeEach(async ({ page }) => {
 
   // Ensure we've reached the dashboard
   await expect(page).toHaveURL(/search\/$/);
+  await expect(page.getByText("Loading …")).not.toBeVisible();
 
   // Navigate to "Administration"
   await page.getByRole("link", { name: "Administration" }).click();
@@ -63,8 +64,8 @@ test("crud location", async ({ page }) => {
   await expect(page).toHaveURL(/locations\/.+\/$/);
 
   // Delete area
-  page.on("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Delete" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
 
   // Check that area is not included in list anymore
   await expect(page).toHaveURL(/locations\/$/);

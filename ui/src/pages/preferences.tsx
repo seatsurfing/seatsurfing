@@ -6,11 +6,13 @@ import { IoLinkOutline } from "react-icons/io5";
 import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import DateTimePicker from "@/components/DateTimePicker";
+import DateUtil from "@/util/DateUtil";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Location from "@/types/Location";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import Session from "@/types/Session";
 import JwtDecoder from "@/util/JwtDecoder";
 import Formatting from "@/util/Formatting";
@@ -18,8 +20,13 @@ import Validation from "@/util/Validation";
 import TotpSettings from "@/components/TotpSettings";
 import PasskeySettings from "@/components/PasskeySettings";
 import SaveButton from "@/components/SaveButton";
+import UrlInput from "@/components/form/UrlInput";
 import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
+import ReloadModal from "@/components/ReloadModal";
+import { PreferencesTab } from "@/util/Navigation";
+import CONSTANT from "@/util/Contant";
+import WeekdaySelection from "@/components/WeekdaySelection";
 
 interface State {
   loading: boolean;
@@ -27,9 +34,9 @@ interface State {
   saved: boolean;
   error: boolean;
   enterTime: number;
-  workdayStart: number;
-  workdayEnd: number;
-  workdays: boolean[];
+  workdayStart: string;
+  workdayEnd: string;
+  workdays: number[];
   booked: string;
   notBooked: string;
   selfBooked: string;
@@ -48,17 +55,28 @@ interface State {
   caldavCalendarsLoaded: boolean;
   caldavError: boolean;
   mailNotifications: boolean;
+  mailReminder: boolean;
+  mailLanguage: string;
   use24HourTime: boolean;
   dateFormat: string;
+  weekStartDay: number;
   activeSessions: Session[];
   currentSessionId: string;
   showPasswordChangedModal: boolean;
+  showReloadModal: boolean;
 }
 
 interface Props {
   router: NextRouter;
   t: TranslationFunc;
 }
+
+const TAB_MAP: Record<PreferencesTab, string> = {
+  booking: "tab-bookings",
+  style: "tab-style",
+  security: "tab-security",
+  integration: "tab-integrations",
+};
 
 const COLOR_BOOKED: string = "#ff453a";
 const COLOR_NOT_BOOKED: string = "#30d158";
@@ -79,8 +97,8 @@ class Preferences extends React.Component<Props, State> {
       saved: false,
       error: false,
       enterTime: 0,
-      workdayStart: 0,
-      workdayEnd: 0,
+      workdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      workdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       workdays: [],
       booked: COLOR_BOOKED,
       notBooked: COLOR_NOT_BOOKED,
@@ -100,127 +118,109 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
       caldavError: false,
       mailNotifications: false,
+      mailReminder: false,
+      mailLanguage: "",
       use24HourTime: true,
       dateFormat: "Y-m-d",
+      weekStartDay: 1,
       activeSessions: [],
       currentSessionId: "",
       showPasswordChangedModal: false,
+      showReloadModal: false,
     };
   }
 
-  componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
+  componentDidMount = async () => {
+    const tabParam = this.props.router.query.tab as PreferencesTab;
+    if (tabParam && TAB_MAP[tabParam]) {
+      this.setState({ activeTab: TAB_MAP[tabParam] });
     }
-    const tabParam = this.props.router.query.tab;
-    if (tabParam === "security") {
-      this.setState({ activeTab: "tab-security" });
-    }
-    const promises = [
+    await Promise.all([
       this.loadPreferences(),
       this.loadLocations(),
       this.loadActiveSessions(),
-    ];
-    Promise.all(promises).then(() => {
-      this.setState({ loading: false });
-    });
+    ]);
+    this.setState({ loading: false });
   };
 
   loadActiveSessions = async (): Promise<void> => {
     const accessTokenPayload = JwtDecoder.getPayload(
       Ajax.PERSISTER.readCredentialsFromLocalStorage().accessToken,
     );
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      Session.list()
-        .then((sessions) => {
-          self.setState({
-            activeSessions: sessions,
-            currentSessionId: accessTokenPayload.sid,
-          });
-          resolve();
-        })
-        .catch((e) => reject(e));
+    const sessions = await Session.list();
+    this.setState({
+      activeSessions: sessions,
+      currentSessionId: accessTokenPayload.sid,
     });
   };
 
   loadPreferences = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      UserPreference.list()
-        .then((list) => {
-          const state: any = {};
-          list.forEach((s) => {
-            if (typeof window !== "undefined") {
-              if (s.name === UserPreference.PREF_ENTER_TIME)
-                state.enterTime = window.parseInt(s.value);
-              if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.workdayStart = window.parseInt(s.value);
-              if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.workdayEnd = window.parseInt(s.value);
-            }
-            if (s.name === UserPreference.PREF_WORKDAYS) {
-              state.workdays = [];
-              for (let i = 0; i <= 6; i++) {
-                state.workdays[i] = false;
-              }
-              s.value.split(",").forEach((val) => (state.workdays[val] = true));
-            }
-            if (s.name === UserPreference.PREF_BOOKED_COLOR)
-              state.booked = s.value;
-            if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
-              state.notBooked = s.value;
-            if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
-              state.selfBooked = s.value;
-            if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
-              state.partiallyBooked = s.value;
-            if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
-              state.buddyBooked = s.value;
-            if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
-              state.disallowedColor = s.value;
-            if (s.name === UserPreference.PREF_LOCATION_ID)
-              state.locationId = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_URL)
-              state.caldavUrl = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_USER)
-              state.caldavUser = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_PASS)
-              state.caldavPass = s.value;
-            if (s.name === UserPreference.PREF_CALDAV_PATH)
-              state.caldavCalendar = s.value;
-            if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
-              state.mailNotifications = s.value === "1";
-            if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
-              state.use24HourTime = s.value === "1";
-            if (s.name === UserPreference.PREF_DATE_FORMAT)
-              state.dateFormat = s.value;
-          });
-          self.setState(
-            {
-              ...self.state,
-              ...state,
-            },
-            () => resolve(),
-          );
-        })
-        .catch((e) => reject(e));
+    const list = await UserPreference.list();
+    const state: Partial<State> = {};
+    list.forEach((s) => {
+      if (typeof window !== "undefined") {
+        if (s.name === UserPreference.PREF_ENTER_TIME)
+          state.enterTime = window.parseInt(s.value);
+      }
+      if (s.name === UserPreference.PREF_WORKDAY_START)
+        state.workdayStart =
+          DateUtil.parseTimeString(s.value) ??
+          UserPreference.DEFAULT_WORKDAY_START;
+      if (s.name === UserPreference.PREF_WORKDAY_END)
+        state.workdayEnd =
+          DateUtil.parseTimeString(s.value) ??
+          UserPreference.DEFAULT_WORKDAY_END;
+      if (s.name === UserPreference.PREF_WORKDAYS) {
+        state.workdays = s.value
+          .split(",")
+          .map((val) => parseInt(val))
+          .filter((val) => !isNaN(val));
+      }
+      if (s.name === UserPreference.PREF_BOOKED_COLOR) state.booked = s.value;
+      if (s.name === UserPreference.PREF_NOT_BOOKED_COLOR)
+        state.notBooked = s.value;
+      if (s.name === UserPreference.PREF_SELF_BOOKED_COLOR)
+        state.selfBooked = s.value;
+      if (s.name === UserPreference.PREF_PARTIALLY_BOOKED_COLOR)
+        state.partiallyBooked = s.value;
+      if (s.name === UserPreference.PREF_BUDDY_BOOKED_COLOR)
+        state.buddyBooked = s.value;
+      if (s.name === UserPreference.PREF_DISALLOWED_COLOR)
+        state.disallowed = s.value;
+      if (s.name === UserPreference.PREF_LOCATION_ID)
+        state.locationId = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_URL) state.caldavUrl = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_USER)
+        state.caldavUser = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_PASS)
+        state.caldavPass = s.value;
+      if (s.name === UserPreference.PREF_CALDAV_PATH)
+        state.caldavCalendar = s.value;
+      if (s.name === UserPreference.PREF_MAIL_NOTIFICATIONS)
+        state.mailNotifications = s.value === "1";
+      if (s.name === UserPreference.PREF_MAIL_REMINDER)
+        state.mailReminder = s.value === "1";
+      if (s.name === UserPreference.PREF_MAIL_LANGUAGE)
+        state.mailLanguage = s.value;
+      if (s.name === UserPreference.PREF_USE_24_HOUR_TIME)
+        state.use24HourTime = s.value === "1";
+      if (s.name === UserPreference.PREF_DATE_FORMAT)
+        state.dateFormat = s.value;
+      if (s.name === UserPreference.PREF_WEEK_START_DAY) {
+        const v = parseInt(s.value);
+        state.weekStartDay = CONSTANT.WEEK_START_DAYS.includes(v) ? v : 1;
+      }
     });
+    await new Promise<void>((resolve) =>
+      this.setState({ ...this.state, ...state }, resolve),
+    );
   };
 
   loadLocations = async (): Promise<void> => {
-    const self = this;
-    return new Promise<void>(function (resolve, reject) {
-      Location.list()
-        .then((list) => {
-          self.locations = list;
-          resolve();
-        })
-        .catch((e) => reject(e));
-    });
+    this.locations = await Location.list();
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
@@ -228,43 +228,59 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    const workdays: string[] = [];
-    this.state.workdays.forEach((val, day) => {
-      if (val) {
-        workdays.push(day.toString());
-      }
-    });
     const payload = [
-      new UserPreference("enter_time", this.state.enterTime.toString()),
-      new UserPreference("workday_start", this.state.workdayStart.toString()),
-      new UserPreference("workday_end", this.state.workdayEnd.toString()),
-      new UserPreference("workdays", workdays.join(",")),
       new UserPreference(
-        "mail_notifications",
+        UserPreference.PREF_ENTER_TIME,
+        this.state.enterTime.toString(),
+      ),
+      new UserPreference(
+        UserPreference.PREF_WORKDAY_START,
+        this.state.workdayStart,
+      ),
+      new UserPreference(
+        UserPreference.PREF_WORKDAY_END,
+        this.state.workdayEnd,
+      ),
+      new UserPreference(
+        UserPreference.PREF_WORKDAYS,
+        [...this.state.workdays].sort((a, b) => a - b).join(","),
+      ),
+      new UserPreference(
+        UserPreference.PREF_MAIL_NOTIFICATIONS,
         this.state.mailNotifications ? "1" : "0",
       ),
       new UserPreference(
-        "use_24_hour_time",
+        UserPreference.PREF_MAIL_REMINDER,
+        this.state.mailReminder ? "1" : "0",
+      ),
+      new UserPreference(
+        UserPreference.PREF_MAIL_LANGUAGE,
+        this.state.mailLanguage,
+      ),
+      new UserPreference(
+        UserPreference.PREF_USE_24_HOUR_TIME,
         this.state.use24HourTime ? "1" : "0",
       ),
-      new UserPreference("location_id", this.state.locationId),
-      new UserPreference("date_format", this.state.dateFormat),
+      new UserPreference(
+        UserPreference.PREF_LOCATION_ID,
+        this.state.locationId,
+      ),
+      new UserPreference(
+        UserPreference.PREF_DATE_FORMAT,
+        this.state.dateFormat,
+      ),
+      new UserPreference(
+        UserPreference.PREF_WEEK_START_DAY,
+        this.state.weekStartDay.toString(),
+      ),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        RuntimeConfig.loadUserPreferences().then(() => {
-          this.setState({
-            submitting: false,
-            saved: true,
-          });
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
-      });
+    try {
+      await UserPreference.setAll(payload);
+      await RuntimeConfig.loadUserPreferences();
+      this.setState({ submitting: false, showReloadModal: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   onSubmitSecurity = async (e: any) => {
@@ -286,7 +302,7 @@ class Preferences extends React.Component<Props, State> {
     this.setState({ submitting: false, showPasswordChangedModal: true });
   };
 
-  onSubmitColors = (e: any) => {
+  onSubmitColors = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
@@ -294,33 +310,35 @@ class Preferences extends React.Component<Props, State> {
       error: false,
       caldavError: false,
     });
-    const workdays: string[] = [];
-    this.state.workdays.forEach((val, day) => {
-      if (val) {
-        workdays.push(day.toString());
-      }
-    });
     const payload = [
-      new UserPreference("booked_color", this.state.booked),
-      new UserPreference("not_booked_color", this.state.notBooked),
-      new UserPreference("self_booked_color", this.state.selfBooked),
-      new UserPreference("partially_booked_color", this.state.partiallyBooked),
-      new UserPreference("buddy_booked_color", this.state.buddyBooked),
-      new UserPreference("disallowed_color", this.state.disallowed),
+      new UserPreference(UserPreference.PREF_BOOKED_COLOR, this.state.booked),
+      new UserPreference(
+        UserPreference.PREF_NOT_BOOKED_COLOR,
+        this.state.notBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_SELF_BOOKED_COLOR,
+        this.state.selfBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_PARTIALLY_BOOKED_COLOR,
+        this.state.partiallyBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_BUDDY_BOOKED_COLOR,
+        this.state.buddyBooked,
+      ),
+      new UserPreference(
+        UserPreference.PREF_DISALLOWED_COLOR,
+        this.state.disallowed,
+      ),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
-      });
+    try {
+      await UserPreference.setAll(payload);
+      this.setState({ submitting: false, showReloadModal: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   resetColors = () => {
@@ -334,16 +352,11 @@ class Preferences extends React.Component<Props, State> {
     });
   };
 
-  onWorkdayCheck = (day: number, checked: boolean) => {
-    const workdays = this.state.workdays.map((val, i) =>
-      i === day ? checked : val,
-    );
-    this.setState({
-      workdays: workdays,
-    });
+  onWorkdaysChange = (workdays: number[]) => {
+    this.setState({ workdays: [...workdays].sort((a, b) => a - b) });
   };
 
-  connectCalDav = () => {
+  connectCalDav = async () => {
     this.setState({
       submitting: true,
       saved: false,
@@ -356,25 +369,23 @@ class Preferences extends React.Component<Props, State> {
       username: this.state.caldavUser,
       password: this.state.caldavPass,
     };
-    Ajax.postData("/preference/caldav/listCalendars", payload)
-      .then((res) => {
-        this.setState({
-          caldavCalendarsLoaded: true,
-          caldavCalendars: res.json,
-          caldavCalendar:
-            res.json && res.json.length > 0 ? res.json[0].path : "",
-          submitting: false,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          caldavError: true,
-        });
+    try {
+      const res = await Ajax.postData(
+        "/preference/caldav/listCalendars",
+        payload,
+      );
+      this.setState({
+        caldavCalendarsLoaded: true,
+        caldavCalendars: res.json,
+        caldavCalendar: res.json && res.json.length > 0 ? res.json[0].path : "",
+        submitting: false,
       });
+    } catch {
+      this.setState({ submitting: false, caldavError: true });
+    }
   };
 
-  disconnectCalDav = () => {
+  disconnectCalDav = async () => {
     this.setState({
       submitting: true,
       saved: false,
@@ -383,32 +394,28 @@ class Preferences extends React.Component<Props, State> {
       caldavCalendarsLoaded: false,
     });
     const payload = [
-      new UserPreference("caldav_url", ""),
-      new UserPreference("caldav_user", ""),
-      new UserPreference("caldav_pass", ""),
-      new UserPreference("caldav_path", ""),
+      new UserPreference(UserPreference.PREF_CALDAV_URL, ""),
+      new UserPreference(UserPreference.PREF_CALDAV_USER, ""),
+      new UserPreference(UserPreference.PREF_CALDAV_PASS, ""),
+      new UserPreference(UserPreference.PREF_CALDAV_PATH, ""),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-          caldavUrl: "",
-          caldavUser: "",
-          caldavPass: "",
-          caldavCalendar: "",
-          caldavCalendars: [],
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
+    try {
+      await UserPreference.setAll(payload);
+      this.setState({
+        submitting: false,
+        saved: true,
+        caldavUrl: "",
+        caldavUser: "",
+        caldavPass: "",
+        caldavCalendar: "",
+        caldavCalendars: [],
       });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
-  saveCaldavSettings = (e: any) => {
+  saveCaldavSettings = async (e: any) => {
     e.preventDefault();
     this.setState({
       submitting: true,
@@ -417,24 +424,26 @@ class Preferences extends React.Component<Props, State> {
       caldavError: false,
     });
     const payload = [
-      new UserPreference("caldav_url", this.state.caldavUrl),
-      new UserPreference("caldav_user", this.state.caldavUser),
-      new UserPreference("caldav_pass", this.state.caldavPass),
-      new UserPreference("caldav_path", this.state.caldavCalendar),
+      new UserPreference(UserPreference.PREF_CALDAV_URL, this.state.caldavUrl),
+      new UserPreference(
+        UserPreference.PREF_CALDAV_USER,
+        this.state.caldavUser,
+      ),
+      new UserPreference(
+        UserPreference.PREF_CALDAV_PASS,
+        this.state.caldavPass,
+      ),
+      new UserPreference(
+        UserPreference.PREF_CALDAV_PATH,
+        this.state.caldavCalendar,
+      ),
     ];
-    UserPreference.setAll(payload)
-      .then(() => {
-        this.setState({
-          submitting: false,
-          saved: true,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          submitting: false,
-          error: true,
-        });
-      });
+    try {
+      await UserPreference.setAll(payload);
+      this.setState({ submitting: false, saved: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   renderBookingColor(
@@ -506,8 +515,17 @@ class Preferences extends React.Component<Props, State> {
               variant="underline"
               activeKey={this.state.activeTab}
               onSelect={(key) => {
-                if (key)
+                if (key) {
                   this.setState({ activeTab: key, error: false, saved: false });
+                  const tabParam = Object.entries(TAB_MAP).find(
+                    ([, v]) => v === key,
+                  )?.[0] as PreferencesTab;
+                  this.props.router.replace(
+                    { query: { ...this.props.router.query, tab: tabParam } },
+                    undefined,
+                    { shallow: true },
+                  );
+                }
               }}
             >
               <Nav.Item>
@@ -568,23 +586,37 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label htmlFor="workdayStart">
                   {this.props.t("workingHours")}
                 </Form.Label>
-                <div>
-                  <Form.Control
-                    type="number"
-                    id="workdayStart"
-                    value={this.state.workdayStart}
-                    onChange={(e: any) =>
-                      this.setState({
-                        workdayStart:
-                          typeof window !== "undefined"
-                            ? window.parseInt(e.target.value)
-                            : 0,
-                      })
-                    }
-                    min="0"
-                    max="23"
-                    style={{ display: "inline", width: "40%" }}
-                  />
+                <div className="d-flex align-items-center">
+                  <div style={{ width: "40%" }}>
+                    <DateTimePicker
+                      id="workdayStart"
+                      noCalendar={true}
+                      enableTime={true}
+                      value={DateUtil.getTodayTimeFromTimeString(
+                        this.state.workdayStart,
+                      )}
+                      maxDate={DateUtil.getTodayTimeFromMinutes(23 * 60 - 1)}
+                      onChange={(value: Date) => {
+                        const workdayStart = DateUtil.formatTimeString(value);
+                        const startMinutes =
+                          DateUtil.timeStringToMinutes(workdayStart);
+                        const endMinutes = DateUtil.timeStringToMinutes(
+                          this.state.workdayEnd,
+                        );
+                        this.setState({
+                          workdayStart: workdayStart,
+                          workdayEnd:
+                            endMinutes >= startMinutes + 60
+                              ? this.state.workdayEnd
+                              : DateUtil.formatTimeString(
+                                  DateUtil.getTodayTimeFromMinutes(
+                                    startMinutes + 60,
+                                  ),
+                                ),
+                        });
+                      }}
+                    />
+                  </div>
                   <span
                     style={{
                       width: "20%",
@@ -596,35 +628,88 @@ class Preferences extends React.Component<Props, State> {
                       {this.props.t("to").toString()}
                     </Form.Label>
                   </span>
-                  <Form.Control
-                    type="number"
-                    id="workdayEnd"
-                    value={this.state.workdayEnd}
-                    onChange={(e: any) =>
-                      this.setState({ workdayEnd: e.target.value })
-                    }
-                    min={this.state.workdayStart + 1}
-                    max="23"
-                    style={{ display: "inline", width: "40%" }}
-                  />
+                  <div style={{ width: "40%" }}>
+                    <DateTimePicker
+                      id="workdayEnd"
+                      noCalendar={true}
+                      enableTime={true}
+                      value={DateUtil.getTodayTimeFromTimeString(
+                        this.state.workdayEnd,
+                      )}
+                      minDate={DateUtil.getTodayTimeFromMinutes(
+                        DateUtil.timeStringToMinutes(this.state.workdayStart) +
+                          60,
+                      )}
+                      onChange={(value: Date) => {
+                        const workdayEnd = DateUtil.formatTimeString(value);
+                        const endMinutes =
+                          DateUtil.timeStringToMinutes(workdayEnd);
+                        const startMinutes = DateUtil.timeStringToMinutes(
+                          this.state.workdayStart,
+                        );
+                        this.setState({
+                          workdayEnd: workdayEnd,
+                          workdayStart:
+                            startMinutes <= endMinutes - 60
+                              ? this.state.workdayStart
+                              : DateUtil.formatTimeString(
+                                  DateUtil.getTodayTimeFromMinutes(
+                                    endMinutes - 60,
+                                  ),
+                                ),
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
+                {!RuntimeConfig.INFOS.dailyBasisBooking &&
+                  (DateUtil.timeStringToMinutes(this.state.workdayEnd) -
+                    DateUtil.timeStringToMinutes(this.state.workdayStart)) /
+                    60 >
+                    RuntimeConfig.INFOS.maxBookingDurationHours && (
+                    <Form.Text muted>
+                      {this.props.t("workingHoursHintExceedsMaxDuration", {
+                        num: RuntimeConfig.INFOS.maxBookingDurationHours,
+                      })}
+                    </Form.Text>
+                  )}
+                {RuntimeConfig.INFOS.dailyBasisBooking && (
+                  <Form.Text muted>
+                    {this.props.t("workingHoursHintOnlyDaily")}
+                  </Form.Text>
+                )}
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label>{this.props.t("workdays")}</Form.Label>
                 <div className="text-left">
-                  {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                    <Form.Check
-                      type="checkbox"
-                      key={"workday-" + day}
-                      id={"workday-" + day}
-                      label={this.props.t("workday-" + day)}
-                      checked={this.state.workdays[day]}
-                      onChange={(e: any) =>
-                        this.onWorkdayCheck(day, e.target.checked)
-                      }
-                    />
-                  ))}
+                  <WeekdaySelection
+                    id="workdays"
+                    value={this.state.workdays}
+                    weekStartDay={this.state.weekStartDay}
+                    onChange={this.onWorkdaysChange}
+                    preventEmpty={true}
+                  />
                 </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label htmlFor="weekStartDay">
+                  {this.props.t("weekStartDay")}
+                </Form.Label>
+                <Form.Select
+                  id="weekStartDay"
+                  value={this.state.weekStartDay}
+                  onChange={(e: any) =>
+                    this.setState({
+                      weekStartDay: window.parseInt(e.target.value),
+                    })
+                  }
+                >
+                  {CONSTANT.WEEK_START_DAYS.map((day) => (
+                    <option key={"week-start-" + day} value={day}>
+                      {this.props.t("workday-" + day)}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label htmlFor="mailNotifications">
@@ -632,15 +717,49 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Label>
                 <div className="text-left">
                   <Form.Check
-                    type="checkbox"
+                    type="switch"
                     id="mailNotifications"
-                    label={this.props.t("mailNotifications")}
+                    label={this.props.t("mailNotificationsBookingInfo")}
                     checked={this.state.mailNotifications}
                     onChange={(e: any) =>
                       this.setState({ mailNotifications: e.target.checked })
                     }
                   />
+                  <Form.Check
+                    type="switch"
+                    id="mailReminder"
+                    label={this.props.t("mailReminderBookingInfo")}
+                    checked={this.state.mailReminder}
+                    onChange={(e: any) =>
+                      this.setState({ mailReminder: e.target.checked })
+                    }
+                  />
                 </div>
+              </Form.Group>
+              <Form.Group className="margin-top-15">
+                <Form.Label htmlFor="mailLanguage">
+                  {this.props.t("mailLanguage")}
+                </Form.Label>
+                <Form.Select
+                  id="mailLanguage"
+                  value={this.state.mailLanguage}
+                  onChange={(e: any) =>
+                    this.setState({ mailLanguage: e.target.value })
+                  }
+                >
+                  <option value="">
+                    ({this.props.t("default")} -{" "}
+                    {this.props.t(
+                      "language-" + RuntimeConfig.INFOS.orgLanguage,
+                    )}
+                    )
+                  </option>
+                  {["de", "en"].map((lc) => (
+                    <option key={lc} value={lc}>
+                      {this.props.t("language-" + lc)}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
               <Form.Group className="margin-top-15">
                 <Form.Label htmlFor="use24HourTime">
@@ -648,7 +767,7 @@ class Preferences extends React.Component<Props, State> {
                 </Form.Label>
                 <div className="text-left">
                   <Form.Check
-                    type="checkbox"
+                    type="switch"
                     id="use24HourTime"
                     label={this.props.t("use24HourTime")}
                     checked={this.state.use24HourTime}
@@ -789,10 +908,9 @@ class Preferences extends React.Component<Props, State> {
               onPasskeyAdded={() => {
                 RuntimeConfig.INFOS.hasPasskeys = true;
               }}
-              onPasskeyDeleted={() => {
-                Passkey.list().then((passkeys) => {
-                  RuntimeConfig.INFOS.hasPasskeys = passkeys.length > 0;
-                });
+              onPasskeyDeleted={async () => {
+                const passkeys = await Passkey.list();
+                RuntimeConfig.INFOS.hasPasskeys = passkeys.length > 0;
               }}
             />
             <div hidden={this.state.activeTab !== "tab-security"}>
@@ -826,12 +944,14 @@ class Preferences extends React.Component<Props, State> {
                           <td>
                             <a
                               href="#"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.preventDefault();
-                                session
-                                  .delete()
-                                  .then(() => this.loadActiveSessions())
-                                  .catch(() => RuntimeConfig.logOut());
+                                try {
+                                  await session.delete();
+                                  await this.loadActiveSessions();
+                                } catch {
+                                  RuntimeConfig.logOut();
+                                }
                               }}
                             >
                               {this.props.t("logout")}
@@ -846,13 +966,16 @@ class Preferences extends React.Component<Props, State> {
                     hidden={this.state.activeSessions?.length <= 1}
                     type="button"
                     variant="secondary"
-                    onClick={() => {
+                    onClick={async () => {
                       const others = this.state.activeSessions.filter(
                         (s) => s.id !== this.state.currentSessionId,
                       );
-                      Promise.all(others.map((s) => s.delete()))
-                        .then(() => this.loadActiveSessions())
-                        .catch(() => RuntimeConfig.logOut());
+                      try {
+                        await Promise.all(others.map((s) => s.delete()));
+                        await this.loadActiveSessions();
+                      } catch {
+                        RuntimeConfig.logOut();
+                      }
                     }}
                   >
                     {this.props.t("logoutOthers")}
@@ -881,6 +1004,7 @@ class Preferences extends React.Component<Props, State> {
                 src={profilePageUrl}
                 style={{ width: "100%", height: "100vh", borderWidth: 0 }}
                 id="idp-profilepage-iframe"
+                sandbox="allow-scripts allow-same-origin allow-forms"
               ></iframe>
             </div>
 
@@ -899,9 +1023,9 @@ class Preferences extends React.Component<Props, State> {
                 <Form.Label htmlFor="caldavUrl">
                   {this.props.t("caldavUrl")}
                 </Form.Label>
-                <Form.Control
+                <UrlInput
                   id="caldavUrl"
-                  type="url"
+                  placeholder="https://…"
                   value={this.state.caldavUrl}
                   onChange={(e: any) =>
                     this.setState({
@@ -1018,6 +1142,12 @@ class Preferences extends React.Component<Props, State> {
             </Button>
           </Modal.Footer>
         </Modal>
+        <ReloadModal
+          show={this.state.showReloadModal}
+          title={this.props.t(
+            this.state.activeTab === "tab-style" ? "style" : "bookings",
+          )}
+        />
       </>
     );
   }

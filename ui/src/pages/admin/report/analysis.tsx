@@ -14,10 +14,13 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import DateUtil from "@/util/DateUtil";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
-import RedirectUtil from "@/util/RedirectUtil";
+
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import DateTimePicker from "@/components/DateTimePicker";
+import RuntimeConfig from "@/components/RuntimeConfig";
+import RendererUtils from "@/util/RendererUtils";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
@@ -56,8 +59,8 @@ class ReportAnalysis extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
+    if (RuntimeConfig.INFOS.hideReports) {
+      this.props.router.push("/404");
       return;
     }
     Location.list().then((locations) => (this.locations = locations));
@@ -67,7 +70,7 @@ class ReportAnalysis extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  loadItems = () => {
+  loadItems = async () => {
     const end = new Date(this.state.end);
     end.setHours(23, 59, 59);
     let params =
@@ -79,15 +82,14 @@ class ReportAnalysis extends React.Component<Props, State> {
       "&end=" +
       encodeURIComponent(DateUtil.convertToFakeUTCDate(end).toISOString());
     params += "&locationId=" + encodeURIComponent(this.state.locationId);
-    Ajax.get("/booking/report/presence/?" + params)
-      .then((res) => {
-        this.data = res.json;
-        this.setState({ loading: false });
-      })
-      .catch((e: any) => {
-        const errorCode: number = AjaxError.getAppErrorCode(e);
-        this.setState({ loading: false, errorCode, error: true });
-      });
+    try {
+      const res = await Ajax.get("/booking/report/presence/?" + params);
+      this.data = res.json;
+      this.setState({ loading: false });
+    } catch (e: any) {
+      const errorCode: number = AjaxError.getAppErrorCode(e);
+      this.setState({ loading: false, errorCode, error: errorCode != 0 });
+    }
   };
 
   getRows = () => {
@@ -104,7 +106,9 @@ class ReportAnalysis extends React.Component<Props, State> {
       });
       return (
         <tr key={user.userId}>
-          <td className="no-wrap">{user.email}</td>
+          <td className="no-wrap" title={user.email}>
+            {RendererUtils.fullname(user.firstname, user.lastname)}
+          </td>
           {cols}
         </tr>
       );
@@ -271,12 +275,19 @@ class ReportAnalysis extends React.Component<Props, State> {
         >
           <thead>
             <tr>
-              <th className="no-wrap">{this.props.t("user")}</th>
-              {this.data.dates.map((date: string) => (
-                <th key={"date-" + date} className="no-wrap">
-                  {date}
-                </th>
-              ))}
+              <th className="no-wrap">{this.props.t("name")}</th>
+              {this.data.dates.map((date: string) => {
+                const d = new Date(date);
+                return (
+                  <th
+                    key={"date-" + date}
+                    className="no-wrap"
+                    title={this.props.t("workday-" + d.getUTCDay())}
+                  >
+                    {Formatting.getFormatterDate().format(d)}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>{this.getRows()}</tbody>

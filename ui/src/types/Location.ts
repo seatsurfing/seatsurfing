@@ -12,7 +12,10 @@ export default class Location extends Entity {
   mapHeight: number;
   mapMimeType: string;
   mapScale: number;
+  mapType: string;
   allowedBookerGroupIds: string[];
+  /** weekdays (0=Sunday..6=Saturday) the location can be booked on; empty array means unrestricted */
+  bookableDays: number[];
 
   constructor() {
     super();
@@ -25,7 +28,9 @@ export default class Location extends Entity {
     this.mapHeight = 0;
     this.mapMimeType = "";
     this.mapScale = 1.0;
+    this.mapType = "";
     this.allowedBookerGroupIds = [];
+    this.bookableDays = [];
   }
 
   serialize(): Object {
@@ -36,7 +41,9 @@ export default class Location extends Entity {
       timezone: this.timezone,
       enabled: this.enabled,
       mapScale: this.mapScale,
+      mapType: this.mapType,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
+      bookableDays: this.bookableDays,
     });
   }
 
@@ -51,9 +58,11 @@ export default class Location extends Entity {
     this.mapHeight = input.mapHeight;
     this.mapMimeType = input.mapMimeType;
     this.mapScale = input.mapScale;
+    this.mapType = input.mapType || "";
     if (input.allowedBookerGroupIds) {
       this.allowedBookerGroupIds = input.allowedBookerGroupIds;
     }
+    this.bookableDays = input.bookableDays || [];
   }
 
   getBackendUrl(): string {
@@ -90,10 +99,24 @@ export default class Location extends Entity {
     );
   }
 
+  async getFloorPlanDesign(): Promise<string> {
+    const result = await Ajax.get(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/floorplan-design",
+    );
+    return result.json.designData as string;
+  }
+
+  async setFloorPlanDesign(designData: string): Promise<void> {
+    await Ajax.postData(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/floorplan-design",
+      { designData },
+    );
+  }
+
   async getAttributes(): Promise<SpaceAttributeValue[]> {
     return Ajax.get(this.getBackendUrl() + this.id + "/attribute").then(
       (result) => {
-        let list: SpaceAttributeValue[] = [];
+        const list: SpaceAttributeValue[] = [];
         (result.json as []).forEach((item) => {
           let e: SpaceAttributeValue = new SpaceAttributeValue();
           e.deserialize(item);
@@ -105,7 +128,7 @@ export default class Location extends Entity {
   }
 
   async setAttribute(attributeId: string, value: string): Promise<void> {
-    let payload = {
+    const payload = {
       value: value,
     };
     return Ajax.postData(

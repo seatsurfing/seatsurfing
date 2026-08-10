@@ -10,28 +10,30 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import OrgSettings from "@/types/Settings";
+import Organization from "@/types/Organization";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Space from "@/types/Space";
 import User from "@/types/User";
 import Location from "@/types/Location";
 import Booking from "@/types/Booking";
-import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
-import RedirectUtil from "@/util/RedirectUtil";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
-import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
 import ProfilePicture from "@/components/ProfilePicture";
 import Search, { SearchOptions } from "@/types/Search";
+import AjaxError from "@/util/AjaxError";
+import ErrorText from "@/types/ErrorText";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   loading: boolean;
   saved: boolean;
   error: boolean;
+  errorText: string;
   wasCreated: boolean;
   goBack: boolean;
   enter: Date;
@@ -52,8 +54,8 @@ interface State {
   canSave: boolean;
   canEdit: boolean;
   prefEnterTime: number;
-  prefWorkdayStart: number;
-  prefWorkdayEnd: number;
+  prefWorkdayStart: string;
+  prefWorkdayEnd: string;
   prefWorkdays: number[];
   prefLocationId: string;
   selfEmail: string;
@@ -61,6 +63,7 @@ interface State {
   typeaheadOptions: any[];
   typeaheadLoading: boolean;
   typeaheadSelected: [{ email: string }];
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -69,9 +72,6 @@ interface Props {
 }
 
 class EditBooking extends React.Component<Props, State> {
-  static PreferenceEnterTimeNow: number = 1;
-  static PreferenceEnterTimeNextDay: number = 2;
-  static PreferenceEnterTimeNextWorkday: number = 3;
   entity: Booking = new Booking();
   authProviders: { [key: string]: string } = {};
   dailyBasisBooking: boolean;
@@ -101,6 +101,7 @@ class EditBooking extends React.Component<Props, State> {
       loading: true,
       saved: false,
       error: false,
+      errorText: "",
       wasCreated: false,
       goBack: false,
       enter: new Date(),
@@ -121,8 +122,8 @@ class EditBooking extends React.Component<Props, State> {
       canSave: false,
       canEdit: false,
       prefEnterTime: 0,
-      prefWorkdayStart: 0,
-      prefWorkdayEnd: 0,
+      prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
+      prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
       prefWorkdays: [],
       prefLocationId: "",
       selfEmail: "",
@@ -130,14 +131,11 @@ class EditBooking extends React.Component<Props, State> {
       typeaheadOptions: [],
       typeaheadLoading: false,
       typeaheadSelected: [{ email: "" }],
+      showDeleteConfirm: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     const promises = [
       this.loadData(),
       this.loadSettings(),
@@ -200,50 +198,15 @@ class EditBooking extends React.Component<Props, State> {
 
   initDates = () => {
     if (!this.isNewBooking) return;
-    const enter = new Date();
-    if (this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNow) {
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      if (enter.getHours() < this.state.prefWorkdayStart) {
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-      if (enter.getHours() >= this.state.prefWorkdayEnd) {
-        enter.setDate(enter.getDate() + 1);
-        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-      }
-    } else if (
-      this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNextDay
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    } else if (
-      this.state.prefEnterTime === EditBooking.PreferenceEnterTimeNextWorkday
-    ) {
-      enter.setDate(enter.getDate() + 1);
-      let add = 0;
-      let nextDayFound = false;
-      let lookFor = enter.getDay();
-      while (!nextDayFound) {
-        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
-          nextDayFound = true;
-        } else {
-          add++;
-          lookFor++;
-          if (lookFor > 6) {
-            lookFor = 0;
-          }
-        }
-      }
-      enter.setDate(enter.getDate() + add);
-      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
-    }
 
-    const leave = new Date(enter);
-    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
+    const { enter, leave } = DateUtil.getNextPreferredEnterAndLeaveTime(
+      this.state.prefEnterTime,
+      this.state.prefWorkdayStart,
+      this.state.prefWorkdayEnd,
+      this.state.prefWorkdays,
+      this.dailyBasisBooking,
+    );
 
-    if (this.dailyBasisBooking) {
-      enter.setHours(0, 0, 0, 0);
-      leave.setHours(23, 59, 59, 0);
-    }
     this.setState({
       enter,
       leave,
@@ -281,22 +244,22 @@ class EditBooking extends React.Component<Props, State> {
   loadSettings = async (): Promise<void> => {
     return OrgSettings.list().then((settings) => {
       settings.forEach((s) => {
-        if (s.name === "daily_basis_booking") {
+        if (s.name === Organization.PREF_DAILY_BASIS_BOOKING) {
           this.dailyBasisBooking = s.value === "1";
         }
-        if (s.name === "no_admin_restrictions") {
+        if (s.name === Organization.PREF_NO_ADMIN_RESTRICTIONS) {
           this.noAdminRestrictions = s.value === "1";
         }
-        if (s.name === "max_bookings_per_user") {
+        if (s.name === Organization.PREF_MAX_BOOKINGS_PER_USER) {
           this.maxBookingsPerUser = window.parseInt(s.value);
         }
-        if (s.name === "max_days_in_advance") {
+        if (s.name === Organization.PREF_MAX_DAYS_IN_ADVANCE) {
           this.maxDaysInAdvance = window.parseInt(s.value);
         }
-        if (s.name === "max_booking_duration_hours") {
+        if (s.name === Organization.PREF_MAX_BOOKING_DURATION_HOURS) {
           this.maxBookingDurationHours = window.parseInt(s.value);
         }
-        if (s.name === "min_booking_duration_hours") {
+        if (s.name === Organization.PREF_MIN_BOOKING_DURATION_HOURS) {
           this.minBookingDurationHours = window.parseInt(s.value);
         }
       });
@@ -314,9 +277,13 @@ class EditBooking extends React.Component<Props, State> {
               if (s.name === UserPreference.PREF_ENTER_TIME)
                 state.prefEnterTime = window.parseInt(s.value);
               if (s.name === UserPreference.PREF_WORKDAY_START)
-                state.prefWorkdayStart = window.parseInt(s.value);
+                state.prefWorkdayStart =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_START;
               if (s.name === UserPreference.PREF_WORKDAY_END)
-                state.prefWorkdayEnd = window.parseInt(s.value);
+                state.prefWorkdayEnd =
+                  DateUtil.parseTimeString(s.value) ??
+                  UserPreference.DEFAULT_WORKDAY_END;
               if (s.name === UserPreference.PREF_WORKDAYS)
                 state.prefWorkdays = s.value
                   .split(",")
@@ -334,8 +301,8 @@ class EditBooking extends React.Component<Props, State> {
               state.prefBuddyBookedColor = s.value;
           });
           if (self.dailyBasisBooking) {
-            state.prefWorkdayStart = 0;
-            state.prefWorkdayEnd = 23;
+            state.prefWorkdayStart = "00:00";
+            state.prefWorkdayEnd = "23:59";
           }
           self.setState(
             {
@@ -355,7 +322,7 @@ class EditBooking extends React.Component<Props, State> {
     });
   };
 
-  //TODO: modify to init according to selcted user
+  //TODO: modify to init according to selected user
   // initCurrentBookingCount = () => {
   //     Booking.list().then(list => {
   //         this.curBookingCount = list.length;
@@ -379,10 +346,9 @@ class EditBooking extends React.Component<Props, State> {
       let leave = new Date();
       leave = this.state.leave;
       leave.setHours(23, 59, 59, 0);
-
       this.setState({
-        enter: enter,
-        leave: leave,
+        enter,
+        leave,
       });
     } else {
       const enter = this.state.enter;
@@ -420,9 +386,16 @@ class EditBooking extends React.Component<Props, State> {
             selectedUserEmail: user,
           });
         })
-        .catch(() => {
+        .catch((e) => {
+          let code: number = 0;
+          if (e instanceof AjaxError) {
+            code = e.appErrorCode;
+          }
           this.setState({
             error: true,
+            errorText: code
+              ? ErrorText.getTextForAppCode(code, this.props.t)
+              : this.props.t("errorSave"),
             saved: false,
             wasCreated: true,
           });
@@ -448,9 +421,16 @@ class EditBooking extends React.Component<Props, State> {
             wasCreated: false,
           });
         })
-        .catch(() => {
+        .catch((e) => {
+          let code: number = 0;
+          if (e instanceof AjaxError) {
+            code = e.appErrorCode;
+          }
           this.setState({
             error: true,
+            errorText: code
+              ? ErrorText.getTextForAppCode(code, this.props.t)
+              : this.props.t("errorSave"),
             saved: false,
             wasCreated: false,
           });
@@ -459,16 +439,11 @@ class EditBooking extends React.Component<Props, State> {
   };
 
   deleteItem = () => {
-    const formatter = RuntimeConfig.INFOS.dailyBasisBooking
-      ? Formatting.getFormatterNoTime()
-      : Formatting.getFormatter();
+    this.setState({ showDeleteConfirm: true });
+  };
 
-    const confirmMessage = this.props.t("confirmCancelBooking", {
-      enter: formatter.format(this.entity.enter),
-    });
-    if (!window.confirm(RendererUtils.decodeHtmlEntities(confirmMessage))) {
-      return;
-    }
+  confirmDeleteItem = () => {
+    this.setState({ showDeleteConfirm: false });
     this.entity.delete().then(() => {
       this.setState({ goBack: true });
     });
@@ -576,8 +551,8 @@ class EditBooking extends React.Component<Props, State> {
       }
       this.setState(
         {
-          enter: enter,
-          leave: leave,
+          enter,
+          leave,
           isDisabledLocation: false,
           isDisabledSpace: true,
         },
@@ -766,7 +741,7 @@ class EditBooking extends React.Component<Props, State> {
         <Alert variant="danger">{this.props.t(this.state.canSearchHint)}</Alert>
       );
     } else if (this.state.error) {
-      hint = <Alert variant="danger">{this.props.t("errorSave")}</Alert>;
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
     const buttonDelete = (
@@ -1003,6 +978,22 @@ class EditBooking extends React.Component<Props, State> {
             </Col>
           </Form.Group>
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={
+            this.state.showDeleteConfirm
+              ? RendererUtils.decodeHtmlEntities(
+                  this.props.t("confirmCancelBooking", {
+                    enter: Formatting.getBookingDateFormatter().format(
+                      this.entity.enter,
+                    ),
+                  }),
+                )
+              : ""
+          }
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={this.confirmDeleteItem}
+        />
       </FullLayout>
     );
   }

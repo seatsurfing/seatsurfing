@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"log"
@@ -13,7 +14,20 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
+
+// RemotePluginConfig describes one remote plugin the host should connect to
+// over gRPC - see PLUGINS_CONFIG below. Routing information (base path,
+// legacy route prefixes) is not part of this config - it's fetched live
+// from the plugin itself over gRPC at startup (see app.resolvePluginRoutes),
+// so it never has to be hand-duplicated here.
+type RemotePluginConfig struct {
+	Name    string `json:"name"`
+	Address string `json:"address"` // e.g. "subscription-plugin:50051"
+	Token   string `json:"token"`   // shared secret the host presents when dialing this plugin
+	TLS     bool   `json:"tls"`
+}
 
 type Config struct {
 	PublicListenAddr                    string
@@ -35,6 +49,7 @@ type Config struct {
 	ACSAccessKey                        string
 	MockSendmail                        bool
 	Development                         bool
+	DevUIProxyTarget                    string // host:port of the UI dev server that /ui/* is proxied to when Development is enabled
 	InitOrgName                         string
 	InitOrgUser                         string
 	InitOrgPass                         string
@@ -46,7 +61,11 @@ type Config struct {
 	LoginProtectionBanMinutes           int
 	CryptKey                            string
 	FilesystemBasePath                  string
-	PluginsSubPath                      string
+	Plugins                             []RemotePluginConfig
+	HostAPIListenAddr                   string
+	HostAPIToken                        string
+	PluginCallTimeout                   time.Duration
+	PluginMaxMsgSize                    int
 	PublicScheme                        string
 	PublicPort                          int
 	CacheType                           string // "valkey" or "default"
@@ -60,7 +79,10 @@ type Config struct {
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
 	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
-	MaxPasskeysPerUser                  int // Maximum number of passkeys a single user may register
+	MaxPasskeysPerUser                  int  // Maximum number of passkeys a single user may register
+	DisableVersionCheck                 bool // Disable polling seatsurfing.io for latest version information
+	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
+	DisableInstallIDExposure            bool // Disable exposing the install ID via public API
 }
 
 var _configInstance *Config
@@ -75,15 +97,28 @@ func GetConfig() *Config {
 }
 
 func (c *Config) ReadConfig() {
-	log.Println("Reading config...")
+	log.Println("Reading config …")
 	c.Development = (c.getEnv("DEV", "0") == "1")
+	if c.Development {
+		log.Println("ℹ️  Development mode is enabled, do not use this in production environments!")
+	}
+	c.DevUIProxyTarget = c.getEnv("DEV_UI_PROXY_TARGET", "localhost:3000")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
 	c.StaticUiPath = strings.TrimSuffix(c.getEnv("STATIC_UI_PATH", "/app/ui"), "/") + "/"
 	c.PostgresURL = c.getEnv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing?sslmode=disable")
-	privateKey, _ := c.loadPrivateKey(c.getEnv("JWT_PRIVATE_KEY", ""))
-	publicKey, _ := c.loadPublicKey(c.getEnv("JWT_PUBLIC_KEY", ""))
+
+	privateKeyFile := c.getEnv("JWT_PRIVATE_KEY", "")
+	privateKey, err := c.loadPrivateKey(privateKeyFile)
+	if privateKeyFile != "" && err != nil {
+		log.Println("⚠️  Warning: Loading private key failed", err)
+	}
+	publicKeyFile := c.getEnv("JWT_PUBLIC_KEY", "")
+	publicKey, err := c.loadPublicKey(publicKeyFile)
+	if publicKeyFile != "" && err != nil {
+		log.Println("⚠️  Warning: Loading public key failed", err)
+	}
 	if publicKey == nil || privateKey == nil {
-		log.Println("Warning: No valid JWT_PRIVATE_KEY or JWT_PUBLIC_KEY set. Generating a temporary random private/public key pair...")
+		log.Println("⚠️  Warning: No valid JWT_PRIVATE_KEY or JWT_PUBLIC_KEY set. Generating a temporary random private/public key pair …")
 		privkey, _ := rsa.GenerateKey(rand.Reader, 2048)
 		c.JwtPrivateKey = privkey
 		c.JwtPublicKey = &privkey.PublicKey
@@ -91,6 +126,7 @@ func (c *Config) ReadConfig() {
 		c.JwtPrivateKey = privateKey
 		c.JwtPublicKey = publicKey
 	}
+
 	c.SMTPHost = c.getEnv("SMTP_HOST", "127.0.0.1")
 	c.SMTPPort = c.getEnvInt("SMTP_PORT", 25)
 	c.SMTPStartTLS = (c.getEnv("SMTP_START_TLS", "0") == "1")
@@ -100,7 +136,7 @@ func (c *Config) ReadConfig() {
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
 	c.SMTPAuthMethod = strings.ToUpper(c.getEnv("SMTP_AUTH_METHOD", "PLAIN"))
 	if c.SMTPAuthMethod != "PLAIN" && c.SMTPAuthMethod != "LOGIN" {
-		log.Println("Warning: Invalid SMTP_AUTH_METHOD set. Only 'PLAIN' and 'LOGIN' are allowed. Defaulting to 'PLAIN'.")
+		log.Println("⚠️  Warning: Invalid SMTP_AUTH_METHOD set. Only 'PLAIN' and 'LOGIN' are allowed. Defaulting to 'PLAIN'.")
 		c.SMTPAuthMethod = "PLAIN"
 	}
 	c.MailSenderAddress = c.getEnv("MAIL_SENDER_ADDRESS", "no-reply@localhost")
@@ -110,7 +146,7 @@ func (c *Config) ReadConfig() {
 	}
 	c.MailService = strings.ToLower(c.getEnv("MAIL_SERVICE", "smtp"))
 	if c.MailService != "smtp" && c.MailService != "acs" {
-		log.Println("Warning: Invalid MAIL_SERVICE set. Only 'smtp' and 'acs' are allowed. Defaulting to 'smtp'.")
+		log.Println("⚠️  Warning: Invalid MAIL_SERVICE set. Only 'smtp' and 'acs' are allowed. Defaulting to 'smtp'.")
 		c.MailService = "smtp"
 	}
 	c.ACSHost = c.getEnv("ACS_HOST", "")
@@ -121,7 +157,7 @@ func (c *Config) ReadConfig() {
 	c.InitOrgPass = c.getEnv("INIT_ORG_PASS", "Sea!surf1ng")
 	c.InitOrgLanguage = c.getEnv("INIT_ORG_LANGUAGE", "en")
 	if !c.IsValidLanguageCode(c.InitOrgLanguage) {
-		log.Println("Warning: Invalid INIT_ORG_LANGUAGE set. Defaulting to 'en'.")
+		log.Println("⚠️  Warning: Invalid INIT_ORG_LANGUAGE set. Defaulting to 'en'.")
 		c.InitOrgLanguage = "en"
 	}
 	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "localhost")
@@ -131,16 +167,23 @@ func (c *Config) ReadConfig() {
 	c.LoginProtectionBanMinutes = c.getEnvInt("LOGIN_PROTECTION_BAN_MINUTES", 5)
 	c.CryptKey = c.getEnv("CRYPT_KEY", "")
 	if c.CryptKey == "" || len(c.CryptKey) != 32 {
-		log.Println("Warning: No valid CRYPT_KEY set. Set it to a 32 bytes long string in order to use features such as CalDAV integration.")
+		log.Fatalln("Error: No valid CRYPT_KEY set. CRYPT_KEY needs to be set to a 32 bytes long random string.")
 	}
 	pwd, _ := os.Getwd()
 	c.FilesystemBasePath = c.getEnv("FILESYSTEM_BASE_PATH", pwd)
-	c.PluginsSubPath = c.getEnv("PLUGINS_SUB_PATH", "plugins")
+	c.Plugins = c.parsePluginsConfig(c.getEnv("PLUGINS_CONFIG", ""))
+	c.HostAPIListenAddr = c.getEnv("HOSTAPI_LISTEN_ADDR", "0.0.0.0:50052")
+	c.HostAPIToken = c.getEnv("HOSTAPI_TOKEN", "")
+	if len(c.Plugins) > 0 && c.HostAPIToken == "" {
+		log.Println("⚠️  Warning: PLUGINS_CONFIG is set but HOSTAPI_TOKEN is empty - the HostAPI gRPC listener will accept an empty token from any caller that can reach it. Set HOSTAPI_TOKEN to a random secret shared with your plugin(s).")
+	}
+	c.PluginCallTimeout = time.Duration(c.getEnvInt("PLUGIN_CALL_TIMEOUT_SECONDS", 30)) * time.Second
+	c.PluginMaxMsgSize = c.getEnvInt("PLUGIN_MAX_MSG_SIZE", 16<<20)
 	c.PublicScheme = c.getEnv("PUBLIC_SCHEME", "https")
 	c.PublicPort = c.getEnvInt("PUBLIC_PORT", 443)
 	c.CacheType = c.getEnv("CACHE_TYPE", "default")
 	if c.CacheType != "valkey" && c.CacheType != "default" {
-		log.Println("Warning: Invalid CACHE_TYPE set. Only 'valkey' and 'default' are allowed. Defaulting to 'default'.")
+		log.Println("⚠️  Warning: Invalid CACHE_TYPE set. Only 'valkey' and 'default' are allowed. Defaulting to 'default'.")
 		c.CacheType = "default"
 	}
 	c.ValkeyHosts = strings.Split(c.getEnv("VALKEY_HOSTS", "127.0.0.1:6379"), ",")
@@ -164,31 +207,52 @@ func (c *Config) ReadConfig() {
 	c.RateLimitPeriod = c.getEnv("RATE_LIMIT_PERIOD", "1-M")
 	rxRateLimitPeriod := regexp.MustCompile(`^[0-9]+\-[SMHD]$`)
 	if !rxRateLimitPeriod.MatchString(c.RateLimitPeriod) {
-		log.Println("Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
+		log.Println("⚠️  Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
 		c.RateLimitPeriod = "1-M"
 	}
 	c.MaxSessionsPerUser = c.getEnvInt("MAX_SESSIONS_PER_USER", 10)
 	if c.MaxSessionsPerUser < 1 {
-		log.Println("Warning: MAX_SESSIONS_PER_USER must be at least 1. Defaulting to 10.")
+		log.Println("⚠️  Warning: MAX_SESSIONS_PER_USER must be at least 1. Defaulting to 10.")
 		c.MaxSessionsPerUser = 10
 	}
 	c.WebAuthnRPDisplayName = c.getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Seatsurfing")
 	c.MaxPasskeysPerUser = c.getEnvInt("MAX_PASSKEYS_PER_USER", 10)
 	if c.MaxPasskeysPerUser < 1 {
-		log.Println("Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
+		log.Println("⚠️  Warning: MAX_PASSKEYS_PER_USER must be at least 1. Defaulting to 10.")
 		c.MaxPasskeysPerUser = 10
 	}
+	c.DisableVersionCheck = (c.getEnv("DISABLE_VERSION_CHECK", "0") == "1")
+	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
+	c.DisableInstallIDExposure = (c.getEnv("DISABLE_INSTALL_ID_EXPOSURE", "0") == "1")
 
 	// Check deprecated environment variables
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
-		log.Println("Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
+		log.Println("⚠️  Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
 	}
 	if c.getEnv("BOOKING_UI_BACKEND", "") != "" {
-		log.Println("Warning: BOOKING_UI_BACKEND is deprecated. The Booking UI now uses the same backend as the Admin UI. Please remove this environment variable.")
+		log.Println("⚠️  Warning: BOOKING_UI_BACKEND is deprecated. The Booking UI now uses the same backend as the Admin UI. Please remove this environment variable.")
 	}
 	if c.getEnv("DISABLE_UI_PROXY", "") != "" {
-		log.Println("Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
+		log.Println("⚠️  Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
 	}
+}
+
+// parsePluginsConfig parses the PLUGINS_CONFIG env var, a JSON array of
+// RemotePluginConfig entries, e.g.:
+//
+//	[{"name":"subscription","address":"subscription-plugin:50051","token":"<secret>","tls":false}]
+//
+// A single env var supports an arbitrary-length list of plugins - unset or
+// empty means zero plugins loaded, which is a non-fatal, valid state.
+func (c *Config) parsePluginsConfig(raw string) []RemotePluginConfig {
+	if raw == "" {
+		return nil
+	}
+	var plugins []RemotePluginConfig
+	if err := json.Unmarshal([]byte(raw), &plugins); err != nil {
+		log.Fatalln("Error: Could not parse PLUGINS_CONFIG as JSON:", err)
+	}
+	return plugins
 }
 
 func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {
@@ -226,9 +290,8 @@ func (c *Config) loadPublicKey(path string) (*rsa.PublicKey, error) {
 
 func (c *Config) IsValidLanguageCode(isoLanguageCode string) bool {
 	validLanguageCodes := []string{"de", "en"}
-	lc := strings.ToLower(isoLanguageCode)
 	for _, s := range validLanguageCodes {
-		if lc == s {
+		if isoLanguageCode == s {
 			return true
 		}
 	}

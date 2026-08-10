@@ -7,13 +7,20 @@
 
 ## 🚀 Seatsurfing SaaS available!
 
-We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS) at. [Start for free now](https://seatsurfing.io/sign-up)!
+We offer [Seatsurfing](https://seatsurfing.io/) as a fully-hosted Software-as-a-Service (SaaS). [Start for free now](https://seatsurfing.io/sign-up)!
 
 - **No installation required** - Get started immediately
-- **Microsoft Teams integration** - See [Microsoft AppSource marketplace](https://appsource.microsoft.com/product/office/WA200008773)
 - **Get it free** - Free for up to 10 users
 - **Automatic updates** - Always enjoy the latest features
 - **Managed infrastructure** - Servers in Germany (EU)
+- **30 days free trail for Professional plan** - [Start free trial](https://seatsurfing.io/sign-up?paid)!
+
+If you prefer to self host, but want additional functionality, check out our [Plus Plugin](https://seatsurfing.io/docs/self-hosted/plus-plugin).
+
+## 🔗 Integrations
+
+- **[Microsoft Teams](https://appsource.microsoft.com/en-us/product/office/WA200008773)**
+- **[Atlassian Confluence](https://marketplace.atlassian.com/apps/1224242)** (Cloud-only feature)
 
 ## 📖 Introduction
 
@@ -60,7 +67,12 @@ services:
       - 8080:8080
     environment:
       POSTGRES_URL: 'postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable'
+      # CRYPT_KEY is used for encrypting sensitive data in the database
       CRYPT_KEY: 'some-random-32-bytes-long-string'
+      # When running without a reverse proxy taking care of TLS termination,
+      # use the following settings which enable HTTP on port 8080
+      PUBLIC_SCHEME: 'http'
+      PUBLIC_PORT: '8080'
   db:
     image: postgres:17
     restart: always
@@ -80,10 +92,10 @@ networks:
   sql:
 ```
 
-This starts...
+This starts …
 
-- a PostgreSQL database with data stored on Docker volume "db"
-- a Seatsurfing instance with port 8080 exposed
+- … a PostgreSQL database with data stored on Docker volume "db"
+- … a Seatsurfing instance with port 8080 exposed
 
 The Seatsurfing Booking UI is accessible at :8080/ui/search/ and the Seatsurfing Admin UI instance at :8080/ui/admin/.
 

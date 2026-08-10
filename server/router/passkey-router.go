@@ -12,6 +12,7 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gorilla/mux"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
@@ -206,10 +207,6 @@ func (router *UserRouter) listPasskeys(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		SendInternalServerError(w)
-		return
-	}
 	user := GetRequestUser(r)
 	if user == nil {
 		SendUnauthorized(w)
@@ -224,8 +221,14 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 		SendForbidden(w)
 		return
 	}
-	// Enforce per-user passkey limit (Finding #4)
-	if GetPasskeyRepository().GetCountByUserID(user.ID) >= GetConfig().MaxPasskeysPerUser {
+	// Enforce per-user passkey limit
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if passkeyCount >= GetConfig().MaxPasskeysPerUser {
 		SendForbidden(w)
 		return
 	}
@@ -299,10 +302,6 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 }
 
 func (router *UserRouter) finishPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
-	if !CanCrypt() {
-		SendInternalServerError(w)
-		return
-	}
 	user := GetRequestUser(r)
 	if user == nil {
 		SendUnauthorized(w)
@@ -445,9 +444,13 @@ func (router *UserRouter) deletePasskey(w http.ResponseWriter, r *http.Request) 
 	}
 	// Spec §5.4: if enforce_totp is enabled and this is the user's last passkey
 	// and TOTP is not configured, refuse deletion (would violate 2FA enforcement).
-	enforceTotp, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingEnforceTOTP.Name)
-	if enforceTotp && user.TotpSecret == "" {
-		passkeyCount := GetPasskeyRepository().GetCountByUserID(user.ID)
+	if IsTotpEnforcedForUser(user) && user.TotpSecret == "" {
+		passkeyCount, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
 		if passkeyCount <= 1 {
 			SendForbidden(w)
 			return
@@ -467,10 +470,6 @@ func (router *UserRouter) deletePasskey(w http.ResponseWriter, r *http.Request) 
 
 func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Request) {
 	// Encryption must be available to securely store the challenge (Finding #1)
-	if !CanCrypt() {
-		SendInternalServerError(w)
-		return
-	}
 	var m BeginPasskeyLoginRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -710,7 +709,12 @@ const (
 //	│       └── NO → Issue passkey challenge (401) → passkey2FAHandled
 //	└── NO  → passkey2FANotApplicable
 func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Request, user *User, m *AuthPasswordRequest) passkey2FAResult {
-	count := GetPasskeyRepository().GetCountByUserID(user.ID)
+	count, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return passkey2FAHandled
+	}
 	if count == 0 {
 		return passkey2FANotApplicable
 	}

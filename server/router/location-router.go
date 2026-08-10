@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"image"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -19,6 +21,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -33,7 +36,9 @@ type CreateLocationRequest struct {
 	Timezone              string   `json:"timezone" validate:"max=32"`
 	Enabled               bool     `json:"enabled"`
 	MapScale              float64  `json:"mapScale"`
-	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds"`
+	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
+	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	BookableDays          []int    `json:"bookableDays" validate:"dive,min=0,max=6"`
 }
 
 type GetLocationResponse struct {
@@ -43,6 +48,14 @@ type GetLocationResponse struct {
 	MapHeight      uint   `json:"mapHeight"`
 	MapMimeType    string `json:"mapMimeType"`
 	CreateLocationRequest
+}
+
+type GetFloorPlanDesignResponse struct {
+	DesignData string `json:"designData"`
+}
+
+type SetFloorPlanDesignRequest struct {
+	DesignData string `json:"designData" validate:"required"`
 }
 
 type GetMapResponse struct {
@@ -65,7 +78,7 @@ type GetSpaceAttributeValueResponse struct {
 type SearchLocationRequest struct {
 	Enter      time.Time         `json:"enter" validate:"required"`
 	Leave      time.Time         `json:"leave" validate:"required"`
-	Attributes []SearchAttribute `json:"attributes"`
+	Attributes []SearchAttribute `json:"attributes" validate:"dive"`
 }
 
 const (
@@ -82,6 +95,8 @@ func (router *LocationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/attribute/{attributeId}", router.deleteAttribute).Methods("DELETE")
 	s.HandleFunc("/{id}/map", router.getMap).Methods("GET")
 	s.HandleFunc("/{id}/map", router.setMap).Methods("POST")
+	s.HandleFunc("/{id}/floorplan-design", router.getFloorPlanDesign).Methods("GET")
+	s.HandleFunc("/{id}/floorplan-design", router.setFloorPlanDesign).Methods("POST")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -383,9 +398,26 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if len(m.BookableDays) > 0 {
+		if !IsValidWeekdaysList(weekdaysToString(m.BookableDays)) {
+			SendBadRequest(w)
+			return
+		}
+	}
+	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
+	// Clear stale floor plan data before flipping map_type so that a failure
+	// here does not leave the location in an inconsistent state (map_type
+	// already updated but stale map data still present).
+	if previousMapType == "designed" && eNew.MapType == "" {
+		if err := GetLocationRepository().ClearMapData(eNew); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+	}
 	if err := GetLocationRepository().Update(eNew); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -441,6 +473,12 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if len(m.BookableDays) > 0 {
+		if !IsValidWeekdaysList(weekdaysToString(m.BookableDays)) {
+			SendBadRequest(w)
+			return
+		}
+	}
 	if err := GetLocationRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -470,6 +508,34 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.MapType == "designed" {
+		var designData string
+		plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
+		if err == sql.ErrNoRows {
+			designData = `{"elements":[]}`
+		} else if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		} else {
+			designData = plan.DesignData
+		}
+		svgData, width, height, err := renderFloorPlanSVG(designData)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		res := &GetMapResponse{
+			Width:    width,
+			Height:   height,
+			MimeType: "svg+xml",
+			Scale:    1.0,
+			Data:     base64.StdEncoding.EncodeToString(svgData),
+		}
+		SendJSON(w, res)
+		return
+	}
 	locationMap, err := GetLocationRepository().GetMap(e)
 	if err != nil {
 		log.Println(err)
@@ -484,6 +550,84 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		Data:     base64.StdEncoding.EncodeToString(locationMap.Data),
 	}
 	SendJSON(w, res)
+}
+
+func (router *LocationRouter) getFloorPlanDesign(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetLocationRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanAccessOrg(user, e.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
+	if err == sql.ErrNoRows {
+		// No design record exists yet — return empty design
+		SendJSON(w, &GetFloorPlanDesignResponse{DesignData: ""})
+		return
+	} else if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendJSON(w, &GetFloorPlanDesignResponse{DesignData: plan.DesignData})
+}
+
+func (router *LocationRouter) setFloorPlanDesign(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	e, err := GetLocationRepository().GetOne(vars["id"])
+	if err != nil {
+		log.Println(err)
+		SendNotFound(w)
+		return
+	}
+	user := GetRequestUser(r)
+	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	var m SetFloorPlanDesignRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !json.Valid([]byte(m.DesignData)) {
+		SendBadRequest(w)
+		return
+	}
+	plan := &LocationFloorPlan{
+		LocationID:     e.ID,
+		OrganizationID: e.OrganizationID,
+		DesignData:     m.DesignData,
+	}
+	if err := GetLocationFloorPlanRepository().SetDesign(plan); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	// Render the SVG to compute dimensions and persist them on the location so
+	// that map_width / map_height / map_mimetype are kept in sync.
+	_, width, height, err := renderFloorPlanSVG(m.DesignData)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	e.MapWidth = width
+	e.MapHeight = height
+	e.MapMimeType = "svg+xml"
+	e.MapScale = 1.0
+	if err := GetLocationRepository().SetMapMeta(e); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
 }
 
 func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
@@ -562,6 +706,34 @@ func (router *LocationRouter) loadSampleData(w http.ResponseWriter, r *http.Requ
 	GetOrganizationRepository().CreateSampleData(org)
 }
 
+func weekdaysToString(days []int) string {
+	if len(days) == 0 {
+		return ""
+	}
+	sorted := make([]int, len(days))
+	copy(sorted, days)
+	slices.Sort(sorted)
+	parts := make([]string, len(sorted))
+	for i, d := range sorted {
+		parts[i] = strconv.Itoa(d)
+	}
+	return strings.Join(parts, ",")
+}
+
+func weekdaysFromString(csv string) []int {
+	days := []int{}
+	if csv == "" {
+		return days
+	}
+	for _, part := range strings.Split(csv, ",") {
+		d, err := strconv.Atoi(part)
+		if err == nil {
+			days = append(days, d)
+		}
+	}
+	return days
+}
+
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
 	e := &Location{}
 	e.Name = m.Name
@@ -570,6 +742,8 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.Timezone = m.Timezone
 	e.Enabled = m.Enabled
 	e.MapScale = m.MapScale
+	e.MapType = m.MapType
+	e.BookableDays = weekdaysToString(m.BookableDays)
 	return e
 }
 
@@ -582,10 +756,12 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.MapWidth = e.MapWidth
 	m.MapHeight = e.MapHeight
 	m.MapScale = e.MapScale
+	m.MapType = e.MapType
 	m.Description = e.Description
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
+	m.BookableDays = weekdaysFromString(e.BookableDays)
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}

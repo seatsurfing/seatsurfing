@@ -32,6 +32,18 @@ tmux split-window -v -f -t "$SESSION:0"
 
 CONSOLE_CMD="\
 cd '$SCRIPT_DIR' \
+&& add-missing-translations() { \
+  tmux send-keys -t '$SESSION:0.0' C-c '' Enter \
+  && sleep 1 \
+  && tmux send-keys -t '$SESSION:0.0' \"cd '$SCRIPT_DIR/ui' && ./add-missing-translations.sh && npm run dev\" Enter; \
+} \
+&& export -f add-missing-translations \
+&& prettierFormat() { \
+  tmux send-keys -t '$SESSION:0.0' C-c '' Enter \
+  && sleep 1 \
+  && tmux send-keys -t '$SESSION:0.0' \"cd '$SCRIPT_DIR/ui' && npm run prettier:format && npm run dev\" Enter; \
+} \
+&& export -f prettierFormat \
 && restartServer() { \
   tmux send-keys -t '$SESSION:0.2' C-c '' Enter \
   && sleep 1 \
@@ -46,7 +58,7 @@ cd '$SCRIPT_DIR' \
   && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; \
 } \
 && export -f clearDatabase \
-&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\n- restartServer: restarts the backend server\n- clearDatabase: restarts with a clean new database\n\nHappy (Seat)surfing... 🏄\n\n' \
+&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\n- restartServer: restarts the backend server\n- clearDatabase: restarts with a clean new database\n- prettierFormat: runs code formatting\n- add-missing-translations: adds missing translations\n\nHappy Seatsurfing … 🏄\n\n' \
 ; bash \
 ; tmux kill-session -t '$SESSION'\
 "

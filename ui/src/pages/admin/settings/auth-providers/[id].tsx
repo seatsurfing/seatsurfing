@@ -1,9 +1,18 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert, ButtonGroup } from "react-bootstrap";
+import {
+  Form,
+  Col,
+  Row,
+  Button,
+  Alert,
+  ButtonGroup,
+  InputGroup,
+} from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
   Trash2 as IconDelete,
+  Edit2 as IconEdit,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -14,13 +23,20 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import AuthProvider from "@/types/AuthProvider";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+
+import ErrorText from "@/types/ErrorText";
+import AjaxError from "@/util/AjaxError";
+import RendererUtils from "@/util/RendererUtils";
+import UrlInput from "@/components/form/UrlInput";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface State {
   loading: boolean;
   submitting: boolean;
   saved: boolean;
   goBack: boolean;
+  error: boolean;
+  errorText: string;
   name: string;
   providerType: number;
   authUrl: string;
@@ -33,9 +49,11 @@ interface State {
   userInfoLastnameField: string;
   clientId: string;
   clientSecret: string;
+  clientSecretEditing: boolean;
   logoutUrl: string;
   profilePageUrl: string;
   readOnly: boolean;
+  showDeleteConfirm: boolean;
 }
 
 interface Props {
@@ -53,6 +71,8 @@ class EditAuthProvider extends React.Component<Props, State> {
       submitting: false,
       saved: false,
       goBack: false,
+      error: false,
+      errorText: "",
       name: "",
       providerType: 0,
       authUrl: "",
@@ -65,24 +85,23 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoLastnameField: "",
       clientId: "",
       clientSecret: "",
+      clientSecretEditing: true,
       logoutUrl: "",
       profilePageUrl: "",
       readOnly: false,
+      showDeleteConfirm: false,
     };
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
-  loadData = () => {
+  loadData = async () => {
     const { id } = this.props.router.query;
     if (id && typeof id === "string" && id !== "add") {
-      AuthProvider.get(id).then((authProvider) => {
+      try {
+        const authProvider = await AuthProvider.get(id);
         this.entity = authProvider;
         this.setState({
           name: authProvider.name,
@@ -97,12 +116,15 @@ class EditAuthProvider extends React.Component<Props, State> {
           userInfoLastnameField: authProvider.userInfoLastnameField,
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
+          clientSecretEditing: false,
           logoutUrl: authProvider.logoutUrl,
           profilePageUrl: authProvider.profilePageUrl,
           readOnly: authProvider.readOnly,
           loading: false,
         });
-      });
+      } catch {
+        this.setState({ loading: false, error: true });
+      }
     } else {
       this.setState({
         loading: false,
@@ -110,7 +132,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     }
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     this.entity.name = this.state.name;
     this.entity.providerType = this.state.providerType;
@@ -123,24 +145,48 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.userInfoFirstnameField = this.state.userInfoFirstnameField;
     this.entity.userInfoLastnameField = this.state.userInfoLastnameField;
     this.entity.clientId = this.state.clientId;
-    this.entity.clientSecret = this.state.clientSecret;
+    if (this.state.clientSecretEditing) {
+      this.entity.clientSecret = this.state.clientSecret;
+    }
     this.entity.logoutUrl = this.state.logoutUrl;
     this.entity.profilePageUrl = this.state.profilePageUrl;
-    this.entity.save().then(() => {
+
+    try {
+      await this.entity.save();
+      this.entity.clientSecret = "";
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
       );
       this.setState({
         saved: true,
+        submitting: false,
+        clientSecretEditing: false,
       });
-    });
+    } catch (e) {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
+      this.setState({
+        error: true,
+        errorText: code
+          ? ErrorText.getTextForAppCode(code, this.props.t)
+          : this.props.t("errorSave"),
+      });
+    }
   };
 
   deleteItem = () => {
-    if (window.confirm(this.props.t("confirmDeleteAuthProvider"))) {
-      this.entity.delete().then(() => {
-        this.setState({ goBack: true });
-      });
+    this.setState({ showDeleteConfirm: true });
+  };
+
+  confirmDeleteItem = async () => {
+    this.setState({ showDeleteConfirm: false });
+    try {
+      await this.entity.delete();
+      this.setState({ goBack: true });
+    } catch {
+      this.setState({ error: true });
     }
   };
 
@@ -242,9 +288,11 @@ class EditAuthProvider extends React.Component<Props, State> {
     let hint = <></>;
     if (this.state.saved) {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
+    } else if (this.state.error) {
+      hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
-    let urlInfo = <></>;
+    let callbackUrlInfo = <></>;
     let buttonDelete = (
       <Button
         className="btn-sm"
@@ -272,7 +320,7 @@ class EditAuthProvider extends React.Component<Props, State> {
           {backButton} {buttonDelete} {buttonSave}
         </>
       );
-      urlInfo = (
+      callbackUrlInfo = (
         <Form.Group as={Row}>
           <Form.Label column sm="2">
             Callback URL
@@ -302,6 +350,36 @@ class EditAuthProvider extends React.Component<Props, State> {
       <FullLayout headline={this.props.t("editAuthProvider")} buttons={buttons}>
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
+          <Form.Group as={Row} hidden={this.entity.id !== ""}>
+            <Form.Label column sm="2">
+              {this.props.t("templates")}
+            </Form.Label>
+            <Col sm="9">
+              <ButtonGroup>
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.templateGoogle}
+                >
+                  Google
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.templateMicrosoft}
+                >
+                  Microsoft
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.templateKeycloak}
+                >
+                  Keycloak
+                </Button>
+                <Button variant="outline-secondary" onClick={this.templateOkta}>
+                  Okta
+                </Button>
+              </ButtonGroup>
+            </Col>
+          </Form.Group>
           <Form.Group as={Row}>
             <Form.Label column sm="2">
               {this.props.t("name")}
@@ -338,9 +416,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Auth URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.authUrl}
                 onChange={(e: any) =>
                   this.setState({ authUrl: e.target.value })
@@ -354,9 +430,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Token URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.tokenUrl}
                 onChange={(e: any) =>
                   this.setState({ tokenUrl: e.target.value })
@@ -420,17 +494,40 @@ class EditAuthProvider extends React.Component<Props, State> {
               Client Secret
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="text"
-                placeholder="Client Secret"
-                value={this.state.clientSecret}
-                onChange={(e: any) =>
-                  this.setState({ clientSecret: e.target.value })
-                }
-                required={true}
-                pattern="[^\s]+"
-                title="Client Secret (whitespaces are not allowed)"
-              />
+              {!this.state.clientSecretEditing && this.entity.id ? (
+                <InputGroup>
+                  <Form.Control
+                    type="text"
+                    value={RendererUtils.SECRET_PLACEHOLDER}
+                    readOnly={true}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() =>
+                      this.setState({
+                        clientSecretEditing: true,
+                        clientSecret: "",
+                      })
+                    }
+                    title={this.props.t("edit")}
+                  >
+                    <IconEdit className="feather" />
+                  </Button>
+                </InputGroup>
+              ) : (
+                <Form.Control
+                  type="text"
+                  placeholder="Client Secret"
+                  value={this.state.clientSecret}
+                  onChange={(e: any) =>
+                    this.setState({ clientSecret: e.target.value })
+                  }
+                  required={true}
+                  pattern="[^\s]+"
+                  title="Client Secret (whitespaces are not allowed)"
+                  autoFocus={this.state.clientSecretEditing && !!this.entity.id}
+                />
+              )}
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -438,9 +535,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Userinfo URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.userInfoUrl}
                 onChange={(e: any) =>
                   this.setState({ userInfoUrl: e.target.value })
@@ -500,9 +595,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Logout URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.logoutUrl}
                 onChange={(e: any) =>
                   this.setState({ logoutUrl: e.target.value })
@@ -515,9 +608,7 @@ class EditAuthProvider extends React.Component<Props, State> {
               Profile Page URL
             </Form.Label>
             <Col sm="9">
-              <Form.Control
-                type="url"
-                placeholder="https://..."
+              <UrlInput
                 value={this.state.profilePageUrl}
                 onChange={(e: any) =>
                   this.setState({ profilePageUrl: e.target.value })
@@ -525,38 +616,14 @@ class EditAuthProvider extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
-          {urlInfo}
-          <Form.Group as={Row} hidden={this.entity.id !== ""}>
-            <Form.Label column sm="2">
-              {this.props.t("templates")}
-            </Form.Label>
-            <Col sm="9">
-              <ButtonGroup>
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.templateGoogle}
-                >
-                  Google
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.templateMicrosoft}
-                >
-                  Microsoft
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.templateKeycloak}
-                >
-                  Keycloak
-                </Button>
-                <Button variant="outline-secondary" onClick={this.templateOkta}>
-                  Okta
-                </Button>
-              </ButtonGroup>
-            </Col>
-          </Form.Group>
+          {callbackUrlInfo}
         </Form>
+        <ConfirmModal
+          show={this.state.showDeleteConfirm}
+          message={this.props.t("confirmDeleteAuthProvider")}
+          onCancel={() => this.setState({ showDeleteConfirm: false })}
+          onConfirm={this.confirmDeleteItem}
+        />
       </FullLayout>
     );
   }

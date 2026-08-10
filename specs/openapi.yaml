@@ -20,7 +20,7 @@ info:
 
     ## Authentication
 
-    Authentication is done via JWT Bearer tokens in the `Authorization` header. Service accounts may also use HTTP Basic Authentication.
+    Authentication is done via JWT Bearer tokens in the `Authorization` header. Service accounts may also use HTTP Basic Authentication (`Authorization: Basic <base64>`) or a long-lived API token (`Authorization: Bearer <token>`) generated via `POST /user/{id}/api-token`. API tokens are stored as SHA-256 hashes and are shown only once at generation time.
 
     ## Session management
 
@@ -101,6 +101,10 @@ components:
       type: http
       scheme: basic
       description: Service account authentication using `{orgId}_{email}` as username and the service account password
+    ServiceAccountBearerAuth:
+      type: http
+      scheme: bearer
+      description: Service account authentication using a long-lived API token generated via `POST /user/{id}/api-token`. The raw token is presented as a Bearer token. Read-only service accounts may only use this on `GET` requests.
 
   schemas:
     # --- Authentication ---
@@ -296,32 +300,6 @@ components:
         email:
           type: string
           format: email
-
-    DebugTimeIssuesRequest:
-      type: object
-      required: [time]
-      properties:
-        time:
-          type: string
-          format: date-time
-
-    DebugTimeIssuesResponse:
-      type: object
-      properties:
-        tz:
-          type: string
-        error:
-          type: string
-        receivedTime:
-          type: string
-        receivedTimeTransformed:
-          type: string
-        dbTime:
-          type: string
-          format: date-time
-        result:
-          type: string
-          format: date-time
 
     # --- Recurring Bookings ---
     CreateRecurringBookingRequest:
@@ -644,6 +622,12 @@ components:
           type: string
           format: email
           description: Only visible if showNames is enabled or it's the user's own booking
+        userFirstname:
+          type: string
+          description: Only visible if showNames is enabled or it's the user's own booking
+        userLastname:
+          type: string
+          description: Only visible if showNames is enabled or it's the user's own booking
         enter:
           type: string
           format: date-time
@@ -652,6 +636,8 @@ components:
           format: date-time
         subject:
           type: string
+        approved:
+          type: boolean
 
     SpaceBulkUpdateRequest:
       type: object
@@ -991,6 +977,21 @@ components:
           type: string
           description: TOTP secret key for manual entry
 
+    GenerateApiTokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Raw API token (64-character lowercase hex string). Shown once only — store it securely.
+          example: "a3f1e2d4c5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2"
+
+    GetApiTokenStatusResponse:
+      type: object
+      properties:
+        configured:
+          type: boolean
+          description: Whether a long-lived API token is currently configured for this service account.
+
     ValidateTotpRequest:
       type: object
       required: [code, stateId]
@@ -1227,8 +1228,6 @@ components:
           type: string
         clientId:
           type: string
-        clientSecret:
-          type: string
         logoutUrl:
           type: string
         profilePageUrl:
@@ -1292,25 +1291,73 @@ components:
           description: Space load percentage for last week
 
     # --- Search ---
+    GetUserSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstname:
+          type: string
+        lastname:
+          type: string
+
+    GetLocationSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    GetSpaceSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          $ref: "#/components/schemas/GetLocationSearchResponse"
+
+    GetGroupSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        organizationId:
+          type: string
+          format: uuid
+
     GetSearchResultsResponse:
       type: object
       properties:
         users:
           type: array
           items:
-            $ref: "#/components/schemas/GetUserResponse"
+            $ref: "#/components/schemas/GetUserSearchResponse"
         locations:
           type: array
           items:
-            $ref: "#/components/schemas/GetLocationResponse"
+            $ref: "#/components/schemas/GetLocationSearchResponse"
         spaces:
           type: array
           items:
-            $ref: "#/components/schemas/GetSpaceResponse"
+            $ref: "#/components/schemas/GetSpaceSearchResponse"
         groups:
           type: array
           items:
-            $ref: "#/components/schemas/GetGroupResponse"
+            $ref: "#/components/schemas/GetGroupSearchResponse"
 
     # --- Healthcheck ---
     HealthcheckResponse:
@@ -2106,29 +2153,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-
-  /booking/debugtimeissues/:
-    post:
-      tags: [Bookings]
-      summary: Debug timezone issues
-      description: Diagnostic endpoint for debugging timezone-related issues. No authentication required (whitelisted route).
-      operationId: debugTimeIssues
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DebugTimeIssuesRequest"
-      responses:
-        "200":
-          description: Debug information
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DebugTimeIssuesResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
 
   # ===========================
   # Recurring Bookings
@@ -3847,6 +3871,93 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /user/{id}/api-token:
+    get:
+      tags: [Users]
+      summary: Get API token status
+      description: Returns whether a long-lived API token is currently configured for the specified service account. The raw token is never returned. Requires Org Admin role.
+      operationId: getApiTokenStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Service account user ID
+      responses:
+        "200":
+          description: API token status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiTokenStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Users]
+      summary: Generate API token
+      description: |
+        Generates a new long-lived API token for the specified service account.
+        The raw token is returned **once** in the response and is not stored in plaintext.
+        Calling this endpoint again immediately invalidates the previous token.
+        The token can be used as `Authorization: Bearer <token>` on any endpoint that accepts service account credentials.
+        Requires Org Admin role.
+      operationId: generateApiToken
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Service account user ID
+      responses:
+        "200":
+          description: Generated API token (shown once only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateApiTokenResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Users]
+      summary: Revoke API token
+      description: Revokes the API token for the specified service account. The token stops working immediately. This operation is idempotent (returns 204 even if no token was configured). Requires Org Admin role.
+      operationId: revokeApiToken
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Service account user ID
+      responses:
+        "204":
+          description: Token revoked (or was not set)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /user/{id}/totp:
     delete:
       tags: [Users]
@@ -4878,7 +4989,7 @@ paths:
       tags: [Search]
       summary: Search across entities
       description: |
-        Searches across users, locations, spaces, and groups by keyword. Requires Org Admin role for users and Space Admin role for everything else.
+        Searches across users, locations, spaces, and groups by keyword. Requires Space Admin role.
         Use query parameters to control which entity types to include in the search:
         - `includeUsers=1` (requires Org Admin)
         - `includeGroups=1`

@@ -8,10 +8,9 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
-import Ajax from "@/util/Ajax";
 import AuthProvider from "@/types/AuthProvider";
 import RuntimeConfig from "@/components/RuntimeConfig";
-import RedirectUtil from "@/util/RedirectUtil";
+import RendererUtils from "@/util/RendererUtils";
 
 interface State {
   selectedItem: string;
@@ -36,27 +35,19 @@ class Users extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
-    if (!Ajax.hasAccessToken()) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
-    import("excellentexport").then(
-      (imp) => (this.ExcellentExport = imp.default),
-    );
+  componentDidMount = async () => {
+    const imp = await import("excellentexport");
+    this.ExcellentExport = imp.default;
     this.loadItems();
   };
 
-  loadItems = () => {
-    AuthProvider.list().then((providers) => {
-      providers.forEach((provider) => {
-        this.authProviders[provider.id] = provider.name;
-      });
-      User.list().then((list) => {
-        this.data = list;
-        this.setState({ loading: false });
-      });
+  loadItems = async () => {
+    const providers = await AuthProvider.list();
+    providers.forEach((provider) => {
+      this.authProviders[provider.id] = provider.name;
     });
+    this.data = await User.list();
+    this.setState({ loading: false });
   };
 
   onItemSelect = (user: User) => {
@@ -72,30 +63,11 @@ class Users extends React.Component<Props, State> {
     } else if (this.authProviders[user.authProviderId]) {
       authProvider = this.authProviders[user.authProviderId];
     }
-    let role = this.props.t("roleUser");
-    if (user.role === User.UserRoleSpaceAdmin) {
-      role = this.props.t("roleSpaceAdmin");
-    }
-    if (user.role === User.UserRoleOrgAdmin) {
-      role = this.props.t("roleOrgAdmin");
-    }
-    if (user.role === User.UserRoleServiceAccountRO) {
-      role = this.props.t("roleServiceAccountRO");
-    }
-    if (user.role === User.UserRoleServiceAccountRW) {
-      role = this.props.t("roleServiceAccountRW");
-    }
-    if (user.role === User.UserRoleSuperAdmin) {
-      role = this.props.t("roleSuperAdmin");
-    }
+    const role = RendererUtils.roleName(user.role, this.props.t);
     return (
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
-        <td>
-          {user.lastname}
-          {user.lastname && user.firstname ? ", " : ""}
-          {user.firstname}
-        </td>
+        <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
         <td>{role}</td>
         <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
           {authProvider}
@@ -117,7 +89,7 @@ class Users extends React.Component<Props, State> {
       return <></>;
     }
     // eslint-disable-next-line
-    let downloadButton = (
+    const downloadButton = (
       <a
         download="seatsurfing-users.xlsx"
         href="#"
@@ -127,7 +99,7 @@ class Users extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
-    let buttons = (
+    const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         <Link
@@ -147,7 +119,7 @@ class Users extends React.Component<Props, State> {
       );
     }
 
-    let rows = this.data.map((item) => this.renderItem(item));
+    const rows = this.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("users")} buttons={buttons}>
@@ -169,9 +141,7 @@ class Users extends React.Component<Props, State> {
           <thead>
             <tr>
               <th>{this.props.t("user")}</th>
-              <th>
-                {this.props.t("lastname")}, {this.props.t("firstname")}
-              </th>
+              <th>{this.props.t("name")}</th>
               <th>{this.props.t("role")}</th>
               <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
                 {this.props.t("loginMeans")}

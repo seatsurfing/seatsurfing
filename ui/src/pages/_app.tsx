@@ -8,10 +8,12 @@ import "@/styles/EditLocation.css";
 import "@/styles/ConfluenceHint.css";
 import "@/styles/Login.css";
 import "@/styles/Search.css";
+import "@/styles/Calendar.css";
 import "@/styles/Settings.css";
 import "@/styles/SideBar.css";
 import "@/styles/FullLayout.css";
 import "@/styles/Booking.css";
+import "@/styles/FloorPlanDesigner.css";
 import type { AppProps } from "next/app";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import React from "react";
@@ -19,9 +21,14 @@ import Loading from "@/components/Loading";
 import Head from "next/head";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
+import Navigation from "@/util/Navigation";
 import Formatting from "@/util/Formatting";
 import TotpSetupModal from "@/components/TotpSetupModal";
 import MfaEncouragementModal from "@/components/MfaEncouragementModal";
+import SessionExpiredModal from "@/components/SessionExpiredModal";
+import ServerErrorModal from "@/components/ServerErrorModal";
+import NotFoundModal from "@/components/NotFoundModal";
+import BadRequestModal from "@/components/BadRequestModal";
 import User from "@/types/User";
 import Router from "next/router";
 
@@ -29,6 +36,10 @@ interface State {
   isLoading: boolean;
   showTotpEnforcement: boolean;
   showMfaEncouragement: boolean;
+  showSessionExpired: boolean;
+  showServerError: boolean;
+  showNotFound: boolean;
+  showBadRequest: boolean;
   totpQrCode: string;
   totpStateId: string;
   enforceTOTP: boolean;
@@ -48,6 +59,10 @@ class App extends React.Component<Props, State> {
       isLoading: true,
       showTotpEnforcement: false,
       showMfaEncouragement: false,
+      showSessionExpired: false,
+      showServerError: false,
+      showNotFound: false,
+      showBadRequest: false,
       totpQrCode: "",
       totpStateId: "",
       enforceTOTP: false,
@@ -64,6 +79,11 @@ class App extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    Ajax.onUnauthorized = () => this.setState({ showSessionExpired: true });
+    Ajax.onServerError = () => this.setState({ showServerError: true });
+    Ajax.onNotFound = () => this.setState({ showNotFound: true });
+    Ajax.onBadRequest = () => this.setState({ showBadRequest: true });
+
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
         this.setState(
@@ -85,6 +105,10 @@ class App extends React.Component<Props, State> {
   }
 
   componentWillUnmount() {
+    Ajax.onUnauthorized = null;
+    Ajax.onServerError = null;
+    Ajax.onNotFound = null;
+    Ajax.onBadRequest = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
   }
 
@@ -239,7 +263,7 @@ class App extends React.Component<Props, State> {
       // ignore
     }
     this.setState({ showMfaEncouragement: false });
-    Router.push("/preferences?tab=security");
+    Router.push(Navigation.preferences("security"));
   };
 
   onTotpEnforcementSuccess = () => {
@@ -286,7 +310,12 @@ class App extends React.Component<Props, State> {
           <link rel="shortcut icon" href="/ui/favicon-192.png" />
           <link rel="apple-touch-icon" href="/ui/favicon-192.png" />
           <link rel="apple-touch-startup-image" href="/ui/favicon-1024.png" />
-          <title>Seatsurfing</title>
+          <title>
+            Seatsurfing{" "}
+            {RuntimeConfig.INFOS?.orgName
+              ? ` – ${RuntimeConfig.INFOS.orgName}`
+              : ""}
+          </title>
         </Head>
         {this.state.showTotpEnforcement && (
           <TotpSetupModal
@@ -305,6 +334,10 @@ class App extends React.Component<Props, State> {
             onSetup={this.onMfaEncouragementSetup}
           />
         )}
+        <SessionExpiredModal show={this.state.showSessionExpired} />
+        <ServerErrorModal show={this.state.showServerError} />
+        <NotFoundModal show={this.state.showNotFound} />
+        <BadRequestModal show={this.state.showBadRequest} />
         <Component {...pageProps} />
       </>
     );

@@ -1,6 +1,9 @@
 package testutil
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +16,7 @@ import (
 
 	"github.com/google/uuid"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/app"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -158,11 +162,11 @@ func CreateTestUserInOrg(org *Organization) *User {
 	return CreateTestUserInOrgDomain(org, "test.com")
 }
 
-func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
+func CreateTestUserDomain(org *Organization, domain string, role UserRole) *User {
 	user := &User{
 		Email:          uuid.New().String() + "@" + domain,
 		OrganizationID: org.ID,
-		Role:           UserRoleOrgAdmin,
+		Role:           role,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
@@ -170,8 +174,16 @@ func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
 	return user
 }
 
+func CreateTestUserOrgAdminDomain(org *Organization, domain string) *User {
+	return CreateTestUserDomain(org, domain, UserRoleOrgAdmin)
+}
+
 func CreateTestUserOrgAdmin(org *Organization) *User {
 	return CreateTestUserOrgAdminDomain(org, "test.com")
+}
+
+func CreateTestUserOrgSpaceAdmin(org *Organization) *User {
+	return CreateTestUserDomain(org, "test.com", UserRoleSpaceAdmin)
 }
 
 func CreateTestString(length int) string {
@@ -352,4 +364,38 @@ func TestRunner(m *testing.M) {
 	DropTestDB()
 	db.Close()
 	os.Exit(code)
+}
+
+func CreateTestServiceAccountRW(org *Organization) *User {
+	user := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+		Role:           UserRoleServiceAccountRW,
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		panic(err)
+	}
+	return user
+}
+
+func GenerateTestApiToken(userID string) string {
+	rawBytes := make([]byte, 32)
+	if _, err := rand.Read(rawBytes); err != nil {
+		panic(err)
+	}
+	rawToken := hex.EncodeToString(rawBytes)
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := hex.EncodeToString(hash[:])
+	if err := GetUserRepository().SetApiToken(userID, NullString(tokenHash)); err != nil {
+		panic(err)
+	}
+	return rawToken
+}
+
+func NewHTTPRequestBearer(method, url, rawToken string, body io.Reader) *http.Request {
+	req, _ := http.NewRequest(method, url, body)
+	if rawToken != "" {
+		req.Header.Set("Authorization", "Bearer "+rawToken)
+	}
+	return req
 }

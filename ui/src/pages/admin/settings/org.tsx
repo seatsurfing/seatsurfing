@@ -14,7 +14,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
-import RedirectUtil from "@/util/RedirectUtil";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -56,10 +56,6 @@ class EditOrg extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (!Ajax.hasAccessToken() || !RuntimeConfig.INFOS.orgAdmin) {
-      RedirectUtil.toLogin(this.props.router);
-      return;
-    }
     this.loadData();
   };
 
@@ -84,7 +80,7 @@ class EditOrg extends React.Component<Props, State> {
       error: false,
       saved: false,
     });
-    let payload = {
+    const payload = {
       code: this.state.code,
     };
     Ajax.postData(
@@ -132,7 +128,7 @@ class EditOrg extends React.Component<Props, State> {
   };
 
   render() {
-    let backButton = (
+    const backButton = (
       <Link
         href="/admin/settings/"
         className="btn btn-sm btn-outline-secondary"
@@ -184,7 +180,7 @@ class EditOrg extends React.Component<Props, State> {
       );
     }
 
-    let languages = ["de", "en"];
+    const languages = ["de", "en"];
     return (
       <FullLayout headline={this.props.t("editOrg")} buttons={buttons}>
         <Form
@@ -194,25 +190,29 @@ class EditOrg extends React.Component<Props, State> {
         >
           {hint}
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="org-name">
               {this.props.t("org")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="org-name"
                 type="text"
                 value={this.state.name}
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
+                minLength={2}
+                maxLength={64}
                 autoFocus={true}
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="org-language">
               {this.props.t("language")}
             </Form.Label>
             <Col sm="4">
               <Form.Select
+                id="org-language"
                 value={this.state.language}
                 onChange={(e: any) =>
                   this.setState({ language: e.target.value })
@@ -220,52 +220,66 @@ class EditOrg extends React.Component<Props, State> {
                 required={true}
               >
                 {languages.map((lc) => (
-                  <option key={lc}>{lc}</option>
+                  <option key={lc} value={lc}>
+                    {this.props.t("language-" + lc)}
+                  </option>
                 ))}
               </Form.Select>
             </Col>
           </Form.Group>
+
+          {/* PRIMARY CONTACT */}
+
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>{this.props.t("primaryContact")}</h4>
+          </div>
           <Form.Group as={Row}>
-            <Form.Label column sm="6" className="lead text-uppercase">
-              {this.props.t("primaryContact")}
-            </Form.Label>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="org-firstname">
               {this.props.t("firstname")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="org-firstname"
                 type="text"
                 value={this.state.firstname}
                 onChange={(e: any) =>
                   this.setState({ firstname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="org-lastname">
               {this.props.t("lastname")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="org-lastname"
                 type="text"
                 value={this.state.lastname}
                 onChange={(e: any) =>
                   this.setState({ lastname: e.target.value })
                 }
                 required={true}
+                minLength={2}
+                maxLength={64}
+                pattern={Validation.HUMAN_NAME_PATTERN}
+                title={this.props.t("nameRequirements")}
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2">
+            <Form.Label column sm="2" htmlFor="org-email">
               {this.props.t("emailAddress")}
             </Form.Label>
             <Col sm="4">
               <Form.Control
+                id="org-email"
                 type="email"
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}

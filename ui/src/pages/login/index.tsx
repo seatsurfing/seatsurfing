@@ -85,7 +85,6 @@ class Login extends React.Component<Props, State> {
       loading: true,
       orgDomain: "",
       domainNotFound: false,
-      // Sync pre-check; refined by the async call in componentDidMount (Finding #14)
       passkeyAvailable: Passkey.isSupported(),
       requirePasswordUpdate: false,
       newPassword: "",
@@ -102,10 +101,6 @@ class Login extends React.Component<Props, State> {
       }
     }
     this.loadOrgDetails();
-    // Refine the platform authenticator availability check asynchronously (Finding #14)
-    Passkey.isPlatformAuthAvailable().then((available) =>
-      this.setState({ passkeyAvailable: available }),
-    );
   };
 
   applyOrg = (res: any) => {
@@ -137,7 +132,7 @@ class Login extends React.Component<Props, State> {
 
   loadOrgDetails = () => {
     const domain = window.location.host.split(":").shift();
-    Ajax.get("/auth/org/" + domain)
+    Ajax.get("/auth/org/" + domain, () => true)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -148,7 +143,7 @@ class Login extends React.Component<Props, State> {
   };
 
   checkSingleOrg = () => {
-    Ajax.get("/auth/singleorg")
+    Ajax.get("/auth/singleorg", () => true)
       .then((res) => {
         this.applyOrg(res);
       })
@@ -192,7 +187,7 @@ class Login extends React.Component<Props, State> {
     if (this.state.requirePasskey && this.state.passkeyStateId) {
       payload.passkeyStateId = this.state.passkeyStateId;
     }
-    Ajax.postData("/auth/login", payload)
+    Ajax.postData("/auth/login", payload, () => true)
       .then((res) => {
         this.onSuccessfulLogin(res.json);
       })
@@ -259,7 +254,7 @@ class Login extends React.Component<Props, State> {
       organizationId: this.org?.id,
       newPassword: this.state.newPassword,
     };
-    Ajax.postData("/auth/updatepw", payload)
+    Ajax.postData("/auth/updatepw", payload, () => true)
       .then((res) => {
         this.onSuccessfulLogin(res.json);
       })
@@ -302,7 +297,7 @@ class Login extends React.Component<Props, State> {
         passkeyStateId: stateId,
         passkeyCredential: serialized,
       };
-      const res = await Ajax.postData("/auth/login", payload);
+      const res = await Ajax.postData("/auth/login", payload, () => true);
       await this.onSuccessfulLogin(res.json);
       this.setState({ inPasskeyLogin: false });
     } catch (err: any) {
@@ -345,9 +340,8 @@ class Login extends React.Component<Props, State> {
       await this.onSuccessfulLogin({ ...res, logoutUrl: "" });
       this.setState({ inPasskeyLogin: false, passkeyLoginFailed: false });
     } catch (err: any) {
+      console.log("Passkey login failed", err);
       // NotAllowedError = user dismissed the browser passkey dialog — no error shown.
-      // Any other error (e.g. 404 from finishLogin for an expired/unknown credential)
-      // must surface to the user.
       const cancelled =
         err instanceof DOMException && err.name === "NotAllowedError";
       this.setState({
@@ -358,9 +352,9 @@ class Login extends React.Component<Props, State> {
   };
 
   getRedirectUrl = () => {
-    // prevent (open) redirect to absolute URLs
+    // only allow relative redirect URLs to prevent (open) redirects
     const redirectUrl = this.props.router.query["redir"] as string;
-    if (!redirectUrl || Validation.isAbsoluteUrl(redirectUrl)) {
+    if (!redirectUrl || !Validation.isRelativeUrl(redirectUrl)) {
       return Navigation.PATH_PAGE_SEARCH;
     }
 
@@ -425,13 +419,13 @@ class Login extends React.Component<Props, State> {
 
     const copyrightFooter = (
       <div className="copyright-footer">
-        &copy; Seatsurfing &#183;{" "}
+        &copy;&nbsp;
         <a
           href="https://seatsurfing.io"
           target="_blank"
           rel="noopener noreferrer"
         >
-          https://seatsurfing.io
+          Seatsurfing
         </a>
         <LanguageSelector />
       </div>
@@ -704,7 +698,6 @@ class Login extends React.Component<Props, State> {
                 }
                 required={true}
                 isInvalid={this.state.invalid}
-                minLength={8}
               />
               <Button variant="primary" type="submit">
                 {this.state.inPasswordSubmit ? (

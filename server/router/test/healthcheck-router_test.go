@@ -1,12 +1,12 @@
 package test
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/seatsurfing/seatsurfing/server/router"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/seatsurfing/seatsurfing/server/router"
-	"fmt"
-	"encoding/json"
 )
 
 func TestHealthcheckHandler_Success(t *testing.T) {

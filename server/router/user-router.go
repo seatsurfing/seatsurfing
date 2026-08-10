@@ -2,7 +2,10 @@ package router
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"image/png"
 	"log"
 	"net/http"
@@ -83,12 +86,15 @@ type GetUserResponse struct {
 	TotpEnabled     bool                    `json:"totpEnabled"`
 	HasPasskeys     bool                    `json:"hasPasskeys"`
 	IsPrimaryDomain bool                    `json:"isPrimaryDomain"`
+	LastActivity    *time.Time              `json:"lastActivity"`
 	CreateUserRequest
 }
 
 type GetUserInfoSmall struct {
-	UserID string `json:"userId"`
-	Email  string `json:"email"`
+	UserID    string `json:"userId"`
+	Email     string `json:"email"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
 }
 
 type GetMergeRequestResponse struct {
@@ -144,6 +150,9 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/totp/disable", router.disableTotp).Methods("POST")
 	s.HandleFunc("/{id}/passkeys", router.adminResetPasskeys).Methods("DELETE")
 	s.HandleFunc("/{id}/totp", router.adminResetTotp).Methods("DELETE")
+	s.HandleFunc("/{id}/api-token", router.getApiToken).Methods("GET")
+	s.HandleFunc("/{id}/api-token", router.generateApiToken).Methods("POST")
+	s.HandleFunc("/{id}/api-token", router.revokeApiToken).Methods("DELETE")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -214,8 +223,7 @@ func (router *UserRouter) disableTotp(w http.ResponseWriter, r *http.Request) {
 		SendUnauthorized(w)
 		return
 	}
-	enforceTotp, _ := GetSettingsRepository().GetBool(user.OrganizationID, SettingEnforceTOTP.Name)
-	if enforceTotp {
+	if IsTotpEnforcedForUser(user) {
 		SendForbidden(w)
 		return
 	}
@@ -528,7 +536,13 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, false)
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, false, passkeyCount > 0)
 	res.Organization = GetOrganizationResponse{
 		ID: org.ID,
 		CreateOrganizationRequest: CreateOrganizationRequest{
@@ -568,7 +582,13 @@ func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) 
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e, true)
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, true, passkeyCount > 0)
 	SendJSON(w, res)
 }
 
@@ -589,7 +609,13 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	res := router.copyToRestModel(e, true)
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, true, passkeyCount > 0)
 	SendJSON(w, res)
 }
 
@@ -612,9 +638,19 @@ func (router *UserRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	userIDs := make([]string, len(list))
+	for i, e := range list {
+		userIDs[i] = e.ID
+	}
+	hasPasskeysByUserID, err := GetPasskeyRepository().GetUserIDsWithPasskeys(userIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetUserResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e, true)
+		m := router.copyToRestModel(e, true, hasPasskeysByUserID[e.ID])
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -627,6 +663,11 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
+		SendBadRequest(w)
+		return
+	}
+
+	if !IsValidHumanName(m.Firstname) || !IsValidHumanName(m.Lastname) {
 		SendBadRequest(w)
 		return
 	}
@@ -696,7 +737,11 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		eNew.HashedPassword = e.HashedPassword
 		eNew.AuthProviderID = e.AuthProviderID
 		eNew.PasswordPending = e.PasswordPending
+		eNew.PasswordUpdateRequired = e.PasswordUpdateRequired
 	}
+
+	eNew.TotpSecret = e.TotpSecret
+	eNew.AtlassianID = e.AtlassianID
 
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {
@@ -773,6 +818,11 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
+		SendBadRequest(w)
+		return
+	}
+
+	if !IsValidHumanName(m.Firstname) || !IsValidHumanName(m.Lastname) {
 		SendBadRequest(w)
 		return
 	}
@@ -882,7 +932,7 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 	return e
 }
 
-func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse {
+func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool) *GetUserResponse {
 	m := &GetUserResponse{}
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
@@ -897,9 +947,112 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool) *GetUserResponse 
 	m.RequirePassword = (e.HashedPassword != "")
 	m.PasswordPending = e.PasswordPending
 	m.TotpEnabled = (e.TotpSecret != "")
-	m.HasPasskeys = GetPasskeyRepository().GetCountByUserID(e.ID) > 0
+	m.HasPasskeys = hasPasskeys
+	m.LastActivity = e.LastActivityAtUTC
 	if admin {
 		m.AuthProviderID = string(e.AuthProviderID)
 	}
 	return m
+}
+
+type GenerateApiTokenResponse struct {
+	Token string `json:"token"`
+}
+
+type GetApiTokenStatusResponse struct {
+	Configured bool `json:"configured"`
+}
+
+func (router *UserRouter) getApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	res := &GetApiTokenStatusResponse{
+		Configured: e.ApiToken != "",
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	rawBytes := make([]byte, 32)
+	if _, err := rand.Read(rawBytes); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	rawToken := hex.EncodeToString(rawBytes)
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := hex.EncodeToString(hash[:])
+	if err := GetUserRepository().SetApiToken(e.ID, NullString(tokenHash)); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := &GenerateApiTokenResponse{
+		Token: rawToken,
+	}
+	SendJSON(w, res)
+}
+
+func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CanAdminOrg(user, user.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil {
+		SendNotFound(w)
+		return
+	}
+	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+		SendNotFound(w)
+		return
+	}
+	if !isServiceAccountRole(int(e.Role)) {
+		SendBadRequest(w)
+		return
+	}
+	if err := GetUserRepository().SetApiToken(e.ID, NullString("")); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

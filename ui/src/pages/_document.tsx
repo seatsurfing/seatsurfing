@@ -18,9 +18,9 @@ class Doc extends Document<Props> {
     const csp = new Map<string, string[]>();
     csp.set("default-src", ["'self'"]);
     csp.set("form-action", ["'self'"]);
-    csp.set("img-src", ["'self'", "data:", "https:", "'unsafe-eval'"]);
+    csp.set("img-src", ["'self'", "data:", "https:"]);
     csp.set("style-src", ["'self'", "data:", "'unsafe-inline'"]);
-    csp.set("object-src", ["data:", "'unsafe-eval'"]);
+    csp.set("object-src", ["data:"]);
     csp.set("base-uri", ["'none'"]);
     csp.set("script-src", [
       "'self'",

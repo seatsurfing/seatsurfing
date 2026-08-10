@@ -7,5 +7,16 @@
     "Bereich: {{areaName}}",
     "Platz: {{spaceName}}",
     "Betreff: {{subject}}"
-  ]
+  ],
+  "buttons": [
+    {
+      "label": "Deine Buchungen",
+      "url": "{{orgDomain}}ui/bookings/"
+    }
+  ],
+  "finalInfo": {
+    "text": "Möchtest du keine Buchungsinformationen mehr per E-Mail erhalten? Deaktiviere diese in der Seatsurfing-Oberfläche unter {{link}}.",
+    "label": "Einstellungen",
+    "url": "{{orgDomain}}ui/preferences/"
+  }
 }

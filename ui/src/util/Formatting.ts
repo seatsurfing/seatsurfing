@@ -1,64 +1,94 @@
 import RuntimeConfig from "@/components/RuntimeConfig";
 
+export interface DateFormatter {
+  format(date?: Date | number): string;
+}
+
 export default class Formatting {
   static Language: string = "en";
   static t: (key: string, view?: object) => any;
 
-  static tbool(s: string) {
-    return Formatting.t(s) === "1";
+  private static formatDatePart(
+    date: Date | number | undefined,
+    local?: boolean,
+  ): string {
+    const d =
+      date === undefined
+        ? new Date()
+        : typeof date === "number"
+          ? new Date(date)
+          : date;
+    const year = local ? d.getFullYear() : d.getUTCFullYear();
+    const month = (local ? d.getMonth() : d.getUTCMonth()) + 1;
+    const day = local ? d.getDate() : d.getUTCDate();
+    return RuntimeConfig.INFOS.dateFormat
+      .replace("Y", year.toString().padStart(4, "0"))
+      .replace("m", month.toString().padStart(2, "0"))
+      .replace("d", day.toString().padStart(2, "0"));
   }
 
-  static getFormatter(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
+  private static getWeekdayFormatter(local?: boolean): Intl.DateTimeFormat {
+    return new Intl.DateTimeFormat(Formatting.Language, {
       timeZone: local ? undefined : "UTC",
       weekday: "long",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+    });
+  }
+
+  private static getTimeFormatter(local?: boolean): Intl.DateTimeFormat {
+    return new Intl.DateTimeFormat(Formatting.Language, {
+      timeZone: local ? undefined : "UTC",
       hour: "numeric",
       minute: "numeric",
       hour12: !RuntimeConfig.INFOS.use24HourTime,
     });
-    return formatter;
   }
 
-  static getFormatterNoTime(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
-      timeZone: local ? undefined : "UTC",
-      weekday: "long",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    return formatter;
+  static getFormatter(local?: boolean): DateFormatter {
+    const weekdayFormatter = Formatting.getWeekdayFormatter(local);
+    const timeFormatter = Formatting.getTimeFormatter(local);
+    return {
+      format: (date?: Date | number) => {
+        const d = date === undefined ? new Date() : date;
+        return `${weekdayFormatter.format(d)}, ${Formatting.formatDatePart(d, local)}, ${timeFormatter.format(d)}`;
+      },
+    };
   }
 
-  static getFormatterShort(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
-      timeZone: local ? undefined : "UTC",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: !RuntimeConfig.INFOS.use24HourTime,
-    });
-    return formatter;
+  static getFormatterNoTime(local?: boolean): DateFormatter {
+    const weekdayFormatter = Formatting.getWeekdayFormatter(local);
+    return {
+      format: (date?: Date | number) => {
+        const d = date === undefined ? new Date() : date;
+        return `${weekdayFormatter.format(d)}, ${Formatting.formatDatePart(d, local)}`;
+      },
+    };
   }
 
-  static getFormatterDate(local?: boolean): Intl.DateTimeFormat {
-    let formatter = new Intl.DateTimeFormat(Formatting.Language, {
-      timeZone: local ? undefined : "UTC",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    return formatter;
+  static getBookingDateFormatter(): DateFormatter {
+    return RuntimeConfig.INFOS.dailyBasisBooking
+      ? Formatting.getFormatterNoTime()
+      : Formatting.getFormatter();
+  }
+
+  static getFormatterShort(local?: boolean): DateFormatter {
+    const timeFormatter = Formatting.getTimeFormatter(local);
+    return {
+      format: (date?: Date | number) => {
+        const d = date === undefined ? new Date() : date;
+        return `${Formatting.formatDatePart(d, local)}, ${timeFormatter.format(d)}`;
+      },
+    };
+  }
+
+  static getFormatterDate(local?: boolean): DateFormatter {
+    return {
+      format: (date?: Date | number) => Formatting.formatDatePart(date, local),
+    };
   }
 
   static getDateTimePickerFormatString(): string {
-    let date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
-    let formattedDate = Formatting.getFormatterShort().format(date);
+    const date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
+    const formattedDate = Formatting.getFormatterShort().format(date);
     return formattedDate
       .replace("2006", "y")
       .replace("12", "MM")
@@ -68,8 +98,8 @@ export default class Formatting {
   }
 
   static getDateTimePickerFormatDailyString(): string {
-    let date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
-    let formattedDate = Formatting.getFormatterDate().format(date);
+    const date = Date.UTC(2006, 11, 23, 11, 41, 52, 0);
+    const formattedDate = Formatting.getFormatterDate().format(date);
     return formattedDate
       .replace("2006", "y")
       .replace("12", "MM")
@@ -77,7 +107,7 @@ export default class Formatting {
   }
 
   static getDayValue(date: Date): number {
-    let s =
+    const s =
       date.getFullYear().toString().padStart(4, "0") +
       (date.getMonth() + 1).toString().padStart(2, "0") +
       date.getDate().toString().padStart(2, "0");
@@ -93,7 +123,7 @@ export default class Formatting {
   }
 
   static getISO8601(date: Date): string {
-    let s =
+    const s =
       date.getFullYear().toString().padStart(4, "0") +
       "-" +
       (date.getMonth() + 1).toString().padStart(2, "0") +
@@ -103,9 +133,9 @@ export default class Formatting {
   }
 
   static getDateOffsetText(enter: Date, leave: Date): string {
-    let today = Formatting.getDayValue(new Date());
-    let start = Formatting.getDayValue(enter);
-    let end = Formatting.getDayValue(leave);
+    const today = Formatting.getDayValue(new Date());
+    const start = Formatting.getDayValue(enter);
+    const end = Formatting.getDayValue(leave);
     if (start <= today && today <= end) {
       return Formatting.t("today");
     }
@@ -119,9 +149,16 @@ export default class Formatting {
   }
 
   static stripTimezoneDetails(s: string): string {
-    if (s.length > 6 && (s[s.length - 6] === "+" || s[s.length - 6] === "-")) {
-      return s.substring(0, s.length - 6) + ".000Z";
+    const match = s.match(/^(.+?)([+-]\d{2}:\d{2})$/);
+    if (!match) {
+      return s;
     }
-    return s;
+    const withoutOffset = match[1];
+    const fractionMatch = withoutOffset.match(/\.(\d+)$/);
+    if (fractionMatch) {
+      const ms = fractionMatch[1].padEnd(3, "0").slice(0, 3);
+      return withoutOffset.replace(/\.\d+$/, "." + ms) + "Z";
+    }
+    return withoutOffset + ".000Z";
   }
 }

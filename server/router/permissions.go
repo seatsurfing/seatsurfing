@@ -1,7 +1,7 @@
 package router
 
 import (
-	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/api"
 )
 
 func CanPasswordLogin(user *User) bool {

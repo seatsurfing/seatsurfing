@@ -8,10 +8,10 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
-	"github.com/seatsurfing/seatsurfing/server/plugin"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -34,10 +34,12 @@ type SettingsRouterAdminMenuItem struct {
 	Source     string `json:"src"`
 	Visibility string `json:"visibility"`
 	Icon       string `json:"icon"`
+	TagName    string `json:"tagName"`
 }
 
 type SettingsRouterWelcomeScreen struct {
-	Source string `json:"src"`
+	Source  string `json:"src"`
+	TagName string `json:"tagName"`
 }
 
 var (
@@ -48,6 +50,8 @@ var (
 	SysSettingAdminWelcomeScreens  = "_sys_admin_welcome_screens"
 	SysSettingOrgPrimaryDomain     = "_sys_org_primary_domain"
 	SysSettingDisablePasswordLogin = "_sys_disable_password_login"
+	SysSettingOrgLanguage          = "_sys_org_language"
+	SysSettingInstallID            = "_sys_install_id"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -88,13 +92,37 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if vars["name"] == SysSettingOrgPrimaryDomain {
-		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(user.OrganizationID)
+		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
+		sysSettingOrgPrimaryDomain := router.getSysSettingOrgPrimaryDomain(org)
 		SendJSON(w, sysSettingOrgPrimaryDomain.Value)
 		return
 	}
 	if vars["name"] == SysSettingDisablePasswordLogin {
 		sysSettingDisablePasswordLogin := router.getSysSettingDisablePasswordLogin()
 		SendJSON(w, sysSettingDisablePasswordLogin.Value)
+		return
+	}
+	if vars["name"] == SysSettingOrgLanguage {
+		org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
+		SendJSON(w, router.getSysSettingOrgLanguage(org).Value)
+		return
+	}
+	if vars["name"] == SysSettingInstallID {
+		if GetConfig().DisableInstallIDExposure {
+			SendJSON(w, "")
+			return
+		}
+		SendJSON(w, router.getSysSettingInstallID().Value)
+		return
+	}
+	// Kiosk secret: return "1" if configured, "" if not – never expose the stored hash.
+	if vars["name"] == SettingKioskSecret.Name {
+		v, err := GetSettingsRepository().Get(user.OrganizationID, SettingKioskSecret.Name)
+		if err != nil || v == "" {
+			SendJSON(w, "")
+		} else {
+			SendJSON(w, "1")
+		}
 		return
 	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
@@ -170,16 +198,26 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	if CanSpaceAdminOrg(user, user.OrganizationID) {
 		res = append(res, router.getAdminMenuItems())
 	}
+	org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
 	res = append(res, router.getSysSettingVersion())
-	res = append(res, router.getSysSettingOrgPrimaryDomain(user.OrganizationID))
+	res = append(res, router.getSysSettingOrgPrimaryDomain(org))
+	res = append(res, router.getSysSettingOrgLanguage(org))
 	res = append(res, router.getSysSettingDisablePasswordLogin())
-	for _, plg := range plugin.GetPlugins() {
-		plgSettings := (*plg).GetPublicSettings(user.OrganizationID)
+	for _, plg := range GetPlugins() {
+		plgSettings := plg.GetPublicSettings(user.OrganizationID)
 		for _, setting := range plgSettings {
 			res = append(res, &GetSettingsResponse{
 				Name:  setting.Name,
 				Value: setting.Value,
 			})
+		}
+	}
+	if orgAdmin {
+		// Appended last, not grouped with the other orgAdmin-only sys
+		// settings above, so it doesn't shift the fixed indices existing
+		// callers/tests already rely on for those.
+		if !GetConfig().DisableInstallIDExposure {
+			res = append(res, router.getSysSettingInstallID())
 		}
 	}
 	SendJSON(w, res)
@@ -225,14 +263,31 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *SettingsRouter) doSetOne(organizationID, name, value string) error {
-	err := GetSettingsRepository().Set(organizationID, name, value)
-	return err
+	// Kiosk secret: hash the plaintext before storing; empty value clears it.
+	if name == SettingKioskSecret.Name {
+		if value == "" {
+			return GetSettingsRepository().Delete(organizationID, name)
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(value), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		return GetSettingsRepository().Set(organizationID, name, string(hash))
+	}
+	return GetSettingsRepository().Set(organizationID, name, value)
 }
 
 func (router *SettingsRouter) copyToRestModel(e *OrgSetting) *GetSettingsResponse {
 	m := &GetSettingsResponse{}
 	m.Name = e.Name
-	m.Value = e.Value
+	// Never expose the kiosk secret hash; return "1" to indicate a secret is configured.
+	if e.Name == SettingKioskSecret.Name {
+		if e.Value != "" {
+			m.Value = "1"
+		}
+	} else {
+		m.Value = e.Value
+	}
 	return m
 }
 
@@ -258,11 +313,15 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
 		name == SettingFeatureAuthProviders.Name ||
+		name == SettingFeatureKioskMode.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SysSettingOrgPrimaryDomain ||
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin ||
+		name == SysSettingOrgLanguage ||
 		name == SettingEnforceTOTP.Name ||
+		name == SettingHideReports.Name ||
+		name == SettingHideStats.Name ||
 		name == SettingAllowRecurringBookings.Name {
 		return true
 	}
@@ -277,12 +336,15 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SysSettingOrgSignupDelete ||
 		name == SysSettingAdminMenuItems ||
 		name == SysSettingAdminWelcomeScreens ||
+		name == SysSettingInstallID ||
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingSubjectDefault.Name ||
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
-		name == SettingTargetUtilizationHoursPerWeek.Name {
+		name == SettingTargetUtilizationHoursPerWeek.Name ||
+		name == SettingKioskSecret.Name ||
+		name == SettingKioskModeEnabled.Name {
 		return true
 	}
 	return false
@@ -313,8 +375,12 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingAllowRecurringBookings.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
 		name == SettingEnforceTOTP.Name ||
+		name == SettingHideReports.Name ||
+		name == SettingHideStats.Name ||
 		name == SettingSubjectDefault.Name ||
-		name == SettingTargetUtilizationHoursPerWeek.Name {
+		name == SettingTargetUtilizationHoursPerWeek.Name ||
+		name == SettingKioskSecret.Name ||
+		name == SettingKioskModeEnabled.Name {
 		return true
 	}
 	return false
@@ -396,8 +462,20 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingEnforceTOTP.Name {
 		return SettingEnforceTOTP.Type
 	}
+	if name == SettingHideReports.Name {
+		return SettingHideReports.Type
+	}
+	if name == SettingHideStats.Name {
+		return SettingHideStats.Type
+	}
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type
+	}
+	if name == SettingKioskSecret.Name {
+		return SettingKioskSecret.Type
+	}
+	if name == SettingKioskModeEnabled.Name {
+		return SettingKioskModeEnabled.Type
 	}
 	return 0
 }
@@ -470,13 +548,21 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 			return false
 		}
 	}
+	if name == SettingEnforceTOTP.Name {
+		intVal, _ := strconv.Atoi(value)
+		if intVal != SettingEnforceTOTPDisabled &&
+			intVal != SettingEnforceTOTPAllUsers &&
+			intVal != SettingEnforceTOTPAdminsOnly {
+			return false
+		}
+	}
 	return true
 }
 
 func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *GetSettingsResponse {
 	res := []SettingsRouterWelcomeScreen{}
-	for _, plg := range plugin.GetPlugins() {
-		ws := (*plg).GetAdminWelcomeScreen()
+	for _, plg := range GetPlugins() {
+		ws := plg.GetAdminWelcomeScreen()
 		if ws != nil {
 			skip := false
 			for _, setting := range settings {
@@ -487,7 +573,8 @@ func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *Ge
 			}
 			if !skip {
 				resItem := SettingsRouterWelcomeScreen{
-					Source: ws.Source,
+					Source:  ws.Source,
+					TagName: ws.TagName,
 				}
 				res = append(res, resItem)
 			}
@@ -506,14 +593,15 @@ func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *Ge
 
 func (router *SettingsRouter) getAdminMenuItems() *GetSettingsResponse {
 	res := []SettingsRouterAdminMenuItem{}
-	for _, plg := range plugin.GetPlugins() {
-		for _, item := range (*plg).GetAdminUIMenuItems() {
+	for _, plg := range GetPlugins() {
+		for _, item := range plg.GetAdminUIMenuItems() {
 			resItem := SettingsRouterAdminMenuItem{
 				ID:         item.ID,
 				Title:      item.Title,
 				Source:     item.Source,
 				Visibility: item.Visibility,
 				Icon:       item.Icon,
+				TagName:    item.TagName,
 			}
 			res = append(res, resItem)
 		}
@@ -558,8 +646,7 @@ func (router *SettingsRouter) getSysSettingDisablePasswordLogin() *GetSettingsRe
 	}
 }
 
-func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSettingsResponse {
-	org, _ := GetOrganizationRepository().GetOne(orgId)
+func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(org *Organization) *GetSettingsResponse {
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 
 	primaryDomainValue := ""
@@ -570,5 +657,27 @@ func (router *SettingsRouter) getSysSettingOrgPrimaryDomain(orgId string) *GetSe
 	return &GetSettingsResponse{
 		Name:  SysSettingOrgPrimaryDomain,
 		Value: primaryDomainValue,
+	}
+}
+
+func (router *SettingsRouter) getSysSettingInstallID() *GetSettingsResponse {
+	installID, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	if GetConfig().DisableInstallIDExposure {
+		installID = ""
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingInstallID,
+		Value: installID,
+	}
+}
+
+func (router *SettingsRouter) getSysSettingOrgLanguage(org *Organization) *GetSettingsResponse {
+	language := ""
+	if org != nil {
+		language = org.Language
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingOrgLanguage,
+		Value: language,
 	}
 }
