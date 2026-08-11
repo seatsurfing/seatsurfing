@@ -604,7 +604,7 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 		log.Println("ValidateDiscoverableLogin error:", err)
 		// Record failed attempt if we managed to identify the user
 		if matchedUser != nil {
-			GetAuthAttemptRepository().RecordLoginAttempt(matchedUser, false)
+			recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorPasskeyAssertion, ErrorDetail: err.Error(), BanCheck: true})
 		}
 		SendNotFound(w)
 		return
@@ -614,26 +614,31 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if matchedUser.Disabled {
+		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorUserDisabled})
 		SendNotFound(w)
 		return
 	}
 	// Must not be a service account
 	if matchedUser.Role == UserRoleServiceAccountRO || matchedUser.Role == UserRoleServiceAccountRW {
+		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorServiceAccount})
 		SendNotFound(w)
 		return
 	}
 	// Must have a password set (not IdP-only)
 	if matchedUser.HashedPassword == "" {
+		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorNoPasswordSet})
 		SendNotFound(w)
 		return
 	}
 	// Must not be pending password set
 	if matchedUser.PasswordPending {
+		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorPasswordPending})
 		SendNotFound(w)
 		return
 	}
 	// Check ban status
 	if matchedUser.BanExpiry != nil && matchedUser.BanExpiry.After(time.Now()) {
+		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorUserDisabled, ErrorDetail: "user is banned"})
 		SendUnauthorized(w)
 		return
 	}
@@ -643,7 +648,7 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 	if matchedPasskey.SignCount > 0 && credential.Authenticator.SignCount <= matchedPasskey.SignCount {
 		log.Printf("Warning: clone detection triggered for passkey %s (user %s): stored=%d, returned=%d\n",
 			matchedPasskey.ID, matchedUser.ID, matchedPasskey.SignCount, credential.Authenticator.SignCount)
-		GetAuthAttemptRepository().RecordLoginAttempt(matchedUser, false)
+		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorPasskeyCloneDetected, BanCheck: true})
 		SendNotFound(w)
 		return
 	}
@@ -657,7 +662,7 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 		log.Println("UpdateLastUsedAt error:", err)
 	}
 
-	GetAuthAttemptRepository().RecordLoginAttempt(matchedUser, true)
+	recordAuthEvent(r, &AuthEvent{User: matchedUser, Successful: true, Method: AuthMethodPasskey, BanCheck: true})
 	now := time.Now().UTC()
 	matchedUser.LastActivityAtUTC = &now
 	GetUserRepository().Update(matchedUser)
@@ -731,20 +736,24 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 	if m.PasskeyStateID != "" && len(m.PasskeyCredential) > 0 {
 		state, err := GetAuthStateRepository().GetOne(m.PasskeyStateID)
 		if err != nil || state == nil {
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyStateInvalid, ErrorDetail: "state not found"})
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
 		if state.AuthStateType != AuthPasskey2FA {
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyStateInvalid, ErrorDetail: "unexpected state type"})
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
 		if state.Expiry.Before(time.Now()) {
 			GetAuthStateRepository().Delete(state)
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyStateInvalid, ErrorDetail: "state expired"})
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
 		// Ensure this challenge was issued for this specific user
 		if state.AuthProviderID != user.ID {
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyStateInvalid, ErrorDetail: "state was issued for a different user"})
 			SendForbidden(w)
 			return passkey2FAHandled
 		}
@@ -772,14 +781,14 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		parsedAssertion, err := protocol.ParseCredentialRequestResponseBytes(m.PasskeyCredential)
 		if err != nil {
 			log.Println("parse assertion error:", err)
-			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyAssertion, ErrorDetail: err.Error(), BanCheck: true})
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
 		credential, err := wa.ValidateLogin(webAuthnUser, sessionData, parsedAssertion)
 		if err != nil {
 			log.Println("ValidateLogin error:", err)
-			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyAssertion, ErrorDetail: err.Error(), BanCheck: true})
 			SendNotFound(w)
 			return passkey2FAHandled
 		}
@@ -789,7 +798,7 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 			if pk.SignCount > 0 && credential.Authenticator.SignCount <= pk.SignCount {
 				log.Printf("Warning: clone detection triggered for passkey %s (user %s): stored=%d, returned=%d\n",
 					pk.ID, user.ID, pk.SignCount, credential.Authenticator.SignCount)
-				GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+				recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyCloneDetected, BanCheck: true})
 				SendNotFound(w)
 				return passkey2FAHandled
 			}

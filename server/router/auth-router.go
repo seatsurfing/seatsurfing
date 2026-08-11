@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -541,27 +542,31 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	}
 	user, err := GetUserRepository().GetByEmail(m.OrganizationID, m.Email)
 	if err == sql.ErrNoRows {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: m.OrganizationID, Email: m.Email, Method: AuthMethodPassword, ErrorCode: AuthErrorUserNotFound})
 		SendBadRequest(w)
 		return
 	}
 	if err != nil {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: m.OrganizationID, Email: m.Email, Method: AuthMethodPassword, ErrorCode: AuthErrorInternal, ErrorDetail: err.Error()})
 		SendInternalServerError(w)
 		return
 	}
 
 	if !CanPasswordLogin(user) {
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: PasswordLoginDenialReason(user)})
 		SendBadRequest(w)
 		return
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
-		GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
 		SendBadRequest(w)
 		return
 	}
 
 	// check if password update is required
 	if user.PasswordUpdateRequired {
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorPasswordUpdateReq})
 		SendUnauthorizedCode(w, ResponseCodePasswordUpdateRequired)
 		return
 	}
@@ -570,16 +575,22 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	if passkeyResult == passkey2FAHandled {
 		return
 	}
+	method := AuthMethodPassword
+	if passkeyResult == passkey2FAVerified {
+		method = AuthMethodPasskey2FA
+	}
 	// If passkey 2FA was verified, skip TOTP entirely.
 	if passkeyResult != passkey2FAVerified && user.TotpSecret != "" {
+		method = AuthMethodTOTP
 		if m.Code == "" {
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodTOTP, ErrorCode: AuthErrorTotpMissing})
 			SendUnauthorized(w)
 			return
 		}
 
 		// Check for replay attack
 		if totpCache.isCodeUsed(user.ID, m.Code) {
-			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodTOTP, ErrorCode: AuthErrorTotpReplay, BanCheck: true})
 			SendBadRequest(w)
 			return
 		}
@@ -587,12 +598,17 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		totpSecret, err := DecryptString(string(user.TotpSecret))
 		if err != nil {
 			log.Println("Error decrypting TOTP secret for user " + user.ID + ": " + err.Error())
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodTOTP, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to decrypt TOTP secret: " + err.Error()})
 			SendInternalServerError(w)
 			return
 		}
 		valid, err := totp.ValidateCustom(m.Code, totpSecret, time.Now(), *TotpOptions)
 		if err != nil || !valid {
-			GetAuthAttemptRepository().RecordLoginAttempt(user, false)
+			detail := ""
+			if err != nil {
+				detail = err.Error()
+			}
+			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodTOTP, ErrorCode: AuthErrorTotpInvalid, ErrorDetail: detail, BanCheck: true})
 			SendBadRequest(w)
 			return
 		}
@@ -601,7 +617,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 		totpCache.markCodeAsUsed(user.ID, m.Code)
 	}
 
-	router.createAndSendJWT(w, r, user, "password login", "", "")
+	router.createAndSendJWT(w, r, user, method, "", "", "")
 }
 
 func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request) {
@@ -650,7 +666,7 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	user.PasswordUpdateRequired = false
 	GetUserRepository().Update(user)
 
-	router.createAndSendJWT(w, r, user, "password update", "", "")
+	router.createAndSendJWT(w, r, user, AuthMethodPassword, "", "", "")
 }
 
 func (router *AuthRouter) CreateSession(r *http.Request, user *User) *Session {
@@ -775,20 +791,23 @@ func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *Auth
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	user, err := GetUserRepository().GetByAtlassianID(payload.UserID)
 	if err != nil {
+		// organization is not determinable here, so no auth event is recorded
 		SendNotFound(w)
 		return
 	}
 	if user.Disabled {
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodConfluence, ErrorCode: AuthErrorUserDisabled})
 		SendNotFound(w)
 		return
 	}
 	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodConfluence, ErrorCode: AuthErrorServiceAccount})
 		SendNotFound(w)
 		return
 	}
 	GetAuthStateRepository().Delete(authState)
 
-	router.createAndSendJWT(w, r, user, "Atlassian verify", "", "")
+	router.createAndSendJWT(w, r, user, AuthMethodConfluence, "", "", "")
 }
 
 func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
@@ -819,15 +838,18 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		if user == nil {
 			org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
 			if err != nil {
+				recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: payload.UserID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorInternal, ErrorDetail: "organization not found"})
 				SendInternalServerError(w)
 				return
 			}
 			allowAnyUser, _ := GetSettingsRepository().GetBool(provider.OrganizationID, SettingAllowAnyUser.Name)
 			if !allowAnyUser {
+				recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: payload.UserID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserNotFound})
 				SendNotFound(w)
 				return
 			}
 			if !GetUserRepository().CanCreateUser(org) {
+				recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: payload.UserID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserLimitReached})
 				SendPaymentRequired(w)
 				return
 			}
@@ -837,9 +859,12 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 				Role:           UserRoleUser,
 				AuthProviderID: NullUUID(provider.ID),
 			}
-			GetUserRepository().Create(user)
+			if err := GetUserRepository().Create(user); err != nil {
+				recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: payload.UserID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserCreateFailed, ErrorDetail: err.Error()})
+			}
 		} else {
 			if user.OrganizationID != provider.OrganizationID {
+				recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorOrgMismatch})
 				SendBadRequest(w)
 				return
 			}
@@ -858,6 +883,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		// Check if user is trying to log in with a different auth provider than bound to
 		if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
 			log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.Email, provider.ID, authProviderIDStr)
+			recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is bound to auth provider " + authProviderIDStr})
 			SendForbidden(w)
 			return
 		}
@@ -872,17 +898,27 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
+	verifyProviderID := ""
+	if provider != nil {
+		verifyProviderID = provider.ID
+	}
 	if user.Disabled {
+		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: verifyProviderID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserDisabled})
 		SendNotFound(w)
 		return
 	}
 	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: verifyProviderID, Method: AuthMethodOAuth, ErrorCode: AuthErrorServiceAccount})
 		SendNotFound(w)
 		return
 	}
 	GetAuthStateRepository().Delete(authState)
 
-	router.createAndSendJWT(w, r, user, "OAuth verify", router.getLogoutUrl(provider), router.getProfilePageURL(provider))
+	providerID := ""
+	if provider != nil {
+		providerID = provider.ID
+	}
+	router.createAndSendJWT(w, r, user, AuthMethodOAuth, providerID, router.getLogoutUrl(provider), router.getProfilePageURL(provider))
 }
 
 func (router *AuthRouter) getLogoutUrl(provider *AuthProvider) string {
@@ -916,8 +952,9 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	redir := r.URL.Query().Get("redir")
-	config := router.getConfig(provider)
-	if config == nil {
+	config, err := router.getConfig(provider)
+	if err != nil {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpConfigInvalid, ErrorDetail: err.Error()})
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "config"))
 		return
 	}
@@ -933,6 +970,7 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		Payload:        marshalAuthStateLoginPayload(payload),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to create auth state: " + err.Error()})
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "authState"))
 		return
 	}
@@ -952,14 +990,18 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error getting user info for provider %s: %s\n", vars["id"], err)
 
+		detail := err.Error()
 		// forward error and error_description from callback URL to our login failed page
 		redirectUrl := router.getRedirectFailedUrl("ui", provider, "userinfo")
 		if error := r.FormValue("error"); error != "" {
 			redirectUrl += "&error=" + url.QueryEscape(error)
+			detail += ", IdP error: " + error
 		}
 		if errorDesc := r.FormValue("error_description"); errorDesc != "" {
 			redirectUrl += "&error_description=" + url.QueryEscape(errorDesc)
+			detail += ", IdP error description: " + errorDesc
 		}
+		recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: authErrorCode(err, AuthErrorIdpUserinfoFailed), ErrorDetail: detail})
 		SendTemporaryRedirect(w, redirectUrl)
 
 		return
@@ -968,6 +1010,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	user, err := GetUserRepository().GetByEmail(provider.OrganizationID, userInfo.Email)
 	if !allowAnyUser {
 		if err != nil || user == nil {
+			recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: userInfo.Email, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserNotFound})
 			SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
 			return
 		}
@@ -975,10 +1018,12 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	if user == nil {
 		org, err := GetOrganizationRepository().GetOne(provider.OrganizationID)
 		if org == nil || err != nil {
+			recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: userInfo.Email, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorInternal, ErrorDetail: "organization not found"})
 			SendNotFound(w)
 			return
 		}
 		if !GetUserRepository().CanCreateUser(org) {
+			recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: userInfo.Email, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserLimitReached})
 			SendPaymentRequired(w)
 			return
 		}
@@ -988,7 +1033,9 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 			Role:           UserRoleUser,
 			AuthProviderID: NullUUID(provider.ID),
 		}
-		GetUserRepository().Create(user)
+		if err := GetUserRepository().Create(user); err != nil {
+			recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, Email: userInfo.Email, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorUserCreateFailed, ErrorDetail: err.Error()})
+		}
 	}
 	needUserUpdate := false
 
@@ -1003,6 +1050,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	// Check if user is trying to log in with a different auth provider than bound to
 	if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
 		log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.Email, provider.ID, authProviderIDStr)
+		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is bound to auth provider " + authProviderIDStr})
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
 		return
 	}
@@ -1030,6 +1078,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		log.Println(err)
+		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to create auth state: " + err.Error()})
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "authState"))
 		return
 	}
@@ -1071,44 +1120,77 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 	}
 }
 
+// authError carries a stable auth event error code alongside the error detail.
+type authError struct {
+	code   string
+	detail string
+}
+
+func (e *authError) Error() string {
+	return e.detail
+}
+
+// authErrorCode maps an error to its auth event error code, using fallback for
+// untyped errors.
+func authErrorCode(err error, fallback string) string {
+	var ae *authError
+	if errors.As(err, &ae) {
+		return ae.code
+	}
+	return fallback
+}
+
 func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*IdPUserInfo, *AuthStateLoginPayload, error) {
 	// Verify state string
 	authState, err := GetAuthStateRepository().GetOne(state)
 	if err != nil {
-		return nil, nil, fmt.Errorf("state not found for id %s", strings.Replace(strings.Replace(state, "\r", "", -1), "\n", "", -1))
+		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: fmt.Sprintf("state not found for id %s", strings.Replace(strings.Replace(state, "\r", "", -1), "\n", "", -1))}
 	}
 	if authState.AuthProviderID != provider.ID {
-		return nil, nil, fmt.Errorf("auth providers don't match")
+		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: "auth providers don't match"}
 	}
 	defer GetAuthStateRepository().Delete(authState)
 	// Exchange authorization code for an access token
-	config := router.getConfig(provider)
+	config, err := router.getConfig(provider)
+	if err != nil {
+		return nil, nil, &authError{code: AuthErrorIdpConfigInvalid, detail: err.Error()}
+	}
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
-		return nil, nil, fmt.Errorf("code exchange failed: %s", err.Error())
+		detail := "code exchange failed: " + err.Error()
+		var retrieveErr *oauth2.RetrieveError
+		if errors.As(err, &retrieveErr) {
+			detail = fmt.Sprintf("code exchange failed: token endpoint returned HTTP %d: %s", retrieveErr.Response.StatusCode, string(retrieveErr.Body))
+		}
+		return nil, nil, &authError{code: AuthErrorIdpCodeExchangeFailed, detail: detail}
 	}
 	// Get user info from resource server
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", provider.UserInfoURL, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed creating http request: %s", err.Error())
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed creating http request: " + err.Error()}
 	}
 	req.Header.Add("Authorization", "Bearer "+token.AccessToken)
 	response, err := client.Do(req)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed getting user info: %s", err.Error())
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed getting user info: " + err.Error()}
 	}
 	defer response.Body.Close()
 	contents, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed reading response body: %s", err.Error())
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed reading response body: " + err.Error()}
+	}
+	if response.StatusCode < 200 || response.StatusCode > 299 {
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: fmt.Sprintf("userinfo endpoint returned HTTP %d: %s", response.StatusCode, string(contents))}
 	}
 	// Extract email address from JSON response
 	var result map[string]interface{}
-	json.Unmarshal([]byte(contents), &result)
+	if err := json.Unmarshal([]byte(contents), &result); err != nil {
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: fmt.Sprintf("failed parsing userinfo response as JSON: %s: %s", err.Error(), string(contents))}
+	}
 	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: err.Error() + ", userinfo response: " + string(contents)}
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	return info, payload, nil
@@ -1170,18 +1252,18 @@ func (router *AuthRouter) SendUserInvitationEmail(user *User, ID string, org *Or
 	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathInviteUser(), org.Language, vars, org.ID)
 }
 
-func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
+func (router *AuthRouter) getConfig(provider *AuthProvider) (*oauth2.Config, error) {
 	org, _ := GetOrganizationRepository().GetOne(provider.OrganizationID)
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if primaryDomain == nil {
 		log.Println("Error compiling config for auth provider " + provider.Name + ": No primary domain found for organization")
-		return nil
+		return nil, fmt.Errorf("no primary domain found for organization %s", provider.OrganizationID)
 	}
 
 	clientSecret, err := DecryptString(provider.ClientSecret)
 	if err != nil {
 		log.Printf("Error decrypting client secret for auth provider %s: %v\n", provider.ID, err)
-		return nil
+		return nil, fmt.Errorf("failed to decrypt client secret: %s", err.Error())
 	}
 
 	config := &oauth2.Config{
@@ -1195,7 +1277,7 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) *oauth2.Config {
 			AuthStyle: oauth2.AuthStyle(provider.AuthStyle),
 		},
 	}
-	return config
+	return config, nil
 }
 
 func (router *AuthRouter) CreateClaims(user *User, session *Session) *Claims {
@@ -1293,8 +1375,18 @@ func unmarshalAuthStateLoginPayload(payload string) *AuthStateLoginPayload {
 	return o
 }
 
-func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Request, user *User, authMethod string, logoutURL string, profilePageURL string) {
-	GetAuthAttemptRepository().RecordLoginAttempt(user, true)
+// recordAuthEvent persists an authentication event, deriving the device string
+// from the request. Recording must never fail the login flow itself.
+func recordAuthEvent(r *http.Request, e *AuthEvent) {
+	var ar AuthRouter
+	e.Device = ar.GetDeviceInfo(r)
+	if err := GetAuthAttemptRepository().RecordAuthEvent(e); err != nil {
+		log.Println("Error recording auth event: " + err.Error())
+	}
+}
+
+func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Request, user *User, authMethod string, authProviderID string, logoutURL string, profilePageURL string) {
+	recordAuthEvent(r, &AuthEvent{User: user, Successful: true, Method: authMethod, AuthProviderID: authProviderID, BanCheck: true})
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
 	GetUserRepository().Update(user)

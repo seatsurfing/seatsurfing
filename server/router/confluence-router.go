@@ -38,6 +38,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	}
 	sharedSecret, err := GetSettingsRepository().Get(org.ID, SettingConfluenceServerSharedSecret.Name)
 	if err != nil || sharedSecret == "" {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Method: AuthMethodConfluence, ErrorCode: AuthErrorIdpConfigInvalid, ErrorDetail: "Confluence shared secret is not configured"})
 		SendBadRequest(w)
 		return
 	}
@@ -51,11 +52,13 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	primaryDomain, _ := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		log.Println("JWT header verification failed: parsing JWT failed with: " + err.Error())
+		recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Method: AuthMethodConfluence, ErrorCode: AuthErrorConfluenceJwtInvalid, ErrorDetail: "parsing JWT failed: " + err.Error()})
 		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed/")
 		return
 	}
 	if !token.Valid {
 		log.Println("JWT header verification failed: invalid JWT")
+		recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Method: AuthMethodConfluence, ErrorCode: AuthErrorConfluenceJwtInvalid, ErrorDetail: "invalid JWT"})
 		SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed/")
 		return
 	}
@@ -78,6 +81,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 	}
 	if err != nil {
 		if !GetUserRepository().CanCreateUser(org) {
+			recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Email: userID, Method: AuthMethodConfluence, ErrorCode: AuthErrorUserLimitReached})
 			SendTemporaryRedirect(w, FormatURL(primaryDomain.DomainName)+"/ui/login/failed")
 			return
 		}
@@ -87,7 +91,9 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 			OrganizationID: org.ID,
 			Role:           UserRoleUser,
 		}
-		GetUserRepository().Create(user)
+		if err := GetUserRepository().Create(user); err != nil {
+			recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Email: userID, Method: AuthMethodConfluence, ErrorCode: AuthErrorUserCreateFailed, ErrorDetail: err.Error()})
+		}
 	}
 	payload := &AuthStateLoginPayload{
 		LoginType: "",
@@ -100,6 +106,7 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 		Payload:        marshalAuthStateLoginPayload(payload),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Email: userID, Method: AuthMethodConfluence, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to create auth state: " + err.Error()})
 		SendInternalServerError(w)
 		return
 	}

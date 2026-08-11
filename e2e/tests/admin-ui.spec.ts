@@ -71,3 +71,30 @@ test("crud location", async ({ page }) => {
   await expect(page).toHaveURL(/locations\/$/);
   await expect(page.getByRole("cell", { name: name })).toHaveCount(0);
 });
+
+test("auth events", async ({ page }) => {
+  // Navigate to "Auth events"
+  await page.getByRole("link", { name: "Auth events" }).click();
+  await expect(page).toHaveURL(/auth-events\/$/);
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+
+  // The login from beforeEach must show up as a successful event
+  await expect(
+    page.getByRole("cell", { name: "admin@seatsurfing.local" }).first(),
+  ).toBeVisible();
+  await expect(page.getByText("Successful").first()).toBeVisible();
+
+  // Open the details modal
+  await page
+    .getByRole("cell", { name: "admin@seatsurfing.local" })
+    .first()
+    .click();
+  await expect(page.getByRole("dialog").getByText("Outcome")).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+
+  // Filter for failures only
+  await page.locator("#outcome-select").selectOption("failure");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  await expect(page.getByText("Successful")).toHaveCount(0);
+});

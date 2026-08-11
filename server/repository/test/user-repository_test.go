@@ -68,7 +68,7 @@ func TestDeleteObsoleteConfluenceAnonymousUsers(t *testing.T) {
 
 	// Confluence User 1 with recent login (not to be deleted)
 	cu1 := CreateTestUserInOrgWithName(org, "confluence-anonymous-"+uuid.New().String()+"@test.com", UserRoleUser)
-	GetAuthAttemptRepository().RecordLoginAttempt(cu1, true)
+	GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: cu1, Successful: true, Method: AuthMethodPassword, BanCheck: true})
 
 	// Confluence User 2 without login (to be deleted)
 	CreateTestUserInOrgWithName(org, "confluence-anonymous-"+uuid.New().String()+"@test.com", UserRoleUser)

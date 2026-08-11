@@ -540,6 +540,7 @@ func (a *App) InitializeRouter() {
 	routers["/buddy/"] = &BuddyRouter{}
 	routers["/organization/"] = &OrganizationRouter{}
 	routers["/auth-provider/"] = &AuthProviderRouter{}
+	routers["/auth-attempt/"] = &AuthAttemptRouter{}
 	routers["/auth/"] = &AuthRouter{}
 	routers["/group/"] = &GroupRouter{}
 	routers["/user/"] = &UserRouter{}
@@ -715,6 +716,17 @@ func (a *App) onTimerTick() {
 	}
 	if num > 0 {
 		log.Printf("Purged %d old bookings", num)
+	}
+
+	// purge max. 100 auth events after retention period (disabled if <= 0)
+	if retentionDays := GetConfig().AuthEventRetentionDays; retentionDays > 0 {
+		num, err = GetAuthAttemptRepository().PurgeOld(time.Duration(retentionDays)*24*time.Hour, 100)
+		if err != nil {
+			log.Println(err)
+		}
+		if num > 0 {
+			log.Printf("Purged %d old auth events", num)
+		}
 	}
 
 	// send booking reminder emails (~24h before booking start)
