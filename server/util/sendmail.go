@@ -631,20 +631,21 @@ func smtpDialAndSend(from string, to []string, msg []byte) error {
 	}
 	defer c.Close()
 
-	// Always check and use STARTTLS if available, especially important for M365
-	if ok, _ := c.Extension("STARTTLS"); ok {
-		tlsConfig := &tls.Config{
-			ServerName:         config.SMTPHost,
-			InsecureSkipVerify: config.SMTPInsecureSkipVerify,
+	if startTLS {
+		if ok, _ := c.Extension("STARTTLS"); ok {
+			tlsConfig := &tls.Config{
+				ServerName:         config.SMTPHost,
+				InsecureSkipVerify: config.SMTPInsecureSkipVerify,
+			}
+			if err = c.StartTLS(tlsConfig); err != nil {
+				log.Println("Error starting TLS with SMTP server:", err)
+				return err
+			}
+		} else {
+			// If STARTTLS is required but not available, fail
+			log.Println("STARTTLS required but not supported by server")
+			return fmt.Errorf("STARTTLS required but not supported by server")
 		}
-		if err = c.StartTLS(tlsConfig); err != nil {
-			log.Println("Error starting TLS with SMTP server:", err)
-			return err
-		}
-	} else if startTLS {
-		// If STARTTLS is required but not available, fail
-		log.Println("STARTTLS required but not supported by server")
-		return fmt.Errorf("STARTTLS required but not supported by server")
 	}
 
 	if config.SMTPAuth {
