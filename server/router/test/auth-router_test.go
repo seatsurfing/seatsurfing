@@ -649,6 +649,79 @@ func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
 	CheckTestString(t, authProvider.ID, string(updatedUser.AuthProviderID))
 }
 
+func TestAuthVerifyDuplicateRequestWithinGraceWindow(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	authProvider := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "Provider1",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider)
+
+	email := "test@test.com"
+	payloadAuthState := &AuthStateLoginPayload{
+		UserID:    email,
+		LoginType: "ui",
+	}
+	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
+	authState := &AuthState{
+		AuthProviderID: authProvider.ID,
+		Expiry:         time.Now().Add(time.Minute * 5),
+		AuthStateType:  AuthResponseCache,
+		Payload:        string(payloadAuthStateJson),
+	}
+	GetAuthStateRepository().Create(authState)
+	createdState, err := GetAuthStateRepository().GetOne(authState.ID)
+	CheckTestBool(t, true, err == nil)
+
+	// First verification succeeds
+	req := NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// Duplicate verification within the grace window succeeds as well
+	req = NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// The state's expiry has been shortened to the grace window
+	updatedState, err := GetAuthStateRepository().GetOne(authState.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestBool(t, true, updatedState.Expiry.Before(createdState.Expiry))
+}
+
+func TestAuthVerifyExpiredState(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	authProvider := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "Provider1",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider)
+
+	payloadAuthState := &AuthStateLoginPayload{
+		UserID:    "test@test.com",
+		LoginType: "ui",
+	}
+	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
+	authState := &AuthState{
+		AuthProviderID: authProvider.ID,
+		Expiry:         time.Now().Add(-1 * time.Minute),
+		AuthStateType:  AuthResponseCache,
+		Payload:        string(payloadAuthStateJson),
+	}
+	GetAuthStateRepository().Create(authState)
+
+	// Verification with an expired state fails even if the cleanup job has not run yet
+	req := NewHTTPRequest("GET", "/auth/verify/"+authState.ID, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
 func TestTotpSetup(t *testing.T) {
 	ClearTestDB()
 

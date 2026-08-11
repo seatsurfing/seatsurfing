@@ -65,6 +65,30 @@ func (r *AuthStateStore) Delete(e *AuthState) error {
 	return err
 }
 
+// GetOneActive returns the auth state with the given ID if it has not expired yet.
+// Expiry is compared in SQL as timestamps round-trip as wall-clock time.
+func (r *AuthStateStore) GetOneActive(id string) (*AuthState, error) {
+	e := &AuthState{}
+	err := GetDatabase().DB().QueryRow("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
+		"FROM auth_states "+
+		"WHERE id = $1 AND expiry > $2",
+		id, time.Now()).Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+// MarkForDeletion keeps the auth state valid for a short grace window instead
+// of deleting it immediately, so duplicate verification requests for the same
+// state (e.g. a double-mounted client) still succeed. The periodic cleanup
+// removes the state once the shortened expiry has passed.
+func (r *AuthStateStore) MarkForDeletion(e *AuthState, graceWindow time.Duration) error {
+	_, err := GetDatabase().DB().Exec("UPDATE auth_states SET expiry = LEAST(expiry, $1) WHERE id = $2",
+		time.Now().Add(graceWindow), e.ID)
+	return err
+}
+
 func (r *AuthStateStore) GetActiveByPayloadAndType(payload string, authStateType AuthStateType) ([]*AuthState, error) {
 	var result []*AuthState
 	now := time.Now()
