@@ -26,10 +26,11 @@ class LoginSuccess extends React.Component<Props, State> {
   };
 
   loadData = async () => {
-    const id = this.props.router.query["id"] as string;
-    if (!id) {
+    const idParam = this.props.router.query["id"];
+    if (typeof idParam !== "string" || idParam.length === 0) {
       return;
     }
+    const id = idParam;
     let request = verifyRequests.get(id);
     if (!request) {
       request = Ajax.get("/auth/verify/" + id, () => true);
@@ -52,6 +53,7 @@ class LoginSuccess extends React.Component<Props, State> {
           redirParam && Validation.isRelativeUrl(redirParam)
             ? redirParam
             : "/search";
+        verifyRequests.delete(id);
         this.props.router.push(redirect);
       } else {
         verifyRequests.delete(id);
