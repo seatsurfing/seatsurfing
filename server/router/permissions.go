@@ -2,7 +2,6 @@ package router
 
 import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 
 func CanPasswordLogin(user *User) bool {
@@ -10,27 +9,6 @@ func CanPasswordLogin(user *User) bool {
 		return false
 	}
 	return CanResetPassword(user)
-}
-
-// PasswordLoginDenialReason returns the auth event error code explaining why
-// CanPasswordLogin() is false for this user ("" if password login is allowed).
-func PasswordLoginDenialReason(user *User) string {
-	if user.PasswordPending {
-		return AuthErrorPasswordPending
-	}
-	if user.HashedPassword == "" {
-		return AuthErrorNoPasswordSet
-	}
-	if user.AuthProviderID != "" {
-		return AuthErrorBoundToAuthProvider
-	}
-	if user.Disabled {
-		return AuthErrorUserDisabled
-	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
-		return AuthErrorServiceAccount
-	}
-	return ""
 }
 
 func CanResetPassword(user *User) bool {

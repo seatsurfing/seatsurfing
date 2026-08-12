@@ -70,8 +70,6 @@ func (router *AuthAttemptRouter) getAll(w http.ResponseWriter, r *http.Request) 
 		Start:          start,
 		End:            end,
 		EmailLike:      r.URL.Query().Get("user"),
-		Method:         r.URL.Query().Get("method"),
-		ErrorCode:      r.URL.Query().Get("errorCode"),
 	}
 	if param := r.URL.Query().Get("success"); param != "" {
 		successful := param == "true" || param == "1"

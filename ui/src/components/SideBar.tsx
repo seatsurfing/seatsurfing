@@ -202,18 +202,14 @@ class SideBar extends React.Component<Props, State> {
             </Nav.Link>
           </li>
           <li className="nav-item">
-            <Nav.Link
-              as={Link}
-              eventKey="/admin/auth-events"
-              href="/admin/auth-events"
-            >
+            <Nav.Link as={Link} eventKey="/admin/audit" href="/admin/audit">
               <this.SidebarIcon
                 icon={IconShield}
-                title={this.props.t("authEvents")}
+                title={this.props.t("audit")}
               />
               <span className="d-none d-md-inline">
                 {" "}
-                {this.props.t("authEvents")}
+                {this.props.t("audit")}
               </span>
             </Nav.Link>
           </li>

@@ -516,7 +516,7 @@
   "mailReminderBookingInfo": "Booking reminders",
   "home": "Home",
   "markdownSupported": "Markdown syntax is supported",
-  "authEvents": "Auth events",
+  "audit": "Audit",
   "authProvider": "Auth provider",
   "autherror_bound_to_auth_provider": "User must log in via auth provider",
   "autherror_confluence_jwt_invalid": "Confluence JWT verification failed",

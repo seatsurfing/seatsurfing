@@ -553,7 +553,7 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !CanPasswordLogin(user) {
-		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: PasswordLoginDenialReason(user)})
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: router.getPasswordLoginDenialReason(user)})
 		SendBadRequest(w)
 		return
 	}
@@ -1406,4 +1406,25 @@ func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Reques
 		ProfilePageURL: profilePageURL,
 	}
 	SendJSON(w, res)
+}
+
+// PasswordLoginDenialReason returns the auth event error code explaining why
+// CanPasswordLogin() is false for this user ("" if password login is allowed).
+func (router *AuthRouter) getPasswordLoginDenialReason(user *User) string {
+	if user.PasswordPending {
+		return AuthErrorPasswordPending
+	}
+	if user.HashedPassword == "" {
+		return AuthErrorNoPasswordSet
+	}
+	if user.AuthProviderID != "" {
+		return AuthErrorBoundToAuthProvider
+	}
+	if user.Disabled {
+		return AuthErrorUserDisabled
+	}
+	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+		return AuthErrorServiceAccount
+	}
+	return ""
 }

@@ -525,7 +525,7 @@
   "errorDetail": "Error details",
   "userId": "User ID",
   "authProvider": "Auth provider",
-  "authEvents": "Auth events",
+  "audit": "Audit",
   "authmethod_password": "Password",
   "authmethod_totp": "Password + TOTP",
   "authmethod_passkey": "Passkey",

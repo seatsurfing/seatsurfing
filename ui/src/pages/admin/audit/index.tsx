@@ -28,8 +28,6 @@ interface State {
   end: Date;
   filterUser: string;
   filterOutcome: "" | "success" | "failure";
-  filterMethod: string;
-  filterErrorCode: string;
   page: number;
   total: number;
   selectedItem: AuthAttempt | null;
@@ -40,7 +38,7 @@ interface Props {
   t: TranslationFunc;
 }
 
-class AuthEvents extends React.Component<Props, State> {
+class Audit extends React.Component<Props, State> {
   data: AuthAttempt[];
 
   constructor(props: any) {
@@ -72,8 +70,6 @@ class AuthEvents extends React.Component<Props, State> {
         outcomeQuery === "success" || outcomeQuery === "failure"
           ? outcomeQuery
           : "",
-      filterMethod: (this.props.router.query["method"] as string) ?? "",
-      filterErrorCode: (this.props.router.query["errorCode"] as string) ?? "",
       page: 0,
       total: 0,
       selectedItem: null,
@@ -90,10 +86,6 @@ class AuthEvents extends React.Component<Props, State> {
       end: DateUtil.formatToDateTimeString(this.state.end),
       ...(this.state.filterUser && { user: this.state.filterUser }),
       ...(this.state.filterOutcome && { outcome: this.state.filterOutcome }),
-      ...(this.state.filterMethod && { method: this.state.filterMethod }),
-      ...(this.state.filterErrorCode && {
-        errorCode: this.state.filterErrorCode,
-      }),
     };
     this.props.router.replace(
       {
@@ -110,8 +102,6 @@ class AuthEvents extends React.Component<Props, State> {
       start: this.state.start,
       end: DateUtil.setSecondsToMax(this.state.end),
       user: this.state.filterUser,
-      method: this.state.filterMethod,
-      errorCode: this.state.filterErrorCode,
       success:
         this.state.filterOutcome === ""
           ? undefined
@@ -372,54 +362,12 @@ class AuthEvents extends React.Component<Props, State> {
             </Form.Select>
           </Col>
         </Form.Group>
-        <Form.Group as={Row}>
-          <Form.Label column sm="2" htmlFor="method-select">
-            {this.props.t("authMethod")}
-          </Form.Label>
-          <Col sm="4">
-            <Form.Select
-              id="method-select"
-              value={this.state.filterMethod}
-              onChange={(e: any) =>
-                this.setState({ filterMethod: e.target.value })
-              }
-            >
-              <option value="">({this.props.t("all")})</option>
-              {AuthAttempt.METHODS.map((method) => (
-                <option key={method} value={method}>
-                  {this.props.t("authmethod_" + method)}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-        </Form.Group>
-        <Form.Group as={Row}>
-          <Form.Label column sm="2" htmlFor="errorcode-select">
-            {this.props.t("errorCode")}
-          </Form.Label>
-          <Col sm="4">
-            <Form.Select
-              id="errorcode-select"
-              value={this.state.filterErrorCode}
-              onChange={(e: any) =>
-                this.setState({ filterErrorCode: e.target.value })
-              }
-            >
-              <option value="">({this.props.t("all")})</option>
-              {AuthAttempt.ERROR_CODES.map((code) => (
-                <option key={code} value={code}>
-                  {this.props.t("autherror_" + code)}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-        </Form.Group>
       </Form>
     );
 
     if (this.state.loading) {
       return (
-        <FullLayout headline={this.props.t("authEvents")}>
+        <FullLayout headline={this.props.t("audit")}>
           {form}
           <Loading />
         </FullLayout>
@@ -429,17 +377,14 @@ class AuthEvents extends React.Component<Props, State> {
     const rows = this.data.map((item) => this.renderItem(item));
     if (rows.length === 0) {
       return (
-        <FullLayout
-          headline={this.props.t("authEvents")}
-          buttons={searchButton}
-        >
+        <FullLayout headline={this.props.t("audit")} buttons={searchButton}>
           {form}
           <p>{this.props.t("noRecords")}</p>
         </FullLayout>
       );
     }
     return (
-      <FullLayout headline={this.props.t("authEvents")} buttons={searchButton}>
+      <FullLayout headline={this.props.t("audit")} buttons={searchButton}>
         {form}
         <Table
           striped={true}
@@ -469,4 +414,4 @@ class AuthEvents extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(AuthEvents as any));
+export default withTranslation(withReadyRouter(Audit as any));

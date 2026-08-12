@@ -166,7 +166,7 @@ func (c *Config) ReadConfig() {
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)
 	c.LoginProtectionSlidingWindowSeconds = c.getEnvInt("LOGIN_PROTECTION_SLIDING_WINDOW_SECONDS", 600)
 	c.LoginProtectionBanMinutes = c.getEnvInt("LOGIN_PROTECTION_BAN_MINUTES", 5)
-	c.AuthEventRetentionDays = c.getEnvInt("AUTH_EVENT_RETENTION_DAYS", 90)
+	c.AuthEventRetentionDays = c.getEnvInt("AUTH_EVENT_RETENTION_DAYS", 14)
 	c.CryptKey = c.getEnv("CRYPT_KEY", "")
 	if c.CryptKey == "" || len(c.CryptKey) != 32 {
 		log.Fatalln("Error: No valid CRYPT_KEY set. CRYPT_KEY needs to be set to a 32 bytes long random string.")
