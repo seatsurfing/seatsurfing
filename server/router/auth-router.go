@@ -1061,17 +1061,9 @@ func (router *AuthRouter) getRedirectFailedUrl(loginType string, provider *AuthP
 
 	if primaryDomain == nil {
 		log.Println("Error compiling redirect failed URL for auth provider " + provider.Name + ": No primary domain found for organization")
-		if loginType == "ui" {
-			return "/ui/login/failed/" + queryString
-		} else {
-			return "/ui/login/failed/" + queryString
-		}
+		return "/ui/login/failed/" + queryString
 	}
-	if loginType == "ui" {
-		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/" + queryString
-	} else {
-		return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/" + queryString
-	}
+	return FormatURL(primaryDomain.DomainName) + "/ui/login/failed/" + queryString
 }
 
 func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*IdPUserInfo, *AuthStateLoginPayload, error) {
