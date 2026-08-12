@@ -11,6 +11,7 @@ import {
   Clipboard as IconClipboard,
   Icon,
   Clock as IconApproval,
+  Shield as IconShield,
 } from "react-feather";
 import { Badge, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
@@ -109,6 +110,7 @@ class SideBar extends React.Component<Props, State> {
       "/admin/locations",
       "/admin/bookings",
       "/admin/approvals",
+      "/admin/auth-events",
       ...RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
         return "/admin/plugin/" + item.id;
       }),
@@ -197,6 +199,18 @@ class SideBar extends React.Component<Props, State> {
                 {this.props.t("groups")}
               </span>
               <PremiumFeatureIcon className="d-none d-md-inline" />
+            </Nav.Link>
+          </li>
+          <li className="nav-item">
+            <Nav.Link as={Link} eventKey="/admin/audit" href="/admin/audit">
+              <this.SidebarIcon
+                icon={IconShield}
+                title={this.props.t("audit")}
+              />
+              <span className="d-none d-md-inline">
+                {" "}
+                {this.props.t("audit")}
+              </span>
             </Nav.Link>
           </li>
           <li className="nav-item">

@@ -319,6 +319,10 @@ func (r *OrganizationStore) Delete(e *Organization) error {
 	if err := GetMailLogRepository().AnonymizeAll(e.ID); err != nil {
 		return err
 	}
+	// Delete auth events
+	if err := GetAuthAttemptRepository().DeleteAll(e.ID); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM organizations_domains WHERE organization_id = $1", e.ID)
 	if err != nil {
 		return err

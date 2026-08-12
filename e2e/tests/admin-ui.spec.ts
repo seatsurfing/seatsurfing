@@ -71,3 +71,38 @@ test("crud location", async ({ page }) => {
   await expect(page).toHaveURL(/locations\/$/);
   await expect(page.getByRole("cell", { name: name })).toHaveCount(0);
 });
+
+test("auth events", async ({ page }) => {
+  // Navigate to "Auth events"
+  await page.getByRole("link", { name: "Auth events" }).click();
+  await expect(page).toHaveURL(/auth-events\//);
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+
+  // The login from beforeEach must show up as a successful event
+  const table = page.locator("#datatable");
+  await expect(
+    table.getByRole("cell", { name: "admin@seatsurfing.local" }).first(),
+  ).toBeVisible();
+  await expect(table.getByText("Successful").first()).toBeVisible();
+
+  // Open the details modal
+  await table
+    .getByRole("cell", { name: "admin@seatsurfing.local" })
+    .first()
+    .click();
+  await expect(page.getByRole("dialog").getByText("Outcome")).toBeVisible();
+  await page
+    .getByRole("dialog")
+    .locator(".modal-footer")
+    .getByRole("button", { name: "Close" })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  // Filter for failures only
+  await page.locator("#outcome-select").selectOption("failure");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  await expect(page.locator("#datatable").getByText("Successful")).toHaveCount(
+    0,
+  );
+});

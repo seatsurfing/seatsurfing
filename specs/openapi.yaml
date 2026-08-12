@@ -75,6 +75,8 @@ tags:
     description: Manage buddy relationships
   - name: Auth Providers
     description: Manage OAuth/OIDC authentication providers
+  - name: Auth Events
+    description: Browse recorded authentication events (login successes and failures)
   - name: Settings
     description: Get and set organization settings
   - name: User Preferences
@@ -1241,6 +1243,57 @@ components:
           format: uuid
         name:
           type: string
+
+    # --- Auth Events ---
+    GetAuthAttemptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+          description: ID of the affected user (empty if the user could not be resolved, e.g. unknown email address)
+        email:
+          type: string
+          description: Attempted login identifier
+        timestamp:
+          type: string
+          format: date-time
+        successful:
+          type: boolean
+        method:
+          type: string
+          description: Authentication method (empty for legacy records)
+          enum: ["", password, totp, passkey, passkey_2fa, oauth, confluence]
+        authProviderId:
+          type: string
+          format: uuid
+          description: Auth provider ID (only for IdP logins)
+        authProviderName:
+          type: string
+          description: Resolved auth provider name (empty if not an IdP login or the provider was deleted)
+        errorCode:
+          type: string
+          description: Stable error code (empty on success), e.g. wrong_password, user_not_found, idp_code_exchange_failed
+        errorDetail:
+          type: string
+          description: Raw error detail, e.g. the IdP's OAuth error response body (truncated to 2000 characters)
+        device:
+          type: string
+          description: Parsed user agent, e.g. "Chrome on Windows 10/11"
+
+    GetAuthAttemptListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of matching events (for pagination)
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetAuthAttemptResponse"
 
     # --- Settings ---
     SetSettingsRequest:
@@ -4710,6 +4763,77 @@ paths:
                   $ref: "#/components/schemas/GetAuthProviderPublicResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  # ===========================
+  # Auth Events
+  # ===========================
+
+  /auth-attempt/:
+    get:
+      tags: [Auth Events]
+      summary: List authentication events
+      description: Returns recorded login attempts (successes and failures) for the caller's organization, newest first. Requires Org Admin role.
+      operationId: getAuthAttempts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Range start (RFC3339). Defaults to end minus 7 days.
+        - name: end
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Range end (RFC3339). Defaults to now.
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: Case-insensitive email substring filter
+        - name: method
+          in: query
+          schema:
+            type: string
+            enum: [password, totp, passkey, passkey_2fa, oauth, confluence]
+          description: Filter by authentication method
+        - name: success
+          in: query
+          schema:
+            type: boolean
+          description: Filter by outcome (omit for both)
+        - name: errorCode
+          in: query
+          schema:
+            type: string
+          description: Filter by stable error code
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Paginated list of authentication events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAuthAttemptListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   # ===========================
   # Settings
