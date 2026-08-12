@@ -155,7 +155,11 @@ class Buddies extends React.Component<Props, State> {
     return (
       <ListGroup.Item
         key={id}
-        style={{ minWidth: "300px", maxWidth: "100%", overflowWrap: "break-word" }}
+        style={{
+          minWidth: "300px",
+          maxWidth: "100%",
+          overflowWrap: "break-word",
+        }}
       >
         <h5 style={{ overflowWrap: "break-word" }}>{email}</h5>
         {(firstBooking == null && <p>{this.props.t("noBooking")}</p>) || (
