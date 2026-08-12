@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.121.1](https://github.com/seatsurfing/seatsurfing/compare/v1.121.0...v1.121.1) (2026-08-12)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump @types/react-dom from 19.2.3 to 19.2.4 in /ui in the production-dependencies group across 1 directory ([#2505](https://github.com/seatsurfing/seatsurfing/issues/2505)) ([ee57bd9](https://github.com/seatsurfing/seatsurfing/commit/ee57bd93e9ad9f6b8311b7cb8a5b42aff0e8beac))
+* **deps:** bump google.golang.org/grpc from 1.82.1 to 1.83.0 in /server in the minor-and-patch group ([#2504](https://github.com/seatsurfing/seatsurfing/issues/2504)) ([f80c16d](https://github.com/seatsurfing/seatsurfing/commit/f80c16ddc370c83173e67c31cfa777deb16b32a5))
+* **deps:** bump react-zoom-pan-pinch from 4.0.3 to 4.0.4 in /ui in the production-dependencies group across 1 directory ([#2512](https://github.com/seatsurfing/seatsurfing/issues/2512)) ([f45669c](https://github.com/seatsurfing/seatsurfing/commit/f45669ca0048ddd4d7e02db347d86d1c7040a2b8))
+* **server:** race condition when logging in via OAuth ([#2514](https://github.com/seatsurfing/seatsurfing/issues/2514)) ([4bc4fb2](https://github.com/seatsurfing/seatsurfing/commit/4bc4fb20696fb49d310f68af5e51b3d540159d74))
+* **server:** respect SMTP_START_TLS setting ([#2510](https://github.com/seatsurfing/seatsurfing/issues/2510)) ([686aabf](https://github.com/seatsurfing/seatsurfing/commit/686aabf2c48bf13c9f70f1f13e79183dbec40fff))
+
 ## [1.121.0](https://github.com/seatsurfing/seatsurfing/compare/v1.120.0...v1.121.0) (2026-08-07)
 
 
