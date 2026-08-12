@@ -22,7 +22,7 @@
     "react-markdown": "10.1.0",
     "react-moveable": "0.56.0",
     "react-tooltip": "6.0.8",
-    "react-zoom-pan-pinch": "4.0.3",
+    "react-zoom-pan-pinch": "4.0.4",
     "remark-gfm": "4.0.1"
   },
   "scripts": {
