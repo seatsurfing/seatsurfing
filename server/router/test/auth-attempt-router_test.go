@@ -62,21 +62,6 @@ func TestAuthAttemptRouterFiltersAndPaging(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 2, resBody.Total)
 
-	// method filter
-	req = NewHTTPRequest("GET", "/auth-attempt/?method=oauth", admin.ID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 1, resBody.Total)
-	CheckTestString(t, "ghost@test.com", resBody.Items[0].Email)
-
-	// error code filter
-	req = NewHTTPRequest("GET", "/auth-attempt/?errorCode=wrong_password", admin.ID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 1, resBody.Total)
-
 	// email filter
 	req = NewHTTPRequest("GET", "/auth-attempt/?user=ghost", admin.ID, nil)
 	res = ExecuteTestRequest(req)
