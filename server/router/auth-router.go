@@ -29,6 +29,9 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
+// How long a consumed auth state stays valid to tolerate duplicate verification requests
+const authStateVerifyGraceWindow = 30 * time.Second
+
 var TotpOptions *totp.ValidateOpts = &totp.ValidateOpts{
 	Period:    30,
 	Skew:      1,
@@ -786,14 +789,14 @@ func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *Auth
 		SendNotFound(w)
 		return
 	}
-	GetAuthStateRepository().Delete(authState)
+	GetAuthStateRepository().MarkForDeletion(authState, authStateVerifyGraceWindow)
 
 	router.createAndSendJWT(w, r, user, "Atlassian verify", "", "")
 }
 
 func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
@@ -880,7 +883,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	GetAuthStateRepository().Delete(authState)
+	GetAuthStateRepository().MarkForDeletion(authState, authStateVerifyGraceWindow)
 
 	router.createAndSendJWT(w, r, user, "OAuth verify", router.getLogoutUrl(provider), router.getProfilePageURL(provider))
 }
