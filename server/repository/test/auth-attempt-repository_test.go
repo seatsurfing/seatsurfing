@@ -177,3 +177,33 @@ func TestAuthAttemptRepositoryDeleteAll(t *testing.T) {
 	total, _ = GetAuthAttemptRepository().CountFiltered(filter)
 	CheckTestInt(t, 1, total)
 }
+
+// TestAuthAttemptRepositoryBanIgnoresNonPasswordMethods verifies that OAuth/Confluence
+// failures (persisted for the audit log but not ban-relevant) never contribute to
+// banning a user out of password/TOTP/passkey login.
+func TestAuthAttemptRepositoryBanIgnoresNonPasswordMethods(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrgWithName(org, "u1@test.com", UserRoleUser)
+
+	// Plenty of OAuth/Confluence failures for the same user, none of which
+	// call checkBanUser themselves (BanCheck: false, as in the real code paths).
+	for i := 0; i < 5; i++ {
+		GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch})
+	}
+	for i := 0; i < 5; i++ {
+		GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodConfluence, ErrorCode: AuthErrorConfluenceJwtInvalid})
+	}
+	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+
+	// Two real password failures (ban threshold in tests is 3, see LOGIN_PROTECTION_MAX_FAILS).
+	GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
+	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+	GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
+	// If the OAuth/Confluence rows above were (incorrectly) counted, this would already be banned.
+	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+
+	// Third real password failure crosses the threshold.
+	GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
+	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+}

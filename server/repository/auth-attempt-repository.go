@@ -282,9 +282,16 @@ func (r *AuthAttemptRepository) checkBanUser(user *User) error {
 	}
 	var numFailedLogins int
 	limit := time.Now().Add(time.Second * time.Duration(GetConfig().LoginProtectionSlidingWindowSeconds*-1))
+	// Only count failed attempts for methods that can actually trigger a ban
+	// (password, TOTP, passkey) plus legacy rows recorded before the method
+	// column existed. OAuth/Confluence failures are persisted for the audit
+	// log but must not contribute to banning a user out of password login.
 	if err := GetDatabase().DB().QueryRow("SELECT COUNT(id) FROM auth_attempts "+
-		"WHERE user_id = $1 AND timestamp > $2 AND timestamp > $3",
-		user.ID, limit, lastSuccessfulLogin).Scan(&numFailedLogins); err != nil {
+		"WHERE user_id = $1 AND successful = FALSE "+
+		"AND (method = '' OR method IN ($4, $5, $6, $7)) "+
+		"AND timestamp > $2 AND timestamp > $3",
+		user.ID, limit, lastSuccessfulLogin,
+		AuthMethodPassword, AuthMethodTOTP, AuthMethodPasskey, AuthMethodPasskey2FA).Scan(&numFailedLogins); err != nil {
 		return err
 	}
 	if numFailedLogins >= GetConfig().LoginProtectionMaxFails {
