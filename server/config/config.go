@@ -100,7 +100,7 @@ func (c *Config) ReadConfig() {
 	log.Println("Reading config …")
 	c.Development = (c.getEnv("DEV", "0") == "1")
 	if c.Development {
-		log.Println("ℹ️  Development mode is enabled, do not use this in production environments!")
+		log.Println("⚠️  Warning: Development mode is enabled, do *not* use this in production environments!")
 	}
 	c.DevUIProxyTarget = c.getEnv("DEV_UI_PROXY_TARGET", "localhost:3000")
 	c.PublicListenAddr = c.getEnv("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080")
@@ -131,6 +131,10 @@ func (c *Config) ReadConfig() {
 	c.SMTPPort = c.getEnvInt("SMTP_PORT", 25)
 	c.SMTPStartTLS = (c.getEnv("SMTP_START_TLS", "0") == "1")
 	c.SMTPInsecureSkipVerify = (c.getEnv("SMTP_INSECURE_SKIP_VERIFY", "0") == "1")
+	if c.SMTPInsecureSkipVerify {
+		log.Println("⚠️  Warning: SMTP_INSECURE_SKIP_VERIFY is enabled, do *not* use this in production environments!")
+	}
+
 	c.SMTPAuth = (c.getEnv("SMTP_AUTH", "0") == "1")
 	c.SMTPAuthUser = c.getEnv("SMTP_AUTH_USER", "")
 	c.SMTPAuthPass = c.getEnv("SMTP_AUTH_PASS", "")
