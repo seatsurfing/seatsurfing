@@ -153,8 +153,15 @@ class Buddies extends React.Component<Props, State> {
     } = item;
     const formatter = Formatting.getBookingDateFormatter();
     return (
-      <ListGroup.Item key={id} style={{ minWidth: "300px" }}>
-        <h5>{email}</h5>
+      <ListGroup.Item
+        key={id}
+        style={{
+          minWidth: "300px",
+          maxWidth: "100%",
+          overflowWrap: "break-word",
+        }}
+      >
+        <h5 style={{ overflowWrap: "break-word" }}>{email}</h5>
         {(firstBooking == null && <p>{this.props.t("noBooking")}</p>) || (
           <p>
             <IconLocation className="feather" />
