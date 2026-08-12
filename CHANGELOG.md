@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.122.0](https://github.com/seatsurfing/seatsurfing/compare/v1.121.1...v1.122.0) (2026-08-12)
+
+
+### ✨ Features
+
+* **admin-ui:** audit log for authentication attempts ([#2511](https://github.com/seatsurfing/seatsurfing/issues/2511)) ([57dff18](https://github.com/seatsurfing/seatsurfing/commit/57dff187c06a5a934c192b4d5ccfe83748d056bb))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** fix email address overflow in buddy list ([#2516](https://github.com/seatsurfing/seatsurfing/issues/2516)) ([5cde9de](https://github.com/seatsurfing/seatsurfing/commit/5cde9de1f54a6c9cafd6a7ccf97927b97a223693))
+* **main:** show error details on failed login page ([#2518](https://github.com/seatsurfing/seatsurfing/issues/2518)) ([e31dd28](https://github.com/seatsurfing/seatsurfing/commit/e31dd28744eff187ae4de06d7b92a5099bf8037b))
+* **main:** update Estonian translations ([#2515](https://github.com/seatsurfing/seatsurfing/issues/2515)) ([1b02215](https://github.com/seatsurfing/seatsurfing/commit/1b022152122317bb50675493bc171e0e64af81c5))
+* **server:** add warning if SMTP_INSECURE_SKIP_VERIFY is enabled ([#2519](https://github.com/seatsurfing/seatsurfing/issues/2519)) ([6c532da](https://github.com/seatsurfing/seatsurfing/commit/6c532da85895176730c3acc91484fce8f6c688e9))
+
+
+### 🔧 Refactoring
+
+* **server:** minor refactoring in auth router ([#2517](https://github.com/seatsurfing/seatsurfing/issues/2517)) ([a628545](https://github.com/seatsurfing/seatsurfing/commit/a62854578f6606e09a2a62f6674f322ef19501ea))
+
 ## [1.121.1](https://github.com/seatsurfing/seatsurfing/compare/v1.121.0...v1.121.1) (2026-08-12)
 
 
