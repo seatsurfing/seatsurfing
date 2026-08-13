@@ -40,7 +40,7 @@ test("crud booking", async ({ page }) => {
     .first()
     .click();
   await page.getByRole("button", { name: "Cancel booking" }).click();
-  await page.getByText("No bookings.");
+  await expect(page.getByText("No bookings.")).toBeVisible();
   await page.getByRole("link", { name: "Book a space" }).click();
   await expect(page).toHaveURL(/search\/$/);
 });

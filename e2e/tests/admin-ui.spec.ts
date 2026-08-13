@@ -73,9 +73,9 @@ test("crud location", async ({ page }) => {
 });
 
 test("auth events", async ({ page }) => {
-  // Navigate to "Auth events"
-  await page.getByRole("link", { name: "Auth events" }).click();
-  await expect(page).toHaveURL(/auth-events\//);
+  // Navigate to "Audit"
+  await page.getByRole("link", { name: "Audit" }).click();
+  await expect(page).toHaveURL(/audit\//);
   await expect(page.getByText("Loading …")).not.toBeVisible();
 
   // The login from beforeEach must show up as a successful event
