@@ -586,7 +586,10 @@ func (router *AuthRouter) loginPassword(w http.ResponseWriter, r *http.Request) 
 	if passkeyResult != passkey2FAVerified && user.TotpSecret != "" {
 		method = AuthMethodTOTP
 		if m.Code == "" {
-			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodTOTP, ErrorCode: AuthErrorTotpMissing})
+			// Password was correct but a second factor is required. This is
+			// the expected first step of the TOTP flow (client re-submits
+			// with a code next), not a failed login attempt, so it must not
+			// be recorded as one.
 			SendUnauthorized(w)
 			return
 		}
