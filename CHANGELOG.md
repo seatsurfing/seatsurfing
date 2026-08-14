@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.122.1](https://github.com/seatsurfing/seatsurfing/compare/v1.122.0...v1.122.1) (2026-08-13)
+
+
+### 🐛 Bug Fixes
+
+* **server:** do not log login attempts if asking for 2nd factor ([#2521](https://github.com/seatsurfing/seatsurfing/issues/2521)) ([2b6a085](https://github.com/seatsurfing/seatsurfing/commit/2b6a08531b6ba8d9523a8076ca1b385fb750db57))
+
 ## [1.122.0](https://github.com/seatsurfing/seatsurfing/compare/v1.121.1...v1.122.0) (2026-08-12)
 
 
