@@ -4,17 +4,24 @@
   display: flex;
   -ms-flex-align: center;
   align-items: center;
-  background-color: #f5f5f5;
+  background-color: var(--bs-tertiary-bg);
   text-align: center;
   position: relative;
   padding-bottom: 50px;
   padding-top: 75px;
 }
 
-.lng-selector {
+.footer-selectors {
   position: absolute;
   right: 10px;
   bottom: -5px;
+  display: flex;
+  gap: 6px;
+}
+
+.footer-selectors .lng-selector,
+.footer-selectors .theme-selector {
+  position: static;
 }
 
 .iconLanguage_nlXk {
@@ -32,6 +39,10 @@
 .form-signin .logo {
   width: 100%;
   margin-bottom: 50px;
+}
+
+[data-bs-theme="dark"] .form-signin .logo {
+  filter: invert(1);
 }
 
 .form-signin .form-control:focus {

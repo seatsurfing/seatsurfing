@@ -560,5 +560,8 @@
   "successful": "Erfolgreich",
   "timestamp": "Zeitstempel",
   "unknown": "Unbekannt",
-  "userId": "Benutzer ID"
+  "userId": "Benutzer ID",
+  "themeLight": "Hell",
+  "themeDark": "Dunkel",
+  "themeSystem": "System"
 }

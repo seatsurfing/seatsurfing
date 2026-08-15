@@ -31,6 +31,7 @@ import NotFoundModal from "@/components/NotFoundModal";
 import BadRequestModal from "@/components/BadRequestModal";
 import User from "@/types/User";
 import Router from "next/router";
+import Theme from "@/util/Theme";
 
 interface State {
   isLoading: boolean;
@@ -102,6 +103,8 @@ class App extends React.Component<Props, State> {
     }, 10);
 
     Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
+    Router.events.on("routeChangeStart", this.onThemeRouteChange);
+    Router.events.on("routeChangeComplete", this.onThemeRouteChange);
   }
 
   componentWillUnmount() {
@@ -110,7 +113,13 @@ class App extends React.Component<Props, State> {
     Ajax.onNotFound = null;
     Ajax.onBadRequest = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
+    Router.events.off("routeChangeStart", this.onThemeRouteChange);
+    Router.events.off("routeChangeComplete", this.onThemeRouteChange);
   }
+
+  onThemeRouteChange = (url: string) => {
+    Theme.apply(url);
+  };
 
   onRouteChangeComplete = () => {
     if (

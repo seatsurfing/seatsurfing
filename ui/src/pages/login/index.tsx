@@ -12,6 +12,7 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import JwtDecoder from "@/util/JwtDecoder";
 import Loading from "@/components/Loading";
 import LanguageSelector from "@/components/LanguageSelector";
+import ThemeSelector from "@/components/ThemeSelector";
 import Validation from "@/util/Validation";
 import Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
@@ -427,7 +428,10 @@ class Login extends React.Component<Props, State> {
         >
           Seatsurfing
         </a>
-        <LanguageSelector />
+        <div className="footer-selectors">
+          <ThemeSelector />
+          <LanguageSelector />
+        </div>
       </div>
     );
 

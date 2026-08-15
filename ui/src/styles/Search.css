@@ -4,10 +4,10 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
+  color: var(--bs-body-color);
+  background-color: var(--bs-body-bg);
   background-clip: padding-box;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--bs-border-color);
   border-radius: 0.25rem;
   transition:
     border-color 0.15s ease-in-out,
@@ -83,13 +83,13 @@
   border-bottom-left-radius: 0px;
   border-bottom-right-radius: 0px;
   box-shadow: 0px 0px 3px #555;
-  background-color: white;
+  background-color: var(--bs-body-bg);
   opacity: 0.95;
   transition: all 0.2s;
 }
 
 .container-search-config .btn-outline-dark:hover {
-  background-color: #eee;
+  background-color: var(--bs-tertiary-bg);
 }
 
 .container-search-config.minimized {
@@ -175,7 +175,7 @@
 
 .search-hint-banner {
   opacity: 0.95;
-  background-color: #fff;
+  background-color: var(--bs-body-bg);
   border-bottom: none;
   border-radius: 10px 10px 0 0;
   width: 85%;
