@@ -488,17 +488,6 @@ func (r *BookingStore) GetCountAll() (int, error) {
 	return res, err
 }
 
-func (r *BookingStore) GetCount(organizationID string) (int, error) {
-	var res int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1",
-		organizationID).Scan(&res)
-	return res, err
-}
-
 // GetCountsSummary returns the booking counts needed by the stats summary in a
 // single pass over the organization's bookings, instead of one query each.
 func (r *BookingStore) GetCountsSummary(organizationID string, today, yesterday, thisWeek DateRange) (BookingCounts, error) {
@@ -518,32 +507,6 @@ func (r *BookingStore) GetCountsSummary(organizationID string, today, yesterday,
 		yesterday.Enter, yesterday.Leave,
 		thisWeek.Enter, thisWeek.Leave).
 		Scan(&res.Total, &res.Current, &res.Today, &res.Yesterday, &res.ThisWeek)
-	return res, err
-}
-
-func (r *BookingStore) GetCountCurrent(organizationID string) (int, error) {
-	var res int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz "+
-		"WHERE locations.organization_id = $1 "+
-		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) "+
-		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)",
-		organizationID).Scan(&res)
-	return res, err
-}
-
-func (r *BookingStore) GetCountDateRange(organizationID string, enter, leave time.Time) (int, error) {
-	var res int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1 "+
-		"AND enter_time <= $3 AND leave_time >= $2",
-		organizationID, enter, leave).Scan(&res)
 	return res, err
 }
 
@@ -579,23 +542,6 @@ func (r *BookingStore) GetCountByWeekday(organizationID string, location *Locati
 		}
 	}
 	return res, rows.Err()
-}
-
-func (r *BookingStore) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
-	query := "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60), 0) " +
-		"FROM bookings " +
-		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
-		"INNER JOIN locations ON locations.id = spaces.location_id " +
-		"WHERE locations.organization_id = $1 " +
-		"AND enter_time <= $3 AND leave_time >= $2"
-	args := []any{organizationID, enter, leave}
-	if location != nil {
-		query += " AND spaces.location_id = $4"
-		args = append(args, location.ID)
-	}
-	var totalBookedMinutes float64
-	err := GetDatabase().DB().QueryRow(query, args...).Scan(&totalBookedMinutes)
-	return int(math.RoundToEven(totalBookedMinutes)), err
 }
 
 // GetTotalBookedMinutesMulti computes the booked minutes for several windows in
@@ -680,14 +626,6 @@ func calcLoad(rng DateRange, totalBookedMinutes, numSpaces, targetUtilizationHou
 	}
 	res := float64(totalBookedMinutes) / totalTimeMinutes * float64(100)
 	return int(math.RoundToEven(res))
-}
-
-func (r *BookingStore) GetLoad(organizationID string, enter, leave time.Time, location *Location) (int, error) {
-	res, err := r.GetLoadMulti(organizationID, []DateRange{{Enter: enter, Leave: leave}}, location)
-	if err != nil {
-		return 0, err
-	}
-	return res[0], nil
 }
 
 // various scenarios
