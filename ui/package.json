@@ -39,7 +39,7 @@
   },
   "homepage": "/ui/",
   "devDependencies": {
-    "@types/node": "26.1.2",
+    "@types/node": "26.2.0",
     "@types/react-big-calendar": "1.16.3",
     "eslint": "10.8.0",
     "eslint-config-next": "16.3.0",
