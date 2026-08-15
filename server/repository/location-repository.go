@@ -99,6 +99,11 @@ func (r *LocationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 51 {
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_locations_organization_id ON locations(organization_id)"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *LocationStore) Create(e *Location) error {

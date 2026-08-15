@@ -43,7 +43,11 @@ func GetSpaceAttributeValueRepository() *SpaceAttributeValueRepository {
 }
 
 func (r *SpaceAttributeValueRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// nothing yet
+	if curVersion < 51 {
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_space_attribute_values_entity ON space_attribute_values(entity_id, entity_type)"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *SpaceAttributeValueRepository) Set(attributeID string, entityID string, entityType SpaceAttributeValueEntityType, value string) error {
