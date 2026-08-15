@@ -1,0 +1,116 @@
+name: Performance Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      scale:
+        description: "Seed scale"
+        type: choice
+        options: [small, full]
+        default: small
+  schedule:
+    - cron: "0 3 * * 0" # weekly, Sunday 03:00 UTC (always full scale)
+
+jobs:
+  perf:
+    name: Seed & measure REST API performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: seatsurfing_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: server/go.sum
+
+      - name: Generate JWT signing key
+        working-directory: ./server
+        run: ./generate-key.sh .
+
+      - name: Install server dependencies
+        working-directory: ./server
+        run: go mod download
+
+      - name: Build server
+        working-directory: ./server
+        run: go build -buildvcs=false -o ./seatsurfing .
+
+      - name: Build perf test tools
+        working-directory: ./server
+        run: |
+          go build -o ./perftest-seed ./perftest/cmd/seed
+          go build -o ./perftest-measure ./perftest/cmd/measure
+
+      - uses: JarvusInnovations/background-action@v2
+        name: Run server in background
+        with:
+          working-directory: ./server
+          run: PUBLIC_SCHEME=http PUBLIC_LISTEN_ADDR=0.0.0.0:8080 POSTGRES_URL=postgres://postgres:root@localhost/seatsurfing_test?sslmode=disable CRYPT_KEY=rC8REJftxMcdhzTvu9Tk6RqgygBRctZC JWT_PRIVATE_KEY=./private.pem JWT_PUBLIC_KEY=./public.pem ./seatsurfing
+          wait-on: http-get://localhost:8080/auth/singleorg
+          wait-for: 60s
+
+      - name: Determine seed scale
+        id: scale
+        run: |
+          scale="${{ github.event.inputs.scale }}"
+          if [ "$scale" = "small" ]; then
+            echo "orgs=5" >> "$GITHUB_OUTPUT"
+            echo "users_per_org=100" >> "$GITHUB_OUTPUT"
+            echo "spaces_per_org=50" >> "$GITHUB_OUTPUT"
+            echo "bookings_per_org=2000" >> "$GITHUB_OUTPUT"
+          else
+            echo "orgs=100" >> "$GITHUB_OUTPUT"
+            echo "users_per_org=1000" >> "$GITHUB_OUTPUT"
+            echo "spaces_per_org=500" >> "$GITHUB_OUTPUT"
+            echo "bookings_per_org=200000" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Seed database
+        working-directory: ./server
+        env:
+          POSTGRES_URL: postgres://postgres:root@localhost/seatsurfing_test?sslmode=disable
+          CRYPT_KEY: rC8REJftxMcdhzTvu9Tk6RqgygBRctZC
+          JWT_PRIVATE_KEY: ./private.pem
+          JWT_PUBLIC_KEY: ./public.pem
+        run: |
+          ./perftest-seed \
+            --orgs=${{ steps.scale.outputs.orgs }} \
+            --users-per-org=${{ steps.scale.outputs.users_per_org }} \
+            --spaces-per-org=${{ steps.scale.outputs.spaces_per_org }} \
+            --bookings-per-org=${{ steps.scale.outputs.bookings_per_org }} \
+            --out=perftest-actors.json
+
+      - name: Run performance measurements
+        working-directory: ./server
+        env:
+          POSTGRES_URL: postgres://postgres:root@localhost/seatsurfing_test?sslmode=disable
+          CRYPT_KEY: rC8REJftxMcdhzTvu9Tk6RqgygBRctZC
+          JWT_PRIVATE_KEY: ./private.pem
+          JWT_PUBLIC_KEY: ./public.pem
+        run: |
+          ./perftest-measure \
+            --base-url=http://localhost:8080 \
+            --actors-file=perftest-actors.json \
+            --thresholds=perftest/testdata/thresholds.yaml \
+            --json-out=perftest-results.json
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: perftest-results
+          path: server/perftest-results.json
+          retention-days: 90

@@ -1,0 +1,43 @@
+# Max acceptable REST API response time (milliseconds) per scenario, at the
+# seeded scale of 100 orgs / 1000 users per org / 500 spaces per org / 200000
+# bookings per org. p95 is the primary gate; p99 is an optional secondary
+# gate. A scenario without an entry here is measured but not gated.
+#
+# These are starting placeholders -- calibrate against the first few real
+# full-scale runs (see perftest-results.json uploaded by the workflow).
+scenarios:
+  organization.list:
+    p95_ms: 500
+  organization.getOne:
+    p95_ms: 150
+  user.list:
+    p95_ms: 400
+  user.count:
+    p95_ms: 200
+  user.byEmail:
+    p95_ms: 150
+  space.list:
+    p95_ms: 400
+  space.availability:
+    # The core booking-search endpoint (ui/src/pages/search.tsx); joins
+    # spaces to bookings-in-range plus attributes/group/allowed-booker
+    # lookups, so it gets the same budget as booking.filter.
+    p95_ms: 1500
+    p99_ms: 3000
+  search.users:
+    p95_ms: 500
+  user.me:
+    p95_ms: 150
+  booking.filter:
+    p95_ms: 1500
+    p99_ms: 3000
+  booking.current:
+    p95_ms: 800
+  booking.pendingApprovals:
+    p95_ms: 400
+  stats.summary:
+    p95_ms: 2000
+  stats.load:
+    p95_ms: 1500
+  stats.weekday:
+    p95_ms: 1500
