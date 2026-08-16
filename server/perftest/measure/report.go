@@ -26,11 +26,39 @@ type ScenarioResult struct {
 	ThresholdP99Ms int             `json:"thresholdP99Ms,omitempty"`
 	Gated          bool            `json:"gated"`
 	Pass           bool            `json:"pass"`
-	durations      []time.Duration `json:"-"`
+	// Skipped marks a scenario that never ran because the run exceeded
+	// RunConfig.MaxDuration. A skipped gated scenario counts as a failure --
+	// it produced no evidence that the endpoint is within budget.
+	Skipped bool `json:"skipped,omitempty"`
+	// ErrorsByReason breaks Errors down by cause (HTTP status, transport
+	// error class, or request-build failure) so that a failed run can be
+	// diagnosed from the uploaded JSON artifact alone.
+	ErrorsByReason map[string]int `json:"errorsByReason,omitempty"`
+	// AvgErrorMs is the mean wall-clock time of the errored requests. It
+	// separates "rejected instantly" (e.g. an expired token) from "too slow"
+	// (e.g. killed by the server write timeout), which the latency
+	// percentiles cannot show because errored requests contribute no sample.
+	AvgErrorMs float64         `json:"avgErrorMs,omitempty"`
+	durations  []time.Duration `json:"-"`
 }
 
-func newScenarioResult(id string, durations []time.Duration, errCount int) ScenarioResult {
-	r := ScenarioResult{ScenarioID: id, Samples: len(durations), Errors: errCount, durations: durations}
+func newScenarioResult(id string, durations []time.Duration, errorsByReason map[string]int, errDurations []time.Duration) ScenarioResult {
+	r := ScenarioResult{
+		ScenarioID: id,
+		Samples:    len(durations),
+		Errors:     totalCount(errorsByReason),
+		durations:  durations,
+	}
+	if len(errorsByReason) > 0 {
+		r.ErrorsByReason = errorsByReason
+	}
+	if len(errDurations) > 0 {
+		var sum time.Duration
+		for _, d := range errDurations {
+			sum += d
+		}
+		r.AvgErrorMs = float64((sum / time.Duration(len(errDurations))).Microseconds()) / 1000.0
+	}
 	if len(durations) == 0 {
 		return r
 	}
@@ -96,7 +124,12 @@ func Report(results []ScenarioResult, jsonOutPath string) (allPass bool, err err
 	fmt.Printf("%-28s %8s %8s %8s %8s %8s %10s %6s\n", "SCENARIO", "SAMPLES", "P50(ms)", "P95(ms)", "P99(ms)", "MAX(ms)", "THRESHOLD", "RESULT")
 	for _, r := range results {
 		status := "-"
-		if r.Gated {
+		if r.Skipped {
+			status = "SKIP"
+			if r.Gated {
+				allPass = false
+			}
+		} else if r.Gated {
 			if r.Pass {
 				status = "PASS"
 			} else {
@@ -105,7 +138,7 @@ func Report(results []ScenarioResult, jsonOutPath string) (allPass bool, err err
 			}
 		}
 		threshold := "-"
-		if r.Gated {
+		if r.Gated && !r.Skipped {
 			threshold = fmt.Sprintf("p95<=%d", r.ThresholdP95Ms)
 			if r.ThresholdP99Ms > 0 {
 				threshold += fmt.Sprintf(",p99<=%d", r.ThresholdP99Ms)
@@ -114,7 +147,8 @@ func Report(results []ScenarioResult, jsonOutPath string) (allPass bool, err err
 		fmt.Printf("%-28s %8d %8.1f %8.1f %8.1f %8.1f %10s %6s\n",
 			r.ScenarioID, r.Samples, r.P50Ms, r.P95Ms, r.P99Ms, r.MaxMs, threshold, status)
 		if r.Errors > 0 {
-			fmt.Printf("  %d/%d requests errored\n", r.Errors, r.Samples+r.Errors)
+			fmt.Printf("  %d/%d requests errored (%s; avg %.1f ms to fail)\n",
+				r.Errors, r.Samples+r.Errors, formatReasons(r.ErrorsByReason), r.AvgErrorMs)
 		}
 	}
 

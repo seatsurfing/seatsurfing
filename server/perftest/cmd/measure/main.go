@@ -24,6 +24,7 @@ func main() {
 	iterations := flag.Int("iterations", 50, "timed requests per scenario")
 	jsonOut := flag.String("json-out", "perftest-results.json", "path to write the machine-readable JSON report")
 	timeout := flag.Duration("timeout", 30*time.Second, "per-request HTTP timeout")
+	maxDuration := flag.Duration("max-duration", 60*time.Minute, "abort the run once this much wall-clock time has elapsed; remaining scenarios are skipped rather than measured")
 	flag.Parse()
 
 	if *postgresURL != "" {
@@ -47,6 +48,7 @@ func main() {
 		Warmup:      *warmup,
 		Iterations:  *iterations,
 		Timeout:     *timeout,
+		MaxDuration: *maxDuration,
 		Thresholds:  thresholds,
 		JSONOutPath: *jsonOut,
 	}
