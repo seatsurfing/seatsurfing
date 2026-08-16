@@ -2050,7 +2050,7 @@ class Search extends React.Component<Props, State> {
             onClick={() => this.toggleSearchContainer()}
           >
             <CollapseIcon2
-              color={"#000"}
+              color={"var(--bs-body-color)"}
               height="20px"
               width="20px"
               className="collapse-icon"

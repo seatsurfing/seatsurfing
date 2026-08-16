@@ -46,6 +46,7 @@ class Doc extends Document<Props> {
         <Head nonce={nonce}>
           <meta name="robots" content="noindex" />
           <meta httpEquiv="Content-Security-Policy" content={cspString} />
+          {/* Sets data-bs-theme before first paint to avoid a light/dark flash; admin pages manage theme separately */}
           <script
             nonce={nonce}
             dangerouslySetInnerHTML={{
