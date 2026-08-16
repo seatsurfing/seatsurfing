@@ -21,13 +21,13 @@ const IconTextButton: React.FC<Props> = ({
       className="ms-2 btn d-flex align-items-center"
       style={{
         padding: "4px 8px",
-        borderColor: hovered ? "#6c757d" : "#CED4DA",
+        borderColor: hovered ? "#6c757d" : "var(--bs-border-color)",
         backgroundColor: disabled
           ? "var(--bs-secondary-bg)"
           : hovered
             ? "#6c757d"
-            : "#fff",
-        color: disabled ? undefined : hovered ? "#fff" : "#555",
+            : "var(--bs-body-bg)",
+        color: disabled ? undefined : hovered ? "#fff" : "var(--bs-body-color)",
         opacity: disabled ? 1 : undefined,
       }}
       disabled={disabled}
