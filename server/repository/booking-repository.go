@@ -22,6 +22,21 @@ type BookingPresenceItem struct {
 	Presence map[string]int
 }
 
+// DateRange is an inclusive [Enter, Leave] window used by the stats queries.
+type DateRange struct {
+	Enter time.Time
+	Leave time.Time
+}
+
+// BookingCounts holds the booking counts shown on the stats summary page.
+type BookingCounts struct {
+	Total     int
+	Current   int
+	Today     int
+	Yesterday int
+	ThisWeek  int
+}
+
 var bookingRepository *BookingStore
 var bookingRepositoryOnce sync.Once
 
@@ -89,6 +104,14 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_reminder_due ON bookings(enter_time) WHERE reminder_sent_at_utc IS NULL AND approved = true"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 51 {
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_space_time ON bookings(space_id, enter_time, leave_time)"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_pending ON bookings(space_id, leave_time) WHERE approved = false"); err != nil {
 			panic(err)
 		}
 	}
@@ -465,44 +488,25 @@ func (r *BookingStore) GetCountAll() (int, error) {
 	return res, err
 }
 
-func (r *BookingStore) GetCount(organizationID string) (int, error) {
-	var res int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1",
-		organizationID).Scan(&res)
-	return res, err
-}
-
-func (r *BookingStore) GetCountCurrent(organizationID string) (int, error) {
-	var res int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
+// GetCountsSummary returns the booking counts needed by the stats summary in a
+// single pass over the organization's bookings, instead of one query each.
+func (r *BookingStore) GetCountsSummary(organizationID string, today, yesterday, thisWeek DateRange) (BookingCounts, error) {
+	var res BookingCounts
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id), "+
+		"COUNT(bookings.id) FILTER (WHERE enter_time <= (NOW() AT TIME ZONE effective_tz.tz) AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)), "+
+		"COUNT(bookings.id) FILTER (WHERE enter_time <= $3 AND leave_time >= $2), "+
+		"COUNT(bookings.id) FILTER (WHERE enter_time <= $5 AND leave_time >= $4), "+
+		"COUNT(bookings.id) FILTER (WHERE enter_time <= $7 AND leave_time >= $6) "+
 		"FROM bookings "+
 		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
 		"INNER JOIN locations ON locations.id = spaces.location_id "+
 		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz "+
-		"WHERE locations.organization_id = $1 "+
-		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) "+
-		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)",
-		organizationID).Scan(&res)
-	return res, err
-}
-
-func (r *BookingStore) GetCountDateRange(organizationID string, enter, leave time.Time) (int, error) {
-	var res int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(bookings.id) "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
-		"INNER JOIN locations ON locations.id = spaces.location_id "+
-		"WHERE locations.organization_id = $1 AND ("+
-		"($2 BETWEEN enter_time AND leave_time) OR "+
-		"($3 BETWEEN enter_time AND leave_time) OR "+
-		"(enter_time BETWEEN $2 AND $3) OR "+
-		"(leave_time BETWEEN $2 AND $3)"+
-		")",
-		organizationID, enter, leave).Scan(&res)
+		"WHERE locations.organization_id = $1",
+		organizationID,
+		today.Enter, today.Leave,
+		yesterday.Enter, yesterday.Leave,
+		thisWeek.Enter, thisWeek.Leave).
+		Scan(&res.Total, &res.Current, &res.Today, &res.Yesterday, &res.ThisWeek)
 	return res, err
 }
 
@@ -540,64 +544,88 @@ func (r *BookingStore) GetCountByWeekday(organizationID string, location *Locati
 	return res, rows.Err()
 }
 
-func (r *BookingStore) GetTotalBookedMinutes(organizationID string, enter, leave time.Time, location *Location) (int, error) {
-	query := "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $3) - GREATEST(enter_time, $2)))/60), 0) " +
+// GetTotalBookedMinutesMulti computes the booked minutes for several windows in
+// a single query, using one aggregate per window.
+func (r *BookingStore) GetTotalBookedMinutesMulti(organizationID string, ranges []DateRange, location *Location) ([]int, error) {
+	if len(ranges) == 0 {
+		return nil, nil
+	}
+	args := []any{organizationID}
+	aggregates := make([]string, 0, len(ranges))
+	for _, rng := range ranges {
+		enterPos, leavePos := len(args)+1, len(args)+2
+		args = append(args, rng.Enter, rng.Leave)
+		aggregates = append(aggregates, fmt.Sprintf(
+			"COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(leave_time, $%d) - GREATEST(enter_time, $%d)))/60) "+
+				"FILTER (WHERE enter_time <= $%d AND leave_time >= $%d), 0)",
+			leavePos, enterPos, leavePos, enterPos))
+	}
+	query := "SELECT " + strings.Join(aggregates, ", ") + " " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
 		"INNER JOIN locations ON locations.id = spaces.location_id " +
-		"WHERE locations.organization_id = $1 AND (" +
-		"($2 BETWEEN enter_time AND leave_time) OR " +
-		"($3 BETWEEN enter_time AND leave_time) OR " +
-		"(enter_time BETWEEN $2 AND $3) OR " +
-		"(leave_time BETWEEN $2 AND $3)" +
-		")"
-	args := []any{organizationID, enter, leave}
+		"WHERE locations.organization_id = $1"
 	if location != nil {
-		query += " AND spaces.location_id = $4"
+		query += fmt.Sprintf(" AND spaces.location_id = $%d", len(args)+1)
 		args = append(args, location.ID)
 	}
-	var totalBookedMinutes float64
-	err := GetDatabase().DB().QueryRow(query, args...).Scan(&totalBookedMinutes)
-	return int(math.RoundToEven(totalBookedMinutes)), err
+	values := make([]float64, len(ranges))
+	targets := make([]any, len(ranges))
+	for i := range values {
+		targets[i] = &values[i]
+	}
+	if err := GetDatabase().DB().QueryRow(query, args...).Scan(targets...); err != nil {
+		return nil, err
+	}
+	res := make([]int, len(ranges))
+	for i, v := range values {
+		res[i] = int(math.RoundToEven(v))
+	}
+	return res, nil
 }
 
-func (r *BookingStore) GetLoad(organizationID string, enter, leave time.Time, location *Location) (int, error) {
-	totalBookedMinutes, err := r.GetTotalBookedMinutes(organizationID, enter, leave, location)
-	if err != nil {
-		return 0, err
+// GetLoadMulti computes the space utilization for several windows, querying the
+// booked minutes and the space count exactly once for all of them.
+func (r *BookingStore) GetLoadMulti(organizationID string, ranges []DateRange, location *Location) ([]int, error) {
+	res := make([]int, len(ranges))
+	if len(ranges) == 0 {
+		return res, nil
 	}
-	numSpaces := 0
+	bookedMinutes, err := r.GetTotalBookedMinutesMulti(organizationID, ranges, location)
+	if err != nil {
+		return nil, err
+	}
+	var numSpaces int
 	if location != nil {
-		loc := *location
-		numSpaces, err = GetSpaceRepository().GetCountByLocation(organizationID, loc)
-		if err != nil {
-			return 0, err
-		}
+		numSpaces, err = GetSpaceRepository().GetCountByLocation(organizationID, *location)
 	} else {
 		numSpaces, err = GetSpaceRepository().GetCount(organizationID)
-		if err != nil {
-			return 0, err
-		}
 	}
-
+	if err != nil {
+		return nil, err
+	}
 	if numSpaces == 0 {
-		return 0, nil
+		return res, nil
 	}
-
-	var totalTimeMinutes float64
 	targetUtilizationHoursPerWeek, _ := GetSettingsRepository().GetInt(organizationID, SettingTargetUtilizationHoursPerWeek.Name)
+	for i, rng := range ranges {
+		res[i] = calcLoad(rng, bookedMinutes[i], numSpaces, targetUtilizationHoursPerWeek)
+	}
+	return res, nil
+}
+
+func calcLoad(rng DateRange, totalBookedMinutes, numSpaces, targetUtilizationHoursPerWeek int) int {
+	if numSpaces == 0 || totalBookedMinutes == 0 {
+		return 0
+	}
+	var totalTimeMinutes float64
 	if targetUtilizationHoursPerWeek != 0 {
-		totalTimeMinutes = math.Floor(leave.Sub(enter).Hours()/24*(float64(targetUtilizationHoursPerWeek)/7)*float64(numSpaces)) * 60
+		totalTimeMinutes = math.Floor(rng.Leave.Sub(rng.Enter).Hours()/24*(float64(targetUtilizationHoursPerWeek)/7)*float64(numSpaces)) * 60
 	} else {
-		totalTimeMinutes = leave.Sub(enter).Minutes() * float64(numSpaces)
+		totalTimeMinutes = rng.Leave.Sub(rng.Enter).Minutes() * float64(numSpaces)
 	}
-
-	if totalBookedMinutes == 0 {
-		return 0, nil
-	}
-
-	res := float64(totalBookedMinutes) / float64(totalTimeMinutes) * float64(100)
-	return int(math.RoundToEven(res)), nil
+	res := float64(totalBookedMinutes) / totalTimeMinutes * float64(100)
+	return int(math.RoundToEven(res))
 }
 
 // various scenarios
@@ -826,7 +854,7 @@ func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*B
 		"INNER JOIN users ON bookings.user_id = users.id "+
 		"WHERE bookings.approved = false AND "+
 		"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "+
-		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
+		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		")) "+
 		"ORDER BY bookings.enter_time ASC", approverUserID)
@@ -852,7 +880,7 @@ func (r *BookingStore) GetBookingsCountRequiringApproval(approverUserID string) 
 		"FROM bookings "+
 		"WHERE approved = false AND "+
 		"leave_time >= NOW() - INTERVAL '24 hours' AND "+
-		"space_id IN (SELECT space_id FROM spaces_approvers WHERE spaces_approvers.space_id = bookings.space_id AND group_id IN ("+
+		"space_id IN (SELECT space_id FROM spaces_approvers WHERE group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		"))", approverUserID).Scan(&count)
 	if err != nil {

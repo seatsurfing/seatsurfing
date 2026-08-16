@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
@@ -823,4 +825,139 @@ func TestLocationAllowedBookerForbidden(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestBool(t, true, resBody[0].IsAllowed)
+}
+
+// The booking entries returned by the availability endpoint used to be packed
+// into '@@@'-delimited strings and re-parsed in Go. This pins every field of an
+// entry so the typed representation keeps returning identical values, including
+// a NULL recurring ID (which must surface as an empty string) and an
+// unapproved booking.
+func TestSpacesAvailabilityBookingDetails(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	booker := CreateTestUserInOrg(org)
+	booker.Firstname = "Jane"
+	booker.Lastname = "Roe"
+	GetUserRepository().Update(booker)
+
+	admin := CreateTestUserOrgAdmin(org)
+	loginAdmin := LoginTestUser(admin.ID)
+
+	location := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(location)
+	space := &Space{LocationID: location.ID, Name: "S1", Enabled: true}
+	GetSpaceRepository().Create(space)
+
+	enter := time.Date(2030, 9, 1, 9, 0, 0, 0, time.UTC)
+	leave := time.Date(2030, 9, 1, 17, 0, 0, 0, time.UTC)
+	recurringID := uuid.New().String()
+	booking := &Booking{
+		UserID:      booker.ID,
+		SpaceID:     space.ID,
+		Enter:       enter,
+		Leave:       leave,
+		Subject:     "Team sync",
+		Approved:    false,
+		RecurringID: NullUUID(recurringID),
+	}
+	CheckTestIsNil(t, GetBookingRepository().Create(booking))
+
+	qEnter := url.QueryEscape(time.Date(2030, 9, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339))
+	qLeave := url.QueryEscape(time.Date(2030, 9, 1, 23, 0, 0, 0, time.UTC).Format(time.RFC3339))
+	req := NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+qEnter+"&leave="+qLeave, loginAdmin.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	var resBody []*GetSpaceAvailabilityResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected array with 1 element, got %d", len(resBody))
+	}
+	CheckTestBool(t, false, resBody[0].Available)
+	if len(resBody[0].Bookings) != 1 {
+		t.Fatalf("Expected 1 booking, got %d", len(resBody[0].Bookings))
+	}
+	e := resBody[0].Bookings[0]
+	CheckTestString(t, booking.ID, e.BookingID)
+	CheckTestString(t, recurringID, e.RecurringID)
+	CheckTestString(t, booker.ID, e.UserID)
+	CheckTestString(t, booker.Email, e.UserEmail)
+	CheckTestString(t, "Jane", e.UserFirstname)
+	CheckTestString(t, "Roe", e.UserLastname)
+	CheckTestString(t, "Team sync", e.Subject)
+	CheckTestBool(t, false, e.Approved)
+	CheckTestString(t, enter.Format("2006-01-02T15:04:05"), e.Enter.Format("2006-01-02T15:04:05"))
+	CheckTestString(t, leave.Format("2006-01-02T15:04:05"), e.Leave.Format("2006-01-02T15:04:05"))
+
+	// A booking without a recurring ID must yield an empty string, not "<nil>".
+	space2 := &Space{LocationID: location.ID, Name: "S2", Enabled: true}
+	GetSpaceRepository().Create(space2)
+	plain := &Booking{UserID: booker.ID, SpaceID: space2.ID, Enter: enter, Leave: leave, Approved: true}
+	CheckTestIsNil(t, GetBookingRepository().Create(plain))
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+qEnter+"&leave="+qLeave, loginAdmin.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 2 {
+		t.Fatalf("Expected array with 2 elements, got %d", len(resBody))
+	}
+	if len(resBody[1].Bookings) != 1 {
+		t.Fatalf("Expected 1 booking on second space, got %d", len(resBody[1].Bookings))
+	}
+	CheckTestString(t, "", resBody[1].Bookings[0].RecurringID)
+	CheckTestBool(t, true, resBody[1].Bookings[0].Approved)
+	CheckTestString(t, "", resBody[1].Bookings[0].Subject)
+}
+
+// Bookings of several spaces at the same location must be attached to the
+// correct space, and spaces without bookings must stay available.
+func TestSpacesAvailabilityBookingsGroupedPerSpace(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	admin := CreateTestUserOrgAdmin(org)
+	loginAdmin := LoginTestUser(admin.ID)
+
+	location := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(location)
+	spaceA := &Space{LocationID: location.ID, Name: "A", Enabled: true}
+	GetSpaceRepository().Create(spaceA)
+	spaceB := &Space{LocationID: location.ID, Name: "B", Enabled: true}
+	GetSpaceRepository().Create(spaceB)
+	spaceC := &Space{LocationID: location.ID, Name: "C", Enabled: true}
+	GetSpaceRepository().Create(spaceC)
+
+	day := func(h int) time.Time { return time.Date(2030, 9, 1, h, 0, 0, 0, time.UTC) }
+	// Space A has two bookings, space B one, space C none.
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: spaceA.ID, Enter: day(13), Leave: day(15)})
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: spaceA.ID, Enter: day(9), Leave: day(11)})
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: spaceB.ID, Enter: day(10), Leave: day(12)})
+
+	qEnter := url.QueryEscape(day(0).Format(time.RFC3339))
+	qLeave := url.QueryEscape(day(23).Format(time.RFC3339))
+	req := NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability?enter="+qEnter+"&leave="+qLeave, loginAdmin.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	var resBody []*GetSpaceAvailabilityResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 3 {
+		t.Fatalf("Expected array with 3 elements, got %d", len(resBody))
+	}
+	CheckTestString(t, "A", resBody[0].Name)
+	CheckTestString(t, "B", resBody[1].Name)
+	CheckTestString(t, "C", resBody[2].Name)
+
+	CheckTestInt(t, 2, len(resBody[0].Bookings))
+	CheckTestInt(t, 1, len(resBody[1].Bookings))
+	CheckTestInt(t, 0, len(resBody[2].Bookings))
+	CheckTestBool(t, false, resBody[0].Available)
+	CheckTestBool(t, false, resBody[1].Available)
+	CheckTestBool(t, true, resBody[2].Available)
+
+	// Bookings are ordered by enter time ascending.
+	CheckTestString(t, "09", resBody[0].Bookings[0].Enter.Format("15"))
+	CheckTestString(t, "13", resBody[0].Bookings[1].Enter.Format("15"))
 }

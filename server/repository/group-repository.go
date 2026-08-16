@@ -37,7 +37,11 @@ func GetGroupRepository() *GroupStore {
 }
 
 func (r *GroupStore) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// Nothing yet
+	if curVersion < 51 {
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_users_groups_user_id ON users_groups(user_id)"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *GroupStore) Create(e *Group) error {

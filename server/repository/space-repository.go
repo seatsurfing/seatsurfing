@@ -141,49 +141,58 @@ func (r *SpaceStore) GetOne(id string) (*Space, error) {
 
 func (r *SpaceStore) GetAllInTime(locationID string, enter, leave time.Time) ([]*SpaceAvailability, error) {
 	var result []*SpaceAvailability
-	subQueryWhere := "bookings.space_id = spaces.id AND (" +
-		"($1 >= bookings.enter_time AND $1 <= bookings.leave_time) OR " +
-		"($2 >= bookings.enter_time AND $2 <= bookings.leave_time) OR " +
-		"(bookings.enter_time >= $1 AND bookings.enter_time <= $2) OR " +
-		"(bookings.leave_time >= $1 AND bookings.leave_time <= $2)" +
-		")"
-	rows, err := GetDatabase().DB().Query("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size, "+
-		"NOT EXISTS(SELECT id FROM bookings WHERE "+subQueryWhere+"), "+
-		"ARRAY(SELECT CONCAT(users.id, '@@@', users.email, '@@@', bookings.enter_time, '@@@', bookings.leave_time, '@@@', bookings.id, '@@@', bookings.subject, '@@@', bookings.recurring_id, '@@@', bookings.approved::text, '@@@', COALESCE(users.firstname, ''), '@@@', COALESCE(users.lastname, '')) FROM bookings INNER JOIN users ON users.id = bookings.user_id WHERE "+subQueryWhere+" ORDER BY bookings.enter_time ASC) "+
+	bySpaceID := make(map[string]*SpaceAvailability)
+	rows, err := GetDatabase().DB().Query("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size "+
 		"FROM spaces "+
-		"WHERE location_id = $3 "+
-		"ORDER BY name", enter, leave, locationID)
+		"WHERE location_id = $1 "+
+		"ORDER BY name", locationID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		e := &SpaceAvailability{}
-		var bookingUserNames []string
-		err = rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize, &e.Available, pq.Array(&bookingUserNames))
-		for _, bookingUserName := range bookingUserNames {
-			tokens := strings.Split(bookingUserName, "@@@")
-			timeFormat := "2006-01-02 15:04:05"
-			enter, _ := time.Parse(timeFormat, tokens[2])
-			leave, _ := time.Parse(timeFormat, tokens[3])
-			entry := &SpaceAvailabilityBookingEntry{
-				BookingID:     tokens[4],
-				UserID:        tokens[0],
-				UserEmail:     tokens[1],
-				UserFirstname: tokens[8],
-				UserLastname:  tokens[9],
-				Enter:         enter,
-				Leave:         leave,
-				Subject:       tokens[5],
-				RecurringID:   tokens[6],
-				Approved:      tokens[7] == "true",
-			}
-			e.Bookings = append(e.Bookings, entry)
-		}
-		if err != nil {
+		e := &SpaceAvailability{Available: true}
+		if err := rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize); err != nil {
 			return nil, err
 		}
+		bySpaceID[e.ID] = e
 		result = append(result, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(result) == 0 {
+		return result, nil
+	}
+
+	// Fetch all bookings overlapping the requested window for this location in
+	// one go and attach them to their space, rather than running a correlated
+	// subquery per space.
+	bookingRows, err := GetDatabase().DB().Query("SELECT bookings.space_id, bookings.id, COALESCE(bookings.recurring_id::text, ''), bookings.enter_time, bookings.leave_time, bookings.subject, bookings.approved, "+
+		"users.id, users.email, COALESCE(users.firstname, ''), COALESCE(users.lastname, '') "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
+		"INNER JOIN users ON users.id = bookings.user_id "+
+		"WHERE spaces.location_id = $1 "+
+		"AND bookings.enter_time <= $3 AND bookings.leave_time >= $2 "+
+		"ORDER BY bookings.enter_time ASC", locationID, enter, leave)
+	if err != nil {
+		return nil, err
+	}
+	defer bookingRows.Close()
+	for bookingRows.Next() {
+		var spaceID string
+		entry := &SpaceAvailabilityBookingEntry{}
+		if err := bookingRows.Scan(&spaceID, &entry.BookingID, &entry.RecurringID, &entry.Enter, &entry.Leave, &entry.Subject, &entry.Approved, &entry.UserID, &entry.UserEmail, &entry.UserFirstname, &entry.UserLastname); err != nil {
+			return nil, err
+		}
+		if space, ok := bySpaceID[spaceID]; ok {
+			space.Available = false
+			space.Bookings = append(space.Bookings, entry)
+		}
+	}
+	if err := bookingRows.Err(); err != nil {
+		return nil, err
 	}
 	return result, nil
 }

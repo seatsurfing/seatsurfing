@@ -106,10 +106,15 @@ func (router *StatsRouter) getLoad(w http.ResponseWriter, r *http.Request) {
 	thisWeekEnter, thisWeekLeave, lastWeekEnter, lastWeekLeave, nextWeekEnter, nextWeekLeave, lastMonthEnter, lastMonthLeave := getDateRanges()
 
 	m := &GetLoadResponse{}
-	m.SpaceLoadNextWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, nextWeekEnter, nextWeekLeave, location)
-	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave, location)
-	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave, location)
-	m.SpaceLoadLastMonth, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastMonthEnter, lastMonthLeave, location)
+	load, _ := GetBookingRepository().GetLoadMulti(user.OrganizationID, []DateRange{
+		{Enter: nextWeekEnter, Leave: nextWeekLeave},
+		{Enter: thisWeekEnter, Leave: thisWeekLeave},
+		{Enter: lastWeekEnter, Leave: lastWeekLeave},
+		{Enter: lastMonthEnter, Leave: lastMonthLeave},
+	}, location)
+	if load != nil {
+		m.SpaceLoadNextWeek, m.SpaceLoadThisWeek, m.SpaceLoadLastWeek, m.SpaceLoadLastMonth = load[0], load[1], load[2], load[3]
+	}
 
 	SendJSON(w, m)
 }
@@ -136,17 +141,29 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 
 	m := &GetStatsResponse{}
 	m.NumUsers, _ = GetUserRepository().GetCount(user.OrganizationID)
-	m.NumBookings, _ = GetBookingRepository().GetCount(user.OrganizationID)
 	m.NumLocations, _ = GetLocationRepository().GetCount(user.OrganizationID)
 	m.NumSpaces, _ = GetSpaceRepository().GetCount(user.OrganizationID)
-	m.NumBookingsCurrent, _ = GetBookingRepository().GetCountCurrent(user.OrganizationID)
-	m.NumBookingsToday, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, todayEnter, todayLeave)
-	m.NumBookingsYesterday, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, yesterdayEnter, yesterdayLeave)
-	m.NumBookingsThisWeek, _ = GetBookingRepository().GetCountDateRange(user.OrganizationID, thisWeekEnter, thisWeekLeave)
-	m.SpaceLoadNextWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, nextWeekEnter, nextWeekLeave, nil)
-	m.SpaceLoadThisWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, thisWeekEnter, thisWeekLeave, nil)
-	m.SpaceLoadLastWeek, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastWeekEnter, lastWeekLeave, nil)
-	m.SpaceLoadLastMonth, _ = GetBookingRepository().GetLoad(user.OrganizationID, lastMonthEnter, lastMonthLeave, nil)
+
+	counts, _ := GetBookingRepository().GetCountsSummary(user.OrganizationID,
+		DateRange{Enter: todayEnter, Leave: todayLeave},
+		DateRange{Enter: yesterdayEnter, Leave: yesterdayLeave},
+		DateRange{Enter: thisWeekEnter, Leave: thisWeekLeave})
+	m.NumBookings = counts.Total
+	m.NumBookingsCurrent = counts.Current
+	m.NumBookingsToday = counts.Today
+	m.NumBookingsYesterday = counts.Yesterday
+	m.NumBookingsThisWeek = counts.ThisWeek
+
+	load, _ := GetBookingRepository().GetLoadMulti(user.OrganizationID, []DateRange{
+		{Enter: nextWeekEnter, Leave: nextWeekLeave},
+		{Enter: thisWeekEnter, Leave: thisWeekLeave},
+		{Enter: lastWeekEnter, Leave: lastWeekLeave},
+		{Enter: lastMonthEnter, Leave: lastMonthLeave},
+	}, nil)
+	if load != nil {
+		m.SpaceLoadNextWeek, m.SpaceLoadThisWeek, m.SpaceLoadLastWeek, m.SpaceLoadLastMonth = load[0], load[1], load[2], load[3]
+	}
+
 	m.BookingsByWeekday, _ = GetBookingRepository().GetCountByWeekday(user.OrganizationID, nil, nil, nil)
 	SendJSON(w, m)
 }
