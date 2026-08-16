@@ -30,7 +30,16 @@ class LanguageSelector extends React.Component<Props, State> {
       </svg>
     );
 
-    const title = (
+    const title = this.props.inNavbar ? (
+      <>
+        {icon}
+        <span className="d-lg-none">
+          {" "}
+          {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
+            RuntimeConfig.getLanguage()}
+        </span>
+      </>
+    ) : (
       <>
         {icon}
         {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??

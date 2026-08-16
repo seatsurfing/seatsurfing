@@ -59,7 +59,12 @@ class ThemeSelector extends React.Component<Props, State> {
       (option) => option.mode === this.state.mode,
     );
 
-    const title = (
+    const title = this.props.inNavbar ? (
+      <>
+        {this.getIcon(this.state.mode)}
+        <span className="d-lg-none"> {currentOption?.label}</span>
+      </>
+    ) : (
       <>
         {this.getIcon(this.state.mode)} {currentOption?.label}
       </>
