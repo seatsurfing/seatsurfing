@@ -1924,11 +1924,16 @@ class Search extends React.Component<Props, State> {
         </div>
       );
     } else {
-      const floorPlanStyle = {
+      const floorPlanStyle: React.CSSProperties = {
+        position: "relative",
         width:
           (this.mapData ? this.mapData.width * this.mapData.scale : 0) + "px",
         height:
           (this.mapData ? this.mapData.height * this.mapData.scale : 0) + "px",
+      };
+      const floorPlanImageStyle: React.CSSProperties = {
+        position: "absolute",
+        inset: 0,
         backgroundSize: "contain",
         backgroundImage: this.mapData
           ? "url(data:image/" +
@@ -1957,31 +1962,31 @@ class Search extends React.Component<Props, State> {
               <>
                 {window.innerWidth >= 768 && (
                   <div
+                    className="bg-body border rounded overflow-hidden"
                     style={{
                       position: "absolute",
                       top: 70,
                       right: 10,
                       zIndex: 10,
-                      border: "1px solid #ccc",
-                      background: "#fff",
-                      borderRadius: "5px",
-                      overflow: "hidden",
                     }}
                   >
                     <MiniMap>
-                      <div style={floorPlanStyle}></div>
+                      <div style={floorPlanStyle}>
+                        <div
+                          className="floor-plan-bg"
+                          style={floorPlanImageStyle}
+                        ></div>
+                      </div>
                     </MiniMap>
                   </div>
                 )}
                 <div
+                  className="bg-body border rounded"
                   style={{
                     position: "absolute",
                     top: 70,
                     left: 10,
                     zIndex: 10,
-                    border: "1px solid #ccc",
-                    background: "#fff",
-                    borderRadius: "5px",
                   }}
                 >
                   <button
@@ -2007,7 +2012,13 @@ class Search extends React.Component<Props, State> {
                   </button>
                 </div>
                 <TransformComponent contentClass="border border-3">
-                  <div style={floorPlanStyle}>{spaces}</div>
+                  <div style={floorPlanStyle}>
+                    <div
+                      className="floor-plan-bg"
+                      style={floorPlanImageStyle}
+                    ></div>
+                    {spaces}
+                  </div>
                   <Tooltip
                     id="space-tooltip"
                     float={true}

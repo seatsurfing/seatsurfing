@@ -233,6 +233,10 @@ form#filter-locations-form .row {
   height: 100% !important;
 }
 
+[data-bs-theme="dark"] .floor-plan-bg {
+  filter: invert(1);
+}
+
 .active-transparent:active,
 .active-transparent:focus {
   background-color: transparent !important;
