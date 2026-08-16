@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.122.2](https://github.com/seatsurfing/seatsurfing/compare/v1.122.1...v1.122.2) (2026-08-16)
+
+
+### 🐛 Bug Fixes
+
+* **server:** rest api performance improvements ([#2526](https://github.com/seatsurfing/seatsurfing/issues/2526)) ([ec6b5bd](https://github.com/seatsurfing/seatsurfing/commit/ec6b5bd0853d27334884031e562d0fd8ad26c037))
+
 ## [1.122.1](https://github.com/seatsurfing/seatsurfing/compare/v1.122.0...v1.122.1) (2026-08-13)
 
 
