@@ -2056,7 +2056,7 @@ class Search extends React.Component<Props, State> {
               className="collapse-icon"
             />
             <CollapseIcon
-              color={"#555"}
+              color={"var(--bs-secondary-color)"}
               height="20px"
               width="20px"
               className="expand-icon"
@@ -2069,7 +2069,7 @@ class Search extends React.Component<Props, State> {
                 <div className="pt-1 me-2">
                   <LocationIcon
                     title={this.props.t("area")}
-                    color={"#555"}
+                    color={"var(--bs-secondary-color)"}
                     height="20px"
                     width="20px"
                   />
@@ -2125,7 +2125,7 @@ class Search extends React.Component<Props, State> {
                 <div className="me-2">
                   <WeekIcon
                     title={this.props.t("date")}
-                    color={"#555"}
+                    color={"var(--bs-secondary-color)"}
                     height="20px"
                     width="20px"
                   />
@@ -2200,7 +2200,7 @@ class Search extends React.Component<Props, State> {
                   <div className="me-2">
                     <TimeIcon
                       title={this.props.t("time")}
-                      color={"#555"}
+                      color={"var(--bs-secondary-color)"}
                       height="20px"
                       width="20px"
                     />
@@ -2241,7 +2241,7 @@ class Search extends React.Component<Props, State> {
                 <div className="me-2">
                   <MapIcon
                     title={this.props.t("map")}
-                    color={"#555"}
+                    color={"var(--bs-secondary-color)"}
                     height="20px"
                     width="20px"
                   />
@@ -2268,7 +2268,7 @@ class Search extends React.Component<Props, State> {
                     <div className="me-2 ms-3">
                       <NamesIcon
                         title={this.props.t("names")}
-                        color={"#555"}
+                        color={"var(--bs-secondary-color)"}
                         height="20px"
                         width="20px"
                       />
