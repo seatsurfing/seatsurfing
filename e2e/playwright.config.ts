@@ -28,6 +28,13 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     // baseURL: 'http://127.0.0.1:3000',
 
+    /* Pin the browser timezone to the seeded organization's default_timezone.
+       The UI sends the browser's local wall clock to the API, which the server
+       interprets as the location's local time. If the two disagree (CI runners
+       are UTC), a booking created for "today" can already be in the past from
+       the organization's point of view and disappears from "My bookings". */
+    timezoneId: "Europe/Berlin",
+
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
 

@@ -528,9 +528,10 @@ func TestLoadShouldBe0IfNoSpacesExist(t *testing.T) {
 
 	enter := time.Date(2023, 10, 1, 9, 0, 0, 0, time.UTC)
 	leave := time.Date(2023, 10, 2, 9, 0, 0, 0, time.UTC)
-	load, _ := GetBookingRepository().GetLoad(org.ID, enter, leave, nil)
+	loads, _ := GetBookingRepository().GetLoadMulti(org.ID, []DateRange{{Enter: enter, Leave: leave}}, nil)
 
-	CheckTestInt(t, 0, load)
+	CheckTestInt(t, 1, len(loads))
+	CheckTestInt(t, 0, loads[0])
 }
 
 // Tests that a booking starting in the past in the location's local timezone
@@ -571,9 +572,10 @@ func TestBookingRepositoryCurrentWithLocationTimezone(t *testing.T) {
 	CheckTestInt(t, 1, len(currentBookings))
 	CheckTestString(t, currentBooking.ID, currentBookings[0].ID)
 
-	count, err := GetBookingRepository().GetCountCurrent(org.ID)
+	now := DateRange{Enter: time.Now().UTC(), Leave: time.Now().UTC()}
+	counts, err := GetBookingRepository().GetCountsSummary(org.ID, now, now, now)
 	CheckTestBool(t, true, err == nil)
-	CheckTestInt(t, 1, count)
+	CheckTestInt(t, 1, counts.Current)
 }
 
 func TestGetBookingsDueForReminderIncludesEligibleBooking(t *testing.T) {
@@ -779,7 +781,231 @@ func TestBookingRepositoryCurrentWithDefaultTimezone(t *testing.T) {
 	CheckTestInt(t, 1, len(currentBookings))
 	CheckTestString(t, currentBooking.ID, currentBookings[0].ID)
 
-	count, err := GetBookingRepository().GetCountCurrent(org.ID)
+	now := DateRange{Enter: time.Now().UTC(), Leave: time.Now().UTC()}
+	counts, err := GetBookingRepository().GetCountsSummary(org.ID, now, now, now)
 	CheckTestBool(t, true, err == nil)
-	CheckTestInt(t, 1, count)
+	CheckTestInt(t, 1, counts.Current)
+}
+
+// Verifies the combined counts query returns the same numbers the stats summary
+// previously obtained from five separate queries (total / current / today /
+// yesterday / this week), including the inclusive overlap semantics of the
+// date-range filters.
+func TestBookingRepositoryGetCountsSummary(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	location := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(location)
+	space := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(space)
+
+	day := func(y int, m time.Month, d, h int) time.Time {
+		return time.Date(y, m, d, h, 0, 0, 0, time.UTC)
+	}
+	book := func(enter, leave time.Time) *Booking {
+		b := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: enter, Leave: leave}
+		CheckTestIsNil(t, GetBookingRepository().Create(b))
+		return b
+	}
+
+	today := DateRange{Enter: day(2030, 9, 1, 0), Leave: day(2030, 9, 1, 23)}
+	yesterday := DateRange{Enter: day(2030, 8, 31, 0), Leave: day(2030, 8, 31, 23)}
+	thisWeek := DateRange{Enter: day(2030, 8, 26, 0), Leave: day(2030, 9, 1, 23)}
+
+	book(day(2030, 9, 1, 9), day(2030, 9, 1, 17))   // today + this week
+	book(day(2030, 8, 31, 9), day(2030, 8, 31, 17)) // yesterday + this week
+	book(day(2030, 8, 28, 9), day(2030, 8, 28, 17)) // this week only
+	book(day(2030, 7, 1, 9), day(2030, 7, 1, 17))   // outside every window
+	// Spans midnight into "today": must be counted by the inclusive overlap.
+	book(day(2030, 8, 31, 22), day(2030, 9, 1, 2))
+	// Currently running right now.
+	book(time.Now().UTC().Add(-1*time.Hour), time.Now().UTC().Add(1*time.Hour))
+
+	counts, err := GetBookingRepository().GetCountsSummary(org.ID, today, yesterday, thisWeek)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 6, counts.Total)
+	CheckTestInt(t, 2, counts.Today)     // 09-01 booking + the one spanning midnight
+	CheckTestInt(t, 2, counts.Yesterday) // 08-31 booking + the one spanning midnight
+	CheckTestInt(t, 4, counts.ThisWeek)  // 09-01, 08-31, 08-28, midnight-spanning
+	CheckTestInt(t, 1, counts.Current)
+}
+
+// Counts must be scoped to the requesting organization only.
+func TestBookingRepositoryGetCountsSummaryOrgIsolation(t *testing.T) {
+	ClearTestDB()
+	orgA := CreateTestOrg("a.com")
+	orgB := CreateTestOrg("b.com")
+	userA := CreateTestUserInOrg(orgA)
+	userB := CreateTestUserInOrg(orgB)
+	_, spaceA := CreateTestLocationAndSpace(orgA)
+	_, spaceB := CreateTestLocationAndSpace(orgB)
+
+	enter := time.Date(2030, 9, 1, 9, 0, 0, 0, time.UTC)
+	leave := time.Date(2030, 9, 1, 17, 0, 0, 0, time.UTC)
+	GetBookingRepository().Create(&Booking{UserID: userA.ID, SpaceID: spaceA.ID, Enter: enter, Leave: leave})
+	GetBookingRepository().Create(&Booking{UserID: userB.ID, SpaceID: spaceB.ID, Enter: enter, Leave: leave})
+	GetBookingRepository().Create(&Booking{UserID: userB.ID, SpaceID: spaceB.ID, Enter: enter, Leave: leave})
+
+	today := DateRange{Enter: time.Date(2030, 9, 1, 0, 0, 0, 0, time.UTC), Leave: time.Date(2030, 9, 1, 23, 0, 0, 0, time.UTC)}
+	counts, err := GetBookingRepository().GetCountsSummary(orgA.ID, today, today, today)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, counts.Total)
+	CheckTestInt(t, 1, counts.Today)
+}
+
+// Verifies the multi-window load query returns, for each window, exactly what a
+// single-window computation returns — the space count is now fetched once and
+// shared across all windows, so a mix-up between windows would show up here.
+func TestBookingRepositoryGetLoadMulti(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	// Use the raw window duration as the utilization baseline so the expected
+	// percentages do not depend on the default target-utilization setting.
+	GetSettingsRepository().Set(org.ID, SettingTargetUtilizationHoursPerWeek.Name, "0")
+	user := CreateTestUserInOrg(org)
+
+	location := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(location)
+	space1 := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(space1)
+	space2 := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(space2)
+
+	// Window A: one full day, 2 spaces => 2 * 1440 = 2880 available minutes.
+	// A single 12h booking uses 720 minutes => 25%.
+	winA := DateRange{
+		Enter: time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC),
+	}
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: space1.ID,
+		Enter: time.Date(2030, 9, 2, 6, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 2, 18, 0, 0, 0, time.UTC)})
+
+	// Window B: a different day with no bookings at all => 0%.
+	winB := DateRange{
+		Enter: time.Date(2030, 9, 10, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 11, 0, 0, 0, 0, time.UTC),
+	}
+
+	// Window C: one day, both spaces booked for the full day => 100%.
+	winC := DateRange{
+		Enter: time.Date(2030, 9, 20, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 21, 0, 0, 0, 0, time.UTC),
+	}
+	for _, s := range []*Space{space1, space2} {
+		GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: s.ID,
+			Enter: time.Date(2030, 9, 20, 0, 0, 0, 0, time.UTC),
+			Leave: time.Date(2030, 9, 21, 0, 0, 0, 0, time.UTC)})
+	}
+
+	ranges := []DateRange{winA, winB, winC}
+	loads, err := GetBookingRepository().GetLoadMulti(org.ID, ranges, nil)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 3, len(loads))
+	CheckTestInt(t, 25, loads[0])
+	CheckTestInt(t, 0, loads[1])
+	CheckTestInt(t, 100, loads[2])
+}
+
+// Bookings are clamped to the requested window, so a booking reaching beyond the
+// window only contributes the overlapping minutes.
+func TestBookingRepositoryGetLoadMultiClampsToWindow(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	// Use the raw window duration as the utilization baseline so the expected
+	// percentages do not depend on the default target-utilization setting.
+	GetSettingsRepository().Set(org.ID, SettingTargetUtilizationHoursPerWeek.Name, "0")
+	user := CreateTestUserInOrg(org)
+
+	location := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(location)
+	space := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(space)
+
+	// Booking covers two full days, the window only the second one.
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: space.ID,
+		Enter: time.Date(2030, 9, 1, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC)})
+
+	win := DateRange{
+		Enter: time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC),
+	}
+	loads, err := GetBookingRepository().GetLoadMulti(org.ID, []DateRange{win}, nil)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 100, loads[0])
+}
+
+// A location filter must restrict both the booked minutes and the space count.
+func TestBookingRepositoryGetLoadMultiByLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	// Use the raw window duration as the utilization baseline so the expected
+	// percentages do not depend on the default target-utilization setting.
+	GetSettingsRepository().Set(org.ID, SettingTargetUtilizationHoursPerWeek.Name, "0")
+	user := CreateTestUserInOrg(org)
+
+	locA := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(locA)
+	spaceA := &Space{LocationID: locA.ID, Enabled: true}
+	GetSpaceRepository().Create(spaceA)
+
+	locB := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(locB)
+	spaceB := &Space{LocationID: locB.ID, Enabled: true}
+	GetSpaceRepository().Create(spaceB)
+
+	// Only location A is booked, for the full window.
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: spaceA.ID,
+		Enter: time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC)})
+
+	win := DateRange{
+		Enter: time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC),
+	}
+
+	loadsA, err := GetBookingRepository().GetLoadMulti(org.ID, []DateRange{win}, locA)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 100, loadsA[0])
+
+	loadsB, err := GetBookingRepository().GetLoadMulti(org.ID, []DateRange{win}, locB)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, loadsB[0])
+
+	// Org-wide: 1440 booked of 2 spaces * 1440 => 50%.
+	loadsAll, err := GetBookingRepository().GetLoadMulti(org.ID, []DateRange{win}, nil)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 50, loadsAll[0])
+}
+
+// When a target utilization is configured, the baseline is that target rather
+// than the raw window duration. This pins the arithmetic that was extracted
+// into the shared calcLoad helper.
+func TestBookingRepositoryGetLoadMultiWithTargetUtilization(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	// 35h/week over a 1-day window with 1 space => floor(1 * 35/7 * 1) * 60 = 300 minutes.
+	GetSettingsRepository().Set(org.ID, SettingTargetUtilizationHoursPerWeek.Name, "35")
+
+	location := &Location{OrganizationID: org.ID, Timezone: "UTC", Enabled: true}
+	GetLocationRepository().Create(location)
+	space := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(space)
+
+	// A 150 minute booking of the 300 minute baseline => 50%.
+	GetBookingRepository().Create(&Booking{UserID: user.ID, SpaceID: space.ID,
+		Enter: time.Date(2030, 9, 2, 9, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 2, 11, 30, 0, 0, time.UTC)})
+
+	win := DateRange{
+		Enter: time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC),
+		Leave: time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC),
+	}
+	loads, err := GetBookingRepository().GetLoadMulti(org.ID, []DateRange{win}, nil)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 50, loads[0])
 }
