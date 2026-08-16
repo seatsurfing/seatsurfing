@@ -55,7 +55,15 @@ class ThemeSelector extends React.Component<Props, State> {
       { mode: Theme.AUTO, label: this.props.t("themeSystem") },
     ];
 
-    const title = <>{this.getIcon(this.state.mode)}</>;
+    const currentOption = options.find(
+      (option) => option.mode === this.state.mode,
+    );
+
+    const title = (
+      <>
+        {this.getIcon(this.state.mode)} {currentOption?.label}
+      </>
+    );
 
     const ItemComponent = this.props.inNavbar
       ? NavDropdown.Item
