@@ -8,6 +8,7 @@ interface State {}
 
 interface Props {
   inNavbar?: boolean;
+  compact?: boolean;
   drop?: "up" | "down" | "start" | "end";
   align?: "start" | "end";
   t: TranslationFunc;
@@ -30,7 +31,7 @@ class LanguageSelector extends React.Component<Props, State> {
       </svg>
     );
 
-    const title = this.props.inNavbar ? (
+    const title = this.props.compact ? (
       <>
         {icon}
         <span className="d-lg-none">

@@ -14,6 +14,7 @@ interface State {
 
 interface Props {
   inNavbar?: boolean;
+  compact?: boolean;
   drop?: "up" | "down" | "start" | "end";
   align?: "start" | "end";
   variant?: string;
@@ -59,7 +60,7 @@ class ThemeSelector extends React.Component<Props, State> {
       (option) => option.mode === this.state.mode,
     );
 
-    const title = this.props.inNavbar ? (
+    const title = this.props.compact ? (
       <>
         {this.getIcon(this.state.mode)}
         <span className="d-lg-none"> {currentOption?.label}</span>
