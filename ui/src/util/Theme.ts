@@ -1,3 +1,5 @@
+import BrowserUtil from "./BrowserUtil";
+
 export type ThemeMode = "light" | "dark" | "auto";
 
 export default class Theme {
@@ -9,10 +11,10 @@ export default class Theme {
   static readonly CHANGE_EVENT = "themechange";
 
   static get(): ThemeMode {
-    if (typeof window === "undefined") {
-      return Theme.AUTO;
-    }
-    const stored = window.localStorage.getItem(Theme.STORAGE_KEY);
+    const stored = BrowserUtil.tryLocalStorageGetItem(
+      Theme.STORAGE_KEY,
+      Theme.AUTO,
+    );
     if (
       stored === Theme.LIGHT ||
       stored === Theme.DARK ||
@@ -27,7 +29,7 @@ export default class Theme {
     if (typeof window === "undefined") {
       return;
     }
-    window.localStorage.setItem(Theme.STORAGE_KEY, mode);
+    BrowserUtil.tryLocalStorageSetItem(Theme.STORAGE_KEY, mode);
     Theme.apply();
   }
 
