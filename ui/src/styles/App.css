@@ -197,3 +197,28 @@ h2 {
   top: 8px;
   right: 8px;
 }
+
+.seatsurfing-logo {
+  width: 100%;
+  margin-bottom: 50px;
+}
+
+[data-bs-theme="dark"] .seatsurfing-logo {
+  filter: invert(1);
+}
+
+/* Bootstrap's outline-secondary button hardcodes a light-mode gray
+   (#6c757d) instead of theming off the CSS vars, which reads as
+   low-contrast, near-illegible text on a dark background. */
+[data-bs-theme="dark"] .btn-outline-secondary {
+  --bs-btn-color: var(--bs-secondary-color);
+  --bs-btn-border-color: var(--bs-border-color);
+  --bs-btn-hover-color: var(--bs-emphasis-color);
+  --bs-btn-hover-bg: var(--bs-secondary-bg);
+  --bs-btn-hover-border-color: var(--bs-border-color);
+  --bs-btn-active-color: var(--bs-emphasis-color);
+  --bs-btn-active-bg: var(--bs-secondary-bg);
+  --bs-btn-active-border-color: var(--bs-border-color);
+  --bs-btn-disabled-color: var(--bs-secondary-color);
+  --bs-btn-disabled-border-color: var(--bs-border-color);
+}

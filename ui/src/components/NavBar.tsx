@@ -247,8 +247,16 @@ class NavBar extends React.Component<Props, State> {
               )}
             </span>
           </Nav.Link>
-          <ThemeSelector inNavbar={true} compact={true} align="end" />
-          <LanguageSelector inNavbar={true} compact={true} align="end" />
+          <ThemeSelector
+            inNavbar={true}
+            compactBreakpoint="lg"
+            align="end"
+          />
+          <LanguageSelector
+            inNavbar={true}
+            compactBreakpoint="lg"
+            align="end"
+          />
           {signOffButton}
         </Nav>
       </>

@@ -1992,21 +1992,21 @@ class Search extends React.Component<Props, State> {
                   <button
                     onClick={() => zoomIn()}
                     aria-label="Zoom in"
-                    className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
+                    className="btn btn-outline-secondary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <AddIcon />
                   </button>
                   <button
                     onClick={() => zoomOut()}
                     aria-label="Zoom out"
-                    className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
+                    className="btn btn-outline-secondary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <RemoveIcon />
                   </button>
                   <button
                     onClick={() => this.centerMap()}
                     aria-label="Reset zoom"
-                    className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
+                    className="btn btn-outline-secondary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <ScanIcon />
                   </button>

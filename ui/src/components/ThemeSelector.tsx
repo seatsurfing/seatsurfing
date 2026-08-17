@@ -7,6 +7,7 @@ import {
   Monitor as IconAuto,
 } from "react-feather";
 import Theme, { ThemeMode } from "@/util/Theme";
+import { Breakpoint } from "@/types/Layout";
 
 interface State {
   mode: ThemeMode;
@@ -14,7 +15,7 @@ interface State {
 
 interface Props {
   inNavbar?: boolean;
-  compact?: boolean;
+  compactBreakpoint?: Breakpoint;
   drop?: "up" | "down" | "start" | "end";
   align?: "start" | "end";
   variant?: string;
@@ -60,10 +61,16 @@ class ThemeSelector extends React.Component<Props, State> {
       (option) => option.mode === this.state.mode,
     );
 
-    const title = this.props.compact ? (
+    const labelClass = this.props.compactBreakpoint
+      ? this.props.inNavbar
+        ? `d-${this.props.compactBreakpoint}-none`
+        : `d-none d-${this.props.compactBreakpoint}-inline`
+      : undefined;
+
+    const title = this.props.compactBreakpoint ? (
       <>
         {this.getIcon(this.state.mode)}
-        <span className="d-lg-none"> {currentOption?.label}</span>
+        <span className={labelClass}> {currentOption?.label}</span>
       </>
     ) : (
       <>

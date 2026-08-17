@@ -2,6 +2,7 @@ import React from "react";
 import { Button, Form } from "react-bootstrap";
 import Link from "next/link";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import SeatsurfingLogo from "@/components/SeatsurfingLogo";
 import Organization from "@/types/Organization";
 import Ajax from "@/util/Ajax";
 import Navigation from "@/util/Navigation";
@@ -109,7 +110,7 @@ class InitPasswordReset extends React.Component<Props, State> {
           className="container-center-inner"
           onSubmit={this.onPasswordSubmit}
         >
-          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <SeatsurfingLogo />
           {this.renderContent()}
           <p className="margin-top-50">
             <Link href="/login">{this.props.t("back")}</Link>
