@@ -522,7 +522,7 @@ func TestGetUserMeIsPrimaryDomainTrue(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
-	var userRes GetUserResponse
+	var userRes GetUserSelfResponse
 	json.Unmarshal(res.Body.Bytes(), &userRes)
 	CheckTestBool(t, true, userRes.IsPrimaryDomain)
 }
@@ -538,7 +538,7 @@ func TestGetUserMeIsPrimaryDomainFalse(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
-	var userRes GetUserResponse
+	var userRes GetUserSelfResponse
 	json.Unmarshal(res.Body.Bytes(), &userRes)
 	CheckTestBool(t, false, userRes.IsPrimaryDomain)
 }
@@ -554,7 +554,7 @@ func TestGetUserMeIsPrimaryDomainCaseInsensitive(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
-	var userRes GetUserResponse
+	var userRes GetUserSelfResponse
 	json.Unmarshal(res.Body.Bytes(), &userRes)
 	CheckTestBool(t, true, userRes.IsPrimaryDomain)
 }
