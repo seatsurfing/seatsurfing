@@ -21,9 +21,15 @@ func main() {
 	actorsFile := flag.String("actors-file", "perftest-actors.json", "path to the actors file written by perftest-seed")
 	thresholdsPath := flag.String("thresholds", "perftest/testdata/thresholds.yaml", "path to the thresholds YAML file")
 	warmup := flag.Int("warmup", 5, "untimed warmup requests per scenario")
+	// Requests are rate limited per user ID (RATE_LIMIT, default 250 per
+	// minute), and each scenario draws from a pool of ~100 actors. Raising
+	// iterations far above the default therefore starts returning HTTP 429
+	// rather than measuring anything; raise RATE_LIMIT on the server under
+	// test alongside it.
 	iterations := flag.Int("iterations", 50, "timed requests per scenario")
 	jsonOut := flag.String("json-out", "perftest-results.json", "path to write the machine-readable JSON report")
 	timeout := flag.Duration("timeout", 30*time.Second, "per-request HTTP timeout")
+	maxDuration := flag.Duration("max-duration", 60*time.Minute, "abort the run once this much wall-clock time has elapsed; remaining scenarios are skipped rather than measured")
 	flag.Parse()
 
 	if *postgresURL != "" {
@@ -47,6 +53,7 @@ func main() {
 		Warmup:      *warmup,
 		Iterations:  *iterations,
 		Timeout:     *timeout,
+		MaxDuration: *maxDuration,
 		Thresholds:  thresholds,
 		JSONOutPath: *jsonOut,
 	}

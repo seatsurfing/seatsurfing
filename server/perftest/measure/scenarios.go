@@ -24,7 +24,7 @@ type Scenario struct {
 	// UseSuperAdmin selects the single global super admin actor instead of
 	// a random per-org actor.
 	UseSuperAdmin bool
-	Request       func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error)
+	Request       func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error)
 }
 
 func newGet(baseURL, path, jwt string) (*http.Request, error) {
@@ -63,33 +63,33 @@ var Scenarios = []Scenario{
 	{
 		ID:            "organization.list",
 		UseSuperAdmin: true,
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/organization/", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/organization/", a.Token())
 		},
 	},
 	{
 		ID: "organization.getOne",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/organization/"+a.OrgID, a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/organization/"+a.OrgID, a.Token())
 		},
 	},
 	{
 		ID: "user.list",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/user/", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/user/", a.Token())
 		},
 	},
 	{
 		ID: "user.count",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/user/count", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/user/count", a.Token())
 		},
 	},
 	{
 		ID: "user.byEmail",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
 			if a.UsersPerOrg == 0 {
-				return newGet(baseURL, "/user/byEmail/nonexistent@perf.test", a.JWT)
+				return newGet(baseURL, "/user/byEmail/nonexistent@perf.test", a.Token())
 			}
 			// Indices 0/1 are the org-admin/space-admin actor users
 			// (seed.Run); skip them so the query never targets the
@@ -102,17 +102,17 @@ var Scenarios = []Scenario{
 				idx = 0
 			}
 			email := fmt.Sprintf("user%06d@org%04d.perf.test", idx, a.OrgIndex)
-			return newGet(baseURL, "/user/byEmail/"+url.PathEscape(email), a.JWT)
+			return newGet(baseURL, "/user/byEmail/"+url.PathEscape(email), a.Token())
 		},
 	},
 	{
 		ID: "space.list",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
 			if len(a.LocationIDs) == 0 {
 				return nil, fmt.Errorf("actor for org %d has no seeded locations", a.OrgIndex)
 			}
 			locID := a.LocationIDs[rnd.Intn(len(a.LocationIDs))]
-			return newGet(baseURL, "/location/"+locID+"/space/", a.JWT)
+			return newGet(baseURL, "/location/"+locID+"/space/", a.Token())
 		},
 	},
 	{
@@ -122,7 +122,7 @@ var Scenarios = []Scenario{
 		// allowed-booker lists, making it one of the most expensive
 		// endpoints at scale (see space-router.go _getAvailability).
 		ID: "space.availability",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
 			if len(a.LocationIDs) == 0 {
 				return nil, fmt.Errorf("actor for org %d has no seeded locations", a.OrgIndex)
 			}
@@ -133,47 +133,47 @@ var Scenarios = []Scenario{
 			q := url.Values{}
 			q.Set("enter", enter.Format(time.RFC3339Nano))
 			q.Set("leave", leave.Format(time.RFC3339Nano))
-			return newGet(baseURL, "/location/"+locID+"/space/availability?"+q.Encode(), a.JWT)
+			return newGet(baseURL, "/location/"+locID+"/space/availability?"+q.Encode(), a.Token())
 		},
 	},
 	{
 		ID: "booking.filter",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
 			start, end := randomWeekWindow(rnd)
 			q := url.Values{}
 			q.Set("start", start.Format(time.RFC3339Nano))
 			q.Set("end", end.Format(time.RFC3339Nano))
-			return newGet(baseURL, "/booking/filter/?"+q.Encode(), a.JWT)
+			return newGet(baseURL, "/booking/filter/?"+q.Encode(), a.Token())
 		},
 	},
 	{
 		ID: "booking.current",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/booking/current/", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/booking/current/", a.Token())
 		},
 	},
 	{
 		ID: "booking.pendingApprovals",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/booking/pendingapprovals/", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/booking/pendingapprovals/", a.Token())
 		},
 	},
 	{
 		ID: "stats.summary",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/stats/", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/stats/", a.Token())
 		},
 	},
 	{
 		ID: "stats.load",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/stats/load", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/stats/load", a.Token())
 		},
 	},
 	{
 		ID: "stats.weekday",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/stats/weekday", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/stats/weekday", a.Token())
 		},
 	},
 	{
@@ -183,14 +183,14 @@ var Scenarios = []Scenario{
 		// matches the email prefix of every seeded regular user, so this
 		// exercises the worst-case (near-full-table) match set.
 		ID: "search.users",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/search/?includeUsers=1&query=user", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/search/?includeUsers=1&query=user", a.Token())
 		},
 	},
 	{
 		ID: "user.me",
-		Request: func(baseURL string, a Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/user/me", a.JWT)
+		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
+			return newGet(baseURL, "/user/me", a.Token())
 		},
 	},
 }
