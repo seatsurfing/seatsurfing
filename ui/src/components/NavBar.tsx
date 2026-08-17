@@ -247,11 +247,7 @@ class NavBar extends React.Component<Props, State> {
               )}
             </span>
           </Nav.Link>
-          <ThemeSelector
-            inNavbar={true}
-            compactBreakpoint="lg"
-            align="end"
-          />
+          <ThemeSelector inNavbar={true} compactBreakpoint="lg" align="end" />
           <LanguageSelector
             inNavbar={true}
             compactBreakpoint="lg"
