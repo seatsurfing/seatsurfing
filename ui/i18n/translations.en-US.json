@@ -559,5 +559,8 @@
   "successful": "Successful",
   "timestamp": "Timestamp",
   "unknown": "Unknown",
-  "userId": "User ID"
+  "userId": "User ID",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System"
 }

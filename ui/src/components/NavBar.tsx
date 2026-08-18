@@ -28,6 +28,7 @@ import MergeRequest from "@/types/MergeRequest";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import LanguageSelector from "./LanguageSelector";
+import ThemeSelector from "./ThemeSelector";
 import RendererUtils from "@/util/RendererUtils";
 
 interface State {
@@ -246,7 +247,12 @@ class NavBar extends React.Component<Props, State> {
               )}
             </span>
           </Nav.Link>
-          <LanguageSelector inNavbar={true} align="end" />
+          <ThemeSelector inNavbar={true} compactBreakpoint="lg" align="end" />
+          <LanguageSelector
+            inNavbar={true}
+            compactBreakpoint="lg"
+            align="end"
+          />
           {signOffButton}
         </Nav>
       </>
@@ -262,18 +268,22 @@ class NavBar extends React.Component<Props, State> {
     }
 
     const logoUrl = RuntimeConfig.INFOS.customLogoUrl || "/ui/seatsurfing.svg";
+    const isDefaultLogo = !RuntimeConfig.INFOS.customLogoUrl;
 
     return (
       <>
         <Navbar
-          bg="light"
-          variant="light"
+          bg="body-tertiary"
           fixed="top"
           expand={RuntimeConfig.EMBEDDED ? true : "lg"}
         >
           <Container fluid={true}>
             <Navbar.Brand as={NavLink} to="/search">
-              <img src={logoUrl} alt="Seatsurfing" />
+              <img
+                src={logoUrl}
+                alt="Seatsurfing"
+                className={isDefaultLogo ? "default-logo" : undefined}
+              />
             </Navbar.Brand>
             {collapsable}
           </Container>

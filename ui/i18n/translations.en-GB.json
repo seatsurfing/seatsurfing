@@ -557,5 +557,8 @@
   "autherror_user_create_failed": "Creating user failed",
   "autherror_org_mismatch": "Organization mismatch",
   "autherror_internal_error": "Internal server error",
-  "autherror_confluence_jwt_invalid": "Confluence JWT verification failed"
+  "autherror_confluence_jwt_invalid": "Confluence JWT verification failed",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System"
 }

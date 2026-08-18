@@ -253,7 +253,7 @@ class Bookings extends React.Component<Props, State> {
                     <div className="me-2">
                       <CalendarIcon
                         title={this.props.t("map")}
-                        color={"#555"}
+                        color={"var(--bs-secondary-color)"}
                         height="20px"
                         width="20px"
                       />

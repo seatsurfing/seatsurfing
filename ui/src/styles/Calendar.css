@@ -26,3 +26,26 @@
   border-right: 2px solid var(--bs-primary);
   border-bottom: 2px solid var(--bs-primary);
 }
+
+/* react-big-calendar ships light-mode-only colors (#ddd grid lines,
+   a light-blue today highlight), so mirror them with theme-aware
+   colors when dark mode is active. Only week/day view classes are
+   covered here, as those are the only views used in this app. */
+[data-bs-theme="dark"] .rbc-today {
+  background-color: var(--bs-primary-bg-subtle);
+}
+[data-bs-theme="dark"] .rbc-time-view,
+[data-bs-theme="dark"] .rbc-header,
+[data-bs-theme="dark"] .rbc-header + .rbc-header,
+[data-bs-theme="dark"] .rbc-day-bg + .rbc-day-bg,
+[data-bs-theme="dark"] .rbc-timeslot-group,
+[data-bs-theme="dark"] .rbc-time-header.rbc-overflowing,
+[data-bs-theme="dark"] .rbc-time-header > .rbc-row:first-child,
+[data-bs-theme="dark"] .rbc-time-header-content,
+[data-bs-theme="dark"] .rbc-time-content,
+[data-bs-theme="dark"] .rbc-time-content > * + * > * {
+  border-color: var(--bs-border-color);
+}
+[data-bs-theme="dark"] .rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid var(--bs-border-color-translucent);
+}

@@ -3,11 +3,13 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Dropdown, DropdownButton, NavDropdown } from "react-bootstrap";
 import RuntimeConfig from "./RuntimeConfig";
 import { LanguageSwitcher } from "next-export-i18n";
+import { Breakpoint } from "@/types/Layout";
 
 interface State {}
 
 interface Props {
   inNavbar?: boolean;
+  compactBreakpoint?: Breakpoint;
   drop?: "up" | "down" | "start" | "end";
   align?: "start" | "end";
   t: TranslationFunc;
@@ -30,7 +32,22 @@ class LanguageSelector extends React.Component<Props, State> {
       </svg>
     );
 
-    const title = (
+    const labelClass = this.props.compactBreakpoint
+      ? this.props.inNavbar
+        ? `d-${this.props.compactBreakpoint}-none`
+        : `d-none d-${this.props.compactBreakpoint}-inline`
+      : undefined;
+
+    const title = this.props.compactBreakpoint ? (
+      <>
+        {icon}
+        <span className={labelClass}>
+          {" "}
+          {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
+            RuntimeConfig.getLanguage()}
+        </span>
+      </>
+    ) : (
       <>
         {icon}
         {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??

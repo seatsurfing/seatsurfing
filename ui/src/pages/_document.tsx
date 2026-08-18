@@ -46,6 +46,13 @@ class Doc extends Document<Props> {
         <Head nonce={nonce}>
           <meta name="robots" content="noindex" />
           <meta httpEquiv="Content-Security-Policy" content={cspString} />
+          {/* Sets data-bs-theme before first paint to avoid a light/dark flash; admin pages manage theme separately */}
+          <script
+            nonce={nonce}
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{if(/\\/admin(\\/|$)/.test(window.location.pathname))return;var m=window.localStorage.getItem("theme")||"auto";var d=m==="dark"||(m==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-bs-theme",d?"dark":"light");}catch(e){}})();`,
+            }}
+          />
         </Head>
         <body>
           <Main />

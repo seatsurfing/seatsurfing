@@ -132,11 +132,6 @@ class Buddies extends React.Component<Props, State> {
                 this.addBuddy();
               }
             }}
-            style={{
-              backgroundColor: "#007bff",
-              borderColor: "#007bff",
-              color: "white",
-            }}
             disabled={!isValidEmail}
           >
             {this.props.t("addBuddy")}

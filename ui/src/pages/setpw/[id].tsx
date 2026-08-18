@@ -4,6 +4,7 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import SeatsurfingLogo from "@/components/SeatsurfingLogo";
 import Ajax from "@/util/Ajax";
 import Validation from "@/util/Validation";
 
@@ -85,7 +86,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
       return (
         <div className="container-center">
           <div className="container-center-inner">
-            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <SeatsurfingLogo />
             <p>{this.props.t("loading")}</p>
           </div>
         </div>
@@ -97,7 +98,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
       return (
         <div className="container-center">
           <div className="container-center-inner">
-            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <SeatsurfingLogo />
             <p>{this.props.t("inviteLinkExpired")}</p>
             <p>
               <Link href="/login" className="btn btn-primary">
@@ -113,7 +114,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
       return (
         <div className="container-center">
           <div className="container-center-inner">
-            <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+            <SeatsurfingLogo />
             <p>{this.props.t("passwordChanged")}</p>
             <p>
               <Link href="/login" className="btn btn-primary">
@@ -131,7 +132,7 @@ class CompleteUserInvitation extends React.Component<Props, State> {
           className="container-center-inner"
           onSubmit={this.onPasswordSubmit}
         >
-          <img src="/ui/seatsurfing.svg" alt="Seatsurfing" className="logo" />
+          <SeatsurfingLogo />
           <p>{this.props.t("welcomeSetPassword")}</p>
           <Form.Group>
             <Form.Control

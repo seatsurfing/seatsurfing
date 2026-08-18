@@ -12,6 +12,10 @@
   height: 2rem;
 }
 
+[data-bs-theme="dark"] .navbar-brand > img.default-logo {
+  filter: invert(1);
+}
+
 .navbar-nav .nav-link.active {
   color: var(--bs-primary) !important;
 }

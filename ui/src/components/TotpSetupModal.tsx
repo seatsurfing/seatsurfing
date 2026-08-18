@@ -130,8 +130,8 @@ class TotpSetupModal extends React.Component<Props, State> {
                       userSelect: "all",
                       display: "block",
                       padding: "8px",
-                      backgroundColor: "#f8f9fa",
-                      border: "1px solid #dee2e6",
+                      backgroundColor: "var(--bs-tertiary-bg)",
+                      border: "1px solid var(--bs-border-color)",
                       borderRadius: "4px",
                     }}
                   >

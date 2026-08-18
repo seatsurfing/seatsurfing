@@ -26,14 +26,14 @@ const IconButton: React.FC<Props> = ({
       }`}
       style={{
         padding: "4px 8px",
-        borderColor: hovered ? "#6c757d" : "#CED4DA",
+        borderColor: hovered ? "#6c757d" : "var(--bs-border-color)",
         backgroundColor: disabled
           ? "var(--bs-secondary-bg)"
           : active
             ? undefined
             : hovered
               ? "#6c757d"
-              : "#fff",
+              : "var(--bs-body-bg)",
         opacity: disabled ? 1 : undefined,
       }}
       disabled={disabled}
@@ -44,7 +44,15 @@ const IconButton: React.FC<Props> = ({
     >
       <Icon
         title={title}
-        color={disabled ? "#555" : active ? "#fff" : hovered ? "#fff" : "#555"}
+        color={
+          disabled
+            ? "var(--bs-body-color)"
+            : active
+              ? "#fff"
+              : hovered
+                ? "#fff"
+                : "var(--bs-body-color)"
+        }
         height="20px"
         width="20px"
       />

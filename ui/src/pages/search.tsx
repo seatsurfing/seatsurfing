@@ -1924,11 +1924,16 @@ class Search extends React.Component<Props, State> {
         </div>
       );
     } else {
-      const floorPlanStyle = {
+      const floorPlanStyle: React.CSSProperties = {
+        position: "relative",
         width:
           (this.mapData ? this.mapData.width * this.mapData.scale : 0) + "px",
         height:
           (this.mapData ? this.mapData.height * this.mapData.scale : 0) + "px",
+      };
+      const floorPlanImageStyle: React.CSSProperties = {
+        position: "absolute",
+        inset: 0,
         backgroundSize: "contain",
         backgroundImage: this.mapData
           ? "url(data:image/" +
@@ -1957,57 +1962,63 @@ class Search extends React.Component<Props, State> {
               <>
                 {window.innerWidth >= 768 && (
                   <div
+                    className="bg-body border rounded overflow-hidden"
                     style={{
                       position: "absolute",
                       top: 70,
                       right: 10,
                       zIndex: 10,
-                      border: "1px solid #ccc",
-                      background: "#fff",
-                      borderRadius: "5px",
-                      overflow: "hidden",
                     }}
                   >
                     <MiniMap>
-                      <div style={floorPlanStyle}></div>
+                      <div style={floorPlanStyle}>
+                        <div
+                          className="floor-plan-bg"
+                          style={floorPlanImageStyle}
+                        ></div>
+                      </div>
                     </MiniMap>
                   </div>
                 )}
                 <div
+                  className="bg-body border rounded"
                   style={{
                     position: "absolute",
                     top: 70,
                     left: 10,
                     zIndex: 10,
-                    border: "1px solid #ccc",
-                    background: "#fff",
-                    borderRadius: "5px",
                   }}
                 >
                   <button
                     onClick={() => zoomIn()}
                     aria-label="Zoom in"
-                    className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
+                    className="btn btn-outline-secondary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <AddIcon />
                   </button>
                   <button
                     onClick={() => zoomOut()}
                     aria-label="Zoom out"
-                    className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
+                    className="btn btn-outline-secondary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <RemoveIcon />
                   </button>
                   <button
                     onClick={() => this.centerMap()}
                     aria-label="Reset zoom"
-                    className="btn btn-outline-primary btn-sm m-1 d-flex align-items-center justify-content-center"
+                    className="btn btn-outline-secondary btn-sm m-1 d-flex align-items-center justify-content-center"
                   >
                     <ScanIcon />
                   </button>
                 </div>
                 <TransformComponent contentClass="border border-3">
-                  <div style={floorPlanStyle}>{spaces}</div>
+                  <div style={floorPlanStyle}>
+                    <div
+                      className="floor-plan-bg"
+                      style={floorPlanImageStyle}
+                    ></div>
+                    {spaces}
+                  </div>
                   <Tooltip
                     id="space-tooltip"
                     float={true}
@@ -2039,13 +2050,13 @@ class Search extends React.Component<Props, State> {
             onClick={() => this.toggleSearchContainer()}
           >
             <CollapseIcon2
-              color={"#000"}
+              color={"var(--bs-body-color)"}
               height="20px"
               width="20px"
               className="collapse-icon"
             />
             <CollapseIcon
-              color={"#555"}
+              color={"var(--bs-secondary-color)"}
               height="20px"
               width="20px"
               className="expand-icon"
@@ -2058,7 +2069,7 @@ class Search extends React.Component<Props, State> {
                 <div className="pt-1 me-2">
                   <LocationIcon
                     title={this.props.t("area")}
-                    color={"#555"}
+                    color={"var(--bs-secondary-color)"}
                     height="20px"
                     width="20px"
                   />
@@ -2114,7 +2125,7 @@ class Search extends React.Component<Props, State> {
                 <div className="me-2">
                   <WeekIcon
                     title={this.props.t("date")}
-                    color={"#555"}
+                    color={"var(--bs-secondary-color)"}
                     height="20px"
                     width="20px"
                   />
@@ -2189,7 +2200,7 @@ class Search extends React.Component<Props, State> {
                   <div className="me-2">
                     <TimeIcon
                       title={this.props.t("time")}
-                      color={"#555"}
+                      color={"var(--bs-secondary-color)"}
                       height="20px"
                       width="20px"
                     />
@@ -2230,7 +2241,7 @@ class Search extends React.Component<Props, State> {
                 <div className="me-2">
                   <MapIcon
                     title={this.props.t("map")}
-                    color={"#555"}
+                    color={"var(--bs-secondary-color)"}
                     height="20px"
                     width="20px"
                   />
@@ -2257,7 +2268,7 @@ class Search extends React.Component<Props, State> {
                     <div className="me-2 ms-3">
                       <NamesIcon
                         title={this.props.t("names")}
-                        color={"#555"}
+                        color={"var(--bs-secondary-color)"}
                         height="20px"
                         width="20px"
                       />
