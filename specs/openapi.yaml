@@ -908,6 +908,21 @@ components:
           type: boolean
         organization:
           $ref: "#/components/schemas/GetOrganizationResponse"
+        lastActivity:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the user's last activity
+
+    GetUserSelfResponse:
+      description: User details returned for the authenticated user's own account.
+      allOf:
+        - $ref: "#/components/schemas/GetUserResponse"
+        - type: object
+          properties:
+            isPrimaryDomain:
+              type: boolean
+              description: Whether the request's host matches the organization's primary domain
 
     SetPasswordRequest:
       type: object
@@ -3753,7 +3768,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetUserResponse"
+                $ref: "#/components/schemas/GetUserSelfResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 
