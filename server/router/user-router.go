@@ -85,9 +85,13 @@ type GetUserResponse struct {
 	SuperAdmin      bool                    `json:"superAdmin"`
 	TotpEnabled     bool                    `json:"totpEnabled"`
 	HasPasskeys     bool                    `json:"hasPasskeys"`
-	IsPrimaryDomain bool                    `json:"isPrimaryDomain"`
 	LastActivity    *time.Time              `json:"lastActivity"`
 	CreateUserRequest
+}
+
+type GetUserSelfResponse struct {
+	IsPrimaryDomain bool `json:"isPrimaryDomain"`
+	GetUserResponse
 }
 
 type GetUserInfoSmall struct {
@@ -542,7 +546,9 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, false, passkeyCount > 0)
+	res := &GetUserSelfResponse{
+		GetUserResponse: *router.copyToRestModel(e, false, passkeyCount > 0),
+	}
 	res.Organization = GetOrganizationResponse{
 		ID: org.ID,
 		CreateOrganizationRequest: CreateOrganizationRequest{

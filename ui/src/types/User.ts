@@ -35,7 +35,6 @@ export default class User extends Entity {
   firstBooking: BuddyBooking | null;
   totpEnabled: boolean;
   hasPasskeys: boolean;
-  isPrimaryDomain: boolean;
   lastActivity: Date | null;
 
   constructor() {
@@ -59,7 +58,6 @@ export default class User extends Entity {
     this.firstBooking = null;
     this.totpEnabled = false;
     this.hasPasskeys = false;
-    this.isPrimaryDomain = false;
     this.lastActivity = null;
   }
 
@@ -103,7 +101,6 @@ export default class User extends Entity {
     this.superAdmin = input.superAdmin;
     this.totpEnabled = input.totpEnabled;
     this.hasPasskeys = input.hasPasskeys ?? false;
-    this.isPrimaryDomain = input.isPrimaryDomain ?? false;
     this.lastActivity = input.lastActivity
       ? new Date(input.lastActivity)
       : null;
@@ -161,9 +158,9 @@ export default class User extends Entity {
     });
   }
 
-  static async getSelf(): Promise<User> {
+  static async getSelf(): Promise<UserSelf> {
     return Ajax.get("/user/me").then((result) => {
-      let e: User = new User();
+      let e: UserSelf = new UserSelf();
       e.deserialize(result.json);
       return e;
     });
@@ -251,6 +248,20 @@ export default class User extends Entity {
 
   static async revokeApiToken(userId: string): Promise<void> {
     return Ajax.delete("/user/" + userId + "/api-token").then(() => undefined);
+  }
+}
+
+export class UserSelf extends User {
+  isPrimaryDomain: boolean;
+
+  constructor() {
+    super();
+    this.isPrimaryDomain = false;
+  }
+
+  deserialize(input: any): void {
+    super.deserialize(input);
+    this.isPrimaryDomain = input.isPrimaryDomain ?? false;
   }
 }
 
