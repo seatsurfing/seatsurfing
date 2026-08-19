@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.123.0](https://github.com/seatsurfing/seatsurfing/compare/v1.122.2...v1.123.0) (2026-08-19)
+
+
+### ✨ Features
+
+* **booking-ui:** add theme support ([#2530](https://github.com/seatsurfing/seatsurfing/issues/2530)) ([56b64ee](https://github.com/seatsurfing/seatsurfing/commit/56b64ee14a424ca59fd2e576770ec892b15c4efa))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump golang.org/x/crypto from 0.54.0 to 0.55.0 in /server in the minor-and-patch group ([#2536](https://github.com/seatsurfing/seatsurfing/issues/2536)) ([e652825](https://github.com/seatsurfing/seatsurfing/commit/e65282543d8becc7cbeae09374d520e053718070))
+* **deps:** bump google.golang.org/protobuf from 1.36.11 to 1.36.12 in /server in the minor-and-patch group ([#2534](https://github.com/seatsurfing/seatsurfing/issues/2534)) ([d2dd004](https://github.com/seatsurfing/seatsurfing/commit/d2dd00498afdefb1876e8a5f9c1a721ea49d1ffe))
+* **server:** remove IsPrimaryDomain property from generic user DTO ([#2532](https://github.com/seatsurfing/seatsurfing/issues/2532)) ([e392523](https://github.com/seatsurfing/seatsurfing/commit/e3925231760bc094174c6cefe738b4f04bbddc8c))
+
 ## [1.122.2](https://github.com/seatsurfing/seatsurfing/compare/v1.122.1...v1.122.2) (2026-08-16)
 
 
