@@ -7,9 +7,8 @@ import {
   Button,
   Alert,
   InputGroup,
-  Popover,
-  OverlayTrigger,
   Badge,
+  Dropdown,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
@@ -17,6 +16,7 @@ import {
   AlertTriangle as IconAlert,
   Check as IconCheck,
   RefreshCw as IconRefresh,
+  MoreVertical as IconMore,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -86,6 +86,7 @@ interface State {
   hideStats: boolean;
   installId: string;
   removeDomainName: string | null;
+  verifyDomainName: string | null;
   deleteOrgConfirmStep: 0 | 1 | 2;
   alertMessage: string | null;
 }
@@ -150,6 +151,7 @@ class Settings extends React.Component<Props, State> {
       hideStats: false,
       installId: "",
       removeDomainName: null,
+      verifyDomainName: null,
       deleteOrgConfirmStep: 0,
       alertMessage: null,
     };
@@ -480,46 +482,39 @@ class Settings extends React.Component<Props, State> {
     );
   };
 
-  verifyDomain = (domainName: string) => {
-    document.body.click();
-    this.state.domains.forEach((domain) => {
-      if (domain.domain === domainName) {
-        domain
-          .verify()
-          .then(() => {
-            Domain.list(domain.organizationId).then((domains) =>
-              this.setState({ domains: domains }),
-            );
-          })
-          .catch((e) => {
-            this.setState({
-              alertMessage: this.props.t("errorValidateDomain", {
-                domain: domainName,
-              }),
-            });
-          });
-      }
-    });
+  verifyDomain = async (domainName: string) => {
+    const domain = this.state.domains.find((d) => d.domain === domainName);
+    if (!domain) {
+      return;
+    }
+    try {
+      await domain.verify();
+      const domains = await Domain.list(domain.organizationId);
+      this.setState({ domains: domains });
+    } catch (e) {
+      this.setState({
+        alertMessage: this.props.t("errorValidateDomain", {
+          domain: domainName,
+        }),
+      });
+    }
   };
 
   isValidDomain = () => {
     return Validation.isValidDomain(this.state.newDomain);
   };
 
-  addDomain = () => {
+  addDomain = async () => {
     if (!this.isValidDomain() || !this.org) {
       return;
     }
-    Domain.add(this.org.id, this.state.newDomain)
-      .then(() => {
-        Domain.list(this.org ? this.org.id : "").then((domains) =>
-          this.setState({ domains: domains }),
-        );
-        this.setState({ newDomain: "" });
-      })
-      .catch(() => {
-        this.setState({ alertMessage: this.props.t("errorAddDomain") });
-      });
+    try {
+      await Domain.add(this.org.id, this.state.newDomain);
+      const domains = await Domain.list(this.org.id);
+      this.setState({ domains: domains, newDomain: "" });
+    } catch (e) {
+      this.setState({ alertMessage: this.props.t("errorAddDomain") });
+    }
   };
 
   setPrimaryDomain = (domainName: string) => {
@@ -552,6 +547,15 @@ class Settings extends React.Component<Props, State> {
     } catch {
       this.setState({ alertMessage: this.props.t("errorDeleteDomain") });
     }
+  };
+
+  confirmVerifyDomain = async () => {
+    const domainName = this.state.verifyDomainName;
+    this.setState({ verifyDomainName: null });
+    if (!domainName) {
+      return;
+    }
+    await this.verifyDomain(domainName);
   };
 
   handleNewDomainKeyDown = (target: any) => {
@@ -612,43 +616,16 @@ class Settings extends React.Component<Props, State> {
 
     let domains = this.state.domains.map((domain) => {
       let verify = <></>;
-      let popoverId = "popover-domain-" + domain.domain;
-      const popover = (
-        <Popover id={popoverId}>
-          <Popover.Header as="h3">
-            {this.props.t("verifyDomain")}
-          </Popover.Header>
-          <Popover.Body>
-            <div>
-              {this.props.t("verifyDomainHowto", { domain: domain.domain })}
-            </div>
-            <div>&nbsp;</div>
-            <div>
-              <strong>seatsurfing-verification={domain.verifyToken}</strong>
-            </div>
-            <div>&nbsp;</div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => this.verifyDomain(domain.domain)}
-            >
-              {this.props.t("verifyNow")}
-            </Button>
-          </Popover.Body>
-        </Popover>
-      );
       if (!domain.active) {
         verify = (
-          <OverlayTrigger
-            trigger="click"
-            placement="auto"
-            overlay={popover}
-            rootClose={false}
+          <Button
+            variant="primary"
+            size="sm"
+            className="domain-action-btn"
+            onClick={() => this.setState({ verifyDomainName: domain.domain })}
           >
-            <Button variant="primary" size="sm">
-              {this.props.t("verify")}
-            </Button>
-          </OverlayTrigger>
+            {this.props.t("verify")}
+          </Button>
         );
       }
       let accessibleCheckmark = (
@@ -658,36 +635,77 @@ class Settings extends React.Component<Props, State> {
         accessibleCheckmark = <IconCheck className="feather" color="green" />;
       }
       let key = "domain-" + domain.domain;
+      const canMakePrimary = !domain.primary;
+      const canRemove = !domain.domain.endsWith(".seatsurfing.app");
       return (
-        <Form.Group key={key} className="domain-row">
-          {domain.domain}
-          &nbsp;
-          {accessibleCheckmark}
-          &nbsp;
-          <Badge hidden={!domain.primary}>Primary</Badge>
-          &nbsp;
-          <Button
-            variant="secondary"
-            size="sm"
-            hidden={domain.primary}
-            disabled={!domain.active}
-            onClick={() => this.setPrimaryDomain(domain.domain)}
-          >
-            Primary
-          </Button>
-          &nbsp;
-          <Button
-            variant="danger"
-            size="sm"
-            hidden={domain.domain.endsWith(".seatsurfing.app")}
-            disabled={this.state.domains.length <= 1}
-            onClick={() => this.removeDomain(domain.domain)}
-          >
-            {this.props.t("remove")}
-          </Button>
-          &nbsp;
-          {verify}
-        </Form.Group>
+        <tr key={key}>
+          <td className="align-middle domain-name-cell">
+            {domain.domain}
+            &nbsp;
+            {accessibleCheckmark}
+            {domain.primary && (
+              <>
+                &nbsp;
+                <Badge bg="success">{this.props.t("primary")}</Badge>
+              </>
+            )}
+          </td>
+          <td className="align-middle">{verify}</td>
+          <td className="align-middle text-end">
+            {(canMakePrimary || canRemove) && (
+              <Dropdown align="end">
+                <Dropdown.Toggle
+                  variant="outline-secondary"
+                  size="sm"
+                  className="domain-actions-toggle domain-action-btn"
+                >
+                  <IconMore className="feather" />
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {canMakePrimary && (
+                    <span
+                      className="d-block"
+                      title={
+                        !domain.active
+                          ? this.props.t("makePrimaryVerifyTooltip")
+                          : undefined
+                      }
+                    >
+                      <Dropdown.Item
+                        disabled={!domain.active}
+                        onClick={() => this.setPrimaryDomain(domain.domain)}
+                      >
+                        {this.props.t("makePrimary")}
+                      </Dropdown.Item>
+                    </span>
+                  )}
+                  {canRemove && (
+                    <span
+                      className="d-block"
+                      title={
+                        this.state.domains.length <= 1
+                          ? this.props.t("removeDomainLastTooltip")
+                          : undefined
+                      }
+                    >
+                      <Dropdown.Item
+                        className={
+                          this.state.domains.length <= 1
+                            ? undefined
+                            : "text-danger"
+                        }
+                        disabled={this.state.domains.length <= 1}
+                        onClick={() => this.removeDomain(domain.domain)}
+                      >
+                        {this.props.t("remove")}
+                      </Dropdown.Item>
+                    </span>
+                  )}
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
+          </td>
+        </tr>
       );
     });
     let authProviderRows = this.authProviders.map((item) =>
@@ -962,7 +980,9 @@ class Settings extends React.Component<Props, State> {
               <PremiumFeatureIcon />
             </Form.Label>
             <Col sm="4">
-              {domains}
+              <Table borderless size="sm" className="domain-table mb-2">
+                <tbody>{domains}</tbody>
+              </Table>
               <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
                 <Form.Control
                   id="input-newDomain"
@@ -1488,6 +1508,30 @@ class Settings extends React.Component<Props, State> {
           })}
           onCancel={() => this.setState({ removeDomainName: null })}
           onConfirm={this.confirmRemoveDomain}
+        />
+        <ConfirmModal
+          show={this.state.verifyDomainName !== null}
+          title={this.props.t("verifyDomain")}
+          message={
+            <>
+              <p>
+                {this.props.t("verifyDomainHowto", {
+                  domain: this.state.verifyDomainName || "",
+                })}
+              </p>
+              <p>
+                <strong>
+                  seatsurfing-verification=
+                  {this.state.domains.find(
+                    (d) => d.domain === this.state.verifyDomainName,
+                  )?.verifyToken || ""}
+                </strong>
+              </p>
+            </>
+          }
+          confirmLabel={this.props.t("verifyNow")}
+          onCancel={() => this.setState({ verifyDomainName: null })}
+          onConfirm={this.confirmVerifyDomain}
         />
         <ConfirmModal
           show={this.state.deleteOrgConfirmStep === 1}

@@ -563,5 +563,9 @@
   "userId": "Benutzer ID",
   "themeLight": "Hell",
   "themeDark": "Dunkel",
-  "themeSystem": "System"
+  "themeSystem": "System",
+  "primary": "Primär",
+  "makePrimary": "Als primär festlegen",
+  "makePrimaryVerifyTooltip": "Die Domain muss zuerst verifiziert werden, bevor sie als primär festgelegt werden kann.",
+  "removeDomainLastTooltip": "Die letzte Domain kann nicht entfernt werden."
 }

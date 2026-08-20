@@ -562,5 +562,9 @@
   "userId": "User ID",
   "themeDark": "Dark",
   "themeLight": "Light",
-  "themeSystem": "System"
+  "themeSystem": "System",
+  "primary": "Primary",
+  "makePrimary": "Make primary",
+  "makePrimaryVerifyTooltip": "The domain must be verified before it can be made primary.",
+  "removeDomainLastTooltip": "The last domain cannot be removed."
 }
