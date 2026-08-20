@@ -6,7 +6,7 @@ interface Props {
   t: TranslationFunc;
   show: boolean;
   title?: string;
-  message: string;
+  message: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   confirmVariant?: string;

@@ -120,6 +120,7 @@
   "disconnect": "Disconnect",
   "domain": "Domain",
   "domains": "Domains",
+  "removeDomainLastTooltip": "The last domain cannot be removed.",
   "download": "Download",
   "duplicate": "Duplicate",
   "earliestPossible": "Earliest possible",
@@ -560,5 +561,8 @@
   "autherror_confluence_jwt_invalid": "Confluence JWT verification failed",
   "themeLight": "Light",
   "themeDark": "Dark",
-  "themeSystem": "System"
+  "themeSystem": "System",
+  "primary": "Primary",
+  "makePrimary": "Make primary",
+  "makePrimaryVerifyTooltip": "The domain must be verified before it can be made primary."
 }
