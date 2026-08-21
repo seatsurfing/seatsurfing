@@ -58,6 +58,18 @@ func (r *BuddyRepository) Create(e *Buddy) error {
 	return nil
 }
 
+func (r *BuddyRepository) GetByOwnerAndBuddy(ownerID, buddyID string) (*Buddy, error) {
+	e := &Buddy{}
+	err := GetDatabase().DB().QueryRow("SELECT id, owner_id, buddy_id "+
+		"FROM buddies "+
+		"WHERE owner_id = $1 AND buddy_id = $2",
+		ownerID, buddyID).Scan(&e.ID, &e.OwnerID, &e.BuddyID)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 func (r *BuddyRepository) GetOne(id string) (*BuddyDetails, error) {
 	e := &BuddyDetails{}
 	err := GetDatabase().DB().QueryRow("SELECT buddies.id, buddies.owner_id, buddies.buddy_id, "+

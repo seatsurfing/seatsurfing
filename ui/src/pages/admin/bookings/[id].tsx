@@ -5,7 +5,6 @@ import {
   Save as IconSave,
   Trash2 as IconDelete,
 } from "react-feather";
-import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
@@ -23,8 +22,7 @@ import FullLayout from "@/components/FullLayout";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import RendererUtils from "@/util/RendererUtils";
-import ProfilePicture from "@/components/ProfilePicture";
-import Search, { SearchOptions } from "@/types/Search";
+import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -60,8 +58,6 @@ interface State {
   prefLocationId: string;
   selfEmail: string;
   subject: string;
-  typeaheadOptions: any[];
-  typeaheadLoading: boolean;
   typeaheadSelected: [{ email: string }];
   showDeleteConfirm: boolean;
 }
@@ -84,7 +80,6 @@ class EditBooking extends React.Component<Props, State> {
   enterChangeTimer: number | undefined;
   leaveChangeTimer: number | undefined;
   curBookingCount: number = 0;
-  typeahead: any = null;
 
   constructor(props: any) {
     super(props);
@@ -128,8 +123,6 @@ class EditBooking extends React.Component<Props, State> {
       prefLocationId: "",
       selfEmail: "",
       subject: "",
-      typeaheadOptions: [],
-      typeaheadLoading: false,
       typeaheadSelected: [{ email: "" }],
       showDeleteConfirm: false,
     };
@@ -640,26 +633,9 @@ class EditBooking extends React.Component<Props, State> {
     return undefined;
   };
 
-  filterSearch = () => {
-    return true;
-  };
-
   onSearchSelected = (selected: any) => {
     this.setState({
       selectedUserEmail: selected[0]?.email,
-    });
-  };
-
-  handleSearch = (query: string) => {
-    this.setState({ typeaheadLoading: true });
-    const options = new SearchOptions();
-    options.includeUsers = true;
-    options.keyword = query ? query : "";
-    Search.search(options).then((res) => {
-      this.setState({
-        typeaheadOptions: res.users,
-        typeaheadLoading: false,
-      });
     });
   };
 
@@ -781,39 +757,17 @@ class EditBooking extends React.Component<Props, State> {
     let userField = <></>;
     if (this.state.canEdit) {
       userField = (
-        <AsyncTypeahead
+        <UserSearchTypeahead
+          t={this.props.t}
           selected={this.state.typeaheadSelected}
-          filterBy={this.filterSearch}
-          isLoading={this.state.typeaheadLoading}
           inputProps={{ id: "booking-user" }}
-          labelKey="email"
           multiple={false}
-          minLength={3}
           onChange={(selected) => {
             this.setState({
               typeaheadSelected: selected as [{ email: string }],
             });
             this.onSearchSelected(selected);
           }}
-          onSearch={this.handleSearch}
-          options={this.state.typeaheadOptions}
-          placeholder={this.props.t("searchForUser")}
-          ref={(ref: any) => {
-            this.typeahead = ref;
-          }}
-          renderMenuItemChildren={(option: any) => (
-            <div className="d-flex">
-              <ProfilePicture width={24} height={24} />
-              <span style={{ marginLeft: "10px" }}>
-                {option.email}
-                {RendererUtils.preAndSuffixIfDefined(
-                  RendererUtils.fullname(option.firstname, option.lastname),
-                  " (",
-                  ")",
-                )}{" "}
-              </span>
-            </div>
-          )}
         />
       );
     } else {

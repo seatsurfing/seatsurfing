@@ -222,3 +222,8 @@ h2 {
   --bs-btn-disabled-color: var(--bs-secondary-color);
   --bs-btn-disabled-border-color: var(--bs-border-color);
 }
+
+/* autocomplete hint */
+[data-bs-theme="dark"] .rbt-input-hint {
+  color: var(--bs-secondary-color) !important;
+}

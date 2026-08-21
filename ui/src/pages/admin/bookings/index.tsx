@@ -1,4 +1,3 @@
-import ProfilePicture from "@/components/ProfilePicture";
 import React from "react";
 import { Table, Form, Col, Row, Button } from "react-bootstrap";
 import {
@@ -8,7 +7,6 @@ import {
   X as IconX,
   RefreshCw as IconRecurring,
 } from "react-feather";
-import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -24,7 +22,7 @@ import Organization from "@/types/Organization";
 import AjaxError from "@/util/AjaxError";
 
 import DateTimePicker from "@/components/DateTimePicker";
-import Search, { SearchOptions } from "@/types/Search";
+import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -37,8 +35,6 @@ interface State {
   end: Date;
   filterUser: string;
   filterOption: "enter_leave" | "current" | "today";
-  typeaheadOptions: any[];
-  typeaheadLoading: boolean;
   filterLocation: string;
   cancelBookingItem: Booking | null;
   alertMessage: string | null;
@@ -54,7 +50,6 @@ class Bookings extends React.Component<Props, State> {
   locations: Location[];
   ExcellentExport: any;
   maxHoursBeforeDelete: number = 0;
-  typeahead: any = null;
 
   constructor(props: any) {
     super(props);
@@ -96,8 +91,6 @@ class Bookings extends React.Component<Props, State> {
           : this.props.router.query["filter"] === "enter_leave"
             ? "enter_leave"
             : "current",
-      typeaheadOptions: [],
-      typeaheadLoading: false,
       filterLocation: this.props.router.query["location"] as string,
       cancelBookingItem: null,
       alertMessage: null,
@@ -283,26 +276,9 @@ class Bookings extends React.Component<Props, State> {
     );
   };
 
-  filterSearch = () => {
-    return true;
-  };
-
   onSearchSelected = (selected: any) => {
     this.setState({
       filterUser: selected[0]?.email,
-    });
-  };
-
-  handleSearch = (query: string) => {
-    this.setState({ typeaheadLoading: true });
-    const options = new SearchOptions();
-    options.includeUsers = true;
-    options.keyword = query ? query : "";
-    Search.search(options).then((res) => {
-      this.setState({
-        typeaheadOptions: res.users,
-        typeaheadLoading: false,
-      });
     });
   };
 
@@ -422,33 +398,11 @@ class Bookings extends React.Component<Props, State> {
             {this.props.t("user")}
           </Form.Label>
           <Col sm="4">
-            <AsyncTypeahead
+            <UserSearchTypeahead
+              t={this.props.t}
               defaultSelected={[{ email: this.state.filterUser ?? "" }]}
-              filterBy={this.filterSearch}
-              isLoading={this.state.typeaheadLoading}
-              labelKey="email"
               multiple={false}
-              minLength={3}
               onChange={this.onSearchSelected}
-              onSearch={this.handleSearch}
-              options={this.state.typeaheadOptions}
-              placeholder={this.props.t("searchForUser")}
-              ref={(ref: any) => {
-                this.typeahead = ref;
-              }}
-              renderMenuItemChildren={(option: any) => (
-                <div className="d-flex">
-                  <ProfilePicture width={24} height={24} />
-                  <span style={{ marginLeft: "10px" }}>
-                    {option.email}
-                    {RendererUtils.preAndSuffixIfDefined(
-                      RendererUtils.fullname(option.firstname, option.lastname),
-                      " (",
-                      ")",
-                    )}{" "}
-                  </span>
-                </div>
-              )}
             />
           </Col>
         </Form.Group>

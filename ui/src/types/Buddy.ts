@@ -2,6 +2,33 @@ import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import User from "./User";
 
+export class BuddySearchResult {
+  id: string;
+  email: string;
+  firstname: string;
+  lastname: string;
+
+  constructor() {
+    this.id = "";
+    this.email = "";
+    this.firstname = "";
+    this.lastname = "";
+  }
+
+  deserialize(input: any): void {
+    this.id = input.id;
+    this.email = input.email;
+    this.firstname = input.firstname;
+    this.lastname = input.lastname;
+  }
+
+  static from(input: any): BuddySearchResult {
+    const e = new BuddySearchResult();
+    e.deserialize(input);
+    return e;
+  }
+}
+
 export default class Buddy extends Entity {
   buddy: User;
 
@@ -35,7 +62,10 @@ export default class Buddy extends Entity {
   }
 
   async save(): Promise<Buddy> {
-    return Ajax.saveEntity(this, this.getBackendUrl()).then(() => this);
+    return Ajax.putData(this.getBackendUrl(), this.serialize()).then((result) => {
+      this.id = result.objectId;
+      return this;
+    });
   }
 
   async delete(): Promise<void> {
@@ -44,9 +74,9 @@ export default class Buddy extends Entity {
 
   static async list(): Promise<Buddy[]> {
     return Ajax.get("/buddy/").then((result) => {
-      let list: Buddy[] = [];
+      const list: Buddy[] = [];
       (result.json as []).forEach((item) => {
-        let e: Buddy = new Buddy();
+        const e: Buddy = new Buddy();
         e.deserialize(item);
         list.push(e);
       });
@@ -54,9 +84,15 @@ export default class Buddy extends Entity {
     });
   }
 
+  static async search(query: string): Promise<BuddySearchResult[]> {
+    return Ajax.get("/buddy/search?q=" + encodeURIComponent(query)).then(
+      (result) => (result.json as any[]).map(BuddySearchResult.from),
+    );
+  }
+
   static createFromRawArray(arr: any[]): Buddy[] {
     return arr.map((buddy) => {
-      let res = new Buddy();
+      const res = new Buddy();
       res.deserialize(buddy);
       return res;
     });

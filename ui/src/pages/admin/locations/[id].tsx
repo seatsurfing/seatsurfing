@@ -30,9 +30,7 @@ import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
-import { AsyncTypeahead } from "react-bootstrap-typeahead";
-import "react-bootstrap-typeahead/css/Typeahead.css";
-import ProfilePicture from "@/components/ProfilePicture";
+import GroupSearchTypeahead from "@/components/GroupSearchTypeahead";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import RuntimeConfig from "@/components/RuntimeConfig";
@@ -43,7 +41,6 @@ import Group from "@/types/Group";
 import Location from "@/types/Location";
 import Ajax from "@/util/Ajax";
 import Space from "@/types/Space";
-import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import RendererUtils from "@/util/RendererUtils";
@@ -428,12 +425,6 @@ interface State {
   deletedAttributeIds: string[];
   showEditSpaceDetailsModal: boolean;
   selectedSpaceMouseDownTimestamp: number;
-  typeaheadApproversOptions: GroupSearchResult[];
-  typeaheadApproversLoading: boolean;
-  typeaheadAllowBookersOptions: GroupSearchResult[];
-  typeaheadAllowBookersLoading: boolean;
-  typeaheadLocationAllowBookersOptions: GroupSearchResult[];
-  typeaheadLocationAllowBookersLoading: boolean;
   locationAllowBookers: any[] | undefined;
   showDesignerModal: boolean;
   gridEnabled: boolean;
@@ -453,9 +444,6 @@ class EditLocation extends React.Component<Props, State> {
   mapData: any = null;
   timezones: string[];
   ExcellentExport: any;
-  typeaheadApprovers: any = null;
-  typeaheadAllowBookers: any = null;
-  typeaheadLocationAllowBookers: any = null;
   editSpaceFormRef = React.createRef<HTMLFormElement>();
 
   constructor(props: any) {
@@ -490,12 +478,6 @@ class EditLocation extends React.Component<Props, State> {
       deletedAttributeIds: [],
       showEditSpaceDetailsModal: false,
       selectedSpaceMouseDownTimestamp: 0,
-      typeaheadApproversOptions: [],
-      typeaheadApproversLoading: false,
-      typeaheadAllowBookersOptions: [],
-      typeaheadAllowBookersLoading: false,
-      typeaheadLocationAllowBookersOptions: [],
-      typeaheadLocationAllowBookersLoading: false,
       locationAllowBookers: [],
       showDesignerModal: false,
       gridEnabled: false,
@@ -1234,23 +1216,6 @@ class EditLocation extends React.Component<Props, State> {
     );
   };
 
-  filterSearch = () => {
-    return true;
-  };
-
-  handleApproversSearch = (query: string) => {
-    this.setState({ typeaheadApproversLoading: true });
-    const options = new SearchOptions();
-    options.includeGroups = true;
-    options.keyword = query ? query : "";
-    Search.search(options).then((res) => {
-      this.setState({
-        typeaheadApproversOptions: res.groups,
-        typeaheadApproversLoading: false,
-      });
-    });
-  };
-
   onApproversSearchSelected = (selected: any) => {
     if (this.state.selectedSpace == null) {
       return;
@@ -1263,19 +1228,6 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ spaces: spaces, changed: true });
   };
 
-  handleAllowBookersSearch = (query: string) => {
-    this.setState({ typeaheadAllowBookersLoading: true });
-    const options = new SearchOptions();
-    options.includeGroups = true;
-    options.keyword = query ? query : "";
-    Search.search(options).then((res) => {
-      this.setState({
-        typeaheadAllowBookersOptions: res.groups,
-        typeaheadAllowBookersLoading: false,
-      });
-    });
-  };
-
   onAllowBookersSearchSelected = (selected: any) => {
     if (this.state.selectedSpace == null) {
       return;
@@ -1286,19 +1238,6 @@ class EditLocation extends React.Component<Props, State> {
     space.changed = true;
     spaces[this.state.selectedSpace] = space;
     this.setState({ spaces: spaces, changed: true });
-  };
-
-  handleLocationAllowBookersSearch = (query: string) => {
-    this.setState({ typeaheadLocationAllowBookersLoading: true });
-    let options = new SearchOptions();
-    options.includeGroups = true;
-    options.keyword = query ? query : "";
-    Search.search(options).then((res) => {
-      this.setState({
-        typeaheadLocationAllowBookersOptions: res.groups,
-        typeaheadLocationAllowBookersLoading: false,
-      });
-    });
   };
 
   onLocationAllowBookersSearchSelected = (selected: any) => {
@@ -1526,29 +1465,14 @@ class EditLocation extends React.Component<Props, State> {
                 {this.props.t("approvers")}
               </Form.Label>
               <Col sm="8">
-                <AsyncTypeahead
+                <GroupSearchTypeahead
+                  t={this.props.t}
                   disabled={!RuntimeConfig.INFOS.featureGroups}
-                  filterBy={this.filterSearch}
                   id="search-approvers"
                   inputProps={{ id: "search-approvers-input" }}
-                  isLoading={this.state.typeaheadApproversLoading}
-                  labelKey="name"
                   multiple={true}
-                  minLength={3}
                   onChange={this.onApproversSearchSelected}
-                  onSearch={this.handleApproversSearch}
                   defaultSelected={this.getSelectedSpace()?.approvers}
-                  options={this.state.typeaheadApproversOptions}
-                  placeholder={this.props.t("searchForGroup")}
-                  ref={(ref: any) => {
-                    this.typeaheadApprovers = ref;
-                  }}
-                  renderMenuItemChildren={(option: any) => (
-                    <div className="d-flex">
-                      <ProfilePicture width={24} height={24} />
-                      <span style={{ marginLeft: "10px" }}>{option.name}</span>
-                    </div>
-                  )}
                 />
                 <Form.Text
                   className="text-muted"
@@ -1563,29 +1487,14 @@ class EditLocation extends React.Component<Props, State> {
                 {this.props.t("allowBookers")}
               </Form.Label>
               <Col sm="8">
-                <AsyncTypeahead
+                <GroupSearchTypeahead
+                  t={this.props.t}
                   disabled={!RuntimeConfig.INFOS.featureGroups}
-                  filterBy={this.filterSearch}
                   id="search-allowbookers"
                   inputProps={{ id: "search-allowbookers-input" }}
-                  isLoading={this.state.typeaheadAllowBookersLoading}
-                  labelKey="name"
                   multiple={true}
-                  minLength={3}
                   onChange={this.onAllowBookersSearchSelected}
-                  onSearch={this.handleAllowBookersSearch}
                   defaultSelected={this.getSelectedSpace()?.allowBookers}
-                  options={this.state.typeaheadAllowBookersOptions}
-                  placeholder={this.props.t("searchForGroup")}
-                  ref={(ref: any) => {
-                    this.typeaheadAllowBookers = ref;
-                  }}
-                  renderMenuItemChildren={(option: any) => (
-                    <div className="d-flex">
-                      <ProfilePicture width={24} height={24} />
-                      <span style={{ marginLeft: "10px" }}>{option.name}</span>
-                    </div>
-                  )}
                 />
                 <Form.Text
                   className="text-muted"
@@ -2352,29 +2261,14 @@ class EditLocation extends React.Component<Props, State> {
               {this.props.t("allowBookers")}
             </Form.Label>
             <Col sm="4">
-              <AsyncTypeahead
+              <GroupSearchTypeahead
+                t={this.props.t}
                 disabled={!RuntimeConfig.INFOS.featureGroups}
-                filterBy={this.filterSearch}
                 id="search-allowbookers"
                 inputProps={{ id: "location-allowed-bookers" }}
-                isLoading={this.state.typeaheadLocationAllowBookersLoading}
-                labelKey="name"
                 multiple={true}
-                minLength={3}
                 onChange={this.onLocationAllowBookersSearchSelected}
-                onSearch={this.handleLocationAllowBookersSearch}
                 defaultSelected={this.state.locationAllowBookers}
-                options={this.state.typeaheadLocationAllowBookersOptions}
-                placeholder={this.props.t("searchForGroup")}
-                ref={(ref: any) => {
-                  this.typeaheadLocationAllowBookers = ref;
-                }}
-                renderMenuItemChildren={(option: any) => (
-                  <div className="d-flex">
-                    <ProfilePicture width={24} height={24} />
-                    <span style={{ marginLeft: "10px" }}>{option.name}</span>
-                  </div>
-                )}
               />
               <Form.Text
                 className="text-muted"

@@ -45,7 +45,7 @@ func TestBuddiesCRUD(t *testing.T) {
 
 	// 1. Create
 	payload := "{\"buddyId\": \"" + buddyUser1.ID + "\"}"
-	req := NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	req := NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
@@ -78,6 +78,43 @@ func TestBuddiesCRUD(t *testing.T) {
 	}
 }
 
+func TestBuddiesCreateDuplicate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
+
+	// Create buddy user
+	buddyUser1 := CreateTestUserInOrg(org)
+
+	// Switch to non-admin user
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	// 1. Create
+	payload := "{\"buddyId\": \"" + buddyUser1.ID + "\"}"
+	req := NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// 2. Create same buddy again -> idempotent, should succeed and return the same id
+	req = NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	CheckTestString(t, id, res.Header().Get("X-Object-Id"))
+
+	// 3. Ensure only one buddy exists
+	req = NewHTTPRequest("GET", "/buddy/", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetBuddyResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected array with 1 element")
+	}
+}
+
 func TestDeleteBuddyOfAnotherUser(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -94,7 +131,7 @@ func TestDeleteBuddyOfAnotherUser(t *testing.T) {
 
 	// Create
 	payload := "{\"buddyId\": \"" + buddyUser1.ID + "\"}"
-	req := NewHTTPRequest("POST", "/buddy/", user2.ID, bytes.NewBufferString(payload))
+	req := NewHTTPRequest("PUT", "/buddy/", user2.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
@@ -116,7 +153,7 @@ func TestBuddiesCreateWithMissingUser(t *testing.T) {
 
 	// Create
 	payload := "{\"buddyId\": \"" + uuid.New().String() + "\"}"
-	req := NewHTTPRequest("POST", "/buddy/", loginResponse2.UserID, bytes.NewBufferString(payload))
+	req := NewHTTPRequest("PUT", "/buddy/", loginResponse2.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
@@ -138,19 +175,19 @@ func TestBuddiesList(t *testing.T) {
 
 	// Create #1
 	payload := "{\"buddyId\": \"" + buddyUser1.ID + "\"}"
-	req := NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	req := NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Create #2
 	payload = "{\"buddyId\": \"" + buddyUser2.ID + "\"}"
-	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	req = NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Create #3(for a different user)
 	payload = "{\"buddyId\": \"" + buddyUser3.ID + "\"}"
-	req = NewHTTPRequest("POST", "/buddy/", buddyUser2.ID, bytes.NewBufferString(payload))
+	req = NewHTTPRequest("PUT", "/buddy/", buddyUser2.ID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
@@ -199,7 +236,7 @@ func TestBuddiesForbiddenWhenFeatureDisabled(t *testing.T) {
 	req := NewHTTPRequest("GET", "/buddy/", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	req = NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 
@@ -209,14 +246,14 @@ func TestBuddiesForbiddenWhenFeatureDisabled(t *testing.T) {
 	req = NewHTTPRequest("GET", "/buddy/", loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	req = NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 
 	// show_names on, disable_buddies off → allowed, then verify delete is also gated
 	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
 	GetSettingsRepository().Set(org.ID, SettingDisableBuddies.Name, "0")
-	req = NewHTTPRequest("POST", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
+	req = NewHTTPRequest("PUT", "/buddy/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
@@ -224,6 +261,65 @@ func TestBuddiesForbiddenWhenFeatureDisabled(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingDisableBuddies.Name, "1")
 	req = NewHTTPRequest("DELETE", "/buddy/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestBuddiesSearch(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
+
+	alice := CreateTestUserInOrgWithName(org, "alice@test.com", UserRoleUser)
+	bob := CreateTestUserInOrgWithName(org, "bob@test.com", UserRoleUser)
+
+	otherOrg := CreateTestOrg("other.com")
+	GetSettingsRepository().Set(otherOrg.ID, SettingShowNames.Name, "1")
+	CreateTestUserInOrgWithName(otherOrg, "alice2@other.com", UserRoleUser)
+
+	loginResponse := LoginTestUser(bob.ID)
+
+	// Matches by email keyword
+	req := NewHTTPRequest("GET", "/buddy/search?q=alice", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*SearchBuddyResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 1 {
+		t.Fatalf("Expected array with 1 element, got %d", len(resBody))
+	}
+	CheckTestString(t, alice.ID, resBody[0].ID)
+
+	// Query below min length yields empty result, not an error
+	req = NewHTTPRequest("GET", "/buddy/search?q=al", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 []*SearchBuddyResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	if len(resBody2) != 0 {
+		t.Fatalf("Expected empty array")
+	}
+
+	// Requesting user is excluded from own search results
+	req = NewHTTPRequest("GET", "/buddy/search?q=bob", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody3 []*SearchBuddyResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody3)
+	if len(resBody3) != 0 {
+		t.Fatalf("Expected empty array, requesting user should not appear in own search results")
+	}
+}
+
+func TestBuddiesSearchForbiddenWhenFeatureDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "0")
+
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	req := NewHTTPRequest("GET", "/buddy/search?q=alice", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
