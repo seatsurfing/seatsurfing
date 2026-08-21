@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.124.0](https://github.com/seatsurfing/seatsurfing/compare/v1.123.0...v1.124.0) (2026-08-21)
+
+
+### ✨ Features
+
+* **admin-ui:** improve domain admin interface ([#2538](https://github.com/seatsurfing/seatsurfing/issues/2538)) ([f8948f1](https://github.com/seatsurfing/seatsurfing/commit/f8948f18aacb47e23fad548fba30c83fbe5e65f3))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump brace-expansion in /ui ([#2540](https://github.com/seatsurfing/seatsurfing/issues/2540)) ([353c1b6](https://github.com/seatsurfing/seatsurfing/commit/353c1b67085b046b547d602a8703c1b5c0690a21))
+
 ## [1.123.0](https://github.com/seatsurfing/seatsurfing/compare/v1.122.2...v1.123.0) (2026-08-19)
 
 
