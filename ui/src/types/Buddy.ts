@@ -62,10 +62,12 @@ export default class Buddy extends Entity {
   }
 
   async save(): Promise<Buddy> {
-    return Ajax.putData(this.getBackendUrl(), this.serialize()).then((result) => {
-      this.id = result.objectId;
-      return this;
-    });
+    return Ajax.putData(this.getBackendUrl(), this.serialize()).then(
+      (result) => {
+        this.id = result.objectId;
+        return this;
+      },
+    );
   }
 
   async delete(): Promise<void> {
