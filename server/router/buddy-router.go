@@ -1,7 +1,6 @@
 package router
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"strings"
@@ -161,17 +160,6 @@ func (router *BuddyRouter) create(w http.ResponseWriter, r *http.Request) {
 
 	if buddyUser.OrganizationID != requestUser.OrganizationID {
 		SendForbidden(w)
-		return
-	}
-
-	existing, err := GetBuddyRepository().GetByOwnerAndBuddy(requestUser.ID, buddyUser.ID)
-	if err != nil && err != sql.ErrNoRows {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if existing != nil {
-		SendCreated(w, existing.ID)
 		return
 	}
 
