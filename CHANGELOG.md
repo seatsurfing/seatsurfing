@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.125.0](https://github.com/seatsurfing/seatsurfing/compare/v1.124.0...v1.125.0) (2026-08-22)
+
+
+### ✨ Features
+
+* **booking-ui:** use autocompleter when adding buddies ([#2543](https://github.com/seatsurfing/seatsurfing/issues/2543)) ([5e6add3](https://github.com/seatsurfing/seatsurfing/commit/5e6add3d0e90e2a7282c497b1a5475f1b8b86c80))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** order domains and auth providers ([#2542](https://github.com/seatsurfing/seatsurfing/issues/2542)) ([acbf68f](https://github.com/seatsurfing/seatsurfing/commit/acbf68ff9bf7475acc095f380fb7978d4a7119d4))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.76 to 1.0.77 in /server in the minor-and-patch group ([#2545](https://github.com/seatsurfing/seatsurfing/issues/2545)) ([0753467](https://github.com/seatsurfing/seatsurfing/commit/0753467120a4a37d20562e82bc2cb9d27c17c63c))
+* **deps:** bump next from 16.3.0 to 16.3.1 in /ui in the production-dependencies group across 1 directory ([#2544](https://github.com/seatsurfing/seatsurfing/issues/2544)) ([6bda553](https://github.com/seatsurfing/seatsurfing/commit/6bda55346d0bd1a27271c10d0dd3d9003c7c4de5))
+* **server:** add quotes when logging database name ([#2541](https://github.com/seatsurfing/seatsurfing/issues/2541)) ([36ec6be](https://github.com/seatsurfing/seatsurfing/commit/36ec6be2a041b46e64629bd34af6b281eef393ad))
+
 ## [1.124.0](https://github.com/seatsurfing/seatsurfing/compare/v1.123.0...v1.124.0) (2026-08-21)
 
 
