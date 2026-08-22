@@ -1,6 +1,6 @@
 import React from "react";
 import Loading from "../components/Loading";
-import { Button, Form, ListGroup, Modal } from "react-bootstrap";
+import { Button, Form, InputGroup, ListGroup, Modal } from "react-bootstrap";
 import {
   LogIn as IconEnter,
   LogOut as IconLeave,
@@ -11,15 +11,15 @@ import NavBar from "@/components/NavBar";
 import withReadyRouter from "@/components/withReadyRouter";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import AlertModal from "@/components/AlertModal";
+import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import Buddy from "@/types/Buddy";
-import User from "@/types/User";
+import Buddy, { BuddySearchResult } from "@/types/Buddy";
 import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
   selectedItem: Buddy | null;
-  email: string;
+  selectedBuddy: BuddySearchResult | null;
   alertMessage: string | null;
 }
 
@@ -30,6 +30,7 @@ interface Props {
 
 class Buddies extends React.Component<Props, State> {
   data: Buddy[];
+  typeahead: any = null;
 
   constructor(props: any) {
     super(props);
@@ -37,7 +38,7 @@ class Buddies extends React.Component<Props, State> {
     this.state = {
       loading: true,
       selectedItem: null,
-      email: "",
+      selectedBuddy: null,
       alertMessage: null,
     };
   }
@@ -61,7 +62,7 @@ class Buddies extends React.Component<Props, State> {
     this.setState({ selectedItem: item });
   };
 
-  removeBuddy = (item: Buddy | null) => {
+  removeBuddy = (_item: Buddy | null) => {
     this.setState({
       loading: true,
     });
@@ -75,30 +76,35 @@ class Buddies extends React.Component<Props, State> {
     });
   };
 
+  searchBuddyCandidates = (query: string): Promise<BuddySearchResult[]> => {
+    return Buddy.search(query).then((users) => {
+      const existingIds = this.data.map((item) => item.buddy.id);
+      return users.filter((user) => !existingIds.includes(user.id));
+    });
+  };
+
+  onSearchSelected = (selected: BuddySearchResult[]) => {
+    this.setState({ selectedBuddy: selected.length > 0 ? selected[0] : null });
+  };
+
   addBuddy = () => {
-    const { email } = this.state;
+    const { selectedBuddy } = this.state;
 
-    if (!email) {
+    if (!selectedBuddy) {
       return;
     }
 
-    if (
-      this.data.find(
-        (item) => item.buddy.email.toLowerCase() === email.toLowerCase(),
-      )
-    ) {
-      this.setState({ email: "" });
-      return;
-    }
-
-    User.getByEmail(email)
-      .then((user: User) => {
-        const buddy = new Buddy();
-        buddy.buddy = user;
-        buddy.save().then(() => {
-          this.setState({ email: "" });
-          this.loadData();
-        });
+    const buddy = new Buddy();
+    buddy.buddy.id = selectedBuddy.id;
+    buddy.buddy.email = selectedBuddy.email;
+    buddy
+      .save()
+      .then(() => {
+        if (this.typeahead !== null) {
+          this.typeahead.clear();
+        }
+        this.setState({ selectedBuddy: null });
+        this.loadData();
       })
       .catch(() => {
         this.setState({ alertMessage: this.props.t("userNotFound") });
@@ -106,36 +112,32 @@ class Buddies extends React.Component<Props, State> {
   };
 
   renderAddBuddy() {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValidEmail = emailRegex.test(this.state.email);
-
     return (
       <ListGroup.Item key={"add-buddy"} style={{ minWidth: "300px" }}>
         <Form.Group className="grid-item">
-          <Form.Control
-            type="email"
-            placeholder="Email..."
-            value={this.state.email}
-            onChange={(e) => this.setState({ email: e.target.value })}
-            style={{ marginBottom: "10px", padding: "10px" }}
-            isInvalid={!isValidEmail && this.state.email !== ""}
-          />
-          <Form.Control.Feedback type="invalid">
-            {this.props.t("validEmailRequired")}
-          </Form.Control.Feedback>
-          <Button
-            variant="primary"
-            type="submit"
-            onClick={(e) => {
-              e.preventDefault();
-              if (isValidEmail) {
+          <InputGroup>
+            <UserSearchTypeahead
+              t={this.props.t}
+              id="search-buddy"
+              multiple={false}
+              searchFn={this.searchBuddyCandidates}
+              onChange={(selected: any) => this.onSearchSelected(selected)}
+              ref={(ref: any) => {
+                this.typeahead = ref;
+              }}
+            />
+            <Button
+              variant="primary"
+              type="submit"
+              onClick={(e) => {
+                e.preventDefault();
                 this.addBuddy();
-              }
-            }}
-            disabled={!isValidEmail}
-          >
-            {this.props.t("addBuddy")}
-          </Button>
+              }}
+              disabled={!this.state.selectedBuddy}
+            >
+              {this.props.t("addBuddy")}
+            </Button>
+          </InputGroup>
         </Form.Group>
       </ListGroup.Item>
     );

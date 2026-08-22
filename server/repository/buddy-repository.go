@@ -41,7 +41,15 @@ func GetBuddyRepository() *BuddyRepository {
 }
 
 func (r *BuddyRepository) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// No updates yet
+	if curVersion < 52 {
+		if _, err := GetDatabase().DB().Exec("DELETE FROM buddies a USING buddies b " +
+			"WHERE a.owner_id = b.owner_id AND a.buddy_id = b.buddy_id AND a.id > b.id"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_buddies_owner_buddy_unique ON buddies(owner_id, buddy_id)"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *BuddyRepository) Create(e *Buddy) error {
@@ -49,6 +57,7 @@ func (r *BuddyRepository) Create(e *Buddy) error {
 	err := GetDatabase().DB().QueryRow("INSERT INTO buddies "+
 		"(owner_id, buddy_id) "+
 		"VALUES ($1, $2) "+
+		"ON CONFLICT (owner_id, buddy_id) DO UPDATE SET owner_id = EXCLUDED.owner_id "+
 		"RETURNING id",
 		e.OwnerID, e.BuddyID).Scan(&id)
 	if err != nil {
@@ -56,6 +65,18 @@ func (r *BuddyRepository) Create(e *Buddy) error {
 	}
 	e.ID = id
 	return nil
+}
+
+func (r *BuddyRepository) GetByOwnerAndBuddy(ownerID, buddyID string) (*Buddy, error) {
+	e := &Buddy{}
+	err := GetDatabase().DB().QueryRow("SELECT id, owner_id, buddy_id "+
+		"FROM buddies "+
+		"WHERE owner_id = $1 AND buddy_id = $2",
+		ownerID, buddyID).Scan(&e.ID, &e.OwnerID, &e.BuddyID)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
 }
 
 func (r *BuddyRepository) GetOne(id string) (*BuddyDetails, error) {

@@ -14,17 +14,15 @@ import {
   Trash2 as IconDelete,
 } from "react-feather";
 import { NextRouter } from "next/router";
-import { AsyncTypeahead } from "react-bootstrap-typeahead";
 import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
-import "react-bootstrap-typeahead/css/Typeahead.css";
 import ProfilePicture from "@/components/ProfilePicture";
+import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import Group from "@/types/Group";
-import Search, { SearchOptions } from "@/types/Search";
 import ConfirmModal from "@/components/ConfirmModal";
 
 import RendererUtils from "@/util/RendererUtils";
@@ -33,8 +31,6 @@ import ErrorText from "@/types/ErrorText";
 
 interface State {
   loading: boolean;
-  typeaheadOptions: any[];
-  typeaheadLoading: boolean;
   submitting: boolean;
   saved: boolean;
   error: boolean;
@@ -60,8 +56,6 @@ class EditUser extends React.Component<Props, State> {
     super(props);
     this.state = {
       loading: true,
-      typeaheadOptions: [],
-      typeaheadLoading: false,
       submitting: false,
       saved: false,
       error: false,
@@ -141,26 +135,9 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ showDeleteConfirm: true });
   };
 
-  filterSearch = () => {
-    return true;
-  };
-
   onSearchSelected = (selected: any) => {
     this.setState({
       addUserIds: selected.map((user: any) => user.id),
-    });
-  };
-
-  handleSearch = (query: string) => {
-    this.setState({ typeaheadLoading: true });
-    const options = new SearchOptions();
-    options.includeUsers = true;
-    options.keyword = query ? query : "";
-    Search.search(options).then((res) => {
-      this.setState({
-        typeaheadOptions: res.users,
-        typeaheadLoading: false,
-      });
     });
   };
 
@@ -170,18 +147,10 @@ class EditUser extends React.Component<Props, State> {
         .addMembers(this.state.addUserIds)
         .then(() => {
           this.typeahead.clear();
-          this.setState({
-            typeaheadOptions: [],
-            typeaheadLoading: false,
-            addUserIds: [],
-          });
+          this.setState({ addUserIds: [] });
           this.loadMembers();
         })
-        .catch(() => {
-          this.setState({
-            typeaheadLoading: false,
-          });
-        });
+        .catch(() => {});
     }
   };
 
@@ -321,36 +290,14 @@ class EditUser extends React.Component<Props, State> {
             <Form.Group as={Row}>
               <Col sm="6">
                 <InputGroup>
-                  <AsyncTypeahead
-                    filterBy={this.filterSearch}
+                  <UserSearchTypeahead
+                    t={this.props.t}
                     id="search-users"
-                    isLoading={this.state.typeaheadLoading}
-                    labelKey="email"
                     multiple={true}
-                    minLength={3}
                     onChange={this.onSearchSelected}
-                    onSearch={this.handleSearch}
-                    options={this.state.typeaheadOptions}
-                    placeholder={this.props.t("searchForUser")}
                     ref={(ref: any) => {
                       this.typeahead = ref;
                     }}
-                    renderMenuItemChildren={(option: any) => (
-                      <div className="d-flex">
-                        <ProfilePicture width={24} height={24} />
-                        <span style={{ marginLeft: "10px" }}>
-                          {option.email}
-                          {RendererUtils.preAndSuffixIfDefined(
-                            RendererUtils.fullname(
-                              option.firstname,
-                              option.lastname,
-                            ),
-                            " (",
-                            ")",
-                          )}{" "}
-                        </span>
-                      </div>
-                    )}
                   />
                   <Button
                     onClick={() => {
