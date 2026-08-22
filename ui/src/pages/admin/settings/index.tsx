@@ -614,103 +614,105 @@ class Settings extends React.Component<Props, State> {
       );
     }
 
-    let domains = this.state.domains.map((domain) => {
-      let verify = <></>;
-      if (!domain.active) {
-        verify = (
-          <Button
-            variant="primary"
-            size="sm"
-            className="domain-action-btn"
-            onClick={() => this.setState({ verifyDomainName: domain.domain })}
-          >
-            {this.props.t("verify")}
-          </Button>
+    const domains = [...this.state.domains]
+      .sort((a, b) => a.domain.localeCompare(b.domain))
+      .map((domain) => {
+        let verify = <></>;
+        if (!domain.active) {
+          verify = (
+            <Button
+              variant="primary"
+              size="sm"
+              className="domain-action-btn"
+              onClick={() => this.setState({ verifyDomainName: domain.domain })}
+            >
+              {this.props.t("verify")}
+            </Button>
+          );
+        }
+        let accessibleCheckmark = (
+          <IconAlert className="feather" color="orange" />
         );
-      }
-      let accessibleCheckmark = (
-        <IconAlert className="feather" color="orange" />
-      );
-      if (domain.accessible) {
-        accessibleCheckmark = <IconCheck className="feather" color="green" />;
-      }
-      let key = "domain-" + domain.domain;
-      const canMakePrimary = !domain.primary;
-      const canRemove = !domain.domain.endsWith(".seatsurfing.app");
-      return (
-        <tr key={key}>
-          <td className="align-middle domain-name-cell">
-            {domain.domain}
-            &nbsp;
-            {accessibleCheckmark}
-            {domain.primary && (
-              <>
-                &nbsp;
-                <Badge bg="success">{this.props.t("primary")}</Badge>
-              </>
-            )}
-          </td>
-          <td className="align-middle">{verify}</td>
-          <td className="align-middle text-end">
-            {(canMakePrimary || canRemove) && (
-              <Dropdown align="end">
-                <Dropdown.Toggle
-                  variant="outline-secondary"
-                  size="sm"
-                  className="domain-actions-toggle domain-action-btn"
-                >
-                  <IconMore className="feather" />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  {canMakePrimary && (
-                    <span
-                      className="d-block"
-                      title={
-                        !domain.active
-                          ? this.props.t("makePrimaryVerifyTooltip")
-                          : undefined
-                      }
-                    >
-                      <Dropdown.Item
-                        disabled={!domain.active}
-                        onClick={() => this.setPrimaryDomain(domain.domain)}
-                      >
-                        {this.props.t("makePrimary")}
-                      </Dropdown.Item>
-                    </span>
-                  )}
-                  {canRemove && (
-                    <span
-                      className="d-block"
-                      title={
-                        this.state.domains.length <= 1
-                          ? this.props.t("removeDomainLastTooltip")
-                          : undefined
-                      }
-                    >
-                      <Dropdown.Item
-                        className={
-                          this.state.domains.length <= 1
-                            ? undefined
-                            : "text-danger"
+        if (domain.accessible) {
+          accessibleCheckmark = <IconCheck className="feather" color="green" />;
+        }
+        const key = "domain-" + domain.domain;
+        const canMakePrimary = !domain.primary;
+        const canRemove = !domain.domain.endsWith(".seatsurfing.app");
+        return (
+          <tr key={key}>
+            <td className="align-middle domain-name-cell">
+              {domain.domain}
+              &nbsp;
+              {accessibleCheckmark}
+              {domain.primary && (
+                <>
+                  &nbsp;
+                  <Badge bg="success">{this.props.t("primary")}</Badge>
+                </>
+              )}
+            </td>
+            <td className="align-middle">{verify}</td>
+            <td className="align-middle text-end">
+              {(canMakePrimary || canRemove) && (
+                <Dropdown align="end">
+                  <Dropdown.Toggle
+                    variant="outline-secondary"
+                    size="sm"
+                    className="domain-actions-toggle domain-action-btn"
+                  >
+                    <IconMore className="feather" />
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    {canMakePrimary && (
+                      <span
+                        className="d-block"
+                        title={
+                          !domain.active
+                            ? this.props.t("makePrimaryVerifyTooltip")
+                            : undefined
                         }
-                        disabled={this.state.domains.length <= 1}
-                        onClick={() => this.removeDomain(domain.domain)}
                       >
-                        {this.props.t("remove")}
-                      </Dropdown.Item>
-                    </span>
-                  )}
-                </Dropdown.Menu>
-              </Dropdown>
-            )}
-          </td>
-        </tr>
-      );
-    });
-    let authProviderRows = this.authProviders.map((item) =>
-      this.renderAuthProviderItem(item),
-    );
+                        <Dropdown.Item
+                          disabled={!domain.active}
+                          onClick={() => this.setPrimaryDomain(domain.domain)}
+                        >
+                          {this.props.t("makePrimary")}
+                        </Dropdown.Item>
+                      </span>
+                    )}
+                    {canRemove && (
+                      <span
+                        className="d-block"
+                        title={
+                          this.state.domains.length <= 1
+                            ? this.props.t("removeDomainLastTooltip")
+                            : undefined
+                        }
+                      >
+                        <Dropdown.Item
+                          className={
+                            this.state.domains.length <= 1
+                              ? undefined
+                              : "text-danger"
+                          }
+                          disabled={this.state.domains.length <= 1}
+                          onClick={() => this.removeDomain(domain.domain)}
+                        >
+                          {this.props.t("remove")}
+                        </Dropdown.Item>
+                      </span>
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
+              )}
+            </td>
+          </tr>
+        );
+      });
+    const authProviderRows = [...this.authProviders]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((item) => this.renderAuthProviderItem(item));
     let authProviderTable = <p>{this.props.t("noRecords")}</p>;
     if (
       RuntimeConfig.INFOS.cloudHosted &&
