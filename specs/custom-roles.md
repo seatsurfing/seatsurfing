@@ -144,7 +144,7 @@ For each organization, four roles are created:
 | Role                       | `system` | Permissions                                                                                                         | Assigned to legacy role |
 | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | Organization Administrator | yes      | every permission at `admin`                                                                                         | 20, and 90              |
-| Floor Plan Administrator   | no       | `areas`, `space_attributes`, `bookings`, `approvals` at `admin`; `analytics` at `read`; `users`, `groups` at `read` | 10                      |
+| Floor Plan Administrator   | no       | `areas`, `space_attributes`, `bookings`, `approvals` at `admin`; `analytics`, `presence_report` at `read`; `users`, `groups` at `read` | 10                      |
 | API access                 | no       | every permission at `admin`                                                                                         | 21 and 22               |
 
 Both service account kinds receive the same permissions. The read-only
@@ -169,7 +169,8 @@ Levels: `none = 0`, `read = 10`, `write = 20`, `admin = 30`.
 | `space_attributes` | none, admin              | Space and location attributes                                             |
 | `bookings`         | none, read, admin        | Other users' bookings; `read` grants visibility without modification      |
 | `approvals`        | none, admin              | Approving pending bookings (further narrowed by approver groups)          |
-| `analytics`        | none, read               | Statistics, reports, presence report                                      |
+| `analytics`        | none, read               | Aggregate utilization statistics and dashboard tiles                      |
+| `presence_report`  | none, read               | Who was present and when - personal data, hence separate from `analytics` |
 | `users`            | none, read, admin        | User CRUD, password / TOTP / passkey reset                                |
 | `groups`           | none, read, write, admin | `write` grants membership management only; `admin` adds create and delete |
 | `roles`            | none, read, admin        | Managing roles and their assignment                                       |
@@ -179,6 +180,20 @@ Levels: `none = 0`, `read = 10`, `write = 20`, `admin = 30`.
 | `audit_log`        | none, read               | Authentication attempts                                                   |
 
 Plugins register additional keys under a `plugin.` prefix.
+
+### Organization-wide restrictions
+
+The settings `hide_reports` and `hide_stats` are enforced after the permission
+check and withhold the presence report and the utilization statistics
+respectively, from every user including organization administrators. They
+express something a permission cannot: an administrator can always grant
+themselves a permission, so only an organization-level setting can state that
+nobody evaluates presence data - the form a works council agreement takes.
+
+They are not a security boundary, since `org_settings` at full access can
+switch them off, but that is a deliberate act rather than a side effect of a
+role edit. A withheld endpoint answers 404, where a missing permission answers
+403.
 
 ### Baseline access
 

@@ -28,6 +28,7 @@ const (
 	PermissionBookings        Permission = "bookings"
 	PermissionApprovals       Permission = "approvals"
 	PermissionAnalytics       Permission = "analytics"
+	PermissionPresenceReport  Permission = "presence_report"
 	PermissionUsers           Permission = "users"
 	PermissionGroups          Permission = "groups"
 	PermissionRoles           Permission = "roles"
@@ -76,6 +77,11 @@ var builtInPermissions = []PermissionDefinition{
 	{Key: PermissionBookings, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelAdmin}},
 	{Key: PermissionApprovals, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
 	{Key: PermissionAnalytics, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead}},
+	// Separate from PermissionAnalytics because it covers personal data - who
+	// was in the office and when - rather than aggregate occupancy. The two
+	// are governed by separate organization-wide settings for the same reason,
+	// and a role should be able to grant occupancy planning without it.
+	{Key: PermissionPresenceReport, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead}},
 	{Key: PermissionUsers, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelAdmin}},
 	{Key: PermissionGroups, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelWrite, PermissionLevelAdmin}},
 	{Key: PermissionRoles, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelAdmin}},

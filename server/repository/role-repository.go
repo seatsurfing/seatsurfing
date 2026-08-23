@@ -43,6 +43,18 @@ func GetRoleRepository() *RoleStore {
 }
 
 func (r *RoleStore) RunSchemaUpgrade(curVersion, targetVersion int) {
+	if curVersion < 55 {
+		// The presence report was split out of the analytics permission
+		// because it covers personal data. Every role that could already see
+		// it keeps that access.
+		if _, err := GetDatabase().DB().Exec(
+			"INSERT INTO role_permissions (role_id, permission, level) "+
+				"SELECT role_id, $1, level FROM role_permissions WHERE permission = $2 "+
+				"ON CONFLICT (role_id, permission) DO NOTHING",
+			string(PermissionPresenceReport), string(PermissionAnalytics)); err != nil {
+			panic(err)
+		}
+	}
 	if curVersion < 54 {
 		// Its own version rather than 53: a database already upgraded to 53
 		// would never see this column otherwise.
@@ -202,6 +214,7 @@ func floorPlanAdminPermissions() map[Permission]PermissionLevel {
 		PermissionBookings:        PermissionLevelAdmin,
 		PermissionApprovals:       PermissionLevelAdmin,
 		PermissionAnalytics:       PermissionLevelRead,
+		PermissionPresenceReport:  PermissionLevelRead,
 		PermissionUsers:           PermissionLevelRead,
 		PermissionGroups:          PermissionLevelRead,
 	}

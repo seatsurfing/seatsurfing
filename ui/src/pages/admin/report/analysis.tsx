@@ -19,6 +19,7 @@ import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import DateTimePicker from "@/components/DateTimePicker";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import RendererUtils from "@/util/RendererUtils";
 import Formatting from "@/util/Formatting";
 
@@ -59,7 +60,13 @@ class ReportAnalysis extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    if (RuntimeConfig.INFOS.hideReports) {
+    if (
+      RuntimeConfig.INFOS.hideReports ||
+      !RuntimeConfig.hasPermission(
+        Permission.PresenceReport,
+        PermissionLevel.Read,
+      )
+    ) {
       this.props.router.push("/404");
       return;
     }

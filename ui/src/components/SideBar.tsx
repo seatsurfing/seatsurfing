@@ -378,7 +378,7 @@ class SideBar extends React.Component<Props, State> {
             )}
             {!RuntimeConfig.INFOS.hideReports &&
               RuntimeConfig.hasPermission(
-                Permission.Analytics,
+                Permission.PresenceReport,
                 PermissionLevel.Read,
               ) && (
                 <li className="nav-item">

@@ -19,6 +19,7 @@ export const Permission = {
   Bookings: "bookings",
   Approvals: "approvals",
   Analytics: "analytics",
+  PresenceReport: "presence_report",
   Users: "users",
   Groups: "groups",
   Roles: "roles",

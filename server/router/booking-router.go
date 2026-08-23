@@ -721,7 +721,7 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 
 func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionAnalytics, PermissionLevelRead) {
+	if !HasPermission(user, user.OrganizationID, PermissionPresenceReport, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -782,10 +782,15 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 		Dates:     make([]string, numDates),
 		Presences: make([][]int, numUsers),
 	}
-	i := 0
-	for date := range items[0].Presence {
-		res.Dates[i] = date
-		i++
+	// Guarded like numDates above: an empty result - no bookings in the range -
+	// would otherwise index items[0] and panic, answering 500 instead of an
+	// empty report.
+	if numUsers > 0 {
+		i := 0
+		for date := range items[0].Presence {
+			res.Dates[i] = date
+			i++
+		}
 	}
 	sort.Strings(res.Dates)
 	for i, item := range items {

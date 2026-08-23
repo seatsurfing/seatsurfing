@@ -146,3 +146,51 @@ func TestEditedApiAccessRoleStopsTracking(t *testing.T) {
 	floorPlan, _ := GetRoleRepository().GetByName(org.ID, RoleNameFloorPlanAdmin)
 	CheckTestBool(t, false, floorPlan.AutoGrantPluginPermissions)
 }
+
+// Splitting the presence report out of the analytics permission must not take
+// it away from anyone: a role that could already see it keeps it.
+func TestPresenceReportSplitPreservesAccess(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	// A role as it existed before the split: analytics only.
+	role := CreateTestRole(org, "Reporter", map[Permission]PermissionLevel{
+		PermissionAnalytics: PermissionLevelRead,
+	})
+	if _, err := GetDatabase().DB().Exec(
+		"DELETE FROM role_permissions WHERE role_id = $1 AND permission = $2",
+		role.ID, string(PermissionPresenceReport)); err != nil {
+		t.Fatal(err)
+	}
+	user := CreateTestUserInOrg(org)
+	AssignTestRole(user, role)
+
+	perms, _ := GetUserRoleRepository().GetEffectivePermissions(user.ID)
+	CheckTestInt(t, int(PermissionLevelNone), int(perms[PermissionPresenceReport]))
+
+	GetRoleRepository().RunSchemaUpgrade(54, 55)
+
+	perms, _ = GetUserRoleRepository().GetEffectivePermissions(user.ID)
+	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionPresenceReport]))
+	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionAnalytics]))
+
+	// A role that never had analytics gains nothing.
+	other := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionGroups: PermissionLevelAdmin,
+	})
+	GetRoleRepository().RunSchemaUpgrade(54, 55)
+	otherPerms, _ := GetUserRoleRepository().GetEffectivePermissions(other.ID)
+	CheckTestInt(t, int(PermissionLevelNone), int(otherPerms[PermissionPresenceReport]))
+}
+
+// The seeded floor plan role reproduces the old space admin, which could see
+// the presence report.
+func TestFloorPlanRoleKeepsPresenceReport(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	spaceAdmin := CreateTestUserOrgSpaceAdmin(org)
+
+	perms, _ := GetUserRoleRepository().GetEffectivePermissions(spaceAdmin.ID)
+	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionAnalytics]))
+	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionPresenceReport]))
+}

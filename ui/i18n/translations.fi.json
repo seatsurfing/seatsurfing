@@ -599,5 +599,6 @@
   "idpMappings": "Automatic assignment",
   "idpMappingsHint": "Assign roles and groups based on the groups the identity provider reports. Assignments made here are refreshed on every login; roles and groups assigned by hand are left alone.",
   "userinfoGroupsField": "Groups field",
-  "userinfoGroupsFieldHint": "Name of the claim in the identity provider's user info response that lists the user's groups, for example 'groups'. Leave empty to disable automatic assignment."
+  "userinfoGroupsFieldHint": "Name of the claim in the identity provider's user info response that lists the user's groups, for example 'groups'. Leave empty to disable automatic assignment.",
+  "permission.presence_report": "Presence report (user-related)"
 }

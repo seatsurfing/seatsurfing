@@ -19,9 +19,14 @@ info:
     Levels: `0` no access, `10` read only, `20` limited, `30` full access. Not every level is
     meaningful for every permission; `GET /role/permissions` reports the levels each one offers.
 
-    Permission keys: `areas`, `space_attributes`, `bookings`, `approvals`, `analytics`, `users`,
-    `groups`, `roles`, `service_accounts`, `auth_providers`, `org_settings`, `audit_log`.
-    Plugins contribute further keys prefixed with `plugin.`.
+    Permission keys: `areas`, `space_attributes`, `bookings`, `approvals`, `analytics`,
+    `presence_report`, `users`, `groups`, `roles`, `service_accounts`, `auth_providers`,
+    `org_settings`, `audit_log`. Plugins contribute further keys prefixed with `plugin.`.
+
+    `analytics` covers aggregate occupancy figures; `presence_report` covers who was present
+    and when. They are separate because the latter is personal data, and each is additionally
+    subject to an organization-wide setting (`hide_stats` and `hide_reports`) that withholds it
+    from everyone regardless of permission, answering 404 rather than 403.
 
     Every authenticated user, whatever roles they hold, can always manage their own bookings,
     buddies, preferences and profile, and read the areas and spaces available to them. Endpoints
