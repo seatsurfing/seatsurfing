@@ -62,6 +62,12 @@ var (
 	ResponseCodePasswordUpdateRequired = 5001
 
 	ResponseCodeAuthProviderAlreadyExists = 6001
+
+	ResponseCodeRoleWouldLeaveOrgWithoutAdmin = 7001
+	ResponseCodeRoleEscalationNotAllowed      = 7002
+	ResponseCodeRoleIsSystemRole              = 7003
+	ResponseCodeRoleCannotRemoveOwnAccess     = 7004
+	ResponseCodeRoleNameAlreadyExists         = 7005
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {
@@ -311,7 +317,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			if err != nil || user == nil {
 				return false
 			}
-			if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
+			if !user.AccountType.IsServiceAccount() {
 				return false
 			}
 			if user.HashedPassword == "" {
@@ -323,7 +329,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 			if !GetUserRepository().CheckPassword(string(user.HashedPassword), password) {
 				return false
 			}
-			if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
+			if r.Method != "GET" && user.AccountType == AccountTypeServiceAccountRO {
 				return false
 			}
 			ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
@@ -348,13 +354,13 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 		if err != nil || user == nil {
 			return false
 		}
-		if user.Role != UserRoleServiceAccountRO && user.Role != UserRoleServiceAccountRW {
+		if !user.AccountType.IsServiceAccount() {
 			return false
 		}
 		if user.Disabled {
 			return false
 		}
-		if r.Method != "GET" && user.Role == UserRoleServiceAccountRO {
+		if r.Method != "GET" && user.AccountType == AccountTypeServiceAccountRO {
 			return false
 		}
 		ctx := context.WithValue(r.Context(), contextKeyUserID, user.ID)
@@ -481,34 +487,20 @@ func GetRequestUser(r *http.Request) *User {
 	return user
 }
 
+// CanAccessOrg reports organization membership. It is not a privilege check:
+// every authenticated user has baseline access to their own organization.
 func CanAccessOrg(user *User, organizationID string) bool {
-	if user.OrganizationID == organizationID {
-		return true
-	}
-	if GetUserRepository().IsSuperAdmin(user) {
-		return true
-	}
-	return false
-}
-
-func CanSpaceAdminOrg(user *User, organizationID string) bool {
-	if (user.OrganizationID == organizationID) && (GetUserRepository().IsSpaceAdmin(user)) {
-		return true
-	}
-	if GetUserRepository().IsSuperAdmin(user) {
-		return true
-	}
-	return false
+	return user.OrganizationID == organizationID
 }
 
 // IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)
 // falls on one of the location's bookable weekdays, honoring the org's
-// no-admin-restrictions setting for space admins.
+// no-admin-restrictions setting for those who manage other people's bookings.
 func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time.Time) bool {
 	if location.BookableDays == "" {
 		return true
 	}
-	if CanSpaceAdminOrg(user, location.OrganizationID) {
+	if HasPermission(user, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 		noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
 		if noAdminRestrictions {
 			return true
@@ -536,23 +528,20 @@ func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time
 	return true
 }
 
-func CanAdminOrg(user *User, organizationID string) bool {
-	if (user.OrganizationID == organizationID) && (GetUserRepository().IsOrgAdmin(user)) {
-		return true
-	}
-	if GetUserRepository().IsSuperAdmin(user) {
-		return true
-	}
-	return false
-}
-
 func IsTotpEnforcedForUser(user *User) bool {
+	// A second factor cannot apply to an account that authenticates with a
+	// header on every request and never sees an interactive login. Enforcing
+	// it here would be meaningless today and would lock service accounts out
+	// entirely if this function were ever used to gate authentication.
+	if user.AccountType.IsServiceAccount() {
+		return false
+	}
 	enforceTotp, _ := GetSettingsRepository().GetInt(user.OrganizationID, SettingEnforceTOTP.Name)
 	switch enforceTotp {
 	case SettingEnforceTOTPAllUsers:
 		return true
 	case SettingEnforceTOTPAdminsOnly:
-		return GetUserRepository().IsSpaceAdmin(user)
+		return HasAnyPermission(user, user.OrganizationID)
 	default:
 		return false
 	}

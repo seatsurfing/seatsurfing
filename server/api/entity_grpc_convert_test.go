@@ -18,7 +18,7 @@ func TestUserRoundTrip(t *testing.T) {
 		AuthProviderID:         "auth-1",
 		PasswordPending:        true,
 		PasswordUpdateRequired: true,
-		Role:                   UserRoleOrgAdmin,
+		AccountType:            AccountTypeServiceAccountRW,
 		Disabled:               true,
 		BanExpiry:              &now,
 		LastActivityAtUTC:      &now,

@@ -107,7 +107,7 @@ func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 
 func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Request) {
 	requestUser := GetRequestUser(r)
-	if !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+	if !HasPermission(requestUser, requestUser.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -160,7 +160,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 
 func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -178,7 +178,7 @@ func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *
 
 func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -198,7 +198,7 @@ func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.
 
 func (router *BookingRouter) validateBookingFilters(w http.ResponseWriter, r *http.Request) (*User, string, string, bool) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		SendForbidden(w)
 		return nil, "", "", false
 	}
@@ -300,7 +300,7 @@ func (router *BookingRouter) getIcal(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+	if e.UserID != GetRequestUserID(r) && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -352,7 +352,7 @@ func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+	if e.UserID != GetRequestUserID(r) && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -415,7 +415,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	requestUser := GetRequestUser(r)
-	if e.UserID != requestUser.ID && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+	if e.UserID != requestUser.ID && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -429,7 +429,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.UserID = e.UserID
 	eNew.Approved = e.Approved
 	if m.UserEmail != "" {
-		if !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 			SendForbidden(w)
 			return
 		}
@@ -496,7 +496,7 @@ func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	if (e.UserID != GetRequestUserID(r)) && !CanSpaceAdminOrg(GetRequestUser(r), location.OrganizationID) {
+	if (e.UserID != GetRequestUserID(r)) && !HasPermission(GetRequestUser(r), location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -615,7 +615,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// test if location and space is enabled or user is space admin
-	if (!location.Enabled || !space.Enabled) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendBadRequest(w)
 		return
 	}
@@ -627,7 +627,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	e.UserID = GetRequestUserID(r)
 	if m.UserEmail != "" && m.UserEmail != requestUser.Email {
-		if !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 			SendForbidden(w)
 			return
 		}
@@ -672,7 +672,7 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w http.ResponseWriter) (string, error) {
-	if !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+	if !HasPermission(requestUser, requestUser.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return "", errors.New("Forbidden")
 	}
@@ -699,7 +699,6 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 			Email:          userEmail,
 			AtlassianID:    NullString(""),
 			OrganizationID: org.ID,
-			Role:           UserRoleUser,
 		}
 		err = GetUserRepository().Create(user)
 		if err != nil {
@@ -722,7 +721,7 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 
 func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAnalytics, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -762,7 +761,7 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 			SendBadRequest(w)
 			return
 		}
-		if !GetUserRepository().IsSuperAdmin(user) && location.OrganizationID != user.OrganizationID {
+		if location.OrganizationID != user.OrganizationID {
 			SendForbidden(w)
 			return
 		}
@@ -806,7 +805,7 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 
 func (router *BookingRouter) IsValidBookingDuration(m *BookingRequest, orgID string, user *User) bool {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
+	if noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
 		return true
 	}
 	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
@@ -857,7 +856,7 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 		return false, ResponseCodeBookingInPast
 	}
 	advanceDays := math.Floor(m.Enter.Sub(now).Hours() / 24)
-	if advanceDays >= 0 && noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
+	if advanceDays >= 0 && noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
 		return true, 0
 	}
 
@@ -872,7 +871,7 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 
 func (router *BookingRouter) IsValidMaxUpcomingBookings(orgID string, user *User, upcomingBookingsMarkup int) bool {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
+	if noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
 		return true
 	}
 	maxUpcoming, _ := GetSettingsRepository().GetInt(orgID, SettingMaxBookingsPerUser.Name)
@@ -882,7 +881,7 @@ func (router *BookingRouter) IsValidMaxUpcomingBookings(orgID string, user *User
 
 func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, user *User, m *BookingRequest, bookingID string) bool {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && CanSpaceAdminOrg(user, orgID) {
+	if noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
 		return true
 	}
 	maxConcurrent, _ := GetSettingsRepository().GetInt(orgID, SettingMaxConcurrentBookingsPerUser.Name)
@@ -979,7 +978,7 @@ func (router *BookingRouter) IsValidBookingHoursBeforeDelete(e *BookingDetails, 
 		log.Println(err)
 		return false
 	}
-	if noAdminRestrictions && CanSpaceAdminOrg(user, organizationID) {
+	if noAdminRestrictions && HasPermission(user, organizationID, PermissionBookings, PermissionLevelAdmin) {
 		return true
 	}
 
@@ -1020,7 +1019,7 @@ func (router *BookingRouter) IsValidBookingHoursBeforeDelete(e *BookingDetails, 
 
 func (router *BookingRouter) isValidMinHoursBooking(e *BookingRequest, organizationID string, user *User) bool {
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(organizationID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && CanSpaceAdminOrg(user, organizationID) {
+	if noAdminRestrictions && HasPermission(user, organizationID, PermissionBookings, PermissionLevelAdmin) {
 		return true
 	}
 	min_hours, err := GetSettingsRepository().GetInt(organizationID, SettingMinBookingDurationHours.Name)

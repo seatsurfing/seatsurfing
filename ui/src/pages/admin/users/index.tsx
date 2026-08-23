@@ -11,6 +11,8 @@ import User from "@/types/User";
 import AuthProvider from "@/types/AuthProvider";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
+import Role from "@/types/Role";
+import { Permission, PermissionLevel } from "@/types/Permission";
 
 interface State {
   selectedItem: string;
@@ -24,6 +26,7 @@ interface Props {
 
 class Users extends React.Component<Props, State> {
   authProviders: { [key: string]: string } = {};
+  roleNames: { [key: string]: string } = {};
   data: User[] = [];
   ExcellentExport: any;
 
@@ -46,6 +49,13 @@ class Users extends React.Component<Props, State> {
     providers.forEach((provider) => {
       this.authProviders[provider.id] = provider.name;
     });
+    // Role names are resolved once for the whole table rather than per row.
+    if (RuntimeConfig.hasPermission(Permission.Roles, PermissionLevel.Read)) {
+      const roles = await Role.list();
+      roles.forEach((role) => {
+        this.roleNames[role.id] = role.name;
+      });
+    }
     this.data = await User.list();
     this.setState({ loading: false });
   };
@@ -63,7 +73,14 @@ class Users extends React.Component<Props, State> {
     } else if (this.authProviders[user.authProviderId]) {
       authProvider = this.authProviders[user.authProviderId];
     }
-    const role = RendererUtils.roleName(user.role, this.props.t);
+    // A user may hold several roles, or none at all.
+    const roleNames = user.roleIds
+      .map((id) => this.roleNames[id])
+      .filter((name) => name)
+      .sort();
+    const role = roleNames.length
+      ? roleNames.join(", ")
+      : RendererUtils.accountTypeName(user.accountType, this.props.t);
     return (
       <tr key={user.id} onClick={() => this.onItemSelect(user)}>
         <td>{user.email}</td>
@@ -142,7 +159,7 @@ class Users extends React.Component<Props, State> {
             <tr>
               <th>{this.props.t("user")}</th>
               <th>{this.props.t("name")}</th>
-              <th>{this.props.t("role")}</th>
+              <th>{this.props.t("roles")}</th>
               <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
                 {this.props.t("loginMeans")}
               </th>

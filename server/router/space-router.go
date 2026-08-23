@@ -212,7 +212,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 		return
 	}
 	var showNames bool = false
-	if CanSpaceAdminOrg(user, location.OrganizationID) {
+	if HasPermission(user, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		showNames = true
 	} else {
 		showNames, _ = GetSettingsRepository().GetBool(location.OrganizationID, SettingShowNames.Name)
@@ -375,7 +375,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -521,7 +521,7 @@ func (router *SpaceRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -553,7 +553,7 @@ func (router *SpaceRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -579,7 +579,7 @@ func (router *SpaceRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -729,7 +729,7 @@ func (router *SpaceRouter) addApprovers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -769,7 +769,7 @@ func (router *SpaceRouter) removeApprovers(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -799,7 +799,7 @@ func (router *SpaceRouter) getApprovers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -837,7 +837,7 @@ func (router *SpaceRouter) addAllowedBookers(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -877,7 +877,7 @@ func (router *SpaceRouter) removeAllowedBookers(w http.ResponseWriter, r *http.R
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -907,7 +907,7 @@ func (router *SpaceRouter) getAllowedBookers(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, location.OrganizationID) {
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}

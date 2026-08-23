@@ -20,11 +20,8 @@ const reservedActorIndices = 2
 type Scenario struct {
 	// ID identifies this scenario; it is the key looked up in the
 	// thresholds YAML file.
-	ID string
-	// UseSuperAdmin selects the single global super admin actor instead of
-	// a random per-org actor.
-	UseSuperAdmin bool
-	Request       func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error)
+	ID      string
+	Request func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error)
 }
 
 func newGet(baseURL, path, jwt string) (*http.Request, error) {
@@ -60,13 +57,6 @@ func randomDayInBookingWindow(rnd *rand.Rand) time.Time {
 // measurement run. Endpoint paths and auth requirements were verified
 // against server/router/*.go.
 var Scenarios = []Scenario{
-	{
-		ID:            "organization.list",
-		UseSuperAdmin: true,
-		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {
-			return newGet(baseURL, "/organization/", a.Token())
-		},
-	},
 	{
 		ID: "organization.getOne",
 		Request: func(baseURL string, a *Actor, rnd *rand.Rand) (*http.Request, error) {

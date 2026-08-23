@@ -3,14 +3,13 @@ import Ajax from "../util/Ajax";
 import Organization from "./Organization";
 import MergeRequest from "./MergeRequest";
 import { BuddyBooking } from "./Buddy";
+import { PermissionMap } from "./Permission";
 
 export default class User extends Entity {
-  static UserRoleUser: number = 0;
-  static UserRoleSpaceAdmin: number = 10;
-  static UserRoleOrgAdmin: number = 20;
-  static UserRoleServiceAccountRO: number = 21;
-  static UserRoleServiceAccountRW: number = 22;
-  static UserRoleSuperAdmin: number = 90;
+  // How the account authenticates. Access is granted by assigned roles.
+  static AccountTypePerson: number = 0;
+  static AccountTypeServiceAccountRO: number = 1;
+  static AccountTypeServiceAccountRW: number = 2;
 
   static AuthMethodPassword: string = "password";
   static AuthMethodProvider: string = "provider";
@@ -26,10 +25,9 @@ export default class User extends Entity {
   authProviderId: string;
   requirePassword: boolean;
   passwordPending: boolean;
-  role: number;
-  spaceAdmin: boolean;
-  admin: boolean;
-  superAdmin: boolean;
+  accountType: number;
+  /** IDs of the roles assigned to this user. */
+  roleIds: string[];
   password: string;
   sendInvitation: boolean;
   firstBooking: BuddyBooking | null;
@@ -49,10 +47,8 @@ export default class User extends Entity {
     this.authProviderId = "";
     this.requirePassword = false;
     this.passwordPending = false;
-    this.role = User.UserRoleUser;
-    this.spaceAdmin = false;
-    this.admin = false;
-    this.superAdmin = false;
+    this.accountType = User.AccountTypePerson;
+    this.roleIds = [];
     this.password = "";
     this.sendInvitation = false;
     this.firstBooking = null;
@@ -66,7 +62,7 @@ export default class User extends Entity {
       email: this.email,
       firstname: this.firstname,
       lastname: this.lastname,
-      role: this.role,
+      accountType: this.accountType,
       password: this.password,
       sendInvitation: this.sendInvitation,
       authProviderId: this.authProviderId,
@@ -95,10 +91,8 @@ export default class User extends Entity {
     if (input.passwordPending !== undefined) {
       this.passwordPending = input.passwordPending;
     }
-    this.role = input.role;
-    this.spaceAdmin = input.spaceAdmin;
-    this.admin = input.admin;
-    this.superAdmin = input.superAdmin;
+    this.accountType = input.accountType ?? User.AccountTypePerson;
+    this.roleIds = input.roleIds ?? [];
     this.totpEnabled = input.totpEnabled;
     this.hasPasskeys = input.hasPasskeys ?? false;
     this.lastActivity = input.lastActivity
@@ -253,15 +247,19 @@ export default class User extends Entity {
 
 export class UserSelf extends User {
   isPrimaryDomain: boolean;
+  /** The signed-in user's resolved access, keyed by permission name. */
+  permissions: PermissionMap;
 
   constructor() {
     super();
     this.isPrimaryDomain = false;
+    this.permissions = {};
   }
 
   deserialize(input: any): void {
     super.deserialize(input);
     this.isPrimaryDomain = input.isPrimaryDomain ?? false;
+    this.permissions = input.permissions ?? {};
   }
 }
 

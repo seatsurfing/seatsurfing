@@ -6,7 +6,7 @@ import {
   Map as IconMap,
   Book as IconBook,
   Settings as IconSettings,
-  Box as IconBox,
+  Key as IconKey,
   Activity as IconAnalysis,
   Clipboard as IconClipboard,
   Icon,
@@ -27,6 +27,7 @@ import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
 import RendererUtils from "@/util/RendererUtils";
 import Event from "@/util/Event";
+import { Permission, PermissionLevel } from "@/types/Permission";
 
 interface State {
   approvalCount: number;
@@ -103,13 +104,16 @@ class SideBar extends React.Component<Props, State> {
       path = window.location.pathname.replace("/ui", "");
     }
     const startPaths = [
-      "/admin/organizations",
       "/admin/users",
       "/admin/groups",
+      "/admin/roles",
       "/admin/settings",
       "/admin/locations",
       "/admin/bookings",
       "/admin/approvals",
+      "/admin/attributes",
+      "/admin/audit",
+      "/admin/report",
       "/admin/auth-events",
       ...RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
         return "/admin/plugin/" + item.id;
@@ -143,31 +147,14 @@ class SideBar extends React.Component<Props, State> {
   );
 
   render() {
-    let orgItem = <></>;
-    if (RuntimeConfig.INFOS.superAdmin) {
-      orgItem = (
-        <li className="nav-item">
-          <Nav.Link
-            as={Link}
-            eventKey="/admin/organizations"
-            href="/admin/organizations"
-          >
-            <this.SidebarIcon
-              icon={IconBox}
-              title={this.props.t("organizations")}
-            />
-            <span className="d-none d-md-inline">
-              {" "}
-              {this.props.t("organizations")}
-            </span>
-          </Nav.Link>
-        </li>
-      );
-    }
-    let orgAdminItems = <></>;
-    if (RuntimeConfig.INFOS.orgAdmin) {
-      orgAdminItems = (
-        <>
+    // Each entry is shown to whoever can actually use it, rather than to a
+    // single "administrator" tier.
+    let orgAdminItems = (
+      <>
+        {RuntimeConfig.hasPermission(
+          Permission.Users,
+          PermissionLevel.Read,
+        ) && (
           <li className="nav-item">
             <Nav.Link as={Link} eventKey="/admin/users" href="/admin/users">
               <this.SidebarIcon
@@ -180,6 +167,11 @@ class SideBar extends React.Component<Props, State> {
               </span>
             </Nav.Link>
           </li>
+        )}
+        {RuntimeConfig.hasPermission(
+          Permission.Groups,
+          PermissionLevel.Read,
+        ) && (
           <li className="nav-item">
             <Nav.Link
               as={Link}
@@ -201,6 +193,25 @@ class SideBar extends React.Component<Props, State> {
               <PremiumFeatureIcon className="d-none d-md-inline" />
             </Nav.Link>
           </li>
+        )}
+        {RuntimeConfig.hasPermission(
+          Permission.Roles,
+          PermissionLevel.Read,
+        ) && (
+          <li className="nav-item">
+            <Nav.Link as={Link} eventKey="/admin/roles" href="/admin/roles">
+              <this.SidebarIcon icon={IconKey} title={this.props.t("roles")} />
+              <span className="d-none d-md-inline">
+                {" "}
+                {this.props.t("roles")}
+              </span>
+            </Nav.Link>
+          </li>
+        )}
+        {RuntimeConfig.hasPermission(
+          Permission.AuditLog,
+          PermissionLevel.Read,
+        ) && (
           <li className="nav-item">
             <Nav.Link as={Link} eventKey="/admin/audit" href="/admin/audit">
               <this.SidebarIcon
@@ -213,6 +224,11 @@ class SideBar extends React.Component<Props, State> {
               </span>
             </Nav.Link>
           </li>
+        )}
+        {RuntimeConfig.hasPermission(
+          Permission.OrgSettings,
+          PermissionLevel.Admin,
+        ) && (
           <li className="nav-item">
             <Nav.Link
               as={Link}
@@ -229,35 +245,35 @@ class SideBar extends React.Component<Props, State> {
               </span>
             </Nav.Link>
           </li>
-          {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
-            if (item.visibility !== "admin") {
-              return;
-            }
-            let PluginIcon = this.dynamicIcons.get(item.icon);
-            if (!PluginIcon) {
-              PluginIcon = dynamic(
-                () =>
-                  import("react-feather/dist/icons/" + item.icon.toLowerCase()),
-                { ssr: true },
-              ) as Icon;
-              this.dynamicIcons.set(item.icon, PluginIcon);
-            }
-            return (
-              <li className="nav-item" key={"plugin-" + item.id}>
-                <Nav.Link
-                  as={Link}
-                  eventKey={"/admin/plugin/" + item.id}
-                  href={"/admin/plugin/" + item.id}
-                >
-                  <this.SidebarIcon icon={PluginIcon} title={item.title} />
-                  <span className="d-none d-md-inline"> {item.title}</span>
-                </Nav.Link>
-              </li>
-            );
-          })}
-        </>
-      );
-    }
+        )}
+        {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
+          if (!RuntimeConfig.canSeePluginMenuItem(item, "admin")) {
+            return;
+          }
+          let PluginIcon = this.dynamicIcons.get(item.icon);
+          if (!PluginIcon) {
+            PluginIcon = dynamic(
+              () =>
+                import("react-feather/dist/icons/" + item.icon.toLowerCase()),
+              { ssr: true },
+            ) as Icon;
+            this.dynamicIcons.set(item.icon, PluginIcon);
+          }
+          return (
+            <li className="nav-item" key={"plugin-" + item.id}>
+              <Nav.Link
+                as={Link}
+                eventKey={"/admin/plugin/" + item.id}
+                href={"/admin/plugin/" + item.id}
+              >
+                <this.SidebarIcon icon={PluginIcon} title={item.title} />
+                <span className="d-none d-md-inline"> {item.title}</span>
+              </Nav.Link>
+            </li>
+          );
+        })}
+      </>
+    );
     return (
       <Nav
         id="sidebarMenu"
@@ -282,89 +298,108 @@ class SideBar extends React.Component<Props, State> {
                 </span>
               </Nav.Link>
             </li>
-            <li className="nav-item">
-              <Nav.Link
-                as={Link}
-                eventKey="/admin/locations"
-                href="/admin/locations"
-              >
-                <this.SidebarIcon
-                  icon={IconMap}
-                  title={this.props.t("areas")}
-                />
-                <span className="d-none d-md-inline">
-                  {" "}
-                  {this.props.t("areas")}
-                </span>
-              </Nav.Link>
-            </li>
-            <li className="nav-item">
-              <Nav.Link
-                as={Link}
-                eventKey="/admin/bookings"
-                href="/admin/bookings"
-              >
-                <this.SidebarIcon
-                  icon={IconBook}
-                  title={this.props.t("bookings")}
-                />
-                <span className="d-none d-md-inline">
-                  {" "}
-                  {this.props.t("bookings")}
-                </span>
-              </Nav.Link>
-            </li>
-            <li className="nav-item">
-              <Nav.Link
-                as={Link}
-                eventKey="/admin/approvals"
-                href="/admin/approvals"
-                disabled={
-                  !RuntimeConfig.INFOS.featureGroups &&
-                  !RuntimeConfig.INFOS.cloudHosted
-                }
-              >
-                <this.SidebarIcon
-                  icon={IconApproval}
-                  title={this.props.t("approvals")}
-                />
-                <span className="d-none d-md-inline position-relative">
-                  {" "}
-                  {this.props.t("approvals")}
-                  <Badge
-                    bg="primary"
-                    hidden={this.state.approvalCount === 0}
-                    className="position-absolute top-50 start-100 translate-middle-y"
-                    style={{
-                      marginLeft: "5px",
-                    }}
-                  >
-                    {RendererUtils.numberPlus(this.state.approvalCount, 9)}
-                  </Badge>
-                </span>
-                <PremiumFeatureIcon className="d-none d-md-inline" />
-              </Nav.Link>
-            </li>
-            {!RuntimeConfig.INFOS.hideReports && (
+            {RuntimeConfig.hasPermission(
+              Permission.Areas,
+              PermissionLevel.Admin,
+            ) && (
               <li className="nav-item">
                 <Nav.Link
                   as={Link}
-                  eventKey="/admin/report/analysis"
-                  href="/admin/report/analysis"
+                  eventKey="/admin/locations"
+                  href="/admin/locations"
                 >
                   <this.SidebarIcon
-                    icon={IconAnalysis}
-                    title={this.props.t("analysis")}
+                    icon={IconMap}
+                    title={this.props.t("areas")}
                   />
                   <span className="d-none d-md-inline">
                     {" "}
-                    {this.props.t("analysis")}
+                    {this.props.t("areas")}
                   </span>
                 </Nav.Link>
               </li>
             )}
+            {RuntimeConfig.hasPermission(
+              Permission.Bookings,
+              PermissionLevel.Read,
+            ) && (
+              <li className="nav-item">
+                <Nav.Link
+                  as={Link}
+                  eventKey="/admin/bookings"
+                  href="/admin/bookings"
+                >
+                  <this.SidebarIcon
+                    icon={IconBook}
+                    title={this.props.t("bookings")}
+                  />
+                  <span className="d-none d-md-inline">
+                    {" "}
+                    {this.props.t("bookings")}
+                  </span>
+                </Nav.Link>
+              </li>
+            )}
+            {RuntimeConfig.hasPermission(
+              Permission.Approvals,
+              PermissionLevel.Admin,
+            ) && (
+              <li className="nav-item">
+                <Nav.Link
+                  as={Link}
+                  eventKey="/admin/approvals"
+                  href="/admin/approvals"
+                  disabled={
+                    !RuntimeConfig.INFOS.featureGroups &&
+                    !RuntimeConfig.INFOS.cloudHosted
+                  }
+                >
+                  <this.SidebarIcon
+                    icon={IconApproval}
+                    title={this.props.t("approvals")}
+                  />
+                  <span className="d-none d-md-inline position-relative">
+                    {" "}
+                    {this.props.t("approvals")}
+                    <Badge
+                      bg="primary"
+                      hidden={this.state.approvalCount === 0}
+                      className="position-absolute top-50 start-100 translate-middle-y"
+                      style={{
+                        marginLeft: "5px",
+                      }}
+                    >
+                      {RendererUtils.numberPlus(this.state.approvalCount, 9)}
+                    </Badge>
+                  </span>
+                  <PremiumFeatureIcon className="d-none d-md-inline" />
+                </Nav.Link>
+              </li>
+            )}
+            {!RuntimeConfig.INFOS.hideReports &&
+              RuntimeConfig.hasPermission(
+                Permission.Analytics,
+                PermissionLevel.Read,
+              ) && (
+                <li className="nav-item">
+                  <Nav.Link
+                    as={Link}
+                    eventKey="/admin/report/analysis"
+                    href="/admin/report/analysis"
+                  >
+                    <this.SidebarIcon
+                      icon={IconAnalysis}
+                      title={this.props.t("analysis")}
+                    />
+                    <span className="d-none d-md-inline">
+                      {" "}
+                      {this.props.t("analysis")}
+                    </span>
+                  </Nav.Link>
+                </li>
+              )}
             {RuntimeConfig.INFOS.pluginMenuItems.map((item) => {
-              if (item.visibility !== "spaceadmin") {
+              if (!RuntimeConfig.canSeePluginMenuItem(item, "spaceadmin")) {
                 return;
               }
               let PluginIcon = this.dynamicIcons.get(item.icon);
@@ -392,7 +427,6 @@ class SideBar extends React.Component<Props, State> {
               );
             })}
             {orgAdminItems}
-            {orgItem}
             <li className="nav-item">
               <Nav.Link as={Link} href="/search/">
                 <this.SidebarIcon

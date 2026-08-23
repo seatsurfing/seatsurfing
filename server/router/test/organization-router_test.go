@@ -9,25 +9,29 @@ import (
 	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
-func TestOrganizationsEmptyResult(t *testing.T) {
-	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
-	loginResponse := LoginTestUser(user.ID)
-
-	req := NewHTTPRequest("GET", "/organization/", loginResponse.UserID, nil)
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody []string
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	if len(resBody) != 1 {
-		t.Fatalf("Expected array with one element (auto-created)")
+// createOrgForTest creates an organization directly. Organizations are no
+// longer created through the API: that endpoint required super admin, a role
+// that no longer exists.
+func createOrgForTest(name, firstname, lastname, email, language string) *Organization {
+	org := &Organization{
+		Name:             name,
+		ContactFirstname: firstname,
+		ContactLastname:  lastname,
+		ContactEmail:     email,
+		Language:         language,
+		SignupDate:       time.Now(),
 	}
+	if err := GetOrganizationRepository().Create(org); err != nil {
+		panic(err)
+	}
+	return org
 }
 
 func TestOrganizationsForbidden(t *testing.T) {
@@ -35,13 +39,15 @@ func TestOrganizationsForbidden(t *testing.T) {
 	loginResponse := CreateLoginTestUser()
 	org := CreateTestOrg("testing.com")
 
+	// Listing and creating organizations were super admin only and have been
+	// removed along with that role.
 	req := NewHTTPRequest("GET", "/organization/", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 
 	req = NewHTTPRequest("POST", "/organization/", loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 
 	req = NewHTTPRequest("DELETE", "/organization/"+org.ID, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
@@ -160,33 +166,30 @@ func TestOrganizationsUpdateWithMailChange(t *testing.T) {
 	CheckTestString(t, "foo2@seatsurfing.app", resBody3.Email)
 }
 
-func TestOrganizationsCRUD(t *testing.T) {
+// Organizations are created out of band, so this covers read, update and
+// delete only.
+func TestOrganizationsReadUpdateDelete(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
+	// Deleting an organization through the API now requires the deployment to
+	// permit it for every administrator; the super admin bypass is gone.
+	allowOrgDelete := GetConfig().AllowOrgDelete
+	GetConfig().AllowOrgDelete = true
+	defer func() { GetConfig().AllowOrgDelete = allowOrgDelete }()
+
+	org := createOrgForTest("Some Company Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id := org.ID
+	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
-	// 1. Create
-	payload := `{
-		"name": "Some Company Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id := res.Header().Get("X-Object-Id")
-
 	domain := "test.com"
-	organization, _ := GetOrganizationRepository().GetOne(id)
+	organization := org
 	GetOrganizationRepository().AddDomain(organization, domain, true)
 	GetOrganizationRepository().SetPrimaryDomain(organization, domain)
 	GetOrganizationRepository().SetDomainAccessibility(id, domain, true, time.Now().UTC())
 
-	// 2. Read
-	req = NewHTTPRequest("GET", "/organization/"+id, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
+	// 1. Read
+	req := NewHTTPRequest("GET", "/organization/"+id, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *GetOrganizationResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
@@ -196,8 +199,8 @@ func TestOrganizationsCRUD(t *testing.T) {
 	CheckTestString(t, "foo@seatsurfing.app", resBody.Email)
 	CheckTestString(t, "de", resBody.Language)
 
-	// 3. Update
-	payload = `{
+	// 2. Update
+	payload := `{
 		"name": "Some Company 2 Ltd.",
 		"firstname": "Foo 2",
 		"lastname": "Bar 2",
@@ -217,10 +220,13 @@ func TestOrganizationsCRUD(t *testing.T) {
 	CheckTestString(t, "Some Company 2 Ltd.", resBody2.Name)
 	CheckTestString(t, "Foo 2", resBody2.Firstname)
 	CheckTestString(t, "Bar 2", resBody2.Lastname)
-	CheckTestString(t, "foo2@seatsurfing.app", resBody2.Email)
+	// Changing the contact address always requires confirmation now, so it is
+	// unchanged until the emailed code is submitted. TestOrganizationsUpdate-
+	// WithMailChange covers that flow.
+	CheckTestString(t, "foo@seatsurfing.app", resBody2.Email)
 	CheckTestString(t, "en", resBody2.Language)
 
-	// 4. Delete
+	// 3. Delete
 	req = NewHTTPRequest("DELETE", "/organization/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -228,7 +234,7 @@ func TestOrganizationsCRUD(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
 	CheckTestBool(t, true, len(resBody3.Code) == 6)
 
-	// 5. Confirm deletion
+	// 4. Confirm deletion
 	var authId string
 	GetDatabase().DB().QueryRow(
 		"SELECT id FROM auth_states WHERE auth_state_type=$1 ORDER BY expiry DESC LIMIT 1",
@@ -241,34 +247,28 @@ func TestOrganizationsCRUD(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
-	// Read
+	// The administrator was deleted along with their organization, so their
+	// session is no longer valid.
 	req = NewHTTPRequest("GET", "/organization/"+id, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+
+	if _, err := GetOrganizationRepository().GetOne(id); err == nil {
+		t.Fatal("expected the organization to be deleted")
+	}
 }
 
 func TestOrganizationsGetByDomain(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
+	org := createOrgForTest("Some Company Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id := org.ID
+	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
-
-	// Create organization
-	payload := `{
-		"name": "Some Company Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id := res.Header().Get("X-Object-Id")
 	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
 
 	// Add domain 1
-	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/test1.com", loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("POST", "/organization/"+id+"/domain/test1.com", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Add domain 2
@@ -276,13 +276,13 @@ func TestOrganizationsGetByDomain(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
-	// Get by domain 1 (created by super admin, so it's verified from the start)
+	// Domains added through the API always start unverified now, so the
+	// organization is not yet reachable by this domain.
 	req = NewHTTPRequest("GET", "/organization/domain/test1.com", loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 
 	// Verify both domains
-	org, _ := GetOrganizationRepository().GetOne(id)
 	GetOrganizationRepository().ActivateDomain(org, "test1.com")
 	GetOrganizationRepository().ActivateDomain(org, "test2.com")
 
@@ -310,26 +310,15 @@ func TestOrganizationsGetByDomain(t *testing.T) {
 
 func TestOrganizationsDomainsCRUD(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
+	org := createOrgForTest("Some Company Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id := org.ID
+	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
-
-	// Create organization
-	payload := `{
-		"name": "Some Company Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id := res.Header().Get("X-Object-Id")
 	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
 
 	// Add domain 1
-	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/test1.com", loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("POST", "/organization/"+id+"/domain/test1.com", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Add domain 2
@@ -354,9 +343,11 @@ func TestOrganizationsDomainsCRUD(t *testing.T) {
 	CheckTestString(t, "abc.com", resBody[0].DomainName)
 	CheckTestString(t, "test1.com", resBody[1].DomainName)
 	CheckTestString(t, "test2.com", resBody[2].DomainName)
-	CheckTestBool(t, true, resBody[0].Active)
-	CheckTestBool(t, true, resBody[1].Active)
-	CheckTestBool(t, true, resBody[2].Active)
+	// Domains added through the API now always start unverified: the super
+	// admin shortcut that pre-activated them is gone.
+	CheckTestBool(t, false, resBody[0].Active)
+	CheckTestBool(t, false, resBody[1].Active)
+	CheckTestBool(t, false, resBody[2].Active)
 
 	// Remove 2
 	req = NewHTTPRequest("DELETE", "/organization/"+id+"/domain/test2.com", loginResponse.UserID, nil)
@@ -374,36 +365,22 @@ func TestOrganizationsDomainsCRUD(t *testing.T) {
 	}
 	CheckTestString(t, "abc.com", resBody[0].DomainName)
 	CheckTestString(t, "test1.com", resBody[1].DomainName)
-	CheckTestBool(t, true, resBody[0].Active)
-	CheckTestBool(t, true, resBody[1].Active)
+	CheckTestBool(t, false, resBody[0].Active)
+	CheckTestBool(t, false, resBody[1].Active)
 }
 
 func TestOrganizationsVerifyDNS(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
-	loginResponse := LoginTestUser(user.ID)
-
-	// Create organization
-	payload := `{
-		"name": "Some Company Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id := res.Header().Get("X-Object-Id")
+	org := createOrgForTest("Some Company Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id := org.ID
 	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
 
-	org, _ := GetOrganizationRepository().GetOne(id)
 	adminUser := CreateTestUserOrgAdmin(org)
 	adminLoginResponse := LoginTestUser(adminUser.ID)
 
 	// Add domain
-	req = NewHTTPRequest("POST", "/organization/"+id+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("POST", "/organization/"+id+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Fake verify token
@@ -432,94 +409,51 @@ func TestOrganizationsVerifyDNS(t *testing.T) {
 
 func TestOrganizationsAddDomainConflict(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
+	org1 := createOrgForTest("Some Company Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id1 := org1.ID
+	user := CreateTestUserOrgAdmin(org1)
 	loginResponse := LoginTestUser(user.ID)
-
-	// Create organization 1
-	payload := `{
-		"name": "Some Company Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id1 := res.Header().Get("X-Object-Id")
 	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
 
 	// Create organization 2
-	payload = `{
-		"name": "Some Company 2 Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req = NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id2 := res.Header().Get("X-Object-Id")
+	org2 := createOrgForTest("Some Company 2 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id2 := org2.ID
 	GetSettingsRepository().Set(id2, SettingFeatureCustomDomains.Name, "1")
+	admin2 := CreateTestUserOrgAdmin(org2)
+	loginResponse2 := LoginTestUser(admin2.ID)
 
 	// Add domain to org 1 and activate it
-	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/test1.com", loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("POST", "/organization/"+id1+"/domain/test1.com", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	org1, _ := GetOrganizationRepository().GetOne(id1)
 	GetOrganizationRepository().ActivateDomain(org1, "test1.com")
 
 	// Try to add same domain to org 2
-	req = NewHTTPRequest("POST", "/organization/"+id2+"/domain/test1.com", loginResponse.UserID, nil)
+	req = NewHTTPRequest("POST", "/organization/"+id2+"/domain/test1.com", loginResponse2.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
 }
 
 func TestOrganizationsAddDomainNoConflictBecauseInactive(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
-	loginResponse := LoginTestUser(user.ID)
-
-	// Create organization 1
-	payload := `{
-		"name": "Some Company 1 Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id1 := res.Header().Get("X-Object-Id")
+	org1 := createOrgForTest("Some Company 1 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id1 := org1.ID
 	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
 
 	// Create organization 2
-	payload = `{
-		"name": "Some Company 2 Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req = NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id2 := res.Header().Get("X-Object-Id")
+	org2 := createOrgForTest("Some Company 2 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id2 := org2.ID
 	GetSettingsRepository().Set(id2, SettingFeatureCustomDomains.Name, "1")
 
-	org1, _ := GetOrganizationRepository().GetOne(id1)
 	adminUser1 := CreateTestUserOrgAdmin(org1)
 	adminLoginResponse1 := LoginTestUser(adminUser1.ID)
 
-	org2, _ := GetOrganizationRepository().GetOne(id2)
 	adminUser2 := CreateTestUserOrgAdmin(org2)
 	adminLoginResponse2 := LoginTestUser(adminUser2.ID)
 
 	// Add domain to org 1
-	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/test1.com", adminLoginResponse1.UserID, nil)
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("POST", "/organization/"+id1+"/domain/test1.com", adminLoginResponse1.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Add same domain to org 2
@@ -530,48 +464,24 @@ func TestOrganizationsAddDomainNoConflictBecauseInactive(t *testing.T) {
 
 func TestOrganizationsAddDomainActivateConflicting(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
-	loginResponse := LoginTestUser(user.ID)
-
-	// Create organization 1
-	payload := `{
-		"name": "Some Company 1 Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req := NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id1 := res.Header().Get("X-Object-Id")
+	org1 := createOrgForTest("Some Company 1 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id1 := org1.ID
 	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
 
 	// Create organization 2
-	payload = `{
-		"name": "Some Company 2 Ltd.",
-		"firstname": "Foo",
-		"lastname": "Bar",
-		"email": "foo@seatsurfing.app",
-		"language": "de"
-	}`
-	req = NewHTTPRequest("POST", "/organization/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id2 := res.Header().Get("X-Object-Id")
+	org2 := createOrgForTest("Some Company 2 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
+	id2 := org2.ID
 	GetSettingsRepository().Set(id2, SettingFeatureCustomDomains.Name, "1")
 
-	org1, _ := GetOrganizationRepository().GetOne(id1)
 	adminUser1 := CreateTestUserOrgAdmin(org1)
 	adminLoginResponse1 := LoginTestUser(adminUser1.ID)
 
-	org2, _ := GetOrganizationRepository().GetOne(id2)
 	adminUser2 := CreateTestUserOrgAdmin(org2)
 	adminLoginResponse2 := LoginTestUser(adminUser2.ID)
 
 	// Add domain to org 1
-	req = NewHTTPRequest("POST", "/organization/"+id1+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse1.UserID, nil)
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("POST", "/organization/"+id1+"/domain/seatsurfing-testcase.virtualzone.de", adminLoginResponse1.UserID, nil)
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
 	// Add same domain to org 2

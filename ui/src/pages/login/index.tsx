@@ -363,7 +363,7 @@ class Login extends React.Component<Props, State> {
     // do not redirect to admin pages for non-admin users (to prevent "auto logout")
     if (
       Navigation.isAdminPath(redirectUrl) &&
-      !RuntimeConfig.INFOS?.spaceAdmin
+      !RuntimeConfig.hasAnyPermission()
     ) {
       return Navigation.PATH_PAGE_SEARCH;
     }

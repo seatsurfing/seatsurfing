@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 
@@ -43,7 +44,7 @@ func (router *AuthAttemptRouter) SetupRoutes(s *mux.Router) {
 
 func (router *AuthAttemptRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAuditLog, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}

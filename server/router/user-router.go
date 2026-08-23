@@ -67,7 +67,7 @@ type CreateUserRequest struct {
 	Firstname      string `json:"firstname" validate:"required,max=128"`
 	Lastname       string `json:"lastname" validate:"required,max=128"`
 	AtlassianID    string `json:"atlassianId"`
-	Role           int    `json:"role"`
+	AccountType    int    `json:"accountType"`
 	AuthProviderID string `json:"authProviderId"`
 	Password       string `json:"password"`
 	SendInvitation bool   `json:"sendInvitation"`
@@ -80,9 +80,7 @@ type GetUserResponse struct {
 	RequirePassword bool                    `json:"requirePassword"`
 	PasswordPending bool                    `json:"passwordPending"`
 	AuthProviderID  string                  `json:"authProviderId"`
-	SpaceAdmin      bool                    `json:"spaceAdmin"`
-	OrgAdmin        bool                    `json:"admin"`
-	SuperAdmin      bool                    `json:"superAdmin"`
+	RoleIDs         []string                `json:"roleIds"`
 	TotpEnabled     bool                    `json:"totpEnabled"`
 	HasPasskeys     bool                    `json:"hasPasskeys"`
 	LastActivity    *time.Time              `json:"lastActivity"`
@@ -91,6 +89,10 @@ type GetUserResponse struct {
 
 type GetUserSelfResponse struct {
 	IsPrimaryDomain bool `json:"isPrimaryDomain"`
+	// Permissions is the caller's own resolved access, keyed by permission
+	// name. It is returned only for the authenticated user themselves, since
+	// resolving it for every entry of a user list would cost a query each.
+	Permissions map[string]int `json:"permissions"`
 	GetUserResponse
 }
 
@@ -133,8 +135,8 @@ type ValidateTotpRequest struct {
 	StateID string `json:"stateId" validate:"required,uuid4"`
 }
 
-func isServiceAccountRole(role int) bool {
-	return role == int(UserRoleServiceAccountRO) || role == int(UserRoleServiceAccountRW)
+func isServiceAccountType(accountType int) bool {
+	return AccountType(accountType).IsServiceAccount()
 }
 
 func isValidEmail(email string) bool {
@@ -157,6 +159,9 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/api-token", router.getApiToken).Methods("GET")
 	s.HandleFunc("/{id}/api-token", router.generateApiToken).Methods("POST")
 	s.HandleFunc("/{id}/api-token", router.revokeApiToken).Methods("DELETE")
+	s.HandleFunc("/{id}/roles", router.getRoles).Methods("GET")
+	s.HandleFunc("/{id}/roles", router.setRoles).Methods("PUT")
+	s.HandleFunc("/{id}/permissions", router.getPermissions).Methods("GET")
 	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
 	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
 	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
@@ -174,7 +179,7 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 
 func (router *UserRouter) adminResetPasskeys(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -198,7 +203,7 @@ func (router *UserRouter) adminResetPasskeys(w http.ResponseWriter, r *http.Requ
 
 func (router *UserRouter) adminResetTotp(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -455,7 +460,7 @@ func (router *UserRouter) mergeFinish(w http.ResponseWriter, r *http.Request) {
 
 func (router *UserRouter) getCount(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -489,7 +494,7 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		}
 		e = eUser
 	}
-	if !CanAdminOrg(user, e.OrganizationID) && (user.ID != e.ID) {
+	if !HasPermission(user, e.OrganizationID, PermissionUsers, PermissionLevelAdmin) && (user.ID != e.ID) {
 		SendForbidden(w)
 		return
 	}
@@ -548,6 +553,7 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 	}
 	res := &GetUserSelfResponse{
 		GetUserResponse: *router.copyToRestModel(e, false, passkeyCount > 0),
+		Permissions:     PermissionsToRestModel(GetEffectivePermissions(e, e.OrganizationID)),
 	}
 	res.Organization = GetOrganizationResponse{
 		ID: org.ID,
@@ -565,7 +571,7 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	var showNames bool = false
-	if CanSpaceAdminOrg(user, user.OrganizationID) {
+	if HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) {
 		showNames = true
 	} else {
 		showNames, _ = GetSettingsRepository().GetBool(user.OrganizationID, SettingShowNames.Name)
@@ -600,7 +606,7 @@ func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) 
 
 func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -628,7 +634,7 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 func (router *UserRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("q")
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -668,7 +674,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
+	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
@@ -690,7 +696,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionUsers, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -710,10 +716,9 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	if user.ID == e.ID {
-		// Prevent users from changing their own role
-		eNew.Role = e.Role
-	} else if eNew.Role > user.Role && eNew.Role != UserRoleServiceAccountRO && eNew.Role != UserRoleServiceAccountRW {
-		eNew.Role = e.Role
+		// Nobody turns their own account into a service account, which would
+		// lock them out of the web interface.
+		eNew.AccountType = e.AccountType
 	}
 	eNew.OrganizationID = e.OrganizationID
 
@@ -800,8 +805,13 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) || e.ID == user.ID {
+	if !HasPermission(user, e.OrganizationID, PermissionUsers, PermissionLevelAdmin) || e.ID == user.ID {
 		SendForbidden(w)
+		return
+	}
+	// Refuse before deleting rather than repairing afterwards: this is the
+	// organization's last administrator.
+	if !CheckOrgRetainsAdmin(w, e.OrganizationID, e.ID) {
 		return
 	}
 	if err := GetUserRepository().Delete(e); err != nil {
@@ -814,7 +824,7 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 
 func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -823,7 +833,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	if !isServiceAccountRole(m.Role) && !isValidEmail(m.Email) {
+	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
@@ -838,7 +848,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if m.OrganizationID != "" && m.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+	if m.OrganizationID != "" && m.OrganizationID != user.OrganizationID {
 		SendForbidden(w)
 		return
 	}
@@ -856,12 +866,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	e := router.copyFromRestModel(&m)
-	if e.OrganizationID == "" || !GetUserRepository().IsSuperAdmin(user) {
-		e.OrganizationID = user.OrganizationID
-	}
-	if e.Role > user.Role && e.Role != UserRoleServiceAccountRO && e.Role != UserRoleServiceAccountRW {
-		e.Role = UserRoleUser
-	}
+	e.OrganizationID = user.OrganizationID
 	org, err := GetOrganizationRepository().GetOne(e.OrganizationID)
 	if err != nil {
 		log.Println(err)
@@ -912,7 +917,7 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 	e.Email = m.Email
 	e.Firstname = m.Firstname
 	e.Lastname = m.Lastname
-	e.Role = UserRole(m.Role)
+	e.AccountType = AccountType(m.AccountType)
 
 	if m.SendInvitation {
 		// Invitation mode: user needs to set password via email link
@@ -946,10 +951,13 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool)
 	m.Firstname = e.Firstname
 	m.Lastname = e.Lastname
 	m.AtlassianID = string(e.AtlassianID)
-	m.Role = int(e.Role)
-	m.SpaceAdmin = GetUserRepository().IsSpaceAdmin(e)
-	m.OrgAdmin = GetUserRepository().IsOrgAdmin(e)
-	m.SuperAdmin = GetUserRepository().IsSuperAdmin(e)
+	m.AccountType = int(e.AccountType)
+	if roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(e.ID); err == nil {
+		m.RoleIDs = roleIDs
+	}
+	if m.RoleIDs == nil {
+		m.RoleIDs = []string{}
+	}
 	m.RequirePassword = (e.HashedPassword != "")
 	m.PasswordPending = e.PasswordPending
 	m.TotpEnabled = (e.TotpSecret != "")
@@ -971,7 +979,7 @@ type GetApiTokenStatusResponse struct {
 
 func (router *UserRouter) getApiToken(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -981,11 +989,11 @@ func (router *UserRouter) getApiToken(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+	if e.OrganizationID != user.OrganizationID {
 		SendNotFound(w)
 		return
 	}
-	if !isServiceAccountRole(int(e.Role)) {
+	if !e.AccountType.IsServiceAccount() {
 		SendBadRequest(w)
 		return
 	}
@@ -997,7 +1005,7 @@ func (router *UserRouter) getApiToken(w http.ResponseWriter, r *http.Request) {
 
 func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -1007,11 +1015,11 @@ func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Reques
 		SendNotFound(w)
 		return
 	}
-	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+	if e.OrganizationID != user.OrganizationID {
 		SendNotFound(w)
 		return
 	}
-	if !isServiceAccountRole(int(e.Role)) {
+	if !e.AccountType.IsServiceAccount() {
 		SendBadRequest(w)
 		return
 	}
@@ -1037,7 +1045,7 @@ func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Reques
 
 func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -1047,11 +1055,11 @@ func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request)
 		SendNotFound(w)
 		return
 	}
-	if e.OrganizationID != user.OrganizationID && !GetUserRepository().IsSuperAdmin(user) {
+	if e.OrganizationID != user.OrganizationID {
 		SendNotFound(w)
 		return
 	}
-	if !isServiceAccountRole(int(e.Role)) {
+	if !e.AccountType.IsServiceAccount() {
 		SendBadRequest(w)
 		return
 	}
@@ -1061,4 +1069,135 @@ func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// getRoles lists the role IDs assigned to a user.
+func (router *UserRouter) getRoles(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CheckPermission(w, user, user.OrganizationID, PermissionRoles, PermissionLevelRead) {
+		return
+	}
+	e := router.loadUserInOwnOrg(w, r, user)
+	if e == nil {
+		return
+	}
+	roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if roleIDs == nil {
+		roleIDs = []string{}
+	}
+	SendJSON(w, roleIDs)
+}
+
+// setRoles replaces a user's manually assigned roles. Assignments made by an
+// identity provider are left alone, so that reconciliation on the user's next
+// login still governs those.
+func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	if !CheckPermission(w, user, user.OrganizationID, PermissionRoles, PermissionLevelAdmin) {
+		return
+	}
+	e := router.loadUserInOwnOrg(w, r, user)
+	if e == nil {
+		return
+	}
+	var m SetUserRolesRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	// Every role involved must be one the caller could grant outright, both
+	// the ones being added and the ones the user already holds. Otherwise a
+	// limited administrator could hand out access they do not have themselves,
+	// or strip a role they can not see the full weight of.
+	current, err := GetUserRoleRepository().GetRolesForUser(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	for _, roleID := range m.RoleIDs {
+		role, err := GetRoleRepository().GetOne(roleID)
+		if err != nil || role.OrganizationID != user.OrganizationID {
+			SendBadRequest(w)
+			return
+		}
+		if !CanGrantPermissions(user, user.OrganizationID, role.Permissions) {
+			SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
+			return
+		}
+	}
+	for _, role := range current {
+		full, err := GetRoleRepository().GetOne(role.ID)
+		if err != nil {
+			continue
+		}
+		if !CanGrantPermissions(user, user.OrganizationID, full.Permissions) {
+			SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
+			return
+		}
+	}
+	// Evaluate the outcome before writing: a refused request must leave the
+	// assignments untouched.
+	resulting := ResultingPermissions(e, m.RoleIDs)
+
+	// A user must not be able to sign away their own ability to manage roles.
+	if e.ID == user.ID && resulting[PermissionRoles] < PermissionLevelAdmin {
+		SendBadRequestCode(w, ResponseCodeRoleCannotRemoveOwnAccess)
+		return
+	}
+	// The organization must keep at least one administrator. If this user
+	// still qualifies afterwards there is nothing to check; otherwise somebody
+	// else must.
+	stillAdmin := true
+	for p, level := range AdminRetentionPermissions {
+		if resulting[p] < level {
+			stillAdmin = false
+			break
+		}
+	}
+	if !stillAdmin && !CheckOrgRetainsAdmin(w, user.OrganizationID, e.ID) {
+		return
+	}
+
+	if err := GetUserRoleRepository().SetRolesForUser(e.ID, m.RoleIDs, RoleAssignmentSourceManual); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
+}
+
+// getPermissions returns a user's resolved access. Administrators use it to
+// see the effect of an assignment before relying on it; every user may read
+// their own.
+func (router *UserRouter) getPermissions(w http.ResponseWriter, r *http.Request) {
+	user := GetRequestUser(r)
+	vars := mux.Vars(r)
+	if vars["id"] != user.ID && !CheckPermission(w, user, user.OrganizationID, PermissionRoles, PermissionLevelRead) {
+		return
+	}
+	e := router.loadUserInOwnOrg(w, r, user)
+	if e == nil {
+		return
+	}
+	SendJSON(w, &GetUserPermissionsResponse{
+		Permissions: PermissionsToRestModel(GetEffectivePermissions(e, e.OrganizationID)),
+	})
+}
+
+// loadUserInOwnOrg resolves the user named in the path, refusing anything
+// outside the caller's organization.
+func (router *UserRouter) loadUserInOwnOrg(w http.ResponseWriter, r *http.Request, requestUser *User) *User {
+	vars := mux.Vars(r)
+	e, err := GetUserRepository().GetOne(vars["id"])
+	if err != nil || e == nil || e.OrganizationID != requestUser.OrganizationID {
+		SendNotFound(w)
+		return nil
+	}
+	return e
 }

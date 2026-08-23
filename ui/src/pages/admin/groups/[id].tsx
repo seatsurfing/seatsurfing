@@ -180,7 +180,7 @@ class EditUser extends React.Component<Props, State> {
         </td>
         <td style={{ tableLayout: "auto" }}>
           <div style={{ marginLeft: "10px" }}>
-            {user.email} ({RendererUtils.roleName(user.role, this.props.t)})
+            {user.email}
             {fullname && (
               <>
                 <br />

@@ -29,8 +29,13 @@ service HostAPIService {
   rpc UserGetCount(UserGetCountArgs) returns (IntReply);
   rpc UserGetHashedPassword(UserHashPasswordArgs) returns (StringReply);
   rpc UserGetUsersWithEmail(UserGetUsersWithEmailArgs) returns (UserGetUsersWithEmailReply);
-  rpc UserIsOrgAdmin(UserIsAdminArgs) returns (BoolReply);
-  rpc UserIsSuperAdmin(UserIsAdminArgs) returns (BoolReply);
+  // The ordered role ladder has been replaced by roles and permissions.
+  // Field numbers 32 and 33 held UserIsOrgAdmin and UserIsSuperAdmin.
+  rpc UserHasPermission(UserHasPermissionArgs) returns (BoolReply);
+  // Role assignment, so that a plugin creating an organization's first user
+  // can grant them administrative access.
+  rpc RoleGetIDByName(RoleGetIDByNameArgs) returns (RoleGetIDByNameReply);
+  rpc RoleAssignToUser(RoleAssignToUserArgs) returns (ErrorReply);
   rpc UserCreate(UserMutateArgs) returns (UserGetOneReply);
   rpc UserUpdate(UserMutateArgs) returns (ErrorReply);
   rpc UserDelete(UserMutateArgs) returns (ErrorReply);
@@ -123,7 +128,27 @@ message UserGetUsersWithEmailArgs { string email = 1; }
 message UserGetUsersWithEmailReply { repeated seatsurfing.plugin.v1.User users = 1; string err = 2; }
 message UserGetCountArgs { string org_id = 1; }
 message UserHashPasswordArgs { string password = 1; }
-message UserIsAdminArgs { seatsurfing.plugin.v1.User user = 1; }
+message RoleGetIDByNameArgs {
+  string organization_id = 1;
+  string name = 2;
+}
+
+message RoleGetIDByNameReply {
+  string id = 1;
+  string err = 2;
+}
+
+message RoleAssignToUserArgs {
+  string user_id = 1;
+  string role_id = 2;
+}
+
+message UserHasPermissionArgs {
+  string user_id = 1;
+  string organization_id = 2;
+  string permission = 3;
+  int32 min_level = 4;
+}
 message UserMutateArgs { seatsurfing.plugin.v1.User user = 1; }
 
 // ─── Organizations ────────────────────────────────────────────────────────────

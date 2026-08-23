@@ -42,6 +42,12 @@ func GetAuthProviderRepository() *AuthProviderStore {
 }
 
 func (r *AuthProviderStore) RunSchemaUpgrade(curVersion, targetVersion int) {
+	if curVersion < 53 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
+			"ADD COLUMN IF NOT EXISTS userinfo_groups_field VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
+	}
 	if curVersion < 17 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
 			"ADD COLUMN IF NOT EXISTS logout_url VARCHAR NOT NULL DEFAULT ''"); err != nil {
@@ -99,10 +105,10 @@ func (r *AuthProviderStore) encryptExistingClientSecrets() {
 func (r *AuthProviderStore) Create(e *AuthProvider) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO auth_providers "+
-		"(organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) "+
+		"(organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, userinfo_groups_field, client_id, client_secret, logout_url, profile_page_url, read_only) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) "+
 		"RETURNING id",
-		e.OrganizationID, e.Name, e.ProviderType, e.AuthURL, e.TokenURL, e.AuthStyle, e.Scopes, e.UserInfoURL, e.UserInfoEmailField, e.UserInfoFirstnameField, e.UserInfoLastnameField, e.ClientID, e.ClientSecret, e.LogoutURL, e.ProfilePageURL, e.ReadOnly).Scan(&id)
+		e.OrganizationID, e.Name, e.ProviderType, e.AuthURL, e.TokenURL, e.AuthStyle, e.Scopes, e.UserInfoURL, e.UserInfoEmailField, e.UserInfoFirstnameField, e.UserInfoLastnameField, e.UserInfoGroupsField, e.ClientID, e.ClientSecret, e.LogoutURL, e.ProfilePageURL, e.ReadOnly).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -112,10 +118,10 @@ func (r *AuthProviderStore) Create(e *AuthProvider) error {
 
 func (r *AuthProviderStore) GetOne(id string) (*AuthProvider, error) {
 	e := &AuthProvider{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, userinfo_groups_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+		id).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.UserInfoGroupsField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -124,10 +130,10 @@ func (r *AuthProviderStore) GetOne(id string) (*AuthProvider, error) {
 
 func (r *AuthProviderStore) GetOneByOrgId(id string, orgId string) (*AuthProvider, error) {
 	e := &AuthProvider{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, userinfo_groups_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
 		"WHERE id = $1 AND organization_id = $2",
-		id, orgId).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+		id, orgId).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.UserInfoGroupsField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +142,10 @@ func (r *AuthProviderStore) GetOneByOrgId(id string, orgId string) (*AuthProvide
 
 func (r *AuthProviderStore) GetByName(organizationID string, name string) (*AuthProvider, error) {
 	e := &AuthProvider{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, userinfo_groups_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
 		"WHERE organization_id = $1 AND name = $2",
-		organizationID, name).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+		organizationID, name).Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.UserInfoGroupsField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +154,7 @@ func (r *AuthProviderStore) GetByName(organizationID string, name string) (*Auth
 
 func (r *AuthProviderStore) GetAll(organizationID string) ([]*AuthProvider, error) {
 	var result []*AuthProvider
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, name, provider_type, auth_url, token_url, auth_style, scopes, userinfo_url, userinfo_email_field, userinfo_firstname_field, userinfo_lastname_field, userinfo_groups_field, client_id, client_secret, logout_url, profile_page_url, read_only "+
 		"FROM auth_providers "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY name", organizationID)
@@ -158,7 +164,7 @@ func (r *AuthProviderStore) GetAll(organizationID string) ([]*AuthProvider, erro
 	defer rows.Close()
 	for rows.Next() {
 		e := &AuthProvider{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Name, &e.ProviderType, &e.AuthURL, &e.TokenURL, &e.AuthStyle, &e.Scopes, &e.UserInfoURL, &e.UserInfoEmailField, &e.UserInfoFirstnameField, &e.UserInfoLastnameField, &e.UserInfoGroupsField, &e.ClientID, &e.ClientSecret, &e.LogoutURL, &e.ProfilePageURL, &e.ReadOnly)
 		if err != nil {
 			return nil, err
 		}
@@ -180,17 +186,21 @@ func (r *AuthProviderStore) Update(e *AuthProvider) error {
 		"userinfo_email_field = $9, "+
 		"userinfo_firstname_field = $10, "+
 		"userinfo_lastname_field = $11, "+
-		"client_id = $12, "+
-		"client_secret = $13, "+
-		"logout_url = $14, "+
-		"profile_page_url = $15, "+
-		"read_only = $16 "+
-		"WHERE id = $17",
-		e.OrganizationID, e.Name, e.ProviderType, e.AuthURL, e.TokenURL, e.AuthStyle, e.Scopes, e.UserInfoURL, e.UserInfoEmailField, e.UserInfoFirstnameField, e.UserInfoLastnameField, e.ClientID, e.ClientSecret, e.LogoutURL, e.ProfilePageURL, e.ReadOnly, e.ID)
+		"userinfo_groups_field = $12, "+
+		"client_id = $13, "+
+		"client_secret = $14, "+
+		"logout_url = $15, "+
+		"profile_page_url = $16, "+
+		"read_only = $17 "+
+		"WHERE id = $18",
+		e.OrganizationID, e.Name, e.ProviderType, e.AuthURL, e.TokenURL, e.AuthStyle, e.Scopes, e.UserInfoURL, e.UserInfoEmailField, e.UserInfoFirstnameField, e.UserInfoLastnameField, e.UserInfoGroupsField, e.ClientID, e.ClientSecret, e.LogoutURL, e.ProfilePageURL, e.ReadOnly, e.ID)
 	return err
 }
 
 func (r *AuthProviderStore) Delete(e *AuthProvider) error {
+	if err := GetAuthProviderMappingRepository().DeleteAllForProvider(e.ID); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_providers WHERE id = $1", e.ID)
 	return err
 }

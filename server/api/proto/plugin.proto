@@ -23,6 +23,10 @@ service SeatsurfingPluginService {
   rpc GetUnauthorizedRoutes(seatsurfing.plugin.v1.Empty) returns (StringListReply);
   rpc RunSchemaUpdates(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
   rpc GetAdminUIMenuItems(seatsurfing.plugin.v1.Empty) returns (AdminUIMenuItemsReply);
+  // Permissions this plugin contributes to the role editor. A plugin that
+  // does not implement it declares none, and its menu items fall back to the
+  // coarse visibility below.
+  rpc GetPermissionDefinitions(seatsurfing.plugin.v1.Empty) returns (PermissionDefinitionsReply);
   rpc OnTimer(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
   // OnInit carries no broker id in gRPC mode - the plugin already knows the
   // host's HostAPI address from its own static config and dials it eagerly
@@ -61,11 +65,29 @@ message AdminUIMenuItem {
   // source is the URL of the JS module that registers the plugin's UI as
   // the custom element named by tag_name.
   string source = 3;
+  // Deprecated: superseded by required_permission. Retained so that a plugin
+  // built against the old contract still places its items correctly.
   string visibility = 4;
   string icon = 5;
   // tag_name is the custom element tag to mount for this menu item's UI
   // once the JS module at source has been loaded.
   string tag_name = 6;
+  // The permission a user must hold to see this item, and the level at which.
+  // Empty means fall back to visibility.
+  string required_permission = 7;
+  int32 required_level = 8;
+}
+
+message PermissionDefinition {
+  // Must begin with "plugin." to distinguish it from a built-in permission.
+  string key = 1;
+  // Levels this permission can be granted at: 0 none, 10 read, 20 write,
+  // 30 admin. Empty means none and admin.
+  repeated int32 allowed_levels = 2;
+}
+
+message PermissionDefinitionsReply {
+  repeated PermissionDefinition definitions = 1;
 }
 
 message AdminUIMenuItemsReply {

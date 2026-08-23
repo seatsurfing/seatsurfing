@@ -21,7 +21,9 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
-import AuthProvider from "@/types/AuthProvider";
+import AuthProvider, { AuthProviderMapping } from "@/types/AuthProvider";
+import Role from "@/types/Role";
+import Group from "@/types/Group";
 import Ajax from "@/util/Ajax";
 
 import ErrorText from "@/types/ErrorText";
@@ -47,6 +49,10 @@ interface State {
   userInfoEmailField: string;
   userInfoFirstnameField: string;
   userInfoLastnameField: string;
+  userInfoGroupsField: string;
+  mappings: AuthProviderMapping[];
+  roles: Role[];
+  groups: Group[];
   clientId: string;
   clientSecret: string;
   clientSecretEditing: boolean;
@@ -83,6 +89,10 @@ class EditAuthProvider extends React.Component<Props, State> {
       userInfoEmailField: "",
       userInfoFirstnameField: "",
       userInfoLastnameField: "",
+      userInfoGroupsField: "",
+      mappings: [],
+      roles: [],
+      groups: [],
       clientId: "",
       clientSecret: "",
       clientSecretEditing: true,
@@ -114,6 +124,12 @@ class EditAuthProvider extends React.Component<Props, State> {
           userInfoEmailField: authProvider.userInfoEmailField,
           userInfoFirstnameField: authProvider.userInfoFirstnameField,
           userInfoLastnameField: authProvider.userInfoLastnameField,
+          userInfoGroupsField: authProvider.userInfoGroupsField,
+          mappings: await AuthProviderMapping.list(authProvider.id).catch(
+            () => [],
+          ),
+          roles: await Role.list().catch(() => []),
+          groups: await Group.list().catch(() => []),
           clientId: authProvider.clientId,
           clientSecret: authProvider.clientSecret,
           clientSecretEditing: false,
@@ -132,6 +148,26 @@ class EditAuthProvider extends React.Component<Props, State> {
     }
   };
 
+  addMapping = () => {
+    this.setState((state) => ({
+      mappings: [...state.mappings, new AuthProviderMapping()],
+    }));
+  };
+
+  removeMapping = (index: number) => {
+    this.setState((state) => ({
+      mappings: state.mappings.filter((_, i) => i !== index),
+    }));
+  };
+
+  updateMapping = (index: number, changes: Partial<AuthProviderMapping>) => {
+    this.setState((state) => ({
+      mappings: state.mappings.map((m, i) =>
+        i === index ? Object.assign(new AuthProviderMapping(), m, changes) : m,
+      ),
+    }));
+  };
+
   onSubmit = async (e: any) => {
     e.preventDefault();
     this.entity.name = this.state.name;
@@ -144,6 +180,7 @@ class EditAuthProvider extends React.Component<Props, State> {
     this.entity.userInfoEmailField = this.state.userInfoEmailField;
     this.entity.userInfoFirstnameField = this.state.userInfoFirstnameField;
     this.entity.userInfoLastnameField = this.state.userInfoLastnameField;
+    this.entity.userInfoGroupsField = this.state.userInfoGroupsField;
     this.entity.clientId = this.state.clientId;
     if (this.state.clientSecretEditing) {
       this.entity.clientSecret = this.state.clientSecret;
@@ -153,6 +190,15 @@ class EditAuthProvider extends React.Component<Props, State> {
 
     try {
       await this.entity.save();
+      // Mappings are saved after the provider so that a newly created one
+      // already has an ID to attach them to. Incomplete rows are dropped
+      // rather than rejected.
+      if (this.state.userInfoGroupsField) {
+        await AuthProviderMapping.save(
+          this.entity.id,
+          this.state.mappings.filter((m) => m.claimValue && m.targetId),
+        );
+      }
       this.entity.clientSecret = "";
       this.props.router.push(
         "/admin/settings/auth-providers/" + this.entity.id,
@@ -590,6 +636,91 @@ class EditAuthProvider extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2">
+              {this.props.t("userinfoGroupsField")}
+            </Form.Label>
+            <Col sm="9">
+              <Form.Control
+                type="text"
+                placeholder="groups"
+                value={this.state.userInfoGroupsField}
+                onChange={(e: any) =>
+                  this.setState({ userInfoGroupsField: e.target.value })
+                }
+              />
+              <Form.Text className="text-muted">
+                {this.props.t("userinfoGroupsFieldHint")}
+              </Form.Text>
+            </Col>
+          </Form.Group>
+          {this.entity.id && this.state.userInfoGroupsField && (
+            <>
+              <h5 className="mt-4">{this.props.t("idpMappings")}</h5>
+              <p className="text-muted">{this.props.t("idpMappingsHint")}</p>
+              {this.state.mappings.map((mapping, idx) => (
+                <Form.Group as={Row} key={idx} className="mb-2">
+                  <Col sm="3">
+                    <Form.Control
+                      type="text"
+                      placeholder={this.props.t("idpClaimValue")}
+                      value={mapping.claimValue}
+                      onChange={(e: any) =>
+                        this.updateMapping(idx, { claimValue: e.target.value })
+                      }
+                    />
+                  </Col>
+                  <Col sm="2">
+                    <Form.Select
+                      value={mapping.targetType}
+                      onChange={(e: any) =>
+                        this.updateMapping(idx, {
+                          targetType: e.target.value,
+                          targetId: "",
+                        })
+                      }
+                    >
+                      <option value="role">{this.props.t("role")}</option>
+                      <option value="group">{this.props.t("group")}</option>
+                    </Form.Select>
+                  </Col>
+                  <Col sm="3">
+                    <Form.Select
+                      value={mapping.targetId}
+                      onChange={(e: any) =>
+                        this.updateMapping(idx, { targetId: e.target.value })
+                      }
+                    >
+                      <option value="">{this.props.t("pleaseSelect")}</option>
+                      {(mapping.targetType === "role"
+                        ? this.state.roles
+                        : this.state.groups
+                      ).map((target: any) => (
+                        <option key={target.id} value={target.id}>
+                          {target.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Col>
+                  <Col sm="1">
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => this.removeMapping(idx)}
+                    >
+                      &times;
+                    </Button>
+                  </Col>
+                </Form.Group>
+              ))}
+              <Button
+                className="btn-sm"
+                variant="outline-secondary"
+                onClick={this.addMapping}
+              >
+                {this.props.t("add")}
+              </Button>
+            </>
+          )}
           <Form.Group as={Row}>
             <Form.Label column sm="2">
               Logout URL

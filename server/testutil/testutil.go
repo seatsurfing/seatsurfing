@@ -49,6 +49,8 @@ var DatabaseTables = [...]string{
 	"passkeys",
 	"recurring_bookings",
 	"refresh_tokens",
+	"role_permissions",
+	"roles",
 	"sessions",
 	"settings",
 	"space_attribute_values",
@@ -58,6 +60,7 @@ var DatabaseTables = [...]string{
 	"spaces_approvers",
 	"spaces_attributes",
 	"spaces_attributes_values",
+	"user_roles",
 	"users",
 	"users_groups",
 	"users_preferences",
@@ -100,7 +103,6 @@ func CreateTestUserParams(orgDomain string) *User {
 	user := &User{
 		Email:          uuid.New().String() + "@" + orgDomain,
 		OrganizationID: org.ID,
-		Role:           UserRoleUser,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
@@ -108,17 +110,48 @@ func CreateTestUserParams(orgDomain string) *User {
 	return user
 }
 
-func CreateTestUserSuperAdmin() *User {
-	org := CreateTestOrg("test.com")
-	user := &User{
-		Email:          uuid.New().String() + "@test.com",
+func CreateTestRole(org *Organization, name string, perms map[Permission]PermissionLevel) *Role {
+	role := &Role{
 		OrganizationID: org.ID,
-		Role:           UserRoleSuperAdmin,
+		Name:           name,
+		Permissions:    perms,
+	}
+	if err := GetRoleRepository().Create(role); err != nil {
+		panic(err)
+	}
+	return role
+}
+
+// CreateTestUserWithPermissions creates a user in the organization holding a
+// freshly created role that grants the given permissions.
+func CreateTestUserWithPermissions(org *Organization, perms map[Permission]PermissionLevel) *User {
+	user := &User{
+		Email:          uuid.New().String() + "@" + GetTestOrgDomain(org),
+		OrganizationID: org.ID,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
 	}
+	role := CreateTestRole(org, "Test Role "+uuid.New().String(), perms)
+	AssignTestRole(user, role)
 	return user
+}
+
+// AssignTestRole assigns an existing role to a user.
+func AssignTestRole(user *User, role *Role) {
+	if err := GetUserRoleRepository().Add(user.ID, role.ID, RoleAssignmentSourceManual); err != nil {
+		panic(err)
+	}
+}
+
+// GetTestOrgDomain returns the organization's primary domain, falling back to
+// a placeholder when none is set.
+func GetTestOrgDomain(org *Organization) string {
+	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
+	if err != nil || domain == nil {
+		return "test.com"
+	}
+	return domain.DomainName
 }
 
 func CreateTestOrg(orgDomain string) *Organization {
@@ -146,12 +179,11 @@ func CreateTestUserInOrgWithName(org *Organization, email string, role UserRole)
 	user := &User{
 		Email:          email,
 		OrganizationID: org.ID,
-		Role:           role,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
 	}
-	return user
+	return applyLegacyRole(user, role)
 }
 
 func CreateTestUserInOrgDomain(org *Organization, domain string) *User {
@@ -166,9 +198,47 @@ func CreateTestUserDomain(org *Organization, domain string, role UserRole) *User
 	user := &User{
 		Email:          uuid.New().String() + "@" + domain,
 		OrganizationID: org.ID,
-		Role:           role,
 	}
 	if err := GetUserRepository().Create(user); err != nil {
+		panic(err)
+	}
+	return applyLegacyRole(user, role)
+}
+
+// applyLegacyRole puts a freshly created test user into the same state the
+// schema upgrade produces for a user who held the given legacy role: the
+// matching account type, plus an assignment of the equivalent seeded role.
+//
+// Tests keep naming the old ladder because it reads well as shorthand for
+// "a user with this much access"; nothing at runtime consults it.
+func applyLegacyRole(user *User, role UserRole) *User {
+	switch role {
+	case UserRoleServiceAccountRO:
+		user.AccountType = AccountTypeServiceAccountRO
+	case UserRoleServiceAccountRW:
+		user.AccountType = AccountTypeServiceAccountRW
+	}
+	if user.AccountType != AccountTypePerson {
+		if err := GetUserRepository().Update(user); err != nil {
+			panic(err)
+		}
+	}
+	var roleName string
+	switch role {
+	case UserRoleOrgAdmin:
+		roleName = RoleNameOrgAdmin
+	case UserRoleSpaceAdmin:
+		roleName = RoleNameFloorPlanAdmin
+	case UserRoleServiceAccountRO, UserRoleServiceAccountRW:
+		roleName = RoleNameApiAccess
+	default:
+		return user
+	}
+	builtIn, err := GetRoleRepository().GetByName(user.OrganizationID, roleName)
+	if err != nil {
+		panic(err)
+	}
+	if err := GetUserRoleRepository().Add(user.ID, builtIn.ID, RoleAssignmentSourceManual); err != nil {
 		panic(err)
 	}
 	return user
@@ -366,16 +436,29 @@ func TestRunner(m *testing.M) {
 	os.Exit(code)
 }
 
-func CreateTestServiceAccountRW(org *Organization) *User {
+// CreateTestServiceAccountWithPassword creates a service account that can
+// authenticate with HTTP Basic auth, assigned the seeded API access role.
+func CreateTestServiceAccountWithPassword(org *Organization, email, password string, role UserRole) *User {
 	user := &User{
-		Email:          uuid.New().String() + "@test.com",
+		Email:          email,
 		OrganizationID: org.ID,
-		Role:           UserRoleServiceAccountRW,
+		HashedPassword: NullString(GetUserRepository().GetHashedPassword(password)),
 	}
 	if err := GetUserRepository().Create(user); err != nil {
 		panic(err)
 	}
-	return user
+	return applyLegacyRole(user, role)
+}
+
+func CreateTestServiceAccountRW(org *Organization) *User {
+	user := &User{
+		Email:          uuid.New().String() + "@test.com",
+		OrganizationID: org.ID,
+	}
+	if err := GetUserRepository().Create(user); err != nil {
+		panic(err)
+	}
+	return applyLegacyRole(user, UserRoleServiceAccountRW)
 }
 
 func GenerateTestApiToken(userID string) string {

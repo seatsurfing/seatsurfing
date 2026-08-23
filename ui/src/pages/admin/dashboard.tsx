@@ -17,6 +17,7 @@ import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import Link from "next/link";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import Stats from "@/types/Stats";
@@ -32,8 +33,6 @@ import CloudHint from "@/components/CloudHint";
 interface State {
   loading: boolean;
   redirect: string;
-  spaceAdmin: boolean;
-  orgAdmin: boolean;
   latestVersion: any;
   selectedUtilizationLocationId: string | null;
   selectedWeekdayLocationId: string | null;
@@ -55,8 +54,6 @@ class Dashboard extends React.Component<Props, State> {
     this.state = {
       loading: true,
       redirect: "",
-      spaceAdmin: false,
-      orgAdmin: false,
       latestVersion: null,
       selectedUtilizationLocationId: null,
       selectedWeekdayLocationId: null,
@@ -69,7 +66,6 @@ class Dashboard extends React.Component<Props, State> {
     await Promise.all([
       this.loadItems(),
       this.loadLocations(),
-      this.getUserInfo(),
       this.checkUpdates(),
     ]);
     this.setState({ loading: false });
@@ -80,11 +76,6 @@ class Dashboard extends React.Component<Props, State> {
       return;
     }
     this.setState({ latestVersion: await UpdateChecker.check() });
-  };
-
-  getUserInfo = async (): Promise<void> => {
-    const user = await User.getSelf();
-    this.setState({ spaceAdmin: user.spaceAdmin, orgAdmin: user.admin });
   };
 
   loadLocations = async (): Promise<void> => {
@@ -222,7 +213,10 @@ class Dashboard extends React.Component<Props, State> {
     }
 
     const cloudUpgradeHint =
-      RuntimeConfig.INFOS.orgAdmin &&
+      RuntimeConfig.hasPermission(
+        Permission.OrgSettings,
+        PermissionLevel.Admin,
+      ) &&
       RuntimeConfig.INFOS.cloudHosted &&
       !RuntimeConfig.INFOS.subscriptionActive ? (
         <Row className="mb-4">
@@ -259,7 +253,12 @@ class Dashboard extends React.Component<Props, State> {
             {this.renderStatsCard(
               this.state.stats?.numUsers,
               this.props.t("users"),
-              this.state.orgAdmin ? Navigation.adminUsers() : "",
+              RuntimeConfig.hasPermission(
+                Permission.Users,
+                PermissionLevel.Read,
+              )
+                ? Navigation.adminUsers()
+                : "",
             )}
             {this.renderStatsCard(
               this.state.stats?.numLocations,

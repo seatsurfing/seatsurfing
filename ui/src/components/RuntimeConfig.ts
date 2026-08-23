@@ -3,6 +3,12 @@ import OrgSettings from "@/types/Settings";
 import Ajax from "@/util/Ajax";
 import UserPreference from "@/types/UserPreference";
 import Organization from "@/types/Organization";
+import {
+  Permission,
+  PermissionKey,
+  PermissionLevel,
+  PermissionMap,
+} from "@/types/Permission";
 
 interface RuntimeUserInfos {
   username: string;
@@ -29,9 +35,8 @@ interface RuntimeUserInfos {
   featureRecurringBookings: boolean;
   organizationId: string;
   orgName: string;
-  superAdmin: boolean;
-  spaceAdmin: boolean;
-  orgAdmin: boolean;
+  /** The signed-in user's resolved access, keyed by permission name. */
+  permissions: PermissionMap;
   pluginMenuItems: any[];
   pluginWelcomeScreens: any[];
   featureGroups: boolean;
@@ -57,6 +62,58 @@ interface RuntimeUserInfos {
 }
 
 export default class RuntimeConfig {
+  /**
+   * Reports whether the signed-in user holds at least the given level for a
+   * permission. Absence means not granted.
+   *
+   * This governs presentation only. The server checks every request
+   * independently, so a stale or tampered map can hide or reveal navigation
+   * but never grants access.
+   */
+  static hasPermission = (
+    permission: PermissionKey,
+    level: number = PermissionLevel.Admin,
+  ): boolean => {
+    return (RuntimeConfig.INFOS.permissions[permission] ?? 0) >= level;
+  };
+
+  /**
+   * Reports whether the user holds any administrative permission at all. It
+   * backs the checks that used to ask "is this user some kind of admin", such
+   * as whether to offer the link into the administration UI.
+   */
+  static hasAnyPermission = (): boolean => {
+    return Object.values(RuntimeConfig.INFOS.permissions).some((l) => l > 0);
+  };
+
+  /**
+   * Decides whether a plugin's menu item belongs in the given sidebar section.
+   *
+   * A plugin may declare the permission its screen needs; those that do not
+   * fall back to the coarse "admin" / "spaceadmin" visibility they used
+   * before the permission model existed.
+   */
+  static canSeePluginMenuItem = (item: any, section: string): boolean => {
+    if (item.requiredPermission) {
+      if (section !== "admin") {
+        return false;
+      }
+      return RuntimeConfig.hasPermission(
+        item.requiredPermission,
+        item.requiredLevel ?? PermissionLevel.Admin,
+      );
+    }
+    if (item.visibility !== section) {
+      return false;
+    }
+    return section === "admin"
+      ? RuntimeConfig.hasPermission(
+          Permission.OrgSettings,
+          PermissionLevel.Admin,
+        )
+      : RuntimeConfig.hasAnyPermission();
+  };
+
   static EMBEDDED: boolean = false;
   static INFOS: RuntimeUserInfos;
 
@@ -86,9 +143,7 @@ export default class RuntimeConfig {
       featureRecurringBookings: false,
       organizationId: "",
       orgName: "",
-      superAdmin: false,
-      spaceAdmin: false,
-      orgAdmin: false,
+      permissions: {},
       pluginMenuItems: [],
       pluginWelcomeScreens: [],
       featureGroups: false,
@@ -215,9 +270,7 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.enforceTOTP =
           enforceTotpSetting === Organization.ENFORCE_TOTP_ALL_USERS ||
           (enforceTotpSetting === Organization.ENFORCE_TOTP_ADMINS_ONLY &&
-            (RuntimeConfig.INFOS.spaceAdmin ||
-              RuntimeConfig.INFOS.orgAdmin ||
-              RuntimeConfig.INFOS.superAdmin));
+            RuntimeConfig.hasAnyPermission());
       }
       if (s.name === Organization.PREF_HIDE_REPORTS)
         RuntimeConfig.INFOS.hideReports = s.value === "1";
@@ -254,9 +307,7 @@ export default class RuntimeConfig {
     RuntimeConfig.resetInfos();
     const user = await User.getSelf();
     RuntimeConfig.INFOS.organizationId = user.organizationId;
-    RuntimeConfig.INFOS.superAdmin = user.superAdmin;
-    RuntimeConfig.INFOS.spaceAdmin = user.spaceAdmin;
-    RuntimeConfig.INFOS.orgAdmin = user.admin;
+    RuntimeConfig.INFOS.permissions = user.permissions;
     RuntimeConfig.INFOS.idpLogin = !user.requirePassword;
     RuntimeConfig.INFOS.totpEnabled = user.totpEnabled;
     RuntimeConfig.INFOS.hasPasskeys = user.hasPasskeys;
