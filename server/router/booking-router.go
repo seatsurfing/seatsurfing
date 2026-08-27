@@ -847,9 +847,15 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
 	maxAdvanceDays, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
 	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
+
+	nowExact := time.Now().UTC()
+	// booking already started today and hasn't ended yet -> always valid
+	if m.Enter.Before(nowExact) && m.Enter.Year() == nowExact.Year() && m.Enter.YearDay() == nowExact.YearDay() && m.Leave.After(nowExact) {
+		return true, 0
+	}
+
 	// allow Enter-Date in past if at least this morning
-	now := time.Now().UTC()
-	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	now := time.Date(nowExact.Year(), nowExact.Month(), nowExact.Day(), 0, 0, 0, 0, nowExact.Location())
 	if dailyBasisBooking {
 		now = now.Add(-12 * time.Hour)
 	}

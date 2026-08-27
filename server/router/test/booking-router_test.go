@@ -1611,6 +1611,23 @@ func TestBookingsPastEnterDate(t *testing.T) {
 	CheckTestInt(t, ResponseCodeBookingInPast, errorCode)
 }
 
+func TestBookingsOngoingTodayEnterDate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5")
+	user := CreateTestUserInOrg(org)
+
+	m := &BookingRequest{
+		Enter: time.Now().Add(time.Hour * -2).UTC(),
+		Leave: time.Now().Add(time.Hour * 1).UTC(),
+	}
+
+	router := &BookingRouter{}
+	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
+	CheckTestBool(t, true, res)
+	CheckTestInt(t, 0, errorCode)
+}
+
 func TestBookingsEarlyMorningEnterDate(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
