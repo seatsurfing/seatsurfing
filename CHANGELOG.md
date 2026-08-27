@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.125.1](https://github.com/seatsurfing/seatsurfing/compare/v1.125.0...v1.125.1) (2026-08-27)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** allow todays booking with enter in past ([#2556](https://github.com/seatsurfing/seatsurfing/issues/2556)) ([7d90edf](https://github.com/seatsurfing/seatsurfing/commit/7d90edf0a88d03bffc841572c3094b43b8952c58))
+* **deps:** bump distroless/base-debian13 from `f4a335c` to `20dc7ed` ([#2550](https://github.com/seatsurfing/seatsurfing/issues/2550)) ([79f1f75](https://github.com/seatsurfing/seatsurfing/commit/79f1f75df0e040efbe630499bf319a6144cab52e))
+* **deps:** bump google.golang.org/grpc from 1.83.0 to 1.83.1 in /server in the minor-and-patch group ([#2555](https://github.com/seatsurfing/seatsurfing/issues/2555)) ([78c87c2](https://github.com/seatsurfing/seatsurfing/commit/78c87c2a9d2f098fe4ea4729efdd02c9006e9df9))
+
 ## [1.125.0](https://github.com/seatsurfing/seatsurfing/compare/v1.124.0...v1.125.0) (2026-08-22)
 
 
