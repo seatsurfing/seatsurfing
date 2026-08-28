@@ -564,5 +564,6 @@
   "primary": "Primary",
   "makePrimary": "Make primary",
   "makePrimaryVerifyTooltip": "The domain must be verified before it can be made primary.",
-  "removeDomainLastTooltip": "The last domain cannot be removed."
+  "removeDomainLastTooltip": "The last domain cannot be removed.",
+  "errorNoAuthProvider": "Password login is disabled on this instance, so a new user has to be assigned to an authentication provider. Please configure one first."
 }

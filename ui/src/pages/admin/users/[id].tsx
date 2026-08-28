@@ -35,6 +35,7 @@ import Formatting from "@/util/Formatting";
 import RendererUtils from "@/util/RendererUtils";
 import ConfirmModal from "@/components/ConfirmModal";
 import {
+  canCreateUser,
   defaultAuthMethodForNewUser,
   isAuthMethodGroupHidden,
   isAuthProviderGroupHidden,
@@ -182,10 +183,9 @@ class EditUser extends React.Component<Props, State> {
       } else {
         // New user: password login may be disabled instance-wide, in which case
         // the user can only be bound to an auth provider.
-        const authMethod = defaultAuthMethodForNewUser({
-          disablePasswordLogin: RuntimeConfig.INFOS.disablePasswordLogin,
-          hasAuthProviders: this.authProviders.length > 0,
-        });
+        const authMethod = defaultAuthMethodForNewUser(
+          RuntimeConfig.INFOS.disablePasswordLogin,
+        );
         this.setState({
           authMethod,
           authProviderId:
@@ -212,8 +212,14 @@ class EditUser extends React.Component<Props, State> {
     this.entity.lastname = this.state.lastname;
     this.entity.role = this.state.role;
 
-    // Set authentication fields based on selected auth method
-    if (this.state.authMethod === User.AuthMethodInvitation) {
+    // Set authentication fields based on selected auth method. Service accounts
+    // always authenticate with their generated password, no matter which method
+    // the form defaulted to.
+    const isServiceAccount = this.isServiceAccount(this.state.role);
+    if (
+      !isServiceAccount &&
+      this.state.authMethod === User.AuthMethodInvitation
+    ) {
       // Only send invitation if email changed or explicitly requested
       const emailChanged = this.state.email !== this.state.originalEmail;
       const isNewUser = !this.entity.id;
@@ -221,12 +227,15 @@ class EditUser extends React.Component<Props, State> {
         isNewUser || emailChanged || this.state.resendInvitation;
       this.entity.password = "";
       this.entity.authProviderId = "";
-    } else if (this.state.authMethod === User.AuthMethodProvider) {
+    } else if (
+      !isServiceAccount &&
+      this.state.authMethod === User.AuthMethodProvider
+    ) {
       this.entity.sendInvitation = false;
       this.entity.password = "";
       this.entity.authProviderId = this.state.authProviderId;
     } else {
-      // password method
+      // password method (always used for service accounts)
       this.entity.sendInvitation = false;
       this.entity.authProviderId = "";
       if (this.state.changePassword || !this.entity.id) {
@@ -363,6 +372,20 @@ class EditUser extends React.Component<Props, State> {
       return (
         <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
           <p>{this.props.t("errorSubscriptionLimit")}</p>
+        </FullLayout>
+      );
+    }
+
+    if (
+      !this.entity.id &&
+      !canCreateUser({
+        disablePasswordLogin: RuntimeConfig.INFOS.disablePasswordLogin,
+        hasAuthProviders: this.authProviders.length > 0,
+      })
+    ) {
+      return (
+        <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
+          <p>{this.props.t("errorNoAuthProvider")}</p>
         </FullLayout>
       );
     }

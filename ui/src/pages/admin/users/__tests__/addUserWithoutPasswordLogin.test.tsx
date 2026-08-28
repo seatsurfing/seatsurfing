@@ -73,6 +73,7 @@ vi.mock("@/types/AuthProvider", async () => {
 });
 
 import EditUser from "../[id]";
+import User from "@/types/User";
 
 const flush = async () => {
   await act(async () => {
@@ -101,10 +102,62 @@ const isVisible = (el: Element | null) => {
   return true;
 };
 
+const submitForm = async (container: HTMLElement) => {
+  const form = container.querySelector<HTMLFormElement>("#form")!;
+  await act(async () => {
+    form.requestSubmit();
+  });
+  await flush();
+};
+
+const fillVisibleFields = async (container: HTMLElement) => {
+  const setValue = (selector: string, value: string) => {
+    const input = container.querySelector<HTMLInputElement>(selector)!;
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value",
+    )!.set!;
+    setter.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  await act(async () => {
+    setValue("#email", "j.cermann@example.org");
+    setValue("#firstname", "Jessica");
+    setValue("#lastname", "Cermann");
+  });
+  await flush();
+};
+
+const selectRole = async (container: HTMLElement, role: number) => {
+  const select = container.querySelector<HTMLSelectElement>("#role")!;
+  const setter = Object.getOwnPropertyDescriptor(
+    window.HTMLSelectElement.prototype,
+    "value",
+  )!.set!;
+  await act(async () => {
+    setter.call(select, String(role));
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await flush();
+};
+
 describe("add user with password login disabled", () => {
+  let saved: any = null;
+
   beforeEach(() => {
     document.body.innerHTML = "";
     routerPush.mockClear();
+    saved = null;
+    vi.spyOn(User.prototype, "save").mockImplementation(function (this: any) {
+      saved = {
+        password: this.password,
+        authProviderId: this.authProviderId,
+        sendInvitation: this.sendInvitation,
+        role: this.role,
+      };
+      this.id = "new-user-1";
+      return Promise.resolve(this);
+    });
   });
 
   it("does not leave a required password field inside a hidden group", async () => {
@@ -127,22 +180,38 @@ describe("add user with password login disabled", () => {
 
   it("can be submitted after filling in the visible fields", async () => {
     const container = await renderPage();
-    const form = container.querySelector<HTMLFormElement>("#form");
-    const setValue = (selector: string, value: string) => {
-      const input = container.querySelector<HTMLInputElement>(selector)!;
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      setter.call(input, value);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    };
-    await act(async () => {
-      setValue("#email", "j.cermann@example.org");
-      setValue("#firstname", "Jessica");
-      setValue("#lastname", "Cermann");
-    });
-    await flush();
-    expect(form!.checkValidity()).toBe(true);
+    await fillVisibleFields(container);
+    expect(
+      container.querySelector<HTMLFormElement>("#form")!.checkValidity(),
+    ).toBe(true);
+    await submitForm(container);
+    expect(saved).not.toBeNull();
+    expect(saved.authProviderId).toBe("kc-1");
+    expect(saved.password).toBe("");
+    expect(saved.sendInvitation).toBe(false);
+  });
+
+  it("refuses to create a user when no auth provider is configured", async () => {
+    const AuthProvider = (await import("@/types/AuthProvider")).default as any;
+    AuthProvider.list.mockResolvedValueOnce([]);
+    const container = await renderPage();
+    expect(container.querySelector("#form")).toBeNull();
+    expect(container.textContent).toContain("errorNoAuthProvider");
+  });
+
+  it("still creates service accounts with a password", async () => {
+    // Service accounts authenticate with a generated password even though the
+    // form defaults to the auth provider method on this kind of instance.
+    const container = await renderPage();
+    await fillVisibleFields(container);
+    await selectRole(container, User.UserRoleServiceAccountRW);
+    expect(
+      container.querySelector<HTMLFormElement>("#form")!.checkValidity(),
+    ).toBe(true);
+    await submitForm(container);
+    expect(saved).not.toBeNull();
+    expect(saved.role).toBe(User.UserRoleServiceAccountRW);
+    expect(saved.authProviderId).toBe("");
+    expect(saved.password).not.toBe("");
   });
 });

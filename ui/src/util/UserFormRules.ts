@@ -21,18 +21,26 @@ export interface UserFormRuleInput {
 
 /**
  * Auth method a newly created user starts with. With password login disabled
- * instance-wide, a new user can only authenticate through an auth provider.
+ * instance-wide, an auth provider is the only method that can work: invitation
+ * links are rejected by the server in that case.
  */
-export function defaultAuthMethodForNewUser(opts: {
+export function defaultAuthMethodForNewUser(
+  disablePasswordLogin: boolean,
+): string {
+  return disablePasswordLogin
+    ? User.AuthMethodProvider
+    : User.AuthMethodPassword;
+}
+
+/**
+ * With password login disabled and no auth provider configured, there is no way
+ * for a new user to ever sign in, so the form must not pretend otherwise.
+ */
+export function canCreateUser(opts: {
   disablePasswordLogin: boolean;
   hasAuthProviders: boolean;
-}): string {
-  if (!opts.disablePasswordLogin) {
-    return User.AuthMethodPassword;
-  }
-  return opts.hasAuthProviders
-    ? User.AuthMethodProvider
-    : User.AuthMethodInvitation;
+}): boolean {
+  return !opts.disablePasswordLogin || opts.hasAuthProviders;
 }
 
 export function isAuthMethodGroupHidden(s: UserFormRuleInput): boolean {

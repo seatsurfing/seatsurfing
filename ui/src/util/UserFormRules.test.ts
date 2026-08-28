@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import User from "@/types/User";
 import {
+  canCreateUser,
   defaultAuthMethodForNewUser,
+  isAuthMethodGroupHidden,
   isAuthProviderGroupHidden,
   isAuthProviderRequired,
   isPasswordGroupHidden,
@@ -19,30 +21,51 @@ const base: UserFormRuleInput = {
 
 describe("defaultAuthMethodForNewUser", () => {
   it("uses password login when it is enabled", () => {
-    expect(
-      defaultAuthMethodForNewUser({
-        disablePasswordLogin: false,
-        hasAuthProviders: true,
-      }),
-    ).toBe(User.AuthMethodPassword);
+    expect(defaultAuthMethodForNewUser(false)).toBe(User.AuthMethodPassword);
   });
 
   it("uses the auth provider when password login is disabled", () => {
+    expect(defaultAuthMethodForNewUser(true)).toBe(User.AuthMethodProvider);
+  });
+});
+
+describe("canCreateUser", () => {
+  it("allows creating users while password login is available", () => {
     expect(
-      defaultAuthMethodForNewUser({
-        disablePasswordLogin: true,
-        hasAuthProviders: true,
-      }),
-    ).toBe(User.AuthMethodProvider);
+      canCreateUser({ disablePasswordLogin: false, hasAuthProviders: false }),
+    ).toBe(true);
   });
 
-  it("falls back to invitation when password login is disabled and no provider exists", () => {
+  it("allows creating users bound to an auth provider", () => {
     expect(
-      defaultAuthMethodForNewUser({
-        disablePasswordLogin: true,
-        hasAuthProviders: false,
-      }),
-    ).toBe(User.AuthMethodInvitation);
+      canCreateUser({ disablePasswordLogin: true, hasAuthProviders: true }),
+    ).toBe(true);
+  });
+
+  it("refuses when no auth method could ever work", () => {
+    // Invitation links are rejected by the server while password login is
+    // disabled, so such a user could never sign in.
+    expect(
+      canCreateUser({ disablePasswordLogin: true, hasAuthProviders: false }),
+    ).toBe(false);
+  });
+});
+
+describe("isAuthMethodGroupHidden", () => {
+  it("hides the method choice when password login is disabled", () => {
+    expect(
+      isAuthMethodGroupHidden({ ...base, disablePasswordLogin: true }),
+    ).toBe(true);
+  });
+
+  it("hides the method choice for service accounts", () => {
+    expect(isAuthMethodGroupHidden({ ...base, isServiceAccount: true })).toBe(
+      true,
+    );
+  });
+
+  it("shows the method choice otherwise", () => {
+    expect(isAuthMethodGroupHidden(base)).toBe(false);
   });
 });
 
