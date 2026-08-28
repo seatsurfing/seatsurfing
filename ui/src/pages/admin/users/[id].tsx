@@ -34,6 +34,15 @@ import Validation from "@/util/Validation";
 import Formatting from "@/util/Formatting";
 import RendererUtils from "@/util/RendererUtils";
 import ConfirmModal from "@/components/ConfirmModal";
+import {
+  defaultAuthMethodForNewUser,
+  isAuthMethodGroupHidden,
+  isAuthProviderGroupHidden,
+  isAuthProviderRequired,
+  isPasswordGroupHidden,
+  isPasswordRequired,
+  UserFormRuleInput,
+} from "@/util/UserFormRules";
 
 type PendingConfirmAction =
   "delete" | "resetPasskeys" | "resetTotp" | "revokeApiToken";
@@ -169,6 +178,21 @@ class EditUser extends React.Component<Props, State> {
           hasPasskeys: user.hasPasskeys,
           apiTokenConfigured,
           lastActivity: user.lastActivity,
+        });
+      } else {
+        // New user: password login may be disabled instance-wide, in which case
+        // the user can only be bound to an auth provider.
+        const authMethod = defaultAuthMethodForNewUser({
+          disablePasswordLogin: RuntimeConfig.INFOS.disablePasswordLogin,
+          hasAuthProviders: this.authProviders.length > 0,
+        });
+        this.setState({
+          authMethod,
+          authProviderId:
+            authMethod === User.AuthMethodProvider &&
+            this.authProviders.length === 1
+              ? this.authProviders[0].id
+              : "",
         });
       }
       this.setState({
@@ -383,6 +407,13 @@ class EditUser extends React.Component<Props, State> {
         </>
       );
     }
+    const formRules: UserFormRuleInput = {
+      hasUserId: !!this.entity.id,
+      isServiceAccount: this.isServiceAccount(this.state.role),
+      authMethod: this.state.authMethod,
+      changePassword: this.state.changePassword,
+      disablePasswordLogin: RuntimeConfig.INFOS.disablePasswordLogin,
+    };
     const isOwnUser = RuntimeConfig.INFOS.userId === this.entity.id;
     let roleSelect = <></>;
     if (!isOwnUser && this.adminUserRole >= this.state.role) {
@@ -544,13 +575,7 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
 
           {/* Auth method selection for non-service accounts */}
-          <Form.Group
-            as={Row}
-            hidden={
-              this.isServiceAccount(this.state.role) ||
-              RuntimeConfig.INFOS.disablePasswordLogin
-            }
-          >
+          <Form.Group as={Row} hidden={isAuthMethodGroupHidden(formRules)}>
             <Form.Label htmlFor="auth-method-password" column sm="2">
               {this.props.t("authMethod")}
             </Form.Label>
@@ -591,14 +616,7 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
 
           {/* Auth provider selection */}
-          <Form.Group
-            as={Row}
-            hidden={
-              this.isServiceAccount(this.state.role) ||
-              this.state.authMethod !== User.AuthMethodProvider ||
-              RuntimeConfig.INFOS.disablePasswordLogin
-            }
-          >
+          <Form.Group as={Row} hidden={isAuthProviderGroupHidden(formRules)}>
             <Form.Label htmlFor="authProvider" column sm="2">
               {this.props.t("chooseAuthProvider")}
             </Form.Label>
@@ -609,7 +627,7 @@ class EditUser extends React.Component<Props, State> {
                 onChange={(e: any) =>
                   this.setState({ authProviderId: e.target.value })
                 }
-                required={this.state.authMethod === User.AuthMethodProvider}
+                required={isAuthProviderRequired(formRules)}
               >
                 <option value="">{this.props.t("pleaseSelect")}</option>
                 {this.authProviders.map((provider) => (
@@ -667,15 +685,7 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
 
           {/* Password field */}
-          <Form.Group
-            as={Row}
-            hidden={
-              (RuntimeConfig.INFOS.disablePasswordLogin &&
-                !this.isServiceAccount(this.state.role)) ||
-              (!this.isServiceAccount(this.state.role) &&
-                this.state.authMethod !== User.AuthMethodPassword)
-            }
-          >
+          <Form.Group as={Row} hidden={isPasswordGroupHidden(formRules)}>
             <Form.Label htmlFor="password" column sm="2">
               {this.props.t("password")}
             </Form.Label>
@@ -690,16 +700,7 @@ class EditUser extends React.Component<Props, State> {
                   onChange={(e: any) =>
                     this.setState({ password: e.target.value })
                   }
-                  required={
-                    !!(
-                      this.isServiceAccount(this.state.role) ||
-                      (!this.entity.id &&
-                        this.state.authMethod === User.AuthMethodPassword) ||
-                      (this.entity.id &&
-                        this.state.changePassword &&
-                        this.state.authMethod === User.AuthMethodPassword)
-                    )
-                  }
+                  required={isPasswordRequired(formRules)}
                   disabled={
                     (!this.isServiceAccount(this.state.role) &&
                       this.entity.id &&
