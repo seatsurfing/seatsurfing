@@ -6,6 +6,8 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
 
@@ -151,4 +153,8 @@ class Attributes extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Attributes as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(Attributes as any, Permission.SpaceAttributes, PermissionLevel.Admin) as any,
+  ),
+);

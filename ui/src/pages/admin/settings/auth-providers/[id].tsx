@@ -19,6 +19,8 @@ import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import AuthProvider, { AuthProviderMapping } from "@/types/AuthProvider";
@@ -760,4 +762,8 @@ class EditAuthProvider extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditAuthProvider as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(EditAuthProvider as any, Permission.AuthProviders, PermissionLevel.Admin) as any,
+  ),
+);

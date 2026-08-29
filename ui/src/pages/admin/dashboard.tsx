@@ -15,6 +15,7 @@ import WeekdayChart from "@/components/WeekdayChart";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { Permission, PermissionLevel } from "@/types/Permission";
@@ -516,4 +517,6 @@ class Dashboard extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Dashboard as any));
+export default withTranslation(
+  withReadyRouter(withPermission(Dashboard as any) as any),
+);

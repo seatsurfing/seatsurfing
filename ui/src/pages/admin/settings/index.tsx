@@ -23,6 +23,8 @@ import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
@@ -1557,4 +1559,8 @@ class Settings extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Settings as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(Settings as any, Permission.OrgSettings, PermissionLevel.Admin) as any,
+  ),
+);

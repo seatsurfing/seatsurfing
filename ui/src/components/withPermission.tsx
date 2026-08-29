@@ -15,7 +15,10 @@ import { PermissionKey, PermissionLevel } from "@/types/Permission";
  */
 export default function withPermission<P extends object>(
   Page: React.ComponentType<P>,
-  permission: PermissionKey,
+  // Omitted for pages that are not tied to one functionality - the dashboard,
+  // the admin search, a plugin's own screen - where holding any
+  // administrative permission at all is the right test.
+  permission?: PermissionKey,
   level: number = PermissionLevel.Admin,
 ) {
   return class WithPermission extends React.Component<
@@ -28,10 +31,17 @@ export default function withPermission<P extends object>(
     }
 
     componentDidMount() {
-      const allowed = RuntimeConfig.hasPermission(permission, level);
+      const allowed = permission
+        ? RuntimeConfig.hasPermission(permission, level)
+        : RuntimeConfig.hasAnyPermission();
       this.setState({ checked: true, allowed });
       if (!allowed && this.props.router) {
-        this.props.router.push("/admin/dashboard/");
+        // Somebody with no administrative access at all belongs in the
+        // booking UI, not on the dashboard - which is itself guarded, so
+        // sending them there would bounce them straight back here.
+        this.props.router.push(
+          RuntimeConfig.hasAnyPermission() ? "/admin/dashboard/" : "/search/",
+        );
       }
     }
 

@@ -21,6 +21,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
@@ -924,4 +925,8 @@ class EditUser extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditUser as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(EditUser as any, Permission.Users, PermissionLevel.Read) as any,
+  ),
+);

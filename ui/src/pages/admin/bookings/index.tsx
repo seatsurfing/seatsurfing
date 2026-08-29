@@ -12,6 +12,8 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import type * as CSS from "csstype";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Booking from "@/types/Booking";
@@ -506,4 +508,8 @@ class Bookings extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Bookings as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(Bookings as any, Permission.Bookings, PermissionLevel.Read) as any,
+  ),
+);

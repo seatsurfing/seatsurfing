@@ -10,6 +10,8 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
@@ -184,4 +186,8 @@ class Locations extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Locations as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(Locations as any, Permission.Areas, PermissionLevel.Admin) as any,
+  ),
+);

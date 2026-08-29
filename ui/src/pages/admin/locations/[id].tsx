@@ -30,6 +30,8 @@ import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import GroupSearchTypeahead from "@/components/GroupSearchTypeahead";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
@@ -2302,4 +2304,8 @@ class EditLocation extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditLocation as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(EditLocation as any, Permission.Areas, PermissionLevel.Admin) as any,
+  ),
+);

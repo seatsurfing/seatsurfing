@@ -6,6 +6,7 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import AuthProvider from "@/types/AuthProvider";
@@ -172,4 +173,8 @@ class Users extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Users as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(Users as any, Permission.Users, PermissionLevel.Read) as any,
+  ),
+);

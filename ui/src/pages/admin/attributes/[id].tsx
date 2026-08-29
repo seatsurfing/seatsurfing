@@ -10,6 +10,8 @@ import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SpaceAttribute from "@/types/SpaceAttribute";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -238,4 +240,8 @@ class EditAttribute extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditAttribute as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(EditAttribute as any, Permission.SpaceAttributes, PermissionLevel.Admin) as any,
+  ),
+);

@@ -11,6 +11,8 @@ import Loading from "@/components/Loading";
 import OrgSettings from "@/types/Settings";
 import Organization from "@/types/Organization";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Space from "@/types/Space";
 import User from "@/types/User";
@@ -953,4 +955,8 @@ class EditBooking extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditBooking as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(EditBooking as any, Permission.Bookings, PermissionLevel.Read) as any,
+  ),
+);
