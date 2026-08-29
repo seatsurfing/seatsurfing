@@ -16,7 +16,10 @@ function Page() {
 
 let container: HTMLDivElement;
 
-function renderGuarded(permission?: string, level: number = PermissionLevel.Admin) {
+function renderGuarded(
+  permission?: string,
+  level: number = PermissionLevel.Admin,
+) {
   const push = vi.fn();
   const Guarded = withPermission(Page as any, permission, level) as any;
   const root = createRoot(container);
@@ -40,19 +43,27 @@ describe("withPermission", () => {
 
   it("renders the page when the permission is held", () => {
     RuntimeConfig.INFOS.permissions = { groups: PermissionLevel.Admin };
-    const { rendered, push } = renderGuarded(Permission.Groups, PermissionLevel.Admin);
+    const { rendered, push } = renderGuarded(
+      Permission.Groups,
+      PermissionLevel.Admin,
+    );
     expect(rendered).toBe(true);
     expect(push).not.toHaveBeenCalled();
   });
 
   it("renders when the level held exceeds the level required", () => {
     RuntimeConfig.INFOS.permissions = { groups: PermissionLevel.Admin };
-    expect(renderGuarded(Permission.Groups, PermissionLevel.Read).rendered).toBe(true);
+    expect(
+      renderGuarded(Permission.Groups, PermissionLevel.Read).rendered,
+    ).toBe(true);
   });
 
   it("withholds the page below the required level", () => {
     RuntimeConfig.INFOS.permissions = { groups: PermissionLevel.Read };
-    const { rendered, push } = renderGuarded(Permission.Groups, PermissionLevel.Admin);
+    const { rendered, push } = renderGuarded(
+      Permission.Groups,
+      PermissionLevel.Admin,
+    );
     expect(rendered).toBe(false);
     expect(push).toHaveBeenCalledWith("/admin/dashboard/");
   });
@@ -77,6 +88,8 @@ describe("withPermission", () => {
 
   it("does not let one permission satisfy another", () => {
     RuntimeConfig.INFOS.permissions = { groups: PermissionLevel.Admin };
-    expect(renderGuarded(Permission.Users, PermissionLevel.Read).rendered).toBe(false);
+    expect(renderGuarded(Permission.Users, PermissionLevel.Read).rendered).toBe(
+      false,
+    );
   });
 });

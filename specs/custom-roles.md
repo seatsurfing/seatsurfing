@@ -141,11 +141,11 @@ The `users.role` column is retained but no longer consulted for authorization. I
 
 For each organization, four roles are created:
 
-| Role                       | `system` | Permissions                                                                                                         | Assigned to legacy role |
-| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| Organization Administrator | yes      | every permission at `admin`                                                                                         | 20, and 90              |
+| Role                       | `system` | Permissions                                                                                                                            | Assigned to legacy role |
+| -------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Organization Administrator | yes      | every permission at `admin`                                                                                                            | 20, and 90              |
 | Floor Plan Administrator   | no       | `areas`, `space_attributes`, `bookings`, `approvals` at `admin`; `analytics`, `presence_report` at `read`; `users`, `groups` at `read` | 10                      |
-| API access                 | no       | every permission at `admin`                                                                                         | 21 and 22               |
+| API access                 | no       | every permission at `admin`                                                                                                            | 21 and 22               |
 
 Both service account kinds receive the same permissions. The read-only
 restriction is enforced by the HTTP method check in
@@ -192,8 +192,7 @@ nobody evaluates presence data - the form a works council agreement takes.
 
 They are not a security boundary, since `org_settings` at full access can
 switch them off, but that is a deliberate act rather than a side effect of a
-role edit. A withheld endpoint answers 404, where a missing permission answers
-403.
+role edit. A withheld endpoint answers 404, where a missing permission answers 403.
 
 ### Baseline access
 

@@ -179,7 +179,9 @@ class EditUser extends React.Component<Props, State> {
           {canManageMembers && (
             <Form.Check
               type="checkbox"
-              onChange={(e: any) => this.selectMember(user.id, e.target.checked)}
+              onChange={(e: any) =>
+                this.selectMember(user.id, e.target.checked)
+              }
               checked={this.state.removeUserIds.includes(user.id)}
               onClick={(e: any) => e.stopPropagation()}
             />
@@ -392,6 +394,10 @@ class EditUser extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditUser as any, Permission.Groups, PermissionLevel.Read) as any,
+    withPermission(
+      EditUser as any,
+      Permission.Groups,
+      PermissionLevel.Read,
+    ) as any,
   ),
 );

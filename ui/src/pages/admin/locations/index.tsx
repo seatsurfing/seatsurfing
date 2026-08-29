@@ -188,6 +188,10 @@ class Locations extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Locations as any, Permission.Areas, PermissionLevel.Admin) as any,
+    withPermission(
+      Locations as any,
+      Permission.Areas,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

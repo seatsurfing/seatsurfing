@@ -764,6 +764,10 @@ class EditAuthProvider extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditAuthProvider as any, Permission.AuthProviders, PermissionLevel.Admin) as any,
+    withPermission(
+      EditAuthProvider as any,
+      Permission.AuthProviders,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

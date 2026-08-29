@@ -155,6 +155,10 @@ class Attributes extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Attributes as any, Permission.SpaceAttributes, PermissionLevel.Admin) as any,
+    withPermission(
+      Attributes as any,
+      Permission.SpaceAttributes,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

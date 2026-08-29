@@ -1561,6 +1561,10 @@ class Settings extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Settings as any, Permission.OrgSettings, PermissionLevel.Admin) as any,
+    withPermission(
+      Settings as any,
+      Permission.OrgSettings,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

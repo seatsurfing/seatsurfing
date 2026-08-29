@@ -242,6 +242,10 @@ class EditAttribute extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditAttribute as any, Permission.SpaceAttributes, PermissionLevel.Admin) as any,
+    withPermission(
+      EditAttribute as any,
+      Permission.SpaceAttributes,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

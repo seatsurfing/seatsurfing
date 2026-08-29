@@ -2306,6 +2306,10 @@ class EditLocation extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditLocation as any, Permission.Areas, PermissionLevel.Admin) as any,
+    withPermission(
+      EditLocation as any,
+      Permission.Areas,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

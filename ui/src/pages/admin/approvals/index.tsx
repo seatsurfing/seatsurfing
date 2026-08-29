@@ -308,6 +308,10 @@ class Approvals extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Approvals as any, Permission.Approvals, PermissionLevel.Admin) as any,
+    withPermission(
+      Approvals as any,
+      Permission.Approvals,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

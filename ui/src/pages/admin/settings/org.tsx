@@ -329,6 +329,10 @@ class EditOrg extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditOrg as any, Permission.OrgSettings, PermissionLevel.Admin) as any,
+    withPermission(
+      EditOrg as any,
+      Permission.OrgSettings,
+      PermissionLevel.Admin,
+    ) as any,
   ),
 );

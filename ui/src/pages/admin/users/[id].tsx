@@ -927,6 +927,10 @@ class EditUser extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditUser as any, Permission.Users, PermissionLevel.Read) as any,
+    withPermission(
+      EditUser as any,
+      Permission.Users,
+      PermissionLevel.Read,
+    ) as any,
   ),
 );

@@ -510,6 +510,10 @@ class Bookings extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Bookings as any, Permission.Bookings, PermissionLevel.Read) as any,
+    withPermission(
+      Bookings as any,
+      Permission.Bookings,
+      PermissionLevel.Read,
+    ) as any,
   ),
 );

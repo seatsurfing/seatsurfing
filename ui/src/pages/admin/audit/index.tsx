@@ -418,6 +418,10 @@ class Audit extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Audit as any, Permission.AuditLog, PermissionLevel.Read) as any,
+    withPermission(
+      Audit as any,
+      Permission.AuditLog,
+      PermissionLevel.Read,
+    ) as any,
   ),
 );

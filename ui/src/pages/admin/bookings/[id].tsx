@@ -957,6 +957,10 @@ class EditBooking extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(EditBooking as any, Permission.Bookings, PermissionLevel.Read) as any,
+    withPermission(
+      EditBooking as any,
+      Permission.Bookings,
+      PermissionLevel.Read,
+    ) as any,
   ),
 );

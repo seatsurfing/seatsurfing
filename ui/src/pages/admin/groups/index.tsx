@@ -153,6 +153,10 @@ class Groups extends React.Component<Props, State> {
 
 export default withTranslation(
   withReadyRouter(
-    withPermission(Groups as any, Permission.Groups, PermissionLevel.Read) as any,
+    withPermission(
+      Groups as any,
+      Permission.Groups,
+      PermissionLevel.Read,
+    ) as any,
   ),
 );
