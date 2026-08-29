@@ -168,6 +168,7 @@
   "errorSave": "Error while saving, please try again later.",
   "errorUserRequired": "Please select a user.",
   "errorSubscriptionLimit": "You've reached the maximum number of users.",
+  "errorNoAuthProvider": "Password login is disabled on this instance, so a new user has to be assigned to an authentication provider. Please configure one first.",
   "errorTooManyConcurrent": "Capacity limit reached in selected area.",
   "errorTryAgain": "Something went wrong. Please try again later.",
   "errorUnknown": "Unknown error, please try again later.",

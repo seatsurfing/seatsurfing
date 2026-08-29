@@ -167,6 +167,7 @@
   "errorSave": "Fehler beim Speichern, bitte probiere es später noch einmal.",
   "errorUserRequired": "Bitte einen Benutzer auswählen.",
   "errorSubscriptionLimit": "Du hast die maximale Anzahl von Benutzern erreicht.",
+  "errorNoAuthProvider": "Passwort-Login ist auf dieser Instanz deaktiviert, ein neuer Benutzer muss daher einem Authentifizierungsanbieter zugeordnet werden. Bitte lege zuerst einen an.",
   "errorTooManyConcurrent": "Kapazitätsgrenze des gewählten Bereichs ist erreicht.",
   "errorTryAgain": "Etwas ist schief gegangen. Bitte probiere es später erneut.",
   "errorUnknown": "Unbekannter Fehler, bitte versuche es später erneut.",
