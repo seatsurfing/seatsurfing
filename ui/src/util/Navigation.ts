@@ -1,4 +1,4 @@
-import CONSTANT from "@/util/Contant";
+import CONSTANT from "@/util/Constant";
 
 export type PreferencesTab = "security" | "style" | "booking" | "integration";
 
