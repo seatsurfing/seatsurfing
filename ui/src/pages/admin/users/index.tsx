@@ -172,9 +172,7 @@ class Users extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className={
-            (this.canEdit() ? "clickable-table " : "") + "caption-top"
-          }
+          className={(this.canEdit() ? "clickable-table " : "") + "caption-top"}
           id="datatable"
         >
           <caption>
