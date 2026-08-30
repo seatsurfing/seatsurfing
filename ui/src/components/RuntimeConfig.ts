@@ -94,6 +94,15 @@ export default class RuntimeConfig {
    * before the permission model existed.
    */
   static canSeePluginMenuItem = (item: any, section: string): boolean => {
+    if (item.requiredPermissionsAny && item.requiredPermissionsAny.length) {
+      if (section !== "admin") {
+        return false;
+      }
+      const level = item.requiredLevel ?? PermissionLevel.Admin;
+      return item.requiredPermissionsAny.some((p: string) =>
+        RuntimeConfig.hasPermission(p, level),
+      );
+    }
     if (item.requiredPermission) {
       if (section !== "admin") {
         return false;

@@ -67,12 +67,22 @@ type AdminUIMenuItem struct {
 	// back to Visibility.
 	RequiredPermission Permission
 	RequiredLevel      PermissionLevel
+	// RequiredPermissionsAny lists alternative permissions, any one of which
+	// (at RequiredLevel) is enough to see this item. Takes precedence over
+	// RequiredPermission when non-empty, for a plugin whose single UI surface
+	// spans several independently-grantable permissions.
+	RequiredPermissionsAny []Permission
 }
 
 type AdminWelcomeScreen struct {
 	Source            string
 	SkipOnSettingTrue string
 	TagName           string
+	// RequiredPermission is the permission a user must hold to see this
+	// screen, and RequiredLevel the level at which. An empty
+	// RequiredPermission falls back to requiring org_settings at admin level.
+	RequiredPermission Permission
+	RequiredLevel      PermissionLevel
 }
 
 type PluginSetting struct {

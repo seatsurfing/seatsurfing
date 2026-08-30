@@ -146,7 +146,7 @@ class EditUser extends React.Component<Props, State> {
       User.getSelf().then((me) => {
         return [me];
       }),
-      AuthProvider.list(),
+      AuthProvider.listPublicForOrg(RuntimeConfig.INFOS.organizationId),
       RuntimeConfig.hasPermission(Permission.Roles, PermissionLevel.Read)
         ? Role.list()
         : Promise.resolve([]),

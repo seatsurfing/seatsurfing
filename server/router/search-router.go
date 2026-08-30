@@ -65,7 +65,11 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &GetSearchResultsResponse{}
-	if r.URL.Query().Get("includeUsers") == "1" && HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) {
+	// User search also backs the member picker on the groups admin page, so a
+	// groups-admin (without separate Users access) must be able to use it too.
+	canSearchUsers := HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) ||
+		HasPermission(user, user.OrganizationID, PermissionGroups, PermissionLevelWrite)
+	if r.URL.Query().Get("includeUsers") == "1" && canSearchUsers {
 		if err := router.addUserResults(user, keyword, res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)

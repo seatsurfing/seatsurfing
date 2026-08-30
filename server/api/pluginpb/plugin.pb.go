@@ -178,8 +178,13 @@ type AdminUIMenuItem struct {
 	// Empty means fall back to visibility.
 	RequiredPermission string `protobuf:"bytes,7,opt,name=required_permission,json=requiredPermission,proto3" json:"required_permission,omitempty"`
 	RequiredLevel      int32  `protobuf:"varint,8,opt,name=required_level,json=requiredLevel,proto3" json:"required_level,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// Alternative permissions, any one of which (at required_level) is enough
+	// to see this item. Takes precedence over required_permission when
+	// non-empty, for a plugin whose single UI surface spans several
+	// independently-grantable permissions.
+	RequiredPermissionsAny []string `protobuf:"bytes,9,rep,name=required_permissions_any,json=requiredPermissionsAny,proto3" json:"required_permissions_any,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *AdminUIMenuItem) Reset() {
@@ -266,6 +271,13 @@ func (x *AdminUIMenuItem) GetRequiredLevel() int32 {
 		return x.RequiredLevel
 	}
 	return 0
+}
+
+func (x *AdminUIMenuItem) GetRequiredPermissionsAny() []string {
+	if x != nil {
+		return x.RequiredPermissionsAny
+	}
+	return nil
 }
 
 type PermissionDefinition struct {
@@ -417,8 +429,12 @@ type AdminWelcomeScreen struct {
 	Source            string `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
 	SkipOnSettingTrue string `protobuf:"bytes,2,opt,name=skip_on_setting_true,json=skipOnSettingTrue,proto3" json:"skip_on_setting_true,omitempty"`
 	TagName           string `protobuf:"bytes,3,opt,name=tag_name,json=tagName,proto3" json:"tag_name,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// The permission a user must hold to see this screen, and the level at
+	// which. Empty means fall back to requiring org_settings at admin level.
+	RequiredPermission string `protobuf:"bytes,4,opt,name=required_permission,json=requiredPermission,proto3" json:"required_permission,omitempty"`
+	RequiredLevel      int32  `protobuf:"varint,5,opt,name=required_level,json=requiredLevel,proto3" json:"required_level,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *AdminWelcomeScreen) Reset() {
@@ -470,6 +486,20 @@ func (x *AdminWelcomeScreen) GetTagName() string {
 		return x.TagName
 	}
 	return ""
+}
+
+func (x *AdminWelcomeScreen) GetRequiredPermission() string {
+	if x != nil {
+		return x.RequiredPermission
+	}
+	return ""
+}
+
+func (x *AdminWelcomeScreen) GetRequiredLevel() int32 {
+	if x != nil {
+		return x.RequiredLevel
+	}
+	return 0
 }
 
 type AdminWelcomeScreenReply struct {
@@ -870,7 +900,7 @@ const file_plugin_proto_rawDesc = "" +
 	"\x0fStringListReply\x12\x16\n" +
 	"\x06values\x18\x01 \x03(\tR\x06values\"%\n" +
 	"\rBasePathReply\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\tR\x05value\"\xf6\x01\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\"\xb0\x02\n" +
 	"\x0fAdminUIMenuItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -881,18 +911,21 @@ const file_plugin_proto_rawDesc = "" +
 	"\x04icon\x18\x05 \x01(\tR\x04icon\x12\x19\n" +
 	"\btag_name\x18\x06 \x01(\tR\atagName\x12/\n" +
 	"\x13required_permission\x18\a \x01(\tR\x12requiredPermission\x12%\n" +
-	"\x0erequired_level\x18\b \x01(\x05R\rrequiredLevel\"O\n" +
+	"\x0erequired_level\x18\b \x01(\x05R\rrequiredLevel\x128\n" +
+	"\x18required_permissions_any\x18\t \x03(\tR\x16requiredPermissionsAny\"O\n" +
 	"\x14PermissionDefinition\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
 	"\x0eallowed_levels\x18\x02 \x03(\x05R\rallowedLevels\"k\n" +
 	"\x1aPermissionDefinitionsReply\x12M\n" +
 	"\vdefinitions\x18\x01 \x03(\v2+.seatsurfing.plugin.v1.PermissionDefinitionR\vdefinitions\"U\n" +
 	"\x15AdminUIMenuItemsReply\x12<\n" +
-	"\x05items\x18\x01 \x03(\v2&.seatsurfing.plugin.v1.AdminUIMenuItemR\x05items\"x\n" +
+	"\x05items\x18\x01 \x03(\v2&.seatsurfing.plugin.v1.AdminUIMenuItemR\x05items\"\xd0\x01\n" +
 	"\x12AdminWelcomeScreen\x12\x16\n" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12/\n" +
 	"\x14skip_on_setting_true\x18\x02 \x01(\tR\x11skipOnSettingTrue\x12\x19\n" +
-	"\btag_name\x18\x03 \x01(\tR\atagName\"v\n" +
+	"\btag_name\x18\x03 \x01(\tR\atagName\x12/\n" +
+	"\x13required_permission\x18\x04 \x01(\tR\x12requiredPermission\x12%\n" +
+	"\x0erequired_level\x18\x05 \x01(\x05R\rrequiredLevel\"v\n" +
 	"\x17AdminWelcomeScreenReply\x12\x18\n" +
 	"\apresent\x18\x01 \x01(\bR\apresent\x12A\n" +
 	"\x06screen\x18\x02 \x01(\v2).seatsurfing.plugin.v1.AdminWelcomeScreenR\x06screen\"C\n" +

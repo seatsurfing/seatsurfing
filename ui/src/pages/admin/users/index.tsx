@@ -46,7 +46,11 @@ class Users extends React.Component<Props, State> {
   };
 
   loadItems = async () => {
-    const providers = await AuthProvider.list();
+    // Uses the public (id + name only) listing so that displaying a user's
+    // auth provider doesn't require the separate auth_providers permission.
+    const providers = await AuthProvider.listPublicForOrg(
+      RuntimeConfig.INFOS.organizationId,
+    );
     providers.forEach((provider) => {
       this.authProviders[provider.id] = provider.name;
     });
@@ -61,7 +65,14 @@ class Users extends React.Component<Props, State> {
     this.setState({ loading: false });
   };
 
+  canEdit = () => {
+    return RuntimeConfig.hasPermission(Permission.Users, PermissionLevel.Admin);
+  };
+
   onItemSelect = (user: User) => {
+    if (!this.canEdit()) {
+      return;
+    }
     this.setState({ selectedItem: user.id });
   };
 
@@ -83,7 +94,11 @@ class Users extends React.Component<Props, State> {
       ? roleNames.join(", ")
       : RendererUtils.accountTypeName(user.accountType, this.props.t);
     return (
-      <tr key={user.id} onClick={() => this.onItemSelect(user)}>
+      <tr
+        key={user.id}
+        onClick={this.canEdit() ? () => this.onItemSelect(user) : undefined}
+        style={this.canEdit() ? undefined : { cursor: "default" }}
+      >
         <td>{user.email}</td>
         <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
         <td>{role}</td>
@@ -120,12 +135,19 @@ class Users extends React.Component<Props, State> {
     const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link
-          href="/admin/users/add"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconPlus className="feather" /> {this.props.t("add")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.Users,
+          PermissionLevel.Admin,
+        ) ? (
+          <Link
+            href="/admin/users/add"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconPlus className="feather" /> {this.props.t("add")}
+          </Link>
+        ) : (
+          <></>
+        )}
       </>
     );
 
@@ -150,7 +172,9 @@ class Users extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table caption-top"
+          className={
+            (this.canEdit() ? "clickable-table " : "") + "caption-top"
+          }
           id="datatable"
         >
           <caption>

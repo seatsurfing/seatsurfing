@@ -54,6 +54,7 @@ interface State {
   canSearchHint: string;
   canSave: boolean;
   canEdit: boolean;
+  canDelete: boolean;
   prefEnterTime: number;
   prefWorkdayStart: string;
   prefWorkdayEnd: string;
@@ -119,6 +120,7 @@ class EditBooking extends React.Component<Props, State> {
       canSearchHint: "",
       canSave: false,
       canEdit: false,
+      canDelete: false,
       prefEnterTime: 0,
       prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
       prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
@@ -150,13 +152,17 @@ class EditBooking extends React.Component<Props, State> {
     if (this.isNewBooking) {
       return;
     }
+    const hasFullBookingsAccess = RuntimeConfig.hasPermission(
+      Permission.Bookings,
+      PermissionLevel.Admin,
+    );
     const isOwnBooking = this.entity.user?.email === this.state.selfEmail;
-    const canManage =
-      isOwnBooking ||
-      RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Admin);
-    if (!canManage) {
-      this.setState({ canSave: false, canEdit: false });
-    }
+    const canManage = isOwnBooking || hasFullBookingsAccess;
+    this.setState((prevState) => ({
+      canDelete: hasFullBookingsAccess,
+      canSave: canManage && prevState.canSave,
+      canEdit: canManage && prevState.canEdit,
+    }));
   };
 
   loadData = () => {
@@ -742,7 +748,7 @@ class EditBooking extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         onClick={this.deleteItem}
-        disabled={!this.state.canEdit}
+        disabled={!this.state.canEdit || !this.state.canDelete}
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>

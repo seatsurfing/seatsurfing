@@ -87,6 +87,25 @@ describe("RuntimeConfig permission checks", () => {
       expect(RuntimeConfig.canSeePluginMenuItem(item, "admin")).toBe(true);
     });
 
+    it("honours any one of several alternative permissions", () => {
+      const item = {
+        requiredPermissionsAny: [
+          "plugin.plus.exchange",
+          "plugin.plus.scim",
+          "plugin.plus.msteams",
+        ],
+        requiredLevel: PermissionLevel.Admin,
+        visibility: "admin",
+      };
+      RuntimeConfig.INFOS.permissions = {};
+      expect(RuntimeConfig.canSeePluginMenuItem(item, "admin")).toBe(false);
+
+      RuntimeConfig.INFOS.permissions = {
+        "plugin.plus.msteams": PermissionLevel.Admin,
+      };
+      expect(RuntimeConfig.canSeePluginMenuItem(item, "admin")).toBe(true);
+    });
+
     it("falls back to the old visibility for plugins that declare nothing", () => {
       const adminItem = { visibility: "admin" };
       const spaceAdminItem = { visibility: "spaceadmin" };

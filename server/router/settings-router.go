@@ -29,14 +29,15 @@ type GetSettingsResponse struct {
 }
 
 type SettingsRouterAdminMenuItem struct {
-	ID                 string `json:"id"`
-	Title              string `json:"title"`
-	Source             string `json:"src"`
-	Visibility         string `json:"visibility"`
-	Icon               string `json:"icon"`
-	TagName            string `json:"tagName"`
-	RequiredPermission string `json:"requiredPermission,omitempty"`
-	RequiredLevel      int    `json:"requiredLevel,omitempty"`
+	ID                     string   `json:"id"`
+	Title                  string   `json:"title"`
+	Source                 string   `json:"src"`
+	Visibility             string   `json:"visibility"`
+	Icon                   string   `json:"icon"`
+	TagName                string   `json:"tagName"`
+	RequiredPermission     string   `json:"requiredPermission,omitempty"`
+	RequiredLevel          int      `json:"requiredLevel,omitempty"`
+	RequiredPermissionsAny []string `json:"requiredPermissionsAny,omitempty"`
 }
 
 type SettingsRouterWelcomeScreen struct {
@@ -90,7 +91,7 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	}
 	if vars["name"] == SysSettingAdminWelcomeScreens {
 		list, _ := GetSettingsRepository().GetAll(user.OrganizationID)
-		SendJSON(w, router.getAdminWelcomeScreens(list))
+		SendJSON(w, router.getAdminWelcomeScreens(user, list))
 		return
 	}
 	if vars["name"] == SysSettingOrgPrimaryDomain {
@@ -195,7 +196,9 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	}
 	if orgAdmin {
 		res = append(res, router.getSysSettingOrgSignupDelete())
-		res = append(res, router.getAdminWelcomeScreens(list))
+	}
+	if HasAnyPermission(user, user.OrganizationID) {
+		res = append(res, router.getAdminWelcomeScreens(user, list))
 	}
 	if HasAnyPermission(user, user.OrganizationID) {
 		res = append(res, router.getAdminMenuItems(user))
@@ -561,11 +564,11 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 	return true
 }
 
-func (router *SettingsRouter) getAdminWelcomeScreens(settings []*OrgSetting) *GetSettingsResponse {
+func (router *SettingsRouter) getAdminWelcomeScreens(user *User, settings []*OrgSetting) *GetSettingsResponse {
 	res := []SettingsRouterWelcomeScreen{}
 	for _, plg := range GetPlugins() {
 		ws := plg.GetAdminWelcomeScreen()
-		if ws != nil {
+		if ws != nil && router.canSeeAdminWelcomeScreen(user, ws) {
 			skip := false
 			for _, setting := range settings {
 				if setting.Name == ws.SkipOnSettingTrue && setting.Value == "1" {
@@ -603,15 +606,20 @@ func (router *SettingsRouter) getAdminMenuItems(user *User) *GetSettingsResponse
 			if !router.canSeeAdminMenuItem(user, item) {
 				continue
 			}
+			anyPerms := make([]string, 0, len(item.RequiredPermissionsAny))
+			for _, p := range item.RequiredPermissionsAny {
+				anyPerms = append(anyPerms, string(p))
+			}
 			resItem := SettingsRouterAdminMenuItem{
-				ID:                 item.ID,
-				Title:              item.Title,
-				Source:             item.Source,
-				Visibility:         item.Visibility,
-				Icon:               item.Icon,
-				TagName:            item.TagName,
-				RequiredPermission: string(item.RequiredPermission),
-				RequiredLevel:      int(item.RequiredLevel),
+				ID:                     item.ID,
+				Title:                  item.Title,
+				Source:                 item.Source,
+				Visibility:             item.Visibility,
+				Icon:                   item.Icon,
+				TagName:                item.TagName,
+				RequiredPermission:     string(item.RequiredPermission),
+				RequiredLevel:          int(item.RequiredLevel),
+				RequiredPermissionsAny: anyPerms,
 			}
 			res = append(res, resItem)
 		}
@@ -631,6 +639,18 @@ func (router *SettingsRouter) getAdminMenuItems(user *User) *GetSettingsResponse
 // item. A plugin built against the older contract declares none, so its items
 // fall back to the coarse visibility they used before permissions existed.
 func (router *SettingsRouter) canSeeAdminMenuItem(user *User, item AdminUIMenuItem) bool {
+	if len(item.RequiredPermissionsAny) > 0 {
+		level := item.RequiredLevel
+		if level <= PermissionLevelNone {
+			level = PermissionLevelAdmin
+		}
+		for _, p := range item.RequiredPermissionsAny {
+			if HasPermission(user, user.OrganizationID, p, level) {
+				return true
+			}
+		}
+		return false
+	}
 	if item.RequiredPermission != "" {
 		level := item.RequiredLevel
 		if level <= PermissionLevelNone {
@@ -642,6 +662,21 @@ func (router *SettingsRouter) canSeeAdminMenuItem(user *User, item AdminUIMenuIt
 		return HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin)
 	}
 	return HasAnyPermission(user, user.OrganizationID)
+}
+
+// canSeeAdminWelcomeScreen applies the permission a plugin declares for its
+// welcome screen. A plugin built against the older contract declares none, so
+// its screen falls back to requiring org_settings at admin level, which is
+// also the caller's own gate before getAdminWelcomeScreens is ever invoked.
+func (router *SettingsRouter) canSeeAdminWelcomeScreen(user *User, screen *AdminWelcomeScreen) bool {
+	if screen.RequiredPermission != "" {
+		level := screen.RequiredLevel
+		if level <= PermissionLevelNone {
+			level = PermissionLevelAdmin
+		}
+		return HasPermission(user, user.OrganizationID, screen.RequiredPermission, level)
+	}
+	return HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin)
 }
 
 func (router *SettingsRouter) getSysSettingOrgSignupDelete() *GetSettingsResponse {

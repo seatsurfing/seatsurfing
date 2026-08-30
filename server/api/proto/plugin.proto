@@ -76,6 +76,11 @@ message AdminUIMenuItem {
   // Empty means fall back to visibility.
   string required_permission = 7;
   int32 required_level = 8;
+  // Alternative permissions, any one of which (at required_level) is enough
+  // to see this item. Takes precedence over required_permission when
+  // non-empty, for a plugin whose single UI surface spans several
+  // independently-grantable permissions.
+  repeated string required_permissions_any = 9;
 }
 
 message PermissionDefinition {
@@ -99,6 +104,10 @@ message AdminWelcomeScreen {
   string source = 1;
   string skip_on_setting_true = 2;
   string tag_name = 3;
+  // The permission a user must hold to see this screen, and the level at
+  // which. Empty means fall back to requiring org_settings at admin level.
+  string required_permission = 4;
+  int32 required_level = 5;
 }
 
 message AdminWelcomeScreenReply {

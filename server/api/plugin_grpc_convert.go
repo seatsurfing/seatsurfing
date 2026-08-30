@@ -73,15 +73,20 @@ func PluginHTTPResponseFromProto(p *pluginpb.HttpResponse) PluginHTTPResponse {
 func AdminUIMenuItemsToProto(items []AdminUIMenuItem) []*pluginpb.AdminUIMenuItem {
 	out := make([]*pluginpb.AdminUIMenuItem, 0, len(items))
 	for _, it := range items {
+		anyPerms := make([]string, 0, len(it.RequiredPermissionsAny))
+		for _, p := range it.RequiredPermissionsAny {
+			anyPerms = append(anyPerms, string(p))
+		}
 		out = append(out, &pluginpb.AdminUIMenuItem{
-			Id:                 it.ID,
-			Title:              it.Title,
-			Source:             it.Source,
-			Visibility:         it.Visibility,
-			Icon:               it.Icon,
-			TagName:            it.TagName,
-			RequiredPermission: string(it.RequiredPermission),
-			RequiredLevel:      int32(it.RequiredLevel),
+			Id:                     it.ID,
+			Title:                  it.Title,
+			Source:                 it.Source,
+			Visibility:             it.Visibility,
+			Icon:                   it.Icon,
+			TagName:                it.TagName,
+			RequiredPermission:     string(it.RequiredPermission),
+			RequiredLevel:          int32(it.RequiredLevel),
+			RequiredPermissionsAny: anyPerms,
 		})
 	}
 	return out
@@ -93,15 +98,20 @@ func AdminUIMenuItemsFromProto(items []*pluginpb.AdminUIMenuItem) []AdminUIMenuI
 		if it == nil {
 			continue
 		}
+		anyPerms := make([]Permission, 0, len(it.RequiredPermissionsAny))
+		for _, p := range it.RequiredPermissionsAny {
+			anyPerms = append(anyPerms, Permission(p))
+		}
 		out = append(out, AdminUIMenuItem{
-			ID:                 it.Id,
-			Title:              it.Title,
-			Source:             it.Source,
-			Visibility:         it.Visibility,
-			Icon:               it.Icon,
-			TagName:            it.TagName,
-			RequiredPermission: Permission(it.RequiredPermission),
-			RequiredLevel:      PermissionLevel(it.RequiredLevel),
+			ID:                     it.Id,
+			Title:                  it.Title,
+			Source:                 it.Source,
+			Visibility:             it.Visibility,
+			Icon:                   it.Icon,
+			TagName:                it.TagName,
+			RequiredPermission:     Permission(it.RequiredPermission),
+			RequiredLevel:          PermissionLevel(it.RequiredLevel),
+			RequiredPermissionsAny: anyPerms,
 		})
 	}
 	return out
@@ -149,9 +159,11 @@ func AdminWelcomeScreenToProto(s *AdminWelcomeScreen) *pluginpb.AdminWelcomeScre
 	return &pluginpb.AdminWelcomeScreenReply{
 		Present: true,
 		Screen: &pluginpb.AdminWelcomeScreen{
-			Source:            s.Source,
-			SkipOnSettingTrue: s.SkipOnSettingTrue,
-			TagName:           s.TagName,
+			Source:             s.Source,
+			SkipOnSettingTrue:  s.SkipOnSettingTrue,
+			TagName:            s.TagName,
+			RequiredPermission: string(s.RequiredPermission),
+			RequiredLevel:      int32(s.RequiredLevel),
 		},
 	}
 }
@@ -161,9 +173,11 @@ func AdminWelcomeScreenFromProto(p *pluginpb.AdminWelcomeScreenReply) *AdminWelc
 		return nil
 	}
 	return &AdminWelcomeScreen{
-		Source:            p.Screen.Source,
-		SkipOnSettingTrue: p.Screen.SkipOnSettingTrue,
-		TagName:           p.Screen.TagName,
+		Source:             p.Screen.Source,
+		SkipOnSettingTrue:  p.Screen.SkipOnSettingTrue,
+		TagName:            p.Screen.TagName,
+		RequiredPermission: Permission(p.Screen.RequiredPermission),
+		RequiredLevel:      PermissionLevel(p.Screen.RequiredLevel),
 	}
 }
 

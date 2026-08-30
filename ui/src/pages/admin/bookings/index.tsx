@@ -217,6 +217,11 @@ class Bookings extends React.Component<Props, State> {
   };
 
   canCancel = (booking: Booking) => {
+    if (
+      !RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Admin)
+    ) {
+      return false;
+    }
     return !DateUtil.isInPast(booking.leave);
   };
 

@@ -312,26 +312,27 @@ class EditUser extends React.Component<Props, State> {
           <Form>
             <Form.Group as={Row}>
               <Col sm="6">
-                <InputGroup>
-                  <UserSearchTypeahead
-                    t={this.props.t}
-                    id="search-users"
-                    multiple={true}
-                    onChange={this.onSearchSelected}
-                    ref={(ref: any) => {
-                      this.typeahead = ref;
-                    }}
-                  />
-                  <Button
-                    onClick={() => {
-                      this.addMembers();
-                    }}
-                    variant="outline-secondary"
-                    disabled={!canManageMembers}
-                  >
-                    {this.props.t("add")}
-                  </Button>
-                </InputGroup>
+                {canManageMembers && (
+                  <InputGroup>
+                    <UserSearchTypeahead
+                      t={this.props.t}
+                      id="search-users"
+                      multiple={true}
+                      onChange={this.onSearchSelected}
+                      ref={(ref: any) => {
+                        this.typeahead = ref;
+                      }}
+                    />
+                    <Button
+                      onClick={() => {
+                        this.addMembers();
+                      }}
+                      variant="outline-secondary"
+                    >
+                      {this.props.t("add")}
+                    </Button>
+                  </InputGroup>
+                )}
               </Col>
             </Form.Group>
           </Form>
