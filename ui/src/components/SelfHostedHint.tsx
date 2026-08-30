@@ -22,7 +22,7 @@ interface Hint {
 const ROTATION_INTERVAL_MS = 10000;
 const FADE_DURATION_MS = 400;
 
-class CloudHint extends React.Component<Props, State> {
+class SelfHostedHint extends React.Component<Props, State> {
   private rotationTimer?: ReturnType<typeof setInterval>;
 
   constructor(props: any) {
@@ -70,20 +70,20 @@ class CloudHint extends React.Component<Props, State> {
     return [
       {
         icon: "🚀",
-        textKey: "cloudHintCloudText",
-        linkKey: "cloudHintCloudLink",
+        textKey: "selfHostedHintCloudText",
+        linkKey: "selfHostedHintCloudLink",
         href: `https://seatsurfing.io${langPrefix}/sign-up?paid`,
       },
       {
         icon: "🧩",
-        textKey: "cloudHintPlusText",
-        linkKey: "cloudHintPlusLink",
+        textKey: "selfHostedHintPlusText",
+        linkKey: "selfHostedHintPlusLink",
         href: `https://seatsurfing.io${langPrefix}/docs/self-hosted/plus-plugin`,
       },
       {
         icon: "❤️",
-        textKey: "cloudHintSponsorText",
-        linkKey: "cloudHintSponsorLink",
+        textKey: "selfHostedHintSponsorText",
+        linkKey: "selfHostedHintSponsorLink",
         href: "https://github.com/sponsors/seatsurfing",
       },
     ];
@@ -168,4 +168,4 @@ class CloudHint extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(CloudHint as any);
+export default withTranslation(SelfHostedHint as any);

@@ -27,7 +27,7 @@ import DateUtil from "@/util/DateUtil";
 
 import Navigation from "@/util/Navigation";
 import UpdateChecker from "@/util/UpdateChecker";
-import CloudHint from "@/components/CloudHint";
+import SelfHostedHint from "@/components/SelfHostedHint";
 
 interface State {
   loading: boolean;
@@ -510,7 +510,7 @@ class Dashboard extends React.Component<Props, State> {
       <FullLayout headline="Dashboard">
         {cloudUpgradeHint}
         {updateHint}
-        <CloudHint />
+        <SelfHostedHint />
         {statsContent}
       </FullLayout>
     );
