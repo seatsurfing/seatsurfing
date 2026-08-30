@@ -28,6 +28,7 @@ import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import ConfirmModal from "@/components/ConfirmModal";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   loading: boolean;
@@ -139,9 +140,23 @@ class EditBooking extends React.Component<Props, State> {
       this.loadSelf(),
     ];
     Promise.all(promises).then(() => {
+      this.applyPermissionRestrictions();
       this.setState({ loading: false });
       this.initDates();
     });
+  };
+
+  applyPermissionRestrictions = () => {
+    if (this.isNewBooking) {
+      return;
+    }
+    const isOwnBooking = this.entity.user?.email === this.state.selfEmail;
+    const canManage =
+      isOwnBooking ||
+      RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Admin);
+    if (!canManage) {
+      this.setState({ canSave: false, canEdit: false });
+    }
   };
 
   loadData = () => {

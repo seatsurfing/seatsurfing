@@ -29,6 +29,7 @@ import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   selectedItem: string;
@@ -314,12 +315,19 @@ class Bookings extends React.Component<Props, State> {
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         {searchButton}
-        <Link
-          href="/admin/bookings/add"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconPlus className="feather" /> {this.props.t("add")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.Bookings,
+          PermissionLevel.Admin,
+        ) ? (
+          <Link
+            href="/admin/bookings/add"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconPlus className="feather" /> {this.props.t("add")}
+          </Link>
+        ) : (
+          <></>
+        )}
       </>
     );
     const form = (

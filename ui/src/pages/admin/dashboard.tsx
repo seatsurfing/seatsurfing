@@ -83,8 +83,15 @@ class Dashboard extends React.Component<Props, State> {
     this.locations = await Location.list();
   };
 
+  canViewStats = (): boolean => {
+    return RuntimeConfig.hasPermission(
+      Permission.Analytics,
+      PermissionLevel.Read,
+    );
+  };
+
   loadItems = async (): Promise<void> => {
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       return;
     }
     const stats = await Stats.get();
@@ -92,7 +99,7 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   updateLoad = async (locationId: string | null = null): Promise<void> => {
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       return;
     }
     const statsLoad = await StatsLoad.getLoad(locationId);
@@ -108,7 +115,7 @@ class Dashboard extends React.Component<Props, State> {
     locationId: string | null = null,
     period: string | null = null,
   ): Promise<void> => {
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       return;
     }
     const bookingsByWeekday = await StatsLoad.getWeekday(locationId, period);
@@ -245,7 +252,7 @@ class Dashboard extends React.Component<Props, State> {
     const yesterdayDateString = DateUtil.getDateString(-1);
 
     let statsContent = <></>;
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       statsContent = <p>{this.props.t("statsHiddenByAdmin")}</p>;
     } else {
       statsContent = (

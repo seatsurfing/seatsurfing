@@ -69,6 +69,11 @@ class SideBar extends React.Component<Props, State> {
    * @returns true, if the user's session is (still) alive
    */
   updateApprovalCount = async (): Promise<boolean> => {
+    if (
+      !RuntimeConfig.hasPermission(Permission.Approvals, PermissionLevel.Admin)
+    ) {
+      return true;
+    }
     let count: number;
     try {
       count = await Booking.getPendingApprovalsCount();

@@ -19,6 +19,7 @@ import Location from "@/types/Location";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   selectedItem: string;
@@ -128,12 +129,19 @@ class Locations extends React.Component<Props, State> {
     let buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link
-          href="/admin/attributes"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconTag className="feather" /> {this.props.t("attributes")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.SpaceAttributes,
+          PermissionLevel.Admin,
+        ) ? (
+          <Link
+            href="/admin/attributes"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconTag className="feather" /> {this.props.t("attributes")}
+          </Link>
+        ) : (
+          <></>
+        )}
         <Link
           href="/admin/locations/add"
           className="btn btn-sm btn-outline-secondary"

@@ -109,6 +109,8 @@ export default class Ajax {
       Ajax.onNotFound?.();
     } else if (httpStatus === 400) {
       Ajax.onBadRequest?.();
+    } else if (httpStatus === 403) {
+      // Permission denied - not a server error, callers should gate UI on permissions
     } else {
       // 500, network errors (0), and any other unexpected status
       Ajax.onServerError?.();

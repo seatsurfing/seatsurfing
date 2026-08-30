@@ -517,7 +517,13 @@ class EditLocation extends React.Component<Props, State> {
     if (locationId) {
       return Location.get(locationId).then((location) => {
         this.entity = location;
-        return Group.list().then((groups) => {
+        const groups = RuntimeConfig.hasPermission(
+          Permission.Groups,
+          PermissionLevel.Read,
+        )
+          ? Group.list()
+          : Promise.resolve([]);
+        return groups.then((groups) => {
           this.groups = groups;
           return Space.list(this.entity.id).then((spaces) => {
             this.setState({
