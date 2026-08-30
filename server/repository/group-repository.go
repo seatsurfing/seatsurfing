@@ -41,14 +41,14 @@ func GetGroupRepository() *GroupStore {
 }
 
 func (r *GroupStore) RunSchemaUpgrade(curVersion, targetVersion int) {
-	if curVersion < 53 {
-		if _, err := GetDatabase().DB().Exec("ALTER TABLE users_groups " +
-			"ADD COLUMN IF NOT EXISTS source VARCHAR NOT NULL DEFAULT 'manual'"); err != nil {
+	if curVersion < 51 {
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_users_groups_user_id ON users_groups(user_id)"); err != nil {
 			panic(err)
 		}
 	}
-	if curVersion < 51 {
-		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_users_groups_user_id ON users_groups(user_id)"); err != nil {
+	if curVersion < 53 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE users_groups " +
+			"ADD COLUMN IF NOT EXISTS source VARCHAR NOT NULL DEFAULT 'manual'"); err != nil {
 			panic(err)
 		}
 	}

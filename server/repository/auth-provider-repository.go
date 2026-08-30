@@ -42,12 +42,6 @@ func GetAuthProviderRepository() *AuthProviderStore {
 }
 
 func (r *AuthProviderStore) RunSchemaUpgrade(curVersion, targetVersion int) {
-	if curVersion < 53 {
-		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
-			"ADD COLUMN IF NOT EXISTS userinfo_groups_field VARCHAR NOT NULL DEFAULT ''"); err != nil {
-			panic(err)
-		}
-	}
 	if curVersion < 17 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
 			"ADD COLUMN IF NOT EXISTS logout_url VARCHAR NOT NULL DEFAULT ''"); err != nil {
@@ -70,6 +64,12 @@ func (r *AuthProviderStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	}
 	if curVersion < 42 {
 		r.encryptExistingClientSecrets()
+	}
+	if curVersion < 53 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_providers " +
+			"ADD COLUMN IF NOT EXISTS userinfo_groups_field VARCHAR NOT NULL DEFAULT ''"); err != nil {
+			panic(err)
+		}
 	}
 }
 
