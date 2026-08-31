@@ -29,12 +29,18 @@ message User {
   string auth_provider_id = 8;
   bool password_pending = 9;
   bool password_update_required = 10;
-  int32 role = 11;
+  // Field 11 held the ordered role ladder, which has been replaced by roles
+  // and permissions. It is reserved rather than reused so that a plugin built
+  // against the old contract can not silently read an account type as a role.
+  reserved 11;
+  reserved "role";
   bool disabled = 12;
   google.protobuf.Timestamp ban_expiry = 13;
   google.protobuf.Timestamp last_activity_at_utc = 14;
   string totp_secret = 15;
   string api_token = 16;
+  // 0 = person, 1 = service account (read-only), 2 = service account (read/write).
+  int32 account_type = 17;
 }
 
 message Organization {

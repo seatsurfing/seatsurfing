@@ -45,7 +45,7 @@ func (router *GroupRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionGroups, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -55,7 +55,7 @@ func (router *GroupRouter) getOne(w http.ResponseWriter, r *http.Request) {
 
 func (router *GroupRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionGroups, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -93,7 +93,7 @@ func (router *GroupRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionGroups, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -123,7 +123,7 @@ func (router *GroupRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionGroups, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -137,7 +137,7 @@ func (router *GroupRouter) delete(w http.ResponseWriter, r *http.Request) {
 
 func (router *GroupRouter) create(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionGroups, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -176,7 +176,7 @@ func (router *GroupRouter) addMembers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionGroups, PermissionLevelWrite) {
 		SendForbidden(w)
 		return
 	}
@@ -221,7 +221,7 @@ func (router *GroupRouter) removeMembers(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionGroups, PermissionLevelWrite) {
 		SendForbidden(w)
 		return
 	}
@@ -256,7 +256,7 @@ func (router *GroupRouter) getMembers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionGroups, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}

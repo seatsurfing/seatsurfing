@@ -10,7 +10,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 52
+	targetVersion := 55
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
@@ -37,6 +37,9 @@ func RunDBSchemaUpdates() {
 		GetSessionRepository(),
 		GetPasskeyRepository(),
 		GetLocationFloorPlanRepository(),
+		GetAuthProviderMappingRepository(),
+		GetUserRoleRepository(),
+		GetRoleRepository(),
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)
@@ -44,6 +47,14 @@ func RunDBSchemaUpdates() {
 
 	if curVersion < 43 {
 		if _, err := GetDatabase().DB().Exec("DROP TABLE IF EXISTS debug_time_issues"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 53 {
+		// Dropped last, after the role repository has read it to seed role
+		// assignments. Nothing consults it at runtime any more: what it
+		// encoded is now either a role assignment or users.account_type.
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE users DROP COLUMN IF EXISTS role"); err != nil {
 			panic(err)
 		}
 	}

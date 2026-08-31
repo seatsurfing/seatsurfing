@@ -15,8 +15,10 @@ import WeekdayChart from "@/components/WeekdayChart";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import Link from "next/link";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import Stats from "@/types/Stats";
@@ -32,8 +34,6 @@ import SelfHostedHint from "@/components/SelfHostedHint";
 interface State {
   loading: boolean;
   redirect: string;
-  spaceAdmin: boolean;
-  orgAdmin: boolean;
   latestVersion: any;
   selectedUtilizationLocationId: string | null;
   selectedWeekdayLocationId: string | null;
@@ -55,8 +55,6 @@ class Dashboard extends React.Component<Props, State> {
     this.state = {
       loading: true,
       redirect: "",
-      spaceAdmin: false,
-      orgAdmin: false,
       latestVersion: null,
       selectedUtilizationLocationId: null,
       selectedWeekdayLocationId: null,
@@ -69,7 +67,6 @@ class Dashboard extends React.Component<Props, State> {
     await Promise.all([
       this.loadItems(),
       this.loadLocations(),
-      this.getUserInfo(),
       this.checkUpdates(),
     ]);
     this.setState({ loading: false });
@@ -82,17 +79,19 @@ class Dashboard extends React.Component<Props, State> {
     this.setState({ latestVersion: await UpdateChecker.check() });
   };
 
-  getUserInfo = async (): Promise<void> => {
-    const user = await User.getSelf();
-    this.setState({ spaceAdmin: user.spaceAdmin, orgAdmin: user.admin });
-  };
-
   loadLocations = async (): Promise<void> => {
     this.locations = await Location.list();
   };
 
+  canViewStats = (): boolean => {
+    return RuntimeConfig.hasPermission(
+      Permission.Analytics,
+      PermissionLevel.Read,
+    );
+  };
+
   loadItems = async (): Promise<void> => {
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       return;
     }
     const stats = await Stats.get();
@@ -100,7 +99,7 @@ class Dashboard extends React.Component<Props, State> {
   };
 
   updateLoad = async (locationId: string | null = null): Promise<void> => {
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       return;
     }
     const statsLoad = await StatsLoad.getLoad(locationId);
@@ -116,7 +115,7 @@ class Dashboard extends React.Component<Props, State> {
     locationId: string | null = null,
     period: string | null = null,
   ): Promise<void> => {
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       return;
     }
     const bookingsByWeekday = await StatsLoad.getWeekday(locationId, period);
@@ -222,7 +221,10 @@ class Dashboard extends React.Component<Props, State> {
     }
 
     const cloudUpgradeHint =
-      RuntimeConfig.INFOS.orgAdmin &&
+      RuntimeConfig.hasPermission(
+        Permission.OrgSettings,
+        PermissionLevel.Admin,
+      ) &&
       RuntimeConfig.INFOS.cloudHosted &&
       !RuntimeConfig.INFOS.subscriptionActive ? (
         <Row className="mb-4">
@@ -250,7 +252,7 @@ class Dashboard extends React.Component<Props, State> {
     const yesterdayDateString = DateUtil.getDateString(-1);
 
     let statsContent = <></>;
-    if (RuntimeConfig.INFOS.hideStats) {
+    if (RuntimeConfig.INFOS.hideStats || !this.canViewStats()) {
       statsContent = <p>{this.props.t("statsHiddenByAdmin")}</p>;
     } else {
       statsContent = (
@@ -259,7 +261,12 @@ class Dashboard extends React.Component<Props, State> {
             {this.renderStatsCard(
               this.state.stats?.numUsers,
               this.props.t("users"),
-              this.state.orgAdmin ? Navigation.adminUsers() : "",
+              RuntimeConfig.hasPermission(
+                Permission.Users,
+                PermissionLevel.Read,
+              )
+                ? Navigation.adminUsers()
+                : "",
             )}
             {this.renderStatsCard(
               this.state.stats?.numLocations,
@@ -517,4 +524,6 @@ class Dashboard extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Dashboard as any));
+export default withTranslation(
+  withReadyRouter(withPermission(Dashboard as any) as any),
+);

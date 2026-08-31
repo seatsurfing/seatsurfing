@@ -162,6 +162,7 @@ func (r *OrganizationStore) Create(e *Organization) error {
 		return err
 	}
 	e.ID = id
+	GetRoleRepository().EnsureBuiltInRoles(e.ID)
 	GetSettingsRepository().InitDefaultSettingsForOrg(e.ID)
 	for _, plg := range GetPlugins() {
 		plg.OnOrganizationCreated(e.ID)
@@ -306,6 +307,10 @@ func (r *OrganizationStore) Delete(e *Organization) error {
 		return err
 	}
 	if err := GetSettingsRepository().DeleteAll(e.ID); err != nil {
+		return err
+	}
+	// Roles must go before users so that no assignment outlives its user.
+	if err := GetRoleRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
 	if err := GetGroupRepository().DeleteAll(e.ID); err != nil {

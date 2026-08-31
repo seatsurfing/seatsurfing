@@ -56,34 +56,41 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	// The search spans several functionalities, so it is open to anyone with
+	// any administrative access; each section below is then filtered by the
+	// caller's access to that particular functionality.
+	if !HasAnyPermission(user, user.OrganizationID) {
 		SendForbidden(w)
 		return
 	}
 
 	res := &GetSearchResultsResponse{}
-	if r.URL.Query().Get("includeUsers") == "1" {
+	// User search also backs the member picker on the groups admin page, so a
+	// groups-admin (without separate Users access) must be able to use it too.
+	canSearchUsers := HasPermission(user, user.OrganizationID, PermissionUsers, PermissionLevelRead) ||
+		HasPermission(user, user.OrganizationID, PermissionGroups, PermissionLevelWrite)
+	if r.URL.Query().Get("includeUsers") == "1" && canSearchUsers {
 		if err := router.addUserResults(user, keyword, res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
 		}
 	}
-	if r.URL.Query().Get("includeGroups") == "1" {
+	if r.URL.Query().Get("includeGroups") == "1" && HasPermission(user, user.OrganizationID, PermissionGroups, PermissionLevelRead) {
 		if err := router.addGroupResults(user, keyword, res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
 		}
 	}
-	if r.URL.Query().Get("includeLocations") == "1" {
+	if r.URL.Query().Get("includeLocations") == "1" && HasPermission(user, user.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		if err := router.addLocationResults(user, keyword, res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
 		}
 	}
-	if r.URL.Query().Get("includeSpaces") == "1" {
+	if r.URL.Query().Get("includeSpaces") == "1" && HasPermission(user, user.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		if err := router.addSpaceResults(user, keyword, r.URL.Query().Get("expandLocations") == "1", res); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)

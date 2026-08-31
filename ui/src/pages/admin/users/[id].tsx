@@ -21,6 +21,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
@@ -33,6 +34,8 @@ import AjaxError from "@/util/AjaxError";
 import Validation from "@/util/Validation";
 import Formatting from "@/util/Formatting";
 import RendererUtils from "@/util/RendererUtils";
+import Role from "@/types/Role";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import ConfirmModal from "@/components/ConfirmModal";
 
 type PendingConfirmAction =
@@ -56,7 +59,8 @@ interface State {
   authProviderId: string;
   sendInvitation: boolean;
   resendInvitation: boolean;
-  role: number;
+  accountType: number;
+  roleIds: string[];
   totpEnabled: boolean;
   hasPasskeys: boolean;
   apiTokenConfigured: boolean;
@@ -76,7 +80,7 @@ class EditUser extends React.Component<Props, State> {
   authProviders: AuthProvider[] = [];
   usersMax: number = 0;
   usersCur: number = -1;
-  adminUserRole: number = 0;
+  roles: Role[] = [];
 
   constructor(props: any) {
     super(props);
@@ -98,7 +102,8 @@ class EditUser extends React.Component<Props, State> {
       authProviderId: "",
       sendInvitation: false,
       resendInvitation: false,
-      role: User.UserRoleUser,
+      accountType: User.AccountTypePerson,
+      roleIds: [],
       totpEnabled: false,
       hasPasskeys: false,
       apiTokenConfigured: false,
@@ -113,10 +118,24 @@ class EditUser extends React.Component<Props, State> {
     this.loadData();
   };
 
-  isServiceAccount = (role: number) => {
+  sameRoleIds = (a: string[], b: string[]): boolean => {
     return (
-      role === User.UserRoleServiceAccountRO ||
-      role === User.UserRoleServiceAccountRW
+      a.length === b.length && [...a].sort().join() === [...b].sort().join()
+    );
+  };
+
+  toggleRole = (roleId: string, assigned: boolean) => {
+    this.setState((state) => ({
+      roleIds: assigned
+        ? [...state.roleIds, roleId]
+        : state.roleIds.filter((id) => id !== roleId),
+    }));
+  };
+
+  isServiceAccount = (accountType: number) => {
+    return (
+      accountType === User.AccountTypeServiceAccountRO ||
+      accountType === User.AccountTypeServiceAccountRW
     );
   };
 
@@ -127,7 +146,10 @@ class EditUser extends React.Component<Props, State> {
       User.getSelf().then((me) => {
         return [me];
       }),
-      AuthProvider.list(),
+      AuthProvider.listPublicForOrg(RuntimeConfig.INFOS.organizationId),
+      RuntimeConfig.hasPermission(Permission.Roles, PermissionLevel.Read)
+        ? Role.list()
+        : Promise.resolve([]),
     ];
     const { id } = this.props.router.query;
     if (id && typeof id === "string" && id !== "add") {
@@ -136,10 +158,10 @@ class EditUser extends React.Component<Props, State> {
     Promise.all(promises).then(async (values) => {
       this.usersMax = values[0] === "1" ? 1000000 : 10;
       this.usersCur = values[1];
-      this.adminUserRole = values[2][0].role;
       this.authProviders = values[3];
-      if (values.length >= 5) {
-        const user = values[4];
+      this.roles = values[4];
+      if (values.length >= 6) {
+        const user = values[5];
         this.entity = user;
         // Determine auth method from user data
         let authMethod = User.AuthMethodPassword;
@@ -151,8 +173,8 @@ class EditUser extends React.Component<Props, State> {
           authMethod = User.AuthMethodPassword;
         }
         const isServiceAccount =
-          user.role === User.UserRoleServiceAccountRO ||
-          user.role === User.UserRoleServiceAccountRW;
+          user.accountType === User.AccountTypeServiceAccountRO ||
+          user.accountType === User.AccountTypeServiceAccountRW;
         const apiTokenConfigured = isServiceAccount
           ? await User.getApiTokenStatus(user.id).catch(() => false)
           : false;
@@ -164,7 +186,8 @@ class EditUser extends React.Component<Props, State> {
           requirePassword: user.requirePassword,
           authMethod,
           authProviderId: user.authProviderId || "",
-          role: user.role,
+          accountType: user.accountType,
+          roleIds: user.roleIds,
           totpEnabled: user.totpEnabled,
           hasPasskeys: user.hasPasskeys,
           apiTokenConfigured,
@@ -186,7 +209,7 @@ class EditUser extends React.Component<Props, State> {
     this.entity.email = this.state.email;
     this.entity.firstname = this.state.firstname;
     this.entity.lastname = this.state.lastname;
-    this.entity.role = this.state.role;
+    this.entity.accountType = this.state.accountType;
 
     // Set authentication fields based on selected auth method
     if (this.state.authMethod === User.AuthMethodInvitation) {
@@ -214,6 +237,13 @@ class EditUser extends React.Component<Props, State> {
 
     try {
       await this.entity.save();
+      if (
+        RuntimeConfig.hasPermission(Permission.Roles, PermissionLevel.Admin) &&
+        !this.sameRoleIds(this.entity.roleIds, this.state.roleIds)
+      ) {
+        await Role.setRoleIdsForUser(this.entity.id, this.state.roleIds);
+        this.entity.roleIds = this.state.roleIds;
+      }
       this.props.router.push(
         `/admin/users/${encodeURIComponent(this.entity.id)}`,
       );
@@ -253,11 +283,11 @@ class EditUser extends React.Component<Props, State> {
     this.setState({ password, changePassword: true });
   };
 
-  changeRole = (role: number) => {
-    let changePassword = this.isServiceAccount(role)
+  changeAccountType = (accountType: number) => {
+    let changePassword = this.isServiceAccount(accountType)
       ? true
       : this.state.changePassword;
-    this.setState({ role: role, changePassword });
+    this.setState({ accountType, changePassword });
     if (changePassword) {
       this.generatePassword();
     }
@@ -384,66 +414,50 @@ class EditUser extends React.Component<Props, State> {
       );
     }
     const isOwnUser = RuntimeConfig.INFOS.userId === this.entity.id;
-    let roleSelect = <></>;
-    if (!isOwnUser && this.adminUserRole >= this.state.role) {
-      roleSelect = (
+    const canManageServiceAccounts = RuntimeConfig.hasPermission(
+      Permission.ServiceAccounts,
+      PermissionLevel.Admin,
+    );
+    // What remains on the user itself is how the account authenticates.
+    // Access is granted by the roles assigned below.
+    let accountTypeSelect = <></>;
+    if (!isOwnUser && canManageServiceAccounts) {
+      accountTypeSelect = (
         <Form.Select
-          id="role"
-          value={this.state.role}
-          onChange={(e: any) => this.changeRole(parseInt(e.target.value))}
+          id="accountType"
+          value={this.state.accountType}
+          onChange={(e: any) =>
+            this.changeAccountType(parseInt(e.target.value))
+          }
           required={true}
         >
-          <option value={User.UserRoleUser}>{this.props.t("roleUser")}</option>
-          {this.adminUserRole >= User.UserRoleSpaceAdmin ? (
-            <option value={User.UserRoleSpaceAdmin}>
-              {this.props.t("roleSpaceAdmin")}
-            </option>
-          ) : (
-            <></>
-          )}
-          {this.adminUserRole >= User.UserRoleOrgAdmin ? (
-            <option value={User.UserRoleOrgAdmin}>
-              {this.props.t("roleOrgAdmin")}
-            </option>
-          ) : (
-            <></>
-          )}
-          {this.adminUserRole >= User.UserRoleOrgAdmin ? (
-            <option value={User.UserRoleServiceAccountRO}>
-              {this.props.t("roleServiceAccountRO")}
-            </option>
-          ) : (
-            <></>
-          )}
-          {this.adminUserRole >= User.UserRoleOrgAdmin ? (
-            <option value={User.UserRoleServiceAccountRW}>
-              {this.props.t("roleServiceAccountRW")}
-            </option>
-          ) : (
-            <></>
-          )}
-          {this.adminUserRole >= User.UserRoleSuperAdmin ? (
-            <option value={User.UserRoleSuperAdmin}>
-              {this.props.t("roleSuperAdmin")}
-            </option>
-          ) : (
-            <></>
-          )}
+          <option value={User.AccountTypePerson}>
+            {this.props.t("roleUser")}
+          </option>
+          <option value={User.AccountTypeServiceAccountRO}>
+            {this.props.t("roleServiceAccountRO")}
+          </option>
+          <option value={User.AccountTypeServiceAccountRW}>
+            {this.props.t("roleServiceAccountRW")}
+          </option>
         </Form.Select>
       );
     } else {
-      const role = RendererUtils.roleName(this.state.role, this.props.t);
-      roleSelect = (
+      const accountTypeName = RendererUtils.accountTypeName(
+        this.state.accountType,
+        this.props.t,
+      );
+      accountTypeSelect = (
         <>
           <Form.Control
-            id="role"
+            id="accountType"
             plaintext={true}
             readOnly={true}
-            defaultValue={role}
+            defaultValue={accountTypeName}
           />
           {isOwnUser && (
             <Form.Text className="text-muted">
-              {this.props.t("cannotChangeOwnRole")}
+              {this.props.t("cannotChangeOwnAccountType")}
             </Form.Text>
           )}
         </>
@@ -454,12 +468,52 @@ class EditUser extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
           <Form.Group as={Row}>
-            <Form.Label htmlFor="role" column sm="2">
-              {this.props.t("role")}
+            <Form.Label htmlFor="accountType" column sm="2">
+              {this.props.t("accountType")}
             </Form.Label>
-            <Col sm="4">{roleSelect}</Col>
+            <Col sm="4">{accountTypeSelect}</Col>
           </Form.Group>
-          {!this.isServiceAccount(this.state.role) && (
+          {RuntimeConfig.hasPermission(
+            Permission.Roles,
+            PermissionLevel.Read,
+          ) && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("roles")}
+              </Form.Label>
+              <Col sm="4">
+                {this.roles.length === 0 && (
+                  <Form.Text className="text-muted">
+                    {this.props.t("noRolesDefined")}
+                  </Form.Text>
+                )}
+                {this.roles.map((role) => (
+                  <Form.Check
+                    key={role.id}
+                    type="checkbox"
+                    id={"role-" + role.id}
+                    label={role.name}
+                    checked={this.state.roleIds.includes(role.id)}
+                    disabled={
+                      !RuntimeConfig.hasPermission(
+                        Permission.Roles,
+                        PermissionLevel.Admin,
+                      )
+                    }
+                    onChange={(e: any) =>
+                      this.toggleRole(role.id, e.target.checked)
+                    }
+                  />
+                ))}
+                {isOwnUser && (
+                  <Form.Text className="text-muted">
+                    {this.props.t("cannotRemoveOwnRoleManagement")}
+                  </Form.Text>
+                )}
+              </Col>
+            </Form.Group>
+          )}
+          {!this.isServiceAccount(this.state.accountType) && (
             <Form.Group as={Row}>
               <Form.Label htmlFor="email" column sm="2">
                 {this.props.t("emailAddress")}
@@ -529,14 +583,14 @@ class EditUser extends React.Component<Props, State> {
                 <Form.Control
                   id="username"
                   type="text"
-                  readOnly={!this.isServiceAccount(this.state.role)}
+                  readOnly={!this.isServiceAccount(this.state.accountType)}
                   value={this.state.email}
                   onChange={
-                    this.isServiceAccount(this.state.role)
+                    this.isServiceAccount(this.state.accountType)
                       ? (e: any) => this.setState({ email: e.target.value })
                       : undefined
                   }
-                  required={this.isServiceAccount(this.state.role)}
+                  required={this.isServiceAccount(this.state.accountType)}
                 />
                 <CopyToClipboardButton text={this.state.email} />
               </InputGroup>
@@ -547,7 +601,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group
             as={Row}
             hidden={
-              this.isServiceAccount(this.state.role) ||
+              this.isServiceAccount(this.state.accountType) ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
@@ -594,7 +648,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group
             as={Row}
             hidden={
-              this.isServiceAccount(this.state.role) ||
+              this.isServiceAccount(this.state.accountType) ||
               this.state.authMethod !== User.AuthMethodProvider ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
@@ -625,7 +679,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group
             as={Row}
             hidden={
-              this.isServiceAccount(this.state.role) ||
+              this.isServiceAccount(this.state.accountType) ||
               !this.entity.id ||
               this.state.authMethod !== User.AuthMethodPassword ||
               RuntimeConfig.INFOS.disablePasswordLogin
@@ -648,7 +702,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group
             as={Row}
             hidden={
-              this.isServiceAccount(this.state.role) ||
+              this.isServiceAccount(this.state.accountType) ||
               !this.entity.id ||
               this.state.authMethod !== User.AuthMethodInvitation
             }
@@ -671,8 +725,8 @@ class EditUser extends React.Component<Props, State> {
             as={Row}
             hidden={
               (RuntimeConfig.INFOS.disablePasswordLogin &&
-                !this.isServiceAccount(this.state.role)) ||
-              (!this.isServiceAccount(this.state.role) &&
+                !this.isServiceAccount(this.state.accountType)) ||
+              (!this.isServiceAccount(this.state.accountType) &&
                 this.state.authMethod !== User.AuthMethodPassword)
             }
           >
@@ -684,7 +738,9 @@ class EditUser extends React.Component<Props, State> {
                 <Form.Control
                   id="password"
                   type={
-                    this.isServiceAccount(this.state.role) ? "text" : "password"
+                    this.isServiceAccount(this.state.accountType)
+                      ? "text"
+                      : "password"
                   }
                   value={this.state.password}
                   onChange={(e: any) =>
@@ -692,7 +748,7 @@ class EditUser extends React.Component<Props, State> {
                   }
                   required={
                     !!(
-                      this.isServiceAccount(this.state.role) ||
+                      this.isServiceAccount(this.state.accountType) ||
                       (!this.entity.id &&
                         this.state.authMethod === User.AuthMethodPassword) ||
                       (this.entity.id &&
@@ -701,13 +757,13 @@ class EditUser extends React.Component<Props, State> {
                     )
                   }
                   disabled={
-                    (!this.isServiceAccount(this.state.role) &&
+                    (!this.isServiceAccount(this.state.accountType) &&
                       this.entity.id &&
                       !this.state.changePassword) ||
-                    this.isServiceAccount(this.state.role)
+                    this.isServiceAccount(this.state.accountType)
                   }
                   minLength={
-                    this.isServiceAccount(this.state.role)
+                    this.isServiceAccount(this.state.accountType)
                       ? Validation.PASSWORD_MIN_LENGTH_SA
                       : Validation.PASSWORD_MIN_LENGTH
                   }
@@ -716,14 +772,14 @@ class EditUser extends React.Component<Props, State> {
                 />
                 <Button
                   onClick={() => this.generatePassword()}
-                  hidden={!this.isServiceAccount(this.state.role)}
+                  hidden={!this.isServiceAccount(this.state.accountType)}
                   variant="outline-secondary"
                 >
                   <IconRefresh className="feather" />
                 </Button>
                 <CopyToClipboardButton
                   text={this.state.password}
-                  hidden={!this.isServiceAccount(this.state.role)}
+                  hidden={!this.isServiceAccount(this.state.accountType)}
                 />
               </InputGroup>
             </Col>
@@ -755,7 +811,7 @@ class EditUser extends React.Component<Props, State> {
             as={Row}
             hidden={
               !this.entity.id ||
-              this.isServiceAccount(this.state.role) ||
+              this.isServiceAccount(this.state.accountType) ||
               (!this.state.hasPasskeys && !this.state.totpEnabled)
             }
           >
@@ -786,7 +842,7 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
 
           {/* API Token section — only shown for existing service accounts */}
-          {this.entity.id && this.isServiceAccount(this.state.role) && (
+          {this.entity.id && this.isServiceAccount(this.state.accountType) && (
             <Form.Group as={Row}>
               <Form.Label column sm="2">
                 {this.props.t("apiToken")}
@@ -869,4 +925,12 @@ class EditUser extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditUser as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      EditUser as any,
+      Permission.Users,
+      PermissionLevel.Read,
+    ) as any,
+  ),
+);

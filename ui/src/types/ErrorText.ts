@@ -22,6 +22,12 @@ export const enum ResponseCode {
   PasswordUpdateRequired = 5001,
 
   AuthProviderNameExists = 6001,
+
+  RoleWouldLeaveOrgWithoutAdmin = 7001,
+  RoleEscalationNotAllowed = 7002,
+  RoleIsSystemRole = 7003,
+  RoleCannotRemoveOwnAccess = 7004,
+  RoleNameAlreadyExists = 7005,
 }
 
 export default class ErrorText {
@@ -57,6 +63,15 @@ export default class ErrorText {
         t("errorGroupNameAlreadyExists"),
       [ResponseCode.AuthProviderNameExists]: () =>
         t("errorAuthProviderNameExists"),
+      [ResponseCode.RoleWouldLeaveOrgWithoutAdmin]: () =>
+        t("errorRoleWouldLeaveOrgWithoutAdmin"),
+      [ResponseCode.RoleEscalationNotAllowed]: () =>
+        t("errorRoleEscalationNotAllowed"),
+      [ResponseCode.RoleIsSystemRole]: () => t("errorRoleIsSystemRole"),
+      [ResponseCode.RoleCannotRemoveOwnAccess]: () =>
+        t("errorRoleCannotRemoveOwnAccess"),
+      [ResponseCode.RoleNameAlreadyExists]: () =>
+        t("errorRoleNameAlreadyExists"),
     };
 
     return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");

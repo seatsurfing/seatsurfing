@@ -89,14 +89,13 @@ type RunConfig struct {
 // Run executes every scenario in Scenarios against baseURL, using the
 // supplied actor pools, and returns per-scenario results plus whether all
 // gated scenarios passed their threshold.
-func Run(cfg RunConfig, orgAdmins, spaceAdmins []Actor, superAdmin Actor) (bool, []ScenarioResult, error) {
+func Run(cfg RunConfig, orgAdmins, spaceAdmins []Actor) (bool, []ScenarioResult, error) {
 	if len(orgAdmins) == 0 || len(spaceAdmins) == 0 {
 		return false, nil, fmt.Errorf("no actors available to run scenarios")
 	}
 
 	client := &http.Client{Timeout: cfg.Timeout}
 	rnd := rand.New(rand.NewSource(1))
-	superPool := []Actor{superAdmin}
 
 	// attempt issues one request and reports why it failed, if it did. The
 	// reason is deliberately coarse (an HTTP status or a transport error
@@ -135,9 +134,6 @@ func Run(cfg RunConfig, orgAdmins, spaceAdmins []Actor, superAdmin Actor) (bool,
 		switch sc.ID {
 		case "organization.getOne", "user.count":
 			pool = orgAdmins
-		}
-		if sc.UseSuperAdmin {
-			pool = superPool
 		}
 
 		fmt.Printf("Running scenario %s (warmup=%d, iterations=%d)...\n", sc.ID, cfg.Warmup, cfg.Iterations)

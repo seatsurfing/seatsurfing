@@ -3,7 +3,7 @@ import Head from "next/head";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "next-export-i18n";
 import Ajax from "@/util/Ajax";
-import CONSTANT from "@/util/Contant";
+import CONSTANT from "@/util/Constant";
 import Formatting from "@/util/Formatting";
 import BrowserUtil from "@/util/BrowserUtil";
 

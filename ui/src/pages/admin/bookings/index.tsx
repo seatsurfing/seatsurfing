@@ -12,6 +12,8 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import type * as CSS from "csstype";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Booking from "@/types/Booking";
@@ -27,6 +29,7 @@ import RendererUtils from "@/util/RendererUtils";
 import Location from "@/types/Location";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   selectedItem: string;
@@ -214,6 +217,11 @@ class Bookings extends React.Component<Props, State> {
   };
 
   canCancel = (booking: Booking) => {
+    if (
+      !RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Admin)
+    ) {
+      return false;
+    }
     return !DateUtil.isInPast(booking.leave);
   };
 
@@ -312,12 +320,19 @@ class Bookings extends React.Component<Props, State> {
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         {searchButton}
-        <Link
-          href="/admin/bookings/add"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconPlus className="feather" /> {this.props.t("add")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.Bookings,
+          PermissionLevel.Admin,
+        ) ? (
+          <Link
+            href="/admin/bookings/add"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconPlus className="feather" /> {this.props.t("add")}
+          </Link>
+        ) : (
+          <></>
+        )}
       </>
     );
     const form = (
@@ -506,4 +521,12 @@ class Bookings extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Bookings as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      Bookings as any,
+      Permission.Bookings,
+      PermissionLevel.Read,
+    ) as any,
+  ),
+);

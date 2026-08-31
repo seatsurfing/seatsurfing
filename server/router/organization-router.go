@@ -80,8 +80,6 @@ func (router *OrganizationRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
-	s.HandleFunc("/", router.create).Methods("POST")
-	s.HandleFunc("/", router.getAll).Methods("GET")
 	s.HandleFunc("/deleteorg/{id}", router.completeOrgDeletion).Methods("POST")
 }
 
@@ -129,31 +127,11 @@ func (router *OrganizationRouter) getOne(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+	if !HasPermission(user, e.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
 	res := router.copyToRestModel(e)
-	SendJSON(w, res)
-}
-
-func (router *OrganizationRouter) getAll(w http.ResponseWriter, r *http.Request) {
-	user := GetRequestUser(r)
-	if !GetUserRepository().IsSuperAdmin(user) {
-		SendForbidden(w)
-		return
-	}
-	list, err := GetOrganizationRepository().GetAll()
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	res := []*GetOrganizationResponse{}
-	for _, e := range list {
-		m := router.copyToRestModel(e)
-		res = append(res, m)
-	}
 	SendJSON(w, res)
 }
 
@@ -166,7 +144,7 @@ func (router *OrganizationRouter) getDomains(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+	if !HasPermission(user, e.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -200,7 +178,7 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+	if !HasPermission(user, e.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -232,7 +210,7 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	// Add domain
-	err = GetOrganizationRepository().AddDomain(e, domainName, GetUserRepository().IsSuperAdmin(user))
+	err = GetOrganizationRepository().AddDomain(e, domainName, false)
 	if err != nil {
 		log.Println(err)
 		SendAlreadyExists(w)
@@ -250,7 +228,7 @@ func (router *OrganizationRouter) verifyEmail(w http.ResponseWriter, r *http.Req
 		return
 	}
 	user := GetRequestUser(r)
-	if !GetUserRepository().IsSuperAdmin(user) && !CanAdminOrg(user, e.ID) {
+	if !HasPermission(user, e.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -298,7 +276,7 @@ func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Re
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+	if !HasPermission(user, e.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -339,7 +317,7 @@ func (router *OrganizationRouter) setPrimaryDomain(w http.ResponseWriter, r *htt
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, e.ID)) {
+	if !HasPermission(user, e.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -366,7 +344,7 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 		return
 	}
 	user := GetRequestUser(r)
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, org.ID)) {
+	if !HasPermission(user, org.ID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -398,7 +376,7 @@ func (router *OrganizationRouter) removeDomain(w http.ResponseWriter, r *http.Re
 func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	vars := mux.Vars(r)
-	if !GetUserRepository().IsSuperAdmin(user) && !CanAdminOrg(user, vars["id"]) {
+	if !HasPermission(user, vars["id"], PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -425,7 +403,7 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 	res := &ChangeOrgEmailResponse{
 		VerifyUUID: "",
 	}
-	if !GetUserRepository().IsSuperAdmin(user) && CanAdminOrg(user, vars["id"]) && !strings.EqualFold(e.ContactEmail, eIncoming.ContactEmail) {
+	if !strings.EqualFold(e.ContactEmail, eIncoming.ContactEmail) {
 		payload := &ChangeOrgEmailPayload{
 			OrgID: e.ID,
 			Email: eIncoming.ContactEmail,
@@ -472,17 +450,13 @@ func (router *OrganizationRouter) sendVerifyEmailAddressEmail(org *Organization,
 func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 
-	// user needs to be org admin or super user
-	if !(GetUserRepository().IsSuperAdmin(user) || CanAdminOrg(user, user.OrganizationID)) {
+	if !HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
-
-	// if no super user: check global "org delete" setting
-	if !GetUserRepository().IsSuperAdmin(user) && CanAdminOrg(user, user.OrganizationID) {
-		if !GetConfig().AllowOrgDelete {
-			SendForbidden(w)
-		}
+	if !GetConfig().AllowOrgDelete {
+		SendForbidden(w)
+		return
 	}
 
 	vars := mux.Vars(r)
@@ -584,31 +558,6 @@ func (router *OrganizationRouter) SendOrgConfirmDeleteOrgEmail(user *User, ID st
 		language = userLang
 	}
 	return SendEmailWithOrg(&MailAddress{Address: user.Email}, GetEmailTemplatePathConfirmDeleteOrg(), language, vars, org.ID)
-}
-
-func (router *OrganizationRouter) create(w http.ResponseWriter, r *http.Request) {
-	user := GetRequestUser(r)
-	if !GetUserRepository().IsSuperAdmin(user) {
-		SendForbidden(w)
-		return
-	}
-	var m CreateOrganizationRequest
-	if err := UnmarshalValidateBody(r, &m); err != nil {
-		SendBadRequest(w)
-		return
-	}
-	if !isValidCreateOrganizationRequest(&m) {
-		SendBadRequest(w)
-		return
-	}
-	e := router.copyFromRestModel(&m)
-	e.SignupDate = time.Now()
-	if err := GetOrganizationRepository().Create(e); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	SendCreated(w, e.ID)
 }
 
 func (router *OrganizationRouter) ensureOrgHasPrimaryDomain(e *Organization, favoritePrimaryDomain string) {

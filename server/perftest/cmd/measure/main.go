@@ -42,7 +42,7 @@ func main() {
 	}
 
 	log.Printf("Loading actors and minting fresh access tokens from %s...", *actorsFile)
-	orgAdmins, spaceAdmins, superAdmin, err := measure.LoadActors(*actorsFile)
+	orgAdmins, spaceAdmins, err := measure.LoadActors(*actorsFile)
 	if err != nil {
 		log.Fatalf("Failed to load actors: %v", err)
 	}
@@ -58,7 +58,7 @@ func main() {
 		JSONOutPath: *jsonOut,
 	}
 
-	allPass, _, err := measure.Run(cfg, orgAdmins, spaceAdmins, *superAdmin)
+	allPass, _, err := measure.Run(cfg, orgAdmins, spaceAdmins)
 	if err != nil {
 		log.Fatalf("Measurement run failed: %v", err)
 	}

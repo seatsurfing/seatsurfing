@@ -48,17 +48,16 @@ export default class RendererUtils {
     return state ? t("yes") : t("no");
   }
 
-  static roleName(role: number, t: TranslationFunc): string {
-    if (role === User.UserRoleSpaceAdmin) {
-      return t("roleSpaceAdmin");
-    } else if (role === User.UserRoleOrgAdmin) {
-      return t("roleOrgAdmin");
-    } else if (role === User.UserRoleServiceAccountRO) {
+  /**
+   * Describes how an account authenticates. Roles are named by the
+   * administrator and rendered by name; what remains on the user is whether
+   * the account is a person or a service account.
+   */
+  static accountTypeName(accountType: number, t: TranslationFunc): string {
+    if (accountType === User.AccountTypeServiceAccountRO) {
       return t("roleServiceAccountRO");
-    } else if (role === User.UserRoleServiceAccountRW) {
+    } else if (accountType === User.AccountTypeServiceAccountRW) {
       return t("roleServiceAccountRW");
-    } else if (role === User.UserRoleSuperAdmin) {
-      return t("roleSuperAdmin");
     }
     return t("roleUser");
   }

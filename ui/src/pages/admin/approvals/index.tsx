@@ -10,6 +10,8 @@ import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import type * as CSS from "csstype";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
@@ -304,4 +306,12 @@ class Approvals extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Approvals as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      Approvals as any,
+      Permission.Approvals,
+      PermissionLevel.Admin,
+    ) as any,
+  ),
+);

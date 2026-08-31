@@ -281,7 +281,7 @@ func TestAuthServiceAccountNoLogin(t *testing.T) {
 	user := &User{
 		Email:          uuid.New().String() + "@test.com",
 		OrganizationID: org.ID,
-		Role:           UserRoleServiceAccountRO,
+		AccountType:    AccountTypeServiceAccountRO,
 		HashedPassword: NullString(GetUserRepository().GetHashedPassword(TestPassword)),
 	}
 	if err := GetUserRepository().Create(user); err != nil {
@@ -621,7 +621,6 @@ func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
 	user := &User{
 		Email:          email,
 		OrganizationID: org.ID,
-		Role:           UserRoleUser,
 		AuthProviderID: NullUUID(""),
 	}
 	GetUserRepository().Create(user)
@@ -1156,7 +1155,7 @@ func TestExtractUserInfoFieldsHappyPath(t *testing.T) {
 		"firstname": "Jane",
 		"lastname":  "Doe",
 	}
-	info, err := ExtractUserInfoFields(result, "email", "firstname", "lastname")
+	info, err := ExtractUserInfoFields(result, "email", "firstname", "lastname", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1169,7 +1168,7 @@ func TestExtractUserInfoFieldsEmailMissing(t *testing.T) {
 	result := map[string]interface{}{
 		"firstname": "Jane",
 	}
-	_, err := ExtractUserInfoFields(result, "email", "firstname", "")
+	_, err := ExtractUserInfoFields(result, "email", "firstname", "", "")
 	if err == nil {
 		t.Fatal("expected error for missing email field")
 	}
@@ -1179,7 +1178,7 @@ func TestExtractUserInfoFieldsEmailNotString(t *testing.T) {
 	result := map[string]interface{}{
 		"email": 12345,
 	}
-	_, err := ExtractUserInfoFields(result, "email", "", "")
+	_, err := ExtractUserInfoFields(result, "email", "", "", "")
 	if err == nil {
 		t.Fatal("expected error when email field is not a string")
 	}
@@ -1189,7 +1188,7 @@ func TestExtractUserInfoFieldsEmailEmpty(t *testing.T) {
 	result := map[string]interface{}{
 		"email": "   ",
 	}
-	_, err := ExtractUserInfoFields(result, "email", "", "")
+	_, err := ExtractUserInfoFields(result, "email", "", "", "")
 	if err == nil {
 		t.Fatal("expected error for empty email value")
 	}
@@ -1201,7 +1200,7 @@ func TestExtractUserInfoFieldsOptionalFieldsNotString(t *testing.T) {
 		"firstname": 42,
 		"lastname":  true,
 	}
-	info, err := ExtractUserInfoFields(result, "email", "firstname", "lastname")
+	info, err := ExtractUserInfoFields(result, "email", "firstname", "lastname", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1214,7 +1213,7 @@ func TestExtractUserInfoFieldsOptionalFieldsAbsent(t *testing.T) {
 	result := map[string]interface{}{
 		"email": "user@example.com",
 	}
-	info, err := ExtractUserInfoFields(result, "email", "", "")
+	info, err := ExtractUserInfoFields(result, "email", "", "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1229,7 +1228,7 @@ func TestExtractUserInfoFieldsTrimsWhitespace(t *testing.T) {
 		"firstname": "  Jane  ",
 		"lastname":  "  Doe  ",
 	}
-	info, err := ExtractUserInfoFields(result, "email", "firstname", "lastname")
+	info, err := ExtractUserInfoFields(result, "email", "firstname", "lastname", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

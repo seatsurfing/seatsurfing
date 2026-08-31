@@ -25,9 +25,7 @@ type orgActorsFile struct {
 }
 
 type actorsFile struct {
-	SuperAdminID    string          `json:"superAdminId"`
-	SuperAdminOrgID string          `json:"superAdminOrgId"`
-	Orgs            []orgActorsFile `json:"orgs"`
+	Orgs []orgActorsFile `json:"orgs"`
 }
 
 // accessTokenRefreshAfter is how long a minted access token is reused
@@ -79,19 +77,19 @@ func (a *Actor) Token() string {
 // Sessions are created once and last 90 days, but access tokens expire after
 // 15 minutes -- far less than a full-scale run takes -- so each Actor keeps
 // its session and re-mints its own token on demand via Actor.Token().
-func LoadActors(path string) (orgAdmins, spaceAdmins []Actor, superAdmin *Actor, err error) {
+func LoadActors(path string) (orgAdmins, spaceAdmins []Actor, err error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	var f actorsFile
 	if err := json.Unmarshal(data, &f); err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	auth := &AuthRouter{}
-	mint := func(userID, orgID string, role UserRole) (Actor, error) {
-		user := &User{ID: userID, OrganizationID: orgID, Role: role}
+	mint := func(userID, orgID string) (Actor, error) {
+		user := &User{ID: userID, OrganizationID: orgID}
 		session := auth.CreateSession(nil, user)
 		if session == nil || session.ID == "" {
 			return Actor{}, fmt.Errorf("failed to create session for user %s", userID)
@@ -105,28 +103,20 @@ func LoadActors(path string) (orgAdmins, spaceAdmins []Actor, superAdmin *Actor,
 
 	for _, o := range f.Orgs {
 		if o.OrgAdminID != "" {
-			role := UserRoleOrgAdmin
-			if o.OrgID == f.SuperAdminOrgID && o.OrgAdminID == f.SuperAdminID {
-				role = UserRoleSuperAdmin
-			}
-			a, err := mint(o.OrgAdminID, o.OrgID, role)
+			a, err := mint(o.OrgAdminID, o.OrgID)
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, err
 			}
 			a.OrgIndex = o.OrgIndex
 			a.LocationIDs = o.LocationIDs
 			a.SpaceIDs = o.SpaceIDs
 			a.UsersPerOrg = o.UsersPerOrg
 			orgAdmins = append(orgAdmins, a)
-			if role == UserRoleSuperAdmin {
-				sa := a
-				superAdmin = &sa
-			}
 		}
 		if o.SpaceAdminID != "" {
-			a, err := mint(o.SpaceAdminID, o.OrgID, UserRoleSpaceAdmin)
+			a, err := mint(o.SpaceAdminID, o.OrgID)
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, err
 			}
 			a.OrgIndex = o.OrgIndex
 			a.LocationIDs = o.LocationIDs
@@ -136,8 +126,5 @@ func LoadActors(path string) (orgAdmins, spaceAdmins []Actor, superAdmin *Actor,
 		}
 	}
 
-	if superAdmin == nil {
-		return nil, nil, nil, fmt.Errorf("actors file has no super admin (superAdminId=%q)", f.SuperAdminID)
-	}
-	return orgAdmins, spaceAdmins, superAdmin, nil
+	return orgAdmins, spaceAdmins, nil
 }

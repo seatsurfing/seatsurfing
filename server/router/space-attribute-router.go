@@ -80,7 +80,7 @@ func (router *SpaceAttributeRouter) update(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionSpaceAttributes, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -103,7 +103,7 @@ func (router *SpaceAttributeRouter) delete(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionSpaceAttributes, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -124,7 +124,7 @@ func (router *SpaceAttributeRouter) create(w http.ResponseWriter, r *http.Reques
 	user := GetRequestUser(r)
 	e := router.copyFromRestModel(&m)
 	e.OrganizationID = user.OrganizationID
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionSpaceAttributes, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}

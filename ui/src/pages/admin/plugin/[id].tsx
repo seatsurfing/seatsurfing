@@ -3,6 +3,7 @@ import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import PluginEmbed from "@/components/PluginEmbed";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { NextRouter } from "next/router";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { withTranslation } from "@/components/withTranslation";
@@ -98,4 +99,6 @@ class PluginPage extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(PluginPage as any));
+export default withTranslation(
+  withReadyRouter(withPermission(PluginPage as any) as any),
+);

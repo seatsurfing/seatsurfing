@@ -6,8 +6,10 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Group from "@/types/Group";
 
@@ -95,12 +97,17 @@ class Groups extends React.Component<Props, State> {
     const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link
-          href="/admin/groups/add"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconPlus className="feather" /> {this.props.t("add")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.Groups,
+          PermissionLevel.Admin,
+        ) && (
+          <Link
+            href="/admin/groups/add"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconPlus className="feather" /> {this.props.t("add")}
+          </Link>
+        )}
       </>
     );
 
@@ -144,4 +151,12 @@ class Groups extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Groups as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      Groups as any,
+      Permission.Groups,
+      PermissionLevel.Read,
+    ) as any,
+  ),
+);

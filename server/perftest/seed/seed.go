@@ -46,10 +46,8 @@ type OrgActors struct {
 // measure tool mints fresh ones for these user IDs right before it starts
 // timing requests.
 type ActorsFile struct {
-	GeneratedAt     time.Time   `json:"generatedAt"`
-	SuperAdminID    string      `json:"superAdminId"`
-	SuperAdminOrgID string      `json:"superAdminOrgId"`
-	Orgs            []OrgActors `json:"orgs"`
+	GeneratedAt time.Time   `json:"generatedAt"`
+	Orgs        []OrgActors `json:"orgs"`
 }
 
 const (
@@ -140,14 +138,6 @@ func Run(cfg Config) error {
 		if cfg.UsersPerOrg > 1 {
 			userRoles[1] = UserRoleSpaceAdmin
 			actors.SpaceAdminID = userIDs[1]
-		}
-		// The very first org additionally gets a super admin (bumped from
-		// org admin), used for the one cross-org scenario (organization
-		// list).
-		if orgIdx == 0 && cfg.UsersPerOrg > 0 {
-			userRoles[0] = UserRoleSuperAdmin
-			result.SuperAdminID = userIDs[0]
-			result.SuperAdminOrgID = orgID
 		}
 		if err := seedUsers(db, orgID, orgIdx, userIDs, userRoles); err != nil {
 			return fmt.Errorf("seed users for org %d: %w", orgIdx, err)

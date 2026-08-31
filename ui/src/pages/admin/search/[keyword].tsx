@@ -5,6 +5,7 @@ import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Search, { SearchOptions, GroupSearchResult } from "@/types/Search";
 import Ajax from "@/util/Ajax";
@@ -160,4 +161,6 @@ class SearchResult extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(SearchResult as any));
+export default withTranslation(
+  withReadyRouter(withPermission(SearchResult as any) as any),
+);

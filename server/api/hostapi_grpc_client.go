@@ -51,6 +51,40 @@ func (h *HostAPIGRPC) GetAuthProviderRepository() AuthProviderRepository {
 func (h *HostAPIGRPC) GetAuthStateRepository() AuthStateRepository {
 	return &authStateRepositoryGRPC{client: h.client}
 }
+
+// HasPermission asks the host to resolve a user's access. A transport failure
+// denies rather than allows: a plugin must never open up because the host was
+// briefly unreachable.
+func (h *HostAPIGRPC) HasPermission(userID, organizationID, permission string, minLevel int) (bool, error) {
+	r, err := h.client.UserHasPermission(context.Background(), &hostapipb.UserHasPermissionArgs{
+		UserId: userID, OrganizationId: organizationID, Permission: permission, MinLevel: int32(minLevel),
+	})
+	if err != nil {
+		return false, err
+	}
+	return r.V, nil
+}
+
+func (h *HostAPIGRPC) GetRoleIDByName(organizationID, name string) (string, error) {
+	r, err := h.client.RoleGetIDByName(context.Background(), &hostapipb.RoleGetIDByNameArgs{
+		OrganizationId: organizationID, Name: name,
+	})
+	if err != nil {
+		return "", err
+	}
+	return r.Id, strErr(r.Err)
+}
+
+func (h *HostAPIGRPC) AssignRoleToUser(userID, roleID string) error {
+	r, err := h.client.RoleAssignToUser(context.Background(), &hostapipb.RoleAssignToUserArgs{
+		UserId: userID, RoleId: roleID,
+	})
+	if err != nil {
+		return err
+	}
+	return strErr(r.Err)
+}
+
 func (h *HostAPIGRPC) SendEmail(recipient, subject, body, language, orgID string) error {
 	r, err := h.client.SendEmail(context.Background(), &hostapipb.SendEmailArgs{
 		Recipient: recipient, Subject: subject, Body: body, Language: language, OrgId: orgID,
@@ -222,20 +256,6 @@ func (r *userRepositoryGRPC) GetUsersWithEmail(email string) ([]*User, error) {
 		return nil, err
 	}
 	return usersFromProto(reply.Users), strErr(reply.Err)
-}
-func (r *userRepositoryGRPC) IsOrgAdmin(user *User) bool {
-	reply, err := r.client.UserIsOrgAdmin(context.Background(), &hostapipb.UserIsAdminArgs{User: userToProto(user)})
-	if err != nil {
-		return false
-	}
-	return reply.V
-}
-func (r *userRepositoryGRPC) IsSuperAdmin(user *User) bool {
-	reply, err := r.client.UserIsSuperAdmin(context.Background(), &hostapipb.UserIsAdminArgs{User: userToProto(user)})
-	if err != nil {
-		return false
-	}
-	return reply.V
 }
 func (r *userRepositoryGRPC) Create(e *User) error {
 	reply, err := r.client.UserCreate(context.Background(), &hostapipb.UserMutateArgs{User: userToProto(e)})

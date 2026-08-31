@@ -25,7 +25,7 @@ import Passkey from "@/types/Passkey";
 import RendererUtils from "@/util/RendererUtils";
 import ReloadModal from "@/components/ReloadModal";
 import { PreferencesTab } from "@/util/Navigation";
-import CONSTANT from "@/util/Contant";
+import CONSTANT from "@/util/Constant";
 import WeekdaySelection from "@/components/WeekdaySelection";
 
 interface State {

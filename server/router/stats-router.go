@@ -73,7 +73,7 @@ func getDateRanges() (thisWeekEnter, thisWeekLeave, lastWeekEnter, lastWeekLeave
 
 func (router *StatsRouter) getLoad(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAnalytics, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -121,7 +121,7 @@ func (router *StatsRouter) getLoad(w http.ResponseWriter, r *http.Request) {
 
 func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAnalytics, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -170,7 +170,7 @@ func (router *StatsRouter) getStats(w http.ResponseWriter, r *http.Request) {
 
 func (router *StatsRouter) getWeekday(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAnalytics, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}

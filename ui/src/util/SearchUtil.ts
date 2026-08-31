@@ -1,6 +1,7 @@
 import DateUtil from "@/util/DateUtil";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc } from "@/components/withTranslation";
+import { Permission, PermissionLevel } from "@/types/Permission";
 
 export default class SearchUtil {
   /**
@@ -41,7 +42,7 @@ export default class SearchUtil {
 
     if (
       RuntimeConfig.INFOS.noAdminRestrictions &&
-      RuntimeConfig.INFOS.spaceAdmin
+      RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Admin)
     )
       return hints;
 

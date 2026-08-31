@@ -10,6 +10,8 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Ajax from "@/util/Ajax";
 import Location from "@/types/Location";
@@ -17,6 +19,7 @@ import Location from "@/types/Location";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   selectedItem: string;
@@ -126,12 +129,19 @@ class Locations extends React.Component<Props, State> {
     let buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link
-          href="/admin/attributes"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconTag className="feather" /> {this.props.t("attributes")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.SpaceAttributes,
+          PermissionLevel.Admin,
+        ) ? (
+          <Link
+            href="/admin/attributes"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconTag className="feather" /> {this.props.t("attributes")}
+          </Link>
+        ) : (
+          <></>
+        )}
         <Link
           href="/admin/locations/add"
           className="btn btn-sm btn-outline-secondary"
@@ -184,4 +194,12 @@ class Locations extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Locations as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      Locations as any,
+      Permission.Areas,
+      PermissionLevel.Admin,
+    ) as any,
+  ),
+);
