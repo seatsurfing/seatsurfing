@@ -29,6 +29,10 @@ func GetGroupRepository() *GroupStore {
 		if _, err := GetDatabase().DB().Exec("CREATE TABLE IF NOT EXISTS users_groups (" +
 			"group_id uuid NOT NULL, " +
 			"user_id uuid NOT NULL, " +
+			// source distinguishes memberships an administrator set by hand
+			// from those reconciled out of an identity provider, so that
+			// reconciliation revokes only what it granted.
+			"source VARCHAR NOT NULL DEFAULT 'manual', " +
 			"PRIMARY KEY (group_id, user_id))"); err != nil {
 			panic(err)
 		}
@@ -39,6 +43,12 @@ func GetGroupRepository() *GroupStore {
 func (r *GroupStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 51 {
 		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_users_groups_user_id ON users_groups(user_id)"); err != nil {
+			panic(err)
+		}
+	}
+	if curVersion < 53 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE users_groups " +
+			"ADD COLUMN IF NOT EXISTS source VARCHAR NOT NULL DEFAULT 'manual'"); err != nil {
 			panic(err)
 		}
 	}
@@ -190,6 +200,9 @@ func (r *GroupStore) Update(e *Group) error {
 }
 
 func (r *GroupStore) Delete(e *Group) error {
+	if err := GetAuthProviderMappingRepository().DeleteAllForTarget(AuthProviderMappingTargetGroup, e.ID); err != nil {
+		return err
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE "+
 		"group_id = $1", e.ID); err != nil {
 		return err
@@ -263,6 +276,33 @@ func (r *GroupStore) AddMembers(e *Group, userIDs []string) error {
 		vals = append(vals, e.ID, userID)
 	}
 	sqlStr = strings.TrimSuffix(sqlStr, ",")
+	sqlStr += " ON CONFLICT DO NOTHING"
+	_, err := GetDatabase().DB().Exec(sqlStr, vals...)
+	return err
+}
+
+// SetMembershipsForUser replaces the user's group memberships that came from
+// the given source, leaving memberships from other sources untouched. This is
+// what lets identity provider reconciliation revoke only what it granted,
+// without disturbing groups an administrator assigned by hand.
+func (r *GroupStore) SetMembershipsForUser(userID string, groupIDs []string, source string) error {
+	if _, err := GetDatabase().DB().Exec("DELETE FROM users_groups WHERE user_id = $1 AND source = $2",
+		userID, source); err != nil {
+		return err
+	}
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	sqlStr := "INSERT INTO users_groups (group_id, user_id, source) VALUES "
+	vals := []interface{}{}
+	i := 1
+	for _, groupID := range groupIDs {
+		sqlStr += fmt.Sprintf("($%d, $%d, $%d),", i, i+1, i+2)
+		i += 3
+		vals = append(vals, groupID, userID, source)
+	}
+	sqlStr = strings.TrimSuffix(sqlStr, ",")
+	sqlStr += " ON CONFLICT DO NOTHING"
 	_, err := GetDatabase().DB().Exec(sqlStr, vals...)
 	return err
 }

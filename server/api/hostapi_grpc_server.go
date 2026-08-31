@@ -81,12 +81,6 @@ func (s *HostAPIGRPCServer) UserGetUsersWithEmail(ctx context.Context, a *hostap
 	v, err := s.impl.GetUserRepository().GetUsersWithEmail(a.Email)
 	return &hostapipb.UserGetUsersWithEmailReply{Users: usersToProto(v), Err: errStr(err)}, nil
 }
-func (s *HostAPIGRPCServer) UserIsOrgAdmin(ctx context.Context, a *hostapipb.UserIsAdminArgs) (*hostapipb.BoolReply, error) {
-	return &hostapipb.BoolReply{V: s.impl.GetUserRepository().IsOrgAdmin(userFromProto(a.User))}, nil
-}
-func (s *HostAPIGRPCServer) UserIsSuperAdmin(ctx context.Context, a *hostapipb.UserIsAdminArgs) (*hostapipb.BoolReply, error) {
-	return &hostapipb.BoolReply{V: s.impl.GetUserRepository().IsSuperAdmin(userFromProto(a.User))}, nil
-}
 func (s *HostAPIGRPCServer) UserCreate(ctx context.Context, a *hostapipb.UserMutateArgs) (*hostapipb.UserGetOneReply, error) {
 	u := userFromProto(a.User)
 	err := s.impl.GetUserRepository().Create(u)
@@ -245,6 +239,21 @@ func (s *HostAPIGRPCServer) AuthStateCreate(ctx context.Context, a *hostapipb.Au
 
 // ─── General ──────────────────────────────────────────────────────────────────
 
+func (s *HostAPIGRPCServer) UserHasPermission(ctx context.Context, a *hostapipb.UserHasPermissionArgs) (*hostapipb.BoolReply, error) {
+	v, err := s.impl.HasPermission(a.UserId, a.OrganizationId, a.Permission, int(a.MinLevel))
+	if err != nil {
+		return &hostapipb.BoolReply{V: false}, nil
+	}
+	return &hostapipb.BoolReply{V: v}, nil
+}
+func (s *HostAPIGRPCServer) RoleGetIDByName(ctx context.Context, a *hostapipb.RoleGetIDByNameArgs) (*hostapipb.RoleGetIDByNameReply, error) {
+	v, err := s.impl.GetRoleIDByName(a.OrganizationId, a.Name)
+	return &hostapipb.RoleGetIDByNameReply{Id: v, Err: errStr(err)}, nil
+}
+func (s *HostAPIGRPCServer) RoleAssignToUser(ctx context.Context, a *hostapipb.RoleAssignToUserArgs) (*hostapipb.ErrorReply, error) {
+	err := s.impl.AssignRoleToUser(a.UserId, a.RoleId)
+	return &hostapipb.ErrorReply{Err: errStr(err)}, nil
+}
 func (s *HostAPIGRPCServer) SendEmail(ctx context.Context, a *hostapipb.SendEmailArgs) (*hostapipb.ErrorReply, error) {
 	err := s.impl.SendEmail(a.Recipient, a.Subject, a.Body, a.Language, a.OrgId)
 	return &hostapipb.ErrorReply{Err: errStr(err)}, nil

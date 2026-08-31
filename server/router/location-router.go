@@ -138,7 +138,7 @@ func (router *LocationRouter) setAttribute(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -174,7 +174,7 @@ func (router *LocationRouter) deleteAttribute(w http.ResponseWriter, r *http.Req
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -388,7 +388,7 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -442,7 +442,7 @@ func (router *LocationRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -463,7 +463,7 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	e := router.copyFromRestModel(&m)
 	e.OrganizationID = user.OrganizationID
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -587,7 +587,7 @@ func (router *LocationRouter) setFloorPlanDesign(w http.ResponseWriter, r *http.
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -639,7 +639,7 @@ func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanSpaceAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -694,7 +694,7 @@ func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
 
 func (router *LocationRouter) loadSampleData(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}

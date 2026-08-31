@@ -30,6 +30,8 @@ import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import GroupSearchTypeahead from "@/components/GroupSearchTypeahead";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
@@ -515,7 +517,13 @@ class EditLocation extends React.Component<Props, State> {
     if (locationId) {
       return Location.get(locationId).then((location) => {
         this.entity = location;
-        return Group.list().then((groups) => {
+        const groups = RuntimeConfig.hasPermission(
+          Permission.Groups,
+          PermissionLevel.Read,
+        )
+          ? Group.list()
+          : Promise.resolve([]);
+        return groups.then((groups) => {
           this.groups = groups;
           return Space.list(this.entity.id).then((spaces) => {
             this.setState({
@@ -2302,4 +2310,12 @@ class EditLocation extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditLocation as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      EditLocation as any,
+      Permission.Areas,
+      PermissionLevel.Admin,
+    ) as any,
+  ),
+);

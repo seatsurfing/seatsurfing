@@ -140,7 +140,7 @@ func (router *RecurringBookingRouter) getOne(w http.ResponseWriter, r *http.Requ
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, location.OrganizationID) {
+	if e.UserID != GetRequestUserID(r) && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
@@ -169,7 +169,7 @@ func (router *RecurringBookingRouter) delete(w http.ResponseWriter, r *http.Requ
 		SendForbidden(w)
 		return
 	}
-	if (e.UserID != GetRequestUserID(r)) && !CanSpaceAdminOrg(GetRequestUser(r), location.OrganizationID) {
+	if (e.UserID != GetRequestUserID(r)) && !HasPermission(GetRequestUser(r), location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -299,7 +299,7 @@ func (router *RecurringBookingRouter) getIcal(w http.ResponseWriter, r *http.Req
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+	if e.UserID != GetRequestUserID(r) && !HasPermission(requestUser, requestUser.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}

@@ -14,6 +14,8 @@ import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import AuthAttempt from "@/types/AuthAttempt";
 import DateUtil from "@/util/DateUtil";
@@ -414,4 +416,12 @@ class Audit extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Audit as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      Audit as any,
+      Permission.AuditLog,
+      PermissionLevel.Read,
+    ) as any,
+  ),
+);

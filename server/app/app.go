@@ -226,6 +226,17 @@ func (a *App) registerPluginOnConnect(inst *PluginInstance) {
 	}
 
 	AddUnauthorizedRoutes(inst.Instance.GetUnauthorizedRoutes())
+	// Re-registered on every reconnect, so that a plugin which gains or drops
+	// a permission between versions is reflected without a host restart.
+	pluginPermissions := inst.Instance.GetPermissionDefinitions()
+	for _, d := range pluginPermissions {
+		d.PluginID = inst.Name
+		api.RegisterPermission(d)
+	}
+	// Roles seeded before this plugin existed pick its permissions up now.
+	if err := GetRoleRepository().GrantPluginPermissions(pluginPermissions); err != nil {
+		log.Println(err)
+	}
 	if inst.registered.CompareAndSwap(false, true) {
 		api.RegisterPlugin(inst.Instance)
 	}
@@ -270,6 +281,30 @@ func (h *hostAPIImpl) GetAuthProviderRepository() api.AuthProviderRepository {
 func (h *hostAPIImpl) GetAuthStateRepository() api.AuthStateRepository {
 	return GetAuthStateRepository()
 }
+
+// HasPermission resolves a user's access for a plugin. The user is loaded
+// fresh rather than trusted from the caller, for the same reason the host's
+// own handlers re-load it: the plugin only ever receives an ID.
+func (h *hostAPIImpl) HasPermission(userID, organizationID, permission string, minLevel int) (bool, error) {
+	user, err := GetUserRepository().GetOne(userID)
+	if err != nil {
+		return false, err
+	}
+	return HasPermission(user, organizationID, api.Permission(permission), api.PermissionLevel(minLevel)), nil
+}
+
+func (h *hostAPIImpl) GetRoleIDByName(organizationID, name string) (string, error) {
+	role, err := GetRoleRepository().GetByName(organizationID, name)
+	if err != nil {
+		return "", err
+	}
+	return role.ID, nil
+}
+
+func (h *hostAPIImpl) AssignRoleToUser(userID, roleID string) error {
+	return GetUserRoleRepository().Add(userID, roleID, api.RoleAssignmentSourceManual)
+}
+
 func (h *hostAPIImpl) SendEmail(recipient, subject, body, language, orgID string) error {
 	return SendEmailWithBodyAndOrg(&MailAddress{Address: recipient}, subject, body, language, orgID)
 }
@@ -543,6 +578,7 @@ func (a *App) InitializeRouter() {
 	routers["/auth-attempt/"] = &AuthAttemptRouter{}
 	routers["/auth/"] = &AuthRouter{}
 	routers["/group/"] = &GroupRouter{}
+	routers["/role/"] = &RoleRouter{}
 	routers["/user/"] = &UserRouter{}
 	routers["/preference/"] = &UserPreferencesRouter{}
 	routers["/recurring-booking/"] = &RecurringBookingRouter{}
@@ -660,13 +696,23 @@ func (a *App) InitializeDefaultOrg() {
 			OrganizationID: org.ID,
 			Email:          email,
 			HashedPassword: api.NullString(GetUserRepository().GetHashedPassword(config.InitOrgPass)),
-			Role:           api.UserRoleOrgAdmin,
 			Firstname:      "Organization",
 			Lastname:       "Admin",
 		}
 		GetUserRepository().Create(user)
+		orgAdminRoleID, _, _ := GetRoleRepository().EnsureBuiltInRoles(org.ID)
+		if err := GetUserRoleRepository().Add(user.ID, orgAdminRoleID, api.RoleAssignmentSourceManual); err != nil {
+			log.Println(err)
+		}
 		GetOrganizationRepository().CreateSampleData(org)
 	}
+}
+
+// EnsureOrgAdmins repairs any organization left without an administrator.
+// With the super admin role gone there is no outside account that could fix
+// such an organization by hand.
+func (a *App) EnsureOrgAdmins() {
+	EnsureEveryOrgHasAdmin()
 }
 
 func (a *App) InitializeSingleOrgSettings() {

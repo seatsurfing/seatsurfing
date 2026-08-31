@@ -11,6 +11,10 @@ type UserRole int
 
 const DefaultUserLimit int = 10
 
+// Legacy role values. The ordered role ladder has been replaced by the role
+// and permission model in permissions.go; these constants remain solely so
+// that the schema upgrade can read the users.role column before dropping it.
+// Nothing at runtime consults them.
 const (
 	UserRoleUser             UserRole = 0
 	UserRoleSpaceAdmin       UserRole = 10
@@ -31,7 +35,7 @@ type User struct {
 	AuthProviderID         NullUUID
 	PasswordPending        bool
 	PasswordUpdateRequired bool
-	Role                   UserRole
+	AccountType            AccountType
 	Disabled               bool
 	BanExpiry              *time.Time
 	LastActivityAtUTC      *time.Time
@@ -172,11 +176,14 @@ type AuthProvider struct {
 	UserInfoEmailField     string
 	UserInfoFirstnameField string
 	UserInfoLastnameField  string
-	ClientID               string
-	ClientSecret           string
-	LogoutURL              string
-	ProfilePageURL         string
-	ReadOnly               bool
+	// UserInfoGroupsField names the claim carrying the user's groups, used to
+	// assign roles and group memberships automatically. Empty disables it.
+	UserInfoGroupsField string
+	ClientID            string
+	ClientSecret        string
+	LogoutURL           string
+	ProfilePageURL      string
+	ReadOnly            bool
 }
 
 // ─── AuthState ────────────────────────────────────────────────────────────────
@@ -273,3 +280,85 @@ var (
 	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
 	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
 )
+
+// ─── AccountType ─────────────────────────────────────────────────────────────
+
+type AccountType int
+
+const (
+	AccountTypePerson           AccountType = 0
+	AccountTypeServiceAccountRO AccountType = 1
+	AccountTypeServiceAccountRW AccountType = 2
+)
+
+// IsServiceAccount reports whether the account authenticates via Basic auth or
+// an API token rather than an interactive login.
+func (t AccountType) IsServiceAccount() bool {
+	return t == AccountTypeServiceAccountRO || t == AccountTypeServiceAccountRW
+}
+
+// ─── Role ────────────────────────────────────────────────────────────────────
+
+// Names of the roles seeded for every organization by the schema upgrade.
+// Only RoleNameOrgAdmin is created as a system role; the others are ordinary
+// roles that administrators may edit or delete.
+const (
+	RoleNameOrgAdmin       = "Organization Administrator"
+	RoleNameFloorPlanAdmin = "Floor Plan Administrator"
+	RoleNameApiAccess      = "API access"
+)
+
+type Role struct {
+	ID             string
+	OrganizationID string
+	Name           string
+	Description    string
+	// System roles can not be edited or deleted. Every organization has
+	// exactly one: RoleNameOrgAdmin.
+	System bool
+	// AutoGrantPluginPermissions marks a seeded role that should pick up
+	// permissions contributed by plugins as they register, so that a service
+	// account migrated from the old model keeps reaching plugin endpoints such
+	// as SCIM. Cleared as soon as an administrator edits the role: from then
+	// on its permission set is theirs, not ours.
+	AutoGrantPluginPermissions bool
+	// Permissions holds only the entries granted above PermissionLevelNone.
+	Permissions map[Permission]PermissionLevel
+}
+
+// Sources of a role assignment. Assignments reconciled from an identity
+// provider are marked so that reconciliation revokes only what it granted.
+const (
+	RoleAssignmentSourceManual = "manual"
+	RoleAssignmentSourceOIDC   = "oidc"
+)
+
+// RoleAssignment links a user to a role. ScopeType and ScopeID are reserved
+// for a later scoped-assignment feature and are always empty for now.
+type RoleAssignment struct {
+	UserID    string
+	RoleID    string
+	ScopeType string
+	ScopeID   string
+	Source    string
+}
+
+// ─── AuthProviderMapping ─────────────────────────────────────────────────────
+
+// Targets an auth provider mapping can point at.
+const (
+	AuthProviderMappingTargetRole  = "role"
+	AuthProviderMappingTargetGroup = "group"
+)
+
+// AuthProviderMapping assigns a role or a group membership to users whose
+// identity provider reports a given claim value. Assignments it makes are
+// marked with the OIDC source so that reconciliation on the next login revokes
+// only what it granted, leaving manual assignments alone.
+type AuthProviderMapping struct {
+	ID             string
+	AuthProviderID string
+	ClaimValue     string
+	TargetType     string
+	TargetID       string
+}

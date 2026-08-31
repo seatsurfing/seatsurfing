@@ -89,7 +89,6 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 			Email:          userID,
 			AtlassianID:    NullString(userID),
 			OrganizationID: org.ID,
-			Role:           UserRoleUser,
 		}
 		if err := GetUserRepository().Create(user); err != nil {
 			recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Email: userID, Method: AuthMethodConfluence, ErrorCode: AuthErrorUserCreateFailed, ErrorDetail: err.Error()})

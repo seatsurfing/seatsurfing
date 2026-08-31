@@ -6,11 +6,14 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import User from "@/types/User";
 import AuthProvider from "@/types/AuthProvider";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import RendererUtils from "@/util/RendererUtils";
+import Role from "@/types/Role";
+import { Permission, PermissionLevel } from "@/types/Permission";
 
 interface State {
   selectedItem: string;
@@ -24,6 +27,7 @@ interface Props {
 
 class Users extends React.Component<Props, State> {
   authProviders: { [key: string]: string } = {};
+  roleNames: { [key: string]: string } = {};
   data: User[] = [];
   ExcellentExport: any;
 
@@ -42,15 +46,33 @@ class Users extends React.Component<Props, State> {
   };
 
   loadItems = async () => {
-    const providers = await AuthProvider.list();
+    // Uses the public (id + name only) listing so that displaying a user's
+    // auth provider doesn't require the separate auth_providers permission.
+    const providers = await AuthProvider.listPublicForOrg(
+      RuntimeConfig.INFOS.organizationId,
+    );
     providers.forEach((provider) => {
       this.authProviders[provider.id] = provider.name;
     });
+    // Role names are resolved once for the whole table rather than per row.
+    if (RuntimeConfig.hasPermission(Permission.Roles, PermissionLevel.Read)) {
+      const roles = await Role.list();
+      roles.forEach((role) => {
+        this.roleNames[role.id] = role.name;
+      });
+    }
     this.data = await User.list();
     this.setState({ loading: false });
   };
 
+  canEdit = () => {
+    return RuntimeConfig.hasPermission(Permission.Users, PermissionLevel.Admin);
+  };
+
   onItemSelect = (user: User) => {
+    if (!this.canEdit()) {
+      return;
+    }
     this.setState({ selectedItem: user.id });
   };
 
@@ -63,9 +85,20 @@ class Users extends React.Component<Props, State> {
     } else if (this.authProviders[user.authProviderId]) {
       authProvider = this.authProviders[user.authProviderId];
     }
-    const role = RendererUtils.roleName(user.role, this.props.t);
+    // A user may hold several roles, or none at all.
+    const roleNames = user.roleIds
+      .map((id) => this.roleNames[id])
+      .filter((name) => name)
+      .sort();
+    const role = roleNames.length
+      ? roleNames.join(", ")
+      : RendererUtils.accountTypeName(user.accountType, this.props.t);
     return (
-      <tr key={user.id} onClick={() => this.onItemSelect(user)}>
+      <tr
+        key={user.id}
+        onClick={this.canEdit() ? () => this.onItemSelect(user) : undefined}
+        style={this.canEdit() ? undefined : { cursor: "default" }}
+      >
         <td>{user.email}</td>
         <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
         <td>{role}</td>
@@ -102,12 +135,19 @@ class Users extends React.Component<Props, State> {
     const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
-        <Link
-          href="/admin/users/add"
-          className="btn btn-sm btn-outline-secondary"
-        >
-          <IconPlus className="feather" /> {this.props.t("add")}
-        </Link>
+        {RuntimeConfig.hasPermission(
+          Permission.Users,
+          PermissionLevel.Admin,
+        ) ? (
+          <Link
+            href="/admin/users/add"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            <IconPlus className="feather" /> {this.props.t("add")}
+          </Link>
+        ) : (
+          <></>
+        )}
       </>
     );
 
@@ -132,7 +172,7 @@ class Users extends React.Component<Props, State> {
         <Table
           striped={true}
           hover={true}
-          className="clickable-table caption-top"
+          className={(this.canEdit() ? "clickable-table " : "") + "caption-top"}
           id="datatable"
         >
           <caption>
@@ -142,7 +182,7 @@ class Users extends React.Component<Props, State> {
             <tr>
               <th>{this.props.t("user")}</th>
               <th>{this.props.t("name")}</th>
-              <th>{this.props.t("role")}</th>
+              <th>{this.props.t("roles")}</th>
               <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
                 {this.props.t("loginMeans")}
               </th>
@@ -155,4 +195,8 @@ class Users extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Users as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(Users as any, Permission.Users, PermissionLevel.Read) as any,
+  ),
+);

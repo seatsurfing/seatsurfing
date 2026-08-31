@@ -93,12 +93,9 @@ type JWTResponse struct {
 }
 
 type Claims struct {
-	Email      string `json:"email"`
-	UserID     string `json:"userID"`
-	SessionID  string `json:"sid"`
-	SpaceAdmin bool   `json:"spaceAdmin"`
-	OrgAdmin   bool   `json:"admin"`
-	Role       int    `json:"role"`
+	Email     string `json:"email"`
+	UserID    string `json:"userID"`
+	SessionID string `json:"sid"`
 	jwt.RegisteredClaims
 }
 
@@ -106,6 +103,9 @@ type IdPUserInfo struct {
 	Email     string
 	Firstname string
 	Lastname  string
+	// Groups as reported by the identity provider, used to assign roles and
+	// group memberships. Empty when the provider declares no groups claim.
+	Groups []string
 }
 
 type InitPasswordResetRequest struct {
@@ -378,7 +378,7 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if user.AccountType.IsServiceAccount() {
 		SendNotFound(w)
 		return
 	}
@@ -418,7 +418,7 @@ func (router *AuthRouter) validateUserInvitation(w http.ResponseWriter, r *http.
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if user.AccountType.IsServiceAccount() {
 		SendNotFound(w)
 		return
 	}
@@ -466,7 +466,7 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if user.AccountType.IsServiceAccount() {
 		SendNotFound(w)
 		return
 	}
@@ -806,7 +806,7 @@ func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *Auth
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if user.AccountType.IsServiceAccount() {
 		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodConfluence, ErrorCode: AuthErrorServiceAccount})
 		SendNotFound(w)
 		return
@@ -862,7 +862,6 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 			user = &User{
 				Email:          payload.UserID,
 				OrganizationID: org.ID,
-				Role:           UserRoleUser,
 				AuthProviderID: NullUUID(provider.ID),
 			}
 			if err := GetUserRepository().Create(user); err != nil {
@@ -913,7 +912,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if user.AccountType.IsServiceAccount() {
 		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: verifyProviderID, Method: AuthMethodOAuth, ErrorCode: AuthErrorServiceAccount})
 		SendNotFound(w)
 		return
@@ -1036,7 +1035,6 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 		user = &User{
 			Email:          userInfo.Email,
 			OrganizationID: org.ID,
-			Role:           UserRoleUser,
 			AuthProviderID: NullUUID(provider.ID),
 		}
 		if err := GetUserRepository().Create(user); err != nil {
@@ -1072,6 +1070,10 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	if needUserUpdate {
 		GetUserRepository().Update(user)
 	}
+	// Apply the provider's role and group mappings on every login, so that a
+	// change made in the identity provider takes effect the next time the user
+	// signs in.
+	ReconcileUserFromIdP(user, provider, userInfo.Groups)
 	payloadNew := &AuthStateLoginPayload{
 		UserID:    userInfo.Email,
 		LoginType: payload.LoginType,
@@ -1186,7 +1188,7 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if err := json.Unmarshal([]byte(contents), &result); err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: fmt.Sprintf("failed parsing userinfo response as JSON: %s: %s", err.Error(), string(contents))}
 	}
-	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField)
+	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField, provider.UserInfoGroupsField)
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: err.Error() + ", userinfo response: " + string(contents)}
 	}
@@ -1194,7 +1196,7 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	return info, payload, nil
 }
 
-func ExtractUserInfoFields(result map[string]interface{}, emailField, firstnameField, lastnameField string) (*IdPUserInfo, error) {
+func ExtractUserInfoFields(result map[string]interface{}, emailField, firstnameField, lastnameField, groupsField string) (*IdPUserInfo, error) {
 	emailVal, ok := result[emailField].(string)
 	if !ok || strings.TrimSpace(emailVal) == "" {
 		return nil, fmt.Errorf("could not read email address from field: %s", emailField)
@@ -1215,7 +1217,39 @@ func ExtractUserInfoFields(result map[string]interface{}, emailField, firstnameF
 		Email:     strings.TrimSpace(emailVal),
 		Firstname: firstname,
 		Lastname:  lastname,
+		Groups:    extractGroupsClaim(result, groupsField),
 	}, nil
+}
+
+// extractGroupsClaim reads the groups a provider reports. Providers differ:
+// most send an array of strings, some a single string. Values are returned
+// verbatim, including Keycloak's leading-slash paths such as "/parent/child",
+// which are matched in full rather than by their last segment - two groups can
+// share a leaf name under different parents.
+func extractGroupsClaim(result map[string]interface{}, groupsField string) []string {
+	if groupsField == "" {
+		return nil
+	}
+	raw, ok := result[groupsField]
+	if !ok {
+		return nil
+	}
+	var groups []string
+	switch v := raw.(type) {
+	case []interface{}:
+		for _, item := range v {
+			if str, ok := item.(string); ok {
+				if str = strings.TrimSpace(str); str != "" {
+					groups = append(groups, str)
+				}
+			}
+		}
+	case string:
+		if str := strings.TrimSpace(v); str != "" {
+			groups = append(groups, str)
+		}
+	}
+	return groups
 }
 
 func (router *AuthRouter) SendPasswordResetEmail(user *User, ID string, org *Organization) error {
@@ -1280,12 +1314,9 @@ func (router *AuthRouter) getConfig(provider *AuthProvider) (*oauth2.Config, err
 
 func (router *AuthRouter) CreateClaims(user *User, session *Session) *Claims {
 	claims := &Claims{
-		UserID:     user.ID,
-		Email:      user.Email,
-		SessionID:  session.ID,
-		SpaceAdmin: GetUserRepository().IsSpaceAdmin(user),
-		OrgAdmin:   GetUserRepository().IsOrgAdmin(user),
-		Role:       int(user.Role),
+		UserID:    user.ID,
+		Email:     user.Email,
+		SessionID: session.ID,
 	}
 	return claims
 }
@@ -1421,7 +1452,7 @@ func (router *AuthRouter) getPasswordLoginDenialReason(user *User) string {
 	if user.Disabled {
 		return AuthErrorUserDisabled
 	}
-	if user.Role == UserRoleServiceAccountRO || user.Role == UserRoleServiceAccountRW {
+	if user.AccountType.IsServiceAccount() {
 		return AuthErrorServiceAccount
 	}
 	return ""

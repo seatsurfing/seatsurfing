@@ -11,6 +11,8 @@ import Loading from "@/components/Loading";
 import OrgSettings from "@/types/Settings";
 import Organization from "@/types/Organization";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import Space from "@/types/Space";
 import User from "@/types/User";
@@ -26,6 +28,7 @@ import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import ConfirmModal from "@/components/ConfirmModal";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 interface State {
   loading: boolean;
@@ -51,6 +54,7 @@ interface State {
   canSearchHint: string;
   canSave: boolean;
   canEdit: boolean;
+  canDelete: boolean;
   prefEnterTime: number;
   prefWorkdayStart: string;
   prefWorkdayEnd: string;
@@ -116,6 +120,7 @@ class EditBooking extends React.Component<Props, State> {
       canSearchHint: "",
       canSave: false,
       canEdit: false,
+      canDelete: false,
       prefEnterTime: 0,
       prefWorkdayStart: UserPreference.DEFAULT_WORKDAY_START,
       prefWorkdayEnd: UserPreference.DEFAULT_WORKDAY_END,
@@ -137,9 +142,27 @@ class EditBooking extends React.Component<Props, State> {
       this.loadSelf(),
     ];
     Promise.all(promises).then(() => {
+      this.applyPermissionRestrictions();
       this.setState({ loading: false });
       this.initDates();
     });
+  };
+
+  applyPermissionRestrictions = () => {
+    if (this.isNewBooking) {
+      return;
+    }
+    const hasFullBookingsAccess = RuntimeConfig.hasPermission(
+      Permission.Bookings,
+      PermissionLevel.Admin,
+    );
+    const isOwnBooking = this.entity.user?.email === this.state.selfEmail;
+    const canManage = isOwnBooking || hasFullBookingsAccess;
+    this.setState((prevState) => ({
+      canDelete: hasFullBookingsAccess,
+      canSave: canManage && prevState.canSave,
+      canEdit: canManage && prevState.canEdit,
+    }));
   };
 
   loadData = () => {
@@ -725,7 +748,7 @@ class EditBooking extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         onClick={this.deleteItem}
-        disabled={!this.state.canEdit}
+        disabled={!this.state.canEdit || !this.state.canDelete}
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
@@ -953,4 +976,12 @@ class EditBooking extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditBooking as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      EditBooking as any,
+      Permission.Bookings,
+      PermissionLevel.Read,
+    ) as any,
+  ),
+);

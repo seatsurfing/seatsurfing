@@ -23,6 +23,8 @@ import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
@@ -189,6 +191,14 @@ class Settings extends React.Component<Props, State> {
   };
 
   loadAuthProviders = async (): Promise<void> => {
+    if (
+      !RuntimeConfig.hasPermission(
+        Permission.AuthProviders,
+        PermissionLevel.Admin,
+      )
+    ) {
+      return;
+    }
     return AuthProvider.list().then((list) => {
       this.authProviders = list;
     });
@@ -1460,43 +1470,50 @@ class Settings extends React.Component<Props, State> {
 
           {/* AUTH PROVIDERS */}
 
-          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>
-              {this.props.t("authProviders")}
-              <PremiumFeatureIcon />
-            </h4>
-            <div className="btn-toolbar mb-2 mb-md-0">
-              <div className="btn-group me-2">
-                <Link
-                  href="/admin/settings/auth-providers/add"
-                  className={
-                    "btn btn-sm btn-outline-secondary" +
-                    (RuntimeConfig.INFOS.featureAuthProviders
-                      ? ""
-                      : " disabled")
-                  }
-                >
-                  <IconPlus className="feather" /> {this.props.t("add")}
-                </Link>
+          {RuntimeConfig.hasPermission(
+            Permission.AuthProviders,
+            PermissionLevel.Admin,
+          ) && (
+            <>
+              <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h4>
+                  {this.props.t("authProviders")}
+                  <PremiumFeatureIcon />
+                </h4>
+                <div className="btn-toolbar mb-2 mb-md-0">
+                  <div className="btn-group me-2">
+                    <Link
+                      href="/admin/settings/auth-providers/add"
+                      className={
+                        "btn btn-sm btn-outline-secondary" +
+                        (RuntimeConfig.INFOS.featureAuthProviders
+                          ? ""
+                          : " disabled")
+                      }
+                    >
+                      <IconPlus className="feather" /> {this.props.t("add")}
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-allowAnyUser"
-                title={this.props.t("allowAnyUserTooltip")}
-                label={this.props.t("allowAnyUser")}
-                checked={this.state.allowAnyUser}
-                disabled={this.authProviders.length === 0}
-                onChange={(e: any) =>
-                  this.setState({ allowAnyUser: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          {authProviderTable}
+              <Form.Group as={Row}>
+                <Col sm="6">
+                  <Form.Check
+                    type="checkbox"
+                    id="check-allowAnyUser"
+                    title={this.props.t("allowAnyUserTooltip")}
+                    label={this.props.t("allowAnyUser")}
+                    checked={this.state.allowAnyUser}
+                    disabled={this.authProviders.length === 0}
+                    onChange={(e: any) =>
+                      this.setState({ allowAnyUser: e.target.checked })
+                    }
+                  />
+                </Col>
+              </Form.Group>
+              {authProviderTable}
+            </>
+          )}
           {dangerZone}
         </Form>
         <ReloadModal
@@ -1557,4 +1574,12 @@ class Settings extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(Settings as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      Settings as any,
+      Permission.OrgSettings,
+      PermissionLevel.Admin,
+    ) as any,
+  ),
+);

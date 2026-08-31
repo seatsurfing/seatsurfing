@@ -7,16 +7,33 @@ info:
     ## Authorization checks
 
     Each API endpoint is protected by authorization checks:
-    1. **Role check**: Role of the user (Anonymous, User, Space Admin, Org Admin, Super Admin)
-    2. **Organization check**: Organization membership
+    1. **Permission check**: the permissions granted by the roles assigned to the calling user
+    2. **Organization check**: organization membership - no request reaches data belonging to another organization
 
-    ## Roles
+    ## Permissions
 
-    - **Anonymous**: Every user allowed, no authorization required
-    - **User**: Authorized user who is a member of an organization
-    - **Space Admin**: An organization's space administrator (can manage locations, spaces, bookings)
-    - **Org Admin**: An organization's full administrator
-    - **Super Admin**: Global administrator with access to all organizations and all functions
+    Access is granted by roles, which an organization's administrators define. A role grants each
+    functionality at a level, and a user may hold several roles, holding the highest level any of
+    them grants.
+
+    Levels: `0` no access, `10` read only, `20` limited, `30` full access. Not every level is
+    meaningful for every permission; `GET /role/permissions` reports the levels each one offers.
+
+    Permission keys: `areas`, `space_attributes`, `bookings`, `approvals`, `analytics`,
+    `presence_report`, `users`, `groups`, `roles`, `service_accounts`, `auth_providers`,
+    `org_settings`, `audit_log`. Plugins contribute further keys prefixed with `plugin.`.
+
+    `analytics` covers aggregate occupancy figures; `presence_report` covers who was present
+    and when. They are separate because the latter is personal data, and each is additionally
+    subject to an organization-wide setting (`hide_stats` and `hide_reports`) that withholds it
+    from everyone regardless of permission, answering 404 rather than 403.
+
+    Every authenticated user, whatever roles they hold, can always manage their own bookings,
+    buddies, preferences and profile, and read the areas and spaces available to them. Endpoints
+    covering that baseline require no particular permission.
+
+    An organization always retains at least one user who can manage both roles and users;
+    a request that would remove the last such user is refused with error code 7001.
 
     ## Authentication
 
@@ -43,6 +60,15 @@ info:
     - `1010`: Booking subject required
     - `1011`: Booking in past
     - `2001`: Presence report date range too long
+    - `3001`: User already exists
+    - `4001`: Group name already exists
+    - `5001`: Password update required
+    - `6001`: Auth provider name already exists
+    - `7001`: The change would leave the organization without an administrator
+    - `7002`: Cannot grant access you do not hold yourself
+    - `7003`: The built-in administrator role cannot be changed
+    - `7004`: Cannot remove your own ability to manage roles
+    - `7005`: Role name already exists
   version: 1.60.0
   license:
     name: MIT
@@ -71,6 +97,8 @@ tags:
     description: Manage users, passwords, TOTP and passkeys
   - name: Groups
     description: Manage user groups and memberships
+  - name: Roles
+    description: Define roles and assign them to users
   - name: Buddies
     description: Manage buddy relationships
   - name: Auth Providers
@@ -217,7 +245,7 @@ components:
         userEmail:
           type: string
           format: email
-          description: Email of the user to book for (Space Admin only)
+          description: Email of the user to book for. Requires `bookings` at full access.
 
     GetBookingResponse:
       type: object
@@ -867,7 +895,7 @@ components:
         organizationId:
           type: string
           format: uuid
-          description: Only usable by Super Admins to create users in other organizations
+          description: Must be the caller's own organization. Creating users elsewhere is not possible.
 
     GetUserResponse:
       type: object
@@ -1102,6 +1130,77 @@ components:
           maxLength: 255
 
     # --- Groups ---
+    AuthProviderMapping:
+      type: object
+      required: [claimValue, targetType, targetId]
+      properties:
+        claimValue:
+          type: string
+          maxLength: 512
+          description: The group as the identity provider reports it, matched in full. Keycloak paths include the leading slash, for example "/engineering/backend".
+        targetType:
+          type: string
+          enum: [role, group]
+        targetId:
+          type: string
+          format: uuid
+          description: The role or group to grant. Must belong to the provider's organization.
+
+    PermissionMap:
+      type: object
+      description: |
+        Access keyed by permission name. Levels are 0 no access, 10 read only, 20 limited,
+        30 full access. Permissions the user does not hold are absent rather than zero.
+      additionalProperties:
+        type: integer
+      example:
+        groups: 30
+        users: 10
+
+    GetPermissionDefinitionResponse:
+      type: object
+      properties:
+        key:
+          type: string
+          description: 'Permission name, for example "groups". Plugin permissions are prefixed with "plugin.".'
+        allowedLevels:
+          type: array
+          description: The levels this permission may be granted at. Only these are meaningful for it.
+          items:
+            type: integer
+        pluginId:
+          type: string
+          description: Empty for built-in permissions; otherwise the plugin contributing it.
+
+    CreateRoleRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 512
+        permissions:
+          $ref: "#/components/schemas/PermissionMap"
+
+    GetRoleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        system:
+          type: boolean
+          description: System roles cannot be edited or deleted. Every organization has exactly one.
+        permissions:
+          $ref: "#/components/schemas/PermissionMap"
+
     CreateGroupRequest:
       type: object
       required: [name]
@@ -1197,6 +1296,10 @@ components:
           type: string
         userInfoFirstnameField:
           type: string
+        userInfoGroupsField:
+          type: string
+          maxLength: 256
+          description: Name of the claim listing the user's groups, used to assign roles and group memberships automatically. Empty disables it.
         userInfoLastnameField:
           type: string
         clientId:
@@ -1883,7 +1986,7 @@ paths:
       tags: [Bookings]
       summary: Create a booking
       description: |
-        Creates a new booking. Space Admins can book on behalf of other users by providing `userEmail`.
+        Creates a new booking. Any user may book for themselves. Booking on behalf of someone else via `userEmail` requires `bookings` at full access; booking a disabled location or space requires `areas` at full access.
         Various validation checks are performed (max bookings, max days in advance, slot conflicts, etc.).
       operationId: createBooking
       security:
@@ -1910,7 +2013,7 @@ paths:
     get:
       tags: [Bookings]
       summary: Get a booking
-      description: Returns a single booking by ID. Users can view their own bookings; Space Admins can view any booking in their organization.
+      description: Returns a single booking by ID. Users can view their own; viewing another user's booking requires `bookings` at read level or above.
       operationId: getBooking
       security:
         - BearerAuth: []
@@ -1935,7 +2038,7 @@ paths:
     put:
       tags: [Bookings]
       summary: Update a booking
-      description: Updates an existing booking. Users can update their own bookings; Space Admins can update any booking.
+      description: Updates an existing booking. Users can update their own; updating another user's booking requires `bookings` at full access.
       operationId: updateBooking
       security:
         - BearerAuth: []
@@ -1966,7 +2069,7 @@ paths:
     delete:
       tags: [Bookings]
       summary: Delete a booking
-      description: Deletes a booking. Users can delete their own bookings; Space Admins can delete any booking. Respects the "max hours before delete" setting.
+      description: Deletes a booking. Users can delete their own; deleting another user's booking requires `bookings` at full access. Respects the "max hours before delete" setting.
       operationId: deleteBooking
       security:
         - BearerAuth: []
@@ -1991,7 +2094,7 @@ paths:
     post:
       tags: [Bookings]
       summary: Approve or decline a booking
-      description: Approves or declines a pending booking. Requires Space Admin role and membership in an approver group for the space.
+      description: Approves or declines a pending booking. Requires `approvals` at full access.
       operationId: approveBooking
       security:
         - BearerAuth: []
@@ -2075,7 +2178,7 @@ paths:
     get:
       tags: [Bookings]
       summary: Get filtered bookings
-      description: Returns bookings for an organization filtered by date range and optionally by user email. Requires Space Admin role.
+      description: Returns bookings for an organization filtered by date range and optionally by user email. Requires `bookings` at read level or above.
       operationId: getFilteredBookings
       security:
         - BearerAuth: []
@@ -2118,7 +2221,7 @@ paths:
     get:
       tags: [Bookings]
       summary: Get current bookings
-      description: Returns all currently active bookings for the organization. Requires Space Admin role.
+      description: Returns all currently active bookings for the organization. Requires `bookings` at read level or above.
       operationId: getCurrentBookings
       security:
         - BearerAuth: []
@@ -2147,7 +2250,7 @@ paths:
     get:
       tags: [Bookings]
       summary: Get pending approvals count
-      description: Returns the number of bookings pending approval for the authenticated Space Admin.
+      description: Returns the number of bookings pending approval. Requires `approvals` at full access.
       operationId: getPendingApprovalsCount
       security:
         - BearerAuth: []
@@ -2165,7 +2268,7 @@ paths:
     get:
       tags: [Bookings]
       summary: Get pending approvals
-      description: Returns all bookings pending approval for the authenticated Space Admin.
+      description: Returns all bookings pending approval. Requires `approvals` at full access.
       operationId: getPendingApprovals
       security:
         - BearerAuth: []
@@ -2185,7 +2288,7 @@ paths:
     get:
       tags: [Bookings]
       summary: Get presence report
-      description: Returns a presence report showing which users were present on which dates. Maximum date range is 31 days. Requires Space Admin role.
+      description: Returns a presence report showing which users were present on which dates. Maximum date range is 31 days. Requires `analytics` at read level or above.
       operationId: getPresenceReport
       security:
         - BearerAuth: []
@@ -2294,7 +2397,7 @@ paths:
     get:
       tags: [Recurring Bookings]
       summary: Get a recurring booking
-      description: Returns a single recurring booking by ID. Users can view their own; Space Admins can view any.
+      description: Returns a single recurring booking by ID. Users can view their own; viewing another user's requires `bookings` at read level or above.
       operationId: getRecurringBooking
       security:
         - BearerAuth: []
@@ -2319,7 +2422,7 @@ paths:
     delete:
       tags: [Recurring Bookings]
       summary: Delete a recurring booking
-      description: Deletes a recurring booking and all its future individual bookings. Users can delete their own; Space Admins can delete any.
+      description: Deletes a recurring booking and all its future individual bookings. Users can delete their own; deleting another user's requires `bookings` at full access.
       operationId: deleteRecurringBooking
       security:
         - BearerAuth: []
@@ -2392,7 +2495,7 @@ paths:
     post:
       tags: [Locations]
       summary: Create a location
-      description: Creates a new location in the user's organization. Requires Space Admin role.
+      description: Creates a new location in the user's organization. Requires `areas` at full access.
       operationId: createLocation
       security:
         - BearerAuth: []
@@ -2440,7 +2543,7 @@ paths:
     post:
       tags: [Locations]
       summary: Load sample data
-      description: Creates sample locations and spaces for the organization. Requires Org Admin role.
+      description: Creates sample locations and spaces for the organization. Requires `areas` at full access.
       operationId: loadSampleData
       security:
         - BearerAuth: []
@@ -2479,7 +2582,7 @@ paths:
     put:
       tags: [Locations]
       summary: Update a location
-      description: Updates an existing location. Requires Space Admin role.
+      description: Updates an existing location. Requires `areas` at full access.
       operationId: updateLocation
       security:
         - BearerAuth: []
@@ -2506,7 +2609,7 @@ paths:
     delete:
       tags: [Locations]
       summary: Delete a location
-      description: Deletes a location and all its spaces. Requires Space Admin role.
+      description: Deletes a location and all its spaces. Requires `areas` at full access.
       operationId: deleteLocation
       security:
         - BearerAuth: []
@@ -2554,7 +2657,7 @@ paths:
     post:
       tags: [Locations]
       summary: Upload location map
-      description: Uploads or replaces the floor plan / map image for a location. Accepts PNG, JPEG, GIF, or SVG. Requires Space Admin role.
+      description: Uploads or replaces the floor plan / map image for a location. Accepts PNG, JPEG, GIF, or SVG. Requires `areas` at full access.
       operationId: setLocationMap
       security:
         - BearerAuth: []
@@ -2625,7 +2728,7 @@ paths:
     post:
       tags: [Locations]
       summary: Set location attribute value
-      description: Sets an attribute value on a location. Only attributes marked as `locationApplicable` can be set. Requires Space Admin role.
+      description: Sets an attribute value on a location. Only attributes marked as `locationApplicable` can be set. Requires `areas` at full access.
       operationId: setLocationAttribute
       security:
         - BearerAuth: []
@@ -2660,7 +2763,7 @@ paths:
     delete:
       tags: [Locations]
       summary: Delete location attribute value
-      description: Removes an attribute value from a location. Requires Space Admin role.
+      description: Removes an attribute value from a location. Requires `areas` at full access.
       operationId: deleteLocationAttribute
       security:
         - BearerAuth: []
@@ -2719,7 +2822,7 @@ paths:
     post:
       tags: [Spaces]
       summary: Create a space
-      description: Creates a new space in a location. Requires Space Admin role.
+      description: Creates a new space in a location. Requires `areas` at full access.
       operationId: createSpace
       security:
         - BearerAuth: []
@@ -2779,7 +2882,7 @@ paths:
     put:
       tags: [Spaces]
       summary: Update a space
-      description: Updates an existing space. Requires Space Admin role.
+      description: Updates an existing space. Requires `areas` at full access.
       operationId: updateSpace
       security:
         - BearerAuth: []
@@ -2812,7 +2915,7 @@ paths:
     delete:
       tags: [Spaces]
       summary: Delete a space
-      description: Deletes a space. Requires Space Admin role.
+      description: Deletes a space. Requires `areas` at full access.
       operationId: deleteSpace
       security:
         - BearerAuth: []
@@ -2935,7 +3038,7 @@ paths:
     post:
       tags: [Spaces]
       summary: Bulk create/update/delete spaces
-      description: Performs bulk operations on spaces in a location. Allows creating, updating, and deleting multiple spaces in a single request. Requires Space Admin role.
+      description: Performs bulk operations on spaces in a location. Allows creating, updating, and deleting multiple spaces in a single request. Requires `areas` at full access.
       operationId: bulkUpdateSpaces
       security:
         - BearerAuth: []
@@ -2968,7 +3071,7 @@ paths:
     get:
       tags: [Spaces]
       summary: Get approver groups for a space
-      description: Returns all groups that can approve bookings for this space. Requires Space Admin role.
+      description: Returns all groups that can approve bookings for this space. Requires `areas` at full access.
       operationId: getSpaceApprovers
       security:
         - BearerAuth: []
@@ -3001,7 +3104,7 @@ paths:
     put:
       tags: [Spaces]
       summary: Add approver groups to a space
-      description: Adds groups as approvers for bookings on this space. Requires Space Admin role.
+      description: Adds groups as approvers for bookings on this space. Requires `areas` at full access.
       operationId: addSpaceApprovers
       security:
         - BearerAuth: []
@@ -3040,7 +3143,7 @@ paths:
     post:
       tags: [Spaces]
       summary: Remove approver groups from a space
-      description: Removes groups from the list of approvers for this space. Requires Space Admin role.
+      description: Removes groups from the list of approvers for this space. Requires `areas` at full access.
       operationId: removeSpaceApprovers
       security:
         - BearerAuth: []
@@ -3079,7 +3182,7 @@ paths:
     get:
       tags: [Spaces]
       summary: Get allowed booker groups for a space
-      description: Returns all groups whose members are allowed to book this space. If empty, all users can book. Requires Space Admin role.
+      description: Returns all groups whose members are allowed to book this space. If empty, all users can book. Requires `areas` at full access.
       operationId: getAllowedBookers
       security:
         - BearerAuth: []
@@ -3112,7 +3215,7 @@ paths:
     put:
       tags: [Spaces]
       summary: Add allowed booker groups to a space
-      description: Adds groups whose members are allowed to book this space. Requires Space Admin role.
+      description: Adds groups whose members are allowed to book this space. Requires `areas` at full access.
       operationId: addAllowedBookers
       security:
         - BearerAuth: []
@@ -3151,7 +3254,7 @@ paths:
     post:
       tags: [Spaces]
       summary: Remove allowed booker groups from a space
-      description: Removes groups from the allowed booker list for this space. Requires Space Admin role.
+      description: Removes groups from the allowed booker list for this space. Requires `areas` at full access.
       operationId: removeAllowedBookers
       security:
         - BearerAuth: []
@@ -3209,7 +3312,7 @@ paths:
     post:
       tags: [Space Attributes]
       summary: Create a space attribute
-      description: Creates a new space attribute definition. Requires Space Admin role.
+      description: Creates a new space attribute definition. Requires `space_attributes` at full access.
       operationId: createSpaceAttribute
       security:
         - BearerAuth: []
@@ -3256,7 +3359,7 @@ paths:
     put:
       tags: [Space Attributes]
       summary: Update a space attribute
-      description: Updates an existing space attribute definition. Requires Space Admin role.
+      description: Updates an existing space attribute definition. Requires `space_attributes` at full access.
       operationId: updateSpaceAttribute
       security:
         - BearerAuth: []
@@ -3283,7 +3386,7 @@ paths:
     delete:
       tags: [Space Attributes]
       summary: Delete a space attribute
-      description: Deletes a space attribute definition. Requires Space Admin role.
+      description: Deletes a space attribute definition. Requires `space_attributes` at full access.
       operationId: deleteSpaceAttribute
       security:
         - BearerAuth: []
@@ -3305,51 +3408,11 @@ paths:
   # ===========================
   # Organizations
   # ===========================
-  /organization/:
-    get:
-      tags: [Organizations]
-      summary: Get all organizations
-      description: Returns all organizations. Requires Super Admin role.
-      operationId: getAllOrganizations
-      security:
-        - BearerAuth: []
-      responses:
-        "200":
-          description: List of organizations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GetOrganizationResponse"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-    post:
-      tags: [Organizations]
-      summary: Create an organization
-      description: Creates a new organization. Requires Super Admin role.
-      operationId: createOrganization
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateOrganizationRequest"
-      responses:
-        "201":
-          $ref: "#/components/responses/Created"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
   /organization/{id}:
     get:
       tags: [Organizations]
       summary: Get an organization
-      description: Returns a single organization by ID. Requires Org Admin or Super Admin role.
+      description: Returns a single organization by ID. Requires `org_settings` at full access.
       operationId: getOrganization
       security:
         - BearerAuth: []
@@ -3375,8 +3438,8 @@ paths:
       tags: [Organizations]
       summary: Update an organization
       description: |
-        Updates an organization's details. Requires Org Admin or Super Admin role.
-        If a non-Super Admin changes the contact email, a verification email is sent and the response includes a `verifyUuid`.
+        Updates an organization's details. Requires `org_settings` at full access.
+        Changing the contact email always sends a verification email; the response then includes a `verifyUuid`.
       operationId: updateOrganization
       security:
         - BearerAuth: []
@@ -3412,7 +3475,7 @@ paths:
       description: |
         Initiates the organization deletion process. Sends a confirmation email with a 6-digit code.
         The deletion must be confirmed via the `/organization/deleteorg/{id}` endpoint.
-        Requires Org Admin (with org delete enabled) or Super Admin role.
+        Requires `org_settings` at full access.
       operationId: deleteOrganization
       security:
         - BearerAuth: []
@@ -3516,7 +3579,7 @@ paths:
     get:
       tags: [Organizations]
       summary: Get all domains for an organization
-      description: Returns all domains configured for an organization. Requires Org Admin or Super Admin role.
+      description: Returns all domains configured for an organization. Requires `org_settings` at full access.
       operationId: getDomains
       security:
         - BearerAuth: []
@@ -3545,7 +3608,7 @@ paths:
     post:
       tags: [Organizations]
       summary: Add a domain to an organization
-      description: Adds a new domain to an organization. The domain must be verified via DNS TXT record before it becomes active. Requires Org Admin or Super Admin role. Requires the Custom Domains feature.
+      description: Adds a new domain to an organization. The domain must be verified via DNS TXT record before it becomes active. Requires `org_settings` at full access. Requires the Custom Domains feature.
       operationId: addDomain
       security:
         - BearerAuth: []
@@ -3575,7 +3638,7 @@ paths:
     delete:
       tags: [Organizations]
       summary: Remove a domain from an organization
-      description: Removes a domain from an organization. Seatsurfing signup domains (*.seatsurfing.app) cannot be removed. Requires Org Admin or Super Admin role.
+      description: Removes a domain from an organization. Seatsurfing signup domains (*.seatsurfing.app) cannot be removed. Requires `org_settings` at full access.
       operationId: removeDomain
       security:
         - BearerAuth: []
@@ -3603,7 +3666,7 @@ paths:
     post:
       tags: [Organizations]
       summary: Verify a domain via DNS TXT record
-      description: Verifies domain ownership by checking for the expected DNS TXT record. Activates the domain on success. Requires Org Admin or Super Admin role.
+      description: Verifies domain ownership by checking for the expected DNS TXT record. Activates the domain on success. Requires `org_settings` at full access.
       operationId: verifyDomain
       security:
         - BearerAuth: []
@@ -3635,7 +3698,7 @@ paths:
     post:
       tags: [Organizations]
       summary: Set primary domain
-      description: Sets a domain as the primary domain for an organization. Requires Org Admin or Super Admin role.
+      description: Sets a domain as the primary domain for an organization. Requires `org_settings` at full access.
       operationId: setPrimaryDomain
       security:
         - BearerAuth: []
@@ -3663,7 +3726,7 @@ paths:
     post:
       tags: [Organizations]
       summary: Verify email address change
-      description: Verifies a contact email address change by providing the 6-digit code that was sent to the new email address. Requires Org Admin or Super Admin role.
+      description: Verifies a contact email address change by providing the 6-digit code that was sent to the new email address. Requires `org_settings` at full access.
       operationId: verifyEmail
       security:
         - BearerAuth: []
@@ -3704,7 +3767,7 @@ paths:
     get:
       tags: [Users]
       summary: Get all users
-      description: Returns all users of the organization. Supports search via `q` query parameter. Requires Space Admin role (Org Admin for search by keyword).
+      description: Returns all users of the organization. Supports search via `q` query parameter. Requires `users` at read level or above.
       operationId: getAllUsers
       security:
         - BearerAuth: []
@@ -3729,7 +3792,7 @@ paths:
       tags: [Users]
       summary: Create a user
       description: |
-        Creates a new user in the organization. Requires Org Admin role. Authentication method is determined by the request:
+        Creates a new user in the organization. Requires `users` at full access. Authentication method is determined by the request:
         - Set `sendInvitation: true` to send an email invitation for the user to set their own password
         - Set `password` to create a user with a specific password
         - Set `authProviderId` to bind the user to an OAuth provider
@@ -3776,7 +3839,7 @@ paths:
     get:
       tags: [Users]
       summary: Get user count
-      description: Returns the total number of users in the organization. Requires Org Admin role.
+      description: Returns the total number of users in the organization. Requires `users` at read level or above.
       operationId: getUserCount
       security:
         - BearerAuth: []
@@ -3814,7 +3877,7 @@ paths:
     get:
       tags: [Users]
       summary: Get a user
-      description: Returns a single user by ID. Requires Org Admin role. User must belong to the same organization.
+      description: Returns a single user by ID. Requires `users` at read level or above. User must belong to the same organization.
       operationId: getUser
       security:
         - BearerAuth: []
@@ -3839,7 +3902,7 @@ paths:
     put:
       tags: [Users]
       summary: Update a user
-      description: Updates a user's details. Requires Org Admin role.
+      description: Updates a user's details. Requires `users` at full access.
       operationId: updateUser
       security:
         - BearerAuth: []
@@ -3868,7 +3931,7 @@ paths:
     delete:
       tags: [Users]
       summary: Delete a user
-      description: Deletes a user. Requires Org Admin role. Cannot delete yourself.
+      description: Deletes a user. Requires `users` at full access. Cannot delete yourself.
       operationId: deleteUser
       security:
         - BearerAuth: []
@@ -3891,7 +3954,7 @@ paths:
     put:
       tags: [Users]
       summary: Set user password
-      description: Sets a user's password. Users can set their own password; Org Admins can set any user's password. All sessions are terminated after a password change. Use `me` as the ID to set your own password.
+      description: Sets a user's password. Users can set their own; setting another user's password requires `users` at full access. All sessions are terminated after a password change. Use `me` as the ID to set your own password.
       operationId: setPassword
       security:
         - BearerAuth: []
@@ -3920,7 +3983,7 @@ paths:
     delete:
       tags: [Users]
       summary: Admin reset passkeys
-      description: Removes all passkeys for a user. Requires Org Admin role.
+      description: Removes all passkeys for a user. Requires `users` at full access.
       operationId: adminResetPasskeys
       security:
         - BearerAuth: []
@@ -3943,7 +4006,7 @@ paths:
     get:
       tags: [Users]
       summary: Get API token status
-      description: Returns whether a long-lived API token is currently configured for the specified service account. The raw token is never returned. Requires Org Admin role.
+      description: Returns whether a long-lived API token is currently configured for the specified service account. The raw token is never returned. Requires `service_accounts` at full access.
       operationId: getApiTokenStatus
       security:
         - BearerAuth: []
@@ -3976,7 +4039,7 @@ paths:
         The raw token is returned **once** in the response and is not stored in plaintext.
         Calling this endpoint again immediately invalidates the previous token.
         The token can be used as `Authorization: Bearer <token>` on any endpoint that accepts service account credentials.
-        Requires Org Admin role.
+        Requires `service_accounts` at full access.
       operationId: generateApiToken
       security:
         - BearerAuth: []
@@ -4004,7 +4067,7 @@ paths:
     delete:
       tags: [Users]
       summary: Revoke API token
-      description: Revokes the API token for the specified service account. The token stops working immediately. This operation is idempotent (returns 204 even if no token was configured). Requires Org Admin role.
+      description: Revokes the API token for the specified service account. The token stops working immediately. This operation is idempotent (returns 204 even if no token was configured). Requires `service_accounts` at full access.
       operationId: revokeApiToken
       security:
         - BearerAuth: []
@@ -4030,7 +4093,7 @@ paths:
     delete:
       tags: [Users]
       summary: Admin reset TOTP
-      description: Disables TOTP 2FA for a user. Requires Org Admin role.
+      description: Disables TOTP 2FA for a user. Requires `users` at full access.
       operationId: adminResetTotp
       security:
         - BearerAuth: []
@@ -4053,7 +4116,7 @@ paths:
     get:
       tags: [Users]
       summary: Get user by email
-      description: Returns a user by email address. Only available when name visibility is enabled (showNames setting) or for Space Admins. Cannot look up your own email.
+      description: Returns a user by email address. Only available when name visibility is enabled (showNames setting) or with `users` at read level or above. Cannot look up your own email.
       operationId: getUserByEmail
       security:
         - BearerAuth: []
@@ -4349,6 +4412,335 @@ paths:
                 items:
                   $ref: "#/components/schemas/GetMergeRequestResponse"
 
+  /auth-provider/{id}/mapping:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Auth Providers]
+      summary: Get a provider's role and group mappings
+      description: Returns the claim-to-role and claim-to-group mappings of an auth provider. Requires `auth_providers` at full access.
+      operationId: getAuthProviderMappings
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuthProviderMapping"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Auth Providers]
+      summary: Set a provider's role and group mappings
+      description: |
+        Replaces the auth provider's mappings. Requires `auth_providers` at full access and
+        `roles` at full access. Every target must belong to the same organization, and a mapping
+        may not grant a role the caller could not grant directly (error code 7002).
+
+        Mappings are applied on every login through the provider. Assignments they made are
+        replaced; roles and group memberships assigned by hand are left untouched. A
+        reconciliation that would leave the organization without an administrator is skipped and
+        logged rather than applied.
+      operationId: setAuthProviderMappings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mappings:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/AuthProviderMapping"
+      responses:
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===========================
+  # Roles
+  # ===========================
+  /role/permissions:
+    get:
+      tags: [Roles]
+      summary: Get the permission catalogue
+      description: |
+        Returns every permission that can be granted, including those contributed by installed
+        plugins, together with the levels each one offers. Available to any authenticated user:
+        it describes the model, not the caller's own access.
+      operationId: getPermissionCatalogue
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: The permission catalogue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetPermissionDefinitionResponse"
+
+  /role/:
+    get:
+      tags: [Roles]
+      summary: Get all roles
+      description: Returns all roles defined in the organization. Requires `roles` at read level or above.
+      operationId: getAllRoles
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetRoleResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [Roles]
+      summary: Create a role
+      description: |
+        Creates a role. Requires `roles` at full access. A role may not grant a level the caller
+        does not hold themselves (error code 7002), and each permission accepts only the levels
+        it declares.
+      operationId: createRole
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoleRequest"
+      responses:
+        "201":
+          $ref: "#/components/responses/Created"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /role/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Roles]
+      summary: Get a role
+      description: Returns a single role. Requires `roles` at read level or above.
+      operationId: getRole
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: The role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRoleResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Roles]
+      summary: Update a role
+      description: |
+        Updates a role. Requires `roles` at full access. The built-in administrator role cannot be
+        changed (error code 7003), and a change that would leave the organization without an
+        administrator is refused (error code 7001).
+      operationId: updateRole
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoleRequest"
+      responses:
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Roles]
+      summary: Delete a role
+      description: |
+        Deletes a role and every assignment of it. Requires `roles` at full access. The built-in
+        administrator role cannot be deleted (error code 7003), and a deletion that would leave
+        the organization without an administrator is refused (error code 7001).
+      operationId: deleteRole
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /role/{id}/users:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Roles]
+      summary: Get the users holding a role
+      description: Returns the IDs of the users this role is assigned to. Requires `roles` at full access.
+      operationId: getRoleUsers
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of user IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /user/{id}/roles:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Roles]
+      summary: Get a user's roles
+      description: Returns the IDs of the roles assigned to a user. Requires `roles` at read level or above.
+      operationId: getUserRoles
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of role IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Roles]
+      summary: Set a user's roles
+      description: |
+        Replaces the roles assigned to a user by an administrator. Assignments made by an identity
+        provider are left untouched, so that reconciliation on the user's next login still governs
+        those. Requires `roles` at full access.
+
+        Refused when the caller does not hold everything the roles grant (7002), when it would
+        remove the caller's own ability to manage roles (7004), or when it would leave the
+        organization without an administrator (7001). A refused request changes nothing.
+      operationId: setUserRoles
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roleIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        "204":
+          $ref: "#/components/responses/Updated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /user/{id}/permissions:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Roles]
+      summary: Get a user's resolved access
+      description: |
+        Returns the access a user actually has, resolved across every role they hold. Requires
+        `roles` at read level or above, or the user asking about themselves.
+      operationId: getUserPermissions
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: The resolved permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  permissions:
+                    $ref: "#/components/schemas/PermissionMap"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ===========================
   # Groups
   # ===========================
@@ -4356,7 +4748,7 @@ paths:
     get:
       tags: [Groups]
       summary: Get all groups
-      description: Returns all groups in the organization. Requires Space Admin role.
+      description: Returns all groups in the organization. Requires `groups` at read level or above.
       operationId: getAllGroups
       security:
         - BearerAuth: []
@@ -4374,7 +4766,7 @@ paths:
     post:
       tags: [Groups]
       summary: Create a group
-      description: Creates a new group in the organization. Requires Org Admin role. Requires the Groups feature.
+      description: Creates a new group in the organization. Requires `groups` at full access. Requires the Groups feature.
       operationId: createGroup
       security:
         - BearerAuth: []
@@ -4398,7 +4790,7 @@ paths:
     get:
       tags: [Groups]
       summary: Get a group
-      description: Returns a single group by ID. Requires Space Admin role.
+      description: Returns a single group by ID. Requires `groups` at read level or above.
       operationId: getGroup
       security:
         - BearerAuth: []
@@ -4423,7 +4815,7 @@ paths:
     put:
       tags: [Groups]
       summary: Update a group
-      description: Updates a group's name. Requires Org Admin role.
+      description: Updates a group's name. Requires `groups` at full access.
       operationId: updateGroup
       security:
         - BearerAuth: []
@@ -4450,7 +4842,7 @@ paths:
     delete:
       tags: [Groups]
       summary: Delete a group
-      description: Deletes a group. Requires Org Admin role.
+      description: Deletes a group. Requires `groups` at full access.
       operationId: deleteGroup
       security:
         - BearerAuth: []
@@ -4473,7 +4865,7 @@ paths:
     get:
       tags: [Groups]
       summary: Get group members
-      description: Returns all users that are members of a group. Requires Org Admin role.
+      description: Returns all users that are members of a group. Requires `groups` at read level or above.
       operationId: getGroupMembers
       security:
         - BearerAuth: []
@@ -4500,7 +4892,7 @@ paths:
     put:
       tags: [Groups]
       summary: Add members to a group
-      description: Adds users to a group by their user IDs. Requires Org Admin role. All users must exist and belong to the same organization.
+      description: Adds users to a group by their user IDs. Requires `groups` at limited level or above. All users must exist and belong to the same organization.
       operationId: addGroupMembers
       security:
         - BearerAuth: []
@@ -4535,7 +4927,7 @@ paths:
     post:
       tags: [Groups]
       summary: Remove members from a group
-      description: Removes users from a group by their user IDs. Requires Org Admin role.
+      description: Removes users from a group by their user IDs. Requires `groups` at limited level or above.
       operationId: removeGroupMembers
       security:
         - BearerAuth: []
@@ -4637,7 +5029,7 @@ paths:
     get:
       tags: [Auth Providers]
       summary: Get all auth providers
-      description: Returns all authentication providers for the organization. Requires Org Admin role.
+      description: Returns all authentication providers for the organization. Requires `auth_providers` at full access.
       operationId: getAllAuthProviders
       security:
         - BearerAuth: []
@@ -4655,7 +5047,7 @@ paths:
     post:
       tags: [Auth Providers]
       summary: Create an auth provider
-      description: Creates a new OAuth/OIDC authentication provider. Requires Org Admin role. Requires the Auth Providers feature.
+      description: Creates a new OAuth/OIDC authentication provider. Requires `auth_providers` at full access. Requires the Auth Providers feature.
       operationId: createAuthProvider
       security:
         - BearerAuth: []
@@ -4679,7 +5071,7 @@ paths:
     get:
       tags: [Auth Providers]
       summary: Get an auth provider
-      description: Returns a single authentication provider by ID. Requires Org Admin role.
+      description: Returns a single authentication provider by ID. Requires `auth_providers` at full access.
       operationId: getAuthProvider
       security:
         - BearerAuth: []
@@ -4704,7 +5096,7 @@ paths:
     put:
       tags: [Auth Providers]
       summary: Update an auth provider
-      description: Updates an authentication provider. Read-only providers cannot be updated. Requires Org Admin role.
+      description: Updates an authentication provider. Read-only providers cannot be updated. Requires `auth_providers` at full access.
       operationId: updateAuthProvider
       security:
         - BearerAuth: []
@@ -4731,7 +5123,7 @@ paths:
     delete:
       tags: [Auth Providers]
       summary: Delete an auth provider
-      description: Deletes an authentication provider. Read-only providers cannot be deleted. Cannot delete providers that have users bound to them. Requires Org Admin role.
+      description: Deletes an authentication provider. Read-only providers cannot be deleted. Cannot delete providers that have users bound to them. Requires `auth_providers` at full access.
       operationId: deleteAuthProvider
       security:
         - BearerAuth: []
@@ -4787,7 +5179,7 @@ paths:
     get:
       tags: [Auth Events]
       summary: List authentication events
-      description: Returns recorded login attempts (successes and failures) for the caller's organization, newest first. Requires Org Admin role.
+      description: Returns recorded login attempts (successes and failures) for the caller's organization, newest first. Requires `audit_log` at read level or above.
       operationId: getAuthAttempts
       security:
         - BearerAuth: []
@@ -4859,8 +5251,9 @@ paths:
       summary: Get all settings
       description: |
         Returns all organization settings visible to the current user.
-        Regular users see public settings; Org Admins see additional admin settings;
-        Space Admins see admin menu items. Also includes system settings and plugin settings.
+        Users see public settings; `org_settings` at full access additionally returns admin settings.
+        Plugin menu items are returned filtered by the permission each plugin declares for them.
+        Also includes system settings and plugin settings.
       operationId: getAllSettings
       security:
         - BearerAuth: []
@@ -4878,7 +5271,7 @@ paths:
     put:
       tags: [Settings]
       summary: Update all settings
-      description: Updates multiple settings at once. Requires Org Admin role.
+      description: Updates multiple settings at once. Requires `org_settings` at full access.
       operationId: setAllSettings
       security:
         - BearerAuth: []
@@ -4931,7 +5324,7 @@ paths:
     put:
       tags: [Settings]
       summary: Update a setting
-      description: Updates a single setting by name. Requires Org Admin role.
+      description: Updates a single setting by name. Requires `org_settings` at full access.
       operationId: setSetting
       security:
         - BearerAuth: []
@@ -5106,7 +5499,7 @@ paths:
     get:
       tags: [Statistics]
       summary: Get organization statistics
-      description: Returns statistics for the organization including user count, booking count, space load, and more. Requires Space Admin role.
+      description: Returns statistics for the organization including user count, booking count, space load, and more. Requires `analytics` at read level or above.
       operationId: getStats
       security:
         - BearerAuth: []
@@ -5128,9 +5521,9 @@ paths:
       tags: [Search]
       summary: Search across entities
       description: |
-        Searches across users, locations, spaces, and groups by keyword. Requires Space Admin role.
+        Searches across users, locations, spaces, and groups by keyword. Requires `users` at read level or above.
         Use query parameters to control which entity types to include in the search:
-        - `includeUsers=1` (requires Org Admin)
+        - `includeUsers=1` (requires `users` at read level or above)
         - `includeGroups=1`
         - `includeLocations=1`
         - `includeSpaces=1`

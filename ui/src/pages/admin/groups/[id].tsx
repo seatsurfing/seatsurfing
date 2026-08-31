@@ -18,6 +18,7 @@ import FullLayout from "@/components/FullLayout";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
 import ProfilePicture from "@/components/ProfilePicture";
 import UserSearchTypeahead from "@/components/UserSearchTypeahead";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -28,6 +29,8 @@ import ConfirmModal from "@/components/ConfirmModal";
 import RendererUtils from "@/util/RendererUtils";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
+import RuntimeConfig from "@/components/RuntimeConfig";
+import { Permission, PermissionLevel } from "@/types/Permission";
 
 interface State {
   loading: boolean;
@@ -155,32 +158,41 @@ class EditUser extends React.Component<Props, State> {
   };
 
   getMemberRow = (user: User) => {
+    const canManageMembers = RuntimeConfig.hasPermission(
+      Permission.Groups,
+      PermissionLevel.Write,
+    );
     const fullname = RendererUtils.fullname(user.firstname, user.lastname);
     return (
       <tr
         key={user.id}
         onClick={() =>
+          canManageMembers &&
           this.selectMember(
             user.id,
             !this.state.removeUserIds.includes(user.id),
           )
         }
-        style={{ cursor: "pointer" }}
+        style={{ cursor: canManageMembers ? "pointer" : "default" }}
       >
         <td style={{ tableLayout: "fixed", width: "20px" }}>
-          <Form.Check
-            type="checkbox"
-            onChange={(e: any) => this.selectMember(user.id, e.target.checked)}
-            checked={this.state.removeUserIds.includes(user.id)}
-            onClick={(e: any) => e.stopPropagation()}
-          />
+          {canManageMembers && (
+            <Form.Check
+              type="checkbox"
+              onChange={(e: any) =>
+                this.selectMember(user.id, e.target.checked)
+              }
+              checked={this.state.removeUserIds.includes(user.id)}
+              onClick={(e: any) => e.stopPropagation()}
+            />
+          )}
         </td>
         <td style={{ tableLayout: "fixed", width: "64px" }}>
           <ProfilePicture width={48} height={48} />
         </td>
         <td style={{ tableLayout: "auto" }}>
           <div style={{ marginLeft: "10px" }}>
-            {user.email} ({RendererUtils.roleName(user.role, this.props.t)})
+            {user.email}
             {fullname && (
               <>
                 <br />
@@ -215,6 +227,14 @@ class EditUser extends React.Component<Props, State> {
   };
 
   render() {
+    const canManageGroups = RuntimeConfig.hasPermission(
+      Permission.Groups,
+      PermissionLevel.Admin,
+    );
+    const canManageMembers = RuntimeConfig.hasPermission(
+      Permission.Groups,
+      PermissionLevel.Write,
+    );
     if (this.state.goBack) {
       this.props.router.push("/admin/groups");
       return <></>;
@@ -247,7 +267,6 @@ class EditUser extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         onClick={this.deleteItem}
-        disabled={false}
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
@@ -262,7 +281,11 @@ class EditUser extends React.Component<Props, State> {
         <IconSave className="feather" /> {this.props.t("save")}
       </Button>
     );
-    if (this.entity.id) {
+    // Someone who may only manage membership gets neither: the name, and the
+    // group's existence, are not theirs to change.
+    if (!canManageGroups) {
+      buttons = <>{backButton}</>;
+    } else if (this.entity.id) {
       buttons = (
         <>
           {backButton} {buttonDelete} {buttonSave}
@@ -289,25 +312,27 @@ class EditUser extends React.Component<Props, State> {
           <Form>
             <Form.Group as={Row}>
               <Col sm="6">
-                <InputGroup>
-                  <UserSearchTypeahead
-                    t={this.props.t}
-                    id="search-users"
-                    multiple={true}
-                    onChange={this.onSearchSelected}
-                    ref={(ref: any) => {
-                      this.typeahead = ref;
-                    }}
-                  />
-                  <Button
-                    onClick={() => {
-                      this.addMembers();
-                    }}
-                    variant="outline-secondary"
-                  >
-                    {this.props.t("add")}
-                  </Button>
-                </InputGroup>
+                {canManageMembers && (
+                  <InputGroup>
+                    <UserSearchTypeahead
+                      t={this.props.t}
+                      id="search-users"
+                      multiple={true}
+                      onChange={this.onSearchSelected}
+                      ref={(ref: any) => {
+                        this.typeahead = ref;
+                      }}
+                    />
+                    <Button
+                      onClick={() => {
+                        this.addMembers();
+                      }}
+                      variant="outline-secondary"
+                    >
+                      {this.props.t("add")}
+                    </Button>
+                  </InputGroup>
+                )}
               </Col>
             </Form.Group>
           </Form>
@@ -319,7 +344,7 @@ class EditUser extends React.Component<Props, State> {
           <Button
             className="btn-sm"
             variant="outline-secondary"
-            hidden={this.state.removeUserIds.length === 0}
+            hidden={!canManageMembers || this.state.removeUserIds.length === 0}
             onClick={() => {
               this.persistRemoveMembers();
             }}
@@ -346,6 +371,7 @@ class EditUser extends React.Component<Props, State> {
                 minLength={3}
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
+                readOnly={!canManageGroups}
               />
             </Col>
           </Form.Group>
@@ -367,4 +393,12 @@ class EditUser extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditUser as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      EditUser as any,
+      Permission.Groups,
+      PermissionLevel.Read,
+    ) as any,
+  ),
+);

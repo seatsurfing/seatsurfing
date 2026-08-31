@@ -619,7 +619,7 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	// Must not be a service account
-	if matchedUser.Role == UserRoleServiceAccountRO || matchedUser.Role == UserRoleServiceAccountRW {
+	if matchedUser.AccountType.IsServiceAccount() {
 		recordAuthEvent(r, &AuthEvent{User: matchedUser, Method: AuthMethodPasskey, ErrorCode: AuthErrorServiceAccount})
 		SendNotFound(w)
 		return

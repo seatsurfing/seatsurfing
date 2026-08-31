@@ -8,6 +8,8 @@ import (
 	"github.com/seatsurfing/seatsurfing/server/api/commonpb"
 	"github.com/seatsurfing/seatsurfing/server/api/pluginpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // PluginGRPC runs in the HOST process. It implements SeatsurfingPlugin by
@@ -115,6 +117,22 @@ func (p *PluginGRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 		return []AdminUIMenuItem{}
 	}
 	return AdminUIMenuItemsFromProto(resp.Items)
+}
+
+// GetPermissionDefinitions asks the plugin which permissions it contributes.
+// A plugin built against the older contract does not implement the call; that
+// is not an error, it simply declares none and falls back to Visibility.
+func (p *PluginGRPC) GetPermissionDefinitions() []PermissionDefinition {
+	ctx, cancel := p.ctx()
+	defer cancel()
+	resp, err := p.client.GetPermissionDefinitions(ctx, &commonpb.Empty{})
+	if err != nil {
+		if status.Code(err) != codes.Unimplemented {
+			log.Println("GetPermissionDefinitions RPC error:", err)
+		}
+		return []PermissionDefinition{}
+	}
+	return PermissionDefinitionsFromProto(resp.Definitions)
 }
 
 func (p *PluginGRPC) OnTimer() {

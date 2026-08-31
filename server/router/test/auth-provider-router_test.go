@@ -15,7 +15,8 @@ import (
 
 func TestAuthProvidersEmptyResult(t *testing.T) {
 	ClearTestDB()
-	user := CreateTestUserSuperAdmin()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 
 	req := NewHTTPRequest("GET", "/auth-provider/", loginResponse.UserID, nil)

@@ -39,8 +39,6 @@ type UserRepository interface {
 	GetCount(organizationID string) (int, error)
 	GetHashedPassword(password string) string
 	GetUsersWithEmail(email string) ([]*User, error)
-	IsOrgAdmin(user *User) bool
-	IsSuperAdmin(user *User) bool
 	Create(e *User) error
 	Update(e *User) error
 	Delete(e *User) error
@@ -115,6 +113,17 @@ type HostAPI interface {
 	GetLocationRepository() LocationRepository
 	GetAuthProviderRepository() AuthProviderRepository
 	GetAuthStateRepository() AuthStateRepository
+
+	// HasPermission reports whether a user holds at least the given level for
+	// a permission within an organization. It replaces the role predicates the
+	// plugin-facing user repository used to expose.
+	HasPermission(userID, organizationID, permission string, minLevel int) (bool, error)
+
+	// GetRoleIDByName resolves one of an organization's roles, such as the
+	// built-in RoleNameOrgAdmin, so that a plugin can assign it.
+	GetRoleIDByName(organizationID, name string) (string, error)
+	// AssignRoleToUser grants a role to a user.
+	AssignRoleToUser(userID, roleID string) error
 
 	SendEmail(recipient, subject, body, language, orgID string) error
 	Encrypt(plaintext string) (string, error)

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import SearchUtil from "./SearchUtil";
 import DateUtil from "./DateUtil";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import { PermissionLevel } from "@/types/Permission";
 
 describe("SearchUtil", () => {
   describe("getSearchHints", () => {
@@ -19,6 +20,7 @@ describe("SearchUtil", () => {
       RuntimeConfig.INFOS.maxDaysInAdvance = 365;
       RuntimeConfig.INFOS.maxBookingDurationHours = 8;
       RuntimeConfig.INFOS.minBookingDurationHours = 1;
+      RuntimeConfig.INFOS.permissions = {};
     });
 
     it("should return no hints for a valid selection", () => {
@@ -26,8 +28,8 @@ describe("SearchUtil", () => {
       expect(result).toEqual([]);
     });
 
-    it("should still enforce the booking limit for a plain space admin without noAdminRestrictions", () => {
-      RuntimeConfig.INFOS.spaceAdmin = true;
+    it("should still enforce the booking limit for a plain booking administrator without noAdminRestrictions", () => {
+      RuntimeConfig.INFOS.permissions = { bookings: PermissionLevel.Admin };
       RuntimeConfig.INFOS.noAdminRestrictions = false;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
@@ -35,11 +37,11 @@ describe("SearchUtil", () => {
       expect(result).toEqual(["errorBookingLimit"]);
     });
 
-    it("should still enforce the booking limit when noAdminRestrictions is on but the user is not a space admin", () => {
+    it("should still enforce the booking limit when noAdminRestrictions is on but the user is not a booking administrator", () => {
       // bugfix regression: the previous check compared noAdminRestrictions against
       // the User.UserRoleSpaceAdmin constant (always truthy) instead of the actual
-      // user's spaceAdmin flag, so restrictions were bypassed for every user.
-      RuntimeConfig.INFOS.spaceAdmin = false;
+      // user's role, so restrictions were bypassed for every user.
+      RuntimeConfig.INFOS.permissions = {};
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
@@ -47,8 +49,8 @@ describe("SearchUtil", () => {
       expect(result).toEqual(["errorBookingLimit"]);
     });
 
-    it("should bypass the booking limit for a space admin when noAdminRestrictions is on", () => {
-      RuntimeConfig.INFOS.spaceAdmin = true;
+    it("should bypass the booking limit for a booking administrator when noAdminRestrictions is on", () => {
+      RuntimeConfig.INFOS.permissions = { bookings: PermissionLevel.Admin };
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingsPerUser = 1;
 
@@ -56,8 +58,8 @@ describe("SearchUtil", () => {
       expect(result).toEqual([]);
     });
 
-    it("should bypass the max booking duration restriction for a space admin when noAdminRestrictions is on", () => {
-      RuntimeConfig.INFOS.spaceAdmin = true;
+    it("should bypass the max booking duration restriction for a booking administrator when noAdminRestrictions is on", () => {
+      RuntimeConfig.INFOS.permissions = { bookings: PermissionLevel.Admin };
       RuntimeConfig.INFOS.noAdminRestrictions = true;
       RuntimeConfig.INFOS.maxBookingDurationHours = 1; // selection is 3h, would normally fail
 
@@ -65,8 +67,8 @@ describe("SearchUtil", () => {
       expect(result).toEqual([]);
     });
 
-    it("should still return errorPickArea for a space admin with noAdminRestrictions when no area is selected", () => {
-      RuntimeConfig.INFOS.spaceAdmin = true;
+    it("should still return errorPickArea for a booking administrator with noAdminRestrictions when no area is selected", () => {
+      RuntimeConfig.INFOS.permissions = { bookings: PermissionLevel.Admin };
       RuntimeConfig.INFOS.noAdminRestrictions = true;
 
       const result = SearchUtil.getSearchHints(enter, leave, t, 0, "");

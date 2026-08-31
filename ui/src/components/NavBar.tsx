@@ -77,7 +77,7 @@ class NavBar extends React.Component<Props, State> {
       if (user.email === user.atlassianId) {
         this.setState({ allowMergeInit: true });
       }
-      if (user.role >= User.UserRoleSpaceAdmin) {
+      if (Object.values(user.permissions).some((level) => level > 0)) {
         this.setState({ allowAdmin: true });
       }
     });

@@ -10,6 +10,8 @@ import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
+import withPermission from "@/components/withPermission";
+import { Permission, PermissionLevel } from "@/types/Permission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Organization from "@/types/Organization";
@@ -325,4 +327,12 @@ class EditOrg extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(EditOrg as any));
+export default withTranslation(
+  withReadyRouter(
+    withPermission(
+      EditOrg as any,
+      Permission.OrgSettings,
+      PermissionLevel.Admin,
+    ) as any,
+  ),
+);

@@ -25,6 +25,7 @@ type CreateAuthProviderRequest struct {
 	UserInfoEmailField     string `json:"userInfoEmailField" validate:"required,max=256"`
 	UserInfoFirstnameField string `json:"userInfoFirstnameField" validate:"max=256"`
 	UserInfoLastnameField  string `json:"userInfoLastnameField" validate:"max=256"`
+	UserInfoGroupsField    string `json:"userInfoGroupsField" validate:"max=256"`
 	ClientID               string `json:"clientId" validate:"required,max=256"`
 	ClientSecret           string `json:"clientSecret,omitempty" validate:"max=256"`
 	LogoutURL              string `json:"logoutUrl" validate:"max=256"`
@@ -45,6 +46,8 @@ type GetAuthProviderPublicResponse struct {
 
 func (router *AuthProviderRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/org/{id}", router.listPublicForOrg).Methods("GET")
+	s.HandleFunc("/{id}/mapping", router.getMappings).Methods("GET")
+	s.HandleFunc("/{id}/mapping", router.setMappings).Methods("PUT")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -85,7 +88,7 @@ func (router *AuthProviderRouter) getOne(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -95,7 +98,7 @@ func (router *AuthProviderRouter) getOne(w http.ResponseWriter, r *http.Request)
 
 func (router *AuthProviderRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -153,7 +156,7 @@ func (router *AuthProviderRouter) update(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -197,7 +200,7 @@ func (router *AuthProviderRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, e.OrganizationID) {
+	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -239,7 +242,7 @@ func (router *AuthProviderRouter) create(w http.ResponseWriter, r *http.Request)
 	}
 
 	user := GetRequestUser(r)
-	if !CanAdminOrg(user, user.OrganizationID) {
+	if !HasPermission(user, user.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -288,6 +291,7 @@ func (router *AuthProviderRouter) copyFromRestModel(m *CreateAuthProviderRequest
 	e.UserInfoEmailField = m.UserInfoEmailField
 	e.UserInfoFirstnameField = m.UserInfoFirstnameField
 	e.UserInfoLastnameField = m.UserInfoLastnameField
+	e.UserInfoGroupsField = m.UserInfoGroupsField
 	e.ProviderType = m.ProviderType
 	e.LogoutURL = m.LogoutURL
 	e.ProfilePageURL = m.ProfilePageURL
@@ -309,9 +313,123 @@ func (router *AuthProviderRouter) copyToRestModel(e *AuthProvider) *GetAuthProvi
 	m.UserInfoEmailField = e.UserInfoEmailField
 	m.UserInfoFirstnameField = e.UserInfoFirstnameField
 	m.UserInfoLastnameField = e.UserInfoLastnameField
+	m.UserInfoGroupsField = e.UserInfoGroupsField
 	m.ProviderType = e.ProviderType
 	m.LogoutURL = e.LogoutURL
 	m.ProfilePageURL = e.ProfilePageURL
 	m.ReadOnly = e.ReadOnly
 	return m
+}
+
+// ─── Identity provider mappings ──────────────────────────────────────────────
+
+type AuthProviderMappingModel struct {
+	ClaimValue string `json:"claimValue" validate:"required,max=512"`
+	TargetType string `json:"targetType" validate:"required,oneof=role group"`
+	TargetID   string `json:"targetId" validate:"required,uuid"`
+}
+
+type SetAuthProviderMappingsRequest struct {
+	Mappings []*AuthProviderMappingModel `json:"mappings" validate:"dive"`
+}
+
+// getMappings returns the provider's claim-to-role and claim-to-group mappings.
+func (router *AuthProviderRouter) getMappings(w http.ResponseWriter, r *http.Request) {
+	e := router.loadProvider(w, r)
+	if e == nil {
+		return
+	}
+	list, err := GetAuthProviderMappingRepository().GetAll(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := []*AuthProviderMappingModel{}
+	for _, m := range list {
+		res = append(res, &AuthProviderMappingModel{
+			ClaimValue: m.ClaimValue,
+			TargetType: m.TargetType,
+			TargetID:   m.TargetID,
+		})
+	}
+	SendJSON(w, res)
+}
+
+// setMappings replaces the provider's mappings. Each target must belong to the
+// same organization as the provider, and a mapping may not grant a role the
+// caller could not grant directly.
+func (router *AuthProviderRouter) setMappings(w http.ResponseWriter, r *http.Request) {
+	e := router.loadProvider(w, r)
+	if e == nil {
+		return
+	}
+	user := GetRequestUser(r)
+	if !CheckPermission(w, user, e.OrganizationID, PermissionRoles, PermissionLevelAdmin) {
+		return
+	}
+	var req SetAuthProviderMappingsRequest
+	if UnmarshalValidateBody(r, &req) != nil {
+		SendBadRequest(w)
+		return
+	}
+	for _, item := range req.Mappings {
+		switch item.TargetType {
+		case AuthProviderMappingTargetRole:
+			role, err := GetRoleRepository().GetOne(item.TargetID)
+			if err != nil || role.OrganizationID != e.OrganizationID {
+				SendBadRequest(w)
+				return
+			}
+			if !CanGrantPermissions(user, e.OrganizationID, role.Permissions) {
+				SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
+				return
+			}
+		case AuthProviderMappingTargetGroup:
+			group, err := GetGroupRepository().GetOne(item.TargetID)
+			if err != nil || group.OrganizationID != e.OrganizationID {
+				SendBadRequest(w)
+				return
+			}
+		default:
+			SendBadRequest(w)
+			return
+		}
+	}
+	if err := GetAuthProviderMappingRepository().DeleteAllForProvider(e.ID); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	for _, item := range req.Mappings {
+		mapping := &AuthProviderMapping{
+			AuthProviderID: e.ID,
+			ClaimValue:     item.ClaimValue,
+			TargetType:     item.TargetType,
+			TargetID:       item.TargetID,
+		}
+		if err := GetAuthProviderMappingRepository().Create(mapping); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+	}
+	SendUpdated(w)
+}
+
+// loadProvider resolves the provider named in the path, enforcing the
+// auth_providers permission and organization scoping.
+func (router *AuthProviderRouter) loadProvider(w http.ResponseWriter, r *http.Request) *AuthProvider {
+	user := GetRequestUser(r)
+	vars := mux.Vars(r)
+	e, err := GetAuthProviderRepository().GetOne(vars["id"])
+	if err != nil {
+		SendNotFound(w)
+		return nil
+	}
+	if !HasPermission(user, e.OrganizationID, PermissionAuthProviders, PermissionLevelAdmin) {
+		SendForbidden(w)
+		return nil
+	}
+	return e
 }
