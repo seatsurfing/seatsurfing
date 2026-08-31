@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.126.0](https://github.com/seatsurfing/seatsurfing/compare/v1.125.1...v1.126.0) (2026-08-31)
+
+
+### ✨ Features
+
+* **main:** new permission model ([#2549](https://github.com/seatsurfing/seatsurfing/issues/2549)) ([a756979](https://github.com/seatsurfing/seatsurfing/commit/a7569797ebd064d891bc2b5506de15ca1360a202))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `20dc7ed` to `9ef50bc` ([#2558](https://github.com/seatsurfing/seatsurfing/issues/2558)) ([2fb4e38](https://github.com/seatsurfing/seatsurfing/commit/2fb4e38e85c93344a387ae12ec7c3c938b142549))
+* **deps:** bump library/golang from 1.26-bookworm to 1.27-bookworm ([#2562](https://github.com/seatsurfing/seatsurfing/issues/2562)) ([17f05c9](https://github.com/seatsurfing/seatsurfing/commit/17f05c909a0afcc1cffee4c590b73984fbe4d1ec))
+* **deps:** bump next from 16.3.1 to 16.3.2 in /ui in the production-dependencies group across 1 directory ([#2563](https://github.com/seatsurfing/seatsurfing/issues/2563)) ([fb88747](https://github.com/seatsurfing/seatsurfing/commit/fb88747e5a836ba30f2b659741a8c8040c6fd359))
+
+
+### 🔧 Refactoring
+
+* **booking-ui:** fix typo in filename ([#2569](https://github.com/seatsurfing/seatsurfing/issues/2569)) ([e954e22](https://github.com/seatsurfing/seatsurfing/commit/e954e2284e1fba8ae271413fea1eda6f20c3ab6e))
+
 ## [1.125.1](https://github.com/seatsurfing/seatsurfing/compare/v1.125.0...v1.125.1) (2026-08-27)
 
 
