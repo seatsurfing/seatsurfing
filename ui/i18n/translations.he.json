@@ -284,6 +284,8 @@
   "findYourPlace": "איתור המקום שלך.",
   "firstname": "שם פרטי",
   "floorplan": "תוכנית קרקע",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "שכחת את הסיסמה שלך?",
   "free": "free",
   "freeFrom": "free from {{time}}",

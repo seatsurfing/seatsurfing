@@ -282,6 +282,8 @@
   "findYourPlace": "找到你的空間。",
   "firstname": "名字",
   "floorplan": "平面圖",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "忘記密碼？",
   "free": "免費",
   "freeFrom": "不受 {{time}} 影響",

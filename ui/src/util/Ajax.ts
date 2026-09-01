@@ -16,6 +16,7 @@ export default class Ajax {
   static URL: string = "";
   static PERSISTER: AjaxConfigPersister = new AjaxConfigBrowserPersister();
   static onUnauthorized: (() => void) | null = null;
+  static onForbidden: (() => void) | null = null;
   static onServerError: (() => void) | null = null;
   static onNotFound: (() => void) | null = null;
   static onBadRequest: (() => void) | null = null;
@@ -87,17 +88,8 @@ export default class Ajax {
         );
       } catch {}
 
-      // 403 is a permission error scoped to this one request, not a
-      // global, app-breaking condition like 401/404/400/500 - it must
-      // always fall through to the AjaxError throw below so the caller's
-      // own .catch()/try-catch can handle it (e.g. show an inline "not
-      // allowed" message), rather than hang forever in the pending
-      // Promise the global-error path returns.
-      if (
-        response.status !== 403 &&
-        appCode === 0 &&
-        !handleError(response.status, response)
-      ) {
+      // global error handlers if appCode is not defined
+      if (appCode === 0 && !handleError(response.status, response)) {
         Ajax.handleGlobalError(response.status);
         return new Promise<AjaxResult>(() => {});
       }
@@ -114,12 +106,13 @@ export default class Ajax {
     if (httpStatus === 401) {
       Ajax.PERSISTER.deleteCredentialsFromStorage();
       Ajax.onUnauthorized?.();
+    } else if (httpStatus === 403) {
+      Ajax.onForbidden?.();
     } else if (httpStatus === 404) {
       Ajax.onNotFound?.();
     } else if (httpStatus === 400) {
       Ajax.onBadRequest?.();
     } else {
-      // 403 never reaches here - see the status check in query() above.
       // 500, network errors (0), and any other unexpected status
       Ajax.onServerError?.();
     }
