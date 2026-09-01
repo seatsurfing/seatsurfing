@@ -284,6 +284,8 @@
   "findYourPlace": "Leia oma koht.",
   "firstname": "Eesnimi",
   "floorplan": "Korruseplaan",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "Unustasid parooli?",
   "free": "free",
   "freeFrom": "free from {{time}}",

@@ -282,6 +282,8 @@
   "findYourPlace": "Löydä työpisteesi.",
   "firstname": "Etunimi",
   "floorplan": "Pohjapiirros",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "Unohditko salasanasi?",
   "free": "vapaa",
   "freeFrom": "vapaa klo {{time}} alkaen",

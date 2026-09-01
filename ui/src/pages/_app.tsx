@@ -26,6 +26,7 @@ import Formatting from "@/util/Formatting";
 import TotpSetupModal from "@/components/TotpSetupModal";
 import MfaEncouragementModal from "@/components/MfaEncouragementModal";
 import SessionExpiredModal from "@/components/SessionExpiredModal";
+import ForbiddenModal from "@/components/ForbiddenModal";
 import ServerErrorModal from "@/components/ServerErrorModal";
 import NotFoundModal from "@/components/NotFoundModal";
 import BadRequestModal from "@/components/BadRequestModal";
@@ -38,6 +39,7 @@ interface State {
   showTotpEnforcement: boolean;
   showMfaEncouragement: boolean;
   showSessionExpired: boolean;
+  showForbidden: boolean;
   showServerError: boolean;
   showNotFound: boolean;
   showBadRequest: boolean;
@@ -61,6 +63,7 @@ class App extends React.Component<Props, State> {
       showTotpEnforcement: false,
       showMfaEncouragement: false,
       showSessionExpired: false,
+      showForbidden: false,
       showServerError: false,
       showNotFound: false,
       showBadRequest: false,
@@ -81,6 +84,7 @@ class App extends React.Component<Props, State> {
 
   componentDidMount() {
     Ajax.onUnauthorized = () => this.setState({ showSessionExpired: true });
+    Ajax.onForbidden = () => this.setState({ showForbidden: true });
     Ajax.onServerError = () => this.setState({ showServerError: true });
     Ajax.onNotFound = () => this.setState({ showNotFound: true });
     Ajax.onBadRequest = () => this.setState({ showBadRequest: true });
@@ -109,6 +113,7 @@ class App extends React.Component<Props, State> {
 
   componentWillUnmount() {
     Ajax.onUnauthorized = null;
+    Ajax.onForbidden = null;
     Ajax.onServerError = null;
     Ajax.onNotFound = null;
     Ajax.onBadRequest = null;
@@ -344,6 +349,7 @@ class App extends React.Component<Props, State> {
           />
         )}
         <SessionExpiredModal show={this.state.showSessionExpired} />
+        <ForbiddenModal show={this.state.showForbidden} />
         <ServerErrorModal show={this.state.showServerError} />
         <NotFoundModal show={this.state.showNotFound} />
         <BadRequestModal show={this.state.showBadRequest} />

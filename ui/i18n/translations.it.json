@@ -284,6 +284,8 @@
   "findYourPlace": "Trova il tuo spazio.",
   "firstname": "Nome",
   "floorplan": "Piantina",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "Password dimenticata?",
   "free": "free",
   "freeFrom": "free from {{time}}",

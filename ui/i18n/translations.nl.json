@@ -284,6 +284,8 @@
   "findYourPlace": "Vind jouw ruimte.",
   "firstname": "Voornaam",
   "floorplan": "Plattegrond",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "Wachtwoord vergeten?",
   "free": "free",
   "freeFrom": "free from {{time}}",

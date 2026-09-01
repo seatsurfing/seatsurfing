@@ -284,6 +284,8 @@
   "findYourPlace": "Encontre seu espaço.",
   "firstname": "Nome",
   "floorplan": "Planta baixa",
+  "forbiddenBody": "You don't have permission to access this resource.",
+  "forbiddenTitle": "Access denied",
   "forgotPassword": "Esqueceu sua senha?",
   "free": "free",
   "freeFrom": "free from {{time}}",

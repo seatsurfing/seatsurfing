@@ -285,6 +285,8 @@
   "findYourPlace": "Finde deinen Platz.",
   "firstname": "Vorname",
   "floorplan": "Raumplan",
+  "forbiddenBody": "Du hast keine Berechtigung, auf diese Ressource zuzugreifen.",
+  "forbiddenTitle": "Zugriff verweigert",
   "forgotPassword": "Kennwort vergessen?",
   "free": "frei",
   "freeFrom": "frei ab {{time}}",
