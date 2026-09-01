@@ -463,6 +463,12 @@ class EditUser extends React.Component<Props, State> {
         </>
       );
     }
+
+    const isServiceAccount = this.isServiceAccount(this.state.accountType);
+    const passwordFieldHidden =
+      (RuntimeConfig.INFOS.disablePasswordLogin && !isServiceAccount) ||
+      (!isServiceAccount && this.state.authMethod !== User.AuthMethodPassword);
+
     return (
       <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
         <Form onSubmit={this.onSubmit} id="form">
@@ -721,15 +727,7 @@ class EditUser extends React.Component<Props, State> {
           </Form.Group>
 
           {/* Password field */}
-          <Form.Group
-            as={Row}
-            hidden={
-              (RuntimeConfig.INFOS.disablePasswordLogin &&
-                !this.isServiceAccount(this.state.accountType)) ||
-              (!this.isServiceAccount(this.state.accountType) &&
-                this.state.authMethod !== User.AuthMethodPassword)
-            }
-          >
+          <Form.Group as={Row} hidden={passwordFieldHidden}>
             <Form.Label htmlFor="password" column sm="2">
               {this.props.t("password")}
             </Form.Label>
@@ -757,6 +755,7 @@ class EditUser extends React.Component<Props, State> {
                     )
                   }
                   disabled={
+                    passwordFieldHidden || // disable field to not trigger validation
                     (!this.isServiceAccount(this.state.accountType) &&
                       this.entity.id &&
                       !this.state.changePassword) ||
