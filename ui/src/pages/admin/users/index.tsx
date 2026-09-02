@@ -85,14 +85,16 @@ class Users extends React.Component<Props, State> {
     } else if (this.authProviders[user.authProviderId]) {
       authProvider = this.authProviders[user.authProviderId];
     }
+    const accountType = RendererUtils.accountTypeName(
+      user.accountType,
+      this.props.t,
+    );
     // A user may hold several roles, or none at all.
     const roleNames = user.roleIds
       .map((id) => this.roleNames[id])
       .filter((name) => name)
       .sort();
-    const role = roleNames.length
-      ? roleNames.join(", ")
-      : RendererUtils.accountTypeName(user.accountType, this.props.t);
+    const role = roleNames.length ? roleNames.join(", ") : "-";
     return (
       <tr
         key={user.id}
@@ -101,6 +103,7 @@ class Users extends React.Component<Props, State> {
       >
         <td>{user.email}</td>
         <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
+        <td>{accountType}</td>
         <td>{role}</td>
         <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
           {authProvider}
@@ -182,6 +185,7 @@ class Users extends React.Component<Props, State> {
             <tr>
               <th>{this.props.t("user")}</th>
               <th>{this.props.t("name")}</th>
+              <th>{this.props.t("accountType")}</th>
               <th>{this.props.t("roles")}</th>
               <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
                 {this.props.t("loginMeans")}
