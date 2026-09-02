@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.126.1](https://github.com/seatsurfing/seatsurfing/compare/v1.126.0...v1.126.1) (2026-09-02)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** fix user form if invalid password field is hidden ([#2573](https://github.com/seatsurfing/seatsurfing/issues/2573)) ([3b24a65](https://github.com/seatsurfing/seatsurfing/commit/3b24a65fddfb4ed0a13c3a70ed8d0daf4050db8d))
+* **admin-ui:** new self-hosted hint ([#2568](https://github.com/seatsurfing/seatsurfing/issues/2568)) ([08f9789](https://github.com/seatsurfing/seatsurfing/commit/08f978927009ce94868a4c2f36061486daba8506))
+* **deps:** bump google.golang.org/grpc from 1.83.1 to 1.83.2 in /server in the minor-and-patch group ([#2576](https://github.com/seatsurfing/seatsurfing/issues/2576)) ([31a9bf6](https://github.com/seatsurfing/seatsurfing/commit/31a9bf694152666ae7322a5747e9193bdba46c64))
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2574](https://github.com/seatsurfing/seatsurfing/issues/2574)) ([78d1fcb](https://github.com/seatsurfing/seatsurfing/commit/78d1fcbcaa9987b6fb003a452f6d4311413d0752))
+* **main:** add global error handler for status code 403 ([#2572](https://github.com/seatsurfing/seatsurfing/issues/2572)) ([ec005ad](https://github.com/seatsurfing/seatsurfing/commit/ec005ad8ab6955fd7c45c33377ea68fdf8bf2023))
+
 ## [1.126.0](https://github.com/seatsurfing/seatsurfing/compare/v1.125.1...v1.126.0) (2026-08-31)
 
 
