@@ -8,6 +8,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type RoleRouter struct {
@@ -121,6 +122,10 @@ func (router *RoleRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if !util.ValidateRoleName(m.Name) {
+		SendBadRequest(w)
+		return
+	}
 	perms, ok := router.parsePermissions(w, m.Permissions)
 	if !ok {
 		return
@@ -159,6 +164,10 @@ func (router *RoleRouter) update(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	var m CreateRoleRequest
 	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !util.ValidateRoleName(m.Name) {
 		SendBadRequest(w)
 		return
 	}
