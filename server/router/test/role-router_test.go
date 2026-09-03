@@ -123,6 +123,29 @@ func TestRoleRouterRejectsUndeclaredLevel(t *testing.T) {
 	}
 }
 
+// A blank or whitespace-only name must be refused on create and update; the
+// "required" validator alone would let "   " through.
+func TestRoleRouterRejectsBlankName(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	for _, payload := range []string{
+		`{"name": "", "permissions": {"groups": 30}}`,
+		`{"name": "   ", "permissions": {"groups": 30}}`,
+	} {
+		req := NewHTTPRequest("POST", "/role/", loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	role := CreateTestRole(org, "Group Manager", map[Permission]PermissionLevel{PermissionGroups: PermissionLevelAdmin})
+	req := NewHTTPRequest("PUT", "/role/"+role.ID, loginResponse.UserID, bytes.NewBufferString(`{"name": "   ", "permissions": {"groups": 30}}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestRoleRouterSystemRoleIsProtected(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

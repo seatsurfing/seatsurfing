@@ -159,6 +159,38 @@ func TestInvalidOrgNames(t *testing.T) {
 	}
 }
 
+func TestValidRoleNames(t *testing.T) {
+	inputs := []string{
+		"Group Manager",
+		"admin",
+		"Team_Lead",
+		"Read-Only",
+		"Rolle Nr 3",
+		"Ångström",
+		strings.Repeat("A", 128),
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, ValidateRoleName(input), true)
+	}
+}
+
+func TestInvalidRoleNames(t *testing.T) {
+	inputs := []string{
+		"",
+		"   ",
+		strings.Repeat("A", 129),
+		"Manager!",
+		"Team (A)",
+		"a.b",
+		"user@company",
+		"Name\nWithNewline",
+		"Name\tWithTab",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, ValidateRoleName(input), false)
+	}
+}
+
 func TestValidWeekdaysLists(t *testing.T) {
 	inputs := []string{
 		"0",

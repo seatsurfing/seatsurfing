@@ -15,6 +15,7 @@ var domainRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-
 var timeStringRegex = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
 var humanNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.]+$`)
 var orgNameRegex = regexp.MustCompile(`^[\p{L}\p{N} \-'.&,+()/#@!_<>]+$`)
+var roleNameRegex = regexp.MustCompile(`^[\p{L}\p{N} _-]+$`)
 var validOrgLanguages = map[string]bool{"de": true, "en": true}
 
 func ValidateEmail(s string) bool {
@@ -93,6 +94,17 @@ func IsValidOrgName(s string) bool {
 		return false
 	}
 	return orgNameRegex.MatchString(s)
+}
+
+func ValidateRoleName(s string) bool {
+	l := len([]rune(s))
+	if l < 1 || l > 128 {
+		return false
+	}
+	if strings.TrimSpace(s) == "" {
+		return false
+	}
+	return roleNameRegex.MatchString(s)
 }
 
 func ValidateNumber(s string, min, max int) bool {
