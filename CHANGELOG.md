@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.126.2](https://github.com/seatsurfing/seatsurfing/compare/v1.126.1...v1.126.2) (2026-09-03)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add column "account type" in user administration ([#2578](https://github.com/seatsurfing/seatsurfing/issues/2578)) ([d1302ab](https://github.com/seatsurfing/seatsurfing/commit/d1302abe57e88cfd580ee663b01216f401352a48))
+* **admin-ui:** add role name validation ([#2579](https://github.com/seatsurfing/seatsurfing/issues/2579)) ([8dae9e8](https://github.com/seatsurfing/seatsurfing/commit/8dae9e859c7560709d0d367806e1fc3a6fed4483))
+* **deps:** bump github.com/go-webauthn/webauthn from 0.17.4 to 0.18.0 in /server in the minor-and-patch group ([#2580](https://github.com/seatsurfing/seatsurfing/issues/2580)) ([ce61c80](https://github.com/seatsurfing/seatsurfing/commit/ce61c80de7efa0e5643b72678fd99666ea1d0098))
+
 ## [1.126.1](https://github.com/seatsurfing/seatsurfing/compare/v1.126.0...v1.126.1) (2026-09-02)
 
 
