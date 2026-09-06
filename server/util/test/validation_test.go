@@ -185,6 +185,9 @@ func TestInvalidRoleNames(t *testing.T) {
 		"user@company",
 		"Name\nWithNewline",
 		"Name\tWithTab",
+		" Manager",
+		"Manager ",
+		" Manager ",
 	}
 	for _, input := range inputs {
 		CheckTestBool(t, ValidateRoleName(input), false)
