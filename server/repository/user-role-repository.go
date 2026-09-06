@@ -264,18 +264,18 @@ func (r *UserRoleStore) HasAdminUser(organizationID string, excludeUserIDs []str
 	if excludeUserIDs == nil {
 		excludeUserIDs = []string{}
 	}
-	var count int
-	err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM users u "+
+	var exists bool
+	err := GetDatabase().DB().QueryRow("SELECT EXISTS (SELECT 1 FROM users u "+
 		"WHERE u.organization_id = $1 "+
 		"AND u.disabled IS NOT TRUE "+
 		"AND u.account_type = "+strconv.Itoa(int(AccountTypePerson))+" "+
 		"AND NOT (u.id = ANY($2)) "+
 		"AND EXISTS (SELECT 1 FROM user_roles ur "+
 		"INNER JOIN roles r ON r.id = ur.role_id "+
-		"WHERE ur.user_id = u.id AND r.system IS TRUE)",
-		organizationID, pq.Array(excludeUserIDs)).Scan(&count)
+		"WHERE ur.user_id = u.id AND r.system IS TRUE))",
+		organizationID, pq.Array(excludeUserIDs)).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	return exists, nil
 }
