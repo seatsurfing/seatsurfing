@@ -131,6 +131,32 @@ func (r *UserRoleStore) GetRoleIDsForUser(userID string) ([]string, error) {
 	return result, nil
 }
 
+// GetAssignmentsForSource returns the role IDs assigned to a user by the given
+// source. It supports judging a replacement of one source's assignments in
+// isolation, without the other sources' roles muddying the comparison.
+func (r *UserRoleStore) GetAssignmentsForSource(userID, source string) ([]string, error) {
+	var result []string
+	rows, err := GetDatabase().DB().Query("SELECT role_id "+
+		"FROM user_roles "+
+		"WHERE user_id = $1 AND source = $2",
+		userID, source)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		result = append(result, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // GetAssignmentsExcludingSource returns the role IDs assigned to a user by
 // any source other than the given one. It supports judging a replacement of
 // one source's assignments without losing sight of the others.

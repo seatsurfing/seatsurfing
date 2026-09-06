@@ -90,8 +90,9 @@ func TestPreventSelfDeletion(t *testing.T) {
 func TestUpdateInvalidAuthProviderId(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	user := CreateTestUserInOrg(org)
 
 	invalidAuthProviderID := uuid.New().String()
 	payload := "{\"email\": \"" + user.Email + "\", \"firstname\": \"John2\", \"lastname\": \"Doe2\", \"authProviderId\": \"" + invalidAuthProviderID + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
@@ -793,6 +794,62 @@ func TestAllowRoleChangeForOtherUser(t *testing.T) {
 	var resBody *GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, int(AccountTypePerson), resBody.AccountType)
+}
+
+func TestPreventSelfAuthMethodChange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	GetSettingsRepository().Set(org.ID, SettingFeatureAuthProviders.Name, "1")
+	authProvider := &AuthProvider{
+		OrganizationID: org.ID,
+		Name:           "TestProvider",
+		ProviderType:   int(OAuth2),
+	}
+	GetAuthProviderRepository().Create(authProvider)
+
+	// Try to move your own account onto an identity provider.
+	payload := "{\"email\": \"" + admin.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"authProviderId\": \"" + authProvider.ID + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// The authentication method was left untouched.
+	req = NewHTTPRequest("GET", "/user/"+admin.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "", resBody.AuthProviderID)
+
+	// The same is true for switching to an invitation.
+	payload = "{\"email\": \"" + admin.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"sendInvitation\": true, \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+admin.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/user/"+admin.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody2 *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestBool(t, false, resBody2.PasswordPending)
+	CheckTestString(t, "", resBody2.AuthProviderID)
+
+	// Changing your own email address is ignored as well.
+	payload = "{\"email\": \"" + uuid.New().String() + "@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+admin.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/user/"+admin.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody3 *GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody3)
+	CheckTestString(t, admin.Email, resBody3.Email)
 }
 
 func TestApiTokenGenerate(t *testing.T) {
