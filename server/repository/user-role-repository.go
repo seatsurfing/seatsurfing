@@ -155,6 +155,7 @@ func (r *UserRoleStore) GetAssignmentsForSource(userID, source string) ([]string
 		return nil, err
 	}
 	return result, nil
+}
 
 // GetAssignmentsExcludingSource returns the role IDs assigned to a user by
 // any source other than the given one. It supports judging a replacement of
