@@ -260,7 +260,7 @@
   "errorNoAuthProviders": "Geen authenticatieproviders voor uw gebruiker.",
   "errorPickArea": "Kies een gebied.",
   "errorRoleCannotRemoveOwnAccess": "You cannot remove your own ability to manage roles.",
-  "errorRoleEscalationNotAllowed": "You cannot grant access that you do not have yourself.",
+  "errorRoleEscalationNotAllowed": "You cannot grant or revoke access that you do not have yourself.",
   "errorRoleIsSystemRole": "The built-in administrator role cannot be changed.",
   "errorRoleNameAlreadyExists": "A role with this name already exists.",
   "errorRoleWouldLeaveOrgWithoutAdmin": "This change would leave the organization without an administrator.",
