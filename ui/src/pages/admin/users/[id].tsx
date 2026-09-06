@@ -498,7 +498,17 @@ class EditUser extends React.Component<Props, State> {
                     key={role.id}
                     type="checkbox"
                     id={"role-" + role.id}
-                    label={role.name}
+                    label={
+                      <>
+                        {role.name}
+                        {role.system && (
+                          <span className="text-muted">
+                            {" "}
+                            ({this.props.t("systemRole")})
+                          </span>
+                        )}
+                      </>
+                    }
                     checked={this.state.roleIds.includes(role.id)}
                     disabled={
                       !RuntimeConfig.hasPermission(
