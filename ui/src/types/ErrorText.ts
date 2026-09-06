@@ -17,6 +17,8 @@ export const enum ResponseCode {
 
   UsernameExists = 3001,
 
+  UserCannotChangeOwnRoles = 3002,
+
   GroupNameAlreadyExists = 4001,
 
   PasswordUpdateRequired = 5001,
@@ -59,6 +61,8 @@ export default class ErrorText {
       [ResponseCode.PresenceReportDateRangeTooLong]: () =>
         t("errorDateRangeTooLong"),
       [ResponseCode.UsernameExists]: () => t("errorUsernameExists"),
+      [ResponseCode.UserCannotChangeOwnRoles]: () =>
+        t("errorUserCannotChangeOwnRoles"),
       [ResponseCode.GroupNameAlreadyExists]: () =>
         t("errorGroupNameAlreadyExists"),
       [ResponseCode.AuthProviderNameExists]: () =>

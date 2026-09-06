@@ -701,6 +701,14 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// some information cannot be changed from own account
+	if user.ID == e.ID {
+		m.AccountType = int(e.AccountType)
+		m.Email = e.Email
+		m.SendInvitation = false
+		m.AuthProviderID = ""
+	}
+
 	if m.AuthProviderID != "" {
 		if !ValidateGUID(m.AuthProviderID) {
 			SendBadRequest(w)
@@ -715,11 +723,6 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
-	if user.ID == e.ID {
-		// Nobody turns their own account into a service account, which would
-		// lock them out of the web interface.
-		eNew.AccountType = e.AccountType
-	}
 	eNew.OrganizationID = e.OrganizationID
 
 	// Handle auth method updates
@@ -1119,6 +1122,26 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
+	}
+
+	// A user must not change the roles on their own account at all. Another
+	// administrator has to do that.
+	if e.ID == user.ID {
+		have := make(map[string]bool, len(current))
+		for _, role := range current {
+			have[role.ID] = true
+		}
+		changed := len(current) != len(m.RoleIDs)
+		for _, roleID := range m.RoleIDs {
+			if !have[roleID] {
+				changed = true
+				break
+			}
+		}
+		if changed {
+			SendBadRequestCode(w, ResponseCodeUserCannotChangeOwnRoles)
+			return
+		}
 	}
 	for _, roleID := range m.RoleIDs {
 		role, err := GetRoleRepository().GetOne(roleID)

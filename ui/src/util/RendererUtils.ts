@@ -62,6 +62,19 @@ export default class RendererUtils {
     return t("roleUser");
   }
 
+  /**
+   * Names the authentication method (password, identity provider or
+   * invitation) a person's account uses, for read-only display.
+   */
+  static authMethodName(authMethod: string, t: TranslationFunc): string {
+    if (authMethod === User.AuthMethodProvider) {
+      return t("authMethodProvider");
+    } else if (authMethod === User.AuthMethodInvitation) {
+      return t("authMethodInvitation");
+    }
+    return t("authMethodPassword");
+  }
+
   static numberPlus(number: number, max: number): string {
     return number > max ? `${max}+` : String(number);
   }

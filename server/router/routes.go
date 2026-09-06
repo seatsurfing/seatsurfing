@@ -55,7 +55,8 @@ var (
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
-	ResponseCodeUserAlreadyExists = 3001
+	ResponseCodeUserAlreadyExists        = 3001
+	ResponseCodeUserCannotChangeOwnRoles = 3002
 
 	ResponseCodeGroupNameAlreadyExists = 4001
 

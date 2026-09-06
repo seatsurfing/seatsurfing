@@ -335,11 +335,42 @@ func TestLockoutRemovingOwnRoleManagementRefused(t *testing.T) {
 	CheckTestInt(t, 1, len(roleIDs))
 }
 
-func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
+func TestPreventSelfRoleAssignmentChange(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	admin := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(admin.ID)
+
+	// A second administrator so the org would not be left without one.
+	CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionRoles: PermissionLevelAdmin,
+		PermissionUsers: PermissionLevelAdmin,
+	})
+	extra := CreateTestRole(org, "Extra", map[Permission]PermissionLevel{PermissionGroups: PermissionLevelAdmin})
+
+	before, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+
+	// Adding a role to your own account is refused.
+	payload := `{"roleIds": ["` + before[0] + `", "` + extra.ID + `"]}`
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeUserCannotChangeOwnRoles), res.Header().Get("X-Error-Code"))
+
+	after, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, len(before), len(after))
+
+	// Submitting the unchanged set is accepted.
+	payload = `{"roleIds": ["` + before[0] + `"]}`
+	req = NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
 
 	// A second administrator holding a custom, editable role.
 	custom := CreateTestRole(org, "Custom Admin", map[Permission]PermissionLevel{
@@ -349,19 +380,18 @@ func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
 	second := CreateTestUserInOrg(org)
 	AssignTestRole(second, custom)
 
-	// Removing the built-in administrator leaves the custom one, so this is
-	// allowed; the organization still has an administrator.
-	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID,
-		bytes.NewBufferString(`{"roleIds": ["`+custom.ID+`"]}`))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	// Move the built-in administrator onto the custom role as well, so it is the
+	// only role granting administration in the organization.
+	if err := GetUserRoleRepository().SetRolesForUser(admin.ID, []string{custom.ID}, RoleAssignmentSourceManual); err != nil {
+		t.Fatal(err)
+	}
 
 	// Now weaken the only role granting administration. Both remaining
 	// administrators hold it, so this would empty the organization.
 	secondLogin := LoginTestUser(second.ID)
 	payload := `{"name": "Custom Admin", "permissions": {"users": 30}}`
-	req = NewHTTPRequest("PUT", "/role/"+custom.ID, secondLogin.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
+	req := NewHTTPRequest("PUT", "/role/"+custom.ID, secondLogin.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	CheckTestString(t, strconv.Itoa(ResponseCodeRoleWouldLeaveOrgWithoutAdmin), res.Header().Get("X-Error-Code"))
 }
