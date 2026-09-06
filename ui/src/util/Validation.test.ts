@@ -104,4 +104,29 @@ describe("Validation", () => {
       expect(Validation.isValidDomain("example.")).toBe(false);
     });
   });
+
+  describe("ROLE_NAME_PATTERN", () => {
+    const regex = new RegExp(Validation.ROLE_NAME_PATTERN, "u");
+
+    it("should match valid role names", () => {
+      expect(regex.test("Group Manager")).toBe(true);
+      expect(regex.test("admin")).toBe(true);
+      expect(regex.test("Team_Lead")).toBe(true);
+      expect(regex.test("Read-Only")).toBe(true);
+      expect(regex.test("Ångström")).toBe(true);
+    });
+
+    it("should reject leading or trailing whitespace", () => {
+      expect(regex.test(" Manager")).toBe(false);
+      expect(regex.test("Manager ")).toBe(false);
+      expect(regex.test(" Manager ")).toBe(false);
+    });
+
+    it("should reject blank or disallowed-character names", () => {
+      expect(regex.test("")).toBe(false);
+      expect(regex.test("   ")).toBe(false);
+      expect(regex.test("Manager!")).toBe(false);
+      expect(regex.test("Team (A)")).toBe(false);
+    });
+  });
 });
