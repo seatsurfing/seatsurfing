@@ -701,12 +701,16 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// some information cannot be changed from own account
+	// Some information cannot be changed on your own account.
 	if user.ID == e.ID {
 		m.AccountType = int(e.AccountType)
 		m.Email = e.Email
 		m.SendInvitation = false
 		m.AuthProviderID = ""
+		// Prevent switching auth methods (e.g. IdP/invitation -> password) via self-update.
+		if e.PasswordPending || string(e.AuthProviderID) != "" {
+			m.Password = ""
+		}
 	}
 
 	if m.AuthProviderID != "" {
