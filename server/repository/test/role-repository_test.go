@@ -261,51 +261,43 @@ func TestSetRolesForUserIsScopedToSource(t *testing.T) {
 }
 
 // Backs the invariant that an organization is never left without an
-// administrator.
-func TestGetUserIDsWithPermissions(t *testing.T) {
+// administrator: only a holder of the built-in organization administrator role
+// counts, no matter what a custom role happens to grant.
+func TestHasAdminUser(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	required := map[Permission]PermissionLevel{
-		PermissionRoles: PermissionLevelAdmin,
-		PermissionUsers: PermissionLevelAdmin,
-	}
 
-	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
-		PermissionRoles: PermissionLevelAdmin,
-		PermissionUsers: PermissionLevelAdmin,
-	})
-	// Holds only one of the two required permissions.
+	admin := CreateTestUserOrgAdmin(org)
+	// A custom role granting the same permissions the org admin role does is
+	// still not the org admin role.
 	CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
 		PermissionRoles: PermissionLevelAdmin,
-	})
-	// Holds both, but below the required level.
-	CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
-		PermissionRoles: PermissionLevelRead,
-		PermissionUsers: PermissionLevelRead,
+		PermissionUsers: PermissionLevelAdmin,
 	})
 
-	ids, err := GetUserRoleRepository().GetUserIDsWithPermissions(org.ID, required, nil)
+	found, err := GetUserRoleRepository().HasAdminUser(org.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	CheckTestInt(t, 1, len(ids))
-	CheckTestString(t, admin.ID, ids[0])
+	CheckTestBool(t, true, found)
 
-	// Excluding the only administrator leaves none: this is what makes a
+	// Excluding the only org administrator leaves none: this is what makes a
 	// lock-out detectable before it happens.
-	ids, err = GetUserRoleRepository().GetUserIDsWithPermissions(org.ID, required, []string{admin.ID})
+	found, err = GetUserRoleRepository().HasAdminUser(org.ID, []string{admin.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	CheckTestInt(t, 0, len(ids))
+	CheckTestBool(t, false, found)
 }
 
 // Disabled users and service accounts can not be the last administrator.
-func TestGetUserIDsWithPermissionsExcludesDisabledAndServiceAccounts(t *testing.T) {
+func TestHasAdminUserExcludesDisabledAndServiceAccounts(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	required := map[Permission]PermissionLevel{PermissionRoles: PermissionLevelAdmin}
-	adminRole := CreateTestRole(org, "Admin", map[Permission]PermissionLevel{PermissionRoles: PermissionLevelAdmin})
+	adminRole, err := GetRoleRepository().GetByName(org.ID, RoleNameOrgAdmin)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	disabled := &User{Email: uuid.New().String() + "@test.com", OrganizationID: org.ID, Disabled: true}
 	if err := GetUserRepository().Create(disabled); err != nil {
@@ -319,9 +311,9 @@ func TestGetUserIDsWithPermissionsExcludesDisabledAndServiceAccounts(t *testing.
 	}
 	AssignTestRole(serviceAccount, adminRole)
 
-	ids, err := GetUserRoleRepository().GetUserIDsWithPermissions(org.ID, required, nil)
+	found, err := GetUserRoleRepository().HasAdminUser(org.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	CheckTestInt(t, 0, len(ids))
+	CheckTestBool(t, false, found)
 }

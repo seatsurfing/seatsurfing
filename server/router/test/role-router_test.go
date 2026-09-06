@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"slices"
 	"strconv"
 	"testing"
 
@@ -335,35 +334,49 @@ func TestLockoutRemovingOwnRoleManagementRefused(t *testing.T) {
 	CheckTestInt(t, 1, len(roleIDs))
 }
 
+// With the simplified rule only a holder of the built-in organization
+// administrator role counts. Moving the last such holder onto a custom role
+// that grants the very same permissions is still refused.
 func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	admin := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(admin.ID)
 
-	// A second administrator holding a custom, editable role.
 	custom := CreateTestRole(org, "Custom Admin", map[Permission]PermissionLevel{
 		PermissionRoles: PermissionLevelAdmin,
 		PermissionUsers: PermissionLevelAdmin,
 	})
-	second := CreateTestUserInOrg(org)
-	AssignTestRole(second, custom)
 
-	// Removing the built-in administrator leaves the custom one, so this is
-	// allowed; the organization still has an administrator.
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID,
+		bytes.NewBufferString(`{"roleIds": ["`+custom.ID+`"]}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeRoleWouldLeaveOrgWithoutAdmin), res.Header().Get("X-Error-Code"))
+
+	// The organization administrator assignment survived.
+	roleIDs, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, 1, len(roleIDs))
+}
+
+// A second holder of the organization administrator role makes the demotion of
+// the first go through.
+func TestLockoutStrippingAdminRoleAllowedWithSecondAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	custom := CreateTestRole(org, "Custom Admin", map[Permission]PermissionLevel{
+		PermissionRoles: PermissionLevelAdmin,
+		PermissionUsers: PermissionLevelAdmin,
+	})
+
 	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID,
 		bytes.NewBufferString(`{"roleIds": ["`+custom.ID+`"]}`))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-
-	// Now weaken the only role granting administration. Both remaining
-	// administrators hold it, so this would empty the organization.
-	secondLogin := LoginTestUser(second.ID)
-	payload := `{"name": "Custom Admin", "permissions": {"users": 30}}`
-	req = NewHTTPRequest("PUT", "/role/"+custom.ID, secondLogin.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
-	CheckTestString(t, strconv.Itoa(ResponseCodeRoleWouldLeaveOrgWithoutAdmin), res.Header().Get("X-Error-Code"))
 }
 
 // Disabled users and service accounts do not count towards the invariant: an
@@ -383,34 +396,5 @@ func TestLockoutDisabledAdminDoesNotCount(t *testing.T) {
 	}
 	if OrgRetainsAdminWithout(org.ID) != false {
 		t.Fatal("expected a disabled administrator not to count")
-	}
-}
-
-// The start-up repair is the backstop for a database that reached a
-// locked-out state outside the API.
-func TestEnsureEveryOrgHasAdminRepairs(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserInOrg(org)
-
-	// Simulate a database in which nobody holds administrative access.
-	if _, err := GetDatabase().DB().Exec("DELETE FROM user_roles"); err != nil {
-		t.Fatal(err)
-	}
-	CheckTestBool(t, false, OrgRetainsAdminWithout(org.ID))
-
-	EnsureEveryOrgHasAdmin()
-
-	CheckTestBool(t, true, OrgRetainsAdminWithout(org.ID))
-	roles, err := GetUserRoleRepository().GetRolesForUser(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var names []string
-	for _, r := range roles {
-		names = append(names, r.Name)
-	}
-	if !slices.Contains(names, RoleNameOrgAdmin) {
-		t.Fatalf("expected the organization administrator role to be restored, got %v", names)
 	}
 }

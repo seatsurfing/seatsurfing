@@ -253,49 +253,29 @@ func (r *UserRoleStore) DeleteAllForUser(userID string) error {
 	return err
 }
 
-// GetUserIDsWithPermissions returns the enabled, non-service-account users of
-// an organization whose effective access meets every one of the given minimum
-// levels. It backs the invariant that an organization is never left without an
+// HasAdminUser reports whether the organization has at least one enabled,
+// non-service-account user holding a system role, ignoring the given users.
+// The built-in organization administrator role is the only system role, so
+// this backs the invariant that an organization is never left without an
 // administrator.
-func (r *UserRoleStore) GetUserIDsWithPermissions(organizationID string, required map[Permission]PermissionLevel, excludeUserIDs []string) ([]string, error) {
-	if len(required) == 0 {
-		return nil, nil
-	}
-	// One EXISTS clause per required permission: the user must hold at least
-	// one role granting that permission at or above the minimum level.
+func (r *UserRoleStore) HasAdminUser(organizationID string, excludeUserIDs []string) (bool, error) {
 	// A nil slice would bind as NULL, and "NOT (id = ANY(NULL))" is NULL
 	// rather than true, which would exclude every row.
 	if excludeUserIDs == nil {
 		excludeUserIDs = []string{}
 	}
-	var clauses []string
-	vals := []interface{}{organizationID, pq.Array(excludeUserIDs)}
-	i := 3
-	for permission, level := range required {
-		clauses = append(clauses, "EXISTS (SELECT 1 FROM user_roles ur "+
-			"INNER JOIN role_permissions rp ON rp.role_id = ur.role_id "+
-			"WHERE ur.user_id = u.id AND rp.permission = $"+strconv.Itoa(i)+" AND rp.level >= $"+strconv.Itoa(i+1)+")")
-		vals = append(vals, string(permission), int(level))
-		i += 2
-	}
-	sqlStr := "SELECT u.id FROM users u " +
-		"WHERE u.organization_id = $1 " +
-		"AND u.disabled IS NOT TRUE " +
-		"AND u.account_type = " + strconv.Itoa(int(AccountTypePerson)) + " " +
-		"AND NOT (u.id = ANY($2)) " +
-		"AND " + strings.Join(clauses, " AND ")
-	var result []string
-	rows, err := GetDatabase().DB().Query(sqlStr, vals...)
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM users u "+
+		"WHERE u.organization_id = $1 "+
+		"AND u.disabled IS NOT TRUE "+
+		"AND u.account_type = "+strconv.Itoa(int(AccountTypePerson))+" "+
+		"AND NOT (u.id = ANY($2)) "+
+		"AND EXISTS (SELECT 1 FROM user_roles ur "+
+		"INNER JOIN roles r ON r.id = ur.role_id "+
+		"WHERE ur.user_id = u.id AND r.system IS TRUE)",
+		organizationID, pq.Array(excludeUserIDs)).Scan(&count)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		result = append(result, id)
-	}
-	return result, nil
+	return count > 0, nil
 }

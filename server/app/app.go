@@ -708,13 +708,6 @@ func (a *App) InitializeDefaultOrg() {
 	}
 }
 
-// EnsureOrgAdmins repairs any organization left without an administrator.
-// With the super admin role gone there is no outside account that could fix
-// such an organization by hand.
-func (a *App) EnsureOrgAdmins() {
-	EnsureEveryOrgHasAdmin()
-}
-
 func (a *App) InitializeSingleOrgSettings() {
 	numOrgs, err := GetOrganizationRepository().GetNumOrgs()
 	if err == nil && numOrgs == 1 {
