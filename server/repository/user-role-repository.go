@@ -272,7 +272,7 @@ func (r *UserRoleStore) HasAdminUser(organizationID string, excludeUserIDs []str
 		"AND NOT (u.id = ANY($2)) "+
 		"AND EXISTS (SELECT 1 FROM user_roles ur "+
 		"INNER JOIN roles r ON r.id = ur.role_id "+
-		"WHERE ur.user_id = u.id AND r.system IS TRUE))",
+		"WHERE ur.user_id = u.id AND r.organization_id = u.organization_id AND r.system IS TRUE))",
 		organizationID, pq.Array(excludeUserIDs)).Scan(&exists)
 	if err != nil {
 		return false, err
