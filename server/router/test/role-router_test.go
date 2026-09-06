@@ -367,6 +367,60 @@ func TestPreventSelfRoleAssignmentChange(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
+// A duplicate role ID must not let the "did the set change" check pass a
+// request that would drop a role once the assignments are de-duplicated.
+func TestPreventSelfRoleChangeViaDuplicate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionRoles: PermissionLevelAdmin,
+		PermissionUsers: PermissionLevelAdmin,
+	})
+	extra := CreateTestRole(org, "Extra", map[Permission]PermissionLevel{PermissionGroups: PermissionLevelAdmin})
+	AssignTestRole(admin, extra)
+
+	before, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, 2, len(before))
+
+	// Repeating one role to match the length while silently dropping the other.
+	payload := `{"roleIds": ["` + before[0] + `", "` + before[0] + `"]}`
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	after, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, len(before), len(after))
+}
+
+// Submitting the unchanged manual set is accepted even when an identity
+// provider has also assigned roles: those are not part of the comparison.
+func TestSelfRoleUnchangedAcceptedAlongsideIdPRoles(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	manual, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, 1, len(manual))
+
+	idpRole := CreateTestRole(org, "IdP Role", map[Permission]PermissionLevel{PermissionGroups: PermissionLevelAdmin})
+	if err := GetUserRoleRepository().Add(admin.ID, idpRole.ID, RoleAssignmentSourceOIDC); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := `{"roleIds": ["` + manual[0] + `"]}`
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// The identity provider's assignment is still in place.
+	all, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, 2, len(all))
+}
+
 func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

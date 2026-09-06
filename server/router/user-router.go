@@ -1113,6 +1113,17 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	// The request must name each role at most once. A duplicate would otherwise
+	// slip past the "did the set change" comparison below while still altering
+	// the stored assignments once SetRolesForUser de-duplicates them.
+	requested := make(map[string]bool, len(m.RoleIDs))
+	for _, roleID := range m.RoleIDs {
+		if requested[roleID] {
+			SendBadRequest(w)
+			return
+		}
+		requested[roleID] = true
+	}
 	// Every role involved must be one the caller could grant outright, both
 	// the ones being added and the ones the user already holds. Otherwise a
 	// limited administrator could hand out access they do not have themselves,
@@ -1125,14 +1136,22 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// A user must not change the roles on their own account at all. Another
-	// administrator has to do that.
+	// administrator has to do that. Only the manually assigned roles are
+	// compared: the request replaces just those, while identity provider
+	// assignments stay under reconciliation's control and are not part of it.
 	if e.ID == user.ID {
-		have := make(map[string]bool, len(current))
-		for _, role := range current {
-			have[role.ID] = true
+		manual, err := GetUserRoleRepository().GetAssignmentsForSource(e.ID, RoleAssignmentSourceManual)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
 		}
-		changed := len(current) != len(m.RoleIDs)
-		for _, roleID := range m.RoleIDs {
+		have := make(map[string]bool, len(manual))
+		for _, roleID := range manual {
+			have[roleID] = true
+		}
+		changed := len(have) != len(requested)
+		for roleID := range requested {
 			if !have[roleID] {
 				changed = true
 				break
