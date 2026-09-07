@@ -551,24 +551,6 @@ func (r *UserStore) CanCreateUser(org *Organization) bool {
 	return curUsers < DefaultUserLimit
 }
 
-// GetAnyEnabledUserID returns one enabled, non-service account of an
-// organization, backing the start-up repair of an organization left without an
-// administrator. The users table carries no creation timestamp, so the pick is
-// arbitrary but stable: ordering by the random UUID is deterministic, not
-// chronological.
-func (r *UserStore) GetAnyEnabledUserID(organizationID string) (string, error) {
-	var id string
-	err := GetDatabase().DB().QueryRow("SELECT id FROM users "+
-		"WHERE organization_id = $1 AND disabled IS NOT TRUE AND account_type = $2 "+
-		"ORDER BY id "+
-		"LIMIT 1",
-		organizationID, int(AccountTypePerson)).Scan(&id)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
 func (r *UserStore) DeleteObsoleteConfluenceAnonymousUsers() (int, error) {
 	timestamp := time.Now().Add(-24 * time.Hour)
 	rows, err := GetDatabase().DB().Query("DELETE FROM users u "+

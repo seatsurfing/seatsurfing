@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"slices"
 	"strconv"
 	"testing"
 
@@ -421,33 +420,59 @@ func TestSelfRoleUnchangedAcceptedAlongsideIdPRoles(t *testing.T) {
 	CheckTestInt(t, 2, len(all))
 }
 
+// With the simplified rule only a holder of the built-in organization
+// administrator role counts. Moving the last such holder onto a custom role
+// that grants the very same permissions is still refused.
 func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	admin := CreateTestUserOrgAdmin(org)
 
-	// A second administrator holding a custom, editable role.
+	// A user able to grant the custom role and touch every permission the
+	// built-in role carries, but not itself an administrator under the
+	// simplified rule: it holds full access through a custom role, not the
+	// built-in one.
+	fullAccess := make(map[Permission]PermissionLevel)
+	for _, d := range GetPermissionDefinitions() {
+		fullAccess[d.Key] = d.MaxLevel()
+	}
+	actor := CreateTestUserWithPermissions(org, fullAccess)
+	actorLogin := LoginTestUser(actor.ID)
+
 	custom := CreateTestRole(org, "Custom Admin", map[Permission]PermissionLevel{
 		PermissionRoles: PermissionLevelAdmin,
 		PermissionUsers: PermissionLevelAdmin,
 	})
-	second := CreateTestUserInOrg(org)
-	AssignTestRole(second, custom)
 
-	// Move the built-in administrator onto the custom role as well, so it is the
-	// only role granting administration in the organization.
-	if err := GetUserRoleRepository().SetRolesForUser(admin.ID, []string{custom.ID}, RoleAssignmentSourceManual); err != nil {
-		t.Fatal(err)
-	}
-
-	// Now weaken the only role granting administration. Both remaining
-	// administrators hold it, so this would empty the organization.
-	secondLogin := LoginTestUser(second.ID)
-	payload := `{"name": "Custom Admin", "permissions": {"users": 30}}`
-	req := NewHTTPRequest("PUT", "/role/"+custom.ID, secondLogin.UserID, bytes.NewBufferString(payload))
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", actorLogin.UserID,
+		bytes.NewBufferString(`{"roleIds": ["`+custom.ID+`"]}`))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	CheckTestString(t, strconv.Itoa(ResponseCodeRoleWouldLeaveOrgWithoutAdmin), res.Header().Get("X-Error-Code"))
+
+	// The organization administrator assignment survived.
+	roleIDs, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, 1, len(roleIDs))
+}
+
+// A second holder of the organization administrator role makes the demotion of
+// the first go through.
+func TestLockoutStrippingAdminRoleAllowedWithSecondAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	admin2 := CreateTestUserOrgAdmin(org)
+	admin2Login := LoginTestUser(admin2.ID)
+
+	custom := CreateTestRole(org, "Custom Admin", map[Permission]PermissionLevel{
+		PermissionRoles: PermissionLevelAdmin,
+		PermissionUsers: PermissionLevelAdmin,
+	})
+
+	req := NewHTTPRequest("PUT", "/user/"+admin.ID+"/roles", admin2Login.UserID,
+		bytes.NewBufferString(`{"roleIds": ["`+custom.ID+`"]}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
 // Disabled users and service accounts do not count towards the invariant: an
@@ -467,34 +492,5 @@ func TestLockoutDisabledAdminDoesNotCount(t *testing.T) {
 	}
 	if OrgRetainsAdminWithout(org.ID) != false {
 		t.Fatal("expected a disabled administrator not to count")
-	}
-}
-
-// The start-up repair is the backstop for a database that reached a
-// locked-out state outside the API.
-func TestEnsureEveryOrgHasAdminRepairs(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserInOrg(org)
-
-	// Simulate a database in which nobody holds administrative access.
-	if _, err := GetDatabase().DB().Exec("DELETE FROM user_roles"); err != nil {
-		t.Fatal(err)
-	}
-	CheckTestBool(t, false, OrgRetainsAdminWithout(org.ID))
-
-	EnsureEveryOrgHasAdmin()
-
-	CheckTestBool(t, true, OrgRetainsAdminWithout(org.ID))
-	roles, err := GetUserRoleRepository().GetRolesForUser(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var names []string
-	for _, r := range roles {
-		names = append(names, r.Name)
-	}
-	if !slices.Contains(names, RoleNameOrgAdmin) {
-		t.Fatalf("expected the organization administrator role to be restored, got %v", names)
 	}
 }

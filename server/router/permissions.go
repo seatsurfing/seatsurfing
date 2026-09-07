@@ -106,27 +106,49 @@ func PermissionsToRestModel(perms map[Permission]PermissionLevel) map[string]int
 
 // ─── Lock-out prevention ─────────────────────────────────────────────────────
 
-// AdminRetentionPermissions is what at least one enabled, non-service-account
-// user of every organization must always hold. Managing roles alone is not
-// enough: without user administration there would be nobody to assign the
-// roles to.
-var AdminRetentionPermissions = map[Permission]PermissionLevel{
-	PermissionRoles: PermissionLevelAdmin,
-	PermissionUsers: PermissionLevelAdmin,
-}
-
 // OrgRetainsAdminWithout reports whether the organization would still have at
-// least one administrator if the given users were to lose their access. Pass
-// the users being deleted, disabled, or whose assignments are being replaced.
+// least one administrator if the given users were to lose their access. An
+// administrator is any enabled, non-service-account user holding the built-in
+// organization administrator role. Pass the users being deleted, disabled, or
+// whose assignments are being replaced.
 func OrgRetainsAdminWithout(organizationID string, excludeUserIDs ...string) bool {
-	ids, err := GetUserRoleRepository().GetUserIDsWithPermissions(organizationID, AdminRetentionPermissions, excludeUserIDs)
+	found, err := GetUserRoleRepository().HasAdminUser(organizationID, excludeUserIDs)
 	if err != nil {
 		// Fail closed: refusing a change is recoverable, locking an
 		// organization out of its own administration is not.
 		log.Println(err)
 		return false
 	}
-	return len(ids) > 0
+	return found
+}
+
+// UserWouldRetainAdmin reports whether the user would still hold the built-in
+// organization administrator role if their assignments from the given source
+// were replaced by newRoleIDs. Assignments from other sources are left in
+// place and so still count.
+func UserWouldRetainAdmin(user *User, newRoleIDs []string, source string) bool {
+	if rolesIncludeAdmin(user.OrganizationID, newRoleIDs) {
+		return true
+	}
+	other, err := GetUserRoleRepository().GetAssignmentsExcludingSource(user.ID, source)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	return rolesIncludeAdmin(user.OrganizationID, other)
+}
+
+// rolesIncludeAdmin reports whether any of the given role IDs is a system role
+// of the organization. The organization administrator role is the only system
+// role.
+func rolesIncludeAdmin(organizationID string, roleIDs []string) bool {
+	for _, id := range roleIDs {
+		role, err := GetRoleRepository().GetOne(id)
+		if err == nil && role.OrganizationID == organizationID && role.System {
+			return true
+		}
+	}
+	return false
 }
 
 // CheckOrgRetainsAdmin writes the appropriate error response and reports false
@@ -154,36 +176,6 @@ func CanGrantPermissions(user *User, organizationID string, perms map[Permission
 		}
 	}
 	return true
-}
-
-// EnsureEveryOrgHasAdmin repairs any organization left without an
-// administrator by granting the built-in organization administrator role to
-// one of its enabled members. It runs at start-up as a backstop: the
-// checks above make this unreachable through the API, but a database restored
-// from a partial backup, or edited by hand, can still get there — and with the
-// super admin role gone there is no longer an outside account to fix it with.
-func EnsureEveryOrgHasAdmin() {
-	orgs, err := GetOrganizationRepository().GetAll()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	for _, org := range orgs {
-		if OrgRetainsAdminWithout(org.ID) {
-			continue
-		}
-		userID, err := GetUserRepository().GetAnyEnabledUserID(org.ID)
-		if err != nil || userID == "" {
-			log.Printf("Organization %s has no administrator and no user to promote\n", org.ID)
-			continue
-		}
-		orgAdminRoleID, _, _ := GetRoleRepository().EnsureBuiltInRoles(org.ID)
-		if err := GetUserRoleRepository().Add(userID, orgAdminRoleID, RoleAssignmentSourceManual); err != nil {
-			log.Println(err)
-			continue
-		}
-		log.Printf("⚠️  Organization %s had no administrator; granted %q to user %s\n", org.ID, RoleNameOrgAdmin, userID)
-	}
 }
 
 // ResultingPermissions computes the access a user would end up with if their
@@ -273,14 +265,7 @@ func ReconcileUserFromIdP(user *User, provider *AuthProvider, groups []string) {
 	// An organization must not be able to lose its last administrator because
 	// somebody edited a group in the identity provider. Where that would be
 	// the effect, the roles are left as they are and the operator is told.
-	resulting := ResultingPermissionsFromSource(user, roleIDs, RoleAssignmentSourceOIDC)
-	stillAdmin := true
-	for p, level := range AdminRetentionPermissions {
-		if resulting[p] < level {
-			stillAdmin = false
-			break
-		}
-	}
+	stillAdmin := UserWouldRetainAdmin(user, roleIDs, RoleAssignmentSourceOIDC)
 	if stillAdmin || OrgRetainsAdminWithout(user.OrganizationID, user.ID) {
 		if err := GetUserRoleRepository().SetRolesForUser(user.ID, roleIDs, RoleAssignmentSourceOIDC); err != nil {
 			log.Println(err)

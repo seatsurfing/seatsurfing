@@ -1196,17 +1196,10 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 		SendBadRequestCode(w, ResponseCodeRoleCannotRemoveOwnAccess)
 		return
 	}
-	// The organization must keep at least one administrator. If this user
-	// still qualifies afterwards there is nothing to check; otherwise somebody
-	// else must.
-	stillAdmin := true
-	for p, level := range AdminRetentionPermissions {
-		if resulting[p] < level {
-			stillAdmin = false
-			break
-		}
-	}
-	if !stillAdmin && !CheckOrgRetainsAdmin(w, user.OrganizationID, e.ID) {
+	// The organization must keep at least one administrator. If this user still
+	// holds the organization administrator role afterwards there is nothing to
+	// check; otherwise somebody else must.
+	if !UserWouldRetainAdmin(e, m.RoleIDs, RoleAssignmentSourceManual) && !CheckOrgRetainsAdmin(w, user.OrganizationID, e.ID) {
 		return
 	}
 
