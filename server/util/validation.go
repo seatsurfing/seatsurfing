@@ -82,6 +82,9 @@ func IsValidHumanName(s string) bool {
 	if l < 2 || l > 64 {
 		return false
 	}
+	if s != strings.TrimSpace(s) {
+		return false
+	}
 	if strings.Contains(s, "@@@") {
 		return false
 	}

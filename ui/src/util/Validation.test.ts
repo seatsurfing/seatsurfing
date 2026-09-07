@@ -129,4 +129,32 @@ describe("Validation", () => {
       expect(regex.test("Team (A)")).toBe(false);
     });
   });
+
+  describe("HUMAN_NAME_PATTERN", () => {
+    const regex = new RegExp(Validation.HUMAN_NAME_PATTERN, "u");
+
+    it("should match valid human names", () => {
+      expect(regex.test("John")).toBe(true);
+      expect(regex.test("Jane Doe")).toBe(true);
+      expect(regex.test("O'Brien")).toBe(true);
+      expect(regex.test("Anne-Marie")).toBe(true);
+      expect(regex.test("St. John")).toBe(true);
+      expect(regex.test("Müller")).toBe(true);
+      expect(regex.test("山田太郎")).toBe(true);
+      expect(regex.test("A")).toBe(true);
+    });
+
+    it("should reject leading or trailing whitespace", () => {
+      expect(regex.test(" Peter")).toBe(false);
+      expect(regex.test("Peter ")).toBe(false);
+      expect(regex.test("   Peter   ")).toBe(false);
+    });
+
+    it("should reject blank or disallowed-character names", () => {
+      expect(regex.test("")).toBe(false);
+      expect(regex.test("   ")).toBe(false);
+      expect(regex.test("Name<Tag>")).toBe(false);
+      expect(regex.test("Name@Domain")).toBe(false);
+    });
+  });
 });
