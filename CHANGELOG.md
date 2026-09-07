@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.126.4](https://github.com/seatsurfing/seatsurfing/compare/v1.126.3...v1.126.4) (2026-09-07)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** prevent leading and trailing spaces in firstname and lastname ([#2592](https://github.com/seatsurfing/seatsurfing/issues/2592)) ([bc250a4](https://github.com/seatsurfing/seatsurfing/commit/bc250a41ade81ec4350d000ef3b3364011e18284))
+
 ## [1.126.3](https://github.com/seatsurfing/seatsurfing/compare/v1.126.2...v1.126.3) (2026-09-07)
 
 
