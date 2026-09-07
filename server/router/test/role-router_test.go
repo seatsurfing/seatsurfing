@@ -428,13 +428,15 @@ func TestLockoutStrippingLastAdminRoleRefused(t *testing.T) {
 	org := CreateTestOrg("test.com")
 	admin := CreateTestUserOrgAdmin(org)
 
-	// A user able to grant the custom role, but not itself an administrator
-	// under the simplified rule: it holds the permissions through a custom
-	// role, not the built-in one.
-	actor := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
-		PermissionRoles: PermissionLevelAdmin,
-		PermissionUsers: PermissionLevelAdmin,
-	})
+	// A user able to grant the custom role and touch every permission the
+	// built-in role carries, but not itself an administrator under the
+	// simplified rule: it holds full access through a custom role, not the
+	// built-in one.
+	fullAccess := make(map[Permission]PermissionLevel)
+	for _, d := range GetPermissionDefinitions() {
+		fullAccess[d.Key] = d.MaxLevel()
+	}
+	actor := CreateTestUserWithPermissions(org, fullAccess)
 	actorLogin := LoginTestUser(actor.ID)
 
 	custom := CreateTestRole(org, "Custom Admin", map[Permission]PermissionLevel{
