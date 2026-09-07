@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.126.3](https://github.com/seatsurfing/seatsurfing/compare/v1.126.2...v1.126.3) (2026-09-07)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** prevent changing own account type, email address, roles and authentication method ([#2589](https://github.com/seatsurfing/seatsurfing/issues/2589)) ([77500a6](https://github.com/seatsurfing/seatsurfing/commit/77500a619a075288dbdca108ae5fa9fa8fdfaf5f))
+* **admin-ui:** prevent leading and trailing spaces in role names ([#2591](https://github.com/seatsurfing/seatsurfing/issues/2591)) ([5d5b0de](https://github.com/seatsurfing/seatsurfing/commit/5d5b0de739fb88a9933d68d3cc5b92ac063be41f))
+* **admin-ui:** show system role on user edit page ([#2586](https://github.com/seatsurfing/seatsurfing/issues/2586)) ([5731a56](https://github.com/seatsurfing/seatsurfing/commit/5731a567c0c05e624c4a30eeacb45cfb02f42890))
+* **admin-ui:** update message errorRoleEscalationNotAllowed ([#2588](https://github.com/seatsurfing/seatsurfing/issues/2588)) ([5a8e84f](https://github.com/seatsurfing/seatsurfing/commit/5a8e84f284ebd7691a93740936f555fbe816ddb6))
+* **deps:** bump excellentexport from 3.9.15 to 3.9.16 in /ui in the production-dependencies group across 1 directory ([#2583](https://github.com/seatsurfing/seatsurfing/issues/2583)) ([d1ef387](https://github.com/seatsurfing/seatsurfing/commit/d1ef38735e3d58236792884b72c2b0549bba8970))
+* **main:** make sure org has at least one admin ([#2590](https://github.com/seatsurfing/seatsurfing/issues/2590)) ([74b67f9](https://github.com/seatsurfing/seatsurfing/commit/74b67f9bf172143ebaba3710e851635db28f6f4a))
+
 ## [1.126.2](https://github.com/seatsurfing/seatsurfing/compare/v1.126.1...v1.126.2) (2026-09-03)
 
 
