@@ -9,6 +9,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import Validation from "@/util/Validation";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
 import Role, { PermissionDefinition } from "@/types/Role";
@@ -255,6 +256,7 @@ class EditRole extends React.Component<Props, State> {
                 onChange={(e: any) => this.setState({ name: e.target.value })}
                 required={true}
                 maxLength={128}
+                pattern={Validation.ROLE_NAME_PATTERN}
                 readOnly={readOnly}
               />
             </Col>

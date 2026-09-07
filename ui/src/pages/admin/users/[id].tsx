@@ -448,23 +448,28 @@ class EditUser extends React.Component<Props, State> {
         this.props.t,
       );
       accountTypeSelect = (
-        <>
-          <Form.Control
-            id="accountType"
-            plaintext={true}
-            readOnly={true}
-            defaultValue={accountTypeName}
-          />
-          {isOwnUser && (
-            <Form.Text className="text-muted">
-              {this.props.t("cannotChangeOwnAccountType")}
-            </Form.Text>
-          )}
-        </>
+        <Form.Control
+          id="accountType"
+          plaintext={true}
+          readOnly={true}
+          defaultValue={accountTypeName}
+        />
       );
     }
 
     const isServiceAccount = this.isServiceAccount(this.state.accountType);
+    let authMethodName = RendererUtils.authMethodName(
+      this.state.authMethod,
+      this.props.t,
+    );
+    if (this.state.authMethod === User.AuthMethodProvider) {
+      const provider = this.authProviders.find(
+        (p) => p.id === this.state.authProviderId,
+      );
+      if (provider) {
+        authMethodName += ` (${provider.name})`;
+      }
+    }
     const passwordFieldHidden =
       (RuntimeConfig.INFOS.disablePasswordLogin && !isServiceAccount) ||
       (!isServiceAccount && this.state.authMethod !== User.AuthMethodPassword);
@@ -473,6 +478,11 @@ class EditUser extends React.Component<Props, State> {
       <FullLayout headline={this.props.t("editUser")} buttons={buttons}>
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
+          {isOwnUser && (
+            <Alert variant="info">
+              {this.props.t("selfEditRestrictedFields")}
+            </Alert>
+          )}
           <Form.Group as={Row}>
             <Form.Label htmlFor="accountType" column sm="2">
               {this.props.t("accountType")}
@@ -498,9 +508,20 @@ class EditUser extends React.Component<Props, State> {
                     key={role.id}
                     type="checkbox"
                     id={"role-" + role.id}
-                    label={role.name}
+                    label={
+                      <>
+                        {role.name}
+                        {role.system && (
+                          <span className="text-muted">
+                            {" "}
+                            ({this.props.t("systemRole")})
+                          </span>
+                        )}
+                      </>
+                    }
                     checked={this.state.roleIds.includes(role.id)}
                     disabled={
+                      isOwnUser ||
                       !RuntimeConfig.hasPermission(
                         Permission.Roles,
                         PermissionLevel.Admin,
@@ -511,11 +532,6 @@ class EditUser extends React.Component<Props, State> {
                     }
                   />
                 ))}
-                {isOwnUser && (
-                  <Form.Text className="text-muted">
-                    {this.props.t("cannotRemoveOwnRoleManagement")}
-                  </Form.Text>
-                )}
               </Col>
             </Form.Group>
           )}
@@ -534,6 +550,7 @@ class EditUser extends React.Component<Props, State> {
                     this.setState({ email: e.target.value })
                   }
                   required={true}
+                  readOnly={isOwnUser}
                 />
               </Col>
             </Form.Group>
@@ -603,10 +620,29 @@ class EditUser extends React.Component<Props, State> {
             </Col>
           </Form.Group>
 
+          {/* Auth method — read-only when editing your own account */}
+          <Form.Group
+            as={Row}
+            hidden={this.isServiceAccount(this.state.accountType) || !isOwnUser}
+          >
+            <Form.Label htmlFor="authMethod" column sm="2">
+              {this.props.t("authMethod")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                id="authMethod"
+                plaintext={true}
+                readOnly={true}
+                value={authMethodName}
+              />
+            </Col>
+          </Form.Group>
+
           {/* Auth method selection for non-service accounts */}
           <Form.Group
             as={Row}
             hidden={
+              isOwnUser ||
               this.isServiceAccount(this.state.accountType) ||
               RuntimeConfig.INFOS.disablePasswordLogin
             }
@@ -654,6 +690,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group
             as={Row}
             hidden={
+              isOwnUser ||
               this.isServiceAccount(this.state.accountType) ||
               this.state.authMethod !== User.AuthMethodProvider ||
               RuntimeConfig.INFOS.disablePasswordLogin
@@ -708,6 +745,7 @@ class EditUser extends React.Component<Props, State> {
           <Form.Group
             as={Row}
             hidden={
+              isOwnUser ||
               this.isServiceAccount(this.state.accountType) ||
               !this.entity.id ||
               this.state.authMethod !== User.AuthMethodInvitation

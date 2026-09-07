@@ -101,7 +101,7 @@ func ValidateRoleName(s string) bool {
 	if l < 1 || l > 128 {
 		return false
 	}
-	if strings.TrimSpace(s) == "" {
+	if s != strings.TrimSpace(s) {
 		return false
 	}
 	return roleNameRegex.MatchString(s)
