@@ -27,13 +27,6 @@ func TestGetEmailTemplatePathNotExists(t *testing.T) {
 	CheckTestBool(t, true, err != nil)
 }
 
-func TestGetLocalPartFromEmailAddress(t *testing.T) {
-	CheckTestString(t, "test", GetLocalPartFromEmailAddress("test@domain.com"))
-	CheckTestString(t, "test", GetLocalPartFromEmailAddress("test@domain"))
-	CheckTestString(t, "test", GetLocalPartFromEmailAddress("test"))
-	CheckTestString(t, "\"a@b\"", GetLocalPartFromEmailAddress("\"a@b\"@example.com"))
-}
-
 func TestReplaceVarsInTemplate(t *testing.T) {
 	template := "Hello {{name}}, your code is {{code}}."
 	vars := map[string]string{

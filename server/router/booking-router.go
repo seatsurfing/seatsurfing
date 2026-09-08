@@ -1398,7 +1398,7 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 
 		vars := map[string]string{
 			"orgDomain":     FormatURL(domain.DomainName) + "/",
-			"recipientName": GetLocalPartFromEmailAddress(approver.Email),
+			"recipientName": approver.GetSafeRecipientName(),
 			"userEmail":     bookingUser.Email,
 			"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 			"areaName":      location.Name,
