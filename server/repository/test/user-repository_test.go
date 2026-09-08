@@ -164,10 +164,35 @@ func TestUsersGetSafeRecipientName(t *testing.T) {
 		Firstname: "Mr. Foo",
 		Lastname:  "Bar",
 	}
+	u5 := &User{
+		Email:     "nodomain",
+		Firstname: "",
+		Lastname:  "",
+	}
+	u6 := &User{
+		Email:     "\"a@b\"@example.com",
+		Firstname: "",
+		Lastname:  "",
+	}
 	CheckTestString(t, "Foo", u1.GetSafeRecipientName())
 	CheckTestString(t, "Fb", u2.GetSafeRecipientName())
 	CheckTestString(t, "F.Bar", u3.GetSafeRecipientName())
 	CheckTestString(t, "Mr. Foo", u4.GetSafeRecipientName())
+	CheckTestString(t, "Nodomain", u5.GetSafeRecipientName())
+	CheckTestString(t, "\"A@B\"", u6.GetSafeRecipientName())
+}
+
+func TestBookingDetailsGetSafeRecipientName(t *testing.T) {
+	b1 := &BookingDetails{
+		UserEmail:     "foo@bar.com",
+		UserFirstname: "",
+	}
+	b2 := &BookingDetails{
+		UserEmail:     "foo@bar.com",
+		UserFirstname: "Mr. Foo",
+	}
+	CheckTestString(t, "Foo", b1.GetSafeRecipientName())
+	CheckTestString(t, "Mr. Foo", b2.GetSafeRecipientName())
 }
 
 func TestSetUserPreferenceMailNotification(t *testing.T) {
