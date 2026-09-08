@@ -829,10 +829,7 @@ func (a *App) sendBookingReminderEmail(e *api.BookingDetails) {
 		log.Println(err)
 		return
 	}
-	recipientName := e.UserFirstname
-	if recipientName == "" {
-		recipientName = GetLocalPartFromEmailAddress(e.UserEmail)
-	}
+	recipientName := e.GetSafeRecipientName()
 	subject := e.Subject
 	if subject == "" {
 		subject = "—"

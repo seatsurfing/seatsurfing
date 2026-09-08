@@ -51,14 +51,20 @@ func (u *User) GetDisplayName() string {
 }
 
 func (u *User) GetSafeRecipientName() string {
-	if u.Firstname != "" {
-		return u.Firstname
+	return SafeRecipientName(u.Firstname, u.Email)
+}
+
+// SafeRecipientName returns a name suitable for addressing a person in an email:
+// the firstname if set, otherwise the title-cased local part of the email address.
+func SafeRecipientName(firstname, email string) string {
+	if firstname != "" {
+		return firstname
 	}
-	idx := strings.LastIndex(u.Email, "@")
+	idx := strings.LastIndex(email, "@")
 	if idx == -1 {
-		return strings.Title(u.Email) //nolint:staticcheck
+		return strings.Title(email) //nolint:staticcheck
 	}
-	return strings.Title(u.Email[:idx]) //nolint:staticcheck
+	return strings.Title(email[:idx]) //nolint:staticcheck
 }
 
 // ─── Organization ────────────────────────────────────────────────────────────
@@ -155,6 +161,10 @@ type BookingDetails struct {
 	UserFirstname string
 	UserLastname  string
 	Booking
+}
+
+func (b *BookingDetails) GetSafeRecipientName() string {
+	return SafeRecipientName(b.UserFirstname, b.UserEmail)
 }
 
 // ─── AuthProvider ─────────────────────────────────────────────────────────────
