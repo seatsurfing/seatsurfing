@@ -83,10 +83,18 @@ describe("Validation", () => {
       expect(Validation.isValidDomain("example.co.uk")).toBe(true);
     });
 
-    it("should return false when the dot is too early in the string", () => {
+    it("should return true for single-character labels", () => {
+      expect(Validation.isValidDomain("a.example.com")).toBe(true);
+      expect(Validation.isValidDomain("x.io")).toBe(true);
+    });
+
+    it("should return false for a missing or too short TLD", () => {
       expect(Validation.isValidDomain("a.b")).toBe(false);
       expect(Validation.isValidDomain("ab.c")).toBe(false);
       expect(Validation.isValidDomain("")).toBe(false);
+      expect(Validation.isValidDomain("example")).toBe(false);
+      expect(Validation.isValidDomain("example.c")).toBe(false);
+      expect(Validation.isValidDomain("example.")).toBe(false);
     });
 
     it("should return false for seatsurfing.app subdomains", () => {
@@ -99,9 +107,46 @@ describe("Validation", () => {
       expect(Validation.isValidDomain("FOO.SEATSURFING.IO")).toBe(false);
     });
 
-    it("should return false when the last dot is too close to the end", () => {
-      expect(Validation.isValidDomain("example.c")).toBe(false);
-      expect(Validation.isValidDomain("example.")).toBe(false);
+    it("should return false for uppercase characters", () => {
+      expect(Validation.isValidDomain("Example.com")).toBe(false);
+      expect(Validation.isValidDomain("EXAMPLE.COM")).toBe(false);
+    });
+
+    it("should return false for a scheme, path, port or query", () => {
+      expect(Validation.isValidDomain("http://example.com")).toBe(false);
+      expect(Validation.isValidDomain("example.com/path")).toBe(false);
+      expect(Validation.isValidDomain("example.com:8080")).toBe(false);
+      expect(Validation.isValidDomain("example.com?a=b")).toBe(false);
+    });
+
+    it("should return false for invalid characters or whitespace", () => {
+      expect(Validation.isValidDomain("foo_bar.example.com")).toBe(false);
+      expect(Validation.isValidDomain("foo bar.example.com")).toBe(false);
+      expect(Validation.isValidDomain("exämple.com")).toBe(false);
+      expect(Validation.isValidDomain(" example.com")).toBe(false);
+      expect(Validation.isValidDomain("example.com ")).toBe(false);
+    });
+
+    it("should return false for malformed labels", () => {
+      expect(Validation.isValidDomain(".example.com")).toBe(false);
+      expect(Validation.isValidDomain("example..com")).toBe(false);
+      expect(Validation.isValidDomain("-example.com")).toBe(false);
+      expect(Validation.isValidDomain(">example.com")).toBe(false);
+      expect(Validation.isValidDomain("example-.com")).toBe(false);
+    });
+
+    it("should return false for domains longer than 253 characters", () => {
+      const longLabel = "a".repeat(60);
+      const domain = [
+        longLabel,
+        longLabel,
+        longLabel,
+        longLabel,
+        longLabel,
+        "com",
+      ].join(".");
+      expect(domain.length).toBeGreaterThan(253);
+      expect(Validation.isValidDomain(domain)).toBe(false);
     });
   });
 

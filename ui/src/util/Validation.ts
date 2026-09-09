@@ -6,6 +6,9 @@ export default class Validation {
   static readonly ROLE_NAME_PATTERN =
     "^[\\p{L}\\p{N}_\\-](?:[\\p{L}\\p{N} _\\-]*[\\p{L}\\p{N}_\\-])?$";
 
+  static readonly DOMAIN_PATTERN =
+    /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
   static readonly PASSWORD_MIN_LENGTH = 8;
   static readonly PASSWORD_MAX_LENGTH = 64;
   static readonly PASSWORD_MIN_LENGTH_SA = 32;
@@ -55,7 +58,10 @@ export default class Validation {
   }
 
   static isValidDomain(domain: string): boolean {
-    if (domain.indexOf(".") < 3) {
+    if (domain.length > 253) {
+      return false;
+    }
+    if (!Validation.DOMAIN_PATTERN.test(domain)) {
       return false;
     }
     const lowerCaseDomain = domain.toLowerCase();
@@ -65,11 +71,8 @@ export default class Validation {
     ) {
       return false;
     }
-    let lastIndex = domain.length - 3;
-    if (lastIndex < 3) {
-      lastIndex = 3;
-    }
-    if (domain.lastIndexOf(".") > lastIndex) {
+    const tld = domain.slice(domain.lastIndexOf(".") + 1);
+    if (tld.length < 2) {
       return false;
     }
     return true;
