@@ -6,7 +6,7 @@ jobs:
   container-job:
     name: Run Go tests
     runs-on: ubuntu-latest
-    container: golang:1.25-alpine
+    container: golang:1.27-alpine
     services:
       postgres:
         image: postgres:17-alpine
