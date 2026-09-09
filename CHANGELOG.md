@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.126.5](https://github.com/seatsurfing/seatsurfing/compare/v1.126.4...v1.126.5) (2026-09-09)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump next from 16.3.3 to 16.3.4 in /ui in the production-dependencies group across 1 directory ([#2595](https://github.com/seatsurfing/seatsurfing/issues/2595)) ([4445ef5](https://github.com/seatsurfing/seatsurfing/commit/4445ef52c3a0d6161f4f598ea792aac8c5e8e4b4))
+* **server:** use user firstname and lastname in approval request notification ([#2594](https://github.com/seatsurfing/seatsurfing/issues/2594)) ([8900b82](https://github.com/seatsurfing/seatsurfing/commit/8900b826e87c73808c633b8be07d995e02bb4a2d))
+
 ## [1.126.4](https://github.com/seatsurfing/seatsurfing/compare/v1.126.3...v1.126.4) (2026-09-07)
 
 
