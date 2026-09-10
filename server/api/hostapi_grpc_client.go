@@ -182,6 +182,9 @@ func (r *settingsRepositoryGRPC) GetInt(orgID, name string) (int, error) {
 	}
 	return int(reply.V), strErr(reply.Err)
 }
+func (r *settingsRepositoryGRPC) GetGlobalString(name string) (string, error) {
+	return r.Get(r.GetNullUUID(), name)
+}
 func (r *settingsRepositoryGRPC) GetNullUUID() string {
 	reply, err := r.client.SettingsGetNullUUID(context.Background(), &commonpb.Empty{})
 	if err != nil {
@@ -202,6 +205,9 @@ func (r *settingsRepositoryGRPC) Set(orgID, name, value string) error {
 		return err
 	}
 	return strErr(reply.Err)
+}
+func (r *settingsRepositoryGRPC) SetGlobal(name, value string) error {
+	return r.Set(r.GetNullUUID(), name, value)
 }
 func (r *settingsRepositoryGRPC) Delete(orgID, name string) error {
 	reply, err := r.client.SettingsDelete(context.Background(), &hostapipb.SettingsDeleteArgs{OrgId: orgID, Name: name})

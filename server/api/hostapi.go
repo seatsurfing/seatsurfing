@@ -25,9 +25,11 @@ type SettingsRepository interface {
 	Get(organizationID, name string) (string, error)
 	GetBool(organizationID, name string) (bool, error)
 	GetInt(organizationID, name string) (int, error)
+	GetGlobalString(name string) (string, error)
 	GetNullUUID() string
 	GetOrgIDsByValue(name, value string) ([]string, error)
 	Set(organizationID, name, value string) error
+	SetGlobal(name, value string) error
 	Delete(organizationID, name string) error
 }
 
