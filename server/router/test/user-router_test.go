@@ -392,6 +392,58 @@ func TestUserCreateWithROServiceAccount(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
 
+func TestUserCreateServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	// An admin who may manage users but was not granted the service accounts permission.
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	saPayload := "{\"email\": \"sa1@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypeServiceAccountRW)) + "}"
+	req := NewHTTPRequest("POST", "/user/", login.UserID, bytes.NewBufferString(saPayload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// A regular person account still works with only the users permission.
+	personPayload := "{\"email\": \"" + uuid.New().String() + "@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req = NewHTTPRequest("POST", "/user/", login.UserID, bytes.NewBufferString(personPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// With the service accounts permission the creation is allowed.
+	admin2 := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionUsers:           PermissionLevelAdmin,
+		PermissionServiceAccounts: PermissionLevelAdmin,
+	})
+	login2 := LoginTestUser(admin2.ID)
+	req = NewHTTPRequest("POST", "/user/", login2.UserID, bytes.NewBufferString(saPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+}
+
+func TestUserUpdateServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	sa := CreateTestServiceAccountWithPassword(org, "sa@test.com", TestPassword, UserRoleServiceAccountRW)
+
+	// Editing an existing service account is off-limits without the permission.
+	payload := "{\"email\": \"sa@test.com\", \"firstname\": \"Jane\", \"lastname\": \"Doe\", \"accountType\": " + strconv.Itoa(int(AccountTypeServiceAccountRW)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+sa.ID, login.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// Turning a regular user into a service account is equally off-limits.
+	person := CreateTestUserInOrg(org)
+	payload = "{\"email\": \"" + person.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"accountType\": " + strconv.Itoa(int(AccountTypeServiceAccountRW)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+person.ID, login.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
 func TestUserCreateWithInvitation(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

@@ -701,6 +701,12 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if (e.AccountType.IsServiceAccount() || isServiceAccountType(m.AccountType)) &&
+		!HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
+		return
+	}
+
 	// Some information cannot be changed on your own account.
 	if user.ID == e.ID {
 		m.AccountType = int(e.AccountType)
@@ -838,6 +844,11 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	var m CreateUserRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
+		return
+	}
+
+	if isServiceAccountType(m.AccountType) && !HasPermission(user, user.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
 		return
 	}
 	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
