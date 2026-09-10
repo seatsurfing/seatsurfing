@@ -228,3 +228,31 @@ func TestInvalidWeekdaysLists(t *testing.T) {
 		CheckTestBool(t, IsValidWeekdaysList(input), false)
 	}
 }
+
+func TestValidDomains(t *testing.T) {
+	inputs := []string{
+		"example.com",
+		"sub.domain.de",
+		"a-b.example.co.uk",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, ValidateDomain(input), true)
+	}
+}
+
+func TestInvalidDomains(t *testing.T) {
+	inputs := []string{
+		"",
+		"nodot",
+		"127.0.0.1",
+		"169.254.169.254",
+		"10.0.0.5",
+		"::1",
+		"2001:db8::1",
+		"-leading.example.com",
+		strings.Repeat("a", 254) + ".com",
+	}
+	for _, input := range inputs {
+		CheckTestBool(t, ValidateDomain(input), false)
+	}
+}
