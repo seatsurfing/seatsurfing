@@ -107,6 +107,14 @@ describe("Validation", () => {
       expect(Validation.isValidDomain("FOO.SEATSURFING.IO")).toBe(false);
     });
 
+    it("should return false for IP addresses", () => {
+      expect(Validation.isValidDomain("169.254.169.254")).toBe(false);
+      expect(Validation.isValidDomain("127.0.0.1")).toBe(false);
+      expect(Validation.isValidDomain("10.0.0.5")).toBe(false);
+      expect(Validation.isValidDomain("::1")).toBe(false);
+      expect(Validation.isValidDomain("2001:db8::1")).toBe(false);
+    });
+
     it("should return false for uppercase characters", () => {
       expect(Validation.isValidDomain("Example.com")).toBe(false);
       expect(Validation.isValidDomain("EXAMPLE.COM")).toBe(false);

@@ -61,6 +61,10 @@ export default class Validation {
     if (domain.length > 253) {
       return false;
     }
+    // reject IP literals (v4 dotted-quad, v6 contains a colon)
+    if (/:/.test(domain) || /^\d{1,3}(\.\d{1,3}){3}$/.test(domain)) {
+      return false;
+    }
     if (!Validation.DOMAIN_PATTERN.test(domain)) {
       return false;
     }
