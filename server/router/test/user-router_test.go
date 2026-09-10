@@ -392,6 +392,115 @@ func TestUserCreateWithROServiceAccount(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
 
+func TestUserCreateServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	// An admin who may manage users but was not granted the service accounts permission.
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	saPayload := "{\"email\": \"sa1@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypeServiceAccountRW)) + "}"
+	req := NewHTTPRequest("POST", "/user/", login.UserID, bytes.NewBufferString(saPayload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// A regular person account still works with only the users permission.
+	personPayload := "{\"email\": \"" + uuid.New().String() + "@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req = NewHTTPRequest("POST", "/user/", login.UserID, bytes.NewBufferString(personPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// With the service accounts permission the creation is allowed.
+	admin2 := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionUsers:           PermissionLevelAdmin,
+		PermissionServiceAccounts: PermissionLevelAdmin,
+	})
+	login2 := LoginTestUser(admin2.ID)
+	req = NewHTTPRequest("POST", "/user/", login2.UserID, bytes.NewBufferString(saPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+}
+
+func TestUserUpdateServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	sa := CreateTestServiceAccountWithPassword(org, "sa@test.com", TestPassword, UserRoleServiceAccountRW)
+
+	// Editing an existing service account is off-limits without the permission.
+	payload := "{\"email\": \"sa@test.com\", \"firstname\": \"Jane\", \"lastname\": \"Doe\", \"accountType\": " + strconv.Itoa(int(AccountTypeServiceAccountRW)) + "}"
+	req := NewHTTPRequest("PUT", "/user/"+sa.ID, login.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// Turning a regular user into a service account is equally off-limits.
+	person := CreateTestUserInOrg(org)
+	payload = "{\"email\": \"" + person.Email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"accountType\": " + strconv.Itoa(int(AccountTypeServiceAccountRW)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+person.ID, login.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserDeleteServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	CreateTestUserOrgAdmin(org) // keeps the org from losing its last admin on delete
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	sa := CreateTestServiceAccountWithPassword(org, "sa@test.com", TestPassword, UserRoleServiceAccountRW)
+
+	req := NewHTTPRequest("DELETE", "/user/"+sa.ID, login.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	if _, err := GetUserRepository().GetOne(sa.ID); err != nil {
+		t.Fatal("service account must still exist")
+	}
+
+	admin2 := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionUsers:           PermissionLevelAdmin,
+		PermissionServiceAccounts: PermissionLevelAdmin,
+	})
+	login2 := LoginTestUser(admin2.ID)
+	req = NewHTTPRequest("DELETE", "/user/"+sa.ID, login2.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestUserSetPasswordServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	sa := CreateTestServiceAccountWithPassword(org, "sa@test.com", TestPassword, UserRoleServiceAccountRW)
+
+	// A user admin without the service accounts permission must not be able to
+	// set a password on a service account: that would let them authenticate as
+	// it via basic auth and inherit its permissions.
+	injected := "Hijacked-Password-123"
+	payload := `{"password": "` + injected + `"}`
+	req := NewHTTPRequest("PUT", "/user/"+sa.ID+"/password", login.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// The injected password must not authenticate.
+	req, _ = http.NewRequest("GET", "/user/", nil)
+	req.SetBasicAuth(org.ID+"_sa@test.com", injected)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+
+	// The original password still works.
+	req, _ = http.NewRequest("GET", "/user/", nil)
+	req.SetBasicAuth(org.ID+"_sa@test.com", TestPassword)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
 func TestUserCreateWithInvitation(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

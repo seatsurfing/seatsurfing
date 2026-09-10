@@ -498,6 +498,11 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.AccountType.IsServiceAccount() && user.ID != e.ID &&
+		!HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
+		return
+	}
 	e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	e.PasswordUpdateRequired = user.ID != e.ID
 	if err := GetUserRepository().Update(e); err != nil {
@@ -701,6 +706,12 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if (e.AccountType.IsServiceAccount() || isServiceAccountType(m.AccountType)) &&
+		!HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
+		return
+	}
+
 	// Some information cannot be changed on your own account.
 	if user.ID == e.ID {
 		m.AccountType = int(e.AccountType)
@@ -816,6 +827,10 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.AccountType.IsServiceAccount() && !HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
+		return
+	}
 	// Refuse before deleting rather than repairing afterwards: this is the
 	// organization's last administrator.
 	if !CheckOrgRetainsAdmin(w, e.OrganizationID, e.ID) {
@@ -838,6 +853,11 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	var m CreateUserRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
+		return
+	}
+
+	if isServiceAccountType(m.AccountType) && !HasPermission(user, user.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
 		return
 	}
 	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
