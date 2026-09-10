@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.126.7](https://github.com/seatsurfing/seatsurfing/compare/v1.126.6...v1.126.7) (2026-09-10)
+
+
+### 🐛 Bug Fixes
+
+* **server:** prevent update booking endpoint to move booking to another organization ([#2605](https://github.com/seatsurfing/seatsurfing/issues/2605)) ([954e81c](https://github.com/seatsurfing/seatsurfing/commit/954e81c5dd0142185433aa9102cb3e1f7795c736))
+* **server:** test service account admin permission when creating service accounts ([#2606](https://github.com/seatsurfing/seatsurfing/issues/2606)) ([3eb49a8](https://github.com/seatsurfing/seatsurfing/commit/3eb49a81c5c7a3d6910e4a87655794a82eb6d072))
+
 ## [1.126.6](https://github.com/seatsurfing/seatsurfing/compare/v1.126.5...v1.126.6) (2026-09-09)
 
 
