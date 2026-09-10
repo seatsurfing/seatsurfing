@@ -415,6 +415,14 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	requestUser := GetRequestUser(r)
+	// The target space comes from the request body, so its organization must be
+	// checked before anything else: without this a user could move one of their
+	// own bookings onto a space belonging to a different organization, since the
+	// ownership branch below would otherwise skip every authorization check.
+	if !CanAccessOrg(requestUser, location.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
 	if e.UserID != requestUser.ID && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return

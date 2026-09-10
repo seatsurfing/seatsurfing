@@ -716,6 +716,42 @@ func TestBookingsCreateForeign(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
+func TestBookingsUpdateForeignOrgSpace(t *testing.T) {
+	ClearTestDB()
+
+	// Org A: the caller's own organization
+	orgA := CreateTestOrg("test.com")
+	userA := CreateTestUserInOrg(orgA)
+	loginA := LoginTestUser(userA.ID)
+	GetSettingsRepository().Set(orgA.ID, SettingMaxDaysInAdvance.Name, "5000")
+	_, spaceA := CreateTestLocationAndSpace(orgA)
+
+	// Org B: a different tenant
+	orgB := CreateTestOrg("test2.com")
+	GetSettingsRepository().Set(orgB.ID, SettingMaxDaysInAdvance.Name, "5000")
+	_, spaceB := CreateTestLocationAndSpace(orgB)
+
+	// The caller books a space in their own organization.
+	payload := "{\"spaceId\": \"" + spaceA.ID + "\", \"enter\": \"2030-09-02T08:30:00Z\", \"leave\": \"2030-09-02T17:00:00Z\", \"subject\": \"Test\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginA.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	bookingID := res.Header().Get("X-Object-Id")
+
+	// Moving that booking onto a space owned by another organization must be refused.
+	payload = "{\"spaceId\": \"" + spaceB.ID + "\", \"enter\": \"2030-09-02T08:30:00Z\", \"leave\": \"2030-09-02T17:00:00Z\", \"subject\": \"Test\"}"
+	req = NewHTTPRequest("PUT", "/booking/"+bookingID, loginA.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// The booking must still point at the original space.
+	booking, err := GetBookingRepository().GetOne(bookingID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, spaceA.ID, booking.SpaceID)
+}
+
 func TestBookingsConflictDeleteTooClose(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
