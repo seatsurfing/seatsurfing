@@ -498,6 +498,11 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.AccountType.IsServiceAccount() && user.ID != e.ID &&
+		!HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
+		SendForbidden(w)
+		return
+	}
 	e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	e.PasswordUpdateRequired = user.ID != e.ID
 	if err := GetUserRepository().Update(e); err != nil {
@@ -819,6 +824,10 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	user := GetRequestUser(r)
 	if !HasPermission(user, e.OrganizationID, PermissionUsers, PermissionLevelAdmin) || e.ID == user.ID {
+		SendForbidden(w)
+		return
+	}
+	if e.AccountType.IsServiceAccount() && !HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}

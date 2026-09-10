@@ -444,6 +444,62 @@ func TestUserUpdateServiceAccountRequiresServiceAccountsPermission(t *testing.T)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
+func TestUserDeleteServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	sa := CreateTestServiceAccountWithPassword(org, "sa@test.com", TestPassword, UserRoleServiceAccountRW)
+
+	req := NewHTTPRequest("DELETE", "/user/"+sa.ID, login.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	if _, err := GetUserRepository().GetOne(sa.ID); err != nil {
+		t.Fatal("service account must still exist")
+	}
+
+	admin2 := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionUsers:           PermissionLevelAdmin,
+		PermissionServiceAccounts: PermissionLevelAdmin,
+	})
+	login2 := LoginTestUser(admin2.ID)
+	req = NewHTTPRequest("DELETE", "/user/"+sa.ID, login2.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestUserSetPasswordServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(admin.ID)
+
+	sa := CreateTestServiceAccountWithPassword(org, "sa@test.com", TestPassword, UserRoleServiceAccountRW)
+
+	// A user admin without the service accounts permission must not be able to
+	// set a password on a service account: that would let them authenticate as
+	// it via basic auth and inherit its permissions.
+	injected := "Hijacked-Password-123"
+	payload := `{"password": "` + injected + `"}`
+	req := NewHTTPRequest("PUT", "/user/"+sa.ID+"/password", login.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// The injected password must not authenticate.
+	req, _ = http.NewRequest("GET", "/user/", nil)
+	req.SetBasicAuth(org.ID+"_sa@test.com", injected)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+
+	// The original password still works.
+	req, _ = http.NewRequest("GET", "/user/", nil)
+	req.SetBasicAuth(org.ID+"_sa@test.com", TestPassword)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
 func TestUserCreateWithInvitation(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
