@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@types/react-dom": "19.2.5",
+    "@types/react-dom": "19.2.7",
     "async-mutex": "0.5.0",
     "bootstrap": "5.3.8",
     "chart.js": "4.5.1",
@@ -22,7 +22,7 @@
     "react-markdown": "10.1.0",
     "react-moveable": "0.56.0",
     "react-tooltip": "6.0.8",
-    "react-zoom-pan-pinch": "4.1.1",
+    "react-zoom-pan-pinch": "4.2.0",
     "remark-gfm": "4.0.1"
   },
   "scripts": {
