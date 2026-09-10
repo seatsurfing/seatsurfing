@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.126.6](https://github.com/seatsurfing/seatsurfing/compare/v1.126.5...v1.126.6) (2026-09-09)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** improve domain name testing ([#2600](https://github.com/seatsurfing/seatsurfing/issues/2600)) ([6bc7fb5](https://github.com/seatsurfing/seatsurfing/commit/6bc7fb574a33c912038b009828a84c392c85ba98))
+* **deps:** bump react-zoom-pan-pinch from 4.0.4 to 4.1.1 in /ui in the production-dependencies group across 1 directory ([#2601](https://github.com/seatsurfing/seatsurfing/issues/2601)) ([eb8a68d](https://github.com/seatsurfing/seatsurfing/commit/eb8a68db3bbec97dcf5c8d2b05fd3b4c74fd1c1b))
+* **deps:** bump the minor-and-patch group across 1 directory with 2 updates ([#2603](https://github.com/seatsurfing/seatsurfing/issues/2603)) ([91f33d2](https://github.com/seatsurfing/seatsurfing/commit/91f33d21339910f459af56bbfb4f846b9d4888d1))
+
 ## [1.126.5](https://github.com/seatsurfing/seatsurfing/compare/v1.126.4...v1.126.5) (2026-09-09)
 
 
