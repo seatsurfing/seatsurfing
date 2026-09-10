@@ -356,7 +356,7 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	}
 
 	vars := mux.Vars(r)
-	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
@@ -395,7 +395,7 @@ func (router *AuthRouter) validateUserInvitation(w http.ResponseWriter, r *http.
 		return
 	}
 	vars := mux.Vars(r)
-	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
@@ -443,7 +443,7 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 	}
 
 	vars := mux.Vars(r)
-	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return
@@ -1142,7 +1142,7 @@ func authErrorCode(err error, fallback string) string {
 
 func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*IdPUserInfo, *AuthStateLoginPayload, error) {
 	// Verify state string
-	authState, err := GetAuthStateRepository().GetOne(state)
+	authState, err := GetAuthStateRepository().GetOneActive(state)
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: fmt.Sprintf("state not found for id %s", strings.Replace(strings.Replace(state, "\r", "", -1), "\n", "", -1))}
 	}

@@ -232,7 +232,7 @@ func (router *OrganizationRouter) verifyEmail(w http.ResponseWriter, r *http.Req
 		SendForbidden(w)
 		return
 	}
-	authState, err := GetAuthStateRepository().GetOne(vars["uuid"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["uuid"])
 	if err != nil || authState == nil {
 		SendNotFound(w)
 		return
@@ -515,7 +515,7 @@ func (router *OrganizationRouter) completeOrgDeletion(w http.ResponseWriter, r *
 
 	// test auth state
 	vars := mux.Vars(r)
-	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil {
 		SendNotFound(w)
 		return

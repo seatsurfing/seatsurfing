@@ -1075,6 +1075,65 @@ func TestAuthValidateUserInvitationInvalidID(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestAuthCompletePasswordResetExpiredState(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	GetUserRepository().Update(user)
+
+	authState := &AuthState{
+		AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		Expiry:         time.Now().Add(-time.Minute),
+		AuthStateType:  AuthResetPasswordRequest,
+		Payload:        user.ID,
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := `{"password": "` + TestPasswordNew + `"}`
+	req := NewHTTPRequest("POST", "/auth/pwreset/"+authState.ID, "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	// The original password must still authenticate.
+	payload = `{ "email": "` + user.Email + `", "password": "` + TestPassword + `", "organizationId": "` + org.ID + `" }`
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestAuthCompleteUserInvitationExpiredState(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.PasswordPending = true
+	GetUserRepository().Update(user)
+
+	authState := &AuthState{
+		AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		Expiry:         time.Now().Add(-time.Minute),
+		AuthStateType:  AuthInviteUser,
+		Payload:        user.ID,
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequest("GET", "/auth/setpw/"+authState.ID, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	payload := `{"password": "` + TestPasswordNew + `"}`
+	req = NewHTTPRequest("POST", "/auth/setpw/"+authState.ID, "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	updated, _ := GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, updated.PasswordPending)
+}
+
 func TestAuthOAuthLoginInvalidType(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
