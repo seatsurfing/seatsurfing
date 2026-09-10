@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -231,6 +232,50 @@ func TestUserMergeUsers(t *testing.T) {
 	req = NewHTTPRequest("POST", "/user/merge/finish/"+resBody[0].ID, loginResponseTarget.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestUserMergeUsersExpiredRequest(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	source := CreateTestUserInOrg(org)
+	target := CreateTestUserInOrg(org)
+
+	source.AtlassianID = NullString(source.Email)
+	GetUserRepository().Update(source)
+
+	authState := &AuthState{
+		AuthProviderID: target.ID,
+		Expiry:         time.Now().Add(-time.Minute),
+		AuthStateType:  AuthMergeRequest,
+		Payload:        source.ID,
+	}
+	GetAuthStateRepository().Create(authState)
+
+	loginResponseTarget := LoginTestUser(target.ID)
+
+	// Expired request is not listed
+	req := NewHTTPRequest("GET", "/user/merge", loginResponseTarget.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetMergeRequestResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 0, len(resBody))
+
+	// Expired request cannot be completed
+	payload := "{\"email\": \"" + target.Email + "\"}"
+	req = NewHTTPRequest("POST", "/user/merge/finish/"+authState.ID, loginResponseTarget.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	// Both users still exist
+	user, err := GetUserRepository().GetOne(source.ID)
+	if err != nil || user == nil {
+		t.Fatal("Expected source user to still exist")
+	}
+	user, err = GetUserRepository().GetOne(target.ID)
+	if err != nil || user == nil {
+		t.Fatal("Expected target user to still exist")
+	}
 }
 
 // TODO test domain in org!
