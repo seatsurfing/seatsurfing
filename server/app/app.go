@@ -894,6 +894,10 @@ func (a *App) CheckDomainAccessibilityTimer() {
 		return
 	}
 	for _, domain := range domains {
+		// only test active domains to prevent SSRF attacks against unverified domains
+		if !domain.Active {
+			continue
+		}
 		if strings.HasSuffix(domain.DomainName, ".seatsurfing.app") || strings.HasSuffix(domain.DomainName, ".seatsurfing.io") {
 			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, time.Now().UTC())
 			continue
