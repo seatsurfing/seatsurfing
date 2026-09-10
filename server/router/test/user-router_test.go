@@ -447,6 +447,7 @@ func TestUserUpdateServiceAccountRequiresServiceAccountsPermission(t *testing.T)
 func TestUserDeleteServiceAccountRequiresServiceAccountsPermission(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	CreateTestUserOrgAdmin(org) // keeps the org from losing its last admin on delete
 	admin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
 	login := LoginTestUser(admin.ID)
 
