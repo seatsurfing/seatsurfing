@@ -416,6 +416,10 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	requestUser := GetRequestUser(r)
 
+	if e.Space.Location.OrganizationID != location.OrganizationID {
+		SendForbidden(w)
+		return
+	}
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
 		SendForbidden(w)
 		return

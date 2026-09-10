@@ -750,6 +750,33 @@ func TestBookingsUpdateForeignOrgSpace(t *testing.T) {
 		t.Fatal(err)
 	}
 	CheckTestString(t, spaceA.ID, booking.SpaceID)
+
+	// Reverse direction: a booking that lives in org B, owned by an org-B user.
+	userB := CreateTestUserInOrgDomain(orgB, "test2.com")
+	orgBBooking := &Booking{
+		UserID:  userB.ID,
+		SpaceID: spaceB.ID,
+		Enter:   time.Date(2030, 9, 3, 8, 30, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 9, 3, 17, 0, 0, 0, time.UTC),
+	}
+	if err := GetBookingRepository().Create(orgBBooking); err != nil {
+		t.Fatal(err)
+	}
+
+	// An org-A admin (bookings:admin) must not be able to load that foreign
+	// booking by id and re-home it onto one of their own spaces.
+	adminA := CreateTestUserOrgAdmin(orgA)
+	loginAdminA := LoginTestUser(adminA.ID)
+	payload = "{\"spaceId\": \"" + spaceA.ID + "\", \"enter\": \"2030-09-03T08:30:00Z\", \"leave\": \"2030-09-03T17:00:00Z\", \"subject\": \"Test\"}"
+	req = NewHTTPRequest("PUT", "/booking/"+orgBBooking.ID, loginAdminA.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	afterForeign, err := GetBookingRepository().GetOne(orgBBooking.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, spaceB.ID, afterForeign.SpaceID)
 }
 
 func TestBookingsConflictDeleteTooClose(t *testing.T) {
