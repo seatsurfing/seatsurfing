@@ -152,6 +152,8 @@
   "confirmResetPasskeys": "Kas kustutada kõik selle kasutaja pääsuvõtmed?",
   "confirmResetTotp": "Kas keelata selle kasutaja kaheastmeline autentimine (TOTP)?",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
+  "conflictBody": "The request conflicts with the current state of the resource. Please reload the page and try again.",
+  "conflictTitle": "Conflict",
   "confluenceAnonymous": "Allow anonymous Confluence users (for demonstration purposes only)",
   "confluenceAnonymousHint": "Seatsurfingu Confluence rakenduse kasutamiseks logi sisse Confluence'iga.",
   "confluenceClientIdHint": "Tere tulemast Seatsurfingusse! Selleks, et rakendus toimiks Confluence'iga, seo oma Confluence'i konto Seatsurfingu kontoga. Selleks järgi neid samme:",

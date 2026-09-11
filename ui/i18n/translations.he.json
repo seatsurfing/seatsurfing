@@ -152,6 +152,8 @@
   "confirmResetPasskeys": "Delete all passkeys for this user?",
   "confirmResetTotp": "Disable TOTP for this user?",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
+  "conflictBody": "The request conflicts with the current state of the resource. Please reload the page and try again.",
+  "conflictTitle": "Conflict",
   "confluenceAnonymous": "לאפשר משתמשים אלמוניים מ־Confluence (למטרות הדגמה בלבד)",
   "confluenceAnonymousHint": "נא להיכנס עם Confluence כדי להשתמש ביישומון Seatsurfing ל־Confluence.",
   "confluenceClientIdHint": "ברוך בואך ל־Seatsurfing! כדי שהיישום הזה יעבוד מול Confluence, נצטרך לקשר את מופע ה־Confluence עם החשבון שלך ב־Seatsurfing. נא לבצע את השלבים הבאים:",

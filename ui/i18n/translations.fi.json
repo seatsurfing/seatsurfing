@@ -150,6 +150,8 @@
   "confirmResetPasskeys": "Poistetaanko kaikki tämän käyttäjän Passkeyt?",
   "confirmResetTotp": "Poistetaanko TOTP käytöstä tältä käyttäjältä?",
   "confirmRevokeApiToken": "Mitätöidäänkö API-avain? Avain lakkaa toimimasta välittömästi.",
+  "conflictBody": "The request conflicts with the current state of the resource. Please reload the page and try again.",
+  "conflictTitle": "Conflict",
   "confluenceAnonymous": "Salli anonyymit Confluence-käyttäjät (vain esittelykäyttöön)",
   "confluenceAnonymousHint": "Kirjaudu Confluenceen käyttääksesi Seatsurfing for Confluence -sovellusta.",
   "confluenceClientIdHint": "Tervetuloa Seatsurfingiin! Jotta sovellus toimii Confluencen kanssa, Confluence-ympäristösi tulee yhdistää Seatsurfing-tiliisi. Tee seuraavat vaiheet:",
