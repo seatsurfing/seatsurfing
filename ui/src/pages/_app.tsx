@@ -30,6 +30,7 @@ import ForbiddenModal from "@/components/ForbiddenModal";
 import ServerErrorModal from "@/components/ServerErrorModal";
 import NotFoundModal from "@/components/NotFoundModal";
 import BadRequestModal from "@/components/BadRequestModal";
+import ConflictModal from "@/components/ConflictModal";
 import User from "@/types/User";
 import Router from "next/router";
 import Theme from "@/util/Theme";
@@ -43,6 +44,7 @@ interface State {
   showServerError: boolean;
   showNotFound: boolean;
   showBadRequest: boolean;
+  showConflict: boolean;
   totpQrCode: string;
   totpStateId: string;
   enforceTOTP: boolean;
@@ -67,6 +69,7 @@ class App extends React.Component<Props, State> {
       showServerError: false,
       showNotFound: false,
       showBadRequest: false,
+      showConflict: false,
       totpQrCode: "",
       totpStateId: "",
       enforceTOTP: false,
@@ -88,6 +91,7 @@ class App extends React.Component<Props, State> {
     Ajax.onServerError = () => this.setState({ showServerError: true });
     Ajax.onNotFound = () => this.setState({ showNotFound: true });
     Ajax.onBadRequest = () => this.setState({ showBadRequest: true });
+    Ajax.onConflict = () => this.setState({ showConflict: true });
 
     setTimeout(() => {
       RuntimeConfig.verifyToken(() => {
@@ -117,6 +121,7 @@ class App extends React.Component<Props, State> {
     Ajax.onServerError = null;
     Ajax.onNotFound = null;
     Ajax.onBadRequest = null;
+    Ajax.onConflict = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     Router.events.off("routeChangeStart", this.onThemeRouteChange);
     Router.events.off("routeChangeComplete", this.onThemeRouteChange);
@@ -353,6 +358,7 @@ class App extends React.Component<Props, State> {
         <ServerErrorModal show={this.state.showServerError} />
         <NotFoundModal show={this.state.showNotFound} />
         <BadRequestModal show={this.state.showBadRequest} />
+        <ConflictModal show={this.state.showConflict} />
         <Component {...pageProps} />
       </>
     );

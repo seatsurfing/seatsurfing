@@ -20,6 +20,7 @@ export default class Ajax {
   static onServerError: (() => void) | null = null;
   static onNotFound: (() => void) | null = null;
   static onBadRequest: (() => void) | null = null;
+  static onConflict: (() => void) | null = null;
 
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
@@ -112,6 +113,8 @@ export default class Ajax {
       Ajax.onNotFound?.();
     } else if (httpStatus === 400) {
       Ajax.onBadRequest?.();
+    } else if (httpStatus === 409) {
+      Ajax.onConflict?.();
     } else {
       // 500, network errors (0), and any other unexpected status
       Ajax.onServerError?.();

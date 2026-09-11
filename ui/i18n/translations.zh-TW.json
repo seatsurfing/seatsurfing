@@ -150,6 +150,8 @@
   "confirmResetPasskeys": "刪除該用戶的所有金鑰？",
   "confirmResetTotp": "為此用戶禁用 TOTP？",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
+  "conflictBody": "The request conflicts with the current state of the resource. Please reload the page and try again.",
+  "conflictTitle": "Conflict",
   "confluenceAnonymous": "允許匿名 Confluence 使用者（僅用於演示目的）",
   "confluenceAnonymousHint": "請使用 Confluence 登入以使用 Seatsurfing for Confluence 應用程式。",
   "confluenceClientIdHint": "歡迎來到座椅衝浪！為了讓應用程式能夠與 Confluence 搭配使用，我們需要將您的 Confluence 執行個體與您的 Seatsurfing 帳戶關聯。請執行以下步驟：",

@@ -152,6 +152,8 @@
   "confirmResetPasskeys": "¿Eliminar todas las claves de acceso de este usuario?",
   "confirmResetTotp": "¿Deshabilitar TOTP para este usuario?",
   "confirmRevokeApiToken": "Revoke the API token? The token will stop working immediately.",
+  "conflictBody": "The request conflicts with the current state of the resource. Please reload the page and try again.",
+  "conflictTitle": "Conflict",
   "confluenceAnonymous": "Permitir usuarios anónimos de Confluence (solo para demostración)",
   "confluenceAnonymousHint": "Inicia sesión con Confluence para usar la app Seatsurfing para Confluence.",
   "confluenceClientIdHint": "¡Bienvenido a Seatsurfing! Para que esta app funcione con Confluence, debemos vincular tu instancia de Confluence con tu cuenta de Seatsurfing. Por favor, realiza los siguientes pasos:",
