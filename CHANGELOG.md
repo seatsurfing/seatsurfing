@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.126.8](https://github.com/seatsurfing/seatsurfing/compare/v1.126.7...v1.126.8) (2026-09-11)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2614](https://github.com/seatsurfing/seatsurfing/issues/2614)) ([6a11720](https://github.com/seatsurfing/seatsurfing/commit/6a11720fe83374f5931dd5fe23dcf47bc86b8f83))
+* **main:** do not accept IP addresses as valid domains ([#2611](https://github.com/seatsurfing/seatsurfing/issues/2611)) ([b287585](https://github.com/seatsurfing/seatsurfing/commit/b28758517ce44f9336189da5e70c2695082abd3d))
+* **server:** ensure auth states are active ([#2608](https://github.com/seatsurfing/seatsurfing/issues/2608)) ([adc92c1](https://github.com/seatsurfing/seatsurfing/commit/adc92c16f1e54caad397fedd96d8d8ee0d755548))
+* **server:** harden service account auth check ([#2609](https://github.com/seatsurfing/seatsurfing/issues/2609)) ([532c13e](https://github.com/seatsurfing/seatsurfing/commit/532c13e644bc2f23c95cc4f247e017ca99a97b58))
+* **server:** only test accessibility gainst active/verified domains ([671cbfb](https://github.com/seatsurfing/seatsurfing/commit/671cbfb48c5275cc8266ac24af8c98704a79fe6f))
+
 ## [1.126.7](https://github.com/seatsurfing/seatsurfing/compare/v1.126.6...v1.126.7) (2026-09-10)
 
 
