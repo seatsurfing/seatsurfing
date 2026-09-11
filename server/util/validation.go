@@ -1,6 +1,7 @@
 package util
 
 import (
+	"net"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -68,6 +69,9 @@ func ValidateTimeString(s string) bool {
 
 func ValidateDomain(s string) bool {
 	if len(s) > 253 {
+		return false
+	}
+	if net.ParseIP(s) != nil {
 		return false
 	}
 	return domainRegex.MatchString(s)
