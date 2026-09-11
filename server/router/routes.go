@@ -309,7 +309,7 @@ func VerifyAuthMiddleware(next http.Handler) http.Handler {
 	var handleServiceAccountAuth = func(w http.ResponseWriter, r *http.Request) bool {
 		username, password, ok := r.BasicAuth()
 		if ok {
-			if len(username) < 36+2 && strings.Index(username, "_") != 36 {
+			if len(username) < 36+2 || strings.Index(username, "_") != 36 {
 				return false
 			}
 			organizationId := username[:36]
