@@ -274,15 +274,6 @@ func (r *UserStore) UpdateAtlassianClientIDForUser(organizationID, userId, atlas
 	return err
 }
 
-func (r *UserStore) UpdateAtlassianClientID(organizationID, oldClientID, newClientID string) error {
-	_, err := GetDatabase().DB().Exec("UPDATE users SET "+
-		"atlassian_id = REPLACE(atlassian_id, '@"+oldClientID+"', '@"+newClientID+"') ,"+
-		"email = REPLACE(email, '@"+oldClientID+"', '@"+newClientID+"')"+
-		"WHERE organization_id = $1 AND (atlassian_id IS NOT NULL OR atlassian_id != '')",
-		organizationID)
-	return err
-}
-
 func (r *UserStore) GetByKeyword(organizationID string, keyword string) ([]*User, error) {
 	var result []*User
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
