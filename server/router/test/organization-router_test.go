@@ -542,6 +542,33 @@ func TestOrganizationsDelete(t *testing.T) {
 	CheckTestInt(t, 0, len(users))
 }
 
+func TestOrganizationsDeleteExpiredState(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := &AuthStateOrgDeletionRequestPayload{
+		OrganizationID: user.OrganizationID,
+		Code:           "123456",
+	}
+	payloadJson, _ := json.Marshal(payload)
+	authState := &AuthState{
+		AuthProviderID: GetSettingsRepository().GetNullUUID(),
+		Expiry:         time.Now().Add(-time.Minute),
+		AuthStateType:  AuthDeleteOrg,
+		Payload:        string(payloadJson),
+	}
+	GetAuthStateRepository().Create(authState)
+
+	req := NewHTTPRequest("POST", "/organization/deleteorg/"+authState.ID, loginResponse.UserID, bytes.NewBufferString(`{"code": "123456"}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	users, _ := GetUserRepository().GetAll(org.ID, 100, 0)
+	CheckTestInt(t, 1, len(users))
+}
+
 func TestOrganizationsPrimaryDomain(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test1.com")

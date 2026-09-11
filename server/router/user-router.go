@@ -391,7 +391,7 @@ func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
 
 func (router *UserRouter) getMergeRequests(w http.ResponseWriter, r *http.Request) {
 	target := GetRequestUser(r)
-	list, err := GetAuthStateRepository().GetByAuthProviderID(target.ID)
+	list, err := GetAuthStateRepository().GetActiveByAuthProviderID(target.ID)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -440,7 +440,7 @@ func (router *UserRouter) mergeInit(w http.ResponseWriter, r *http.Request) {
 func (router *UserRouter) mergeFinish(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	target := GetRequestUser(r)
-	authState, err := GetAuthStateRepository().GetOne(vars["id"])
+	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil || authState == nil || authState.AuthStateType != AuthMergeRequest || authState.AuthProviderID != target.ID {
 		SendNotFound(w)
 		return
