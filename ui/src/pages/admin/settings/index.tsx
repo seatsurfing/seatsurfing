@@ -511,7 +511,16 @@ class Settings extends React.Component<Props, State> {
   };
 
   isValidDomain = () => {
-    return Validation.isValidDomain(this.state.newDomain);
+    return (
+      Validation.isValidDomain(this.state.newDomain) && !this.domainExists()
+    );
+  };
+
+  domainExists = () => {
+    const newDomain = this.state.newDomain.trim().toLowerCase();
+    return this.state.domains.some(
+      (domain) => domain.domain.toLowerCase() === newDomain,
+    );
   };
 
   addDomain = async () => {
