@@ -34,6 +34,16 @@ func createOrgForTest(name, firstname, lastname, email, language string) *Organi
 	return org
 }
 
+// enableDomainVerificationForTest turns DOMAIN_VERIFICATION on for the duration
+// of the test, so the cloud behaviour (domains inactive until a TXT record
+// proves ownership) can be exercised.
+func enableDomainVerificationForTest(t *testing.T) {
+	t.Helper()
+	prev := GetConfig().DomainVerification
+	GetConfig().DomainVerification = true
+	t.Cleanup(func() { GetConfig().DomainVerification = prev })
+}
+
 func TestOrganizationsForbidden(t *testing.T) {
 	ClearTestDB()
 	loginResponse := CreateLoginTestUser()
@@ -276,15 +286,8 @@ func TestOrganizationsGetByDomain(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 
-	// Domains added through the API always start unverified now, so the
-	// organization is not yet reachable by this domain.
-	req = NewHTTPRequest("GET", "/organization/domain/test1.com", loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
-
-	// Verify both domains
-	GetOrganizationRepository().ActivateDomain(org, "test1.com")
-	GetOrganizationRepository().ActivateDomain(org, "test2.com")
+	// With DOMAIN_VERIFICATION off (the default), domains added through the API
+	// are active right away, so the organization is immediately reachable.
 
 	// Get by domain 1
 	req = NewHTTPRequest("GET", "/organization/domain/test1.com", loginResponse.UserID, nil)
@@ -343,11 +346,10 @@ func TestOrganizationsDomainsCRUD(t *testing.T) {
 	CheckTestString(t, "abc.com", resBody[0].DomainName)
 	CheckTestString(t, "test1.com", resBody[1].DomainName)
 	CheckTestString(t, "test2.com", resBody[2].DomainName)
-	// Domains added through the API now always start unverified: the super
-	// admin shortcut that pre-activated them is gone.
-	CheckTestBool(t, false, resBody[0].Active)
-	CheckTestBool(t, false, resBody[1].Active)
-	CheckTestBool(t, false, resBody[2].Active)
+	// With DOMAIN_VERIFICATION off (the default), domains are active right away.
+	CheckTestBool(t, true, resBody[0].Active)
+	CheckTestBool(t, true, resBody[1].Active)
+	CheckTestBool(t, true, resBody[2].Active)
 
 	// Remove 2
 	req = NewHTTPRequest("DELETE", "/organization/"+id+"/domain/test2.com", loginResponse.UserID, nil)
@@ -365,12 +367,13 @@ func TestOrganizationsDomainsCRUD(t *testing.T) {
 	}
 	CheckTestString(t, "abc.com", resBody[0].DomainName)
 	CheckTestString(t, "test1.com", resBody[1].DomainName)
-	CheckTestBool(t, false, resBody[0].Active)
-	CheckTestBool(t, false, resBody[1].Active)
+	CheckTestBool(t, true, resBody[0].Active)
+	CheckTestBool(t, true, resBody[1].Active)
 }
 
 func TestOrganizationsVerifyDNS(t *testing.T) {
 	ClearTestDB()
+	enableDomainVerificationForTest(t)
 	org := createOrgForTest("Some Company Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
 	id := org.ID
 	GetSettingsRepository().Set(id, SettingFeatureCustomDomains.Name, "1")
@@ -436,6 +439,7 @@ func TestOrganizationsAddDomainConflict(t *testing.T) {
 
 func TestOrganizationsAddDomainNoConflictBecauseInactive(t *testing.T) {
 	ClearTestDB()
+	enableDomainVerificationForTest(t)
 	org1 := createOrgForTest("Some Company 1 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
 	id1 := org1.ID
 	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
@@ -464,6 +468,7 @@ func TestOrganizationsAddDomainNoConflictBecauseInactive(t *testing.T) {
 
 func TestOrganizationsAddDomainActivateConflicting(t *testing.T) {
 	ClearTestDB()
+	enableDomainVerificationForTest(t)
 	org1 := createOrgForTest("Some Company 1 Ltd.", "Foo", "Bar", "foo@seatsurfing.app", "de")
 	id1 := org1.ID
 	GetSettingsRepository().Set(id1, SettingFeatureCustomDomains.Name, "1")
@@ -571,6 +576,7 @@ func TestOrganizationsDeleteExpiredState(t *testing.T) {
 
 func TestOrganizationsPrimaryDomain(t *testing.T) {
 	ClearTestDB()
+	enableDomainVerificationForTest(t)
 	org := CreateTestOrg("test1.com")
 	GetSettingsRepository().Set(org.ID, SettingFeatureCustomDomains.Name, "1")
 	user := CreateTestUserOrgAdmin(org)

@@ -777,8 +777,8 @@ func (a *App) onTimerTick() {
 	for _, inst := range a.PluginInstances {
 		inst.Instance.OnTimer()
 	}
-	// Check domain accessibility once per hour
-	if time.Now().Minute() == 0 {
+	// Check domain accessibility once per hour (only relevant with DOMAIN_VERIFICATION on)
+	if GetConfig().DomainVerification && time.Now().Minute() == 0 {
 		go a.CheckDomainAccessibilityTimer()
 	}
 	// Update install stats once per hour

@@ -209,12 +209,22 @@ func (router *OrganizationRouter) addDomain(w http.ResponseWriter, r *http.Reque
 		SendAlreadyExists(w)
 		return
 	}
-	// Add domain
-	err = GetOrganizationRepository().AddDomain(e, domainName, false)
+
+	// when DOMAIN_VERIFICATION is off (self-hosted default) there is
+	// no point in a TXT ownership challenge: the domain is active and accessible right away.
+	domainVerification := GetConfig().DomainVerification
+	err = GetOrganizationRepository().AddDomain(e, domainName, !domainVerification)
 	if err != nil {
 		log.Println(err)
 		SendAlreadyExists(w)
 		return
+	}
+	if !domainVerification {
+		if err := GetOrganizationRepository().SetDomainAccessibility(e.ID, domainName, true, time.Now().UTC()); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
 	}
 	router.ensureOrgHasPrimaryDomain(e, domainName)
 	SendCreated(w, domainName)
@@ -293,6 +303,22 @@ func (router *OrganizationRouter) verifyDomain(w http.ResponseWriter, r *http.Re
 	someOrg, _ := GetOrganizationRepository().GetOneByDomain(vars["domain"])
 	if someOrg != nil {
 		SendAlreadyExists(w)
+		return
+	}
+	// With DOMAIN_VERIFICATION off, activate without a TXT ownership challenge.
+	// This also covers domains added before the setting was turned off.
+	if !GetConfig().DomainVerification {
+		if err := GetOrganizationRepository().ActivateDomain(e, domain.DomainName); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		if err := GetOrganizationRepository().SetDomainAccessibility(e.ID, domain.DomainName, true, time.Now().UTC()); err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		SendUpdated(w)
 		return
 	}
 	if !IsValidTXTRecord(domain.DomainName, domain.VerifyToken) {
