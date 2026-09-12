@@ -9,12 +9,15 @@ import {
   InputGroup,
   Badge,
   Dropdown,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import {
   Plus as IconPlus,
   Save as IconSave,
   AlertTriangle as IconAlert,
   Check as IconCheck,
+  HelpCircle as IconHelp,
   RefreshCw as IconRefresh,
   MoreVertical as IconMore,
 } from "react-feather";
@@ -649,11 +652,30 @@ class Settings extends React.Component<Props, State> {
             </Button>
           );
         }
-        let accessibleCheckmark = (
-          <IconAlert className="feather" color="orange" />
+        let domainCheckmark = (
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip>{this.props.t("domainNotVerifiedTooltip")}</Tooltip>
+            }
+          >
+            <IconHelp className="feather" color="gray" />
+          </OverlayTrigger>
         );
-        if (domain.accessible) {
-          accessibleCheckmark = <IconCheck className="feather" color="green" />;
+        if (domain.active) {
+          domainCheckmark = (
+            <OverlayTrigger
+              placement="top"
+              overlay={
+                <Tooltip>{this.props.t("domainAccessibleTooltip")}</Tooltip>
+              }
+            >
+              <IconAlert className="feather" color="orange" />
+            </OverlayTrigger>
+          );
+          if (domain.accessible) {
+            domainCheckmark = <IconCheck className="feather" color="green" />;
+          }
         }
         const key = "domain-" + domain.domain;
         const canMakePrimary = !domain.primary;
@@ -663,7 +685,7 @@ class Settings extends React.Component<Props, State> {
             <td className="align-middle domain-name-cell">
               {domain.domain}
               &nbsp;
-              {accessibleCheckmark}
+              {domainCheckmark}
               {domain.primary && (
                 <>
                   &nbsp;
