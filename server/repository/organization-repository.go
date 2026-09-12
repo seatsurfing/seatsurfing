@@ -369,6 +369,15 @@ func (r *OrganizationStore) AddDomain(e *Organization, domain string, active boo
 	return err
 }
 
+func (r *OrganizationStore) AddDomainWithAccessibility(e *Organization, domain string, active bool, accessible bool) error {
+	verifyToken := uuid.New().String()
+	_, err := GetDatabase().DB().Exec("INSERT INTO organizations_domains "+
+		"(domain, organization_id, active, verify_token, accessible) "+
+		"VALUES ($1, $2, $3, $4, $5)",
+		strings.ToLower(domain), e.ID, active, verifyToken, accessible)
+	return err
+}
+
 func (r *OrganizationStore) RemoveDomain(e *Organization, domain string) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM organizations_domains "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
@@ -379,6 +388,14 @@ func (r *OrganizationStore) RemoveDomain(e *Organization, domain string) error {
 func (r *OrganizationStore) ActivateDomain(e *Organization, domain string) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET active = TRUE "+
+		"WHERE domain = LOWER($1) AND organization_id = $2",
+		strings.ToLower(domain), e.ID)
+	return err
+}
+
+func (r *OrganizationStore) ActivateDomainAsAccessible(e *Organization, domain string) error {
+	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
+		"SET active = TRUE, accessible = TRUE "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",
 		strings.ToLower(domain), e.ID)
 	return err
