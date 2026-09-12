@@ -11,8 +11,8 @@ import (
 
 func TestGroupCRUD(t *testing.T) {
 	ClearTestDB()
-	org1 := CreateTestOrg("test.com")
-	org2 := CreateTestOrg("test.com")
+	org1 := CreateTestOrg("test1.com")
+	org2 := CreateTestOrg("test2.com")
 
 	g1 := &Group{
 		OrganizationID: org1.ID,
