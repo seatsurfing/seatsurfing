@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.127.0](https://github.com/seatsurfing/seatsurfing/compare/v1.126.9...v1.127.0) (2026-09-12)
+
+
+### ✨ Features
+
+* **server:** add feature flags ALLOW_ORG_DELETE and DOMAIN_VERIFICATION ([#2621](https://github.com/seatsurfing/seatsurfing/issues/2621)) ([ab80bb7](https://github.com/seatsurfing/seatsurfing/commit/ab80bb70194003831fe874ea86bb0ca551287671))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** improve domain verification and accessibility status info ([#2620](https://github.com/seatsurfing/seatsurfing/issues/2620)) ([847af82](https://github.com/seatsurfing/seatsurfing/commit/847af8226e3c201965785b43ffe7aba990900c32))
+
 ## [1.126.9](https://github.com/seatsurfing/seatsurfing/compare/v1.126.8...v1.126.9) (2026-09-12)
 
 
