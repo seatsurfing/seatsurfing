@@ -185,9 +185,9 @@ func TestGroupsMembersCRUD(t *testing.T) {
 
 func TestGroupsMembersAddForeignOrg(t *testing.T) {
 	ClearTestDB()
-	org1 := CreateTestOrg("test.com")
+	org1 := CreateTestOrg("test1.com")
 	GetSettingsRepository().Set(org1.ID, SettingFeatureGroups.Name, "1")
-	org2 := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
 	GetSettingsRepository().Set(org2.ID, SettingFeatureGroups.Name, "1")
 	user := CreateTestUserOrgAdmin(org1)
 	loginResponse := LoginTestUser(user.ID)

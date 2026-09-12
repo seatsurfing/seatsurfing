@@ -55,6 +55,7 @@ type Config struct {
 	InitOrgPass                         string
 	InitOrgLanguage                     string
 	InitOrgDomain                       string
+	FeatureFlags                        []string // parsed from FEATURE_FLAGS, e.g. "ALLOW_ORG_DELETE,DOMAIN_VERIFICATION"
 	AllowOrgDelete                      bool
 	LoginProtectionMaxFails             int
 	LoginProtectionSlidingWindowSeconds int
@@ -84,6 +85,7 @@ type Config struct {
 	DisableVersionCheck                 bool // Disable polling seatsurfing.io for latest version information
 	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
 	DisableInstallIDExposure            bool // Disable exposing the install ID via public API
+	DomainVerification                  bool // Require DNS TXT ownership verification before a custom domain becomes active (cloud). When off, domains added through the API are active immediately (self-hosted default).
 }
 
 var _configInstance *Config
@@ -166,7 +168,8 @@ func (c *Config) ReadConfig() {
 		c.InitOrgLanguage = "en"
 	}
 	c.InitOrgDomain = c.getEnv("INIT_ORG_DOMAIN", "localhost")
-	c.AllowOrgDelete = (c.getEnv("ALLOW_ORG_DELETE", "0") == "1")
+	c.FeatureFlags = c.parseFeatureFlags(c.getEnv("FEATURE_FLAGS", ""))
+	c.AllowOrgDelete = slices.Contains(c.FeatureFlags, "ALLOW_ORG_DELETE")
 	c.LoginProtectionMaxFails = c.getEnvInt("LOGIN_PROTECTION_MAX_FAILS", 10)
 	c.LoginProtectionSlidingWindowSeconds = c.getEnvInt("LOGIN_PROTECTION_SLIDING_WINDOW_SECONDS", 600)
 	c.LoginProtectionBanMinutes = c.getEnvInt("LOGIN_PROTECTION_BAN_MINUTES", 5)
@@ -230,8 +233,13 @@ func (c *Config) ReadConfig() {
 	c.DisableVersionCheck = (c.getEnv("DISABLE_VERSION_CHECK", "0") == "1")
 	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
 	c.DisableInstallIDExposure = (c.getEnv("DISABLE_INSTALL_ID_EXPOSURE", "0") == "1")
+	c.DomainVerification = slices.Contains(c.FeatureFlags, "DOMAIN_VERIFICATION")
 
 	// Check deprecated environment variables
+	if c.getEnv("ALLOW_ORG_DELETE", "0") == "1" {
+		log.Println("⚠️  Warning: ALLOW_ORG_DELETE is deprecated. Use FEATURE_FLAGS=ALLOW_ORG_DELETE instead.")
+		c.AllowOrgDelete = true
+	}
 	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
 		log.Println("⚠️  Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
 	}
@@ -259,6 +267,24 @@ func (c *Config) parsePluginsConfig(raw string) []RemotePluginConfig {
 		log.Fatalln("Error: Could not parse PLUGINS_CONFIG as JSON:", err)
 	}
 	return plugins
+}
+
+var validFeatureFlags = []string{"ALLOW_ORG_DELETE", "DOMAIN_VERIFICATION"}
+
+func (c *Config) parseFeatureFlags(raw string) []string {
+	var flags []string
+	for _, flag := range strings.Split(raw, ",") {
+		flag = strings.ToUpper(strings.TrimSpace(flag))
+		if flag == "" {
+			continue
+		}
+		if !slices.Contains(validFeatureFlags, flag) {
+			log.Println("⚠️  Warning: Unknown feature flag '" + flag + "' in FEATURE_FLAGS, ignoring.")
+			continue
+		}
+		flags = append(flags, flag)
+	}
+	return flags
 }
 
 func (c *Config) loadPrivateKey(path string) (*rsa.PrivateKey, error) {
