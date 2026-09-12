@@ -888,16 +888,13 @@ func (a *App) UpdateInstallStats() {
 }
 
 func (a *App) CheckDomainAccessibilityTimer() {
-	domains, err := GetOrganizationRepository().GetAllDomains()
+	// only active domains are checked, to prevent SSRF attacks against unverified domains
+	domains, err := GetOrganizationRepository().GetAllActiveDomains()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	for _, domain := range domains {
-		// only test active domains to prevent SSRF attacks against unverified domains
-		if !domain.Active {
-			continue
-		}
 		if strings.HasSuffix(domain.DomainName, ".seatsurfing.app") || strings.HasSuffix(domain.DomainName, ".seatsurfing.io") {
 			// statically trusted, not actually checked via HTTP request, so no access_check timestamp
 			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, nil)

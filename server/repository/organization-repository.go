@@ -466,10 +466,11 @@ func (r *OrganizationStore) GetDomains(e *Organization) ([]*Domain, error) {
 	}
 	return result, nil
 }
-func (r *OrganizationStore) GetAllDomains() ([]*Domain, error) {
+func (r *OrganizationStore) GetAllActiveDomains() ([]*Domain, error) {
 	var result []*Domain
 	rows, err := GetDatabase().DB().Query("SELECT domain, organization_id, active, verify_token, primary_domain, accessible, access_check " +
 		"FROM organizations_domains " +
+		"WHERE active = TRUE " +
 		"ORDER BY domain")
 	if err != nil {
 		return nil, err
