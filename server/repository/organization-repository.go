@@ -152,7 +152,10 @@ func (r *OrganizationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 	if curVersion < 56 {
 		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains SET active = FALSE " +
 			"WHERE ctid NOT IN (" +
-			"SELECT MIN(ctid) FROM organizations_domains WHERE active = TRUE GROUP BY domain" +
+			"SELECT ctid FROM (" +
+			"SELECT ctid, ROW_NUMBER() OVER (PARTITION BY domain ORDER BY access_check DESC NULLS LAST, ctid) AS rn " +
+			"FROM organizations_domains WHERE active = TRUE" +
+			") sq WHERE rn = 1" +
 			") AND active = TRUE"); err != nil {
 			panic(err)
 		}
