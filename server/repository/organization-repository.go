@@ -149,6 +149,18 @@ func (r *OrganizationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 56 {
+		if _, err := GetDatabase().DB().Exec("UPDATE organizations_domains SET active = FALSE " +
+			"WHERE ctid NOT IN (" +
+			"SELECT MIN(ctid) FROM organizations_domains WHERE active = TRUE GROUP BY domain" +
+			") AND active = TRUE"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_organizations_domains_active_domain " +
+			"ON organizations_domains(domain) WHERE active = TRUE"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *OrganizationStore) Create(e *Organization) error {
