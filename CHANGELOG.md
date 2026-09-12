@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.126.9](https://github.com/seatsurfing/seatsurfing/compare/v1.126.8...v1.126.9) (2026-09-12)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** prevent adding already existing domain ([#2616](https://github.com/seatsurfing/seatsurfing/issues/2616)) ([6046d97](https://github.com/seatsurfing/seatsurfing/commit/6046d97ee47efcdb9ee23377ee8e286e70099fa6))
+* **main:** add global popup for HTTP status code 409 ([#2617](https://github.com/seatsurfing/seatsurfing/issues/2617)) ([f3da088](https://github.com/seatsurfing/seatsurfing/commit/f3da0884a24be224185ac31f11507689b79db33b))
+
 ## [1.126.8](https://github.com/seatsurfing/seatsurfing/compare/v1.126.7...v1.126.8) (2026-09-11)
 
 
