@@ -611,6 +611,6 @@
   "userinfoGroupsField": "Groups field",
   "userinfoGroupsFieldHint": "Name of the claim in the identity provider's user info response that lists the user's groups, for example 'groups'. Leave empty to disable automatic assignment.",
   "permission.presence_report": "Presence report (user-related)",
-  "domainAccessibleTooltip": "Die Verfügbarkeit der Domain wurde noch nicht überprüft. Dies kann bis zu 60 Minuten dauern.",
+  "domainAccessibleTooltip": "Die Verfügbarkeit der Domain konnte nicht oder noch nicht bestätigt werden. Dies wird regelmäßig geprüft und kann bis zu 60 Minuten dauern.",
   "domainNotVerifiedTooltip": "Diese Domain wurde noch nicht verifiziert."
 }

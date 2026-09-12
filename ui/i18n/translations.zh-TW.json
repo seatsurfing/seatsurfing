@@ -608,6 +608,6 @@
   "userinfoGroupsField": "Groups field",
   "userinfoGroupsFieldHint": "Name of the claim in the identity provider's user info response that lists the user's groups, for example 'groups'. Leave empty to disable automatic assignment.",
   "permission.presence_report": "Presence report (user-related)",
-  "domainAccessibleTooltip": "Domain availability has not been verified yet. This can take up to 60 minutes.",
+  "domainAccessibleTooltip": "Domain availability could not be confirmed, or has not been confirmed yet. This is checked periodically and can take up to 60 minutes.",
   "domainNotVerifiedTooltip": "This domain has not been verified yet."
 }

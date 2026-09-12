@@ -195,7 +195,7 @@
   "disabled": "Disabled",
   "disconnect": "Disconnect",
   "domain": "Domain",
-  "domainAccessibleTooltip": "Domain availability has not been verified yet. This can take up to 60 minutes.",
+  "domainAccessibleTooltip": "Domain availability could not be confirmed, or has not been confirmed yet. This is checked periodically and can take up to 60 minutes.",
   "domainNotVerifiedTooltip": "This domain has not been verified yet.",
   "domains": "Domains",
   "download": "Download",
