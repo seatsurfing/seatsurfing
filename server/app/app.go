@@ -899,7 +899,8 @@ func (a *App) CheckDomainAccessibilityTimer() {
 			continue
 		}
 		if strings.HasSuffix(domain.DomainName, ".seatsurfing.app") || strings.HasSuffix(domain.DomainName, ".seatsurfing.io") {
-			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, time.Now().UTC())
+			// statically trusted, not actually checked via HTTP request, so no access_check timestamp
+			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, nil)
 			continue
 		}
 		success, err := IsDomainAccessible(domain.DomainName, domain.OrganizationID)
@@ -907,12 +908,13 @@ func (a *App) CheckDomainAccessibilityTimer() {
 			log.Println("Error while performing domain accessibility check for domain:", domain.DomainName, err)
 			continue
 		}
+		now := time.Now().UTC()
 		if !success {
 			log.Println("Domain is not accessible:", domain.DomainName)
-			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, false, time.Now().UTC())
+			GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, false, &now)
 			continue
 		}
-		GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, time.Now().UTC())
+		GetOrganizationRepository().SetDomainAccessibility(domain.OrganizationID, domain.DomainName, true, &now)
 	}
 }
 

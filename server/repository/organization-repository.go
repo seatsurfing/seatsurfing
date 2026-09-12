@@ -401,7 +401,7 @@ func (r *OrganizationStore) ActivateDomainAsAccessible(e *Organization, domain s
 	return err
 }
 
-func (r *OrganizationStore) SetDomainAccessibility(orgID string, domain string, accessible bool, accessCheck time.Time) error {
+func (r *OrganizationStore) SetDomainAccessibility(orgID string, domain string, accessible bool, accessCheck *time.Time) error {
 	_, err := GetDatabase().DB().Exec("UPDATE organizations_domains "+
 		"SET accessible = $3, access_check = $4 "+
 		"WHERE domain = LOWER($1) AND organization_id = $2",

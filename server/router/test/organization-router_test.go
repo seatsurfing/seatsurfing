@@ -195,7 +195,8 @@ func TestOrganizationsReadUpdateDelete(t *testing.T) {
 	organization := org
 	GetOrganizationRepository().AddDomain(organization, domain, true)
 	GetOrganizationRepository().SetPrimaryDomain(organization, domain)
-	GetOrganizationRepository().SetDomainAccessibility(id, domain, true, time.Now().UTC())
+	now := time.Now().UTC()
+	GetOrganizationRepository().SetDomainAccessibility(id, domain, true, &now)
 
 	// 1. Read
 	req := NewHTTPRequest("GET", "/organization/"+id, loginResponse.UserID, nil)
