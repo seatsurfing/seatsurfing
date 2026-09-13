@@ -79,6 +79,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingFeatureKioskMode.Name,
 		SettingHideReports.Name,
 		SettingHideStats.Name,
+		SettingAnonymousBookingEnabled.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -164,6 +165,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingKioskModeEnabled.Name,
 		SettingHideReports.Name,
 		SettingHideStats.Name,
+		SettingAnonymousBookingEnabled.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

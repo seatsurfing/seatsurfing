@@ -1,0 +1,20 @@
+{
+  "subject": "Bitte bestätige deine Seatsurfing-Buchungsanfrage",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "bitte bestätige deine Buchungsanfrage:",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}"
+  ],
+  "buttons": [
+    {
+      "paragraph": "Klicke auf den Button unten, um deine Anfrage zu bestätigen. Sie wird anschließend zur Genehmigung eingereicht.",
+      "label": "Buchungsanfrage bestätigen",
+      "url": "{{orgDomain}}public-booking/confirm/{{confirmID}}/"
+    }
+  ],
+  "finalParagraphs": [
+    "Wenn du diese Buchung nicht angefragt hast, kannst du diese E-Mail gefahrlos ignorieren."
+  ]
+}

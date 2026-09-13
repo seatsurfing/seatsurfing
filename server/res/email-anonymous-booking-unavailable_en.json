@@ -1,0 +1,11 @@
+{
+  "subject": "Sorry, this space is not available",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Unfortunately the space you requested is not available for the selected time slot anymore.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Please choose a different time slot or space."
+  ]
+}

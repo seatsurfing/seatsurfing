@@ -84,6 +84,7 @@ interface SpaceState {
   requireSubject: boolean;
   enabled: boolean;
   kioskEnabled: boolean;
+  anonymousBookingEnabled: boolean;
   shape: string;
   fontSize: string;
   changed: boolean;
@@ -621,6 +622,8 @@ class EditLocation extends React.Component<Props, State> {
         space.requireSubject = item.requireSubject;
         space.enabled = item.enabled;
         space.kioskEnabled = item.kioskEnabled;
+        space.anonymousBookingEnabled =
+          (item.approvers?.length ?? 0) > 0 && item.anonymousBookingEnabled;
         space.shape = item.shape;
         space.fontSize = item.fontSize;
         space.attributes = [];
@@ -846,6 +849,7 @@ class EditLocation extends React.Component<Props, State> {
         : RuntimeConfig.INFOS.subjectDefault === 3,
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
+      anonymousBookingEnabled: e ? e.anonymousBookingEnabled : false,
       shape: e ? e.shape || "rect" : "rect",
       fontSize: e ? e.fontSize || "normal" : "normal",
       changed: true,
@@ -1513,6 +1517,43 @@ class EditLocation extends React.Component<Props, State> {
               </Col>
             </Form.Group>
             {this.getSpaceAttributeRows()}
+            <Form.Group
+              as={Row}
+              hidden={!RuntimeConfig.INFOS.anonymousBookingEnabled}
+            >
+              <Form.Label
+                column
+                sm="4"
+                htmlFor="space-anonymous-booking-enabled"
+              >
+                {this.props.t("anonymousBooking")}
+              </Form.Label>
+              <Col sm="8">
+                <Form.Check
+                  type="checkbox"
+                  id="space-anonymous-booking-enabled"
+                  label={RendererUtils.capitalize(this.props.t("yes"))}
+                  checked={this.getSelectedSpace()?.anonymousBookingEnabled}
+                  disabled={
+                    (this.getSelectedSpace()?.approvers?.length ?? 0) === 0
+                  }
+                  onChange={(e: any) => {
+                    const spaces = this.state.spaces;
+                    const idx = this.state.selectedSpace!;
+                    const space = { ...spaces[idx] };
+                    space.anonymousBookingEnabled = e.target.checked;
+                    space.changed = true;
+                    spaces[idx] = space;
+                    this.setState({ spaces: spaces, changed: true });
+                  }}
+                />
+                <Form.Text className="text-muted">
+                  {(this.getSelectedSpace()?.approvers?.length ?? 0) === 0
+                    ? this.props.t("anonymousBookingSpaceRequiresApproversHint")
+                    : this.props.t("anonymousBookingSpaceEnabledHint")}
+                </Form.Text>
+              </Col>
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>

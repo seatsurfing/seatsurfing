@@ -10,7 +10,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 56
+	targetVersion := 57
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
@@ -21,6 +21,7 @@ func RunDBSchemaUpdates() {
 		GetAuthStateRepository(),
 		GetAuthAttemptRepository(),
 		GetBookingRepository(),
+		GetAnonymousBookingRepository(),
 		GetBuddyRepository(),
 		GetGroupRepository(),
 		GetLocationRepository(),

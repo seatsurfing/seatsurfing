@@ -590,6 +590,7 @@ func (a *App) InitializeRouter() {
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}
+	routers["/public-booking/"] = &PublicBookingRouter{}
 	builtInPrefixes := make([]string, 0, len(routers))
 	for route, r := range routers {
 		builtInPrefixes = append(builtInPrefixes, route)

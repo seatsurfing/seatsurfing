@@ -13,6 +13,7 @@ var unauthorizedRoutes = []string{
 	"/robots.txt",
 	"/healthcheck/",
 	"/kiosk/",
+	"/public-booking/",
 }
 
 var unauthorizedRoutesMu sync.RWMutex

@@ -71,4 +71,8 @@ export default class Navigation {
   static kioskUrl(spaceId: string, variant: "color" | "mono"): string {
     return `${window.location.origin}/ui/kiosk/${encodeURIComponent(spaceId)}/?variant=${encodeURIComponent(variant)}&lang=en&secret=${encodeURIComponent(CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER)}`;
   }
+
+  static publicBookingUrl(): string {
+    return `${window.location.origin}/ui/public-booking/`;
+  }
 }

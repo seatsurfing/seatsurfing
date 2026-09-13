@@ -115,6 +115,12 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 57 {
+		// Anonymous bookings (see anonymous_bookings table) have no user account.
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ALTER COLUMN user_id DROP NOT NULL"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
@@ -178,7 +184,7 @@ func (r *BookingStore) Create(e *Booking) error {
 		"(user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, created_at_utc) "+
 		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) "+
 		"RETURNING id",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), time.Now().UTC()).Scan(&id)
+		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), time.Now().UTC()).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -188,16 +194,18 @@ func (r *BookingStore) Create(e *Booking) error {
 
 func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 	e := &BookingDetails{}
-	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"users.email, users.firstname, users.lastname "+
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
+		"COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, '') "+
 		"FROM bookings "+
 		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"INNER JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN anonymous_bookings ON anonymous_bookings.booking_id = bookings.id "+
 		"WHERE bookings.id = $1",
-		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.AnonymousName, &e.AnonymousEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -206,14 +214,16 @@ func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 
 // KioskBookingEntry holds the minimal booking data needed for the kiosk display.
 type KioskBookingEntry struct {
-	ID            string
-	UserID        string
-	UserEmail     string
-	UserFirstname string
-	UserLastname  string
-	Enter         time.Time
-	Leave         time.Time
-	Subject       string
+	ID             string
+	UserID         string
+	UserEmail      string
+	UserFirstname  string
+	UserLastname   string
+	AnonymousName  string
+	AnonymousEmail string
+	Enter          time.Time
+	Leave          time.Time
+	Subject        string
 }
 
 // GetCurrentAndNextBySpaceID returns the currently-active booking and the next upcoming
@@ -222,14 +232,15 @@ func (r *BookingStore) GetCurrentAndNextBySpaceID(spaceID string, now time.Time)
 	var current *KioskBookingEntry
 	c := &KioskBookingEntry{}
 	err := GetDatabase().DB().QueryRow(
-		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
+		"SELECT bookings.id, COALESCE(bookings.user_id::text, ''), COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, ''), bookings.enter_time, bookings.leave_time, bookings.subject "+
 			"FROM bookings "+
-			"INNER JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN anonymous_bookings ON anonymous_bookings.booking_id = bookings.id "+
 			"WHERE bookings.space_id = $1 "+
 			"AND bookings.enter_time <= $2 AND bookings.leave_time >= $2 "+
 			"AND bookings.approved = true "+
 			"ORDER BY bookings.enter_time ASC LIMIT 1",
-		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.UserFirstname, &c.UserLastname, &c.Enter, &c.Leave, &c.Subject)
+		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.UserFirstname, &c.UserLastname, &c.AnonymousName, &c.AnonymousEmail, &c.Enter, &c.Leave, &c.Subject)
 	if err == nil {
 		current = c
 	}
@@ -237,14 +248,15 @@ func (r *BookingStore) GetCurrentAndNextBySpaceID(spaceID string, now time.Time)
 	var next *KioskBookingEntry
 	n := &KioskBookingEntry{}
 	err2 := GetDatabase().DB().QueryRow(
-		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
+		"SELECT bookings.id, COALESCE(bookings.user_id::text, ''), COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, ''), bookings.enter_time, bookings.leave_time, bookings.subject "+
 			"FROM bookings "+
-			"INNER JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN anonymous_bookings ON anonymous_bookings.booking_id = bookings.id "+
 			"WHERE bookings.space_id = $1 "+
 			"AND bookings.enter_time > $2 "+
 			"AND bookings.approved = true "+
 			"ORDER BY bookings.enter_time ASC LIMIT 1",
-		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.UserFirstname, &n.UserLastname, &n.Enter, &n.Leave, &n.Subject)
+		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.UserFirstname, &n.UserLastname, &n.AnonymousName, &n.AnonymousEmail, &n.Enter, &n.Leave, &n.Subject)
 	if err2 == nil {
 		next = n
 	}
@@ -274,14 +286,16 @@ func (r *BookingStore) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (
 
 func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
+	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
-		"users.email, users.firstname, users.lastname " +
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), " +
+		"COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, '') " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
-		"INNER JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN anonymous_bookings ON anonymous_bookings.booking_id = bookings.id " +
 		"WHERE locations.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3"
 	args := []any{organizationID, startTime, endTime}
 	if userEmail != "" {
@@ -300,7 +314,7 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 	defer rows.Close()
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.AnonymousName, &e.AnonymousEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -311,14 +325,16 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 
 func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
+	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
-		"users.email, users.firstname, users.lastname " +
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), " +
+		"COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, '') " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
-		"INNER JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN anonymous_bookings ON anonymous_bookings.booking_id = bookings.id " +
 		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz " +
 		"WHERE locations.organization_id = $1 " +
 		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) " +
@@ -341,7 +357,7 @@ func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail strin
 	defer rows.Close()
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.AnonymousName, &e.AnonymousEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -844,14 +860,16 @@ func (r *BookingStore) GetPresenceReport(organizationID string, location *Locati
 }
 
 func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*BookingDetails, error) {
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, "+
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"users.email, users.firstname, users.lastname "+
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
+		"COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, '') "+
 		"FROM bookings "+
 		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"INNER JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN anonymous_bookings ON anonymous_bookings.booking_id = bookings.id "+
 		"WHERE bookings.approved = false AND "+
 		"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "+
 		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE group_id IN ("+
@@ -865,7 +883,7 @@ func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*B
 	var result []*BookingDetails
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.AnonymousName, &e.AnonymousEmail)
 		if err != nil {
 			return nil, err
 		}
