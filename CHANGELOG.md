@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.127.1](https://github.com/seatsurfing/seatsurfing/compare/v1.127.0...v1.127.1) (2026-09-13)
+
+
+### 🐛 Bug Fixes
+
+* **server:** filter active domains in database ([#2623](https://github.com/seatsurfing/seatsurfing/issues/2623)) ([f891509](https://github.com/seatsurfing/seatsurfing/commit/f891509687d0b72ae3c0c2ec3bba1a2820d645c7))
+
 ## [1.127.0](https://github.com/seatsurfing/seatsurfing/compare/v1.126.9...v1.127.0) (2026-09-12)
 
 
