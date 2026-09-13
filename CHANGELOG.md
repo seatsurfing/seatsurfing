@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.127.2](https://github.com/seatsurfing/seatsurfing/compare/v1.127.1...v1.127.2) (2026-09-13)
+
+
+### 🐛 Bug Fixes
+
+* **server:** close race condition in failed-login account lockout ([#2630](https://github.com/seatsurfing/seatsurfing/issues/2630)) ([0a6540a](https://github.com/seatsurfing/seatsurfing/commit/0a6540ab5f560d51c2f596711a3de1416efde231))
+
 ## [1.127.1](https://github.com/seatsurfing/seatsurfing/compare/v1.127.0...v1.127.1) (2026-09-13)
 
 
