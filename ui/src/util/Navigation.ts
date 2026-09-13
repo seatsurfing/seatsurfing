@@ -72,6 +72,10 @@ export default class Navigation {
     return `${window.location.origin}/ui/kiosk/${encodeURIComponent(spaceId)}/?variant=${encodeURIComponent(variant)}&lang=en&secret=${encodeURIComponent(CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER)}`;
   }
 
+  // --------------
+  // PUBLIC BOOKING
+  // --------------
+
   static publicBookingUrl(): string {
     return `${window.location.origin}/ui/public-booking/`;
   }
