@@ -1144,6 +1144,7 @@ class EditLocation extends React.Component<Props, State> {
             space.allowBookers && space.allowBookers?.length > 0,
           )}
         </td>
+        <td>{RendererUtils.state(space.anonymousBookingEnabled)}</td>
         <td>{bookingLink}</td>
       </tr>
     );
@@ -1711,6 +1712,7 @@ class EditLocation extends React.Component<Props, State> {
       t("kioskMode"),
       t("approvers"),
       t("allowBookers"),
+      t("anonymousBooking"),
       t("bookingLink"),
     ];
     const rows = this.state.spaces.map((space) => [
@@ -1723,6 +1725,7 @@ class EditLocation extends React.Component<Props, State> {
         space.allowBookers && space.allowBookers?.length > 0,
         t,
       ),
+      RendererUtils.stateXls(space.anonymousBookingEnabled, t),
       space.id ? Navigation.spaceAbsolute(this.entity.id, space.id) : "",
     ]);
     return this.ExcellentExport.convert(
@@ -2063,6 +2066,7 @@ class EditLocation extends React.Component<Props, State> {
                 <th>
                   {this.props.t("allowBookers")} <PremiumFeatureIcon />
                 </th>
+                <th>{this.props.t("anonymousBooking")}</th>
                 <th>{this.props.t("bookingLink")}</th>
               </tr>
             </thead>
