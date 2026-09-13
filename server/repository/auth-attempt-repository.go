@@ -280,27 +280,34 @@ func (r *AuthAttemptRepository) checkBanUser(user *User) error {
 		user.ID).Scan(&lastSuccessfulLogin); err != nil {
 		lastSuccessfulLogin = time.Unix(0, 0)
 	}
-	var numFailedLogins int
 	limit := time.Now().Add(time.Second * time.Duration(GetConfig().LoginProtectionSlidingWindowSeconds*-1))
+	banExpiry := time.Now().Add(time.Minute * time.Duration(GetConfig().LoginProtectionBanMinutes))
+	// Evaluate the failed-attempt count and apply the ban in a single statement
+	// so concurrent logins for the same user can't each read a stale count and
+	// either miss the threshold or independently (and redundantly) disable the
+	// user. Postgres locks the target row per-statement, so concurrent calls
+	// for the same user serialize and each re-evaluates the subquery against
+	// the latest committed data. "disabled = FALSE" makes this idempotent.
 	// Only count failed attempts for methods that can actually trigger a ban
 	// (password, TOTP, passkey) plus legacy rows recorded before the method
 	// column existed. OAuth/Confluence failures are persisted for the audit
 	// log but must not contribute to banning a user out of password login.
-	if err := GetDatabase().DB().QueryRow("SELECT COUNT(id) FROM auth_attempts "+
+	res, err := GetDatabase().DB().Exec("UPDATE users SET disabled = TRUE, ban_expiry = $2 "+
+		"WHERE id = $1 AND disabled = FALSE AND ("+
+		"SELECT COUNT(id) FROM auth_attempts "+
 		"WHERE user_id = $1 AND successful = FALSE "+
-		"AND (method = '' OR method IN ($4, $5, $6, $7)) "+
-		"AND timestamp > $2 AND timestamp > $3",
-		user.ID, limit, lastSuccessfulLogin,
-		AuthMethodPassword, AuthMethodTOTP, AuthMethodPasskey, AuthMethodPasskey2FA).Scan(&numFailedLogins); err != nil {
+		"AND (method = '' OR method IN ($5, $6, $7, $8)) "+
+		"AND timestamp > $3 AND timestamp > $4"+
+		") >= $9",
+		user.ID, banExpiry, limit, lastSuccessfulLogin,
+		AuthMethodPassword, AuthMethodTOTP, AuthMethodPasskey, AuthMethodPasskey2FA,
+		GetConfig().LoginProtectionMaxFails)
+	if err != nil {
 		return err
 	}
-	if numFailedLogins >= GetConfig().LoginProtectionMaxFails {
-		banExpiry := time.Now().Add(time.Minute * time.Duration(GetConfig().LoginProtectionBanMinutes))
+	if numAffected, err := res.RowsAffected(); err == nil && numAffected > 0 {
 		user.Disabled = true
 		user.BanExpiry = &banExpiry
-		if err := GetUserRepository().Update(user); err != nil {
-			return err
-		}
 	}
 	return nil
 }

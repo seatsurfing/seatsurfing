@@ -274,7 +274,7 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 	}
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
-	GetUserRepository().Update(user)
+	GetUserRepository().UpdateLastActivity(user.ID, now)
 	// Update session activity timestamp
 	if err := GetSessionRepository().UpdateActivity(session.ID); err != nil {
 		log.Println("Error updating session activity: " + err.Error())
@@ -1418,7 +1418,7 @@ func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Reques
 	recordAuthEvent(r, &AuthEvent{User: user, Successful: true, Method: authMethod, AuthProviderID: authProviderID, BanCheck: true})
 	now := time.Now().UTC()
 	user.LastActivityAtUTC = &now
-	GetUserRepository().Update(user)
+	GetUserRepository().UpdateLastActivity(user.ID, now)
 	session := router.CreateSession(r, user)
 	if session == nil {
 		log.Println("Error: Failed to create session during " + authMethod)
