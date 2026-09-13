@@ -55,3 +55,9 @@ jobs:
             ${{ env.REGISTRY }}/seatsurfing/backend:dev
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+  deploy:
+    needs: build
+    uses: seatsurfing/github-workflows/.github/workflows/redeploy.yml@main
+    with:
+      artifact: backend-dev
+    secrets: inherit

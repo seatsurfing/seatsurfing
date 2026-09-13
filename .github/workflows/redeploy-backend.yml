@@ -1,0 +1,12 @@
+name: Redeploy backend
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  deploy:
+    uses: seatsurfing/github-workflows/.github/workflows/redeploy.yml@main
+    with:
+      artifact: backend
+    secrets: inherit
