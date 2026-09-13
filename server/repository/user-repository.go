@@ -388,6 +388,14 @@ func (r *UserStore) SetApiToken(userID string, tokenHash NullString) error {
 	return err
 }
 
+// UpdateLastActivity touches only last_activity_at_utc, so a login's
+// housekeeping write can't blindly overwrite other fields (e.g. disabled/
+// ban_expiry) that a concurrent request set on the same user row.
+func (r *UserStore) UpdateLastActivity(userID string, at time.Time) error {
+	_, err := GetDatabase().DB().Exec("UPDATE users SET last_activity_at_utc = $2 WHERE id = $1", userID, at)
+	return err
+}
+
 func (r *UserStore) Update(e *User) error {
 	_, err := GetDatabase().DB().Exec("UPDATE users SET "+
 		"organization_id = $1, "+

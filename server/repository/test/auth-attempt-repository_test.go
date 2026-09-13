@@ -1,6 +1,7 @@
 package test
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -32,6 +33,49 @@ func TestAuthAttemptRepositoryBanSimple(t *testing.T) {
 	if err := GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true}); err != nil {
 		t.Error(err)
 	}
+	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+}
+
+func TestAuthAttemptRepositoryBanConcurrent(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrgWithName(org, "u1@test.com", UserRoleUser)
+
+	CheckTestBool(t, false, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+
+	// Fire many concurrent failed logins (well above LOGIN_PROTECTION_MAX_FAILS=3)
+	// to exercise the atomic count-and-disable UPDATE under concurrency.
+	numAttempts := 20
+	var wg sync.WaitGroup
+	wg.Add(numAttempts)
+	for i := 0; i < numAttempts; i++ {
+		go func() {
+			defer wg.Done()
+			GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
+		}()
+	}
+	wg.Wait()
+
+	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+}
+
+func TestAuthAttemptRepositoryBanNotClobberedByLastActivityUpdate(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrgWithName(org, "u1@test.com", UserRoleUser)
+
+	for i := 0; i < 3; i++ {
+		GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
+	}
+	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+
+	// A concurrent request that only touches last-activity-on-login (e.g. a
+	// login or token refresh racing against the ban above, holding a stale
+	// in-memory user with Disabled=false) must not revert the ban.
+	if err := GetUserRepository().UpdateLastActivity(user.ID, time.Now().UTC()); err != nil {
+		t.Error(err)
+	}
+
 	CheckTestBool(t, true, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
 }
 
