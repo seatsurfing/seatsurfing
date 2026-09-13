@@ -164,6 +164,26 @@ class PublicBooking extends React.Component<Props, State> {
             </Alert>
           )}
           <Form.Group className="mb-3">
+            <Form.Label>{this.props.t("name")}</Form.Label>
+            <Form.Control
+              type="text"
+              value={this.state.name}
+              onChange={(e: any) => this.setState({ name: e.target.value })}
+              required={true}
+              maxLength={256}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>{this.props.t("emailAddress")}</Form.Label>
+            <Form.Control
+              type="email"
+              value={this.state.email}
+              onChange={(e: any) => this.setState({ email: e.target.value })}
+              required={true}
+              maxLength={256}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
             <Form.Label>{this.props.t("space")}</Form.Label>
             <Form.Select
               value={this.state.spaceId}
@@ -204,26 +224,6 @@ class PublicBooking extends React.Component<Props, State> {
               value={this.state.endTime}
               onChange={(e: any) => this.setState({ endTime: e.target.value })}
               required={true}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>{this.props.t("name")}</Form.Label>
-            <Form.Control
-              type="text"
-              value={this.state.name}
-              onChange={(e: any) => this.setState({ name: e.target.value })}
-              required={true}
-              maxLength={256}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>{this.props.t("emailAddress")}</Form.Label>
-            <Form.Control
-              type="email"
-              value={this.state.email}
-              onChange={(e: any) => this.setState({ email: e.target.value })}
-              required={true}
-              maxLength={256}
             />
           </Form.Group>
           <Button
