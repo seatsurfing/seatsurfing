@@ -9,6 +9,8 @@ import {
   Table,
   Dropdown,
   Modal,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
@@ -25,6 +27,7 @@ import {
   Grid as IconGrid,
   Eye as IconEye,
   Type as IconFontSize,
+  Info as IconHelp,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -1259,6 +1262,15 @@ class EditLocation extends React.Component<Props, State> {
     });
   };
 
+  renderHintTooltip = (hint: string) => (
+    <OverlayTrigger placement="right" overlay={<Tooltip>{hint}</Tooltip>}>
+      <IconHelp
+        size={16}
+        style={{ marginLeft: "6px", cursor: "pointer", color: "#6c757d" }}
+      />
+    </OverlayTrigger>
+  );
+
   getSpaceAttributeRows = () => {
     const res: any = [];
     this.state.availableAttributes.forEach((a) => {
@@ -1476,6 +1488,8 @@ class EditLocation extends React.Component<Props, State> {
             <Form.Group as={Row}>
               <Form.Label column sm="4" htmlFor="search-approvers-input">
                 {this.props.t("approvers")}
+                {RuntimeConfig.INFOS.featureGroups &&
+                  this.renderHintTooltip(this.props.t("setApproversHint"))}
               </Form.Label>
               <Col sm="8">
                 <GroupSearchTypeahead
@@ -1487,17 +1501,13 @@ class EditLocation extends React.Component<Props, State> {
                   onChange={this.onApproversSearchSelected}
                   defaultSelected={this.getSelectedSpace()?.approvers}
                 />
-                <Form.Text
-                  className="text-muted"
-                  hidden={!RuntimeConfig.INFOS.featureGroups}
-                >
-                  {this.props.t("setApproversHint")}
-                </Form.Text>
               </Col>
             </Form.Group>
             <Form.Group as={Row}>
               <Form.Label column sm="4" htmlFor="search-allowbookers-input">
                 {this.props.t("allowBookers")}
+                {RuntimeConfig.INFOS.featureGroups &&
+                  this.renderHintTooltip(this.props.t("setAllowBookersHint"))}
               </Form.Label>
               <Col sm="8">
                 <GroupSearchTypeahead
@@ -1509,12 +1519,6 @@ class EditLocation extends React.Component<Props, State> {
                   onChange={this.onAllowBookersSearchSelected}
                   defaultSelected={this.getSelectedSpace()?.allowBookers}
                 />
-                <Form.Text
-                  className="text-muted"
-                  hidden={!RuntimeConfig.INFOS.featureGroups}
-                >
-                  {this.props.t("setAllowBookersHint")}
-                </Form.Text>
               </Col>
             </Form.Group>
             {this.getSpaceAttributeRows()}
@@ -1528,6 +1532,11 @@ class EditLocation extends React.Component<Props, State> {
                 htmlFor="space-anonymous-booking-enabled"
               >
                 {this.props.t("anonymousBooking")}
+                {this.renderHintTooltip(
+                  (this.getSelectedSpace()?.approvers?.length ?? 0) === 0
+                    ? this.props.t("anonymousBookingSpaceRequiresApproversHint")
+                    : this.props.t("anonymousBookingSpaceEnabledHint"),
+                )}
               </Form.Label>
               <Col sm="8">
                 <Form.Check
@@ -1548,11 +1557,6 @@ class EditLocation extends React.Component<Props, State> {
                     this.setState({ spaces: spaces, changed: true });
                   }}
                 />
-                <Form.Text className="text-muted">
-                  {(this.getSelectedSpace()?.approvers?.length ?? 0) === 0
-                    ? this.props.t("anonymousBookingSpaceRequiresApproversHint")
-                    : this.props.t("anonymousBookingSpaceEnabledHint")}
-                </Form.Text>
               </Col>
             </Form.Group>
           </Form>
