@@ -10,7 +10,7 @@ Seatsurfing is a desk booking / hot-desking web application. The repo is a monor
 
 | Directory      | Language                           | Purpose                                          |
 | -------------- | ---------------------------------- | ------------------------------------------------ |
-| `server/`      | Go 1.25+                           | Backend API server (PostgreSQL, Gorilla Mux)     |
+| `server/`      | Go 1.26+ (CI runs 1.27)            | Backend API server (PostgreSQL, Gorilla Mux)     |
 | `ui/`          | TypeScript / React 19 / Next.js 16 | Frontend SPA (static export, served under `/ui`) |
 | `e2e/`         | TypeScript / Playwright            | End-to-end browser tests                         |
 | `specs/`       | Markdown                           | Feature specifications                           |
@@ -24,6 +24,7 @@ Seatsurfing is a desk booking / hot-desking web application. The repo is a monor
 - **Tests are required.** New backend logic needs Go unit tests (both positive and negative). New frontend features need E2E tests. Modified functionality requires updated tests.
 - **No third-party libraries** without justification. The backend uses a deliberately small dependency set.
 - **Multi-tenant by design.** All data is scoped to an organization. Every database query must filter by `organization_id`. Never leak data across organizations.
+- **Prettier formatting is enforced by CI on the whole repo**, not just `ui/` — the `Prettier code styling` check runs `prettier --check` from `ui/` against `../**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}`, i.e. every matching file at the repo root and in `server/`, `e2e/`, `specs/`, etc. too (see `../.prettierignore` for exclusions). Before committing any change to a file with one of those extensions — including root-level Markdown like this file — run `npx prettier --write <file>` from `ui/`, or `npm run prettier:format` there to fix everything at once. `npm run prettier:check` reproduces the CI check locally.
 
 ---
 
@@ -110,18 +111,18 @@ func GetBookingRepository() *BookingRepository {
 #### Request Handling
 
 ```go
-func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
+func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
     // 1. Extract authenticated user from JWT context
     requestUser := GetRequestUser(r)
 
     // 2. Authorization check — return early on failure
-    if !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+    if !HasPermission(requestUser, requestUser.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
         SendForbidden(w)
         return
     }
 
     // 3. Parse and validate request body
-    m := &CreateBookingRequest{}
+    m := &CreateLocationRequest{}
     if UnmarshalValidateBody(r, m) != nil {
         SendBadRequest(w)
         return
@@ -172,12 +173,35 @@ Application-specific error codes are returned via the `X-Error-Code` response he
 6xxx = Auth provider errors
 ```
 
+### Cross-Organization Reference Checks
+
+A recurring class of bug in this codebase: an update handler authorizes the caller against the organization in the _existing_ record, but never checks that a foreign key in the _request body_ (e.g. moving a booking to a different space) still points at an entity in that same organization. Always validate both directions on update:
+
+```go
+if e.Space.Location.OrganizationID != location.OrganizationID {
+    SendForbidden(w)
+    return
+}
+if !CanAccessOrg(requestUser, location.OrganizationID) {
+    SendForbidden(w)
+    return
+}
+```
+
+Add a test that creates two organizations and asserts a record cannot be re-homed from one to the other (see `TestBookingsUpdateForeignOrgSpace` in `server/router/test/booking-router_test.go`).
+
+### Self-Service Privilege Escalation
+
+Admin-facing endpoints that let a privileged user edit another user (role assignment, account type, email, authentication method) must explicitly refuse to let a user modify **their own** account through that endpoint, even when the resulting state looks unchanged (e.g. de-duplicate submitted role IDs before comparing sets — a duplicate can mask a dropped role). Compare the target user ID against `GetRequestUser(r).ID` and return a dedicated `X-Error-Code` (see `ResponseCodeUserCannotChangeOwnRoles` in `server/router/routes.go`) rather than a generic 403.
+
 ### Authentication & Authorization
 
 - JWT authentication uses RS512 signing. Claims include `UserID`, `SessionID`, `Email`, `Role`.
-- User roles are integer constants: `UserRoleUser (0)`, `UserRoleSpaceAdmin (10)`, `UserRoleOrgAdmin (20)`, `UserRoleServiceAccountRO (21)`, `UserRoleServiceAccountRW (22)`, `UserRoleSuperAdmin (90)`.
 - Use `GetRequestUser(r)` to get the authenticated user from context.
-- Authorization checks use `Can*` helper functions in `permissions.go`.
+- Administrative authorization is **permission-based, not role-ID-based**: organizations define their own `Role` entities (`server/repository/role-repository.go`), each granting a `PermissionLevel` (`None`/`Read`/`Write`/`Admin`, ascending) for one or more `Permission` keys (`PermissionBookings`, `PermissionUsers`, `PermissionRoles`, `PermissionAreas`, ... — the full catalogue is in `server/api/permissions.go`, and plugins can register their own via `RegisterPermission`). A user can hold several roles; `GetEffectivePermissions(user, organizationID)` collapses them to the highest level granted per permission.
+- Guard handlers with `HasPermission(user, organizationID, permission, minLevel)` (bool check) or `CheckPermission(w, user, organizationID, permission, minLevel)` (writes 403 and returns false itself) from `server/router/permissions.go`. Every authenticated user additionally has a fixed baseline (their own bookings, buddies, preferences, profile, MFA; read access to locations/spaces/availability) that is not a `Permission` and can't be revoked.
+- Role assignments are tracked per source (`RoleAssignmentSourceManual`, `RoleAssignmentSourceOIDC`, ...) in `user_roles`, so an identity provider can grant roles without clobbering manually-assigned ones — see `GetAssignmentsForSource` / `GetAssignmentsExcludingSource` in `user-role-repository.go` when replacing one source's assignments.
+- The old integer `UserRole` constants (`UserRoleUser (0)`, `UserRoleSpaceAdmin (10)`, `UserRoleOrgAdmin (20)`, `UserRoleServiceAccountRO (21)`, `UserRoleServiceAccountRW (22)`, `UserRoleSuperAdmin (90)`, `server/api/entities.go`) still exist, but only for account-type distinctions (super admin, service account) and one-time legacy-schema migration (`RunSchemaUpgrade` version 53 converted every pre-existing `role` column value into equivalent `Role`/`role_permissions` rows). Do not use them, or any `Can*OrgAdmin`-style helper, for new authorization checks — they were removed; use `HasPermission`/`CheckPermission` instead.
 - Service accounts support both Basic Auth and Bearer token auth.
 - Public/unauthenticated routes are whitelisted in `unauthorized-routes.go`.
 
@@ -193,12 +217,26 @@ All configuration is via environment variables, read once at startup in `config/
 - `getEnvInt(key string, defaultValue int) int`
 - `getEnvBool(key string, defaultValue bool) bool`
 
+New opt-in behaviors are added as **feature flags**, not one-off boolean env vars. Add the name to `validFeatureFlags` in `config/config.go`, gate the derived `Config` field with `slices.Contains(c.FeatureFlags, "YOUR_FLAG")`, and read it from the single `FEATURE_FLAGS` env var (comma-separated, e.g. `FEATURE_FLAGS=ALLOW_ORG_DELETE,DOMAIN_VERIFICATION`). Unknown flags log a warning and are ignored rather than failing startup. If replacing an existing single-purpose env var, keep it working with a deprecation warning (see `ALLOW_ORG_DELETE` handling) instead of a breaking change.
+
 ### Encryption & Security
 
 - AES-256-GCM for symmetric encryption (`util/encryption.go`). Requires 32-byte `CRYPT_KEY`.
 - SHA-256 hex for irreversible token hashing (API tokens).
 - bcrypt for password hashing.
 - Never store secrets in plaintext. Use `EncryptString()` / `DecryptString()` for reversible storage, SHA-256 for lookup hashes.
+
+### Concurrency
+
+Security-relevant state that can be mutated by concurrent requests for the same entity (e.g. failed-login counters, lockouts, rate limits) must not use a read-then-write pattern (`SELECT count` followed by a separate `UPDATE`) — concurrent requests can each read a stale value and either miss a threshold or write redundantly. Fold the check and the write into a single atomic SQL statement, guarded so it is a no-op once already applied:
+
+```go
+res, err := GetDatabase().DB().Exec("UPDATE users SET disabled = TRUE, ban_expiry = $2 "+
+    "WHERE id = $1 AND disabled = FALSE AND (SELECT COUNT(id) FROM auth_attempts WHERE ...) >= $3",
+    user.ID, banExpiry, GetConfig().LoginProtectionMaxFails)
+```
+
+Postgres locks the target row for the statement's duration, so concurrent calls serialize instead of racing. Add a concurrency test using `sync.WaitGroup` and multiple goroutines hitting the same entity (see `TestAuthAttemptRepositoryBanConcurrent`).
 
 ### Caching
 
@@ -280,6 +318,7 @@ export default withTranslation(MyPage as any);
 - Entities extend a base `Entity` class with `serialize()` / `deserialize()` methods.
 - Promises use `.then()` / `.catch()` chains (not async/await in class components).
 - Token refresh is handled automatically with a mutex lock in `Ajax`.
+- Global HTTP error handling: `Ajax` exposes static callback hooks (`onForbidden`, `onNotFound`, `onBadRequest`, `onConflict`, `onServerError`, ...) that it invokes based on response status (403, 404, 400, 409, 500/network errors). `pages/_app.tsx` wires each hook to a dedicated modal component (`ForbiddenModal`, `NotFoundModal`, `BadRequestModal`, `ConflictModal`, `ServerErrorModal`) in `componentDidMount`/`componentWillUnmount`. Add new cross-cutting HTTP-status UI this way rather than handling the status in each call site.
 
 ### Routing & Auth Protection
 
@@ -415,6 +454,10 @@ cd ui && npx vitest run
 
 # E2E tests (requires built UI + running server)
 cd e2e && npx playwright test
+
+# Formatting (covers the whole repo, not just ui/)
+cd ui && npm run prettier:check   # matches CI
+cd ui && npm run prettier:format  # auto-fix
 ```
 
 ---
@@ -467,6 +510,12 @@ Feature specs follow this structure:
 
 ---
 
+## Pull Requests
+
+- After opening a pull request, subscribe to its activity (CI status, reviews, comments) and stay attached to it until it is merged or closed: address review feedback and fix failing checks rather than leaving the PR to go stale.
+
+---
+
 ## Do Not
 
 - Do not introduce global state outside the established singleton pattern.
@@ -480,3 +529,7 @@ Feature specs follow this structure:
 - Do not skip `ClearTestDB()` at the start of test functions.
 - Do not use third-party assertion libraries in Go tests. Use the `CheckTest*` helpers.
 - Do not hardcode user-visible strings. Always use i18n translation keys.
+- Do not trust a foreign key in an update request body just because the caller is authorized for the existing record's organization — verify the _new_ referenced entity belongs to the same organization too (see Cross-Organization Reference Checks).
+- Do not let a user modify their own account type, email, roles, or authentication method through an admin endpoint, even indirectly (e.g. a "no-op" role list that changes composition after de-duplication).
+- Do not use a separate SELECT-then-UPDATE for concurrently-mutable security counters (lockouts, rate limits). Use a single atomic, idempotent SQL statement.
+- Do not add a single-purpose boolean env var for new opt-in behavior. Add it to `FEATURE_FLAGS` (`validFeatureFlags` in `config/config.go`) instead.
