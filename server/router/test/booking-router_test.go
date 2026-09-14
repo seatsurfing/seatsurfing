@@ -3,10 +3,12 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"runtime/debug"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -3199,4 +3201,125 @@ func TestBookingsApproveLeaveWithin24hInPast(t *testing.T) {
 	req := NewHTTPRequest("POST", "/booking/"+booking.ID+"/approve", adminUser.ID, bytes.NewBufferString(`{"approved": true}`))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+// TestBookingsMaxBookingsPerUserRaceCondition fires many concurrent booking
+// creations for the same user, well above SettingMaxBookingsPerUser. Without
+// a lock serializing the check (current booking count) and the insert, every
+// request can read the count before any of them commits, so all of them pass
+// the check and the limit is not enforced.
+func TestBookingsMaxBookingsPerUserRaceCondition(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	limit := 3
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, strconv.Itoa(limit))
+	user := CreateTestUserInOrg(org)
+
+	l := &Location{
+		Name:           "Test",
+		OrganizationID: org.ID,
+		Enabled:        true,
+	}
+	GetLocationRepository().Create(l)
+
+	numAttempts := 15
+	spaces := make([]*Space, numAttempts)
+	for i := 0; i < numAttempts; i++ {
+		s := &Space{Name: fmt.Sprintf("Space %d", i), LocationID: l.ID, Enabled: true}
+		GetSpaceRepository().Create(s)
+		spaces[i] = s
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(numAttempts)
+	codes := make([]int, numAttempts)
+	for i := 0; i < numAttempts; i++ {
+		go func(i int) {
+			defer wg.Done()
+			// Distinct, non-overlapping days/spaces so nothing but the
+			// per-user booking count limit can reject a request.
+			enter := time.Now().Add(time.Hour * 24 * time.Duration(i+1)).UTC()
+			leave := enter.Add(time.Hour * 2)
+			payload := fmt.Sprintf(`{"spaceId": "%s", "enter": "%s", "leave": "%s"}`,
+				spaces[i].ID, enter.Format(time.RFC3339), leave.Format(time.RFC3339))
+			req := NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload))
+			res := ExecuteTestRequest(req)
+			codes[i] = res.Code
+		}(i)
+	}
+	wg.Wait()
+
+	successCount := 0
+	for _, code := range codes {
+		if code == http.StatusCreated {
+			successCount++
+		}
+	}
+	CheckTestInt(t, limit, successCount)
+
+	bookings, err := GetBookingRepository().GetAllByUser(user.ID, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, limit, len(bookings))
+}
+
+// TestBookingsMaxConcurrentPerUserRaceCondition fires many concurrent
+// booking creations for the same user and overlapping time range, well
+// above SettingMaxConcurrentBookingsPerUser. This exercises the same
+// check-then-insert race as above, but for the per-user concurrency limit
+// instead of the total booking count.
+func TestBookingsMaxConcurrentPerUserRaceCondition(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	limit := 3
+	GetSettingsRepository().Set(org.ID, SettingMaxConcurrentBookingsPerUser.Name, strconv.Itoa(limit))
+	user := CreateTestUserInOrg(org)
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 1000,
+		OrganizationID:        org.ID,
+		Enabled:               true,
+	}
+	GetLocationRepository().Create(l)
+
+	numAttempts := 15
+	spaces := make([]*Space, numAttempts)
+	for i := 0; i < numAttempts; i++ {
+		s := &Space{Name: fmt.Sprintf("Space %d", i), LocationID: l.ID, Enabled: true}
+		GetSpaceRepository().Create(s)
+		spaces[i] = s
+	}
+
+	enter := time.Now().Add(time.Hour * 24 * 7).UTC()
+	leave := enter.Add(time.Hour * 2)
+
+	var wg sync.WaitGroup
+	wg.Add(numAttempts)
+	codes := make([]int, numAttempts)
+	for i := 0; i < numAttempts; i++ {
+		go func(i int) {
+			defer wg.Done()
+			// Same overlapping time range, different spaces: only the
+			// per-user concurrency limit should reject any of these.
+			payload := fmt.Sprintf(`{"spaceId": "%s", "enter": "%s", "leave": "%s"}`,
+				spaces[i].ID, enter.Format(time.RFC3339), leave.Format(time.RFC3339))
+			req := NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload))
+			res := ExecuteTestRequest(req)
+			codes[i] = res.Code
+		}(i)
+	}
+	wg.Wait()
+
+	successCount := 0
+	for _, code := range codes {
+		if code == http.StatusCreated {
+			successCount++
+		}
+	}
+	CheckTestInt(t, limit, successCount)
 }

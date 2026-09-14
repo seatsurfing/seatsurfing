@@ -245,6 +245,20 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
+
+	// Hold the create lock for the whole loop below: it serializes this
+	// request's checks and inserts against any other concurrent booking
+	// create/update for the same user or location. Bookings within this
+	// loop are checked and inserted one at a time regardless, so they
+	// already see each other's committed rows.
+	releaseLock, err := AcquireBookingCreateLock(e.UserID, location.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	defer releaseLock()
+
 	res := make([]CreateRecurringBookingResponse, 0)
 	for _, b := range bookings {
 		bookingReq := &CreateBookingRequest{

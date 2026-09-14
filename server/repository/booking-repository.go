@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 	"sync"
@@ -184,6 +185,40 @@ func (r *BookingStore) Create(e *Booking) error {
 	}
 	e.ID = id
 	return nil
+}
+
+// AcquireBookingCreateLock serializes booking create/update requests that
+// share a user or a location. Without it, two concurrent requests can each
+// read the current booking counts/conflicts before either has committed its
+// insert, so both pass the "max bookings per user", "max concurrent bookings
+// per user/location" and space-conflict checks and jointly end up exceeding
+// the limit they were each individually checked against.
+//
+// The lock is a pair of Postgres transaction-scoped advisory locks (user,
+// then location) held on a dedicated transaction that does not touch any
+// table; it is released by committing that transaction, which the caller
+// must do exactly once (typically via defer) after its check-then-write
+// critical section completes. Every caller acquires the two locks in the
+// same order (user before location), so they can never deadlock on
+// each other.
+func AcquireBookingCreateLock(userID, locationID string) (func(), error) {
+	tx, err := GetDatabase().DB().Begin()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := tx.Exec("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", userID); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if _, err := tx.Exec("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", locationID); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	return func() {
+		if err := tx.Commit(); err != nil {
+			log.Println(err)
+		}
+	}, nil
 }
 
 func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
