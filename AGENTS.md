@@ -24,6 +24,7 @@ Seatsurfing is a desk booking / hot-desking web application. The repo is a monor
 - **Tests are required.** New backend logic needs Go unit tests (both positive and negative). New frontend features need E2E tests. Modified functionality requires updated tests.
 - **No third-party libraries** without justification. The backend uses a deliberately small dependency set.
 - **Multi-tenant by design.** All data is scoped to an organization. Every database query must filter by `organization_id`. Never leak data across organizations.
+- **Prettier formatting is enforced by CI on the whole repo**, not just `ui/` — the `Prettier code styling` check runs `prettier --check` from `ui/` against `../**/*.{tsx,js,css,cjs,json,mjs,html,yml,yaml,ts,scss,md}`, i.e. every matching file at the repo root and in `server/`, `e2e/`, `specs/`, etc. too (see `../.prettierignore` for exclusions). Before committing any change to a file with one of those extensions — including root-level Markdown like this file — run `npx prettier --write <file>` from `ui/`, or `npm run prettier:format` there to fix everything at once. `npm run prettier:check` reproduces the CI check locally.
 
 ---
 
@@ -451,6 +452,10 @@ cd ui && npx vitest run
 
 # E2E tests (requires built UI + running server)
 cd e2e && npx playwright test
+
+# Formatting (covers the whole repo, not just ui/)
+cd ui && npm run prettier:check   # matches CI
+cd ui && npm run prettier:format  # auto-fix
 ```
 
 ---
