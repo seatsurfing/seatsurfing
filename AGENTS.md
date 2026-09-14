@@ -503,6 +503,12 @@ Feature specs follow this structure:
 
 ---
 
+## Pull Requests
+
+- After opening a pull request, subscribe to its activity (CI status, reviews, comments) and stay attached to it until it is merged or closed: address review feedback and fix failing checks rather than leaving the PR to go stale.
+
+---
+
 ## Do Not
 
 - Do not introduce global state outside the established singleton pattern.
