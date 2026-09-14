@@ -174,7 +174,7 @@ Application-specific error codes are returned via the `X-Error-Code` response he
 
 ### Cross-Organization Reference Checks
 
-A recurring class of bug in this codebase: an update handler authorizes the caller against the organization in the *existing* record, but never checks that a foreign key in the *request body* (e.g. moving a booking to a different space) still points at an entity in that same organization. Always validate both directions on update:
+A recurring class of bug in this codebase: an update handler authorizes the caller against the organization in the _existing_ record, but never checks that a foreign key in the _request body_ (e.g. moving a booking to a different space) still points at an entity in that same organization. Always validate both directions on update:
 
 ```go
 if e.Space.Location.OrganizationID != location.OrganizationID {
@@ -522,7 +522,7 @@ Feature specs follow this structure:
 - Do not skip `ClearTestDB()` at the start of test functions.
 - Do not use third-party assertion libraries in Go tests. Use the `CheckTest*` helpers.
 - Do not hardcode user-visible strings. Always use i18n translation keys.
-- Do not trust a foreign key in an update request body just because the caller is authorized for the existing record's organization — verify the *new* referenced entity belongs to the same organization too (see Cross-Organization Reference Checks).
+- Do not trust a foreign key in an update request body just because the caller is authorized for the existing record's organization — verify the _new_ referenced entity belongs to the same organization too (see Cross-Organization Reference Checks).
 - Do not let a user modify their own account type, email, roles, or authentication method through an admin endpoint, even indirectly (e.g. a "no-op" role list that changes composition after de-duplication).
 - Do not use a separate SELECT-then-UPDATE for concurrently-mutable security counters (lockouts, rate limits). Use a single atomic, idempotent SQL statement.
 - Do not add a single-purpose boolean env var for new opt-in behavior. Add it to `FEATURE_FLAGS` (`validFeatureFlags` in `config/config.go`) instead.
