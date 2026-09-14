@@ -111,18 +111,18 @@ func GetBookingRepository() *BookingRepository {
 #### Request Handling
 
 ```go
-func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
+func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
     // 1. Extract authenticated user from JWT context
     requestUser := GetRequestUser(r)
 
     // 2. Authorization check — return early on failure
-    if !CanSpaceAdminOrg(requestUser, requestUser.OrganizationID) {
+    if !HasPermission(requestUser, requestUser.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
         SendForbidden(w)
         return
     }
 
     // 3. Parse and validate request body
-    m := &CreateBookingRequest{}
+    m := &CreateLocationRequest{}
     if UnmarshalValidateBody(r, m) != nil {
         SendBadRequest(w)
         return
@@ -197,9 +197,11 @@ Admin-facing endpoints that let a privileged user edit another user (role assign
 ### Authentication & Authorization
 
 - JWT authentication uses RS512 signing. Claims include `UserID`, `SessionID`, `Email`, `Role`.
-- User roles are integer constants: `UserRoleUser (0)`, `UserRoleSpaceAdmin (10)`, `UserRoleOrgAdmin (20)`, `UserRoleServiceAccountRO (21)`, `UserRoleServiceAccountRW (22)`, `UserRoleSuperAdmin (90)`.
 - Use `GetRequestUser(r)` to get the authenticated user from context.
-- Authorization checks use `Can*` helper functions in `permissions.go`.
+- Administrative authorization is **permission-based, not role-ID-based**: organizations define their own `Role` entities (`server/repository/role-repository.go`), each granting a `PermissionLevel` (`None`/`Read`/`Write`/`Admin`, ascending) for one or more `Permission` keys (`PermissionBookings`, `PermissionUsers`, `PermissionRoles`, `PermissionAreas`, ... — the full catalogue is in `server/api/permissions.go`, and plugins can register their own via `RegisterPermission`). A user can hold several roles; `GetEffectivePermissions(user, organizationID)` collapses them to the highest level granted per permission.
+- Guard handlers with `HasPermission(user, organizationID, permission, minLevel)` (bool check) or `CheckPermission(w, user, organizationID, permission, minLevel)` (writes 403 and returns false itself) from `server/router/permissions.go`. Every authenticated user additionally has a fixed baseline (their own bookings, buddies, preferences, profile, MFA; read access to locations/spaces/availability) that is not a `Permission` and can't be revoked.
+- Role assignments are tracked per source (`RoleAssignmentSourceManual`, `RoleAssignmentSourceOIDC`, ...) in `user_roles`, so an identity provider can grant roles without clobbering manually-assigned ones — see `GetAssignmentsForSource` / `GetAssignmentsExcludingSource` in `user-role-repository.go` when replacing one source's assignments.
+- The old integer `UserRole` constants (`UserRoleUser (0)`, `UserRoleSpaceAdmin (10)`, `UserRoleOrgAdmin (20)`, `UserRoleServiceAccountRO (21)`, `UserRoleServiceAccountRW (22)`, `UserRoleSuperAdmin (90)`, `server/api/entities.go`) still exist, but only for account-type distinctions (super admin, service account) and one-time legacy-schema migration (`RunSchemaUpgrade` version 53 converted every pre-existing `role` column value into equivalent `Role`/`role_permissions` rows). Do not use them, or any `Can*OrgAdmin`-style helper, for new authorization checks — they were removed; use `HasPermission`/`CheckPermission` instead.
 - Service accounts support both Basic Auth and Bearer token auth.
 - Public/unauthenticated routes are whitelisted in `unauthorized-routes.go`.
 
