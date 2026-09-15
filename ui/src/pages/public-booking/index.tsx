@@ -239,7 +239,9 @@ class PublicBooking extends React.Component<Props, State> {
               required={true}
               noCalendar={true}
               enableTime={true}
-              minDate={this.state.enter}
+              minDate={
+                new Date(this.state.enter.getTime() + 60 * 1000)
+              }
             />
           </Form.Group>
           <Button
