@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.127.3](https://github.com/seatsurfing/seatsurfing/compare/v1.127.2...v1.127.3) (2026-09-15)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `9ef50bc` to `0ebad35` ([#2635](https://github.com/seatsurfing/seatsurfing/issues/2635)) ([3811ab0](https://github.com/seatsurfing/seatsurfing/commit/3811ab0080ebc50736cbf0bd61439e71df01d002))
+* **server:** close race condition in per-user/per-location booking limits ([#2632](https://github.com/seatsurfing/seatsurfing/issues/2632)) ([88da639](https://github.com/seatsurfing/seatsurfing/commit/88da6398f924ecd47fcb0c7864762c9622c43b5e))
+
+
+### 📚 Documentation
+
+* **main:** refresh AGENTS.md with patterns from recent security fixes ([#2633](https://github.com/seatsurfing/seatsurfing/issues/2633)) ([2cbe7f6](https://github.com/seatsurfing/seatsurfing/commit/2cbe7f62939a48e9531f6d8ed1333533a37d25b3))
+
 ## [1.127.2](https://github.com/seatsurfing/seatsurfing/compare/v1.127.1...v1.127.2) (2026-09-13)
 
 
