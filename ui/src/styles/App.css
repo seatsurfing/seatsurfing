@@ -200,6 +200,7 @@ h2 {
 
 .seatsurfing-logo {
   width: 100%;
+  max-width: 330px;
   margin-bottom: 50px;
 }
 

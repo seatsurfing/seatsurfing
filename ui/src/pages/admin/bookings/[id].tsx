@@ -171,7 +171,8 @@ class EditBooking extends React.Component<Props, State> {
       if (id !== "add") {
         return Booking.get(id).then((booking) => {
           this.entity = booking;
-          const canSave = !DateUtil.isInPast(this.entity.leave);
+          const canSave =
+            !DateUtil.isInPast(this.entity.leave) && !this.entity.anonymous;
           this.setState({
             enter: DateUtil.convertToUTC(this.entity.enter),
             leave: DateUtil.convertToUTC(this.entity.leave),
@@ -778,7 +779,16 @@ class EditBooking extends React.Component<Props, State> {
       );
     }
     let userField = <></>;
-    if (this.state.canEdit) {
+    if (this.entity.anonymous) {
+      userField = (
+        <Form.Control
+          id="booking-user"
+          type="text"
+          disabled
+          value={this.entity.user.firstname}
+        />
+      );
+    } else if (this.state.canEdit) {
       userField = (
         <UserSearchTypeahead
           t={this.props.t}
@@ -824,6 +834,24 @@ class EditBooking extends React.Component<Props, State> {
             </Form.Label>
             <Col sm="4">{userField}</Col>
           </Form.Group>
+
+          {this.entity.anonymous ? (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2" htmlFor="booking-user-email">
+                {this.props.t("emailAddress")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Control
+                  id="booking-user-email"
+                  type="text"
+                  disabled
+                  value={this.state.selectedUserEmail}
+                />
+              </Col>
+            </Form.Group>
+          ) : (
+            <></>
+          )}
 
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="booking-enter">

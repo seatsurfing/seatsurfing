@@ -1,0 +1,17 @@
+{
+  "subject": "Leider ist dieser Platz nicht verfügbar",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "leider ist der von dir angefragte Platz für den gewählten Zeitraum nicht mehr verfügbar.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Bitte wähle einen anderen Zeitraum oder Platz."
+  ],
+  "buttons": [
+    {
+      "label": "Platz buchen",
+      "url": "{{orgDomain}}ui/public-booking/"
+    }
+  ]
+}
