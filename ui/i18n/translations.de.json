@@ -24,6 +24,7 @@
   "allowBookingNonExistUsers": "Buchungen für nicht existierende Benutzer zulassen (Erstellen beim Buchen, Admins Only)",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "analysis": "Auswertung",
+  "anonymous": "Anonym",
   "anonymousBooking": "Anonyme Buchung",
   "anonymousBookingAvailable": "Anonyme Buchungen zulassen",
   "anonymousBookingAvailableHint": "Aktiviert eine öffentliche, nicht authentifizierte Seite, auf der Besucher eine Buchung für dafür freigegebene Räume anfragen können. Die Freigabe erfolgt je Raum in den entsprechenden Einstellungen.",

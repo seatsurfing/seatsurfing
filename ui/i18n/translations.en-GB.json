@@ -23,6 +23,7 @@
   "allowBookingNonExistUsers": "Allow bookings for non-existing users (create on booking, admins only)",
   "allowRecurringBookings": "Allow recurring bookings",
   "analysis": "Analysis",
+  "anonymous": "Anonymous",
   "anonymousBooking": "Anonymous booking",
   "anonymousBookingAvailable": "Allow anonymous bookings",
   "anonymousBookingAvailableHint": "Enables a public, unauthenticated page where visitors can request a booking for spaces that have anonymous booking enabled. Activation is done per space in the respective settings.",
