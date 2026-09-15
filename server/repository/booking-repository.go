@@ -718,7 +718,7 @@ func calcLoad(rng DateRange, totalBookedMinutes, numSpaces, targetUtilizationHou
 // get all bookings by a specific user which overlap with the provided time range
 func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $4 AND user_id = $1 AND ("+
 		"($2 <= enter_time AND $3 > enter_time) OR "+ // (overlap start, can end at same time as next start)
@@ -745,7 +745,7 @@ func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave 
 // with the specified enter and leave times.
 func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id = $2 AND ("+
 		"($3 >= enter_time AND $3 <= leave_time) OR "+
@@ -788,7 +788,7 @@ func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave 
 	if err != nil {
 		return 0, err
 	}
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id IN (SELECT id FROM spaces WHERE location_id = $2) AND ("+
 		"($3 >= enter_time AND $3 <= leave_time) OR "+
