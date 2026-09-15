@@ -114,3 +114,20 @@ func TestGroupMembers(t *testing.T) {
 	CheckTestBool(t, false, slices.Contains(res2, u2.ID))
 	CheckTestBool(t, true, slices.Contains(res2, u3.ID))
 }
+
+func TestGroupAddMembersEmpty(t *testing.T) {
+	org := CreateTestOrg("test-empty.com")
+
+	g1 := &Group{
+		OrganizationID: org.ID,
+		Name:           "G1",
+	}
+	GetGroupRepository().Create(g1)
+
+	err := GetGroupRepository().AddMembers(g1, []string{})
+	CheckTestBool(t, true, err == nil)
+
+	res, err := GetGroupRepository().GetMemberUserIDs(g1)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(res))
+}
