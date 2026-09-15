@@ -15,7 +15,7 @@ services:
       PUBLIC_SCHEME: "http"
       PUBLIC_PORT: "8080"
   db:
-    image: postgres:17
+    image: postgres:18
     restart: always
     networks:
       sql:
