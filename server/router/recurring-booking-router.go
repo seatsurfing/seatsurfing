@@ -233,6 +233,20 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	e.UserID = GetRequestUserID(r)
+
+	// Hold the create lock from before the recurring definition is persisted
+	// through the whole loop below: it serializes this request's checks and
+	// inserts against any other concurrent booking create/update for the
+	// same user or location, and ensures we don't leave an orphaned
+	// recurring definition behind if lock acquisition itself fails.
+	releaseLock, err := AcquireBookingCreateLock(e.UserID, location.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	defer releaseLock()
+
 	if err := GetRecurringBookingRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -245,6 +259,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
+
 	res := make([]CreateRecurringBookingResponse, 0)
 	for _, b := range bookings {
 		bookingReq := &CreateBookingRequest{

@@ -454,6 +454,18 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
+	// See the matching comment in create(): this serializes the checks and
+	// write below against any other concurrent create/update for the same
+	// user or location.
+	releaseLock, err := AcquireBookingCreateLock(eNew.UserID, location.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	defer releaseLock()
+
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
 		Subject: m.Subject,
@@ -648,6 +660,19 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	// Hold the create lock for the rest of this handler: it serializes this
+	// request against any other concurrent create/update for the same user
+	// or location, so the checks below and the insert they guard can't race
+	// with another request's checks and insert.
+	releaseLock, err := AcquireBookingCreateLock(e.UserID, location.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	defer releaseLock()
+
 	bookingReq := &CreateBookingRequest{
 		SpaceID: m.SpaceID,
 		Subject: m.Subject,

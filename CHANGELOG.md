@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.127.3](https://github.com/seatsurfing/seatsurfing/compare/v1.127.2...v1.127.3) (2026-09-15)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `9ef50bc` to `0ebad35` ([#2635](https://github.com/seatsurfing/seatsurfing/issues/2635)) ([3811ab0](https://github.com/seatsurfing/seatsurfing/commit/3811ab0080ebc50736cbf0bd61439e71df01d002))
+* **server:** close race condition in per-user/per-location booking limits ([#2632](https://github.com/seatsurfing/seatsurfing/issues/2632)) ([88da639](https://github.com/seatsurfing/seatsurfing/commit/88da6398f924ecd47fcb0c7864762c9622c43b5e))
+
+
+### 📚 Documentation
+
+* **main:** refresh AGENTS.md with patterns from recent security fixes ([#2633](https://github.com/seatsurfing/seatsurfing/issues/2633)) ([2cbe7f6](https://github.com/seatsurfing/seatsurfing/commit/2cbe7f62939a48e9531f6d8ed1333533a37d25b3))
+
+## [1.127.2](https://github.com/seatsurfing/seatsurfing/compare/v1.127.1...v1.127.2) (2026-09-13)
+
+
+### 🐛 Bug Fixes
+
+* **server:** close race condition in failed-login account lockout ([#2630](https://github.com/seatsurfing/seatsurfing/issues/2630)) ([0a6540a](https://github.com/seatsurfing/seatsurfing/commit/0a6540ab5f560d51c2f596711a3de1416efde231))
+
+## [1.127.1](https://github.com/seatsurfing/seatsurfing/compare/v1.127.0...v1.127.1) (2026-09-13)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump nanoid from 3.3.17 to 3.3.19 in /ui ([#2627](https://github.com/seatsurfing/seatsurfing/issues/2627)) ([9422ab0](https://github.com/seatsurfing/seatsurfing/commit/9422ab00a1d6559a1e6173ab72235b09e16c20df))
+* **server:** filter active domains in database ([#2623](https://github.com/seatsurfing/seatsurfing/issues/2623)) ([f891509](https://github.com/seatsurfing/seatsurfing/commit/f891509687d0b72ae3c0c2ec3bba1a2820d645c7))
+
 ## [1.127.0](https://github.com/seatsurfing/seatsurfing/compare/v1.126.9...v1.127.0) (2026-09-12)
 
 
