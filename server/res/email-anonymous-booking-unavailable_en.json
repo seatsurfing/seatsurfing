@@ -7,5 +7,11 @@
     "Area: {{areaName}}",
     "Space: {{spaceName}}",
     "Please choose a different time slot or space."
+  ],
+  "buttons": [
+    {
+      "label": "Book a space",
+      "url": "{{orgDomain}}ui/public-booking/"
+    }
   ]
 }

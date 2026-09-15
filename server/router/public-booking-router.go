@@ -141,7 +141,7 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	name := strings.TrimSpace(m.Name)
-	if name == "" {
+	if !IsValidHumanName(name) {
 		SendBadRequest(w)
 		return
 	}

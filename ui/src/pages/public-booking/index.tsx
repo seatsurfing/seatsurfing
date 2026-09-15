@@ -8,6 +8,7 @@ import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
+import Validation from "@/util/Validation";
 
 interface AnonymousBookableSpace {
   spaceId: string;
@@ -163,7 +164,10 @@ class PublicBooking extends React.Component<Props, State> {
               value={this.state.name}
               onChange={(e: any) => this.setState({ name: e.target.value })}
               required={true}
-              maxLength={256}
+              minLength={2}
+              maxLength={64}
+              pattern={Validation.HUMAN_NAME_PATTERN}
+              title={this.props.t("nameRequirements")}
             />
           </Form.Group>
           <Form.Group className="mb-3">
