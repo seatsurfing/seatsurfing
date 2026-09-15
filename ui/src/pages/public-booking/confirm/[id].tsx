@@ -19,8 +19,10 @@ interface Props {
 // The confirmation token is single-use, so concurrent mounts (e.g. React
 // StrictMode mounting the component twice) must share one request per ID
 // instead of firing a second one that creates a duplicate booking.
-const confirmRequests: Map<string, ReturnType<typeof Ajax.postData>> =
-  new Map();
+const confirmRequests: Map<
+  string,
+  ReturnType<typeof Ajax.postData>
+> = new Map();
 
 class ConfirmAnonymousBooking extends React.Component<Props, State> {
   constructor(props: any) {
