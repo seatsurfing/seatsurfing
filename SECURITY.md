@@ -59,6 +59,10 @@ Findings that are generally **not eligible**, unless a credible, demonstrated im
 
 We may, at our discretion, also recognize valid reports that do not qualify for a monetary reward through public acknowledgment (e.g. a hall-of-fame credit), with the reporter's consent.
 
+### Payment of rewards
+
+If we decide to award a reward, payment requires a valid invoice from the reporter, addressed to Seatsurfing and stating the amount agreed with our security team, before any payment can be made. It is the reporter's responsibility to ensure the invoice complies with the tax and legal requirements applicable to them, and to bear any tax obligations arising from the reward. We reserve the right to withhold payment until a valid invoice is provided, and we may request additional documentation (e.g. identity verification) as required for payment processing or legal/regulatory compliance.
+
 ### Confidentiality
 
 Please keep any vulnerability details confidential until we have confirmed that the issue has been resolved, and coordinate the timing of any public disclosure with us in advance. We may update this policy from time to time; the version published in this repository at the time of your report governs that report.
