@@ -7,6 +7,7 @@ import SeatsurfingLogo from "@/components/SeatsurfingLogo";
 import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
 import DateUtil from "@/util/DateUtil";
+import DateTimePicker from "@/components/DateTimePicker";
 
 interface AnonymousBookableSpace {
   spaceId: string;
@@ -17,14 +18,13 @@ interface AnonymousBookableSpace {
 
 interface State {
   loading: boolean;
-  notAvailable: boolean;
   spaces: AnonymousBookableSpace[];
   spaceId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
+  enter: Date;
+  leave: Date;
   name: string;
   email: string;
+  subject: string;
   submitting: boolean;
   submitted: boolean;
   error: boolean;
@@ -40,16 +40,20 @@ class PublicBooking extends React.Component<Props, State> {
 
   constructor(props: any) {
     super(props);
+    const enter = new Date();
+    enter.setMinutes(0, 0, 0);
+    enter.setHours(enter.getHours() + 1);
+    const leave = new Date(enter);
+    leave.setHours(leave.getHours() + 1);
     this.state = {
       loading: true,
-      notAvailable: false,
       spaces: [],
       spaceId: "",
-      date: "",
-      startTime: "",
-      endTime: "",
+      enter: enter,
+      leave: leave,
       name: "",
       email: "",
+      subject: "",
       submitting: false,
       submitted: false,
       error: false,
@@ -67,7 +71,7 @@ class PublicBooking extends React.Component<Props, State> {
       .catch(() => {
         Ajax.get("/auth/singleorg", () => true)
           .then((res) => this.onOrgResolved(res.json.organization.id))
-          .catch(() => this.setState({ loading: false, notAvailable: true }));
+          .catch(() => this.props.router.replace("/404"));
       });
   };
 
@@ -79,43 +83,39 @@ class PublicBooking extends React.Component<Props, State> {
     )
       .then((res) => {
         const spaces: AnonymousBookableSpace[] = res.json || [];
+        if (spaces.length === 0) {
+          this.props.router.replace("/404");
+          return;
+        }
         this.setState({
           loading: false,
           spaces: spaces,
-          spaceId: spaces.length > 0 ? spaces[0].spaceId : "",
+          spaceId: spaces[0].spaceId,
         });
       })
-      .catch(() => this.setState({ loading: false, notAvailable: true }));
+      .catch(() => this.props.router.replace("/404"));
   };
 
   onSubmit = (e: any) => {
     e.preventDefault();
-    if (
-      !this.state.spaceId ||
-      !this.state.date ||
-      !this.state.startTime ||
-      !this.state.endTime
-    ) {
+    if (!this.state.spaceId) {
       return;
     }
-    const [startHours, startMinutes] = this.state.startTime
-      .split(":")
-      .map(Number);
-    const [endHours, endMinutes] = this.state.endTime.split(":").map(Number);
-    const [year, month, day] = this.state.date.split("-").map(Number);
-    const enter = new Date(year, month - 1, day, startHours, startMinutes, 0);
-    const leave = new Date(year, month - 1, day, endHours, endMinutes, 0);
-    if (leave <= enter) {
+    if (
+      this.state.leave <= this.state.enter ||
+      !DateUtil.isSameDay(this.state.enter, this.state.leave)
+    ) {
       this.setState({ error: true });
       return;
     }
     this.setState({ submitting: true, error: false });
     const payload = {
       spaceId: this.state.spaceId,
-      enter: DateUtil.convertToFakeUTCDate(enter).toISOString(),
-      leave: DateUtil.convertToFakeUTCDate(leave).toISOString(),
+      enter: DateUtil.convertToFakeUTCDate(this.state.enter).toISOString(),
+      leave: DateUtil.convertToFakeUTCDate(this.state.leave).toISOString(),
       name: this.state.name,
       email: this.state.email,
+      subject: this.state.subject,
     };
     Ajax.postData(
       "/public-booking/" + encodeURIComponent(this.orgId) + "/request",
@@ -131,21 +131,14 @@ class PublicBooking extends React.Component<Props, State> {
       return <Loading />;
     }
 
-    if (this.state.notAvailable || this.state.spaces.length === 0) {
-      return (
-        <div className="container-center">
-          <div className="container-center-inner">
-            <SeatsurfingLogo />
-            <p>{this.props.t("anonymousBookingNotAvailable")}</p>
-          </div>
-        </div>
-      );
+    if (this.state.spaces.length === 0) {
+      return <Loading />;
     }
 
     if (this.state.submitted) {
       return (
         <div className="container-center">
-          <div className="container-center-inner">
+          <div className="container-center-inner-wide">
             <SeatsurfingLogo />
             <p>{this.props.t("anonymousBookingRequestSubmitted")}</p>
           </div>
@@ -155,7 +148,7 @@ class PublicBooking extends React.Component<Props, State> {
 
     return (
       <div className="container-center">
-        <Form className="container-center-inner" onSubmit={this.onSubmit}>
+        <Form className="container-center-inner-wide" onSubmit={this.onSubmit}>
           <SeatsurfingLogo />
           <p>{this.props.t("anonymousBookingIntro")}</p>
           {this.state.error && (
@@ -198,32 +191,55 @@ class PublicBooking extends React.Component<Props, State> {
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>{this.props.t("date")}</Form.Label>
+            <Form.Label>{this.props.t("subject")}</Form.Label>
             <Form.Control
-              type="date"
-              value={this.state.date}
-              onChange={(e: any) => this.setState({ date: e.target.value })}
+              type="text"
+              value={this.state.subject}
+              onChange={(e: any) => this.setState({ subject: e.target.value })}
+              maxLength={256}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>{this.props.t("date")}</Form.Label>
+            <DateTimePicker
+              value={this.state.enter}
+              onChange={(value: Date) =>
+                this.setState({
+                  enter: DateUtil.copyDate(value, this.state.enter),
+                  leave: DateUtil.copyDate(value, this.state.leave),
+                })
+              }
               required={true}
+              enableTime={false}
             />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>{this.props.t("enter")}</Form.Label>
-            <Form.Control
-              type="time"
-              value={this.state.startTime}
-              onChange={(e: any) =>
-                this.setState({ startTime: e.target.value })
+            <DateTimePicker
+              value={this.state.enter}
+              onChange={(value: Date) =>
+                this.setState({
+                  enter: DateUtil.copyTime(value, this.state.enter),
+                })
               }
               required={true}
+              noCalendar={true}
+              enableTime={true}
             />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>{this.props.t("leave")}</Form.Label>
-            <Form.Control
-              type="time"
-              value={this.state.endTime}
-              onChange={(e: any) => this.setState({ endTime: e.target.value })}
+            <DateTimePicker
+              value={this.state.leave}
+              onChange={(value: Date) =>
+                this.setState({
+                  leave: DateUtil.copyTime(value, this.state.leave),
+                })
+              }
               required={true}
+              noCalendar={true}
+              enableTime={true}
+              minDate={this.state.enter}
             />
           </Form.Group>
           <Button

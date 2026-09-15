@@ -227,6 +227,10 @@ func (r *LocationStore) DeleteAll(organizationID string) error {
 		")", organizationID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM anonymous_bookings WHERE id NOT IN "+
+		"(SELECT anonymous_id FROM bookings WHERE anonymous_id IS NOT NULL)"); err != nil {
+		return err
+	}
 	// Delete space attribute values for locations to be deleted
 	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE attribute_id IN (SELECT id FROM space_attributes WHERE organization_id = $1)", organizationID); err != nil {
 		return err

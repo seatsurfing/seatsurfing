@@ -151,6 +151,7 @@ type Booking struct {
 	Approved              bool
 	Subject               string
 	RecurringID           NullUUID
+	AnonymousID           NullUUID
 	CreatedAtUTC          *time.Time
 	LastInfoMailSentAtUTC *time.Time
 	ReminderSentAtUTC     *time.Time
@@ -177,7 +178,6 @@ func (b *BookingDetails) GetSafeRecipientName() string {
 
 type AnonymousBooking struct {
 	ID           string
-	BookingID    string
 	Name         string
 	Email        string
 	CreatedAtUTC *time.Time

@@ -11,7 +11,7 @@
     {
       "paragraph": "Klicke auf den Button unten, um deine Anfrage zu bestätigen. Sie wird anschließend zur Genehmigung eingereicht.",
       "label": "Buchungsanfrage bestätigen",
-      "url": "{{orgDomain}}public-booking/confirm/{{confirmID}}/"
+      "url": "{{orgDomain}}ui/public-booking/confirm/{{confirmID}}/"
     }
   ],
   "finalParagraphs": [

@@ -124,6 +124,13 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendForbidden(w)
 		return
 	}
+	if e.AnonymousID != "" {
+		anonymousBookingEnabled, _ := GetSettingsRepository().GetBool(e.Space.Location.OrganizationID, SettingAnonymousBookingEnabled.Name)
+		if !anonymousBookingEnabled {
+			SendForbidden(w)
+			return
+		}
+	}
 	m := &SetBookingApprovalRequest{}
 	if UnmarshalBody(r, m) != nil {
 		SendBadRequest(w)
@@ -400,6 +407,10 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
+	if e.AnonymousID != "" {
+		SendForbidden(w)
+		return
+	}
 	var m CreateBookingRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -438,6 +449,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.ID = e.ID
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
+	eNew.AnonymousID = e.AnonymousID
 	eNew.Approved = e.Approved
 	if m.UserEmail != "" {
 		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
@@ -1252,7 +1264,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	if e.UserID == "" {
 		// Anonymous booking: no user account, no opt-out preference, no
 		// per-user language - recipient info comes from anonymous_bookings.
-		anonymousBooking, err := GetAnonymousBookingRepository().GetByBookingID(e.ID)
+		anonymousBooking, err := GetAnonymousBookingRepository().GetOne(string(e.AnonymousID))
 		if err != nil || anonymousBooking == nil {
 			log.Println(err)
 			return
@@ -1412,7 +1424,7 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 	// Get booking requester info (a real user, or an anonymous booker)
 	bookingUserEmail := ""
 	if e.UserID == "" {
-		anonymousBooking, err := GetAnonymousBookingRepository().GetByBookingID(e.ID)
+		anonymousBooking, err := GetAnonymousBookingRepository().GetOne(string(e.AnonymousID))
 		if err != nil || anonymousBooking == nil {
 			log.Println("Error getting anonymous booking:", err)
 			return

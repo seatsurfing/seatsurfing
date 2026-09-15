@@ -108,6 +108,10 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 	if err != nil || !leave.After(enter) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
+	if enter.Year() != leave.Year() || enter.YearDay() != leave.YearDay() {
+		// Anonymous bookings must not span across a day boundary.
+		return nil, nil, time.Time{}, time.Time{}, false
+	}
 	bookingRequest := &BookingRequest{Enter: enter, Leave: leave}
 	bookingRouter := &BookingRouter{}
 	if !bookingRouter.IsValidBookingDuration(bookingRequest, orgID, nil) {
@@ -275,24 +279,24 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	booking := &Booking{
-		SpaceID:  space.ID,
-		Enter:    payload.Enter,
-		Leave:    payload.Leave,
-		Subject:  payload.Subject,
-		Approved: false, // anonymous booking is only allowed on spaces that always have an approver group
+	anonymousBooking := &AnonymousBooking{
+		Name:  payload.Name,
+		Email: payload.Email,
 	}
-	if err := GetBookingRepository().Create(booking); err != nil {
+	if err := GetAnonymousBookingRepository().Create(anonymousBooking); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	anonymousBooking := &AnonymousBooking{
-		BookingID: booking.ID,
-		Name:      payload.Name,
-		Email:     payload.Email,
+	booking := &Booking{
+		SpaceID:     space.ID,
+		Enter:       payload.Enter,
+		Leave:       payload.Leave,
+		Subject:     payload.Subject,
+		Approved:    false, // anonymous booking is only allowed on spaces that always have an approver group
+		AnonymousID: NullUUID(anonymousBooking.ID),
 	}
-	if err := GetAnonymousBookingRepository().Create(anonymousBooking); err != nil {
+	if err := GetBookingRepository().Create(booking); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return

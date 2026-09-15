@@ -20,6 +20,7 @@ import {
   HelpCircle as IconHelp,
   RefreshCw as IconRefresh,
   MoreVertical as IconMore,
+  ExternalLink as IconExternalLink,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -1543,6 +1544,14 @@ class Settings extends React.Component<Props, State> {
                     disabled={true}
                   />
                   <CopyToClipboardButton text={Navigation.publicBookingUrl()} />
+                  <Button
+                    variant="outline-secondary"
+                    href={Navigation.publicBookingUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <IconExternalLink className="feather" />
+                  </Button>
                 </InputGroup>
               </Col>
             </Form.Group>
