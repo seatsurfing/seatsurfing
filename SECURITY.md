@@ -10,18 +10,18 @@ If you find a vulnerability, please contact security@seatsurfing.io. We'll look 
 
 When reporting, please include:
 
-* A clear description of the vulnerability and its potential impact.
-* Step-by-step instructions to reproduce the issue (proof-of-concept code, requests, or scripts are welcome).
-* The affected component, version, URL, or deployment (if known).
-* Any relevant logs, screenshots, or output.
+- A clear description of the vulnerability and its potential impact.
+- Step-by-step instructions to reproduce the issue (proof-of-concept code, requests, or scripts are welcome).
+- The affected component, version, URL, or deployment (if known).
+- Any relevant logs, screenshots, or output.
 
 We ask that you:
 
-* Give us a reasonable amount of time to investigate and remediate an issue before disclosing it publicly.
-* Make a good faith effort to avoid privacy violations, destruction of data, and interruption or degradation of our services during your research.
-* Only interact with accounts, data, and systems you own or for which you have explicit permission, and avoid accessing, modifying, or exfiltrating data belonging to other users.
-* Not perform testing that could negatively impact Seatsurfing or its users, including (but not limited to) denial-of-service attacks, spam, social engineering or phishing of our staff or users, and physical attacks against our facilities.
-* Not exploit a vulnerability beyond what is necessary to confirm and document it.
+- Give us a reasonable amount of time to investigate and remediate an issue before disclosing it publicly.
+- Make a good faith effort to avoid privacy violations, destruction of data, and interruption or degradation of our services during your research.
+- Only interact with accounts, data, and systems you own or for which you have explicit permission, and avoid accessing, modifying, or exfiltrating data belonging to other users.
+- Not perform testing that could negatively impact Seatsurfing or its users, including (but not limited to) denial-of-service attacks, spam, social engineering or phishing of our staff or users, and physical attacks against our facilities.
+- Not exploit a vulnerability beyond what is necessary to confirm and document it.
 
 We will not pursue legal action against researchers who discover and report vulnerabilities in good faith and in accordance with this policy.
 
@@ -39,19 +39,19 @@ We appreciate the efforts of security researchers who help us keep Seatsurfing a
 
 To be eligible for consideration, a report must:
 
-* Describe a previously unreported, verifiable vulnerability in a currently supported version of Seatsurfing's software or in infrastructure that we operate.
-* Not be the result of testing prohibited under this policy (e.g. social engineering, physical attacks, denial-of-service testing, or automated scanning that generates excessive traffic).
-* Not involve issues that have already been reported by another party, are already known to us, or are publicly disclosed.
-* Not involve vulnerabilities in third-party services, products, or dependencies that are outside of our control (these should be reported to the respective vendor or maintainer).
+- Describe a previously unreported, verifiable vulnerability in a currently supported version of Seatsurfing's software or in infrastructure that we operate.
+- Not be the result of testing prohibited under this policy (e.g. social engineering, physical attacks, denial-of-service testing, or automated scanning that generates excessive traffic).
+- Not involve issues that have already been reported by another party, are already known to us, or are publicly disclosed.
+- Not involve vulnerabilities in third-party services, products, or dependencies that are outside of our control (these should be reported to the respective vendor or maintainer).
 
 Findings that are generally **not eligible**, unless a credible, demonstrated impact is shown, include (non-exhaustive):
 
-* Missing security headers or best-practice hardening suggestions without a demonstrated exploit.
-* Issues requiring physical access to a device, a compromised/rooted device, or a compromised user account.
-* Reports from automated scanners without manual verification or a working proof of concept.
-* Self-XSS, clickjacking on pages with no sensitive actions, or issues requiring unlikely user interaction.
-* Rate limiting or brute-force issues without a demonstrated, meaningful impact.
-* Vulnerabilities affecting outdated or unsupported versions.
+- Missing security headers or best-practice hardening suggestions without a demonstrated exploit.
+- Issues requiring physical access to a device, a compromised/rooted device, or a compromised user account.
+- Reports from automated scanners without manual verification or a working proof of concept.
+- Self-XSS, clickjacking on pages with no sensitive actions, or issues requiring unlikely user interaction.
+- Rate limiting or brute-force issues without a demonstrated, meaningful impact.
+- Vulnerabilities affecting outdated or unsupported versions.
 
 ### Rewards are entirely at our discretion
 
