@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.127.7](https://github.com/seatsurfing/seatsurfing/compare/v1.127.6...v1.127.7) (2026-09-16)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** restore missing org-deletion confirmation page ([#2653](https://github.com/seatsurfing/seatsurfing/issues/2653)) ([877583b](https://github.com/seatsurfing/seatsurfing/commit/877583b959b744a872b693c64fb0a4f61886c24f))
+* **deps:** bump golang.org/x/crypto from 0.56.0 to 0.57.0 in /server in the minor-and-patch group ([#2651](https://github.com/seatsurfing/seatsurfing/issues/2651)) ([3bb2a10](https://github.com/seatsurfing/seatsurfing/commit/3bb2a1041c4de0426f97fe397bfa5a6f39647b2a))
+* **server:** remove deprecated env vars ADMIN_UI_BACKEND, BOOKING_UI_BACKEND and DISABLE_UI_PROXY ([#2650](https://github.com/seatsurfing/seatsurfing/issues/2650)) ([f125e3b](https://github.com/seatsurfing/seatsurfing/commit/f125e3bf79f303782c0aa72020f5945d7d608258))
+
+
+### 📚 Documentation
+
+* **main:** add link to releases page ([#2643](https://github.com/seatsurfing/seatsurfing/issues/2643)) ([e69e7e7](https://github.com/seatsurfing/seatsurfing/commit/e69e7e7d0f1e335ec14916d887a559a788948e86))
+
 ## [1.127.6](https://github.com/seatsurfing/seatsurfing/compare/v1.127.5...v1.127.6) (2026-09-16)
 
 
