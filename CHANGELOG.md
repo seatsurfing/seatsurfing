@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.127.4](https://github.com/seatsurfing/seatsurfing/compare/v1.127.3...v1.127.4) (2026-09-15)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** fix error when adding no user to group ([#2640](https://github.com/seatsurfing/seatsurfing/issues/2640)) ([72d2013](https://github.com/seatsurfing/seatsurfing/commit/72d2013788d05fc81b120ea37fbc9e9bd8eb43c1))
+
+
+### 📚 Documentation
+
+* **main:** expand SECURITY.md with vulnerability reporting guidelines and bug bounty program ([#2642](https://github.com/seatsurfing/seatsurfing/issues/2642)) ([ca7de53](https://github.com/seatsurfing/seatsurfing/commit/ca7de5300afdfcb239b1515df17908b2637c2556))
+
 ## [1.127.3](https://github.com/seatsurfing/seatsurfing/compare/v1.127.2...v1.127.3) (2026-09-15)
 
 
