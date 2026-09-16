@@ -107,15 +107,25 @@ func (router *BookingRouter) SetupRoutes(s *mux.Router) {
 
 func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Request) {
 	requestUser := GetRequestUser(r)
-	if !HasPermission(requestUser, requestUser.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
-		SendForbidden(w)
-		return
-	}
 	vars := mux.Vars(r)
 	e, err := GetBookingRepository().GetOne(vars["id"])
 	if err != nil {
 		log.Println(err)
 		SendNotFound(w)
+		return
+	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	if !HasPermission(requestUser, location.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		SendForbidden(w)
 		return
 	}
 
