@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.127.5](https://github.com/seatsurfing/seatsurfing/compare/v1.127.4...v1.127.5) (2026-09-16)
+
+
+### 🐛 Bug Fixes
+
+* **server:** enforce target-organization authorization on organization deletion ([#2644](https://github.com/seatsurfing/seatsurfing/issues/2644)) ([d0c00ca](https://github.com/seatsurfing/seatsurfing/commit/d0c00cafc5e877a3f6fb21898cfcc97a21121a58))
+
 ## [1.127.4](https://github.com/seatsurfing/seatsurfing/compare/v1.127.3...v1.127.4) (2026-09-15)
 
 
