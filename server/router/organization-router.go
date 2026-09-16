@@ -463,8 +463,9 @@ func (router *OrganizationRouter) sendVerifyEmailAddressEmail(org *Organization,
 
 func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
+	vars := mux.Vars(r)
 
-	if !HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
+	if !HasPermission(user, vars["id"], PermissionOrgSettings, PermissionLevelAdmin) {
 		SendForbidden(w)
 		return
 	}
@@ -473,7 +474,6 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	vars := mux.Vars(r)
 	e, err := GetOrganizationRepository().GetOne(vars["id"])
 	if err != nil {
 		SendNotFound(w)
