@@ -267,6 +267,9 @@ func (r *GroupStore) GetUserCountMap(organizationID string) (map[string]int, err
 }
 
 func (r *GroupStore) AddMembers(e *Group, userIDs []string) error {
+	if len(userIDs) == 0 {
+		return nil
+	}
 	sqlStr := "INSERT INTO users_groups (group_id, user_id) VALUES "
 	vals := []interface{}{}
 	i := 1

@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_URL: "postgres://seatsurfing:DB_PASSWORD@db/seatsurfing?sslmode=disable"
   db:
-    image: postgres:17
+    image: postgres:18
     restart: always
     networks:
       sql:

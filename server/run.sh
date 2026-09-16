@@ -14,7 +14,7 @@ else
         -e PGDATA=/var/lib/postgresql/data/pgdata \
         -v postgres-seatsurfing:/var/lib/postgresql/data \
         --name postgres-seatsurfing \
-        postgres:17-alpine
+        postgres:18-alpine
     until docker exec postgres-seatsurfing pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
 fi
 docker exec postgres-seatsurfing psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='seatsurfing'" | grep -q 1 || docker exec postgres-seatsurfing psql -U postgres -c "CREATE DATABASE seatsurfing"

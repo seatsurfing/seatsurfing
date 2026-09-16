@@ -145,7 +145,7 @@ class EditUser extends React.Component<Props, State> {
   };
 
   addMembers = () => {
-    if (this.typeahead !== null) {
+    if (this.typeahead !== null && this.state.addUserIds.length > 0) {
       this.entity
         .addMembers(this.state.addUserIds)
         .then(() => {
