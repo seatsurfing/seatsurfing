@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.127.6](https://github.com/seatsurfing/seatsurfing/compare/v1.127.5...v1.127.6) (2026-09-16)
+
+
+### 🐛 Bug Fixes
+
+* **server:** enforce target-organization authorization across cross-tenant endpoints ([#2646](https://github.com/seatsurfing/seatsurfing/issues/2646)) ([9d761f5](https://github.com/seatsurfing/seatsurfing/commit/9d761f58e6df063323c52ccc744f779197e28f7f))
+
 ## [1.127.5](https://github.com/seatsurfing/seatsurfing/compare/v1.127.4...v1.127.5) (2026-09-16)
 
 
