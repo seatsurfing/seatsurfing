@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the latest stable release is supported. Please make sure you're upgrading regularly.
+Only the latest [stable release](/seatsurfing/seatsurfing/releases) is supported. Please make sure you're upgrading regularly.
 
 ## Reporting a Vulnerability
 
