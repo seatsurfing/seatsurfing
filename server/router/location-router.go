@@ -112,6 +112,11 @@ func (router *LocationRouter) getAttributes(w http.ResponseWriter, r *http.Reque
 		SendNotFound(w)
 		return
 	}
+	user := GetRequestUser(r)
+	if !CanAccessOrg(user, e.OrganizationID) {
+		SendForbidden(w)
+		return
+	}
 	list, err := GetSpaceAttributeValueRepository().GetAllForEntity(e.ID, SpaceAttributeValueEntityTypeLocation)
 	if err != nil {
 		log.Println(err)

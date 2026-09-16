@@ -574,3 +574,21 @@ func TestLocationMapTypeDesigned(t *testing.T) {
 	CheckTestBool(t, true, len(svgData) > 0)
 	CheckTestBool(t, true, string(svgData[:4]) == "<svg")
 }
+
+// TestLocationGetAttributesCrossTenant proves (and, once fixed, guards
+// against) CWE-285/CWE-639: any authenticated user must not be able to read
+// another organization's location attribute values just by putting that
+// location's ID in the URL.
+func TestLocationGetAttributesCrossTenant(t *testing.T) {
+	ClearTestDB()
+	victimOrg := CreateTestOrg("victim.com")
+	victimLocation, _ := CreateTestLocationAndSpace(victimOrg)
+
+	attackerOrg := CreateTestOrg("attacker.com")
+	attackerUser := CreateTestUserInOrg(attackerOrg)
+	loginResponse := LoginTestUser(attackerUser.ID)
+
+	req := NewHTTPRequest("GET", "/location/"+victimLocation.ID+"/attribute", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
