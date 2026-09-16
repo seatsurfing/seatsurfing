@@ -5,6 +5,7 @@
 
 ### 🐛 Bug Fixes
 
+* **admin-ui:** show user's name in approval table ([#2647](https://github.com/seatsurfing/seatsurfing/issues/2647)) ([722f133](https://github.com/seatsurfing/seatsurfing/commit/722f1334792e8f5942de04fd09566e34750b1020))
 * **server:** enforce target-organization authorization across cross-tenant endpoints ([#2646](https://github.com/seatsurfing/seatsurfing/issues/2646)) ([9d761f5](https://github.com/seatsurfing/seatsurfing/commit/9d761f58e6df063323c52ccc744f779197e28f7f))
 
 ## [1.127.5](https://github.com/seatsurfing/seatsurfing/compare/v1.127.4...v1.127.5) (2026-09-16)
