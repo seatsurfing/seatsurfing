@@ -1667,7 +1667,8 @@ class EditLocation extends React.Component<Props, State> {
   exportTable = (e: any) => {
     const t = this.props.t;
     const showKioskMode =
-      RuntimeConfig.INFOS.featureKioskMode && RuntimeConfig.INFOS.kioskModeEnabled;
+      RuntimeConfig.INFOS.featureKioskMode &&
+      RuntimeConfig.INFOS.kioskModeEnabled;
     const headers = [
       t("name"),
       t("enabled"),
@@ -1681,9 +1682,7 @@ class EditLocation extends React.Component<Props, State> {
       space.name,
       RendererUtils.stateXls(space.enabled, t),
       RendererUtils.stateXls(space.requireSubject, t),
-      ...(showKioskMode
-        ? [RendererUtils.stateXls(space.kioskEnabled, t)]
-        : []),
+      ...(showKioskMode ? [RendererUtils.stateXls(space.kioskEnabled, t)] : []),
       RendererUtils.stateXls(space.approvers && space.approvers?.length > 0, t),
       RendererUtils.stateXls(
         space.allowBookers && space.allowBookers?.length > 0,
