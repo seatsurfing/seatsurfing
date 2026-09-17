@@ -240,15 +240,6 @@ func (c *Config) ReadConfig() {
 		log.Println("⚠️  Warning: ALLOW_ORG_DELETE is deprecated. Use FEATURE_FLAGS=ALLOW_ORG_DELETE instead.")
 		c.AllowOrgDelete = true
 	}
-	if c.getEnv("ADMIN_UI_BACKEND", "") != "" {
-		log.Println("⚠️  Warning: ADMIN_UI_BACKEND is deprecated. The Admin UI now uses the same backend as the booking UI. Please remove this environment variable.")
-	}
-	if c.getEnv("BOOKING_UI_BACKEND", "") != "" {
-		log.Println("⚠️  Warning: BOOKING_UI_BACKEND is deprecated. The Booking UI now uses the same backend as the Admin UI. Please remove this environment variable.")
-	}
-	if c.getEnv("DISABLE_UI_PROXY", "") != "" {
-		log.Println("⚠️  Warning: DISABLE_UI_PROXY is deprecated. Admin and Booking UI assets are now part of the backend. Please adjust your proxy configuration accordingly.")
-	}
 }
 
 // parsePluginsConfig parses the PLUGINS_CONFIG env var, a JSON array of

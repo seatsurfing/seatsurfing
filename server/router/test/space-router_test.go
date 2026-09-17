@@ -961,3 +961,93 @@ func TestSpacesAvailabilityBookingsGroupedPerSpace(t *testing.T) {
 	CheckTestString(t, "09", resBody[0].Bookings[0].Enter.Format("15"))
 	CheckTestString(t, "13", resBody[0].Bookings[1].Enter.Format("15"))
 }
+
+// TestSpaceRouterUpdateCrossTenant proves (and, once fixed, guards against)
+// CWE-285/CWE-639: an area admin of org A must not be able to hijack org B's
+// space (overwriting it and reparenting it into org A's location) just by
+// putting org B's space ID in the URL under org A's own location.
+func TestSpaceRouterUpdateCrossTenant(t *testing.T) {
+	ClearTestDB()
+	victimOrg := CreateTestOrg("victim.com")
+	_, victimSpace := CreateTestLocationAndSpace(victimOrg)
+
+	attackerOrg := CreateTestOrg("attacker.com")
+	attackerAdmin := CreateTestUserOrgAdmin(attackerOrg)
+	attackerLocation, _ := CreateTestLocationAndSpace(attackerOrg)
+	loginResponse := LoginTestUser(attackerAdmin.ID)
+
+	payload := `{"name": "Hijacked", "shape": "rect", "fontSize": "normal"}`
+	req := NewHTTPRequest("PUT", "/location/"+attackerLocation.ID+"/space/"+victimSpace.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	unchanged, err := GetSpaceRepository().GetOne(victimSpace.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unchanged.LocationID != victimSpace.LocationID {
+		t.Fatal("victim space must not have been reparented into the attacker's location")
+	}
+	if unchanged.Name == "Hijacked" {
+		t.Fatal("victim space must not have been overwritten")
+	}
+}
+
+// TestSpaceRouterBulkUpdateCrossTenant proves (and, once fixed, guards
+// against) CWE-285/CWE-639: an area admin of org A must not be able to
+// delete or reparent org B's spaces via the bulk endpoint just by listing
+// org B's space IDs while authorized only for org A's own location.
+func TestSpaceRouterBulkUpdateCrossTenant(t *testing.T) {
+	ClearTestDB()
+	victimOrg := CreateTestOrg("victim.com")
+	_, victimSpace := CreateTestLocationAndSpace(victimOrg)
+
+	attackerOrg := CreateTestOrg("attacker.com")
+	attackerAdmin := CreateTestUserOrgAdmin(attackerOrg)
+	attackerLocation, _ := CreateTestLocationAndSpace(attackerOrg)
+	loginResponse := LoginTestUser(attackerAdmin.ID)
+
+	payload := `{"updates": [{"id": "` + victimSpace.ID + `", "name": "Hijacked", "shape": "rect", "fontSize": "normal"}], "deleteIds": ["` + victimSpace.ID + `"]}`
+	req := NewHTTPRequest("POST", "/location/"+attackerLocation.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	still, err := GetSpaceRepository().GetOne(victimSpace.ID)
+	if err != nil {
+		t.Fatal("victim space must not have been deleted")
+	}
+	if still.LocationID != victimSpace.LocationID {
+		t.Fatal("victim space must not have been reparented into the attacker's location")
+	}
+	if still.Name == "Hijacked" {
+		t.Fatal("victim space must not have been overwritten")
+	}
+}
+
+// TestSpaceRouterApproversCrossTenant proves (and, once fixed, guards
+// against) an area admin of org A tampering with org B's space approvers or
+// allowed bookers by putting org B's space ID under org A's own location.
+func TestSpaceRouterApproversCrossTenant(t *testing.T) {
+	ClearTestDB()
+	victimOrg := CreateTestOrg("victim.com")
+	_, victimSpace := CreateTestLocationAndSpace(victimOrg)
+	victimGroup := CreateTestGroup(victimOrg, nil)
+	GetSpaceRepository().AddApprovers(victimSpace, []string{victimGroup.ID})
+
+	attackerOrg := CreateTestOrg("attacker.com")
+	attackerAdmin := CreateTestUserOrgAdmin(attackerOrg)
+	attackerLocation, _ := CreateTestLocationAndSpace(attackerOrg)
+	loginResponse := LoginTestUser(attackerAdmin.ID)
+
+	req := NewHTTPRequest("POST", "/location/"+attackerLocation.ID+"/space/"+victimSpace.ID+"/approver/remove", loginResponse.UserID, bytes.NewBufferString(`["`+victimGroup.ID+`"]`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(victimSpace.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(approvers) != 1 {
+		t.Fatal("victim space's approvers must not have been removed by a cross-tenant caller")
+	}
+}

@@ -398,7 +398,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	if m.DeleteIDs != nil {
 		for _, deleteID := range m.DeleteIDs {
 			e, err := GetSpaceRepository().GetOne(deleteID)
-			if err != nil {
+			if err != nil || e.LocationID != location.ID {
 				res.Deletes = append(res.Deletes, BulkUpdateItemResponse{ID: deleteID, Success: false})
 			} else {
 				if err := GetSpaceRepository().Delete(e); err != nil {
@@ -440,6 +440,11 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	// Process updates
 	if m.Updates != nil {
 		for _, mSpace := range m.Updates {
+			existing, err := GetSpaceRepository().GetOne(mSpace.ID)
+			if err != nil || existing.LocationID != location.ID {
+				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: "", Success: false})
+				continue
+			}
 			if mSpace.AnonymousBookingEnabled && len(mSpace.ApproverGroupIDs) == 0 {
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: mSpace.ID, Success: false})
 				continue
@@ -522,6 +527,11 @@ func (router *SpaceRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
+	existing, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil || existing.LocationID != vars["locationId"] {
+		SendNotFound(w)
+		return
+	}
 	e := router.copyFromRestModel(&m)
 	e.ID = vars["id"]
 	e.LocationID = vars["locationId"]
@@ -766,7 +776,7 @@ func (router *SpaceRouter) addApprovers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	e, err := GetSpaceRepository().GetOne(vars["id"])
-	if err != nil {
+	if err != nil || e.LocationID != location.ID {
 		SendNotFound(w)
 		return
 	}
@@ -806,7 +816,7 @@ func (router *SpaceRouter) removeApprovers(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	e, err := GetSpaceRepository().GetOne(vars["id"])
-	if err != nil {
+	if err != nil || e.LocationID != location.ID {
 		SendNotFound(w)
 		return
 	}
@@ -861,7 +871,7 @@ func (router *SpaceRouter) getApprovers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	e, err := GetSpaceRepository().GetOne(vars["id"])
-	if err != nil {
+	if err != nil || e.LocationID != location.ID {
 		SendNotFound(w)
 		return
 	}
@@ -899,7 +909,7 @@ func (router *SpaceRouter) addAllowedBookers(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	e, err := GetSpaceRepository().GetOne(vars["id"])
-	if err != nil {
+	if err != nil || e.LocationID != location.ID {
 		SendNotFound(w)
 		return
 	}
@@ -939,7 +949,7 @@ func (router *SpaceRouter) removeAllowedBookers(w http.ResponseWriter, r *http.R
 		return
 	}
 	e, err := GetSpaceRepository().GetOne(vars["id"])
-	if err != nil {
+	if err != nil || e.LocationID != location.ID {
 		SendNotFound(w)
 		return
 	}
@@ -969,7 +979,7 @@ func (router *SpaceRouter) getAllowedBookers(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	e, err := GetSpaceRepository().GetOne(vars["id"])
-	if err != nil {
+	if err != nil || e.LocationID != location.ID {
 		SendNotFound(w)
 		return
 	}

@@ -3323,3 +3323,35 @@ func TestBookingsMaxConcurrentPerUserRaceCondition(t *testing.T) {
 	}
 	CheckTestInt(t, limit, successCount)
 }
+
+// TestBookingsApproveCrossTenant proves (and, once fixed, guards against)
+// CWE-285/CWE-639: an approvals admin of org A must not be able to approve
+// or decline a pending booking belonging to org B just by putting org B's
+// booking ID in the URL, even when org B's space has no approver group
+// configured (which would otherwise trivially satisfy the approver check).
+func TestBookingsApproveCrossTenant(t *testing.T) {
+	ClearTestDB()
+	victimOrg := CreateTestOrg("victim.com")
+	victimUser := CreateTestUserInOrg(victimOrg)
+	victimLocation, victimSpace := CreateTestLocationAndSpace(victimOrg)
+	_ = victimLocation
+	victimBooking := CreateTestBooking9To5(victimUser, victimSpace, 1)
+
+	attackerOrg := CreateTestOrg("attacker.com")
+	attackerAdmin := CreateTestUserWithPermissions(attackerOrg, map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelAdmin,
+	})
+
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+victimBooking.ID+"/approve", attackerAdmin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	still, err := GetBookingRepository().GetOne(victimBooking.ID)
+	if err != nil {
+		t.Fatal("victim booking must not have been deleted")
+	}
+	if still.Approved {
+		t.Fatal("victim booking must not have been approved by a cross-tenant caller")
+	}
+}

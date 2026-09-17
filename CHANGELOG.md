@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.127.7](https://github.com/seatsurfing/seatsurfing/compare/v1.127.6...v1.127.7) (2026-09-16)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** restore missing org-deletion confirmation page ([#2653](https://github.com/seatsurfing/seatsurfing/issues/2653)) ([877583b](https://github.com/seatsurfing/seatsurfing/commit/877583b959b744a872b693c64fb0a4f61886c24f))
+* **deps:** bump golang.org/x/crypto from 0.56.0 to 0.57.0 in /server in the minor-and-patch group ([#2651](https://github.com/seatsurfing/seatsurfing/issues/2651)) ([3bb2a10](https://github.com/seatsurfing/seatsurfing/commit/3bb2a1041c4de0426f97fe397bfa5a6f39647b2a))
+* **server:** remove deprecated env vars ADMIN_UI_BACKEND, BOOKING_UI_BACKEND and DISABLE_UI_PROXY ([#2650](https://github.com/seatsurfing/seatsurfing/issues/2650)) ([f125e3b](https://github.com/seatsurfing/seatsurfing/commit/f125e3bf79f303782c0aa72020f5945d7d608258))
+
+
+### 📚 Documentation
+
+* **main:** add link to releases page ([#2643](https://github.com/seatsurfing/seatsurfing/issues/2643)) ([e69e7e7](https://github.com/seatsurfing/seatsurfing/commit/e69e7e7d0f1e335ec14916d887a559a788948e86))
+
+## [1.127.6](https://github.com/seatsurfing/seatsurfing/compare/v1.127.5...v1.127.6) (2026-09-16)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** show user's name in approval table ([#2647](https://github.com/seatsurfing/seatsurfing/issues/2647)) ([722f133](https://github.com/seatsurfing/seatsurfing/commit/722f1334792e8f5942de04fd09566e34750b1020))
+* **server:** enforce target-organization authorization across cross-tenant endpoints ([#2646](https://github.com/seatsurfing/seatsurfing/issues/2646)) ([9d761f5](https://github.com/seatsurfing/seatsurfing/commit/9d761f58e6df063323c52ccc744f779197e28f7f))
+
+## [1.127.5](https://github.com/seatsurfing/seatsurfing/compare/v1.127.4...v1.127.5) (2026-09-16)
+
+
+### 🐛 Bug Fixes
+
+* **server:** enforce target-organization authorization on organization deletion ([#2644](https://github.com/seatsurfing/seatsurfing/issues/2644)) ([d0c00ca](https://github.com/seatsurfing/seatsurfing/commit/d0c00cafc5e877a3f6fb21898cfcc97a21121a58))
+
 ## [1.127.4](https://github.com/seatsurfing/seatsurfing/compare/v1.127.3...v1.127.4) (2026-09-15)
 
 

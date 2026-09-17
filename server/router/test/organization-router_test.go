@@ -777,6 +777,33 @@ func TestOrganizationsCompleteOrgDeletionNotFound(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+// TestOrganizationsDeleteCrossTenant proves (and, once fixed, guards against)
+// CWE-285/CWE-639: an admin of org A must not be able to initiate deletion of
+// org B just by putting org B's ID in the URL path.
+func TestOrganizationsDeleteCrossTenant(t *testing.T) {
+	ClearTestDB()
+	allowOrgDelete := GetConfig().AllowOrgDelete
+	GetConfig().AllowOrgDelete = true
+	defer func() { GetConfig().AllowOrgDelete = allowOrgDelete }()
+
+	victimOrg := createOrgForTest("Victim Org", "Foo", "Bar", "victim@seatsurfing.app", "de")
+	GetOrganizationRepository().AddDomain(victimOrg, "victim.com", true)
+	GetOrganizationRepository().SetPrimaryDomain(victimOrg, "victim.com")
+	attackerOrg := createOrgForTest("Attacker Org", "Mal", "Ory", "attacker@seatsurfing.app", "de")
+	attackerAdmin := CreateTestUserOrgAdmin(attackerOrg)
+	loginResponse := LoginTestUser(attackerAdmin.ID)
+
+	// Attacker (admin of attackerOrg) requests deletion of victimOrg's ID.
+	req := NewHTTPRequest("DELETE", "/organization/"+victimOrg.ID, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// victimOrg must still exist.
+	if _, err := GetOrganizationRepository().GetOne(victimOrg.ID); err != nil {
+		t.Fatal("victim organization must not have been touched")
+	}
+}
+
 func TestOrganizationsGetOneForbidden(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
