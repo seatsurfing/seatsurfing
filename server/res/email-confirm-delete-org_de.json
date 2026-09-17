@@ -8,7 +8,7 @@
     {
       "paragraph": "BITTE BEACHTEN: Das Löschen der Seatsurfing-Instanz umfasst die endgültige Löschung aller Buchungen, Bereiche, Arbeitsplätze und Benutzer. Eine Wiederherstellung ist nicht möglich! Klicke auf die Schaltfläche unten, um diese Aktion zu bestätigen.",
       "label": "Instanz endgültig löschen",
-      "url": "{{orgDomain}}ui/admin/organizations/delete/{{confirmID}}/"
+      "url": "{{orgDomain}}ui/admin/settings/delete/{{confirmID}}/"
     }
   ],
   "finalParagraphs": [
