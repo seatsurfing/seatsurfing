@@ -52,6 +52,7 @@ type OrganizationRepository interface {
 	GetByEmail(email string) (*Organization, error)
 	GetAllDaysPassedSinceSignup(daysPassed int, settingExists string) ([]*Organization, error)
 	GetPrimaryDomain(e *Organization) (*Domain, error)
+	GetDomains(e *Organization) ([]*Domain, error)
 	Create(e *Organization) error
 	Update(e *Organization) error
 	Delete(e *Organization) error

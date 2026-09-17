@@ -47,6 +47,7 @@ service HostAPIService {
   rpc OrgGetByEmail(OrgGetByEmailArgs) returns (OrgGetOneReply);
   rpc OrgGetAllDaysPassedSinceSignup(OrgGetDaysPassedArgs) returns (OrgGetAllReply);
   rpc OrgGetPrimaryDomain(OrgGetPrimaryDomainArgs) returns (OrgGetPrimaryDomainReply);
+  rpc OrgGetDomains(OrgGetDomainsArgs) returns (OrgGetDomainsReply);
   rpc OrgCreate(OrgMutateArgs) returns (OrgGetOneReply);
   rpc OrgUpdate(OrgMutateArgs) returns (ErrorReply);
   rpc OrgDelete(OrgMutateArgs) returns (ErrorReply);
@@ -161,6 +162,8 @@ message OrgGetByEmailArgs { string email = 1; }
 message OrgGetDaysPassedArgs { int32 days_passed = 1; string setting_exists = 2; }
 message OrgGetPrimaryDomainArgs { seatsurfing.plugin.v1.Organization org = 1; }
 message OrgGetPrimaryDomainReply { seatsurfing.plugin.v1.Domain domain = 1; string err = 2; }
+message OrgGetDomainsArgs { seatsurfing.plugin.v1.Organization org = 1; }
+message OrgGetDomainsReply { repeated seatsurfing.plugin.v1.Domain domains = 1; string err = 2; }
 message OrgMutateArgs { seatsurfing.plugin.v1.Organization org = 1; }
 message OrgAddDomainArgs { seatsurfing.plugin.v1.Organization org = 1; string domain = 2; bool active = 3; }
 message OrgSetPrimaryDomainArgs { seatsurfing.plugin.v1.Organization org = 1; string domain = 2; }

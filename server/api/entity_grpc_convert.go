@@ -179,6 +179,22 @@ func domainFromProto(p *commonpb.Domain) *Domain {
 	}
 }
 
+func domainsToProto(domains []*Domain) []*commonpb.Domain {
+	out := make([]*commonpb.Domain, 0, len(domains))
+	for _, d := range domains {
+		out = append(out, domainToProto(d))
+	}
+	return out
+}
+
+func domainsFromProto(domains []*commonpb.Domain) []*Domain {
+	out := make([]*Domain, 0, len(domains))
+	for _, d := range domains {
+		out = append(out, domainFromProto(d))
+	}
+	return out
+}
+
 func groupToProto(g *Group) *commonpb.Group {
 	if g == nil {
 		return nil
