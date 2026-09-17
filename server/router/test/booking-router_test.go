@@ -1797,6 +1797,26 @@ func TestBookingsInvalidFutureAdvanceDate(t *testing.T) {
 	CheckTestBool(t, false, res)
 }
 
+func TestBookingsInvalidAdvanceDateOnLeave(t *testing.T) {
+	ClearTestDB()
+	// booking starts within the allowed advance window, but its multi-day
+	// duration pushes the leave date beyond it -> must be rejected
+	// (see https://github.com/seatsurfing/seatsurfing/issues/2658)
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5")
+	user := CreateTestUserInOrg(org)
+
+	m := &BookingRequest{
+		Enter: time.Now().Add(time.Hour * 2 * 24).Add(time.Hour * 1).UTC(),
+		Leave: time.Now().Add(time.Hour * 8 * 24).Add(time.Hour * 5).UTC(),
+	}
+
+	router := &BookingRouter{}
+	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
+	CheckTestBool(t, false, res)
+	CheckTestInt(t, ResponseCodeBookingTooManyDaysInAdvance, errorCode)
+}
+
 func TestBookingsValidMaxUpcomingBookings(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
