@@ -356,6 +356,7 @@
   "maxConcurrentBookings": "Maksimaalne broneeringute arv",
   "maxConcurrentBookingsPerUser": "Maksimaalne samaaegsete broneeringute arv kasutaja kohta",
   "maxDaysInAdvance": "Maksimaalne broneerimine ette",
+  "maxDaysInAdvanceHint": "Kehtib broneeringu alguse kohta",
   "maxHoursBeforeDelete": "Maksimaalne tühistamise aeg enne broneeringu algust",
   "maxHoursPartiallyBooked": "Maksimaalne osaliselt broneeritud aeg",
   "members": "Liikmed",

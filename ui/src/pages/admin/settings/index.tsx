@@ -1151,6 +1151,9 @@ class Settings extends React.Component<Props, State> {
                 />
                 <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
               </InputGroup>
+              <Form.Text className="text-muted">
+                {this.props.t("maxDaysInAdvanceHint")}
+              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
