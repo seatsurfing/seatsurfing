@@ -922,10 +922,6 @@ func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID stri
 	if advanceDays > float64(maxAdvanceDays) {
 		return false, ResponseCodeBookingTooManyDaysInAdvance
 	}
-	leaveAdvanceDays := math.Floor(m.Leave.Sub(now).Hours() / 24)
-	if leaveAdvanceDays > float64(maxAdvanceDays) {
-		return false, ResponseCodeBookingTooManyDaysInAdvance
-	}
 	return true, 0
 }
 
