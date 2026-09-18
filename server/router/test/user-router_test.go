@@ -1362,3 +1362,48 @@ func TestUserUpdatePreservesSecurityFields(t *testing.T) {
 	CheckTestString(t, "SOMEFAKETOTPSECRET", string(updatedUser.TotpSecret))
 	CheckTestBool(t, true, updatedUser.PasswordUpdateRequired)
 }
+
+// Listing users returns each user's role assignments, resolved in one query
+// for the whole list rather than one per user (see issue #2664).
+func TestUserListIncludesRoleIDs(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	spaceAdmin := CreateTestUserOrgSpaceAdmin(org)
+	plain := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	req := NewHTTPRequest("GET", "/user/", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 3, len(resBody))
+
+	adminRoleIDs, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	spaceAdminRoleIDs, _ := GetUserRoleRepository().GetRoleIDsForUser(spaceAdmin.ID)
+	CheckTestInt(t, 1, len(adminRoleIDs))
+	CheckTestInt(t, 1, len(spaceAdminRoleIDs))
+
+	found := 0
+	for _, u := range resBody {
+		switch u.ID {
+		case admin.ID:
+			found++
+			CheckTestInt(t, 1, len(u.RoleIDs))
+			CheckTestString(t, adminRoleIDs[0], u.RoleIDs[0])
+		case spaceAdmin.ID:
+			found++
+			CheckTestInt(t, 1, len(u.RoleIDs))
+			CheckTestString(t, spaceAdminRoleIDs[0], u.RoleIDs[0])
+		case plain.ID:
+			found++
+			if u.RoleIDs == nil {
+				t.Fatalf("expected empty roleIds array, got null")
+			}
+			CheckTestInt(t, 0, len(u.RoleIDs))
+		}
+	}
+	CheckTestInt(t, 3, found)
+}
