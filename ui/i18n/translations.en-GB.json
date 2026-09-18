@@ -360,6 +360,7 @@
   "maxConcurrentBookings": "Max. bookings",
   "maxConcurrentBookingsPerUser": "Max. concurrent bookings per user",
   "maxDaysInAdvance": "Max. days in advance",
+  "maxDaysInAdvanceHint": "Applies to enter times",
   "maxHoursBeforeDelete": "Max. hours to cancel a booking before its start time",
   "maxHoursPartiallyBooked": "Max. hours partially booked",
   "members": "Members",

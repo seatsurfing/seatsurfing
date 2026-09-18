@@ -354,6 +354,7 @@
   "maxConcurrentBookings": "最大。預訂",
   "maxConcurrentBookingsPerUser": "最大。每位用戶的同時預訂數",
   "maxDaysInAdvance": "最大。提前幾天",
+  "maxDaysInAdvanceHint": "適用於預約開始時間",
   "maxHoursBeforeDelete": "最大。在開始時間之前取消預訂的時間",
   "maxHoursPartiallyBooked": "最大。部分預訂的時間",
   "members": "會員",

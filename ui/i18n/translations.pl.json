@@ -356,6 +356,7 @@
   "maxConcurrentBookings": "Maksymalna ilość rezerwacji",
   "maxConcurrentBookingsPerUser": "Maksymalna ilość równoczesnych rezerwacji na użytkownika",
   "maxDaysInAdvance": "Maksymalna ilość dni z wyprzedzeniem",
+  "maxDaysInAdvanceHint": "Dotyczy początku rezerwacji",
   "maxHoursBeforeDelete": "Maksymalna liczba godzin na anulowanie rezerwacji przed jej rozpoczęciem",
   "maxHoursPartiallyBooked": "Maksymalna ilość godzin częściowo zarezerwowanych",
   "members": "Członkowie",
