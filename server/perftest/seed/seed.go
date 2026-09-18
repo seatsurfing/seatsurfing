@@ -163,6 +163,15 @@ func Run(cfg Config) error {
 			orgIdx+1, cfg.Orgs, cfg.UsersPerOrg, cfg.SpacesPerOrg, cfg.BookingsPerOrg, time.Since(orgStart))
 	}
 
+	// Bulk loading leaves the planner with statistics that lag the data,
+	// which a production database would have caught up on long before it
+	// reached this size. Analyze once so the measurements reflect plans for
+	// the seeded data rather than whatever autovacuum got around to.
+	log.Println("Analyzing tables...")
+	if _, err := db.Exec("ANALYZE"); err != nil {
+		return fmt.Errorf("analyze: %w", err)
+	}
+
 	return writeActorsFile(cfg.ActorsFile, result)
 }
 

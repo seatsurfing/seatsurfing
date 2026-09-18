@@ -115,6 +115,21 @@ jobs:
             --thresholds=perftest/testdata/thresholds.yaml \
             --json-out=perftest-results.json
 
+      - name: Explain booking range queries
+        # Prints the plans Postgres picked for the two booking-range queries
+        # behind space.availability and booking.filter, the scenarios most
+        # sensitive to planner behaviour at scale.
+        working-directory: ./server
+        if: ${{ !cancelled() }}
+        env:
+          PGPASSWORD: root
+        run: |
+          org=$(jq -r '.orgs[0].orgId' perftest-actors.json)
+          loc=$(jq -r '.orgs[0].locationIds[0]' perftest-actors.json)
+          psql -h localhost -U postgres -d seatsurfing_test -c "SELECT version()" \
+            -c "EXPLAIN (ANALYZE, BUFFERS, SUMMARY OFF) SELECT bookings.id FROM bookings INNER JOIN spaces ON bookings.space_id = spaces.id INNER JOIN locations ON spaces.location_id = locations.id INNER JOIN users ON bookings.user_id = users.id WHERE locations.organization_id = '$org' AND enter_time >= now() - interval '3 days' AND leave_time <= now() + interval '4 days' ORDER BY enter_time" \
+            -c "EXPLAIN (ANALYZE, BUFFERS, SUMMARY OFF) SELECT bookings.space_id, bookings.id FROM bookings INNER JOIN spaces ON spaces.id = bookings.space_id INNER JOIN users ON users.id = bookings.user_id WHERE spaces.location_id = '$loc' AND bookings.enter_time <= now() + interval '8 hours' AND bookings.leave_time >= now() ORDER BY bookings.enter_time ASC"
+
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
