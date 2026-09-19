@@ -1547,7 +1547,8 @@ class Settings extends React.Component<Props, State> {
                     disabled={true}
                   />
                   <CopyToClipboardButton text={Navigation.publicBookingUrl()} />
-                  <Button aria-label={this.props.t("anonymousBookingUrl")}
+                  <Button
+                    aria-label={this.props.t("anonymousBookingUrl")}
                     variant="outline-secondary"
                     href={Navigation.publicBookingUrl()}
                     target="_blank"
