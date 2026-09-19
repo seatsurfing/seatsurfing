@@ -167,13 +167,16 @@ func (r *SpaceStore) GetAllInTime(locationID string, enter, leave time.Time) ([]
 
 	// Fetch all bookings overlapping the requested window for this location in
 	// one go and attach them to their space, rather than running a correlated
-	// subquery per space.
+	// subquery per space. Filters on bookings.location_id (denormalized from
+	// spaces at booking creation time) so this can use the
+	// idx_bookings_location_time index directly instead of joining through
+	// spaces just to test location_id, which forced a much costlier plan at
+	// scale.
 	bookingRows, err := GetDatabase().DB().Query("SELECT bookings.space_id, bookings.id, COALESCE(bookings.recurring_id::text, ''), bookings.enter_time, bookings.leave_time, bookings.subject, bookings.approved, "+
 		"users.id, users.email, COALESCE(users.firstname, ''), COALESCE(users.lastname, '') "+
 		"FROM bookings "+
-		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
 		"INNER JOIN users ON users.id = bookings.user_id "+
-		"WHERE spaces.location_id = $1 "+
+		"WHERE bookings.location_id = $1 "+
 		"AND bookings.enter_time <= $3 AND bookings.leave_time >= $2 "+
 		"ORDER BY bookings.enter_time ASC", locationID, enter, leave)
 	if err != nil {
