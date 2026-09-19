@@ -208,6 +208,12 @@ h2 {
   filter: invert(1);
 }
 
+.custom-logo {
+  max-width: 330px;
+  max-height: 80px;
+  margin-bottom: 50px;
+}
+
 /* Bootstrap's outline-secondary button hardcodes a light-mode gray
    (#6c757d) instead of theming off the CSS vars, which reads as
    low-contrast, near-illegible text on a dark background. */

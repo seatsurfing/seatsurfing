@@ -39,12 +39,13 @@ type GetAnonymousBookableSpacesResponse struct {
 }
 
 type CreateAnonymousBookingRequest struct {
-	SpaceID string    `json:"spaceId" validate:"required,uuid"`
-	Enter   time.Time `json:"enter" validate:"required"`
-	Leave   time.Time `json:"leave" validate:"required"`
-	Name    string    `json:"name" validate:"required,max=256"`
-	Email   string    `json:"email" validate:"required,email,max=256"`
-	Subject string    `json:"subject" validate:"omitempty,max=256"`
+	SpaceID  string    `json:"spaceId" validate:"required,uuid"`
+	Enter    time.Time `json:"enter" validate:"required"`
+	Leave    time.Time `json:"leave" validate:"required"`
+	Name     string    `json:"name" validate:"required,max=256"`
+	Email    string    `json:"email" validate:"required,email,max=256"`
+	Subject  string    `json:"subject" validate:"omitempty,max=256"`
+	Language string    `json:"language" validate:"omitempty,max=10"`
 }
 
 type ConfirmAnonymousBookingResponse struct {
@@ -144,6 +145,17 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 	return space, location, enter, leave, true
 }
 
+// normalizeAnonymousBookingLanguage maps the UI locale submitted with an
+// anonymous booking request (e.g. "de", "en-GB", "fr") down to one of the
+// backend's supported email languages, defaulting to English for anything
+// that isn't German.
+func normalizeAnonymousBookingLanguage(lang string) string {
+	if strings.HasPrefix(strings.ToLower(lang), "de") {
+		return "de"
+	}
+	return "en"
+}
+
 func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Request) {
 	orgID := mux.Vars(r)["orgId"]
 	if !router.isAnonymousBookingEnabledForOrg(orgID) {
@@ -155,6 +167,7 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		SendBadRequest(w)
 		return
 	}
+	language := normalizeAnonymousBookingLanguage(m.Language)
 	name := strings.TrimSpace(m.Name)
 	if !IsValidHumanName(name) {
 		SendBadRequest(w)
@@ -195,26 +208,27 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(conflicts) > 0 {
-		router.createAuthState(AnonymousBookingRequestPayload{Email: m.Email})
-		router.sendUnavailableMail(org, location, space, name, m.Email, enter, leave, m.Subject)
+		router.createAuthState(AnonymousBookingRequestPayload{Email: m.Email, Language: language})
+		router.sendUnavailableMail(org, location, space, name, m.Email, language, enter, leave, m.Subject)
 		SendUpdated(w)
 		return
 	}
 
 	authState, err := router.createAuthState(AnonymousBookingRequestPayload{
-		SpaceID: space.ID,
-		Enter:   enter,
-		Leave:   leave,
-		Name:    name,
-		Email:   m.Email,
-		Subject: m.Subject,
+		SpaceID:  space.ID,
+		Enter:    enter,
+		Leave:    leave,
+		Name:     name,
+		Email:    m.Email,
+		Subject:  m.Subject,
+		Language: language,
 	})
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	router.sendConfirmMail(org, location, space, name, m.Email, enter, leave, authState.ID)
+	router.sendConfirmMail(org, location, space, name, m.Email, language, enter, leave, authState.ID)
 	SendUpdated(w)
 }
 
@@ -288,14 +302,15 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(conflicts) > 0 {
-		router.sendUnavailableMail(org, location, space, payload.Name, payload.Email, payload.Enter, payload.Leave, payload.Subject)
+		router.sendUnavailableMail(org, location, space, payload.Name, payload.Email, payload.Language, payload.Enter, payload.Leave, payload.Subject)
 		SendJSON(w, ConfirmAnonymousBookingResponse{Status: "unavailable"})
 		return
 	}
 
 	anonymousBooking := &AnonymousBooking{
-		Name:  payload.Name,
-		Email: payload.Email,
+		Name:     payload.Name,
+		Email:    payload.Email,
+		Language: payload.Language,
 	}
 	if err := GetAnonymousBookingRepository().Create(anonymousBooking); err != nil {
 		log.Println(err)
@@ -322,11 +337,14 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 	SendJSON(w, ConfirmAnonymousBookingResponse{Status: "pending"})
 }
 
-func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *Location, space *Space, name, email string, enter, leave time.Time, confirmID string) {
+func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *Location, space *Space, name, email, language string, enter, leave time.Time, confirmID string) {
 	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		log.Println(err)
 		return
+	}
+	if language == "" {
+		language = org.Language
 	}
 	vars := map[string]string{
 		"orgDomain":     FormatURL(domain.DomainName) + "/",
@@ -336,16 +354,19 @@ func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *
 		"spaceName":     space.Name,
 		"confirmID":     confirmID,
 	}
-	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathAnonymousBookingConfirm(), org.Language, vars, org.ID); err != nil {
+	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathAnonymousBookingConfirm(), language, vars, org.ID); err != nil {
 		log.Println(err)
 	}
 }
 
-func (router *PublicBookingRouter) sendUnavailableMail(org *Organization, location *Location, space *Space, name, email string, enter, leave time.Time, subject string) {
+func (router *PublicBookingRouter) sendUnavailableMail(org *Organization, location *Location, space *Space, name, email, language string, enter, leave time.Time, subject string) {
 	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
 	if err != nil {
 		log.Println(err)
 		return
+	}
+	if language == "" {
+		language = org.Language
 	}
 	vars := map[string]string{
 		"orgDomain":     FormatURL(domain.DomainName) + "/",
@@ -355,7 +376,7 @@ func (router *PublicBookingRouter) sendUnavailableMail(org *Organization, locati
 		"spaceName":     space.Name,
 		"subject":       subject,
 	}
-	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathAnonymousBookingUnavailable(), org.Language, vars, org.ID); err != nil {
+	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathAnonymousBookingUnavailable(), language, vars, org.ID); err != nil {
 		log.Println(err)
 	}
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import SeatsurfingLogo from "@/components/SeatsurfingLogo";
+import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
 
@@ -67,7 +67,7 @@ class ConfirmAnonymousBooking extends React.Component<Props, State> {
     return (
       <div className="container-center">
         <div className="container-center-inner">
-          <SeatsurfingLogo />
+          <SeatsurfingAppLogo />
           <p>{message}</p>
         </div>
       </div>

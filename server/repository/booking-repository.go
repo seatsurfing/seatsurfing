@@ -283,14 +283,14 @@ func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
 		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
-		"COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, '') "+
+		"COALESCE(anonymous_bookings.name, ''), COALESCE(anonymous_bookings.email, ''), COALESCE(anonymous_bookings.language, '') "+
 		"FROM bookings "+
 		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
 		"LEFT JOIN users ON bookings.user_id = users.id "+
 		"LEFT JOIN anonymous_bookings ON anonymous_bookings.id = bookings.anonymous_id "+
 		"WHERE bookings.id = $1",
-		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.AnonymousID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.AnonymousName, &e.AnonymousEmail)
+		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.AnonymousID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.AnonymousName, &e.AnonymousEmail, &e.AnonymousLanguage)
 	if err != nil {
 		return nil, err
 	}

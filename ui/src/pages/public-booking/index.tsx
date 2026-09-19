@@ -3,7 +3,7 @@ import { Form, Button, Alert } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import SeatsurfingLogo from "@/components/SeatsurfingLogo";
+import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
 import DateUtil from "@/util/DateUtil";
@@ -31,11 +31,13 @@ interface State {
   submitting: boolean;
   submitted: boolean;
   error: boolean;
+  customLogoUrl: string;
 }
 
 interface Props {
   router: NextRouter;
   t: TranslationFunc;
+  lang: string;
 }
 
 class PublicBooking extends React.Component<Props, State> {
@@ -61,6 +63,7 @@ class PublicBooking extends React.Component<Props, State> {
       submitting: false,
       submitted: false,
       error: false,
+      customLogoUrl: "",
     };
   }
 
@@ -81,6 +84,7 @@ class PublicBooking extends React.Component<Props, State> {
         return;
       }
     }
+    this.setState({ customLogoUrl: res.json.customLogoUrl || "" });
     await this.onOrgResolved(res.json.organization.id);
   };
 
@@ -149,6 +153,7 @@ class PublicBooking extends React.Component<Props, State> {
       name: this.state.name,
       email: this.state.email,
       subject: this.state.subject,
+      language: this.props.lang,
     };
     try {
       await Ajax.postData(
@@ -175,7 +180,7 @@ class PublicBooking extends React.Component<Props, State> {
       return (
         <div className="container-center">
           <div className="container-center-inner-wide">
-            <SeatsurfingLogo />
+            <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
             <p>{this.props.t("anonymousBookingRequestSubmitted")}</p>
           </div>
         </div>
@@ -185,7 +190,7 @@ class PublicBooking extends React.Component<Props, State> {
     return (
       <div className="container-center">
         <Form className="container-center-inner-wide" onSubmit={this.onSubmit}>
-          <SeatsurfingLogo />
+          <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
           <p>{this.props.t("anonymousBookingIntro")}</p>
           {this.state.error && (
             <Alert variant="danger">

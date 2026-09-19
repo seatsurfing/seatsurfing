@@ -1272,9 +1272,10 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	var org *Organization
 	language := ""
 	if e.UserID == "" {
-		// Anonymous booking: no user account, no opt-out preference, no
-		// per-user language. Recipient info is taken from e.AnonymousName/
-		// Email as already loaded by the caller - the anonymous_bookings
+		// Anonymous booking: no user account, no opt-out preference.
+		// Recipient info (including language, as submitted with the
+		// original booking request) is taken from e.AnonymousName/Email/
+		// Language as already loaded by the caller - the anonymous_bookings
 		// row itself may already be gone by now (e.g. declining a booking
 		// deletes it before this notification is sent).
 		var err error
@@ -1286,6 +1287,9 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 			return
 		}
 		language = org.Language
+		if e.AnonymousLanguage != "" {
+			language = e.AnonymousLanguage
+		}
 	} else {
 		active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
 		if err != nil || !active {

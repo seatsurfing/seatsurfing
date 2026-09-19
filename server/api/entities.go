@@ -154,6 +154,7 @@ type Booking struct {
 	AnonymousID           NullUUID
 	AnonymousName         string
 	AnonymousEmail        string
+	AnonymousLanguage     string
 	CreatedAtUTC          *time.Time
 	LastInfoMailSentAtUTC *time.Time
 	ReminderSentAtUTC     *time.Time
@@ -180,18 +181,20 @@ type AnonymousBooking struct {
 	ID           string
 	Name         string
 	Email        string
+	Language     string
 	CreatedAtUTC *time.Time
 }
 
 // AnonymousBookingRequestPayload is used for JSON marshaling into AuthState.Payload
 // for the anonymous-booking double-opt-in confirmation flow.
 type AnonymousBookingRequestPayload struct {
-	SpaceID string    `json:"spaceId"`
-	Enter   time.Time `json:"enter"`
-	Leave   time.Time `json:"leave"`
-	Name    string    `json:"name"`
-	Email   string    `json:"email"`
-	Subject string    `json:"subject"`
+	SpaceID  string    `json:"spaceId"`
+	Enter    time.Time `json:"enter"`
+	Leave    time.Time `json:"leave"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Subject  string    `json:"subject"`
+	Language string    `json:"language"`
 }
 
 // ─── AuthProvider ─────────────────────────────────────────────────────────────
