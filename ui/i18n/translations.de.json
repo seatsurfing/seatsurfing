@@ -32,6 +32,7 @@
   "anonymousBookingConfirmPending": "Vielen Dank! Deine Buchungsanfrage wurde bestätigt und wartet nun auf Genehmigung.",
   "anonymousBookingConfirmUnavailable": "Leider ist dieser Platz für den gewählten Zeitraum nicht mehr verfügbar.",
   "anonymousBookingIntro": "Bitte wähle einen Raum und einen Zeitraum, um eine Buchung anzufragen. Du erhältst anschließend eine Bestätigungs-E-Mail.",
+  "anonymousBookingNotEditableHint": "Dies ist eine anonyme Buchung und kann nicht bearbeitet werden.",
   "anonymousBookingRequestError": "Etwas ist schiefgelaufen. Bitte überprüfe deine Eingaben und versuche es erneut.",
   "anonymousBookingRequestSubmitted": "Vielen Dank! Bitte überprüfe deine E-Mails, um deine Buchungsanfrage zu bestätigen.",
   "anonymousBookingSpaceEnabledHint": "Besucher ohne Konto können für diesen Raum über die öffentliche Buchungsseite eine Buchung anfragen. Jede Anfrage muss genehmigt werden.",

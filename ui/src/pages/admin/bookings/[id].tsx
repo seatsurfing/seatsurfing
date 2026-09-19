@@ -1,9 +1,10 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert } from "react-bootstrap";
+import { Form, Col, Row, Button, Alert, InputGroup } from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
   Trash2 as IconDelete,
+  Mail as IconMail,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -749,7 +750,10 @@ class EditBooking extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         onClick={this.deleteItem}
-        disabled={!this.state.canEdit || !this.state.canDelete}
+        disabled={
+          (!this.state.canEdit && !this.entity.anonymous) ||
+          !this.state.canDelete
+        }
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
@@ -828,6 +832,14 @@ class EditBooking extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
 
+          {this.entity.anonymous ? (
+            <Alert variant="info">
+              {this.props.t("anonymousBookingNotEditableHint")}
+            </Alert>
+          ) : (
+            <></>
+          )}
+
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="booking-user">
               {this.props.t("user")}
@@ -841,12 +853,21 @@ class EditBooking extends React.Component<Props, State> {
                 {this.props.t("emailAddress")}
               </Form.Label>
               <Col sm="4">
-                <Form.Control
-                  id="booking-user-email"
-                  type="text"
-                  disabled
-                  value={this.state.selectedUserEmail}
-                />
+                <InputGroup>
+                  <Form.Control
+                    id="booking-user-email"
+                    type="text"
+                    disabled
+                    value={this.state.selectedUserEmail}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    href={`mailto:${this.state.selectedUserEmail}`}
+                    disabled={!this.state.selectedUserEmail}
+                  >
+                    <IconMail className="feather" />
+                  </Button>
+                </InputGroup>
               </Col>
             </Form.Group>
           ) : (
