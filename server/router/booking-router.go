@@ -1273,14 +1273,13 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	language := ""
 	if e.UserID == "" {
 		// Anonymous booking: no user account, no opt-out preference, no
-		// per-user language - recipient info comes from anonymous_bookings.
-		anonymousBooking, err := GetAnonymousBookingRepository().GetOne(string(e.AnonymousID))
-		if err != nil || anonymousBooking == nil {
-			log.Println(err)
-			return
-		}
-		recipientEmail = anonymousBooking.Email
-		recipientName = SafeRecipientName(anonymousBooking.Name, anonymousBooking.Email)
+		// per-user language. Recipient info is taken from e.AnonymousName/
+		// Email as already loaded by the caller - the anonymous_bookings
+		// row itself may already be gone by now (e.g. declining a booking
+		// deletes it before this notification is sent).
+		var err error
+		recipientEmail = e.AnonymousEmail
+		recipientName = SafeRecipientName(e.AnonymousName, e.AnonymousEmail)
 		org, err = GetOrganizationRepository().GetOne(location.OrganizationID)
 		if err != nil || org == nil {
 			log.Println(err)

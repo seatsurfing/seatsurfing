@@ -152,18 +152,18 @@ type Booking struct {
 	Subject               string
 	RecurringID           NullUUID
 	AnonymousID           NullUUID
+	AnonymousName         string
+	AnonymousEmail        string
 	CreatedAtUTC          *time.Time
 	LastInfoMailSentAtUTC *time.Time
 	ReminderSentAtUTC     *time.Time
 }
 
 type BookingDetails struct {
-	Space          SpaceDetails
-	UserEmail      string
-	UserFirstname  string
-	UserLastname   string
-	AnonymousName  string
-	AnonymousEmail string
+	Space         SpaceDetails
+	UserEmail     string
+	UserFirstname string
+	UserLastname  string
 	Booking
 }
 
@@ -249,6 +249,11 @@ type AuthState struct {
 	Expiry         time.Time
 	AuthStateType  AuthStateType
 	Payload        string
+	// Key is an indexable lookup value (e.g. a user ID or email), used
+	// instead of AuthProviderID or a JSON-encoded Payload where a type
+	// needs to look up or rate-limit its states by something other than
+	// the actual OAuth provider.
+	Key string
 }
 
 // AuthStateLoginPayload is used for JSON marshaling into AuthState.Payload.
