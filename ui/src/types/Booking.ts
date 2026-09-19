@@ -15,6 +15,7 @@ export default class Booking extends Entity {
   approved: boolean;
   subject: string;
   recurringId: string;
+  anonymous: boolean;
 
   constructor() {
     super();
@@ -26,6 +27,7 @@ export default class Booking extends Entity {
     this.approved = false;
     this.subject = "";
     this.recurringId = "";
+    this.anonymous = false;
   }
 
   serialize(): Object {
@@ -81,6 +83,9 @@ export default class Booking extends Entity {
     }
     if (input.recurringId) {
       this.recurringId = input.recurringId;
+    }
+    if (input.anonymous !== undefined) {
+      this.anonymous = input.anonymous;
     }
   }
 

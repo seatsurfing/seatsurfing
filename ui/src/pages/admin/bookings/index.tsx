@@ -247,6 +247,11 @@ class Bookings extends React.Component<Props, State> {
         <td>{Formatting.getFormatterShort().format(booking.enter)}</td>
         <td>{Formatting.getFormatterShort().format(booking.leave)}</td>
         <td>{booking.subject}</td>
+        {RuntimeConfig.INFOS.anonymousBookingEnabled ? (
+          <td>{RendererUtils.state(booking.anonymous)}</td>
+        ) : (
+          <></>
+        )}
         <td>
           <Button
             variant="danger"
@@ -272,13 +277,14 @@ class Bookings extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
+    const actionColumn = RuntimeConfig.INFOS.anonymousBookingEnabled ? 8 : 7;
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
       [
         {
           name: "Seatsurfing Bookings",
           from: { table: "datatable" },
-          removeColumns: [0, 7],
+          removeColumns: [0, actionColumn],
         },
       ],
     );
@@ -484,6 +490,11 @@ class Bookings extends React.Component<Props, State> {
               <th>{this.props.t("enter")}</th>
               <th>{this.props.t("leave")}</th>
               <th>{this.props.t("subject")}</th>
+              {RuntimeConfig.INFOS.anonymousBookingEnabled ? (
+                <th>{this.props.t("anonymous")}</th>
+              ) : (
+                <></>
+              )}
               <th></th>
             </tr>
           </thead>

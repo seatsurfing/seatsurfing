@@ -1,9 +1,10 @@
 import React from "react";
-import { Form, Col, Row, Button, Alert } from "react-bootstrap";
+import { Form, Col, Row, Button, Alert, InputGroup } from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
   Save as IconSave,
   Trash2 as IconDelete,
+  Mail as IconMail,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import Link from "next/link";
@@ -171,7 +172,8 @@ class EditBooking extends React.Component<Props, State> {
       if (id !== "add") {
         return Booking.get(id).then((booking) => {
           this.entity = booking;
-          const canSave = !DateUtil.isInPast(this.entity.leave);
+          const canSave =
+            !DateUtil.isInPast(this.entity.leave) && !this.entity.anonymous;
           this.setState({
             enter: DateUtil.convertToUTC(this.entity.enter),
             leave: DateUtil.convertToUTC(this.entity.leave),
@@ -748,7 +750,10 @@ class EditBooking extends React.Component<Props, State> {
         className="btn-sm"
         variant="outline-secondary"
         onClick={this.deleteItem}
-        disabled={!this.state.canEdit || !this.state.canDelete}
+        disabled={
+          (!this.state.canEdit && !this.entity.anonymous) ||
+          !this.state.canDelete
+        }
       >
         <IconDelete className="feather" /> {this.props.t("delete")}
       </Button>
@@ -778,7 +783,16 @@ class EditBooking extends React.Component<Props, State> {
       );
     }
     let userField = <></>;
-    if (this.state.canEdit) {
+    if (this.entity.anonymous) {
+      userField = (
+        <Form.Control
+          id="booking-user"
+          type="text"
+          disabled
+          value={this.entity.user.firstname}
+        />
+      );
+    } else if (this.state.canEdit) {
       userField = (
         <UserSearchTypeahead
           t={this.props.t}
@@ -818,12 +832,47 @@ class EditBooking extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
 
+          {this.entity.anonymous ? (
+            <Alert variant="info">
+              {this.props.t("anonymousBookingNotEditableHint")}
+            </Alert>
+          ) : (
+            <></>
+          )}
+
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="booking-user">
               {this.props.t("user")}
             </Form.Label>
             <Col sm="4">{userField}</Col>
           </Form.Group>
+
+          {this.entity.anonymous ? (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2" htmlFor="booking-user-email">
+                {this.props.t("emailAddress")}
+              </Form.Label>
+              <Col sm="4">
+                <InputGroup>
+                  <Form.Control
+                    id="booking-user-email"
+                    type="text"
+                    disabled
+                    value={this.state.selectedUserEmail}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    href={`mailto:${this.state.selectedUserEmail}`}
+                    disabled={!this.state.selectedUserEmail}
+                  >
+                    <IconMail className="feather" />
+                  </Button>
+                </InputGroup>
+              </Col>
+            </Form.Group>
+          ) : (
+            <></>
+          )}
 
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="booking-enter">

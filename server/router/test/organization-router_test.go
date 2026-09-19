@@ -529,10 +529,9 @@ func TestOrganizationsDelete(t *testing.T) {
 	}
 	payloadJson, _ := json.Marshal(payload)
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(time.Hour * 1),
-		AuthStateType:  AuthDeleteOrg,
-		Payload:        string(payloadJson),
+		Expiry:        time.Now().Add(time.Hour * 1),
+		AuthStateType: AuthDeleteOrg,
+		Payload:       string(payloadJson),
 	}
 	GetAuthStateRepository().Create(authState)
 
@@ -560,10 +559,9 @@ func TestOrganizationsDeleteExpiredState(t *testing.T) {
 	}
 	payloadJson, _ := json.Marshal(payload)
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(-time.Minute),
-		AuthStateType:  AuthDeleteOrg,
-		Payload:        string(payloadJson),
+		Expiry:        time.Now().Add(-time.Minute),
+		AuthStateType: AuthDeleteOrg,
+		Payload:       string(payloadJson),
 	}
 	GetAuthStateRepository().Create(authState)
 

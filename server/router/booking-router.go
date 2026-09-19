@@ -56,6 +56,7 @@ type GetBookingResponse struct {
 	UserEmail     string           `json:"userEmail"`
 	UserFirstname string           `json:"userFirstname"`
 	UserLastname  string           `json:"userLastname"`
+	Anonymous     bool             `json:"anonymous"`
 	Approved      bool             `json:"approved"`
 	Space         GetSpaceResponse `json:"space"`
 	RecurringID   string           `json:"recurringId"`
@@ -132,6 +133,13 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 	if !router.isValidApproverForSpace(requestUser.ID, e.SpaceID) {
 		SendForbidden(w)
 		return
+	}
+	if e.AnonymousID != "" {
+		anonymousBookingEnabled, _ := GetSettingsRepository().GetBool(e.Space.Location.OrganizationID, SettingAnonymousBookingEnabled.Name)
+		if !anonymousBookingEnabled {
+			SendForbidden(w)
+			return
+		}
 	}
 	m := &SetBookingApprovalRequest{}
 	if UnmarshalBody(r, m) != nil {
@@ -409,6 +417,10 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
+	if e.AnonymousID != "" {
+		SendForbidden(w)
+		return
+	}
 	var m CreateBookingRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -447,6 +459,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.ID = e.ID
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
+	eNew.AnonymousID = e.AnonymousID
 	eNew.Approved = e.Approved
 	if m.UserEmail != "" {
 		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
@@ -1243,20 +1256,6 @@ func (router *BookingRouter) getSpaceRequiresApproval(orgID string, e *Space) bo
 }
 
 func (router *BookingRouter) sendMailNotification(e *Booking, notification BookingMailNotification) {
-	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
-	if err != nil || !active {
-		return
-	}
-	user, err := GetUserRepository().GetOne(e.UserID)
-	if err != nil || user == nil {
-		log.Println(err)
-		return
-	}
-	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if err != nil || org == nil {
-		log.Println(err)
-		return
-	}
 	space, err := GetSpaceRepository().GetOne(e.SpaceID)
 	if err != nil {
 		log.Println(err)
@@ -1267,6 +1266,53 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		log.Println(err)
 		return
 	}
+
+	recipientEmail := ""
+	recipientName := ""
+	var org *Organization
+	language := ""
+	if e.UserID == "" {
+		// Anonymous booking: no user account, no opt-out preference.
+		// Recipient info (including language, as submitted with the
+		// original booking request) is taken from e.AnonymousName/Email/
+		// Language as already loaded by the caller - the anonymous_bookings
+		// row itself may already be gone by now (e.g. declining a booking
+		// deletes it before this notification is sent).
+		var err error
+		recipientEmail = e.AnonymousEmail
+		recipientName = SafeRecipientName(e.AnonymousName, e.AnonymousEmail)
+		org, err = GetOrganizationRepository().GetOne(location.OrganizationID)
+		if err != nil || org == nil {
+			log.Println(err)
+			return
+		}
+		language = org.Language
+		if e.AnonymousLanguage != "" {
+			language = e.AnonymousLanguage
+		}
+	} else {
+		active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
+		if err != nil || !active {
+			return
+		}
+		user, err := GetUserRepository().GetOne(e.UserID)
+		if err != nil || user == nil {
+			log.Println(err)
+			return
+		}
+		org, err = GetOrganizationRepository().GetOne(user.OrganizationID)
+		if err != nil || org == nil {
+			log.Println(err)
+			return
+		}
+		recipientEmail = user.Email
+		recipientName = user.GetSafeRecipientName()
+		language = org.Language
+		if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+			language = userLang
+		}
+	}
+
 	attachments := []*MailAttachment{}
 	if notification == BookingMailNotificationCreated || notification == BookingMailNotificationUpdated || notification == BookingMailNotificationApproved {
 		calDavEvent, err := router.getCalDavEventFromBooking(e)
@@ -1299,7 +1345,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	}
 	vars := map[string]string{
 		"orgDomain":     FormatURL(domain.DomainName) + "/",
-		"recipientName": user.GetSafeRecipientName(),
+		"recipientName": recipientName,
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
 		"spaceName":     space.Name,
@@ -1315,11 +1361,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	} else if notification == BookingMailNotificationDeleted {
 		template = GetEmailTemplatePathBookingDeleted()
 	}
-	language := org.Language
-	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
-		language = userLang
-	}
-	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, language, vars, attachments, org.ID); err != nil {
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: recipientEmail}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
 	}
@@ -1392,11 +1434,22 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		return
 	}
 
-	// Get booking user info
-	bookingUser, err := GetUserRepository().GetOne(e.UserID)
-	if err != nil {
-		log.Println("Error getting booking user:", err)
-		return
+	// Get booking requester info (a real user, or an anonymous booker)
+	bookingUserEmail := ""
+	if e.UserID == "" {
+		anonymousBooking, err := GetAnonymousBookingRepository().GetOne(string(e.AnonymousID))
+		if err != nil || anonymousBooking == nil {
+			log.Println("Error getting anonymous booking:", err)
+			return
+		}
+		bookingUserEmail = anonymousBooking.Email
+	} else {
+		bookingUser, err := GetUserRepository().GetOne(e.UserID)
+		if err != nil {
+			log.Println("Error getting booking user:", err)
+			return
+		}
+		bookingUserEmail = bookingUser.Email
 	}
 
 	// Collect all unique approver user IDs who have the preference enabled
@@ -1444,7 +1497,7 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		vars := map[string]string{
 			"orgDomain":     FormatURL(domain.DomainName) + "/",
 			"recipientName": approver.GetSafeRecipientName(),
-			"userEmail":     bookingUser.Email,
+			"userEmail":     bookingUserEmail,
 			"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 			"areaName":      location.Name,
 			"spaceName":     space.Name,
@@ -1507,6 +1560,11 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.UserEmail = e.UserEmail
 	m.UserFirstname = e.UserFirstname
 	m.UserLastname = e.UserLastname
+	if e.UserID == "" {
+		m.Anonymous = true
+		m.UserEmail = e.AnonymousEmail
+		m.UserFirstname = e.AnonymousName
+	}
 	m.SpaceID = e.SpaceID
 	m.Subject = e.Subject
 	m.Enter, _ = GetLocationRepository().AttachTimezoneInformation(e.Enter, &e.Space.Location)

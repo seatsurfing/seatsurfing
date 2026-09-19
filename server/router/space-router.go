@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -21,20 +22,21 @@ type SpaceAttributeValueRequest struct {
 }
 
 type CreateSpaceRequest struct {
-	Name                  string                       `json:"name" validate:"required,max=128"`
-	X                     uint                         `json:"x" validate:"max=100000"`
-	Y                     uint                         `json:"y" validate:"max=100000"`
-	Width                 uint                         `json:"width" validate:"max=5000"`
-	Height                uint                         `json:"height" validate:"max=5000"`
-	Rotation              uint                         `json:"rotation" validate:"max=359"`
-	RequireSubject        bool                         `json:"requireSubject"`
-	Enabled               bool                         `json:"enabled"`
-	KioskEnabled          bool                         `json:"kioskEnabled"`
-	Shape                 string                       `json:"shape" validate:"oneof=rect circle trapezoid"`
-	FontSize              string                       `json:"fontSize" validate:"oneof=small normal big bigger"`
-	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
-	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
-	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	Name                    string                       `json:"name" validate:"required,max=128"`
+	X                       uint                         `json:"x" validate:"max=100000"`
+	Y                       uint                         `json:"y" validate:"max=100000"`
+	Width                   uint                         `json:"width" validate:"max=5000"`
+	Height                  uint                         `json:"height" validate:"max=5000"`
+	Rotation                uint                         `json:"rotation" validate:"max=359"`
+	RequireSubject          bool                         `json:"requireSubject"`
+	Enabled                 bool                         `json:"enabled"`
+	KioskEnabled            bool                         `json:"kioskEnabled"`
+	Shape                   string                       `json:"shape" validate:"oneof=rect circle trapezoid"`
+	FontSize                string                       `json:"fontSize" validate:"oneof=small normal big bigger"`
+	Attributes              []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
+	ApproverGroupIDs        []string                     `json:"approverGroupIds" validate:"dive,uuid"`
+	AllowedBookerGroupIDs   []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	AnonymousBookingEnabled bool                         `json:"anonymousBookingEnabled"`
 }
 
 type UpdateSpaceRequest struct {
@@ -411,6 +413,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	// Process creates
 	if m.Creates != nil {
 		for _, mSpace := range m.Creates {
+			if mSpace.AnonymousBookingEnabled && len(mSpace.ApproverGroupIDs) == 0 {
+				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
+				continue
+			}
 			e := router.copyFromRestModel(&mSpace)
 			e.LocationID = vars["locationId"]
 			if err := GetSpaceRepository().Create(e); err != nil {
@@ -437,6 +443,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 			existing, err := GetSpaceRepository().GetOne(mSpace.ID)
 			if err != nil || existing.LocationID != location.ID {
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: "", Success: false})
+				continue
+			}
+			if mSpace.AnonymousBookingEnabled && len(mSpace.ApproverGroupIDs) == 0 {
+				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: mSpace.ID, Success: false})
 				continue
 			}
 			e := router.copyFromRestModel(&mSpace.CreateSpaceRequest)
@@ -535,6 +545,18 @@ func (router *SpaceRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.AnonymousBookingEnabled {
+		approvers, err := GetSpaceRepository().GetApproverGroupIDs(e.ID)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		if len(approvers) == 0 {
+			SendBadRequest(w)
+			return
+		}
+	}
 	if err := GetSpaceRepository().Update(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -593,6 +615,13 @@ func (router *SpaceRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.AnonymousBookingEnabled {
+		// A newly created space cannot have an approver group yet (this endpoint
+		// does not accept approver group assignment), so anonymous booking can
+		// never be enabled at creation time here.
+		SendBadRequest(w)
+		return
+	}
 	if err := GetSpaceRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -648,6 +677,9 @@ func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttr
 }
 
 func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest) error {
+	if space.AnonymousBookingEnabled && len(m.ApproverGroupIDs) == 0 {
+		return errors.New("space has anonymous booking enabled and requires at least one approver group")
+	}
 	existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	if err != nil {
 		return err
@@ -792,6 +824,31 @@ func (router *SpaceRouter) removeApprovers(w http.ResponseWriter, r *http.Reques
 	if UnmarshalBody(r, &approvers) != nil {
 		SendBadRequest(w)
 		return
+	}
+	if e.AnonymousBookingEnabled {
+		existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(e.ID)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		remaining := 0
+		for _, existing := range existingApprovers {
+			removed := false
+			for _, approver := range approvers {
+				if existing == approver {
+					removed = true
+					break
+				}
+			}
+			if !removed {
+				remaining++
+			}
+		}
+		if remaining == 0 {
+			SendBadRequest(w)
+			return
+		}
 	}
 	if err := GetSpaceRepository().RemoveApprovers(e, approvers); err != nil {
 		log.Println(err)
@@ -960,6 +1017,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.KioskEnabled = m.KioskEnabled
 	e.Shape = m.Shape
 	e.FontSize = m.FontSize
+	e.AnonymousBookingEnabled = m.AnonymousBookingEnabled
 	return e
 }
 
@@ -978,6 +1036,7 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.KioskEnabled = e.KioskEnabled
 	m.Shape = e.Shape
 	m.FontSize = e.FontSize
+	m.AnonymousBookingEnabled = e.AnonymousBookingEnabled
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {
