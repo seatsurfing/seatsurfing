@@ -32,6 +32,11 @@ type GetAnonymousBookableSpaceResponse struct {
 	LocationName string `json:"locationName"`
 }
 
+type GetAnonymousBookableSpacesResponse struct {
+	Spaces           []GetAnonymousBookableSpaceResponse `json:"spaces"`
+	MaxDaysInAdvance int                                  `json:"maxDaysInAdvance"`
+}
+
 type CreateAnonymousBookingRequest struct {
 	SpaceID string    `json:"spaceId" validate:"required,uuid"`
 	Enter   time.Time `json:"enter" validate:"required"`
@@ -81,7 +86,11 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 			LocationName: location.Name,
 		})
 	}
-	SendJSON(w, res)
+	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
+	SendJSON(w, GetAnonymousBookableSpacesResponse{
+		Spaces:           res,
+		MaxDaysInAdvance: maxDaysInAdvance,
+	})
 }
 
 // validateSpaceAndTimes re-checks every condition that makes a slot

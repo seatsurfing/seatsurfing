@@ -23,6 +23,7 @@ interface State {
   spaceId: string;
   enter: Date;
   leave: Date;
+  maxDaysInAdvance: number;
   name: string;
   email: string;
   subject: string;
@@ -42,16 +43,17 @@ class PublicBooking extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     const enter = new Date();
-    enter.setMinutes(0, 0, 0);
-    enter.setHours(enter.getHours() + 1);
+    enter.setDate(enter.getDate() + 1);
+    enter.setHours(9, 0, 0, 0);
     const leave = new Date(enter);
-    leave.setHours(leave.getHours() + 1);
+    leave.setHours(17, 0, 0, 0);
     this.state = {
       loading: true,
       spaces: [],
       spaceId: "",
       enter: enter,
       leave: leave,
+      maxDaysInAdvance: 0,
       name: "",
       email: "",
       subject: "",
@@ -83,18 +85,37 @@ class PublicBooking extends React.Component<Props, State> {
       () => true,
     )
       .then((res) => {
-        const spaces: AnonymousBookableSpace[] = res.json || [];
+        const spaces: AnonymousBookableSpace[] = res.json.spaces || [];
         if (spaces.length === 0) {
           this.props.router.replace("/404");
           return;
+        }
+        const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
+        maxDate.setHours(23, 59, 59, 999);
+        let enter = this.state.enter;
+        let leave = this.state.leave;
+        if (enter > maxDate) {
+          enter = DateUtil.copyDate(maxDate, enter);
+          leave = DateUtil.copyDate(maxDate, leave);
         }
         this.setState({
           loading: false,
           spaces: spaces,
           spaceId: spaces[0].spaceId,
+          maxDaysInAdvance: maxDaysInAdvance,
+          enter: enter,
+          leave: leave,
         });
       })
       .catch(() => this.props.router.replace("/404"));
+  };
+
+  getMaxDate = (): Date => {
+    const maxDate = DateUtil.getTodayStart();
+    maxDate.setDate(maxDate.getDate() + this.state.maxDaysInAdvance);
+    return maxDate;
   };
 
   onSubmit = (e: any) => {
@@ -215,6 +236,8 @@ class PublicBooking extends React.Component<Props, State> {
               }
               required={true}
               enableTime={false}
+              minDate={DateUtil.getTodayStart()}
+              maxDate={this.getMaxDate()}
             />
           </Form.Group>
           <Form.Group className="mb-3">
