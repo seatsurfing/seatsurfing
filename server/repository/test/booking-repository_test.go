@@ -1009,3 +1009,71 @@ func TestBookingRepositoryGetLoadMultiWithTargetUtilization(t *testing.T) {
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 50, loads[0])
 }
+
+// Regression tests for #2552: GetConflicts must treat bookings as half-open
+// intervals [enter, leave), so bookings sharing only an endpoint do not conflict.
+func TestBookingRepositoryGetConflictsBoundaries(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	base := time.Date(2030, 9, 1, 0, 0, 0, 0, time.UTC)
+	at := func(h int) time.Time { return base.Add(time.Duration(h) * time.Hour) }
+
+	type conflictCase struct {
+		name                         string
+		existingEnter, existingLeave time.Time
+		newEnter, newLeave          time.Time
+		expectConflict               bool
+	}
+	cases := []conflictCase{
+		{"adjacent before", at(9), at(12), at(8), at(9), false},
+		{"adjacent after", at(9), at(12), at(12), at(15), false},
+		{"reverse touching", at(12), at(15), at(9), at(12), false},
+		{"overlap at start", at(9), at(12), at(8), at(10), true},
+		{"overlap at end", at(9), at(12), at(11), at(13), true},
+		{"same interval", at(9), at(12), at(9), at(12), true},
+		{"existing contains new", at(8), at(14), at(9), at(12), true},
+		{"new contains existing", at(9), at(12), at(8), at(14), true},
+	}
+	for _, c := range cases {
+		_, space := CreateTestLocationAndSpace(org)
+		b := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: c.existingEnter, Leave: c.existingLeave}
+		CheckTestIsNil(t, GetBookingRepository().Create(b))
+		conflicts, err := GetBookingRepository().GetConflicts(space.ID, c.newEnter, c.newLeave, "")
+		CheckTestIsNil(t, err)
+		if c.expectConflict {
+			CheckTestInt(t, 1, len(conflicts))
+		} else {
+			CheckTestInt(t, 0, len(conflicts))
+		}
+	}
+}
+
+func TestBookingRepositoryGetConflictsExcludeBookingID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	base := time.Date(2030, 9, 1, 0, 0, 0, 0, time.UTC)
+	at := func(h int) time.Time { return base.Add(time.Duration(h) * time.Hour) }
+
+	b := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: at(9), Leave: at(12)}
+	CheckTestIsNil(t, GetBookingRepository().Create(b))
+
+	// Same interval without exclusion must conflict.
+	conflicts, err := GetBookingRepository().GetConflicts(space.ID, at(9), at(12), "")
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, len(conflicts))
+
+	// Same interval excluding itself must not conflict (editing itself).
+	conflicts, err = GetBookingRepository().GetConflicts(space.ID, at(9), at(12), b.ID)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(conflicts))
+
+	// Adjacent slot excluding itself must not conflict either.
+	conflicts, err = GetBookingRepository().GetConflicts(space.ID, at(12), at(15), b.ID)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 0, len(conflicts))
+}
