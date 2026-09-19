@@ -200,3 +200,63 @@ func TestSpacesAllowedBookersCRUD(t *testing.T) {
 	CheckTestInt(t, 1, len(list))
 	CheckTestBool(t, true, slices.Contains(list, g2.ID))
 }
+
+func TestSpaceDeleteCascades(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	location, space := CreateTestLocationAndSpace(org)
+	otherSpace := &Space{LocationID: location.ID, Name: "Other"}
+	CheckTestIsNil(t, GetSpaceRepository().Create(otherSpace))
+
+	group := &Group{OrganizationID: org.ID, Name: "G1"}
+	CheckTestIsNil(t, GetGroupRepository().Create(group))
+	CheckTestIsNil(t, GetSpaceRepository().AddApprovers(space, []string{group.ID}))
+	CheckTestIsNil(t, GetSpaceRepository().AddAllowedBookers(space, []string{group.ID}))
+
+	attribute := &SpaceAttribute{OrganizationID: org.ID, Label: "Attr", Type: SettingTypeString, SpaceApplicable: true}
+	CheckTestIsNil(t, GetSpaceAttributeRepository().Create(attribute))
+	CheckTestIsNil(t, GetSpaceAttributeValueRepository().Set(attribute.ID, space.ID, SpaceAttributeValueEntityTypeSpace, "value"))
+
+	base := time.Now().Add(1 * time.Hour)
+	booking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: base, Leave: base.Add(1 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(booking))
+	otherBooking := &Booking{UserID: user.ID, SpaceID: otherSpace.ID, Enter: base, Leave: base.Add(1 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(otherBooking))
+
+	recurringBooking := &RecurringBooking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   base,
+		Leave:   base.Add(1 * time.Hour),
+		Subject: "Recurring",
+		Cadence: CadenceDaily,
+		Details: &CadenceDailyDetails{Cycle: 1},
+		End:     base.AddDate(0, 0, 30),
+	}
+	CheckTestIsNil(t, GetRecurringBookingRepository().Create(recurringBooking))
+
+	CheckTestIsNil(t, GetSpaceRepository().Delete(space))
+
+	// Dependent data for the deleted space is gone
+	_, err := GetBookingRepository().GetOne(booking.ID)
+	CheckTestBool(t, true, err != nil)
+	_, err = GetRecurringBookingRepository().GetOne(recurringBooking.ID)
+	CheckTestBool(t, true, err != nil)
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(approvers))
+	allowedBookers, err := GetSpaceRepository().GetAllowedBookersGroupIDs(space)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(allowedBookers))
+	attrValues, err := GetSpaceAttributeValueRepository().GetAllForEntity(space.ID, SpaceAttributeValueEntityTypeSpace)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(attrValues))
+
+	// Data belonging to other spaces is untouched
+	_, err = GetBookingRepository().GetOne(otherBooking.ID)
+	CheckTestIsNil(t, err)
+	_, err = GetSpaceRepository().GetOne(otherSpace.ID)
+	CheckTestIsNil(t, err)
+}
