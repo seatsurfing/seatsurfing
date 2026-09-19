@@ -26,10 +26,11 @@ const anonymousBookingConfirmExpiry = 30 * time.Minute
 const maxPendingAnonymousBookingRequestsPerEmail = 2
 
 type GetAnonymousBookableSpaceResponse struct {
-	SpaceID      string `json:"spaceId"`
-	SpaceName    string `json:"spaceName"`
-	LocationID   string `json:"locationId"`
-	LocationName string `json:"locationName"`
+	SpaceID        string `json:"spaceId"`
+	SpaceName      string `json:"spaceName"`
+	LocationID     string `json:"locationId"`
+	LocationName   string `json:"locationName"`
+	RequireSubject bool   `json:"requireSubject"`
 }
 
 type GetAnonymousBookableSpacesResponse struct {
@@ -80,10 +81,11 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 			continue
 		}
 		res = append(res, GetAnonymousBookableSpaceResponse{
-			SpaceID:      space.ID,
-			SpaceName:    space.Name,
-			LocationID:   location.ID,
-			LocationName: location.Name,
+			SpaceID:        space.ID,
+			SpaceName:      space.Name,
+			LocationID:     location.ID,
+			LocationName:   location.Name,
+			RequireSubject: space.RequireSubject,
 		})
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
@@ -162,6 +164,11 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 	space, location, enter, leave, valid := router.validateSpaceAndTimes(orgID, &m)
 	if !valid {
 		SendBadRequest(w)
+		return
+	}
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(orgID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled && space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
 		return
 	}
 

@@ -15,6 +15,7 @@ interface AnonymousBookableSpace {
   spaceName: string;
   locationId: string;
   locationName: string;
+  requireSubject: boolean;
 }
 
 interface State {
@@ -67,49 +68,59 @@ class PublicBooking extends React.Component<Props, State> {
     this.loadOrgAndSpaces();
   };
 
-  loadOrgAndSpaces = () => {
+  loadOrgAndSpaces = async () => {
     const domain = window.location.host.split(":").shift();
-    Ajax.get("/auth/org/" + domain, () => true)
-      .then((res) => this.onOrgResolved(res.json.organization.id))
-      .catch(() => {
-        Ajax.get("/auth/singleorg", () => true)
-          .then((res) => this.onOrgResolved(res.json.organization.id))
-          .catch(() => this.props.router.replace("/404"));
-      });
+    let res;
+    try {
+      res = await Ajax.get("/auth/org/" + domain, () => true);
+    } catch {
+      try {
+        res = await Ajax.get("/auth/singleorg", () => true);
+      } catch {
+        this.props.router.replace("/404");
+        return;
+      }
+    }
+    await this.onOrgResolved(res.json.organization.id);
   };
 
-  onOrgResolved = (orgId: string) => {
+  onOrgResolved = async (orgId: string) => {
     this.orgId = orgId;
-    Ajax.get(
-      "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
-      () => true,
-    )
-      .then((res) => {
-        const spaces: AnonymousBookableSpace[] = res.json.spaces || [];
-        if (spaces.length === 0) {
-          this.props.router.replace("/404");
-          return;
-        }
-        const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
-        const maxDate = new Date();
-        maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
-        maxDate.setHours(23, 59, 59, 999);
-        let enter = this.state.enter;
-        let leave = this.state.leave;
-        if (enter > maxDate) {
-          enter = DateUtil.copyDate(maxDate, enter);
-          leave = DateUtil.copyDate(maxDate, leave);
-        }
-        this.setState({
-          loading: false,
-          spaces: spaces,
-          spaceId: spaces[0].spaceId,
-          maxDaysInAdvance: maxDaysInAdvance,
-          enter: enter,
-          leave: leave,
-        });
-      })
-      .catch(() => this.props.router.replace("/404"));
+    try {
+      const res = await Ajax.get(
+        "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
+        () => true,
+      );
+      const spaces: AnonymousBookableSpace[] = res.json.spaces || [];
+      if (spaces.length === 0) {
+        this.props.router.replace("/404");
+        return;
+      }
+      const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
+      const maxDate = new Date();
+      maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
+      maxDate.setHours(23, 59, 59, 999);
+      let enter = this.state.enter;
+      let leave = this.state.leave;
+      if (enter > maxDate) {
+        enter = DateUtil.copyDate(maxDate, enter);
+        leave = DateUtil.copyDate(maxDate, leave);
+      }
+      this.setState({
+        loading: false,
+        spaces: spaces,
+        spaceId: spaces[0].spaceId,
+        maxDaysInAdvance: maxDaysInAdvance,
+        enter: enter,
+        leave: leave,
+      });
+    } catch {
+      this.props.router.replace("/404");
+    }
+  };
+
+  getSelectedSpace = (): AnonymousBookableSpace | undefined => {
+    return this.state.spaces.find((s) => s.spaceId === this.state.spaceId);
   };
 
   getMaxDate = (): Date => {
@@ -118,7 +129,7 @@ class PublicBooking extends React.Component<Props, State> {
     return maxDate;
   };
 
-  onSubmit = (e: any) => {
+  onSubmit = async (e: any) => {
     e.preventDefault();
     if (!this.state.spaceId) {
       return;
@@ -139,13 +150,16 @@ class PublicBooking extends React.Component<Props, State> {
       email: this.state.email,
       subject: this.state.subject,
     };
-    Ajax.postData(
-      "/public-booking/" + encodeURIComponent(this.orgId) + "/request",
-      payload,
-      () => true,
-    )
-      .then(() => this.setState({ submitting: false, submitted: true }))
-      .catch(() => this.setState({ submitting: false, error: true }));
+    try {
+      await Ajax.postData(
+        "/public-booking/" + encodeURIComponent(this.orgId) + "/request",
+        payload,
+        () => true,
+      );
+      this.setState({ submitting: false, submitted: true });
+    } catch {
+      this.setState({ submitting: false, error: true });
+    }
   };
 
   render() {
@@ -221,6 +235,8 @@ class PublicBooking extends React.Component<Props, State> {
               type="text"
               value={this.state.subject}
               onChange={(e: any) => this.setState({ subject: e.target.value })}
+              required={this.getSelectedSpace()?.requireSubject}
+              minLength={this.getSelectedSpace()?.requireSubject ? 3 : 0}
               maxLength={256}
             />
           </Form.Group>
