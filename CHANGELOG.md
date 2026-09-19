@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.127.9](https://github.com/seatsurfing/seatsurfing/compare/v1.127.8...v1.127.9) (2026-09-19)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump next from 16.3.4 to 16.3.5 in /ui in the production-dependencies group across 1 directory ([#2666](https://github.com/seatsurfing/seatsurfing/issues/2666)) ([589f624](https://github.com/seatsurfing/seatsurfing/commit/589f6245d504867e9a663f32d7106191ab3dab54))
+* **server:** delete all (recurring) bookings when deleting space or location ([#2671](https://github.com/seatsurfing/seatsurfing/issues/2671)) ([84d3b95](https://github.com/seatsurfing/seatsurfing/commit/84d3b95552eb3bf2bd8cde2bb4ef4475b48015c1))
+* **server:** denormalize booking org/location for faster time-range queries ([#2670](https://github.com/seatsurfing/seatsurfing/issues/2670)) ([3643754](https://github.com/seatsurfing/seatsurfing/commit/3643754f3003f884b66bf2635172f7114b6e5760))
+* **server:** resolve user roles in one query and repair perf test seeding ([#2668](https://github.com/seatsurfing/seatsurfing/issues/2668)) ([b5d292e](https://github.com/seatsurfing/seatsurfing/commit/b5d292ef827c2c15262cea6b94a872ab20de0001))
+
 ## [1.127.8](https://github.com/seatsurfing/seatsurfing/compare/v1.127.7...v1.127.8) (2026-09-18)
 
 
