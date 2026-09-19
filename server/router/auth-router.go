@@ -327,10 +327,9 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(time.Hour * 1),
-		AuthStateType:  AuthResetPasswordRequest,
-		Payload:        user.ID,
+		Expiry:        time.Now().Add(time.Hour * 1),
+		AuthStateType: AuthResetPasswordRequest,
+		Payload:       user.ID,
 	}
 	GetAuthStateRepository().Create(authState)
 	if err := router.SendPasswordResetEmail(user, authState.ID, org); err != nil {
@@ -834,8 +833,8 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	var user *User
 	var provider *AuthProvider
-	if authState.AuthProviderID != "" && authState.AuthProviderID != GetSettingsRepository().GetNullUUID() {
-		provider, _ = GetAuthProviderRepository().GetOne(authState.AuthProviderID)
+	if authState.Key != "" {
+		provider, _ = GetAuthProviderRepository().GetOne(authState.Key)
 		if provider == nil {
 			SendNotFound(w)
 			return
@@ -969,10 +968,10 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		Redirect:  redir,
 	}
 	authState := &AuthState{
-		AuthProviderID: provider.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthRequestState,
-		Payload:        marshalAuthStateLoginPayload(payload),
+		Key:           provider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthRequestState,
+		Payload:       marshalAuthStateLoginPayload(payload),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to create auth state: " + err.Error()})
@@ -1079,10 +1078,10 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 		LoginType: payload.LoginType,
 	}
 	authState := &AuthState{
-		AuthProviderID: provider.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthResponseCache,
-		Payload:        marshalAuthStateLoginPayload(payloadNew),
+		Key:           provider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthResponseCache,
+		Payload:       marshalAuthStateLoginPayload(payloadNew),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		log.Println(err)
@@ -1146,7 +1145,7 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: fmt.Sprintf("state not found for id %s", strings.Replace(strings.Replace(state, "\r", "", -1), "\n", "", -1))}
 	}
-	if authState.AuthProviderID != provider.ID {
+	if authState.Key != provider.ID {
 		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: "auth providers don't match"}
 	}
 	defer GetAuthStateRepository().Delete(authState)

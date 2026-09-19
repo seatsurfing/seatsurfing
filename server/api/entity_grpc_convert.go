@@ -465,11 +465,11 @@ func authStateToProto(a *AuthState) *commonpb.AuthState {
 		return nil
 	}
 	return &commonpb.AuthState{
-		Id:             a.ID,
-		AuthProviderId: a.AuthProviderID,
-		Expiry:         timeToProto(a.Expiry),
-		AuthStateType:  int32(a.AuthStateType),
-		Payload:        a.Payload,
+		Id:            a.ID,
+		Key:           a.Key,
+		Expiry:        timeToProto(a.Expiry),
+		AuthStateType: int32(a.AuthStateType),
+		Payload:       a.Payload,
 	}
 }
 
@@ -478,10 +478,10 @@ func authStateFromProto(p *commonpb.AuthState) *AuthState {
 		return nil
 	}
 	return &AuthState{
-		ID:             p.Id,
-		AuthProviderID: p.AuthProviderId,
-		Expiry:         timeFromProto(p.Expiry),
-		AuthStateType:  AuthStateType(p.AuthStateType),
-		Payload:        p.Payload,
+		ID:            p.Id,
+		Key:           p.Key,
+		Expiry:        timeFromProto(p.Expiry),
+		AuthStateType: AuthStateType(p.AuthStateType),
+		Payload:       p.Payload,
 	}
 }

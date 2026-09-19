@@ -256,7 +256,7 @@ func (router *UserRouter) getTotpSecret(w http.ResponseWriter, r *http.Request) 
 	stateID := vars["stateId"]
 
 	authState, err := GetAuthStateRepository().GetOne(stateID)
-	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.AuthProviderID != user.ID {
+	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.Key != user.ID {
 		SendNotFound(w)
 		return
 	}
@@ -292,7 +292,7 @@ func (router *UserRouter) validateTotp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authState, err := GetAuthStateRepository().GetOne(m.StateID)
-	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.AuthProviderID != user.ID {
+	if err != nil || authState == nil || authState.AuthStateType != AuthTotpSetup || authState.Key != user.ID {
 		SendNotFound(w)
 		return
 	}
@@ -371,10 +371,10 @@ func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authState := &AuthState{
-		AuthProviderID: user.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthTotpSetup,
-		Payload:        key.Secret(),
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthTotpSetup,
+		Payload:       key.Secret(),
+		Key:           user.ID,
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		log.Println(err)
@@ -391,7 +391,7 @@ func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
 
 func (router *UserRouter) getMergeRequests(w http.ResponseWriter, r *http.Request) {
 	target := GetRequestUser(r)
-	list, err := GetAuthStateRepository().GetActiveByAuthProviderID(target.ID)
+	list, err := GetAuthStateRepository().GetActiveByKeyAndType(target.ID, AuthMergeRequest)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -425,10 +425,10 @@ func (router *UserRouter) mergeInit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authState := &AuthState{
-		AuthProviderID: target.ID,
-		Expiry:         time.Now().Add(time.Minute * 60),
-		AuthStateType:  AuthMergeRequest,
-		Payload:        source.ID,
+		Expiry:        time.Now().Add(time.Minute * 60),
+		AuthStateType: AuthMergeRequest,
+		Payload:       source.ID,
+		Key:           target.ID,
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		SendInternalServerError(w)
@@ -441,7 +441,7 @@ func (router *UserRouter) mergeFinish(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	target := GetRequestUser(r)
 	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
-	if err != nil || authState == nil || authState.AuthStateType != AuthMergeRequest || authState.AuthProviderID != target.ID {
+	if err != nil || authState == nil || authState.AuthStateType != AuthMergeRequest || authState.Key != target.ID {
 		SendNotFound(w)
 		return
 	}
@@ -818,10 +818,9 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		authState := &AuthState{
-			AuthProviderID: GetSettingsRepository().GetNullUUID(),
-			Expiry:         time.Now().Add(time.Hour * 72), // 3 days
-			AuthStateType:  AuthInviteUser,
-			Payload:        eNew.ID,
+			Expiry:        time.Now().Add(time.Hour * 72), // 3 days
+			AuthStateType: AuthInviteUser,
+			Payload:       eNew.ID,
 		}
 		if err := GetAuthStateRepository().Create(authState); err != nil {
 			log.Println("Failed to create auth state for user invitation:", err)
@@ -942,10 +941,9 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 	// Send invitation email if requested
 	if m.SendInvitation {
 		authState := &AuthState{
-			AuthProviderID: GetSettingsRepository().GetNullUUID(),
-			Expiry:         time.Now().Add(time.Hour * 72), // 3 days
-			AuthStateType:  AuthInviteUser,
-			Payload:        e.ID,
+			Expiry:        time.Now().Add(time.Hour * 72), // 3 days
+			AuthStateType: AuthInviteUser,
+			Payload:       e.ID,
 		}
 		if err := GetAuthStateRepository().Create(authState); err != nil {
 			log.Println("Failed to create auth state for user invitation:", err)

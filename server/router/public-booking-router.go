@@ -215,20 +215,14 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 }
 
 // countPendingRequestsForEmail counts non-expired anonymous-booking auth
-// states (confirmations and "sorry" markers alike) for the given email.
+// states (confirmations and "sorry" markers alike) for the given email, via
+// the indexed Key column rather than scanning and decoding every payload.
 func (router *PublicBookingRouter) countPendingRequestsForEmail(email string) int {
-	pending, err := GetAuthStateRepository().GetActiveByType(AuthAnonymousBooking)
+	pending, err := GetAuthStateRepository().GetActiveByKeyAndType(strings.ToLower(email), AuthAnonymousBooking)
 	if err != nil {
 		return 0
 	}
-	count := 0
-	for _, state := range pending {
-		var payload AnonymousBookingRequestPayload
-		if json.Unmarshal([]byte(state.Payload), &payload) == nil && strings.EqualFold(payload.Email, email) {
-			count++
-		}
-	}
-	return count
+	return len(pending)
 }
 
 func (router *PublicBookingRouter) createAuthState(payload AnonymousBookingRequestPayload) (*AuthState, error) {
@@ -237,10 +231,10 @@ func (router *PublicBookingRouter) createAuthState(payload AnonymousBookingReque
 		return nil, err
 	}
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(anonymousBookingConfirmExpiry),
-		AuthStateType:  AuthAnonymousBooking,
-		Payload:        string(payloadJSON),
+		Expiry:        time.Now().Add(anonymousBookingConfirmExpiry),
+		AuthStateType: AuthAnonymousBooking,
+		Payload:       string(payloadJSON),
+		Key:           strings.ToLower(payload.Email),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		return nil, err

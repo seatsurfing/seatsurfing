@@ -31,16 +31,26 @@ func GetAuthStateRepository() *AuthStateStore {
 }
 
 func (r *AuthStateStore) RunSchemaUpgrade(curVersion, targetVersion int) {
-	// No updates yet
+	if curVersion < 57 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_states ADD COLUMN IF NOT EXISTS key VARCHAR NULL"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_auth_states_key_type ON auth_states(key, auth_state_type)"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_states DROP COLUMN IF EXISTS auth_provider_id"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *AuthStateStore) Create(e *AuthState) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO auth_states "+
-		"(auth_provider_id, expiry, auth_state_type, payload) "+
+		"(expiry, auth_state_type, payload, key) "+
 		"VALUES ($1, $2, $3, $4) "+
 		"RETURNING id",
-		e.AuthProviderID, e.Expiry, e.AuthStateType, e.Payload).Scan(&id)
+		e.Expiry, e.AuthStateType, e.Payload, NullString(e.Key)).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -50,13 +60,15 @@ func (r *AuthStateStore) Create(e *AuthState) error {
 
 func (r *AuthStateStore) GetOne(id string) (*AuthState, error) {
 	e := &AuthState{}
-	err := GetDatabase().DB().QueryRow("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
+	var key NullString
+	err := GetDatabase().DB().QueryRow("SELECT id, expiry, auth_state_type, payload, key "+
 		"FROM auth_states "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload)
+		id).Scan(&e.ID, &e.Expiry, &e.AuthStateType, &e.Payload, &key)
 	if err != nil {
 		return nil, err
 	}
+	e.Key = string(key)
 	return e, nil
 }
 
@@ -69,13 +81,15 @@ func (r *AuthStateStore) Delete(e *AuthState) error {
 // Expiry is compared in SQL as timestamps round-trip as wall-clock time.
 func (r *AuthStateStore) GetOneActive(id string) (*AuthState, error) {
 	e := &AuthState{}
-	err := GetDatabase().DB().QueryRow("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
+	var key NullString
+	err := GetDatabase().DB().QueryRow("SELECT id, expiry, auth_state_type, payload, key "+
 		"FROM auth_states "+
 		"WHERE id = $1 AND expiry > $2",
-		id, time.Now()).Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload)
+		id, time.Now()).Scan(&e.ID, &e.Expiry, &e.AuthStateType, &e.Payload, &key)
 	if err != nil {
 		return nil, err
 	}
+	e.Key = string(key)
 	return e, nil
 }
 
@@ -92,7 +106,7 @@ func (r *AuthStateStore) MarkForDeletion(e *AuthState, graceWindow time.Duration
 func (r *AuthStateStore) GetActiveByPayloadAndType(payload string, authStateType AuthStateType) ([]*AuthState, error) {
 	var result []*AuthState
 	now := time.Now()
-	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
+	rows, err := GetDatabase().DB().Query("SELECT id, expiry, auth_state_type, payload, key "+
 		"FROM auth_states "+
 		"WHERE payload = $1 AND auth_state_type = $2 AND expiry > $3",
 		payload, authStateType, now)
@@ -102,53 +116,36 @@ func (r *AuthStateStore) GetActiveByPayloadAndType(payload string, authStateType
 	defer rows.Close()
 	for rows.Next() {
 		e := &AuthState{}
-		if err := rows.Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload); err != nil {
+		var key NullString
+		if err := rows.Scan(&e.ID, &e.Expiry, &e.AuthStateType, &e.Payload, &key); err != nil {
 			return nil, err
 		}
+		e.Key = string(key)
 		result = append(result, e)
 	}
 	return result, nil
 }
 
-// GetActiveByType returns all non-expired auth states of the given type,
-// regardless of payload. Used where the payload is a structured (e.g. JSON)
-// blob rather than a simple ID, so GetActiveByPayloadAndType can't be used
-// to look up or rate-limit by a derived field within it.
-func (r *AuthStateStore) GetActiveByType(authStateType AuthStateType) ([]*AuthState, error) {
+// GetActiveByKeyAndType returns all non-expired auth states of the given type
+// whose Key matches, e.g. an OAuth provider ID, user ID or email used to look
+// up or rate-limit states where the payload is a structured (JSON) blob.
+func (r *AuthStateStore) GetActiveByKeyAndType(key string, authStateType AuthStateType) ([]*AuthState, error) {
 	var result []*AuthState
-	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
+	rows, err := GetDatabase().DB().Query("SELECT id, expiry, auth_state_type, payload, key "+
 		"FROM auth_states "+
-		"WHERE auth_state_type = $1 AND expiry > $2",
-		authStateType, time.Now())
+		"WHERE key = $1 AND auth_state_type = $2 AND expiry > $3",
+		key, authStateType, time.Now())
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		e := &AuthState{}
-		if err := rows.Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload); err != nil {
+		var k NullString
+		if err := rows.Scan(&e.ID, &e.Expiry, &e.AuthStateType, &e.Payload, &k); err != nil {
 			return nil, err
 		}
-		result = append(result, e)
-	}
-	return result, nil
-}
-
-func (r *AuthStateStore) GetActiveByAuthProviderID(authProviderID string) ([]*AuthState, error) {
-	var result []*AuthState
-	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
-		"FROM auth_states "+
-		"WHERE auth_provider_id = $1 AND expiry > $2",
-		authProviderID, time.Now())
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		e := &AuthState{}
-		if err := rows.Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload); err != nil {
-			return nil, err
-		}
+		e.Key = string(k)
 		result = append(result, e)
 	}
 	return result, nil
@@ -158,25 +155,4 @@ func (r *AuthStateStore) DeleteExpired() error {
 	now := time.Now()
 	_, err := GetDatabase().DB().Exec("DELETE FROM auth_states WHERE expiry < $1", now)
 	return err
-}
-
-func (r *AuthStateStore) GetByAuthProviderID(authProviderID string) ([]*AuthState, error) {
-	var result []*AuthState
-	rows, err := GetDatabase().DB().Query("SELECT id, auth_provider_id, expiry, auth_state_type, payload "+
-		"FROM auth_states "+
-		"WHERE auth_provider_id = $1",
-		authProviderID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		e := &AuthState{}
-		err = rows.Scan(&e.ID, &e.AuthProviderID, &e.Expiry, &e.AuthStateType, &e.Payload)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, e)
-	}
-	return result, nil
 }

@@ -244,15 +244,13 @@ const (
 )
 
 type AuthState struct {
-	ID             string
-	AuthProviderID string
-	Expiry         time.Time
-	AuthStateType  AuthStateType
-	Payload        string
-	// Key is an indexable lookup value (e.g. a user ID or email), used
-	// instead of AuthProviderID or a JSON-encoded Payload where a type
-	// needs to look up or rate-limit its states by something other than
-	// the actual OAuth provider.
+	ID            string
+	Expiry        time.Time
+	AuthStateType AuthStateType
+	Payload       string
+	// Key is an indexable lookup value (e.g. an OAuth provider ID, user ID
+	// or email) used to look up or rate-limit states by something other
+	// than the state's own ID, without decoding the JSON Payload.
 	Key string
 }
 
