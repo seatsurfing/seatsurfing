@@ -317,3 +317,49 @@ func TestHasAdminUserExcludesDisabledAndServiceAccounts(t *testing.T) {
 	}
 	CheckTestBool(t, false, found)
 }
+
+// The user list endpoints resolve the assignments of every listed user in
+// one query. The batch lookup must return exactly what the per-user lookup
+// returns for each user, and nothing for users without any role.
+func TestGetRoleIDsForUsers(t *testing.T) {
+	ClearTestDB()
+
+	org := CreateTestOrg("test.com")
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+	user3 := CreateTestUserInOrg(org)
+	role1 := CreateTestRole(org, "R1", map[Permission]PermissionLevel{PermissionGroups: PermissionLevelAdmin})
+	role2 := CreateTestRole(org, "R2", map[Permission]PermissionLevel{PermissionUsers: PermissionLevelRead})
+	AssignTestRole(user1, role1)
+	AssignTestRole(user1, role2)
+	AssignTestRole(user2, role2)
+
+	byUser, err := GetUserRoleRepository().GetRoleIDsForUsers([]string{user1.ID, user2.ID, user3.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 2, len(byUser))
+	CheckTestInt(t, 2, len(byUser[user1.ID]))
+	CheckTestInt(t, 1, len(byUser[user2.ID]))
+	CheckTestString(t, role2.ID, byUser[user2.ID][0])
+	if _, ok := byUser[user3.ID]; ok {
+		t.Fatalf("expected no entry for user without roles")
+	}
+
+	// Only the requested users are returned.
+	byUser, err = GetUserRoleRepository().GetRoleIDsForUsers([]string{user2.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(byUser))
+	if _, ok := byUser[user1.ID]; ok {
+		t.Fatalf("expected no entry for user that was not requested")
+	}
+
+	// An empty request yields an empty result rather than an error.
+	byUser, err = GetUserRoleRepository().GetRoleIDsForUsers([]string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(byUser))
+}
