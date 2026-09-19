@@ -58,6 +58,10 @@ func (router *PublicBookingRouter) SetupRoutes(s *mux.Router) {
 }
 
 func (router *PublicBookingRouter) isAnonymousBookingEnabledForOrg(orgID string) bool {
+	featureEnabled, _ := GetSettingsRepository().GetBool(orgID, SettingFeatureAnonymousBooking.Name)
+	if !featureEnabled {
+		return false
+	}
 	enabled, _ := GetSettingsRepository().GetBool(orgID, SettingAnonymousBookingEnabled.Name)
 	return enabled
 }

@@ -1515,7 +1515,10 @@ class Settings extends React.Component<Props, State> {
           {/* ANONYMOUS BOOKING */}
 
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h4>{this.props.t("anonymousBooking")}</h4>
+            <h4>
+              {this.props.t("anonymousBooking")}
+              <PremiumFeatureIcon />
+            </h4>
           </div>
           <Form.Group as={Row}>
             <Col sm="6">
@@ -1523,7 +1526,11 @@ class Settings extends React.Component<Props, State> {
                 type="checkbox"
                 id="check-anonymousBookingEnabled"
                 label={this.props.t("anonymousBookingAvailable")}
-                checked={this.state.anonymousBookingEnabled}
+                checked={
+                  this.state.anonymousBookingEnabled &&
+                  RuntimeConfig.INFOS.featureAnonymousBooking
+                }
+                disabled={!RuntimeConfig.INFOS.featureAnonymousBooking}
                 onChange={(e: any) =>
                   this.setState({ anonymousBookingEnabled: e.target.checked })
                 }

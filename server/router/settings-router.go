@@ -328,7 +328,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingHideReports.Name ||
 		name == SettingHideStats.Name ||
 		name == SettingAllowRecurringBookings.Name ||
-		name == SettingAnonymousBookingEnabled.Name {
+		name == SettingAnonymousBookingEnabled.Name ||
+		name == SettingFeatureAnonymousBooking.Name {
 		return true
 	}
 	return false

@@ -80,6 +80,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingHideReports.Name,
 		SettingHideStats.Name,
 		SettingAnonymousBookingEnabled.Name,
+		SettingFeatureAnonymousBooking.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -166,6 +167,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingHideReports.Name,
 		SettingHideStats.Name,
 		SettingAnonymousBookingEnabled.Name,
+		SettingFeatureAnonymousBooking.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

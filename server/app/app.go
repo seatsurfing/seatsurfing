@@ -725,6 +725,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, api.SettingFeatureAuthProviders.Name, "1")
 		GetSettingsRepository().Set(org.ID, api.SettingFeatureRecurringBookings.Name, "1")
 		GetSettingsRepository().Set(org.ID, api.SettingFeatureKioskMode.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeatureAnonymousBooking.Name, "1")
 	}
 }
 

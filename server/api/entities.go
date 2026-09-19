@@ -321,6 +321,7 @@ var (
 	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
 	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
 	SettingAnonymousBookingEnabled        SettingName = SettingName{Name: "anonymous_booking_enabled", Type: SettingTypeBool}
+	SettingFeatureAnonymousBooking        SettingName = SettingName{Name: "feature_anonymous_booking", Type: SettingTypeBool}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────
