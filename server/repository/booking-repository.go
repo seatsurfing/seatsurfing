@@ -117,6 +117,32 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 		}
 	}
 	if curVersion < 57 {
+		// Denormalized from spaces/locations so organization- and
+		// location-scoped time-range queries (booking.filter, booking.current,
+		// space.availability, stats.summary) can filter on an indexed bookings
+		// column instead of joining through spaces and locations just to test
+		// organization_id/location_id, which forced a near-full scan of
+		// bookings at scale. Safe to denormalize because a space's location_id
+		// and a location's organization_id are both immutable once set (the
+		// routers never let either change), so these columns never go stale
+		// after being populated at booking creation time.
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS location_id uuid"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS organization_id uuid"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE bookings SET location_id = spaces.location_id, organization_id = locations.organization_id " +
+			"FROM spaces INNER JOIN locations ON locations.id = spaces.location_id " +
+			"WHERE spaces.id = bookings.space_id AND bookings.location_id IS NULL"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_org_time ON bookings(organization_id, enter_time, leave_time)"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_location_time ON bookings(location_id, enter_time, leave_time)"); err != nil {
+			panic(err)
+		}
 		// Anonymous bookings (see anonymous_bookings table) have no user account.
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ALTER COLUMN user_id DROP NOT NULL"); err != nil {
 			panic(err)
@@ -200,9 +226,14 @@ func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
 
 func (r *BookingStore) Create(e *Booking) error {
 	var id string
+	// location_id/organization_id are looked up from the space being booked
+	// rather than taken as input, so the denormalized columns always reflect
+	// the space's actual (immutable) location and organization.
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
-		"(user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, anonymous_id, created_at_utc) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) "+
+		"(user_id, space_id, location_id, organization_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, anonymous_id, created_at_utc) "+
+		"SELECT $1, $2, spaces.location_id, locations.organization_id, $3, $4, $5, $6, $7, $8, $9, $10 "+
+		"FROM spaces INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE spaces.id = $2 "+
 		"RETURNING id",
 		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.AnonymousID), time.Now().UTC()).Scan(&id)
 	if err != nil {
@@ -350,7 +381,7 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
 		"LEFT JOIN users ON bookings.user_id = users.id " +
 		"LEFT JOIN anonymous_bookings ON anonymous_bookings.id = bookings.anonymous_id " +
-		"WHERE locations.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3"
+		"WHERE bookings.organization_id = $1 AND enter_time >= $2 AND leave_time <= $3"
 	args := []any{organizationID, startTime, endTime}
 	if userEmail != "" {
 		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
@@ -390,7 +421,7 @@ func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail strin
 		"LEFT JOIN users ON bookings.user_id = users.id " +
 		"LEFT JOIN anonymous_bookings ON anonymous_bookings.id = bookings.anonymous_id " +
 		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz " +
-		"WHERE locations.organization_id = $1 " +
+		"WHERE bookings.organization_id = $1 " +
 		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) " +
 		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)"
 	args := []interface{}{organizationID}
@@ -578,7 +609,7 @@ func (r *BookingStore) GetCountsSummary(organizationID string, today, yesterday,
 		"INNER JOIN spaces ON spaces.id = bookings.space_id "+
 		"INNER JOIN locations ON locations.id = spaces.location_id "+
 		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz "+
-		"WHERE locations.organization_id = $1",
+		"WHERE bookings.organization_id = $1",
 		organizationID,
 		today.Enter, today.Leave,
 		yesterday.Enter, yesterday.Leave,
@@ -589,18 +620,19 @@ func (r *BookingStore) GetCountsSummary(organizationID string, today, yesterday,
 
 func (r *BookingStore) GetCountByWeekday(organizationID string, location *Location, enter *time.Time, leave *time.Time) ([7]int, error) {
 	var res [7]int
+	// Filters on the denormalized bookings.organization_id/location_id
+	// columns, so this can use idx_bookings_org_time/idx_bookings_location_time
+	// instead of joining through spaces/locations just to test those columns.
 	query := "SELECT EXTRACT(DOW FROM enter_time)::int AS dow, COUNT(*) " +
 		"FROM bookings " +
-		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
-		"INNER JOIN locations ON locations.id = spaces.location_id " +
-		"WHERE locations.organization_id = $1"
+		"WHERE organization_id = $1"
 	args := []any{organizationID}
 	if enter != nil && leave != nil {
 		query += fmt.Sprintf(" AND enter_time >= $%d AND enter_time <= $%d", len(args)+1, len(args)+2)
 		args = append(args, *enter, *leave)
 	}
 	if location != nil {
-		query += fmt.Sprintf(" AND spaces.location_id = $%d", len(args)+1)
+		query += fmt.Sprintf(" AND location_id = $%d", len(args)+1)
 		args = append(args, location.ID)
 	}
 	query += " GROUP BY dow"
@@ -637,13 +669,14 @@ func (r *BookingStore) GetTotalBookedMinutesMulti(organizationID string, ranges 
 				"FILTER (WHERE enter_time <= $%d AND leave_time >= $%d), 0)",
 			leavePos, enterPos, leavePos, enterPos))
 	}
+	// Filters on the denormalized bookings.organization_id/location_id
+	// columns, so this can use idx_bookings_org_time/idx_bookings_location_time
+	// instead of joining through spaces/locations just to test those columns.
 	query := "SELECT " + strings.Join(aggregates, ", ") + " " +
 		"FROM bookings " +
-		"INNER JOIN spaces ON spaces.id = bookings.space_id " +
-		"INNER JOIN locations ON locations.id = spaces.location_id " +
-		"WHERE locations.organization_id = $1"
+		"WHERE organization_id = $1"
 	if location != nil {
-		query += fmt.Sprintf(" AND spaces.location_id = $%d", len(args)+1)
+		query += fmt.Sprintf(" AND location_id = $%d", len(args)+1)
 		args = append(args, location.ID)
 	}
 	values := make([]float64, len(ranges))

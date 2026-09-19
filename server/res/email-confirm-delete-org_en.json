@@ -8,7 +8,7 @@
     {
       "paragraph": "PLEASE NOTE: Deleting the Seatsurfing instance includes permanently deleting all bookings, areas, spaces and users. No recovery will be possible! Click the button below to confirm this action.",
       "label": "Permanently delete instance",
-      "url": "{{orgDomain}}ui/admin/organizations/delete/{{confirmID}}/"
+      "url": "{{orgDomain}}ui/admin/settings/delete/{{confirmID}}/"
     }
   ],
   "finalParagraphs": [

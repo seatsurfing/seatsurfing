@@ -371,6 +371,7 @@
   "maxConcurrentBookings": "Max. Buchungen",
   "maxConcurrentBookingsPerUser": "Maximale Anzahl gleichzeitiger Buchungen pro Benutzer",
   "maxDaysInAdvance": "Max. Buchungs-Vorlauf",
+  "maxDaysInAdvanceHint": "Gilt für den Buchungsbeginn",
   "maxHoursBeforeDelete": "Max. Stunden vor Beginn zum Löschen",
   "maxHoursPartiallyBooked": "Max. Stunden teilw. gebucht",
   "members": "Mitglieder",

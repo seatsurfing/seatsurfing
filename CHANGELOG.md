@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.127.8](https://github.com/seatsurfing/seatsurfing/compare/v1.127.7...v1.127.8) (2026-09-18)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** hide "kiosk mode" column if kiosk mode is not enabled ([#2659](https://github.com/seatsurfing/seatsurfing/issues/2659)) ([70b2417](https://github.com/seatsurfing/seatsurfing/commit/70b24170c640e934a96a7b97bcc9e66fb749fe4b))
+* **admin-ui:** move delete confirm page to settings path ([#2656](https://github.com/seatsurfing/seatsurfing/issues/2656)) ([cc10f61](https://github.com/seatsurfing/seatsurfing/commit/cc10f61927c130a7da1cf4df17d71080cf2ca304))
+* **deps:** bump @types/react-dom from 19.2.7 to 19.3.0 in /ui in the production-dependencies group across 1 directory ([#2660](https://github.com/seatsurfing/seatsurfing/issues/2660)) ([9cc8410](https://github.com/seatsurfing/seatsurfing/commit/9cc8410e3277d432aec26be00ae6a014bcee0a93))
+* **deps:** bump github.com/go-webauthn/webauthn from 0.18.0 to 0.18.1 in /server in the minor-and-patch group ([#2661](https://github.com/seatsurfing/seatsurfing/issues/2661)) ([5a0398c](https://github.com/seatsurfing/seatsurfing/commit/5a0398c361be8eead541d9fc9df266f74a85acfb))
+* **deps:** bump the production-dependencies group across 1 directory with 2 updates ([#2652](https://github.com/seatsurfing/seatsurfing/issues/2652)) ([4f0c3f0](https://github.com/seatsurfing/seatsurfing/commit/4f0c3f0ca0c2bc6f8b2ee2b754d49ca5fd344c8c))
+* **server:** add OrganizationRepository.GetDomains() to Plugin API ([#2657](https://github.com/seatsurfing/seatsurfing/issues/2657)) ([029c726](https://github.com/seatsurfing/seatsurfing/commit/029c7264bf94b1d9cbe9ec2bc37387a45eece640))
+
+
+### 📚 Documentation
+
+* **admin-ui:** clarify that max days in advance applies to booking start ([#2663](https://github.com/seatsurfing/seatsurfing/issues/2663)) ([f6b11fa](https://github.com/seatsurfing/seatsurfing/commit/f6b11fa4cdfb2f6852380c283726675f77118b29))
+
 ## [1.127.7](https://github.com/seatsurfing/seatsurfing/compare/v1.127.6...v1.127.7) (2026-09-16)
 
 

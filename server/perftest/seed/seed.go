@@ -75,6 +75,8 @@ func Run(cfg Config) error {
 	repository.GetLocationRepository()
 	repository.GetSpaceRepository()
 	repository.GetUserRepository()
+	repository.GetRoleRepository()
+	repository.GetUserRoleRepository()
 	repository.GetBookingRepository()
 	repository.GetSettingsRepository()
 	repository.GetSessionRepository()
@@ -126,21 +128,30 @@ func Run(cfg Config) error {
 		actors.SpaceIDs = sampleStrings(spaceIDs, 20)
 
 		userIDs := make([]string, cfg.UsersPerOrg)
-		userRoles := make([]UserRole, cfg.UsersPerOrg)
 		for i := range userIDs {
 			userIDs[i] = uuid.New().String()
-			userRoles[i] = UserRoleUser
 		}
+		if err := seedUsers(db, orgID, orgIdx, userIDs); err != nil {
+			return fmt.Errorf("seed users for org %d: %w", orgIdx, err)
+		}
+
+		// Access is granted through role assignments rather than a column
+		// on the user, so the actor users get the same built-in roles that
+		// OrganizationRepository.Create seeds for a real organization. The
+		// first two user indices are reserved for the actors -- see
+		// measure.reservedActorIndices.
+		orgAdminRoleID, floorPlanRoleID, _ := repository.GetRoleRepository().EnsureBuiltInRoles(orgID)
 		if cfg.UsersPerOrg > 0 {
-			userRoles[0] = UserRoleOrgAdmin
+			if err := repository.GetUserRoleRepository().Add(userIDs[0], orgAdminRoleID, RoleAssignmentSourceManual); err != nil {
+				return fmt.Errorf("assign org admin role for org %d: %w", orgIdx, err)
+			}
 			actors.OrgAdminID = userIDs[0]
 		}
 		if cfg.UsersPerOrg > 1 {
-			userRoles[1] = UserRoleSpaceAdmin
+			if err := repository.GetUserRoleRepository().Add(userIDs[1], floorPlanRoleID, RoleAssignmentSourceManual); err != nil {
+				return fmt.Errorf("assign floor plan admin role for org %d: %w", orgIdx, err)
+			}
 			actors.SpaceAdminID = userIDs[1]
-		}
-		if err := seedUsers(db, orgID, orgIdx, userIDs, userRoles); err != nil {
-			return fmt.Errorf("seed users for org %d: %w", orgIdx, err)
 		}
 
 		if err := seedBookings(db, rnd, orgIdx, userIDs, spaceIDs, cfg.BookingsPerOrg); err != nil {
@@ -150,6 +161,15 @@ func Run(cfg Config) error {
 		result.Orgs = append(result.Orgs, actors)
 		log.Printf("Org %d/%d seeded (%d users, %d spaces, %d bookings) in %s",
 			orgIdx+1, cfg.Orgs, cfg.UsersPerOrg, cfg.SpacesPerOrg, cfg.BookingsPerOrg, time.Since(orgStart))
+	}
+
+	// Bulk loading leaves the planner with statistics that lag the data,
+	// which a production database would have caught up on long before it
+	// reached this size. Analyze once so the measurements reflect plans for
+	// the seeded data rather than whatever autovacuum got around to.
+	log.Println("Analyzing tables...")
+	if _, err := db.Exec("ANALYZE"); err != nil {
+		return fmt.Errorf("analyze: %w", err)
 	}
 
 	return writeActorsFile(cfg.ActorsFile, result)
@@ -268,18 +288,18 @@ func seedSpaces(db *sql.DB, spaceIDs []string, locationIDs []string, spaceLocati
 	return txn.Commit()
 }
 
-func seedUsers(db *sql.DB, orgID string, orgIdx int, userIDs []string, roles []UserRole) error {
+func seedUsers(db *sql.DB, orgID string, orgIdx int, userIDs []string) error {
 	txn, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	stmt, err := txn.Prepare(pq.CopyIn("users", "id", "organization_id", "email", "role", "firstname", "lastname", "disabled"))
+	stmt, err := txn.Prepare(pq.CopyIn("users", "id", "organization_id", "email", "account_type", "firstname", "lastname", "disabled"))
 	if err != nil {
 		return err
 	}
 	for i, id := range userIDs {
 		email := fmt.Sprintf("user%06d@org%04d.perf.test", i, orgIdx)
-		if _, err := stmt.Exec(id, orgID, email, int(roles[i]), "Perf", fmt.Sprintf("User%06d", i), false); err != nil {
+		if _, err := stmt.Exec(id, orgID, email, int(AccountTypePerson), "Perf", fmt.Sprintf("User%06d", i), false); err != nil {
 			return err
 		}
 	}

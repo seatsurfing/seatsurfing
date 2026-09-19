@@ -131,6 +131,36 @@ func (r *UserRoleStore) GetRoleIDsForUser(userID string) ([]string, error) {
 	return result, nil
 }
 
+// GetRoleIDsForUsers returns the role IDs assigned to each of the given
+// users in a single query, keyed by user ID. Users without any assignment
+// are absent from the result. It backs the user list endpoints, where one
+// query per user would not scale with the size of an organization.
+func (r *UserRoleStore) GetRoleIDsForUsers(userIDs []string) (map[string][]string, error) {
+	result := make(map[string][]string)
+	if len(userIDs) == 0 {
+		return result, nil
+	}
+	rows, err := GetDatabase().DB().Query("SELECT user_id, role_id "+
+		"FROM user_roles "+
+		"WHERE user_id = ANY($1)",
+		pq.Array(userIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userID, roleID string
+		if err := rows.Scan(&userID, &roleID); err != nil {
+			return nil, err
+		}
+		result[userID] = append(result[userID], roleID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // GetAssignmentsForSource returns the role IDs assigned to a user by the given
 // source. It supports judging a replacement of one source's assignments in
 // isolation, without the other sources' roles muddying the comparison.

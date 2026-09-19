@@ -8,6 +8,11 @@ on:
         type: choice
         options: [small, full]
         default: small
+      postgres:
+        description: "Postgres major version to test against"
+        type: choice
+        options: ["18", "17"]
+        default: "18"
   schedule:
     - cron: "0 3 * * 0" # weekly, Sunday 03:00 UTC (always full scale)
 
@@ -18,7 +23,9 @@ jobs:
     timeout-minutes: 90
     services:
       postgres:
-        image: postgres:18-alpine
+        # Defaults to 18 for scheduled runs; workflow_dispatch may pick an
+        # older major to compare the same commit across Postgres versions.
+        image: postgres:${{ github.event.inputs.postgres || '18' }}-alpine
         env:
           POSTGRES_PASSWORD: root
           POSTGRES_DB: seatsurfing_test
@@ -107,6 +114,26 @@ jobs:
             --actors-file=perftest-actors.json \
             --thresholds=perftest/testdata/thresholds.yaml \
             --json-out=perftest-results.json
+
+      - name: Explain booking range queries
+        # Prints the plans Postgres picked for the two booking-range queries
+        # behind space.availability and booking.filter, the scenarios most
+        # sensitive to planner behaviour at scale. These match the queries in
+        # repository/booking-repository.go (GetAllByOrg) and
+        # repository/space-repository.go (GetAllInTime), which filter on the
+        # denormalized bookings.organization_id/location_id columns so they
+        # can use idx_bookings_org_time/idx_bookings_location_time instead of
+        # joining through spaces/locations just to test those columns.
+        working-directory: ./server
+        if: ${{ !cancelled() }}
+        env:
+          PGPASSWORD: root
+        run: |
+          org=$(jq -r '.orgs[0].orgId' perftest-actors.json)
+          loc=$(jq -r '.orgs[0].locationIds[0]' perftest-actors.json)
+          psql -h localhost -U postgres -d seatsurfing_test -c "SELECT version()" \
+            -c "EXPLAIN (ANALYZE, BUFFERS, SUMMARY OFF) SELECT bookings.id FROM bookings INNER JOIN spaces ON bookings.space_id = spaces.id INNER JOIN locations ON spaces.location_id = locations.id INNER JOIN users ON bookings.user_id = users.id WHERE bookings.organization_id = '$org' AND enter_time >= now() - interval '3 days' AND leave_time <= now() + interval '4 days' ORDER BY enter_time" \
+            -c "EXPLAIN (ANALYZE, BUFFERS, SUMMARY OFF) SELECT bookings.space_id, bookings.id FROM bookings INNER JOIN users ON users.id = bookings.user_id WHERE bookings.location_id = '$loc' AND bookings.enter_time <= now() + interval '8 hours' AND bookings.leave_time >= now() ORDER BY bookings.enter_time ASC"
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}

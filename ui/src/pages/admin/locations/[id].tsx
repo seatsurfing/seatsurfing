@@ -1138,7 +1138,10 @@ class EditLocation extends React.Component<Props, State> {
         <td>{space.name}</td>
         <td>{RendererUtils.state(space.enabled)}</td>
         <td>{RendererUtils.state(space.requireSubject)}</td>
-        <td>{RendererUtils.state(space.kioskEnabled)}</td>
+        {RuntimeConfig.INFOS.featureKioskMode &&
+          RuntimeConfig.INFOS.kioskModeEnabled && (
+            <td>{RendererUtils.state(space.kioskEnabled)}</td>
+          )}
         <td>
           {RendererUtils.state(space.approvers && space.approvers?.length > 0)}
         </td>
@@ -1709,11 +1712,14 @@ class EditLocation extends React.Component<Props, State> {
 
   exportTable = (e: any) => {
     const t = this.props.t;
+    const showKioskMode =
+      RuntimeConfig.INFOS.featureKioskMode &&
+      RuntimeConfig.INFOS.kioskModeEnabled;
     const headers = [
       t("name"),
       t("enabled"),
       t("requireSubject"),
-      t("kioskMode"),
+      ...(showKioskMode ? [t("kioskMode")] : []),
       t("approvers"),
       t("allowBookers"),
       t("anonymousBooking"),
@@ -1723,7 +1729,7 @@ class EditLocation extends React.Component<Props, State> {
       space.name,
       RendererUtils.stateXls(space.enabled, t),
       RendererUtils.stateXls(space.requireSubject, t),
-      RendererUtils.stateXls(space.kioskEnabled, t),
+      ...(showKioskMode ? [RendererUtils.stateXls(space.kioskEnabled, t)] : []),
       RendererUtils.stateXls(space.approvers && space.approvers?.length > 0, t),
       RendererUtils.stateXls(
         space.allowBookers && space.allowBookers?.length > 0,
@@ -2061,9 +2067,12 @@ class EditLocation extends React.Component<Props, State> {
                 <th>{this.props.t("name")}</th>
                 <th>{this.props.t("enabled")}</th>
                 <th>{this.props.t("requireSubject")}</th>
-                <th>
-                  {this.props.t("kioskMode")} <PremiumFeatureIcon />
-                </th>
+                {RuntimeConfig.INFOS.featureKioskMode &&
+                  RuntimeConfig.INFOS.kioskModeEnabled && (
+                    <th>
+                      {this.props.t("kioskMode")} <PremiumFeatureIcon />
+                    </th>
+                  )}
                 <th>
                   {this.props.t("approvers")} <PremiumFeatureIcon />
                 </th>

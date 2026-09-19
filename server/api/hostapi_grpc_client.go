@@ -328,6 +328,13 @@ func (r *organizationRepositoryGRPC) GetPrimaryDomain(e *Organization) (*Domain,
 	}
 	return domainFromProto(reply.Domain), strErr(reply.Err)
 }
+func (r *organizationRepositoryGRPC) GetDomains(e *Organization) ([]*Domain, error) {
+	reply, err := r.client.OrgGetDomains(context.Background(), &hostapipb.OrgGetDomainsArgs{Org: orgToProto(e)})
+	if err != nil {
+		return nil, err
+	}
+	return domainsFromProto(reply.Domains), strErr(reply.Err)
+}
 func (r *organizationRepositoryGRPC) Create(e *Organization) error {
 	reply, err := r.client.OrgCreate(context.Background(), &hostapipb.OrgMutateArgs{Org: orgToProto(e)})
 	if err != nil {

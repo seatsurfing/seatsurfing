@@ -556,8 +556,14 @@ func (router *UserRouter) getSelf(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := &GetUserSelfResponse{
-		GetUserResponse: *router.copyToRestModel(e, false, passkeyCount > 0),
+		GetUserResponse: *router.copyToRestModel(e, false, passkeyCount > 0, roleIDs),
 		Permissions:     PermissionsToRestModel(GetEffectivePermissions(e, e.OrganizationID)),
 	}
 	res.Organization = GetOrganizationResponse{
@@ -605,7 +611,13 @@ func (router *UserRouter) getOneByEmail(w http.ResponseWriter, r *http.Request) 
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, true, passkeyCount > 0)
+	roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, true, passkeyCount > 0, roleIDs)
 	SendJSON(w, res)
 }
 
@@ -632,7 +644,13 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, true, passkeyCount > 0)
+	roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(e.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := router.copyToRestModel(e, true, passkeyCount > 0, roleIDs)
 	SendJSON(w, res)
 }
 
@@ -665,9 +683,15 @@ func (router *UserRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	roleIDsByUserID, err := GetUserRoleRepository().GetRoleIDsForUsers(userIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetUserResponse{}
 	for _, e := range list {
-		m := router.copyToRestModel(e, true, hasPasskeysByUserID[e.ID])
+		m := router.copyToRestModel(e, true, hasPasskeysByUserID[e.ID], roleIDsByUserID[e.ID])
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -970,7 +994,11 @@ func (router *UserRouter) copyFromRestModel(m *CreateUserRequest) *User {
 	return e
 }
 
-func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool) *GetUserResponse {
+// copyToRestModel builds the REST representation of a user. roleIDs are
+// passed in rather than looked up here so that list endpoints can resolve
+// the assignments of all listed users in one query (see
+// UserRoleStore.GetRoleIDsForUsers) instead of one per user.
+func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool, roleIDs []string) *GetUserResponse {
 	m := &GetUserResponse{}
 	m.ID = e.ID
 	m.OrganizationID = e.OrganizationID
@@ -979,9 +1007,7 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool)
 	m.Lastname = e.Lastname
 	m.AtlassianID = string(e.AtlassianID)
 	m.AccountType = int(e.AccountType)
-	if roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(e.ID); err == nil {
-		m.RoleIDs = roleIDs
-	}
+	m.RoleIDs = roleIDs
 	if m.RoleIDs == nil {
 		m.RoleIDs = []string{}
 	}

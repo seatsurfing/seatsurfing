@@ -121,6 +121,10 @@ func (s *HostAPIGRPCServer) OrgGetPrimaryDomain(ctx context.Context, a *hostapip
 	v, err := s.impl.GetOrganizationRepository().GetPrimaryDomain(orgFromProto(a.Org))
 	return &hostapipb.OrgGetPrimaryDomainReply{Domain: domainToProto(v), Err: errStr(err)}, nil
 }
+func (s *HostAPIGRPCServer) OrgGetDomains(ctx context.Context, a *hostapipb.OrgGetDomainsArgs) (*hostapipb.OrgGetDomainsReply, error) {
+	v, err := s.impl.GetOrganizationRepository().GetDomains(orgFromProto(a.Org))
+	return &hostapipb.OrgGetDomainsReply{Domains: domainsToProto(v), Err: errStr(err)}, nil
+}
 func (s *HostAPIGRPCServer) OrgCreate(ctx context.Context, a *hostapipb.OrgMutateArgs) (*hostapipb.OrgGetOneReply, error) {
 	o := orgFromProto(a.Org)
 	err := s.impl.GetOrganizationRepository().Create(o)

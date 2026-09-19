@@ -354,6 +354,7 @@
   "maxConcurrentBookings": "Varauksia enintään",
   "maxConcurrentBookingsPerUser": "Samanaikaisia varauksia enintään per käyttäjä",
   "maxDaysInAdvance": "Päiviä etukäteen enintään",
+  "maxDaysInAdvanceHint": "Koskee varauksen alkamisaikaa",
   "maxHoursBeforeDelete": "Tuntimäärä, jonka jälkeen varausta ei voi enää perua ennen alkamisaikaa",
   "maxHoursPartiallyBooked": "Osittain varattuna enintään (tuntia)",
   "members": "Jäsenet",
