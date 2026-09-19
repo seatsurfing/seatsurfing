@@ -735,16 +735,14 @@ func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave 
 }
 
 // GetConflicts returns bookings for a specific space which overlap
-// with the specified enter and leave times.
+// with the specified enter and leave times. Intervals are half-open
+// [enter, leave): bookings sharing only an endpoint do not overlap.
 func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
 	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id = $2 AND ("+
-		"($3 >= enter_time AND $3 <= leave_time) OR "+
-		"($4 >= enter_time AND $4 <= leave_time) OR "+
-		"(enter_time >= $3 AND enter_time <= $4) OR "+
-		"(leave_time >= $3 AND leave_time <= $4)"+
+		"$3 < leave_time AND $4 > enter_time"+
 		") "+
 		"ORDER BY enter_time", excludeBookingID, spaceID, enter, leave)
 	if err != nil {
