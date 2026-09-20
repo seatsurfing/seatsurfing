@@ -40,7 +40,7 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     const { id } = this.props.router.query;
     if (typeof id !== "string" || id.length === 0) {
       return;
@@ -50,22 +50,22 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
       request = Ajax.postData("/public-booking/confirm/" + id, {}, () => true);
       confirmRequests.set(id, request);
     }
-    request
-      .then((res) => {
-        const status =
-          res.json?.status === "pending" ? "pending" : "unavailable";
-        this.setState({
-          loading: false,
-          status: status,
-enter: res.json?.enter
-  ? new Date(Formatting.stripTimezoneDetails(res.json.enter))
-  : null,
-leave: res.json?.leave
-  ? new Date(Formatting.stripTimezoneDetails(res.json.leave))
-  : null,
-        });
-      })
-      .catch(() => this.setState({ loading: false, status: "invalid" }));
+    try {
+      const res = await request;
+      const status = res.json?.status === "pending" ? "pending" : "unavailable";
+      this.setState({
+        loading: false,
+        status: status,
+        enter: res.json?.enter
+          ? new Date(Formatting.stripTimezoneDetails(res.json.enter))
+          : null,
+        leave: res.json?.leave
+          ? new Date(Formatting.stripTimezoneDetails(res.json.leave))
+          : null,
+      });
+    } catch {
+      this.setState({ loading: false, status: "invalid" });
+    }
   };
 
   render() {
