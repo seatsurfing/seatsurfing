@@ -113,6 +113,16 @@ func TestLocationDeleteCleansUpBookings(t *testing.T) {
 	}
 	CheckTestIsNil(t, GetRecurringBookingRepository().Create(otherRecurringBooking))
 
+	anonBooking := &AnonymousBooking{Name: "Anon", Email: "anon@test.com"}
+	CheckTestIsNil(t, GetAnonymousBookingRepository().Create(anonBooking))
+	anonymousBooking := &Booking{SpaceID: s1.ID, AnonymousID: NullUUID(anonBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(anonymousBooking))
+
+	otherAnonBooking := &AnonymousBooking{Name: "OtherAnon", Email: "otheranon@test.com"}
+	CheckTestIsNil(t, GetAnonymousBookingRepository().Create(otherAnonBooking))
+	otherAnonymousBooking := &Booking{SpaceID: s2.ID, AnonymousID: NullUUID(otherAnonBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(otherAnonymousBooking))
+
 	CheckTestIsNil(t, GetLocationRepository().Delete(l1))
 
 	// Dependent data for the deleted location's space is gone
@@ -120,10 +130,14 @@ func TestLocationDeleteCleansUpBookings(t *testing.T) {
 	CheckTestBool(t, true, err != nil)
 	_, err = GetRecurringBookingRepository().GetOne(recurringBooking.ID)
 	CheckTestBool(t, true, err != nil)
+	_, err = GetAnonymousBookingRepository().GetOne(anonBooking.ID)
+	CheckTestBool(t, true, err != nil)
 
 	// Data belonging to the other location is untouched
 	_, err = GetBookingRepository().GetOne(otherBooking.ID)
 	CheckTestIsNil(t, err)
 	_, err = GetRecurringBookingRepository().GetOne(otherRecurringBooking.ID)
+	CheckTestIsNil(t, err)
+	_, err = GetAnonymousBookingRepository().GetOne(otherAnonBooking.ID)
 	CheckTestIsNil(t, err)
 }

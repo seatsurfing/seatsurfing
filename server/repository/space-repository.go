@@ -300,6 +300,10 @@ func (r *SpaceStore) Delete(e *Space) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings WHERE space_id = $1", e.ID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM anonymous_bookings WHERE id NOT IN " +
+		"(SELECT anonymous_id FROM bookings WHERE anonymous_id IS NOT NULL)"); err != nil {
+		return err
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE entity_id = $1 AND entity_type = $2", e.ID, SpaceAttributeValueEntityTypeSpace); err != nil {
 		return err
 	}

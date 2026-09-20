@@ -197,6 +197,10 @@ func (r *LocationStore) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings WHERE recurring_bookings.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM anonymous_bookings WHERE id NOT IN " +
+		"(SELECT anonymous_id FROM bookings WHERE anonymous_id IS NOT NULL)"); err != nil {
+		return err
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_allowed_bookers WHERE spaces_allowed_bookers.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
 		return err
 	}
