@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -122,6 +124,53 @@ func TestPublicBookingConfirmInvalidID(t *testing.T) {
 	req := NewHTTPRequest("POST", "/public-booking/confirm/does-not-exist", "", nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+// TestPublicBookingConfirmConcurrentOnlyCreatesOneBooking guards against the
+// double opt-in confirmation link being posted twice at once (e.g. a
+// double-mounted client tab) and creating two bookings from a single one-time
+// link. The handler must consume the auth state atomically so only one of the
+// concurrent requests succeeds.
+func TestPublicBookingConfirmConcurrentOnlyCreatesOneBooking(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	enter := time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC)
+	leave := time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC)
+	id := createTestPublicBookingAuthState(t, space, enter, leave)
+
+	numAttempts := 10
+	var pendingCount int32
+	var wg sync.WaitGroup
+	wg.Add(numAttempts)
+	for i := 0; i < numAttempts; i++ {
+		go func() {
+			defer wg.Done()
+			req := NewHTTPRequest("POST", "/public-booking/confirm/"+id, "", nil)
+			res := ExecuteTestRequest(req)
+			if res.Code != http.StatusOK {
+				return
+			}
+			var resBody ConfirmPublicBookingResponse
+			if err := json.Unmarshal(res.Body.Bytes(), &resBody); err != nil {
+				return
+			}
+			if resBody.Status == "pending" {
+				atomic.AddInt32(&pendingCount, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	CheckTestInt(t, 1, int(pendingCount))
+
+	conflicts, err := GetBookingRepository().GetConflicts(space.ID, enter, leave, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(conflicts))
 }
 
 // setUpPublicBookingRequiringApproval confirms a public booking request for

@@ -93,6 +93,26 @@ func (r *AuthStateStore) GetOneActive(id string) (*AuthState, error) {
 	return e, nil
 }
 
+// ClaimActive atomically returns and deletes the auth state with the given ID,
+// if it has not expired yet. Unlike GetOneActive followed by a separate Delete,
+// the read and the invalidation happen in a single statement, so concurrent
+// callers racing on the same one-time state (e.g. a confirmation link posted
+// twice) cannot both observe it as still active: Postgres serializes the
+// DELETEs on the row and only one of them returns a row.
+func (r *AuthStateStore) ClaimActive(id string) (*AuthState, error) {
+	e := &AuthState{}
+	var key NullString
+	err := GetDatabase().DB().QueryRow("DELETE FROM auth_states "+
+		"WHERE id = $1 AND expiry > $2 "+
+		"RETURNING id, expiry, auth_state_type, payload, key",
+		id, time.Now()).Scan(&e.ID, &e.Expiry, &e.AuthStateType, &e.Payload, &key)
+	if err != nil {
+		return nil, err
+	}
+	e.Key = string(key)
+	return e, nil
+}
+
 // MarkForDeletion keeps the auth state valid for a short grace window instead
 // of deleting it immediately, so duplicate verification requests for the same
 // state (e.g. a double-mounted client) still succeed. The periodic cleanup

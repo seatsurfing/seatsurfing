@@ -254,7 +254,7 @@ func (router *PublicBookingRouter) createAuthState(payload PublicBookingRequestP
 
 func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	authState, err := GetAuthStateRepository().GetOneActive(id)
+	authState, err := GetAuthStateRepository().ClaimActive(id)
 	if err != nil || authState.AuthStateType != AuthPublicBooking {
 		SendNotFound(w)
 		return
@@ -264,8 +264,6 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		SendNotFound(w)
 		return
 	}
-	// Single-use: remove the state now regardless of outcome below.
-	defer GetAuthStateRepository().Delete(authState)
 
 	space, err := GetSpaceRepository().GetOne(payload.SpaceID)
 	if err != nil {
