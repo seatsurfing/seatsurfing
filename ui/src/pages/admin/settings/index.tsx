@@ -89,7 +89,7 @@ interface State {
   enforceTOTP: number;
   kioskSecret: string;
   kioskModeEnabled: boolean;
-  anonymousBookingEnabled: boolean;
+  publicBookingEnabled: boolean;
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
@@ -155,7 +155,7 @@ class Settings extends React.Component<Props, State> {
       enforceTOTP: Organization.ENFORCE_TOTP_DISABLED,
       kioskSecret: "",
       kioskModeEnabled: false,
-      anonymousBookingEnabled: false,
+      publicBookingEnabled: false,
       hideReports: false,
       hideStats: false,
       installId: "",
@@ -271,8 +271,8 @@ class Settings extends React.Component<Props, State> {
           state.enforceTOTP = window.parseInt(s.value);
         if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
           state.kioskModeEnabled = s.value === "1";
-        if (s.name === Organization.PREF_ANONYMOUS_BOOKING_ENABLED)
-          state.anonymousBookingEnabled = s.value === "1";
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_ENABLED)
+          state.publicBookingEnabled = s.value === "1";
         if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
@@ -454,8 +454,8 @@ class Settings extends React.Component<Props, State> {
         this.state.kioskModeEnabled ? "1" : "0",
       ),
       new OrgSettings(
-        Organization.PREF_ANONYMOUS_BOOKING_ENABLED,
-        this.state.anonymousBookingEnabled ? "1" : "0",
+        Organization.PREF_PUBLIC_BOOKING_ENABLED,
+        this.state.publicBookingEnabled ? "1" : "0",
       ),
       new OrgSettings(
         Organization.PREF_HIDE_REPORTS,
@@ -1512,11 +1512,11 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
 
-          {/* ANONYMOUS BOOKING */}
+          {/* PUBLIC BOOKING */}
 
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h4>
-              {this.props.t("anonymousBooking")}
+              {this.props.t("publicBooking")}
               <PremiumFeatureIcon />
             </h4>
           </div>
@@ -1524,26 +1524,26 @@ class Settings extends React.Component<Props, State> {
             <Col sm="6">
               <Form.Check
                 type="checkbox"
-                id="check-anonymousBookingEnabled"
-                label={this.props.t("anonymousBookingAvailable")}
+                id="check-publicBookingEnabled"
+                label={this.props.t("publicBookingAvailable")}
                 checked={
-                  this.state.anonymousBookingEnabled &&
-                  RuntimeConfig.INFOS.featureAnonymousBooking
+                  this.state.publicBookingEnabled &&
+                  RuntimeConfig.INFOS.featurePublicBooking
                 }
-                disabled={!RuntimeConfig.INFOS.featureAnonymousBooking}
+                disabled={!RuntimeConfig.INFOS.featurePublicBooking}
                 onChange={(e: any) =>
-                  this.setState({ anonymousBookingEnabled: e.target.checked })
+                  this.setState({ publicBookingEnabled: e.target.checked })
                 }
               />
               <Form.Text className="text-muted">
-                {this.props.t("anonymousBookingAvailableHint")}
+                {this.props.t("publicBookingAvailableHint")}
               </Form.Text>
             </Col>
           </Form.Group>
-          {this.state.anonymousBookingEnabled && (
+          {this.state.publicBookingEnabled && (
             <Form.Group as={Row}>
               <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
-                {this.props.t("anonymousBookingUrl")}
+                {this.props.t("publicBookingUrl")}
               </Form.Label>
               <Col sm="6">
                 <InputGroup>
@@ -1555,7 +1555,7 @@ class Settings extends React.Component<Props, State> {
                   />
                   <CopyToClipboardButton text={Navigation.publicBookingUrl()} />
                   <Button
-                    aria-label={this.props.t("anonymousBookingUrl")}
+                    aria-label={this.props.t("publicBookingUrl")}
                     variant="outline-secondary"
                     href={Navigation.publicBookingUrl()}
                     target="_blank"

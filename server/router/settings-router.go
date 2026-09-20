@@ -328,8 +328,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingHideReports.Name ||
 		name == SettingHideStats.Name ||
 		name == SettingAllowRecurringBookings.Name ||
-		name == SettingAnonymousBookingEnabled.Name ||
-		name == SettingFeatureAnonymousBooking.Name {
+		name == SettingPublicBookingEnabled.Name ||
+		name == SettingFeaturePublicBooking.Name {
 		return true
 	}
 	return false
@@ -388,7 +388,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
 		name == SettingKioskModeEnabled.Name ||
-		name == SettingAnonymousBookingEnabled.Name {
+		name == SettingPublicBookingEnabled.Name {
 		return true
 	}
 	return false
@@ -485,8 +485,8 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingKioskModeEnabled.Name {
 		return SettingKioskModeEnabled.Type
 	}
-	if name == SettingAnonymousBookingEnabled.Name {
-		return SettingAnonymousBookingEnabled.Type
+	if name == SettingPublicBookingEnabled.Name {
+		return SettingPublicBookingEnabled.Type
 	}
 	return 0
 }

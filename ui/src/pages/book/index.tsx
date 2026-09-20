@@ -10,7 +10,7 @@ import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Validation from "@/util/Validation";
 
-interface AnonymousBookableSpace {
+interface PublicBookableSpace {
   spaceId: string;
   spaceName: string;
   locationId: string;
@@ -20,7 +20,7 @@ interface AnonymousBookableSpace {
 
 interface State {
   loading: boolean;
-  spaces: AnonymousBookableSpace[];
+  spaces: PublicBookableSpace[];
   spaceId: string;
   enter: Date;
   leave: Date;
@@ -95,7 +95,7 @@ class PublicBooking extends React.Component<Props, State> {
         "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
         () => true,
       );
-      const spaces: AnonymousBookableSpace[] = res.json.spaces || [];
+      const spaces: PublicBookableSpace[] = res.json.spaces || [];
       if (spaces.length === 0) {
         this.props.router.replace("/404");
         return;
@@ -123,7 +123,7 @@ class PublicBooking extends React.Component<Props, State> {
     }
   };
 
-  getSelectedSpace = (): AnonymousBookableSpace | undefined => {
+  getSelectedSpace = (): PublicBookableSpace | undefined => {
     return this.state.spaces.find((s) => s.spaceId === this.state.spaceId);
   };
 
@@ -181,7 +181,7 @@ class PublicBooking extends React.Component<Props, State> {
         <div className="container-center">
           <div className="container-center-inner-wide">
             <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
-            <p>{this.props.t("anonymousBookingRequestSubmitted")}</p>
+            <p>{this.props.t("publicBookingRequestSubmitted")}</p>
           </div>
         </div>
       );
@@ -191,10 +191,10 @@ class PublicBooking extends React.Component<Props, State> {
       <div className="container-center">
         <Form className="container-center-inner-wide" onSubmit={this.onSubmit}>
           <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
-          <p>{this.props.t("anonymousBookingIntro")}</p>
+          <p>{this.props.t("publicBookingIntro")}</p>
           {this.state.error && (
             <Alert variant="danger">
-              {this.props.t("anonymousBookingRequestError")}
+              {this.props.t("publicBookingRequestError")}
             </Alert>
           )}
           <Form.Group className="mb-3">
@@ -295,7 +295,7 @@ class PublicBooking extends React.Component<Props, State> {
             type="submit"
             disabled={this.state.submitting}
           >
-            {this.props.t("anonymousBookingSubmit")}
+            {this.props.t("publicBookingSubmit")}
           </Button>
         </Form>
       </div>

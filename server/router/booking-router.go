@@ -56,7 +56,7 @@ type GetBookingResponse struct {
 	UserEmail     string           `json:"userEmail"`
 	UserFirstname string           `json:"userFirstname"`
 	UserLastname  string           `json:"userLastname"`
-	Anonymous     bool             `json:"anonymous"`
+	Public        bool             `json:"public"`
 	Approved      bool             `json:"approved"`
 	Space         GetSpaceResponse `json:"space"`
 	RecurringID   string           `json:"recurringId"`
@@ -134,9 +134,9 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendForbidden(w)
 		return
 	}
-	if e.AnonymousID != "" {
-		anonymousBookingEnabled, _ := GetSettingsRepository().GetBool(e.Space.Location.OrganizationID, SettingAnonymousBookingEnabled.Name)
-		if !anonymousBookingEnabled {
+	if e.PublicID != "" {
+		publicBookingEnabled, _ := GetSettingsRepository().GetBool(e.Space.Location.OrganizationID, SettingPublicBookingEnabled.Name)
+		if !publicBookingEnabled {
 			SendForbidden(w)
 			return
 		}
@@ -417,7 +417,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	if e.AnonymousID != "" {
+	if e.PublicID != "" {
 		SendForbidden(w)
 		return
 	}
@@ -459,7 +459,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.ID = e.ID
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
-	eNew.AnonymousID = e.AnonymousID
+	eNew.PublicID = e.PublicID
 	eNew.Approved = e.Approved
 	if m.UserEmail != "" {
 		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
@@ -1272,23 +1272,23 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	var org *Organization
 	language := ""
 	if e.UserID == "" {
-		// Anonymous booking: no user account, no opt-out preference.
+		// Public booking: no user account, no opt-out preference.
 		// Recipient info (including language, as submitted with the
-		// original booking request) is taken from e.AnonymousName/Email/
-		// Language as already loaded by the caller - the anonymous_bookings
+		// original booking request) is taken from e.PublicName/Email/
+		// Language as already loaded by the caller - the public_bookings
 		// row itself may already be gone by now (e.g. declining a booking
 		// deletes it before this notification is sent).
 		var err error
-		recipientEmail = e.AnonymousEmail
-		recipientName = SafeRecipientName(e.AnonymousName, e.AnonymousEmail)
+		recipientEmail = e.PublicEmail
+		recipientName = SafeRecipientName(e.PublicName, e.PublicEmail)
 		org, err = GetOrganizationRepository().GetOne(location.OrganizationID)
 		if err != nil || org == nil {
 			log.Println(err)
 			return
 		}
 		language = org.Language
-		if e.AnonymousLanguage != "" {
-			language = e.AnonymousLanguage
+		if e.PublicLanguage != "" {
+			language = e.PublicLanguage
 		}
 	} else {
 		active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
@@ -1434,15 +1434,15 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		return
 	}
 
-	// Get booking requester info (a real user, or an anonymous booker)
+	// Get booking requester info (a real user, or a public booker)
 	bookingUserEmail := ""
 	if e.UserID == "" {
-		anonymousBooking, err := GetAnonymousBookingRepository().GetOne(string(e.AnonymousID))
-		if err != nil || anonymousBooking == nil {
-			log.Println("Error getting anonymous booking:", err)
+		publicBooking, err := GetPublicBookingRepository().GetOne(string(e.PublicID))
+		if err != nil || publicBooking == nil {
+			log.Println("Error getting public booking:", err)
 			return
 		}
-		bookingUserEmail = anonymousBooking.Email
+		bookingUserEmail = publicBooking.Email
 	} else {
 		bookingUser, err := GetUserRepository().GetOne(e.UserID)
 		if err != nil {
@@ -1561,9 +1561,9 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.UserFirstname = e.UserFirstname
 	m.UserLastname = e.UserLastname
 	if e.UserID == "" {
-		m.Anonymous = true
-		m.UserEmail = e.AnonymousEmail
-		m.UserFirstname = e.AnonymousName
+		m.Public = true
+		m.UserEmail = e.PublicEmail
+		m.UserFirstname = e.PublicName
 	}
 	m.SpaceID = e.SpaceID
 	m.Subject = e.Subject

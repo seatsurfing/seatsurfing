@@ -17,7 +17,7 @@ export default class Space extends Entity {
   requireSubject: boolean;
   enabled: boolean;
   kioskEnabled: boolean;
-  anonymousBookingEnabled: boolean;
+  publicBookingEnabled: boolean;
   shape: string;
   fontSize: string;
   attributes: SpaceAttributeValue[];
@@ -41,7 +41,7 @@ export default class Space extends Entity {
     this.requireSubject = false;
     this.enabled = true;
     this.kioskEnabled = false;
-    this.anonymousBookingEnabled = false;
+    this.publicBookingEnabled = false;
     this.shape = "rect";
     this.fontSize = "normal";
     this.attributes = [];
@@ -127,7 +127,7 @@ export default class Space extends Entity {
       requireSubject: this.requireSubject,
       enabled: this.enabled,
       kioskEnabled: this.kioskEnabled,
-      anonymousBookingEnabled: this.anonymousBookingEnabled,
+      publicBookingEnabled: this.publicBookingEnabled,
       shape: this.shape,
       fontSize: this.fontSize,
       attributes: this.attributes.map((a) => a.serialize()),
@@ -148,7 +148,7 @@ export default class Space extends Entity {
     this.requireSubject = input.requireSubject;
     this.enabled = input.enabled;
     this.kioskEnabled = input.kioskEnabled ?? false;
-    this.anonymousBookingEnabled = input.anonymousBookingEnabled ?? false;
+    this.publicBookingEnabled = input.publicBookingEnabled ?? false;
     this.shape = input.shape || "rect";
     this.fontSize = input.fontSize || "normal";
     if (input.allowed !== undefined) {

@@ -24,7 +24,7 @@ const confirmRequests: Map<
   ReturnType<typeof Ajax.postData>
 > = new Map();
 
-class ConfirmAnonymousBooking extends React.Component<Props, State> {
+class ConfirmPublicBooking extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -57,11 +57,11 @@ class ConfirmAnonymousBooking extends React.Component<Props, State> {
       return <Loading />;
     }
 
-    let message = this.props.t("anonymousBookingConfirmInvalid");
+    let message = this.props.t("publicBookingConfirmInvalid");
     if (this.state.status === "pending") {
-      message = this.props.t("anonymousBookingConfirmPending");
+      message = this.props.t("publicBookingConfirmPending");
     } else if (this.state.status === "unavailable") {
-      message = this.props.t("anonymousBookingConfirmUnavailable");
+      message = this.props.t("publicBookingConfirmUnavailable");
     }
 
     return (
@@ -75,4 +75,4 @@ class ConfirmAnonymousBooking extends React.Component<Props, State> {
   }
 }
 
-export default withTranslation(withReadyRouter(ConfirmAnonymousBooking as any));
+export default withTranslation(withReadyRouter(ConfirmPublicBooking as any));

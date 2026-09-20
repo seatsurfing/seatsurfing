@@ -14,18 +14,18 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
-// PublicBookingRouter serves the fully unauthenticated anonymous-booking flow:
-// listing anonymous-bookable spaces, requesting a booking (double opt-in),
-// and confirming it. Every handler re-validates that anonymous booking is
+// PublicBookingRouter serves the fully unauthenticated public-booking flow:
+// listing public-bookable spaces, requesting a booking (double opt-in),
+// and confirming it. Every handler re-validates that public booking is
 // actually enabled for the org/space rather than trusting the unauthenticated
 // route whitelist, following the same principle as KioskRouter.
 type PublicBookingRouter struct {
 }
 
-const anonymousBookingConfirmExpiry = 30 * time.Minute
-const maxPendingAnonymousBookingRequestsPerEmail = 2
+const publicBookingConfirmExpiry = 30 * time.Minute
+const maxPendingPublicBookingRequestsPerEmail = 2
 
-type GetAnonymousBookableSpaceResponse struct {
+type GetPublicBookableSpaceResponse struct {
 	SpaceID        string `json:"spaceId"`
 	SpaceName      string `json:"spaceName"`
 	LocationID     string `json:"locationId"`
@@ -33,12 +33,12 @@ type GetAnonymousBookableSpaceResponse struct {
 	RequireSubject bool   `json:"requireSubject"`
 }
 
-type GetAnonymousBookableSpacesResponse struct {
-	Spaces           []GetAnonymousBookableSpaceResponse `json:"spaces"`
-	MaxDaysInAdvance int                                  `json:"maxDaysInAdvance"`
+type GetPublicBookableSpacesResponse struct {
+	Spaces           []GetPublicBookableSpaceResponse `json:"spaces"`
+	MaxDaysInAdvance int                              `json:"maxDaysInAdvance"`
 }
 
-type CreateAnonymousBookingRequest struct {
+type CreatePublicBookingRequest struct {
 	SpaceID  string    `json:"spaceId" validate:"required,uuid"`
 	Enter    time.Time `json:"enter" validate:"required"`
 	Leave    time.Time `json:"leave" validate:"required"`
@@ -48,7 +48,7 @@ type CreateAnonymousBookingRequest struct {
 	Language string    `json:"language" validate:"omitempty,max=10"`
 }
 
-type ConfirmAnonymousBookingResponse struct {
+type ConfirmPublicBookingResponse struct {
 	Status string `json:"status"`
 }
 
@@ -58,34 +58,34 @@ func (router *PublicBookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/confirm/{id}", router.confirm).Methods("POST")
 }
 
-func (router *PublicBookingRouter) isAnonymousBookingEnabledForOrg(orgID string) bool {
-	featureEnabled, _ := GetSettingsRepository().GetBool(orgID, SettingFeatureAnonymousBooking.Name)
+func (router *PublicBookingRouter) isPublicBookingEnabledForOrg(orgID string) bool {
+	featureEnabled, _ := GetSettingsRepository().GetBool(orgID, SettingFeaturePublicBooking.Name)
 	if !featureEnabled {
 		return false
 	}
-	enabled, _ := GetSettingsRepository().GetBool(orgID, SettingAnonymousBookingEnabled.Name)
+	enabled, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingEnabled.Name)
 	return enabled
 }
 
 func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Request) {
 	orgID := mux.Vars(r)["orgId"]
-	if !router.isAnonymousBookingEnabledForOrg(orgID) {
+	if !router.isPublicBookingEnabledForOrg(orgID) {
 		SendNotFound(w)
 		return
 	}
-	spaces, err := GetSpaceRepository().GetAllAnonymousBookable(orgID)
+	spaces, err := GetSpaceRepository().GetAllPublicBookable(orgID)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	res := []GetAnonymousBookableSpaceResponse{}
+	res := []GetPublicBookableSpaceResponse{}
 	for _, space := range spaces {
 		location, err := GetLocationRepository().GetOne(space.LocationID)
 		if err != nil {
 			continue
 		}
-		res = append(res, GetAnonymousBookableSpaceResponse{
+		res = append(res, GetPublicBookableSpaceResponse{
 			SpaceID:        space.ID,
 			SpaceName:      space.Name,
 			LocationID:     location.ID,
@@ -94,17 +94,17 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 		})
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
-	SendJSON(w, GetAnonymousBookableSpacesResponse{
+	SendJSON(w, GetPublicBookableSpacesResponse{
 		Spaces:           res,
 		MaxDaysInAdvance: maxDaysInAdvance,
 	})
 }
 
 // validateSpaceAndTimes re-checks every condition that makes a slot
-// requestable: org/space anonymous-booking enablement, space/location
+// requestable: org/space public-booking enablement, space/location
 // enablement, and the org's normal booking-duration/advance/weekday rules
 // (reusing BookingRouter's checks with a nil user, which they support).
-func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *CreateAnonymousBookingRequest) (*Space, *Location, time.Time, time.Time, bool) {
+func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *CreatePublicBookingRequest) (*Space, *Location, time.Time, time.Time, bool) {
 	space, err := GetSpaceRepository().GetOne(m.SpaceID)
 	if err != nil {
 		return nil, nil, time.Time{}, time.Time{}, false
@@ -113,7 +113,7 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 	if err != nil || location.OrganizationID != orgID {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
-	if !space.AnonymousBookingEnabled || !space.Enabled || !location.Enabled {
+	if !space.PublicBookingEnabled || !space.Enabled || !location.Enabled {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	enter, err := GetLocationRepository().AttachTimezoneInformation(m.Enter, location)
@@ -125,7 +125,7 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	if enter.Year() != leave.Year() || enter.YearDay() != leave.YearDay() {
-		// Anonymous bookings must not span across a day boundary.
+		// Public bookings must not span across a day boundary.
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	bookingRequest := &BookingRequest{Enter: enter, Leave: leave}
@@ -145,11 +145,11 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 	return space, location, enter, leave, true
 }
 
-// normalizeAnonymousBookingLanguage maps the UI locale submitted with an
-// anonymous booking request (e.g. "de", "en-GB", "fr") down to one of the
+// normalizePublicBookingLanguage maps the UI locale submitted with a
+// public booking request (e.g. "de", "en-GB", "fr") down to one of the
 // backend's supported email languages, defaulting to English for anything
 // that isn't German.
-func normalizeAnonymousBookingLanguage(lang string) string {
+func normalizePublicBookingLanguage(lang string) string {
 	if strings.HasPrefix(strings.ToLower(lang), "de") {
 		return "de"
 	}
@@ -158,16 +158,16 @@ func normalizeAnonymousBookingLanguage(lang string) string {
 
 func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Request) {
 	orgID := mux.Vars(r)["orgId"]
-	if !router.isAnonymousBookingEnabledForOrg(orgID) {
+	if !router.isPublicBookingEnabledForOrg(orgID) {
 		SendNotFound(w)
 		return
 	}
-	var m CreateAnonymousBookingRequest
+	var m CreatePublicBookingRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
 		return
 	}
-	language := normalizeAnonymousBookingLanguage(m.Language)
+	language := normalizePublicBookingLanguage(m.Language)
 	name := strings.TrimSpace(m.Name)
 	if !IsValidHumanName(name) {
 		SendBadRequest(w)
@@ -195,7 +195,7 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 	// below records a marker via the auth_states table (see below), whether
 	// or not the slot turned out to be free, so this check also catches
 	// repeated requests against an already-booked slot.
-	if router.countPendingRequestsForEmail(m.Email) >= maxPendingAnonymousBookingRequestsPerEmail {
+	if router.countPendingRequestsForEmail(m.Email) >= maxPendingPublicBookingRequestsPerEmail {
 		// Don't disclose rate limiting to the caller.
 		SendUpdated(w)
 		return
@@ -208,13 +208,13 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(conflicts) > 0 {
-		router.createAuthState(AnonymousBookingRequestPayload{Email: m.Email, Language: language})
+		router.createAuthState(PublicBookingRequestPayload{Email: m.Email, Language: language})
 		router.sendUnavailableMail(org, location, space, name, m.Email, language, enter, leave, m.Subject)
 		SendUpdated(w)
 		return
 	}
 
-	authState, err := router.createAuthState(AnonymousBookingRequestPayload{
+	authState, err := router.createAuthState(PublicBookingRequestPayload{
 		SpaceID:  space.ID,
 		Enter:    enter,
 		Leave:    leave,
@@ -232,25 +232,25 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 	SendUpdated(w)
 }
 
-// countPendingRequestsForEmail counts non-expired anonymous-booking auth
+// countPendingRequestsForEmail counts non-expired public-booking auth
 // states (confirmations and "sorry" markers alike) for the given email, via
 // the indexed Key column rather than scanning and decoding every payload.
 func (router *PublicBookingRouter) countPendingRequestsForEmail(email string) int {
-	pending, err := GetAuthStateRepository().GetActiveByKeyAndType(strings.ToLower(email), AuthAnonymousBooking)
+	pending, err := GetAuthStateRepository().GetActiveByKeyAndType(strings.ToLower(email), AuthPublicBooking)
 	if err != nil {
 		return 0
 	}
 	return len(pending)
 }
 
-func (router *PublicBookingRouter) createAuthState(payload AnonymousBookingRequestPayload) (*AuthState, error) {
+func (router *PublicBookingRouter) createAuthState(payload PublicBookingRequestPayload) (*AuthState, error) {
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 	authState := &AuthState{
-		Expiry:        time.Now().Add(anonymousBookingConfirmExpiry),
-		AuthStateType: AuthAnonymousBooking,
+		Expiry:        time.Now().Add(publicBookingConfirmExpiry),
+		AuthStateType: AuthPublicBooking,
 		Payload:       string(payloadJSON),
 		Key:           strings.ToLower(payload.Email),
 	}
@@ -263,11 +263,11 @@ func (router *PublicBookingRouter) createAuthState(payload AnonymousBookingReque
 func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	authState, err := GetAuthStateRepository().GetOneActive(id)
-	if err != nil || authState.AuthStateType != AuthAnonymousBooking {
+	if err != nil || authState.AuthStateType != AuthPublicBooking {
 		SendNotFound(w)
 		return
 	}
-	var payload AnonymousBookingRequestPayload
+	var payload PublicBookingRequestPayload
 	if json.Unmarshal([]byte(authState.Payload), &payload) != nil {
 		SendNotFound(w)
 		return
@@ -290,7 +290,7 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		SendNotFound(w)
 		return
 	}
-	if !router.isAnonymousBookingEnabledForOrg(org.ID) || !space.AnonymousBookingEnabled || !space.Enabled || !location.Enabled {
+	if !router.isPublicBookingEnabledForOrg(org.ID) || !space.PublicBookingEnabled || !space.Enabled || !location.Enabled {
 		SendNotFound(w)
 		return
 	}
@@ -303,27 +303,27 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 	}
 	if len(conflicts) > 0 {
 		router.sendUnavailableMail(org, location, space, payload.Name, payload.Email, payload.Language, payload.Enter, payload.Leave, payload.Subject)
-		SendJSON(w, ConfirmAnonymousBookingResponse{Status: "unavailable"})
+		SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable"})
 		return
 	}
 
-	anonymousBooking := &AnonymousBooking{
+	publicBooking := &PublicBooking{
 		Name:     payload.Name,
 		Email:    payload.Email,
 		Language: payload.Language,
 	}
-	if err := GetAnonymousBookingRepository().Create(anonymousBooking); err != nil {
+	if err := GetPublicBookingRepository().Create(publicBooking); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
 	booking := &Booking{
-		SpaceID:     space.ID,
-		Enter:       payload.Enter,
-		Leave:       payload.Leave,
-		Subject:     payload.Subject,
-		Approved:    false, // anonymous booking is only allowed on spaces that always have an approver group
-		AnonymousID: NullUUID(anonymousBooking.ID),
+		SpaceID:  space.ID,
+		Enter:    payload.Enter,
+		Leave:    payload.Leave,
+		Subject:  payload.Subject,
+		Approved: false, // public booking is only allowed on spaces that always have an approver group
+		PublicID: NullUUID(publicBooking.ID),
 	}
 	if err := GetBookingRepository().Create(booking); err != nil {
 		log.Println(err)
@@ -334,7 +334,7 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 	bookingRouter := &BookingRouter{}
 	go bookingRouter.sendApprovalRequestNotifications(booking)
 
-	SendJSON(w, ConfirmAnonymousBookingResponse{Status: "pending"})
+	SendJSON(w, ConfirmPublicBookingResponse{Status: "pending"})
 }
 
 func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *Location, space *Space, name, email, language string, enter, leave time.Time, confirmID string) {
@@ -354,7 +354,7 @@ func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *
 		"spaceName":     space.Name,
 		"confirmID":     confirmID,
 	}
-	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathAnonymousBookingConfirm(), language, vars, org.ID); err != nil {
+	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathPublicBookingConfirm(), language, vars, org.ID); err != nil {
 		log.Println(err)
 	}
 }
@@ -376,7 +376,7 @@ func (router *PublicBookingRouter) sendUnavailableMail(org *Organization, locati
 		"spaceName":     space.Name,
 		"subject":       subject,
 	}
-	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathAnonymousBookingUnavailable(), language, vars, org.ID); err != nil {
+	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathPublicBookingUnavailable(), language, vars, org.ID); err != nil {
 		log.Println(err)
 	}
 }

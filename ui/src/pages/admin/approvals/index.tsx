@@ -143,8 +143,8 @@ class Approvals extends React.Component<Props, State> {
         <td>{Formatting.getFormatterShort().format(booking.enter)}</td>
         <td>{Formatting.getFormatterShort().format(booking.leave)}</td>
         <td>{booking.subject}</td>
-        {RuntimeConfig.INFOS.anonymousBookingEnabled ? (
-          <td>{RendererUtils.state(booking.anonymous)}</td>
+        {RuntimeConfig.INFOS.publicBookingEnabled ? (
+          <td>{RendererUtils.state(booking.public)}</td>
         ) : (
           <></>
         )}
@@ -185,7 +185,7 @@ class Approvals extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
-    const removeColumns = RuntimeConfig.INFOS.anonymousBookingEnabled
+    const removeColumns = RuntimeConfig.INFOS.publicBookingEnabled
       ? [0, 8, 9]
       : [0, 7, 8];
     return this.ExcellentExport.convert(
@@ -286,8 +286,8 @@ class Approvals extends React.Component<Props, State> {
               <th>{this.props.t("enter")}</th>
               <th>{this.props.t("leave")}</th>
               <th>{this.props.t("subject")}</th>
-              {RuntimeConfig.INFOS.anonymousBookingEnabled ? (
-                <th>{this.props.t("anonymous")}</th>
+              {RuntimeConfig.INFOS.publicBookingEnabled ? (
+                <th>{this.props.t("public")}</th>
               ) : (
                 <></>
               )}

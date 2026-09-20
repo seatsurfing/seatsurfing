@@ -237,14 +237,14 @@ func TestSpaceDeleteCascades(t *testing.T) {
 	}
 	CheckTestIsNil(t, GetRecurringBookingRepository().Create(recurringBooking))
 
-	anonBooking := &AnonymousBooking{Name: "Anon", Email: "anon@test.com"}
-	CheckTestIsNil(t, GetAnonymousBookingRepository().Create(anonBooking))
-	booking2 := &Booking{SpaceID: space.ID, AnonymousID: NullUUID(anonBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	pubBooking := &PublicBooking{Name: "Pub", Email: "pub@test.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(pubBooking))
+	booking2 := &Booking{SpaceID: space.ID, PublicID: NullUUID(pubBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
 	CheckTestIsNil(t, GetBookingRepository().Create(booking2))
 
-	otherAnonBooking := &AnonymousBooking{Name: "OtherAnon", Email: "otheranon@test.com"}
-	CheckTestIsNil(t, GetAnonymousBookingRepository().Create(otherAnonBooking))
-	otherBooking2 := &Booking{SpaceID: otherSpace.ID, AnonymousID: NullUUID(otherAnonBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	otherPubBooking := &PublicBooking{Name: "OtherPub", Email: "otherpub@test.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(otherPubBooking))
+	otherBooking2 := &Booking{SpaceID: otherSpace.ID, PublicID: NullUUID(otherPubBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
 	CheckTestIsNil(t, GetBookingRepository().Create(otherBooking2))
 
 	CheckTestIsNil(t, GetSpaceRepository().Delete(space))
@@ -254,7 +254,7 @@ func TestSpaceDeleteCascades(t *testing.T) {
 	CheckTestBool(t, true, err != nil)
 	_, err = GetRecurringBookingRepository().GetOne(recurringBooking.ID)
 	CheckTestBool(t, true, err != nil)
-	_, err = GetAnonymousBookingRepository().GetOne(anonBooking.ID)
+	_, err = GetPublicBookingRepository().GetOne(pubBooking.ID)
 	CheckTestBool(t, true, err != nil)
 	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	CheckTestBool(t, true, err == nil)
@@ -271,6 +271,6 @@ func TestSpaceDeleteCascades(t *testing.T) {
 	CheckTestIsNil(t, err)
 	_, err = GetSpaceRepository().GetOne(otherSpace.ID)
 	CheckTestIsNil(t, err)
-	_, err = GetAnonymousBookingRepository().GetOne(otherAnonBooking.ID)
+	_, err = GetPublicBookingRepository().GetOne(otherPubBooking.ID)
 	CheckTestIsNil(t, err)
 }

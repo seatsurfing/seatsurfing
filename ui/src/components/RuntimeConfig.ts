@@ -43,8 +43,8 @@ interface RuntimeUserInfos {
   featureAuthProviders: boolean;
   featureKioskMode: boolean;
   kioskModeEnabled: boolean;
-  featureAnonymousBooking: boolean;
-  anonymousBookingEnabled: boolean;
+  featurePublicBooking: boolean;
+  publicBookingEnabled: boolean;
   cloudHosted: boolean;
   subscriptionActive: boolean;
   orgPrimaryDomain: string;
@@ -161,8 +161,8 @@ export default class RuntimeConfig {
       featureAuthProviders: false,
       featureKioskMode: false,
       kioskModeEnabled: false,
-      featureAnonymousBooking: false,
-      anonymousBookingEnabled: false,
+      featurePublicBooking: false,
+      publicBookingEnabled: false,
       cloudHosted: false,
       subscriptionActive: false,
       orgPrimaryDomain: "",
@@ -266,10 +266,10 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
       if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
         RuntimeConfig.INFOS.kioskModeEnabled = s.value === "1";
-      if (s.name === "feature_anonymous_booking")
-        RuntimeConfig.INFOS.featureAnonymousBooking = s.value === "1";
-      if (s.name === Organization.PREF_ANONYMOUS_BOOKING_ENABLED)
-        RuntimeConfig.INFOS.anonymousBookingEnabled = s.value === "1";
+      if (s.name === "feature_public_booking")
+        RuntimeConfig.INFOS.featurePublicBooking = s.value === "1";
+      if (s.name === Organization.PREF_PUBLIC_BOOKING_ENABLED)
+        RuntimeConfig.INFOS.publicBookingEnabled = s.value === "1";
       if (s.name === "cloud_hosted")
         RuntimeConfig.INFOS.cloudHosted = s.value ? JSON.parse(s.value) : [];
       if (s.name === "subscription_active")

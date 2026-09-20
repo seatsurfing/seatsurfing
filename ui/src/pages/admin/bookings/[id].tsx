@@ -173,7 +173,7 @@ class EditBooking extends React.Component<Props, State> {
         return Booking.get(id).then((booking) => {
           this.entity = booking;
           const canSave =
-            !DateUtil.isInPast(this.entity.leave) && !this.entity.anonymous;
+            !DateUtil.isInPast(this.entity.leave) && !this.entity.public;
           this.setState({
             enter: DateUtil.convertToUTC(this.entity.enter),
             leave: DateUtil.convertToUTC(this.entity.leave),
@@ -751,7 +751,7 @@ class EditBooking extends React.Component<Props, State> {
         variant="outline-secondary"
         onClick={this.deleteItem}
         disabled={
-          (!this.state.canEdit && !this.entity.anonymous) ||
+          (!this.state.canEdit && !this.entity.public) ||
           !this.state.canDelete
         }
       >
@@ -783,7 +783,7 @@ class EditBooking extends React.Component<Props, State> {
       );
     }
     let userField = <></>;
-    if (this.entity.anonymous) {
+    if (this.entity.public) {
       userField = (
         <Form.Control
           id="booking-user"
@@ -832,9 +832,9 @@ class EditBooking extends React.Component<Props, State> {
         <Form onSubmit={this.onSubmit} id="form">
           {hint}
 
-          {this.entity.anonymous ? (
+          {this.entity.public ? (
             <Alert variant="info">
-              {this.props.t("anonymousBookingNotEditableHint")}
+              {this.props.t("publicBookingNotEditableHint")}
             </Alert>
           ) : (
             <></>
@@ -847,7 +847,7 @@ class EditBooking extends React.Component<Props, State> {
             <Col sm="4">{userField}</Col>
           </Form.Group>
 
-          {this.entity.anonymous ? (
+          {this.entity.public ? (
             <Form.Group as={Row}>
               <Form.Label column sm="2" htmlFor="booking-user-email">
                 {this.props.t("emailAddress")}

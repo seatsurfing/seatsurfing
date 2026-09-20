@@ -113,15 +113,15 @@ func TestLocationDeleteCleansUpBookings(t *testing.T) {
 	}
 	CheckTestIsNil(t, GetRecurringBookingRepository().Create(otherRecurringBooking))
 
-	anonBooking := &AnonymousBooking{Name: "Anon", Email: "anon@test.com"}
-	CheckTestIsNil(t, GetAnonymousBookingRepository().Create(anonBooking))
-	anonymousBooking := &Booking{SpaceID: s1.ID, AnonymousID: NullUUID(anonBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
-	CheckTestIsNil(t, GetBookingRepository().Create(anonymousBooking))
+	pubBooking := &PublicBooking{Name: "Pub", Email: "pub@test.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(pubBooking))
+	publicBooking := &Booking{SpaceID: s1.ID, PublicID: NullUUID(pubBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(publicBooking))
 
-	otherAnonBooking := &AnonymousBooking{Name: "OtherAnon", Email: "otheranon@test.com"}
-	CheckTestIsNil(t, GetAnonymousBookingRepository().Create(otherAnonBooking))
-	otherAnonymousBooking := &Booking{SpaceID: s2.ID, AnonymousID: NullUUID(otherAnonBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
-	CheckTestIsNil(t, GetBookingRepository().Create(otherAnonymousBooking))
+	otherPubBooking := &PublicBooking{Name: "OtherPub", Email: "otherpub@test.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(otherPubBooking))
+	otherPublicBooking := &Booking{SpaceID: s2.ID, PublicID: NullUUID(otherPubBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(otherPublicBooking))
 
 	CheckTestIsNil(t, GetLocationRepository().Delete(l1))
 
@@ -130,7 +130,7 @@ func TestLocationDeleteCleansUpBookings(t *testing.T) {
 	CheckTestBool(t, true, err != nil)
 	_, err = GetRecurringBookingRepository().GetOne(recurringBooking.ID)
 	CheckTestBool(t, true, err != nil)
-	_, err = GetAnonymousBookingRepository().GetOne(anonBooking.ID)
+	_, err = GetPublicBookingRepository().GetOne(pubBooking.ID)
 	CheckTestBool(t, true, err != nil)
 
 	// Data belonging to the other location is untouched
@@ -138,6 +138,6 @@ func TestLocationDeleteCleansUpBookings(t *testing.T) {
 	CheckTestIsNil(t, err)
 	_, err = GetRecurringBookingRepository().GetOne(otherRecurringBooking.ID)
 	CheckTestIsNil(t, err)
-	_, err = GetAnonymousBookingRepository().GetOne(otherAnonBooking.ID)
+	_, err = GetPublicBookingRepository().GetOne(otherPubBooking.ID)
 	CheckTestIsNil(t, err)
 }

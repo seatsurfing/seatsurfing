@@ -118,20 +118,20 @@ type Location struct {
 // ─── Space ───────────────────────────────────────────────────────────────────
 
 type Space struct {
-	ID                      string
-	LocationID              string
-	Name                    string
-	X                       uint
-	Y                       uint
-	Width                   uint
-	Height                  uint
-	Rotation                uint
-	RequireSubject          bool
-	Enabled                 bool
-	KioskEnabled            bool
-	Shape                   string
-	FontSize                string
-	AnonymousBookingEnabled bool
+	ID                   string
+	LocationID           string
+	Name                 string
+	X                    uint
+	Y                    uint
+	Width                uint
+	Height               uint
+	Rotation             uint
+	RequireSubject       bool
+	Enabled              bool
+	KioskEnabled         bool
+	Shape                string
+	FontSize             string
+	PublicBookingEnabled bool
 }
 
 type SpaceDetails struct {
@@ -151,10 +151,10 @@ type Booking struct {
 	Approved              bool
 	Subject               string
 	RecurringID           NullUUID
-	AnonymousID           NullUUID
-	AnonymousName         string
-	AnonymousEmail        string
-	AnonymousLanguage     string
+	PublicID              NullUUID
+	PublicName            string
+	PublicEmail           string
+	PublicLanguage        string
 	CreatedAtUTC          *time.Time
 	LastInfoMailSentAtUTC *time.Time
 	ReminderSentAtUTC     *time.Time
@@ -170,14 +170,14 @@ type BookingDetails struct {
 
 func (b *BookingDetails) GetSafeRecipientName() string {
 	if b.UserID == "" && b.UserEmail == "" {
-		return SafeRecipientName(b.AnonymousName, b.AnonymousEmail)
+		return SafeRecipientName(b.PublicName, b.PublicEmail)
 	}
 	return SafeRecipientName(b.UserFirstname, b.UserEmail)
 }
 
-// ─── AnonymousBooking ───────────────────────────────────────────────────────
+// ─── PublicBooking ──────────────────────────────────────────────────────────
 
-type AnonymousBooking struct {
+type PublicBooking struct {
 	ID           string
 	Name         string
 	Email        string
@@ -185,9 +185,9 @@ type AnonymousBooking struct {
 	CreatedAtUTC *time.Time
 }
 
-// AnonymousBookingRequestPayload is used for JSON marshaling into AuthState.Payload
-// for the anonymous-booking double-opt-in confirmation flow.
-type AnonymousBookingRequestPayload struct {
+// PublicBookingRequestPayload is used for JSON marshaling into AuthState.Payload
+// for the public-booking double-opt-in confirmation flow.
+type PublicBookingRequestPayload struct {
 	SpaceID  string    `json:"spaceId"`
 	Enter    time.Time `json:"enter"`
 	Leave    time.Time `json:"leave"`
@@ -243,7 +243,7 @@ const (
 	AuthPasskeyRegistration  AuthStateType = 10
 	AuthPasskeyLogin         AuthStateType = 11
 	AuthPasskey2FA           AuthStateType = 12
-	AuthAnonymousBooking     AuthStateType = 13
+	AuthPublicBooking        AuthStateType = 13
 )
 
 type AuthState struct {
@@ -323,8 +323,8 @@ var (
 	SettingFeatureKioskMode               SettingName = SettingName{Name: "feature_kiosk_mode", Type: SettingTypeBool}
 	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
 	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
-	SettingAnonymousBookingEnabled        SettingName = SettingName{Name: "anonymous_booking_enabled", Type: SettingTypeBool}
-	SettingFeatureAnonymousBooking        SettingName = SettingName{Name: "feature_anonymous_booking", Type: SettingTypeBool}
+	SettingPublicBookingEnabled           SettingName = SettingName{Name: "public_booking_enabled", Type: SettingTypeBool}
+	SettingFeaturePublicBooking           SettingName = SettingName{Name: "feature_public_booking", Type: SettingTypeBool}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────
