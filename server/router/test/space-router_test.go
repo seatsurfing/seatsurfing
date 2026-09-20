@@ -1051,3 +1051,60 @@ func TestSpaceRouterApproversCrossTenant(t *testing.T) {
 		t.Fatal("victim space's approvers must not have been removed by a cross-tenant caller")
 	}
 }
+
+// TestSpaceRouterBulkUpdateForeignOrgApproverGroup proves that the bulk
+// create/update endpoint cannot be used to attach another organization's
+// group as an approver group for public booking, since applyApprovers()
+// (unlike addApprovers()) did not validate group ownership.
+func TestSpaceRouterBulkUpdateForeignOrgApproverGroup(t *testing.T) {
+	ClearTestDB()
+	foreignOrg := CreateTestOrg("foreign.com")
+	foreignGroup := CreateTestGroup(foreignOrg, nil)
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+
+	// Attempt to create a space with a foreign org's group as approver
+	payload := `{
+		"creates": [
+			{"name": "H1", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "publicBookingEnabled": true, "approverGroupIds": ["` + foreignGroup.ID + `"]}
+		]
+	}`
+	req := NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *BulkUpdateResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.Creates[0].Success)
+	createdID := resBody.Creates[0].ID
+
+	createdApprovers, err := GetSpaceRepository().GetApproverGroupIDs(createdID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(createdApprovers) != 0 {
+		t.Fatal("created space must not have a foreign organization's group attached as approver")
+	}
+
+	// Attempt to update an existing space to use a foreign org's group as approver
+	payload = `{
+		"updates": [
+			{"id": "` + space.ID + `", "name": "H1", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "publicBookingEnabled": true, "approverGroupIds": ["` + foreignGroup.ID + `"]}
+		]
+	}`
+	req = NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.Updates[0].Success)
+
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(approvers) != 0 {
+		t.Fatal("space must not have a foreign organization's group attached as approver")
+	}
+}

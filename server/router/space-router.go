@@ -426,7 +426,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				if err := router.applySpaceAttributes(availableAttributes, e, &mSpace); err != nil {
 					log.Println("Could not apply space attributes:", err)
 				}
-				if err := router.applyApprovers(e, &mSpace); err != nil {
+				if err := router.applyApprovers(e, &mSpace, location.OrganizationID); err != nil {
 					log.Println("Could not apply approvers:", err)
 				}
 				if err := router.applyAllowBookers(e, &mSpace); err != nil {
@@ -459,7 +459,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				if err := router.applySpaceAttributes(availableAttributes, e, &mSpace.CreateSpaceRequest); err != nil {
 					log.Println("Could not apply space attributes:", err)
 				}
-				if err := router.applyApprovers(e, &mSpace.CreateSpaceRequest); err != nil {
+				if err := router.applyApprovers(e, &mSpace.CreateSpaceRequest, location.OrganizationID); err != nil {
 					log.Println("Could not apply approvers:", err)
 				}
 				if err := router.applyAllowBookers(e, &mSpace.CreateSpaceRequest); err != nil {
@@ -676,9 +676,18 @@ func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttr
 	return nil
 }
 
-func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest) error {
+func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest, organizationID string) error {
 	if space.PublicBookingEnabled && len(m.ApproverGroupIDs) == 0 {
 		return errors.New("space has public booking enabled and requires at least one approver group")
+	}
+	if len(m.ApproverGroupIDs) > 0 {
+		ok, err := GetGroupRepository().GroupsExistAndBelongToOrg(organizationID, m.ApproverGroupIDs)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return errors.New("one or more approver groups do not exist or do not belong to the organization")
+		}
 	}
 	existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	if err != nil {
