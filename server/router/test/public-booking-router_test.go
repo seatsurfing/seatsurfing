@@ -1,8 +1,10 @@
 package test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 func createTestPublicBookingAuthState(t *testing.T, space *Space, enter, leave time.Time) string {
@@ -119,4 +122,93 @@ func TestPublicBookingConfirmInvalidID(t *testing.T) {
 	req := NewHTTPRequest("POST", "/public-booking/confirm/does-not-exist", "", nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+// setUpPublicBookingRequiringApproval confirms a public booking request for
+// a space whose sole approver is adminUser, so the approve endpoint can
+// subsequently approve/decline it and trigger the (async) notification mail.
+func setUpPublicBookingRequiringApproval(t *testing.T, org *Organization, adminUser *User) *BookingDetails {
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	group := &Group{Name: "Approvers", OrganizationID: org.ID}
+	if err := GetGroupRepository().Create(group); err != nil {
+		t.Fatal(err)
+	}
+	if err := GetGroupRepository().AddMembers(group, []string{adminUser.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := GetSpaceRepository().AddApprovers(space, []string{group.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	enter := time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC)
+	leave := time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC)
+	id := createTestPublicBookingAuthState(t, space, enter, leave)
+
+	req := NewHTTPRequest("POST", "/public-booking/confirm/"+id, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	pending, err := GetBookingRepository().GetBookingsRequiringApproval(adminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pending) != 1 {
+		t.Fatalf("expected 1 pending booking, got %d", len(pending))
+	}
+	return pending[0]
+}
+
+// waitForSendMailMockContent polls SendMailMockContent, which is filled
+// asynchronously by the approve/decline notification goroutine.
+func waitForSendMailMockContent(t *testing.T, timeout time.Duration) string {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if SendMailMockContent != "" {
+			return SendMailMockContent
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("timed out waiting for notification mail")
+	return ""
+}
+
+func TestPublicBookingApprovedMailOmitsYourBookingsButton(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	pending := setUpPublicBookingRequiringApproval(t, org, adminUser)
+
+	SendMailMockContent = ""
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+pending.ID+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	mail := waitForSendMailMockContent(t, 2*time.Second)
+	CheckTestBool(t, true, strings.Contains(mail, "approved"))
+	CheckTestBool(t, false, strings.Contains(mail, "Your bookings"))
+	CheckTestBool(t, false, strings.Contains(mail, "ui/bookings/"))
+}
+
+func TestPublicBookingDeclinedMailHasNewBookingLinkNotYourBookings(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	pending := setUpPublicBookingRequiringApproval(t, org, adminUser)
+
+	SendMailMockContent = ""
+	payload := `{"approved": false}`
+	req := NewHTTPRequest("POST", "/booking/"+pending.ID+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	mail := waitForSendMailMockContent(t, 2*time.Second)
+	CheckTestBool(t, true, strings.Contains(mail, "declined"))
+	CheckTestBool(t, true, strings.Contains(mail, "New booking"))
+	CheckTestBool(t, true, strings.Contains(mail, "ui/book/"))
+	CheckTestBool(t, false, strings.Contains(mail, "Your bookings"))
+	CheckTestBool(t, false, strings.Contains(mail, "ui/bookings/"))
 }

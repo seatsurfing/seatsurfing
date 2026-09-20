@@ -1,0 +1,17 @@
+{
+  "subject": "Deine Seatsurfing Buchung: Abgelehnt",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "deine Buchungsanfrage wurde abgelehnt.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Neue Buchung",
+      "url": "{{orgDomain}}ui/book/"
+    }
+  ]
+}

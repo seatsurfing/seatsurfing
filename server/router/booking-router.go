@@ -1351,13 +1351,25 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		"spaceName":     space.Name,
 		"subject":       subject,
 	}
+	// Public bookers have no account, so their approved/declined mails use
+	// dedicated templates without the "your bookings" button (there is no
+	// bookings page for them to sign into).
+	isPublicBooking := e.UserID == ""
 	template := GetEmailTemplatePathBookingCreated()
 	if notification == BookingMailNotificationUpdated {
 		template = GetEmailTemplatePathBookingUpdated()
 	} else if notification == BookingMailNotificationDeclined {
-		template = GetEmailTemplatePathBookingDeclined()
+		if isPublicBooking {
+			template = GetEmailTemplatePathPublicBookingDeclined()
+		} else {
+			template = GetEmailTemplatePathBookingDeclined()
+		}
 	} else if notification == BookingMailNotificationApproved {
-		template = GetEmailTemplatePathBookingApproved()
+		if isPublicBooking {
+			template = GetEmailTemplatePathPublicBookingApproved()
+		} else {
+			template = GetEmailTemplatePathBookingApproved()
+		}
 	} else if notification == BookingMailNotificationDeleted {
 		template = GetEmailTemplatePathBookingDeleted()
 	}

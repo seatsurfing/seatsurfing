@@ -222,6 +222,14 @@ func GetEmailTemplatePathPublicBookingConfirm() string {
 	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-public-booking-confirm.json")
 }
 
+func GetEmailTemplatePathPublicBookingApproved() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-public-booking-approved.json")
+}
+
+func GetEmailTemplatePathPublicBookingDeclined() string {
+	return filepath.Join(GetConfig().FilesystemBasePath, "./res/email-public-booking-declined.json")
+}
+
 // GetEmailHTMLLayout returns the raw res/email.html layout wrapper. It is
 // also exposed to plugins over HostAPI.GetEmailHTMLLayout, since plugins run
 // in their own process/container and have no access to the host's res/
