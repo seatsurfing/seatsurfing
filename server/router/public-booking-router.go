@@ -285,6 +285,14 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	releaseLock, err := AcquireBookingCreateLock("", location.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	defer releaseLock()
+
 	conflicts, err := GetBookingRepository().GetConflicts(space.ID, payload.Enter, payload.Leave, "")
 	if err != nil {
 		log.Println(err)
