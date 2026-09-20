@@ -28,6 +28,7 @@
   "publicBookingAvailable": "Allow anonymous bookings",
   "publicBookingAvailableHint": "Enables a public, unauthenticated page where visitors can request a booking for spaces that have anonymous booking enabled. Activation is done per space in the respective settings.",
   "publicBookingConfirmInvalid": "This confirmation link is invalid or has expired.",
+  "publicBookingConfirmNewBooking": "Request a new booking",
   "publicBookingConfirmPending": "Thank you! Your booking request has been confirmed and is now pending approval.",
   "publicBookingConfirmUnavailable": "Sorry, this space is no longer available for the requested time slot.",
   "publicBookingIntro": "Please select a space and a time slot to request a booking. You will receive a confirmation email.",

@@ -1,14 +1,19 @@
 import React from "react";
 import { NextRouter } from "next/router";
+import Link from "next/link";
+import { LogIn as IconEnter, LogOut as IconLeave } from "react-feather";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
+import Formatting from "@/util/Formatting";
 
 interface State {
   loading: boolean;
   status: "pending" | "unavailable" | "invalid" | null;
+  enter: Date | null;
+  leave: Date | null;
 }
 
 interface Props {
@@ -30,6 +35,8 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
     this.state = {
       loading: true,
       status: null,
+      enter: null,
+      leave: null,
     };
   }
 
@@ -47,7 +54,12 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
       .then((res) => {
         const status =
           res.json?.status === "pending" ? "pending" : "unavailable";
-        this.setState({ loading: false, status: status });
+        this.setState({
+          loading: false,
+          status: status,
+          enter: res.json?.enter ? new Date(res.json.enter) : null,
+          leave: res.json?.leave ? new Date(res.json.leave) : null,
+        });
       })
       .catch(() => this.setState({ loading: false, status: "invalid" }));
   };
@@ -64,11 +76,32 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
       message = this.props.t("publicBookingConfirmUnavailable");
     }
 
+    const showBookingInfo =
+      (this.state.status === "pending" ||
+        this.state.status === "unavailable") &&
+      this.state.enter &&
+      this.state.leave;
+    const formatter = Formatting.getBookingDateFormatter();
+
     return (
       <div className="container-center">
         <div className="container-center-inner">
           <SeatsurfingAppLogo />
           <p>{message}</p>
+          {showBookingInfo && (
+            <p>
+              <IconEnter className="feather" />
+              &nbsp;{formatter.format(this.state.enter as Date)}
+              <br />
+              <IconLeave className="feather" />
+              &nbsp;{formatter.format(this.state.leave as Date)}
+            </p>
+          )}
+          {this.state.status === "unavailable" && (
+            <Link href="/book/" className="btn btn-primary">
+              {this.props.t("publicBookingConfirmNewBooking")}
+            </Link>
+          )}
         </div>
       </div>
     );

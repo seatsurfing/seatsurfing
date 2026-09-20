@@ -29,6 +29,7 @@
   "publicBookingAvailable": "Anonyme Buchungen zulassen",
   "publicBookingAvailableHint": "Aktiviert eine öffentliche, nicht authentifizierte Seite, auf der Besucher eine Buchung für dafür freigegebene Räume anfragen können. Die Freigabe erfolgt je Raum in den entsprechenden Einstellungen.",
   "publicBookingConfirmInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen.",
+  "publicBookingConfirmNewBooking": "Neue Buchung anfragen",
   "publicBookingConfirmPending": "Vielen Dank! Deine Buchungsanfrage wurde bestätigt und wartet nun auf Genehmigung.",
   "publicBookingConfirmUnavailable": "Leider ist dieser Platz für den gewählten Zeitraum nicht mehr verfügbar.",
   "publicBookingIntro": "Bitte wähle einen Raum und einen Zeitraum, um eine Buchung anzufragen. Du erhältst anschließend eine Bestätigungs-E-Mail.",

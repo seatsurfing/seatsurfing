@@ -49,7 +49,9 @@ type CreatePublicBookingRequest struct {
 }
 
 type ConfirmPublicBookingResponse struct {
-	Status string `json:"status"`
+	Status string    `json:"status"`
+	Enter  time.Time `json:"enter"`
+	Leave  time.Time `json:"leave"`
 }
 
 func (router *PublicBookingRouter) SetupRoutes(s *mux.Router) {
@@ -292,7 +294,7 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(conflicts) > 0 {
-		SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable"})
+		SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable", Enter: payload.Enter, Leave: payload.Leave})
 		return
 	}
 
@@ -323,7 +325,7 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 	bookingRouter := &BookingRouter{}
 	go bookingRouter.sendApprovalRequestNotifications(booking)
 
-	SendJSON(w, ConfirmPublicBookingResponse{Status: "pending"})
+	SendJSON(w, ConfirmPublicBookingResponse{Status: "pending", Enter: payload.Enter, Leave: payload.Leave})
 }
 
 func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *Location, space *Space, name, email, language string, enter, leave time.Time, confirmID string) {
