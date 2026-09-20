@@ -303,6 +303,18 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable", Enter: payload.Enter, Leave: payload.Leave})
 		return
 	}
+	if location.MaxConcurrentBookings > 0 {
+		concurrent, err := GetBookingRepository().GetConcurrent(location, payload.Enter, payload.Leave, "")
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		if concurrent >= int(location.MaxConcurrentBookings) {
+			SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable", Enter: payload.Enter, Leave: payload.Leave})
+			return
+		}
+	}
 
 	publicBooking := &PublicBooking{
 		Name:     payload.Name,
