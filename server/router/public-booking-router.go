@@ -254,8 +254,8 @@ func (router *PublicBookingRouter) createAuthState(payload PublicBookingRequestP
 
 func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	authState, err := GetAuthStateRepository().ClaimActive(id)
-	if err != nil || authState.AuthStateType != AuthPublicBooking {
+	authState, err := GetAuthStateRepository().ClaimActive(id, AuthPublicBooking)
+	if err != nil {
 		SendNotFound(w)
 		return
 	}

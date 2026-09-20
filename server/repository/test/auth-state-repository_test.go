@@ -24,17 +24,41 @@ func TestAuthStateRepositoryClaimActiveSimple(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	claimed, err := GetAuthStateRepository().ClaimActive(authState.ID)
+	claimed, err := GetAuthStateRepository().ClaimActive(authState.ID, AuthPublicBooking)
 	CheckTestBool(t, true, err == nil)
 	CheckTestString(t, `{"foo":"bar"}`, claimed.Payload)
 
 	// Second claim must fail: the row was deleted by the first claim.
-	_, err = GetAuthStateRepository().ClaimActive(authState.ID)
+	_, err = GetAuthStateRepository().ClaimActive(authState.ID, AuthPublicBooking)
 	CheckTestBool(t, true, err != nil)
 
 	// The state is also gone for a plain lookup.
 	_, err = GetAuthStateRepository().GetOne(authState.ID)
 	CheckTestBool(t, true, err != nil)
+}
+
+func TestAuthStateRepositoryClaimActiveWrongType(t *testing.T) {
+	ClearTestDB()
+	authState := &AuthState{
+		Expiry:        time.Now().Add(30 * time.Minute),
+		AuthStateType: AuthTotpSetup,
+		Payload:       `{"foo":"bar"}`,
+		Key:           "jane.doe@test.com",
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		t.Fatal(err)
+	}
+
+	// Claiming with a mismatched type must fail and must not delete the row,
+	// so an ID from an unrelated flow (e.g. TOTP setup) cannot be invalidated
+	// by posting it to an endpoint that claims a different type (e.g. public
+	// booking confirmation).
+	_, err := GetAuthStateRepository().ClaimActive(authState.ID, AuthPublicBooking)
+	CheckTestBool(t, true, err != nil)
+
+	stillThere, err := GetAuthStateRepository().GetOne(authState.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestString(t, `{"foo":"bar"}`, stillThere.Payload)
 }
 
 func TestAuthStateRepositoryClaimActiveExpired(t *testing.T) {
@@ -49,7 +73,7 @@ func TestAuthStateRepositoryClaimActiveExpired(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := GetAuthStateRepository().ClaimActive(authState.ID)
+	_, err := GetAuthStateRepository().ClaimActive(authState.ID, AuthPublicBooking)
 	CheckTestBool(t, true, err != nil)
 }
 
@@ -83,7 +107,7 @@ func TestAuthStateRepositoryClaimActiveConcurrent(t *testing.T) {
 	for i := 0; i < numAttempts; i++ {
 		go func() {
 			defer wg.Done()
-			if _, err := GetAuthStateRepository().ClaimActive(authState.ID); err == nil {
+			if _, err := GetAuthStateRepository().ClaimActive(authState.ID, AuthPublicBooking); err == nil {
 				atomic.AddInt32(&successCount, 1)
 			}
 		}()
