@@ -223,8 +223,8 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 }
 
 // countPendingRequestsForEmail counts non-expired public-booking auth
-// states (confirmations and "sorry" markers alike) for the given email, via
-// the indexed Key column rather than scanning and decoding every payload.
+// states for the given email, via the indexed Key column rather than
+// scanning and decoding every payload.
 func (router *PublicBookingRouter) countPendingRequestsForEmail(email string) int {
 	pending, err := GetAuthStateRepository().GetActiveByKeyAndType(strings.ToLower(email), AuthPublicBooking)
 	if err != nil {
@@ -292,7 +292,6 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if len(conflicts) > 0 {
-		router.sendUnavailableMail(org, location, space, payload.Name, payload.Email, payload.Language, payload.Enter, payload.Leave, payload.Subject)
 		SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable"})
 		return
 	}
@@ -345,28 +344,6 @@ func (router *PublicBookingRouter) sendConfirmMail(org *Organization, location *
 		"confirmID":     confirmID,
 	}
 	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathPublicBookingConfirm(), language, vars, org.ID); err != nil {
-		log.Println(err)
-	}
-}
-
-func (router *PublicBookingRouter) sendUnavailableMail(org *Organization, location *Location, space *Space, name, email, language string, enter, leave time.Time, subject string) {
-	domain, err := GetOrganizationRepository().GetPrimaryDomain(org)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	if language == "" {
-		language = org.Language
-	}
-	vars := map[string]string{
-		"orgDomain":     FormatURL(domain.DomainName) + "/",
-		"recipientName": SafeRecipientName(name, email),
-		"date":          enter.Format("2006-01-02 15:04") + " - " + leave.Format("2006-01-02 15:04"),
-		"areaName":      location.Name,
-		"spaceName":     space.Name,
-		"subject":       subject,
-	}
-	if err := SendEmailWithOrg(&MailAddress{Address: email}, GetEmailTemplatePathPublicBookingUnavailable(), language, vars, org.ID); err != nil {
 		log.Println(err)
 	}
 }
