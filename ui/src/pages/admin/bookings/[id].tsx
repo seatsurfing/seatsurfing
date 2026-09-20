@@ -751,8 +751,7 @@ class EditBooking extends React.Component<Props, State> {
         variant="outline-secondary"
         onClick={this.deleteItem}
         disabled={
-          (!this.state.canEdit && !this.entity.public) ||
-          !this.state.canDelete
+          (!this.state.canEdit && !this.entity.public) || !this.state.canDelete
         }
       >
         <IconDelete className="feather" /> {this.props.t("delete")}

@@ -1529,11 +1529,7 @@ class EditLocation extends React.Component<Props, State> {
               as={Row}
               hidden={!RuntimeConfig.INFOS.publicBookingEnabled}
             >
-              <Form.Label
-                column
-                sm="4"
-                htmlFor="space-public-booking-enabled"
-              >
+              <Form.Label column sm="4" htmlFor="space-public-booking-enabled">
                 {this.props.t("publicBooking")}
                 {this.renderHintTooltip(
                   (this.getSelectedSpace()?.approvers?.length ?? 0) === 0
