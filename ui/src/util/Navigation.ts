@@ -1,4 +1,5 @@
 import CONSTANT from "@/util/Constant";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 export type PreferencesTab = "security" | "style" | "booking" | "integration";
 
@@ -77,6 +78,9 @@ export default class Navigation {
   // --------------
 
   static publicBookingUrl(): string {
-    return `${window.location.origin}/ui/public-booking/`;
+    const origin = RuntimeConfig.INFOS.orgPrimaryDomain
+      ? `https://${RuntimeConfig.INFOS.orgPrimaryDomain}`
+      : window.location.origin;
+    return `${origin}/ui/book/`;
   }
 }

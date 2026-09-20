@@ -11,7 +11,7 @@
   "buttons": [
     {
       "label": "Book a space",
-      "url": "{{orgDomain}}ui/public-booking/"
+      "url": "{{orgDomain}}ui/book/"
     }
   ]
 }
