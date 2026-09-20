@@ -23,7 +23,7 @@ type PublicBookingRouter struct {
 }
 
 const publicBookingConfirmExpiry = 30 * time.Minute
-const maxPendingPublicBookingRequestsPerEmail = 2
+const maxPendingPublicBookingRequestsPerEmail = 5
 
 type GetPublicBookableSpaceResponse struct {
 	SpaceID        string `json:"spaceId"`
@@ -189,27 +189,17 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Cap the number of emails (confirmation or "sorry") sent to any one
-	// address within the confirmation window, to prevent using this public
-	// endpoint to mail-bomb an arbitrary address. Every accepted request
-	// below records a marker via the auth_states table (see below), whether
-	// or not the slot turned out to be free, so this check also catches
-	// repeated requests against an already-booked slot.
+	// Cap the number of confirmation emails sent to any one address within
+	// the confirmation window, to prevent using this public endpoint to
+	// mail-bomb an arbitrary address. Availability is deliberately not
+	// checked here anymore; it's re-checked in confirm() instead, so every
+	// marker created below is single-use and gets deleted there (see the
+	// defer in confirm()) whether or not the slot turns out to still be
+	// free. That keeps a single opt-in step in charge of releasing it,
+	// rather than requiring a second mechanism for markers that never get
+	// a confirm click.
 	if router.countPendingRequestsForEmail(m.Email) >= maxPendingPublicBookingRequestsPerEmail {
 		// Don't disclose rate limiting to the caller.
-		SendUpdated(w)
-		return
-	}
-
-	conflicts, err := GetBookingRepository().GetConflicts(space.ID, enter, leave, "")
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if len(conflicts) > 0 {
-		router.createAuthState(PublicBookingRequestPayload{Email: m.Email, Language: language})
-		router.sendUnavailableMail(org, location, space, name, m.Email, language, enter, leave, m.Subject)
 		SendUpdated(w)
 		return
 	}
