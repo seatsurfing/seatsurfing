@@ -79,7 +79,7 @@ export default class Navigation {
 
   static publicBookingUrl(): string {
     const origin = RuntimeConfig.INFOS.orgPrimaryDomain
-      ? `https://${RuntimeConfig.INFOS.orgPrimaryDomain}`
+      ? `${window.location.protocol}//${RuntimeConfig.INFOS.orgPrimaryDomain}${window.location.port ? `:${window.location.port}` : ""}`
       : window.location.origin;
     return `${origin}/ui/book/`;
   }
