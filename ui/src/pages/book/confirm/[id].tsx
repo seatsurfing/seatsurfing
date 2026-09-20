@@ -57,8 +57,12 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
         this.setState({
           loading: false,
           status: status,
-          enter: res.json?.enter ? new Date(res.json.enter) : null,
-          leave: res.json?.leave ? new Date(res.json.leave) : null,
+enter: res.json?.enter
+  ? new Date(Formatting.stripTimezoneDetails(res.json.enter))
+  : null,
+leave: res.json?.leave
+  ? new Date(Formatting.stripTimezoneDetails(res.json.leave))
+  : null,
         });
       })
       .catch(() => this.setState({ loading: false, status: "invalid" }));
