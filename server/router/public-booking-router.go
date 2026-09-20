@@ -191,17 +191,8 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Cap the number of confirmation emails sent to any one address within
-	// the confirmation window, to prevent using this public endpoint to
-	// mail-bomb an arbitrary address. Availability is deliberately not
-	// checked here anymore; it's re-checked in confirm() instead, so every
-	// marker created below is single-use and gets deleted there (see the
-	// defer in confirm()) whether or not the slot turns out to still be
-	// free. That keeps a single opt-in step in charge of releasing it,
-	// rather than requiring a second mechanism for markers that never get
-	// a confirm click.
 	if router.countPendingRequestsForEmail(m.Email) >= maxPendingPublicBookingRequestsPerEmail {
-		// Don't disclose rate limiting to the caller.
+		// Don't disclose rate limiting to the caller
 		SendUpdated(w)
 		return
 	}
