@@ -513,9 +513,12 @@ func (r *BookingStore) GetBookingsDueForReminder(batchSize int) ([]*BookingDetai
 		"AND bookings.enter_time > (NOW() AT TIME ZONE 'UTC') + INTERVAL '20 hours' "+
 		"AND bookings.enter_time <= (NOW() AT TIME ZONE 'UTC') + INTERVAL '25 hours' "+
 		"AND (bookings.last_info_mail_sent_at_utc IS NULL OR bookings.last_info_mail_sent_at_utc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '24 hours') "+
+		"AND EXISTS (SELECT 1 FROM users_preferences "+
+		"WHERE users_preferences.user_id = bookings.user_id "+
+		"AND users_preferences.name = $2 AND users_preferences.value = '1') "+
 		"ORDER BY bookings.enter_time ASC "+
 		"LIMIT $1",
-		batchSize)
+		batchSize, PreferenceMailReminder.Name)
 	if err != nil {
 		return nil, err
 	}

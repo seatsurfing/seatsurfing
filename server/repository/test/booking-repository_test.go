@@ -582,6 +582,7 @@ func TestGetBookingsDueForReminderIncludesEligibleBooking(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(22 * time.Hour)
@@ -605,6 +606,7 @@ func TestGetBookingsDueForReminderExcludesNotApproved(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(22 * time.Hour)
@@ -626,6 +628,7 @@ func TestGetBookingsDueForReminderExcludesAlreadySent(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(22 * time.Hour)
@@ -649,6 +652,7 @@ func TestGetBookingsDueForReminderExcludesTooSoon(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(18 * time.Hour)
@@ -670,6 +674,7 @@ func TestGetBookingsDueForReminderExcludesTooFarInFuture(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(27 * time.Hour)
@@ -691,6 +696,7 @@ func TestGetBookingsDueForReminderExcludesRecentInfoMail(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(22 * time.Hour)
@@ -714,6 +720,7 @@ func TestGetBookingsDueForReminderIncludesOldInfoMail(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(22 * time.Hour)
@@ -738,6 +745,7 @@ func TestGetBookingsDueForReminderRespectsBatchSize(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, "1"))
 	_, space := CreateTestLocationAndSpace(org)
 
 	enter := time.Now().UTC().Add(22 * time.Hour)
@@ -755,6 +763,96 @@ func TestGetBookingsDueForReminderRespectsBatchSize(t *testing.T) {
 	results, err := GetBookingRepository().GetBookingsDueForReminder(3)
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 3, len(results))
+}
+
+func TestGetBookingsDueForReminderRespectsPreferences(t *testing.T) {
+	ClearTestDB()
+	for _, tc := range []struct {
+		name       string
+		preference string
+		set        bool
+		want       int
+	}{
+		{name: "unset"},
+		{name: "disabled", preference: "0", set: true},
+		{name: "empty", preference: "", set: true},
+		{name: "noncanonical true", preference: "true", set: true},
+		{name: "enabled", preference: "1", set: true, want: 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			user := CreateTestUserInOrg(org)
+			_, space := CreateTestLocationAndSpace(org)
+			// New users default to opted in; also cover users without a saved preference.
+			CheckTestIsNil(t, GetUserPreferencesRepository().DeleteAll(user.ID))
+			CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailNotifications.Name, "1"))
+			if tc.set {
+				CheckTestIsNil(t, GetUserPreferencesRepository().Set(user.ID, PreferenceMailReminder.Name, tc.preference))
+			}
+
+			enter := time.Now().UTC().Add(22 * time.Hour)
+			b := &Booking{
+				UserID:   user.ID,
+				SpaceID:  space.ID,
+				Enter:    enter,
+				Leave:    enter.Add(time.Hour),
+				Approved: true,
+			}
+			CheckTestIsNil(t, GetBookingRepository().Create(b))
+
+			for i := 0; i < 2; i++ {
+				results, err := GetBookingRepository().GetBookingsDueForReminder(25)
+				CheckTestIsNil(t, err)
+				CheckTestInt(t, tc.want, len(results))
+				if tc.want > 0 {
+					CheckTestString(t, b.ID, results[0].ID)
+				}
+			}
+		})
+	}
+}
+
+func TestGetBookingsDueForReminderFiltersPreferencesBeforeLimit(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	disabled := CreateTestUserInOrg(org)
+	unset := CreateTestUserInOrg(org)
+	enabled := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(disabled.ID, PreferenceMailReminder.Name, "0"))
+	CheckTestIsNil(t, GetUserPreferencesRepository().DeleteAll(unset.ID))
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(enabled.ID, PreferenceMailReminder.Name, "1"))
+	CheckTestIsNil(t, GetUserPreferencesRepository().Set(enabled.ID, PreferenceMailNotifications.Name, "0"))
+
+	enter := time.Now().UTC().Add(22 * time.Hour)
+	for i := 0; i < 25; i++ {
+		user := disabled
+		if i%2 == 1 {
+			user = unset
+		}
+		b := &Booking{
+			UserID:   user.ID,
+			SpaceID:  space.ID,
+			Enter:    enter,
+			Leave:    enter.Add(time.Hour),
+			Approved: true,
+		}
+		CheckTestIsNil(t, GetBookingRepository().Create(b))
+	}
+	b := &Booking{
+		UserID:   enabled.ID,
+		SpaceID:  space.ID,
+		Enter:    enter.Add(time.Hour),
+		Leave:    enter.Add(2 * time.Hour),
+		Approved: true,
+	}
+	CheckTestIsNil(t, GetBookingRepository().Create(b))
+
+	results, err := GetBookingRepository().GetBookingsDueForReminder(25)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, len(results))
+	CheckTestString(t, b.ID, results[0].ID)
 }
 
 // Same scenario as TestBookingRepositoryCurrentWithLocationTimezone but the
