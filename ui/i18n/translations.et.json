@@ -628,5 +628,6 @@
   "publicBookingSpaceEnabledHint": "Visitors without an account can request a booking for this space on the public booking page. Every request requires approval.",
   "publicBookingSpaceRequiresApproversHint": "Add at least one approver group above to allow public bookings for this space.",
   "publicBookingSubmit": "Request booking",
-  "publicBookingUrl": "Public booking page URL"
+  "publicBookingUrl": "Public booking page URL",
+  "availableAfterSaving": "available after saving"
 }

@@ -628,5 +628,6 @@
   "permission.presence_report": "Presence report (user-related)",
   "domainAccessibleTooltip": "Domain availability could not be confirmed, or has not been confirmed yet. This is checked periodically and can take up to 60 minutes.",
   "domainNotVerifiedTooltip": "This domain has not been verified yet.",
-  "publicBookingConfirmNewBooking": "Request a new booking"
+  "publicBookingConfirmNewBooking": "Request a new booking",
+  "availableAfterSaving": "available after saving"
 }

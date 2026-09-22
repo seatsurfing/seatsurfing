@@ -1545,36 +1545,45 @@ class Settings extends React.Component<Props, State> {
               </Form.Text>
             </Col>
           </Form.Group>
-          {this.state.publicBookingEnabledSaved &&
-            this.state.publicBookingEnabled && (
-              <Form.Group as={Row}>
-                <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
-                  {this.props.t("publicBookingUrl")}
-                </Form.Label>
-                <Col sm="6">
-                  <InputGroup>
-                    <Form.Control
-                      id="input-publicBookingUrl"
-                      type="text"
-                      value={Navigation.publicBookingUrl()}
-                      disabled={true}
-                    />
-                    <CopyToClipboardButton
-                      text={Navigation.publicBookingUrl()}
-                    />
-                    <Button
-                      aria-label={this.props.t("publicBookingUrl")}
-                      variant="outline-secondary"
-                      href={Navigation.publicBookingUrl()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <IconExternalLink className="feather" />
-                    </Button>
-                  </InputGroup>
-                </Col>
-              </Form.Group>
-            )}
+          {this.state.publicBookingEnabled && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
+                {this.props.t("publicBookingUrl")}
+              </Form.Label>
+              <Col sm="6">
+                <InputGroup>
+                  <Form.Control
+                    id="input-publicBookingUrl"
+                    type="text"
+                    value={
+                      Navigation.publicBookingUrl() +
+                      (this.state.publicBookingEnabledSaved
+                        ? ""
+                        : " (" + this.props.t("availableAfterSaving") + ")")
+                    }
+                    disabled={true}
+                    className={
+                      this.state.publicBookingEnabledSaved ? "" : "fst-italic"
+                    }
+                  />
+                  <CopyToClipboardButton
+                    text={Navigation.publicBookingUrl()}
+                    disabled={!this.state.publicBookingEnabledSaved}
+                  />
+                  <Button
+                    aria-label={this.props.t("publicBookingUrl")}
+                    variant="outline-secondary"
+                    href={Navigation.publicBookingUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    disabled={!this.state.publicBookingEnabledSaved}
+                  >
+                    <IconExternalLink className="feather" />
+                  </Button>
+                </InputGroup>
+              </Col>
+            </Form.Group>
+          )}
 
           {/* AUTH PROVIDERS */}
 

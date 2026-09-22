@@ -40,6 +40,7 @@
   "publicBookingSpaceRequiresApproversHint": "Füge oben mindestens eine Genehmigergruppe hinzu, um öffentliche Buchungen für diesen Raum zuzulassen.",
   "publicBookingSubmit": "Buchung anfragen",
   "publicBookingUrl": "URL der öffentlichen Buchungsseite",
+  "availableAfterSaving": "verfügbar nach dem Speichern",
   "any": "beliebig",
   "apiToken": "API-Token",
   "apiTokenConfigured": "Konfiguriert",

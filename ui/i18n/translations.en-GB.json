@@ -39,6 +39,7 @@
   "publicBookingSpaceRequiresApproversHint": "Add at least one approver group above to allow public bookings for this space.",
   "publicBookingSubmit": "Request booking",
   "publicBookingUrl": "Public booking page URL",
+  "availableAfterSaving": "available after saving",
   "any": "any",
   "apiToken": "API Token",
   "apiTokenConfigured": "Configured",
