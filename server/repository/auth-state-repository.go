@@ -38,6 +38,9 @@ func (r *AuthStateStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_auth_states_key_type ON auth_states(key, auth_state_type)"); err != nil {
 			panic(err)
 		}
+if _, err := GetDatabase().DB().Exec("UPDATE auth_states SET key = auth_provider_id::text WHERE key IS NULL"); err != nil {
+			panic(err)
+		}
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_states DROP COLUMN IF EXISTS auth_provider_id"); err != nil {
 			panic(err)
 		}
