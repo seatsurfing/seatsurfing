@@ -810,7 +810,7 @@ func (a *App) sendBookingReminders() {
 
 	num := len(bookings)
 	if num > 0 {
-		log.Printf("Sent %d booking reminder emails", num)
+		log.Printf("Processed %d booking reminder candidates", num)
 	}
 }
 
