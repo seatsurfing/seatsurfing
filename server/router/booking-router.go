@@ -1355,6 +1355,9 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	// dedicated templates without the "your bookings" button (there is no
 	// bookings page for them to sign into).
 	isPublicBooking := e.UserID == ""
+	if isPublicBooking && notification == BookingMailNotificationApproved {
+		vars["detailsUrl"] = FormatURL(domain.DomainName) + "/ui/book/details/" + e.ExternalID + "/"
+	}
 	template := GetEmailTemplatePathBookingCreated()
 	if notification == BookingMailNotificationUpdated {
 		template = GetEmailTemplatePathBookingUpdated()
@@ -1371,7 +1374,11 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 			template = GetEmailTemplatePathBookingApproved()
 		}
 	} else if notification == BookingMailNotificationDeleted {
-		template = GetEmailTemplatePathBookingDeleted()
+		if isPublicBooking {
+			template = GetEmailTemplatePathPublicBookingDeleted()
+		} else {
+			template = GetEmailTemplatePathBookingDeleted()
+		}
 	}
 	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: recipientEmail}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)

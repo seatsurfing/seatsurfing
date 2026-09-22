@@ -629,5 +629,9 @@
   "domainAccessibleTooltip": "Domain availability could not be confirmed, or has not been confirmed yet. This is checked periodically and can take up to 60 minutes.",
   "domainNotVerifiedTooltip": "This domain has not been verified yet.",
   "publicBookingConfirmNewBooking": "Request a new booking",
-  "availableAfterSaving": "available after saving"
+  "availableAfterSaving": "available after saving",
+  "publicBookingDetailsDelete": "Cancel booking",
+  "publicBookingDetailsDeleteConfirm": "Are you sure you want to cancel this booking?",
+  "publicBookingDetailsDeleted": "Your booking has been cancelled.",
+  "publicBookingDetailsInvalid": "This booking details link is invalid or has expired."
 }

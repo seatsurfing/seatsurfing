@@ -152,6 +152,7 @@ type Booking struct {
 	Subject               string
 	RecurringID           NullUUID
 	PublicID              NullUUID
+	ExternalID            string
 	PublicName            string
 	PublicEmail           string
 	PublicLanguage        string

@@ -54,10 +54,73 @@ type ConfirmPublicBookingResponse struct {
 	Leave  time.Time `json:"leave"`
 }
 
+type PublicBookingDetailsResponse struct {
+	Enter        time.Time `json:"enter"`
+	Leave        time.Time `json:"leave"`
+	Subject      string    `json:"subject"`
+	SpaceName    string    `json:"spaceName"`
+	LocationName string    `json:"locationName"`
+}
+
 func (router *PublicBookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{orgId}/spaces", router.getSpaces).Methods("GET")
 	s.HandleFunc("/{orgId}/request", router.request).Methods("POST")
 	s.HandleFunc("/confirm/{id}", router.confirm).Methods("POST")
+	s.HandleFunc("/details/{externalId}", router.details).Methods("GET")
+	s.HandleFunc("/details/{externalId}", router.deleteBooking).Methods("DELETE")
+}
+
+// getValidDetailsBooking looks up a booking by its external_id for the
+// details/cancel page and re-validates, on every call, that it is still
+// something the link is allowed to show/cancel: it exists, is approved (a
+// pending or declined request has nothing to show), and has not already
+// ended. Returning "not found" for all three keeps an expired/declined/
+// unknown link indistinguishable to the caller.
+func (router *PublicBookingRouter) getValidDetailsBooking(externalID string) (*BookingDetails, bool) {
+	booking, err := GetBookingRepository().GetOneByExternalID(externalID)
+	if err != nil {
+		return nil, false
+	}
+	if !booking.Approved {
+		return nil, false
+	}
+	if booking.Leave.Before(time.Now()) {
+		return nil, false
+	}
+	return booking, true
+}
+
+func (router *PublicBookingRouter) details(w http.ResponseWriter, r *http.Request) {
+	externalID := mux.Vars(r)["externalId"]
+	booking, ok := router.getValidDetailsBooking(externalID)
+	if !ok {
+		SendNotFound(w)
+		return
+	}
+	SendJSON(w, PublicBookingDetailsResponse{
+		Enter:        booking.Enter,
+		Leave:        booking.Leave,
+		Subject:      booking.Subject,
+		SpaceName:    booking.Space.Name,
+		LocationName: booking.Space.Location.Name,
+	})
+}
+
+func (router *PublicBookingRouter) deleteBooking(w http.ResponseWriter, r *http.Request) {
+	externalID := mux.Vars(r)["externalId"]
+	booking, ok := router.getValidDetailsBooking(externalID)
+	if !ok {
+		SendNotFound(w)
+		return
+	}
+	bookingRouter := &BookingRouter{}
+	go bookingRouter.onBookingDeleted(&booking.Booking, true)
+	if err := GetBookingRepository().Delete(booking); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendUpdated(w)
 }
 
 func (router *PublicBookingRouter) isPublicBookingEnabledForOrg(orgID string) bool {

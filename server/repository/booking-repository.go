@@ -153,6 +153,26 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			"ADD COLUMN IF NOT EXISTS public_id uuid"); err != nil {
 			panic(err)
 		}
+		// Stable, safe-to-email identifier for a single booking, used to link
+		// to the public booking details page from the public booking
+		// approved-confirmation mail. Deliberately separate from bookings.id
+		// (which is never exposed to unauthenticated callers) so that
+		// exposing it can't be walked back to expose anything else.
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ADD COLUMN IF NOT EXISTS external_id uuid DEFAULT uuid_generate_v4()"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("UPDATE bookings SET external_id = uuid_generate_v4() " +
+			"WHERE external_id IS NULL"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ALTER COLUMN external_id SET NOT NULL"); err != nil {
+			panic(err)
+		}
+		if _, err := GetDatabase().DB().Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_external_id ON bookings(external_id)"); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -225,7 +245,7 @@ func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
 }
 
 func (r *BookingStore) Create(e *Booking) error {
-	var id string
+	var id, externalID string
 	// location_id/organization_id are looked up from the space being booked
 	// rather than taken as input, so the denormalized columns always reflect
 	// the space's actual (immutable) location and organization.
@@ -234,12 +254,13 @@ func (r *BookingStore) Create(e *Booking) error {
 		"SELECT $1, $2, spaces.location_id, locations.organization_id, $3, $4, $5, $6, $7, $8, $9, $10 "+
 		"FROM spaces INNER JOIN locations ON locations.id = spaces.location_id "+
 		"WHERE spaces.id = $2 "+
-		"RETURNING id",
-		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), time.Now().UTC()).Scan(&id)
+		"RETURNING id, external_id",
+		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), time.Now().UTC()).Scan(&id, &externalID)
 	if err != nil {
 		return err
 	}
 	e.ID = id
+	e.ExternalID = externalID
 	return nil
 }
 
@@ -279,7 +300,7 @@ func AcquireBookingCreateLock(userID, locationID string) (func(), error) {
 
 func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 	e := &BookingDetails{}
-	err := GetDatabase().DB().QueryRow("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.public_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.public_id, bookings.external_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
 		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
@@ -290,7 +311,30 @@ func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 		"LEFT JOIN users ON bookings.user_id = users.id "+
 		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
 		"WHERE bookings.id = $1",
-		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.PublicID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail, &e.PublicLanguage)
+		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.PublicID, &e.ExternalID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail, &e.PublicLanguage)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+// GetOneByExternalID looks up a booking by its public, safe-to-email
+// external_id (used by the public booking details/cancel page), as opposed
+// to GetOne's internal id which is never exposed to unauthenticated callers.
+func (r *BookingStore) GetOneByExternalID(externalID string) (*BookingDetails, error) {
+	e := &BookingDetails{}
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.public_id, bookings.external_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
+		"spaces.id, spaces.location_id, spaces.name, "+
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
+		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, ''), COALESCE(public_bookings.language, '') "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
+		"INNER JOIN locations ON spaces.location_id = locations.id "+
+		"LEFT JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
+		"WHERE bookings.external_id = $1",
+		externalID).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.PublicID, &e.ExternalID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail, &e.PublicLanguage)
 	if err != nil {
 		return nil, err
 	}
