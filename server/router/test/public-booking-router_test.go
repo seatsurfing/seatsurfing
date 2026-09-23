@@ -300,8 +300,8 @@ func TestPublicBookingApprovedMailContainsDetailsLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	CheckStringNotEmpty(t, approved.ExternalID)
-	CheckTestBool(t, true, strings.Contains(mail, "ui/book/details/"+approved.ExternalID+"/"))
+	CheckStringNotEmpty(t, approved.PublicExternalID)
+	CheckTestBool(t, true, strings.Contains(mail, "ui/book/details/"+approved.PublicExternalID+"/"))
 	CheckTestBool(t, false, strings.Contains(mail, approved.ID))
 }
 
@@ -321,7 +321,7 @@ func TestPublicBookingDetailsReturnsBookingForApprovedFutureBooking(t *testing.T
 		t.Fatal(err)
 	}
 
-	req = NewHTTPRequest("GET", "/public-booking/details/"+approved.ExternalID, "", nil)
+	req = NewHTTPRequest("GET", "/public-booking/details/"+approved.PublicExternalID, "", nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
@@ -358,7 +358,7 @@ func TestPublicBookingDetailsReturnsNotFoundForPendingBooking(t *testing.T) {
 	adminUser := CreateTestUserOrgAdmin(org)
 	pending := setUpPublicBookingRequiringApproval(t, org, adminUser)
 
-	req := NewHTTPRequest("GET", "/public-booking/details/"+pending.ExternalID, "", nil)
+	req := NewHTTPRequest("GET", "/public-booking/details/"+pending.PublicExternalID, "", nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
@@ -386,7 +386,7 @@ func TestPublicBookingDetailsReturnsNotFoundForPastBooking(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := NewHTTPRequest("GET", "/public-booking/details/"+booking.ExternalID, "", nil)
+	req := NewHTTPRequest("GET", "/public-booking/details/"+publicBooking.ExternalID, "", nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
@@ -413,7 +413,7 @@ func TestPublicBookingDeleteRemovesApprovedFutureBooking(t *testing.T) {
 	waitForSendMailMockContent(t, 2*time.Second)
 	SendMailMockContent = ""
 
-	req = NewHTTPRequest("DELETE", "/public-booking/details/"+approved.ExternalID, "", nil)
+	req = NewHTTPRequest("DELETE", "/public-booking/details/"+approved.PublicExternalID, "", nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
@@ -445,7 +445,7 @@ func TestPublicBookingDeleteMailOmitsYourBookingsButton(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req = NewHTTPRequest("DELETE", "/public-booking/details/"+approved.ExternalID, "", nil)
+	req = NewHTTPRequest("DELETE", "/public-booking/details/"+approved.PublicExternalID, "", nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
@@ -477,7 +477,7 @@ func TestPublicBookingDeleteReturnsNotFoundForPendingBooking(t *testing.T) {
 	adminUser := CreateTestUserOrgAdmin(org)
 	pending := setUpPublicBookingRequiringApproval(t, org, adminUser)
 
-	req := NewHTTPRequest("DELETE", "/public-booking/details/"+pending.ExternalID, "", nil)
+	req := NewHTTPRequest("DELETE", "/public-booking/details/"+pending.PublicExternalID, "", nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 

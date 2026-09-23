@@ -152,7 +152,7 @@ type Booking struct {
 	Subject               string
 	RecurringID           NullUUID
 	PublicID              NullUUID
-	ExternalID            string
+	PublicExternalID      string
 	PublicName            string
 	PublicEmail           string
 	PublicLanguage        string
@@ -180,6 +180,7 @@ func (b *BookingDetails) GetSafeRecipientName() string {
 
 type PublicBooking struct {
 	ID           string
+	ExternalID   string
 	Name         string
 	Email        string
 	Language     string

@@ -1356,7 +1356,7 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	// bookings page for them to sign into).
 	isPublicBooking := e.UserID == ""
 	if isPublicBooking && notification == BookingMailNotificationApproved {
-		vars["detailsUrl"] = FormatURL(domain.DomainName) + "/ui/book/details/" + e.ExternalID + "/"
+		vars["detailsUrl"] = FormatURL(domain.DomainName) + "/ui/book/details/" + e.PublicExternalID + "/"
 	}
 	template := GetEmailTemplatePathBookingCreated()
 	if notification == BookingMailNotificationUpdated {
