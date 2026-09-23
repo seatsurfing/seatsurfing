@@ -297,33 +297,34 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 	}
 	GetSpaceRepository().Create(space)
 
-	time8 := time.Date(2025, 1, 1, 8, 0, 0, 0, time.Local)
-	time9 := time.Date(2025, 1, 1, 9, 0, 0, 0, time.Local)
+	time7 := time.Date(2025, 1, 1, 8, 0, 0, 0, time.Local)
+	time8 := time.Date(2025, 1, 1, 9, 0, 0, 0, time.Local)
+	time9 := time.Date(2025, 1, 1, 10, 0, 0, 0, time.Local)
 	time10 := time.Date(2025, 1, 1, 10, 0, 0, 0, time.Local)
 	time11 := time.Date(2025, 1, 1, 11, 0, 0, 0, time.Local)
 	time12 := time.Date(2025, 1, 1, 12, 0, 0, 0, time.Local)
 
-	// create booking from 09:00 to 11:00
+	// create booking from 09:00 to 10:00
 	booking := &Booking{
 		UserID:      user.ID,
 		SpaceID:     space.ID,
 		Enter:       time9,
-		Leave:       time11,
+		Leave:       time10,
 		RecurringID: NullUUID(""),
 	}
 	GetBookingRepository().Create(booking)
 
-	bookings_8_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time10, "", "")
-	CheckTestInt(t, 1, len(bookings_8_10))
+	bookings_7_8, _ := GetBookingRepository().GetAllByOrg(org.ID, time7, time8, "", "")
+	CheckTestInt(t, 0, len(bookings_7_8))
 
-	bookings_10_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time10, time12, "", "")
-	CheckTestInt(t, 1, len(bookings_10_12))
+	bookings_11_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time11, time12, "", "")
+	CheckTestInt(t, 0, len(bookings_11_12))
 
-	bookings_9_11, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time11, user.Email, location.ID)
-	CheckTestInt(t, 1, len(bookings_9_11))
+	bookings_9_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time10, user.Email, location.ID)
+	CheckTestInt(t, 1, len(bookings_9_10))
 
-	bookings_8_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time12, "", "")
-	CheckTestInt(t, 1, len(bookings_8_12))
+	bookings_7_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time7, time12, "", "")
+	CheckTestInt(t, 1, len(bookings_7_12))
 }
 
 func TestBookingRepositoryGetAllByOrgOverlapping(t *testing.T) {

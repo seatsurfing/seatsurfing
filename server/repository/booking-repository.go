@@ -350,7 +350,7 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
 		"INNER JOIN users ON bookings.user_id = users.id " +
-		"WHERE bookings.organization_id = $1 AND enter_time < $3 AND leave_time > $2"
+		"WHERE bookings.organization_id = $1 AND enter_time <= $3 AND leave_time >= $2"
 	args := []any{organizationID, startTime, endTime}
 	if userEmail != "" {
 		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
