@@ -494,6 +494,15 @@ func (r *UserStore) GetCount(organizationID string) (int, error) {
 	return res, err
 }
 
+func (r *UserStore) GetCountHuman(organizationID string) (int, error) {
+	var res int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(id) "+
+		"FROM users "+
+		"WHERE organization_id = $1 AND account_type NOT IN ($2, $3)",
+		organizationID, AccountTypeServiceAccountRO, AccountTypeServiceAccountRW).Scan(&res)
+	return res, err
+}
+
 func (r *UserStore) GetHashedPassword(password string) string {
 	pwHash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(pwHash)

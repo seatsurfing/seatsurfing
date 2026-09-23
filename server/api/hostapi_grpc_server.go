@@ -74,6 +74,10 @@ func (s *HostAPIGRPCServer) UserGetCount(ctx context.Context, a *hostapipb.UserG
 	v, err := s.impl.GetUserRepository().GetCount(a.OrgId)
 	return &hostapipb.IntReply{V: int32(v), Err: errStr(err)}, nil
 }
+func (s *HostAPIGRPCServer) UserGetCountHuman(ctx context.Context, a *hostapipb.UserGetCountArgs) (*hostapipb.IntReply, error) {
+	v, err := s.impl.GetUserRepository().GetCountHuman(a.OrgId)
+	return &hostapipb.IntReply{V: int32(v), Err: errStr(err)}, nil
+}
 func (s *HostAPIGRPCServer) UserGetHashedPassword(ctx context.Context, a *hostapipb.UserHashPasswordArgs) (*hostapipb.StringReply, error) {
 	return &hostapipb.StringReply{V: s.impl.GetUserRepository().GetHashedPassword(a.Password)}, nil
 }
