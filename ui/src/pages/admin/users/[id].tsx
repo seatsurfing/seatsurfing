@@ -14,6 +14,7 @@ import {
   Trash2 as IconDelete,
   RefreshCw as IconRefresh,
   XCircle as IconReset,
+  Calendar as IconCalendar,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -400,10 +401,23 @@ class EditUser extends React.Component<Props, State> {
         <IconSave className="feather" /> {this.props.t("save")}
       </Button>
     );
+    const buttonCalendar =
+      this.entity.id &&
+      !this.isServiceAccount(this.entity.accountType) &&
+      RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Read) ? (
+        <Link
+          href={`/admin/calendar/${this.entity.id}`}
+          className="btn btn-sm btn-outline-secondary"
+        >
+          <IconCalendar className="feather" /> {this.props.t("bookingCalendar")}
+        </Link>
+      ) : (
+        <></>
+      );
     if (this.entity.id) {
       buttons = (
         <>
-          {backButton} {buttonDelete} {buttonSave}
+          {backButton} {buttonCalendar} {buttonDelete} {buttonSave}
         </>
       );
     } else {

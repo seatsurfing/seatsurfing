@@ -615,5 +615,9 @@
   "domainAccessibleTooltip": "Die Verfügbarkeit der Domain konnte nicht oder noch nicht bestätigt werden. Dies wird regelmäßig geprüft und kann bis zu 60 Minuten dauern.",
   "domainNotVerifiedTooltip": "Diese Domain wurde noch nicht verifiziert.",
   "orgSignupFailedDomainHint": "Möglicherweise ist deine gewünschte Domain inzwischen nicht mehr verfügbar.",
-  "orgSignupRetry": "Neue Registrierung starten"
+  "orgSignupRetry": "Neue Registrierung starten",
+  "bookingCalendar": "Buchungskalender",
+  "month": "Monat",
+  "next": "Weiter",
+  "previous": "Zurück"
 }

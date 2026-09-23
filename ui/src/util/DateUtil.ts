@@ -95,6 +95,18 @@ export default class DateUtil {
     );
   }
 
+  static convertFromFakeUTCDate(d: Date): Date {
+    return new Date(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+      d.getUTCHours(),
+      d.getUTCMinutes(),
+      d.getUTCSeconds(),
+      0,
+    );
+  }
+
   static isInFuture(date: Date): boolean {
     return this.convertToUTC(date) > new Date();
   }

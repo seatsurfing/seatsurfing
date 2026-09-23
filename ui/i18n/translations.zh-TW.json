@@ -612,5 +612,9 @@
   "domainAccessibleTooltip": "Domain availability could not be confirmed, or has not been confirmed yet. This is checked periodically and can take up to 60 minutes.",
   "domainNotVerifiedTooltip": "This domain has not been verified yet.",
   "orgSignupFailedDomainHint": "It's also possible that your chosen domain is no longer available.",
-  "orgSignupRetry": "Start a new sign-up"
+  "orgSignupRetry": "Start a new sign-up",
+  "bookingCalendar": "Booking calendar",
+  "month": "Month",
+  "next": "Next",
+  "previous": "Previous"
 }

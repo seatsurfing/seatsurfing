@@ -1,5 +1,5 @@
 import React from "react";
-import { ToolbarProps } from "react-big-calendar";
+import { ToolbarProps, View } from "react-big-calendar";
 import {
   Trello as IconTrello,
   ArrowLeft as IconArrowLeft,
@@ -16,13 +16,20 @@ interface Props {
   toolbar: ToolbarProps<object, object>;
   t: TranslationFunc;
   events?: CalendarEvent[];
+  views?: View[];
 }
 
-const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
+const CustomToolbar: React.FC<Props> = ({ toolbar, t, events, views }) => {
   const weekStart = moment(toolbar.date).clone().startOf("week");
   const weekEnd = moment(toolbar.date).clone().endOf("week");
   const formatter = Formatting.getFormatterDate();
   const isDayView = toolbar.view === "day";
+  const isMonthView = toolbar.view === "month";
+  const monthFormatter = new Intl.DateTimeFormat(Formatting.Language, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 
   const eventWeeks = (events ?? []).reduce((map, event) => {
     const weekKey = moment(event.enter).startOf("week").valueOf();
@@ -72,6 +79,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
         type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("PREV")}
+        aria-label={t("previous")}
       >
         <IconArrowLeft className="feather" />
       </button>{" "}
@@ -79,6 +87,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
         type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("NEXT")}
+        aria-label={t("next")}
       >
         <IconArrowRight className="feather" />
       </button>{" "}
@@ -102,6 +111,26 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
           </button>
         </>
       )}{" "}
+      {views && views.length > 1 && (
+        <div className="btn-group" role="group">
+          {views.map((view) => (
+            <button
+              key={view}
+              type="button"
+              className={
+                "btn btn-sm " +
+                (toolbar.view === view
+                  ? "btn-secondary"
+                  : "btn-outline-secondary")
+              }
+              aria-pressed={toolbar.view === view}
+              onClick={() => toolbar.onView(view)}
+            >
+              {t(view)}
+            </button>
+          ))}
+        </div>
+      )}{" "}
       <span
         className="toolbar-label"
         style={{
@@ -113,7 +142,9 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
       >
         {isDayView
           ? formatter.format(toolbar.date)
-          : `${formatter.format(weekStart.toDate())} – ${formatter.format(weekEnd.toDate())}`}
+          : isMonthView
+            ? monthFormatter.format(toolbar.date)
+            : `${formatter.format(weekStart.toDate())} – ${formatter.format(weekEnd.toDate())}`}
       </span>
     </div>
   );
