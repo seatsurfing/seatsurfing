@@ -37,6 +37,7 @@ type UserRepository interface {
 	GetAll(organizationID string, maxResults, offset int) ([]*User, error)
 	GetByEmail(organizationID, email string) (*User, error)
 	GetCount(organizationID string) (int, error)
+	GetCountHuman(organizationID string) (int, error)
 	GetHashedPassword(password string) string
 	GetUsersWithEmail(email string) ([]*User, error)
 	Create(e *User) error

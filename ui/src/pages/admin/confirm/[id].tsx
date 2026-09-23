@@ -81,6 +81,13 @@ class ConfirmSignup extends React.Component<Props, State> {
         result = (
           <div>
             <p>{this.props.t("orgSignupFailed")}</p>
+            <p>{this.props.t("orgSignupFailedDomainHint")}</p>
+            <Link
+              href="https://seatsurfing.io/sign-up"
+              className="btn btn-primary"
+            >
+              {this.props.t("orgSignupRetry")}
+            </Link>
           </div>
         );
       }

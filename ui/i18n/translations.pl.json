@@ -633,5 +633,7 @@
   "publicBookingDetailsDelete": "Cancel booking",
   "publicBookingDetailsDeleteConfirm": "Are you sure you want to cancel this booking?",
   "publicBookingDetailsDeleted": "Your booking has been cancelled.",
-  "publicBookingDetailsInvalid": "This booking details link is invalid or has expired."
+  "publicBookingDetailsInvalid": "This booking details link is invalid or has expired.",
+  "orgSignupFailedDomainHint": "It's also possible that your chosen domain is no longer available.",
+  "orgSignupRetry": "Start a new sign-up"
 }

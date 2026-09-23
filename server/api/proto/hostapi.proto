@@ -27,6 +27,7 @@ service HostAPIService {
   rpc UserGetAll(UserGetAllArgs) returns (UserGetAllReply);
   rpc UserGetByEmail(UserGetByEmailArgs) returns (UserGetOneReply);
   rpc UserGetCount(UserGetCountArgs) returns (IntReply);
+  rpc UserGetCountHuman(UserGetCountArgs) returns (IntReply);
   rpc UserGetHashedPassword(UserHashPasswordArgs) returns (StringReply);
   rpc UserGetUsersWithEmail(UserGetUsersWithEmailArgs) returns (UserGetUsersWithEmailReply);
   // The ordered role ladder has been replaced by roles and permissions.

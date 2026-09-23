@@ -634,5 +634,7 @@
   "publicBookingDetailsDelete": "Buchung stornieren",
   "publicBookingDetailsDeleteConfirm": "Möchtest du diese Buchung wirklich stornieren?",
   "publicBookingDetailsDeleted": "Deine Buchung wurde storniert.",
-  "publicBookingDetailsInvalid": "Dieser Link zu den Buchungsdetails ist ungültig oder abgelaufen."
+  "publicBookingDetailsInvalid": "Dieser Link zu den Buchungsdetails ist ungültig oder abgelaufen.",
+  "orgSignupFailedDomainHint": "Möglicherweise ist deine gewünschte Domain inzwischen nicht mehr verfügbar.",
+  "orgSignupRetry": "Neue Registrierung starten"
 }

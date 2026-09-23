@@ -243,6 +243,13 @@ func (r *userRepositoryGRPC) GetCount(orgID string) (int, error) {
 	}
 	return int(reply.V), strErr(reply.Err)
 }
+func (r *userRepositoryGRPC) GetCountHuman(orgID string) (int, error) {
+	reply, err := r.client.UserGetCountHuman(context.Background(), &hostapipb.UserGetCountArgs{OrgId: orgID})
+	if err != nil {
+		return 0, err
+	}
+	return int(reply.V), strErr(reply.Err)
+}
 func (r *userRepositoryGRPC) GetHashedPassword(password string) string {
 	reply, err := r.client.UserGetHashedPassword(context.Background(), &hostapipb.UserHashPasswordArgs{Password: password})
 	if err != nil {

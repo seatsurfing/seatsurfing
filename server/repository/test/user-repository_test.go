@@ -60,6 +60,46 @@ func TestUsersCount(t *testing.T) {
 	CheckTestInt(t, 2, res)
 }
 
+func TestUsersCountHuman(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	CreateTestUserInOrg(org)
+	CreateTestUserInOrg(org)
+
+	roUser := CreateTestUserInOrg(org)
+	roUser.AccountType = AccountTypeServiceAccountRO
+	GetUserRepository().Update(roUser)
+
+	rwUser := CreateTestUserInOrg(org)
+	rwUser.AccountType = AccountTypeServiceAccountRW
+	GetUserRepository().Update(rwUser)
+
+	res, err := GetUserRepository().GetCountHuman(org.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 2, res)
+
+	res, err = GetUserRepository().GetCount(org.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 4, res)
+}
+
+func TestUsersCountHumanScopedByOrg(t *testing.T) {
+	ClearTestDB()
+	org1 := CreateTestOrg("test1.com")
+	org2 := CreateTestOrg("test2.com")
+	CreateTestUserInOrg(org1)
+	CreateTestUserInOrg(org1)
+	CreateTestUserInOrg(org2)
+
+	res, err := GetUserRepository().GetCountHuman(org1.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 2, res)
+
+	res, err = GetUserRepository().GetCountHuman(org2.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, res)
+}
+
 func TestDeleteObsoleteConfluenceAnonymousUsers(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
