@@ -297,9 +297,9 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 	}
 	GetSpaceRepository().Create(space)
 
-	time7 := time.Date(2025, 1, 1, 8, 0, 0, 0, time.Local)
-	time8 := time.Date(2025, 1, 1, 9, 0, 0, 0, time.Local)
-	time9 := time.Date(2025, 1, 1, 10, 0, 0, 0, time.Local)
+	time7 := time.Date(2025, 1, 1, 7, 0, 0, 0, time.Local)
+	time8 := time.Date(2025, 1, 1, 8, 0, 0, 0, time.Local)
+	time9 := time.Date(2025, 1, 1, 9, 0, 0, 0, time.Local)
 	time10 := time.Date(2025, 1, 1, 10, 0, 0, 0, time.Local)
 	time11 := time.Date(2025, 1, 1, 11, 0, 0, 0, time.Local)
 	time12 := time.Date(2025, 1, 1, 12, 0, 0, 0, time.Local)
