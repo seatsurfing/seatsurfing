@@ -1077,16 +1077,12 @@ func TestSpaceRouterBulkUpdateForeignOrgApproverGroup(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody *BulkUpdateResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestBool(t, true, resBody.Creates[0].Success)
-	createdID := resBody.Creates[0].ID
-
-	createdApprovers, err := GetSpaceRepository().GetApproverGroupIDs(createdID)
+	CheckTestBool(t, false, resBody.Creates[0].Success)
+	spaces, err := GetSpaceRepository().GetAll(location.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(createdApprovers) != 0 {
-		t.Fatal("created space must not have a foreign organization's group attached as approver")
-	}
+	CheckTestInt(t, 1, len(spaces))
 
 	// Attempt to update an existing space to use a foreign org's group as approver
 	payload = `{
@@ -1098,7 +1094,7 @@ func TestSpaceRouterBulkUpdateForeignOrgApproverGroup(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestBool(t, true, resBody.Updates[0].Success)
+	CheckTestBool(t, false, resBody.Updates[0].Success)
 
 	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	if err != nil {
@@ -1107,4 +1103,9 @@ func TestSpaceRouterBulkUpdateForeignOrgApproverGroup(t *testing.T) {
 	if len(approvers) != 0 {
 		t.Fatal("space must not have a foreign organization's group attached as approver")
 	}
+	unchanged, err := GetSpaceRepository().GetOne(space.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, false, unchanged.PublicBookingEnabled)
 }
