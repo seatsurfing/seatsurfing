@@ -314,16 +314,71 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 	GetBookingRepository().Create(booking)
 
 	bookings_8_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time10, "", "")
-	CheckTestInt(t, 0, len(bookings_8_10))
+	CheckTestInt(t, 1, len(bookings_8_10))
 
 	bookings_10_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time10, time12, "", "")
-	CheckTestInt(t, 0, len(bookings_10_12))
+	CheckTestInt(t, 1, len(bookings_10_12))
 
 	bookings_9_11, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time11, user.Email, location.ID)
 	CheckTestInt(t, 1, len(bookings_9_11))
 
 	bookings_8_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time8, time12, "", "")
 	CheckTestInt(t, 1, len(bookings_8_12))
+}
+
+func TestBookingRepositoryGetAllByOrgOverlapping(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	time8 := time.Date(2025, 1, 1, 8, 0, 0, 0, time.Local)
+	time9 := time.Date(2025, 1, 1, 9, 0, 0, 0, time.Local)
+	time10 := time.Date(2025, 1, 1, 10, 0, 0, 0, time.Local)
+	time11 := time.Date(2025, 1, 1, 11, 0, 0, 0, time.Local)
+	time12 := time.Date(2025, 1, 1, 12, 0, 0, 0, time.Local)
+	time13 := time.Date(2025, 1, 1, 13, 0, 0, 0, time.Local)
+
+	create := func(enter, leave time.Time) *Booking {
+		b := &Booking{
+			UserID:      user.ID,
+			SpaceID:     space.ID,
+			Enter:       enter,
+			Leave:       leave,
+			RecurringID: NullUUID(""),
+		}
+		if err := GetBookingRepository().Create(b); err != nil {
+			t.Fatal(err)
+		}
+		return b
+	}
+	startsBefore := create(time8, time10)
+	inside := create(time10, time11)
+	endsAfter := create(time11, time13)
+	spansAll := create(time8, time13)
+	create(time8, time9)
+	create(time12, time13)
+
+	list, err := GetBookingRepository().GetAllByOrg(org.ID, time9, time12, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 4, len(list))
+	ids := map[string]bool{}
+	for _, b := range list {
+		ids[b.ID] = true
+	}
+	CheckTestBool(t, true, ids[startsBefore.ID])
+	CheckTestBool(t, true, ids[inside.ID])
+	CheckTestBool(t, true, ids[endsAfter.ID])
+	CheckTestBool(t, true, ids[spansAll.ID])
+
+	otherOrg := CreateTestOrg("other.com")
+	list, err = GetBookingRepository().GetAllByOrg(otherOrg.ID, time9, time12, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(list))
 }
 
 func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
