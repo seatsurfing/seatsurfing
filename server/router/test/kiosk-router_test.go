@@ -209,6 +209,58 @@ func TestKioskNextBooking(t *testing.T) {
 	CheckTestString(t, "Team Sync", resBody.NextBooking.Subject)
 }
 
+func TestKioskPublicBookingOwner(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	location.Timezone = "UTC"
+	GetLocationRepository().Update(location)
+
+	space.KioskEnabled = true
+	GetSpaceRepository().Update(space)
+	enableKioskForOrg(org.ID)
+	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
+
+	adminUser := CreateTestUserOrgAdmin(org)
+	payload := `{"value": "myKioskSecret"}`
+	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	now := time.Now().UTC()
+	currentPub := &PublicBooking{Name: "Jane Guest", Email: "jane@guest.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(currentPub))
+	CheckTestIsNil(t, GetBookingRepository().Create(&Booking{
+		SpaceID:  space.ID,
+		PublicID: NullUUID(currentPub.ID),
+		Enter:    now.Add(-1 * time.Hour),
+		Leave:    now.Add(1 * time.Hour),
+		Approved: true,
+	}))
+	nextPub := &PublicBooking{Name: "", Email: "next@guest.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(nextPub))
+	CheckTestIsNil(t, GetBookingRepository().Create(&Booking{
+		SpaceID:  space.ID,
+		PublicID: NullUUID(nextPub.ID),
+		Enter:    now.Add(2 * time.Hour),
+		Leave:    now.Add(3 * time.Hour),
+		Approved: true,
+	}))
+
+	req = newKioskRequest(space.ID, "myKioskSecret")
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	var resBody KioskResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if resBody.CurrentBooking == nil || resBody.NextBooking == nil {
+		t.Fatalf("Expected CurrentBooking and NextBooking to be non-nil")
+	}
+	CheckTestBool(t, true, resBody.CurrentBooking.OwnerVisible)
+	CheckTestString(t, "Jane Guest", resBody.CurrentBooking.Owner)
+	CheckTestString(t, "next@guest.com", resBody.NextBooking.Owner)
+}
+
 func TestKioskSecretMaskedInSettings(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
