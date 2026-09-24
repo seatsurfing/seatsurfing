@@ -24,8 +24,8 @@ import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import Stats from "@/types/Stats";
 import StatsLoad from "@/types/StatsLoad";
 import Location from "@/types/Location";
-import User from "@/types/User";
 import DateUtil from "@/util/DateUtil";
+import Formatting from "@/util/Formatting";
 
 import Navigation from "@/util/Navigation";
 import UpdateChecker from "@/util/UpdateChecker";
@@ -162,11 +162,37 @@ class Dashboard extends React.Component<Props, State> {
     return <WeekdayChart data={data} labels={labels} />;
   };
 
-  renderProgressBar = (num: number | undefined, title: string) => {
+  getLoadDateRanges = () => {
+    const now = new Date();
+    const y = now.getUTCFullYear();
+    const m = now.getUTCMonth();
+    const monday = now.getUTCDate() - ((now.getUTCDay() + 6) % 7);
+    const week = (offset: number): [Date, Date] => [
+      new Date(Date.UTC(y, m, monday + offset)),
+      new Date(Date.UTC(y, m, monday + offset + 6)),
+    ];
+    return {
+      nextWeek: week(7),
+      thisWeek: week(0),
+      lastWeek: week(-7),
+      lastMonth: [
+        new Date(Date.UTC(y, m - 1, 1)),
+        new Date(Date.UTC(y, m, 0)),
+      ] as [Date, Date],
+    };
+  };
+
+  renderProgressBar = (
+    num: number | undefined,
+    title: string,
+    range: [Date, Date],
+  ) => {
     if (!num) {
       num = 0;
     }
     const label = `${title}: ${num} %`;
+    const formatter = Formatting.getFormatterDate();
+    const tooltip = `${formatter.format(range[0])} – ${formatter.format(range[1])}`;
     let variant = "success";
     if (num >= 75) {
       variant = "warning";
@@ -175,7 +201,7 @@ class Dashboard extends React.Component<Props, State> {
       variant = "danger";
     }
     return (
-      <div>
+      <div title={tooltip}>
         {label} <ProgressBar now={num} className="mb-3" variant={variant} />
       </div>
     );
@@ -195,6 +221,7 @@ class Dashboard extends React.Component<Props, State> {
       );
     }
 
+    const loadRanges = this.getLoadDateRanges();
     let updateHint = <></>;
     if (
       this.state.latestVersion &&
@@ -492,18 +519,22 @@ class Dashboard extends React.Component<Props, State> {
                   {this.renderProgressBar(
                     this.state.stats?.spaceLoadNextWeek,
                     this.props.t("nextWeek"),
+                    loadRanges.nextWeek,
                   )}
                   {this.renderProgressBar(
                     this.state.stats?.spaceLoadThisWeek,
                     this.props.t("thisWeek"),
+                    loadRanges.thisWeek,
                   )}
                   {this.renderProgressBar(
                     this.state.stats?.spaceLoadLastWeek,
                     this.props.t("lastWeek"),
+                    loadRanges.lastWeek,
                   )}
                   {this.renderProgressBar(
                     this.state.stats?.spaceLoadLastMonth,
                     this.props.t("lastMonth"),
+                    loadRanges.lastMonth,
                   )}
                 </Card.Body>
               </Card>
