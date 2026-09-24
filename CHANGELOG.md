@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.128.0](https://github.com/seatsurfing/seatsurfing/compare/v1.127.10...v1.128.0) (2026-09-24)
+
+
+### ✨ Features
+
+* **main:** add public booking option ([#2629](https://github.com/seatsurfing/seatsurfing/issues/2629)) ([409b1fa](https://github.com/seatsurfing/seatsurfing/commit/409b1fa5775d0793487b95f378113ff040f40855))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** show date tooltips on load chart ([#2682](https://github.com/seatsurfing/seatsurfing/issues/2682)) ([8cce740](https://github.com/seatsurfing/seatsurfing/commit/8cce740a87db6ceee9cbc19d1dce50ffbf9b3e70))
+
 ## [1.127.10](https://github.com/seatsurfing/seatsurfing/compare/v1.127.9...v1.127.10) (2026-09-23)
 
 
