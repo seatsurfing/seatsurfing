@@ -20,13 +20,17 @@ import Booking from "@/types/Booking";
 import RecurringBooking from "@/types/RecurringBooking";
 import Formatting from "@/util/Formatting";
 import AjaxError from "@/util/AjaxError";
+import RuntimeConfig from "@/components/RuntimeConfig";
 import AlertModal from "@/components/AlertModal";
 
-import BookingCalendar from "@/components/calendar/BookingCalendar";
-import {
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
+import createCustomEvent, {
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
+import moment from "moment-timezone";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import { IoCalendarNumber as CalendarIcon } from "react-icons/io5";
 import DateUtil from "@/util/DateUtil";
 import RendererUtils from "@/util/RendererUtils";
@@ -219,6 +223,24 @@ class Bookings extends React.Component<Props, State> {
 
     const formatter = Formatting.getBookingDateFormatter();
 
+    const toolbar = (props: object) => (
+      <CustomToolbar
+        toolbar={props as any}
+        t={this.props.t}
+        events={calendarEvents}
+      />
+    );
+
+    moment.tz.setDefault("UTC");
+    moment.locale(Formatting.Language);
+    const dow = RuntimeConfig.INFOS.weekStartDay;
+    if (moment.localeData().firstDayOfWeek() !== dow) {
+      moment.updateLocale(moment.locale(), {
+        week: { dow },
+      });
+    }
+    const calendarLocalizer = momentLocalizer(moment);
+
     return (
       <>
         <NavBar />
@@ -281,9 +303,20 @@ class Bookings extends React.Component<Props, State> {
             className={this.state.calendarShow ? "d-none d-lg-block" : "d-none"}
             style={{ width: "100%" }}
           >
-            <BookingCalendar
-              t={this.props.t}
+            <Calendar
+              showMultiDayTimes={true}
+              getNow={() => DateUtil.getNowFakeUTC()}
+              localizer={calendarLocalizer}
               events={calendarEvents}
+              startAccessor={(event: CalendarEvent) => event.enter}
+              endAccessor={(event: CalendarEvent) => event.leave}
+              style={{
+                height: "calc(100vh - 160px)",
+                width: "100%",
+                padding: "10px",
+                margin: "auto",
+              }}
+              defaultView="week"
               date={this.state.calendarDate}
               onNavigate={(newDate: Date) => {
                 const today = DateUtil.getTodayStart();
@@ -296,11 +329,34 @@ class Bookings extends React.Component<Props, State> {
                 const booking = this.data.find((b) => b.id === e.bookingId);
                 if (booking) this.onItemPress(booking);
               }}
+              culture={Formatting.Language}
+              length={7}
+              views={["week"]}
+              eventPropGetter={(event: CalendarEvent) => {
+                if (event.approved === false) {
+                  return { style: { opacity: 0.5 } };
+                }
+                return {};
+              }}
+              components={{
+                toolbar,
+                event: createCustomEvent(),
+              }}
               scrollToTime={DateUtil.convertToFakeUTCDate(
                 DateUtil.getTodayTimeFromTimeString(this.workdayStart),
               )}
-              workdays={this.state.workdays}
-            />
+              dayPropGetter={(date: Date) => {
+                if (
+                  this.state.workdays.length > 0 &&
+                  !this.state.workdays.includes(date.getUTCDay())
+                ) {
+                  return {
+                    style: { backgroundColor: "rgba(0, 0, 0, 0.05)" },
+                  };
+                }
+                return {};
+              }}
+            ></Calendar>
           </div>
         </div>
 

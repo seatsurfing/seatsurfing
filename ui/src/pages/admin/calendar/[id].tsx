@@ -2,16 +2,14 @@ import React from "react";
 import { ChevronLeft as IconBack } from "react-feather";
 import { NextRouter } from "next/router";
 import Link from "next/link";
-import { View } from "react-big-calendar";
+import { Calendar, View } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import BookingCalendar, {
-  getCalendarRange,
-} from "@/components/calendar/BookingCalendar";
-import {
+import createCustomEvent, {
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
@@ -19,6 +17,8 @@ import Booking from "@/types/Booking";
 import User from "@/types/User";
 import { Permission, PermissionLevel } from "@/types/Permission";
 import DateUtil from "@/util/DateUtil";
+import CalendarUtil from "@/util/CalendarUtil";
+import Formatting from "@/util/Formatting";
 import RendererUtils from "@/util/RendererUtils";
 
 interface State {
@@ -47,47 +47,43 @@ class UserBookingCalendar extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     const { id } = this.props.router.query;
     if (typeof id !== "string" || !id) {
       this.props.router.push("/404");
       return;
     }
-    User.get(id).then((user) => {
-      if (
-        user.accountType === User.AccountTypeServiceAccountRO ||
-        user.accountType === User.AccountTypeServiceAccountRW
-      ) {
-        this.props.router.push("/404");
-        return;
-      }
-      this.user = user;
-      this.loadBookings(this.state.date, this.state.view);
-    });
+    const user = await User.get(id);
+    if (
+      user.accountType === User.AccountTypeServiceAccountRO ||
+      user.accountType === User.AccountTypeServiceAccountRW
+    ) {
+      this.props.router.push("/404");
+      return;
+    }
+    this.user = user;
+    await this.loadBookings(this.state.date, this.state.view);
   };
 
-  loadBookings = (date: Date, view: View) => {
+  loadBookings = async (date: Date, view: View) => {
     if (!this.user) {
       return;
     }
     const requestId = ++this.requestCounter;
-    const range = getCalendarRange(date, view);
-    Booking.listFiltered(
+    const range = CalendarUtil.getRange(date, view);
+    const list = await Booking.listFiltered(
       DateUtil.convertFromFakeUTCDate(range.start),
       DateUtil.convertFromFakeUTCDate(range.end),
       this.user.email,
       "",
       true,
-    ).then((list) => {
-      if (requestId !== this.requestCounter) {
-        return;
-      }
-      this.setState({
-        loading: false,
-        events: list.map((b) =>
-          bookingToCalendarEvent(b, "user", this.props.t),
-        ),
-      });
+    );
+    if (requestId !== this.requestCounter) {
+      return;
+    }
+    this.setState({
+      loading: false,
+      events: list.map((b) => bookingToCalendarEvent(b, "user", this.props.t)),
     });
   };
 
@@ -128,19 +124,34 @@ class UserBookingCalendar extends React.Component<Props, State> {
 
     return (
       <FullLayout headline={headline} buttons={buttons}>
-        <BookingCalendar
-          t={this.props.t}
+        <Calendar
+          showMultiDayTimes={true}
+          getNow={() => DateUtil.getNowFakeUTC()}
+          localizer={CalendarUtil.getLocalizer()}
+          culture={Formatting.Language}
           events={this.state.events}
+          startAccessor={(event: CalendarEvent) => event.enter}
+          endAccessor={(event: CalendarEvent) => event.leave}
+          style={{ height: "calc(100vh - 220px)", width: "100%" }}
           date={this.state.date}
           onNavigate={this.onNavigate}
           view={this.state.view}
           views={["week", "month"]}
           onView={this.onView}
-          onSelectEvent={(e) =>
+          onSelectEvent={(e: CalendarEvent) =>
             this.props.router.push(`/admin/bookings/${e.bookingId}`)
           }
-          height="calc(100vh - 220px)"
-          showBookingNavigation={false}
+          messages={{
+            today: this.props.t("today"),
+            previous: this.props.t("previous"),
+            next: this.props.t("next"),
+            week: this.props.t("week"),
+            month: this.props.t("month"),
+          }}
+          eventPropGetter={(event: CalendarEvent) =>
+            event.approved === false ? { style: { opacity: 0.5 } } : {}
+          }
+          components={{ event: createCustomEvent() }}
         />
       </FullLayout>
     );
