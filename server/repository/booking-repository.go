@@ -144,7 +144,7 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
-	if curVersion < 58 {
+	if curVersion < 59 {
 		// Public bookings (see public_bookings table) have no user account.
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ALTER COLUMN user_id DROP NOT NULL"); err != nil {
 			panic(err)
