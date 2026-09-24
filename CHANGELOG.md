@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.127.10](https://github.com/seatsurfing/seatsurfing/compare/v1.127.9...v1.127.10) (2026-09-23)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** find overlapping bookings ([#2683](https://github.com/seatsurfing/seatsurfing/issues/2683)) ([bb3eff0](https://github.com/seatsurfing/seatsurfing/commit/bb3eff0a61392b251dc6a20c96302370fd8b2ee3))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.77 to 1.0.78 in /server in the minor-and-patch group ([#2677](https://github.com/seatsurfing/seatsurfing/issues/2677)) ([8a17e62](https://github.com/seatsurfing/seatsurfing/commit/8a17e62908deca9150785b47e2422a4989f10792))
+* **deps:** bump moment-timezone from 0.6.3 to 0.6.4 in /ui in the production-dependencies group across 1 directory ([#2678](https://github.com/seatsurfing/seatsurfing/issues/2678)) ([e8b32b8](https://github.com/seatsurfing/seatsurfing/commit/e8b32b8e9962028d13176265d020efc5a8cc54d4))
+* **main:** add more info when org signup failed ([#2676](https://github.com/seatsurfing/seatsurfing/issues/2676)) ([39a56f8](https://github.com/seatsurfing/seatsurfing/commit/39a56f878ddffb3c6b29eca9eb656059eb43273d))
+* **server:** add GetCountHuman() to user repository and host api ([#2680](https://github.com/seatsurfing/seatsurfing/issues/2680)) ([a8a1332](https://github.com/seatsurfing/seatsurfing/commit/a8a133247a6aeda0f8b2bc8080da455653d5d653))
+* **server:** respect reminder preferences before batching ([#2674](https://github.com/seatsurfing/seatsurfing/issues/2674)) ([c79f334](https://github.com/seatsurfing/seatsurfing/commit/c79f334c01fbea99d0910daf7281d9fe62594c22))
+
 ## [1.127.9](https://github.com/seatsurfing/seatsurfing/compare/v1.127.8...v1.127.9) (2026-09-19)
 
 
