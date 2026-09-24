@@ -22,4 +22,16 @@ export default class BrowserUtil {
     } catch {}
     return defaultValue;
   }
+
+  static applyLanguageFromQuery(notify: boolean = true) {
+    if (typeof window === "undefined") return;
+    try {
+      const lang = new URLSearchParams(window.location.search).get("lang");
+      if (!lang) return;
+      window.localStorage.setItem("next-export-i18n-lang", lang);
+      if (notify) document.dispatchEvent(new Event("localStorageLangChange"));
+    } catch {
+      // ignore
+    }
+  }
 }

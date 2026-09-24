@@ -11,7 +11,7 @@
   "buttons": [
     {
       "label": "Neue Buchung",
-      "url": "{{orgDomain}}ui/book/"
+      "url": "{{orgDomain}}ui/book/?lang=de"
     }
   ]
 }

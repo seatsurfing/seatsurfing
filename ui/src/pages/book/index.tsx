@@ -6,6 +6,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
+import BrowserUtil from "@/util/BrowserUtil";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Validation from "@/util/Validation";
@@ -68,6 +69,7 @@ class PublicBooking extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
+    BrowserUtil.applyLanguageFromQuery();
     this.loadOrgAndSpaces();
   };
 
@@ -97,7 +99,7 @@ class PublicBooking extends React.Component<Props, State> {
       );
       const spaces: PublicBookableSpace[] = res.json.spaces || [];
       if (spaces.length === 0) {
-        this.props.router.replace("/404");
+        this.setState({ loading: false });
         return;
       }
       const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
@@ -173,7 +175,14 @@ class PublicBooking extends React.Component<Props, State> {
     }
 
     if (this.state.spaces.length === 0) {
-      return <Loading />;
+      return (
+        <div className="container-center">
+          <div className="container-center-inner-wide">
+            <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
+            <p>{this.props.t("publicBookingNoSpaces")}</p>
+          </div>
+        </div>
+      );
     }
 
     if (this.state.submitted) {
@@ -217,6 +226,7 @@ class PublicBooking extends React.Component<Props, State> {
               value={this.state.email}
               onChange={(e: any) => this.setState({ email: e.target.value })}
               required={true}
+              pattern={Validation.EMAIL_PATTERN}
               maxLength={256}
             />
           </Form.Group>

@@ -12,7 +12,7 @@
     {
       "paragraph": "Hier kannst du deine Buchungsdetails ansehen oder die Buchung stornieren:",
       "label": "Details anzeigen",
-      "url": "{{detailsUrl}}"
+      "url": "{{detailsUrl}}?lang=de"
     }
   ]
 }

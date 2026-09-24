@@ -7,6 +7,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
+import BrowserUtil from "@/util/BrowserUtil";
 import Formatting from "@/util/Formatting";
 
 interface State {
@@ -41,6 +42,7 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
   }
 
   componentDidMount = async () => {
+    BrowserUtil.applyLanguageFromQuery();
     const { id } = this.props.router.query;
     if (typeof id !== "string" || id.length === 0) {
       return;
