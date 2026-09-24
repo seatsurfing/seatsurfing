@@ -49,15 +49,7 @@ export default function KioskPage() {
   // Pre-seed localStorage synchronously from ?lang= before the i18n library
   // initializes its hook state — this ensures the first effect run picks up
   // the correct language without needing a page reload.
-  useState(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const lang = new URLSearchParams(window.location.search).get("lang");
-      if (lang) localStorage.setItem("next-export-i18n-lang", lang);
-    } catch {
-      // ignore
-    }
-  });
+  useState(() => BrowserUtil.applyLanguageFromQuery(false));
 
   const getSecretCacheKey = (): string => {
     return `${KIOSK_SECRET_KEY}_${spaceId ?? ""}`;
@@ -80,15 +72,7 @@ export default function KioskPage() {
   // Apply ?lang= URL param — dispatch the library's event so already-mounted
   // hook instances also update (runs once on mount, uses window.location directly).
   useEffect(() => {
-    try {
-      const lang = new URLSearchParams(window.location.search).get("lang");
-      if (lang) {
-        localStorage.setItem("next-export-i18n-lang", lang);
-        document.dispatchEvent(new Event("localStorageLangChange"));
-      }
-    } catch {
-      // ignore
-    }
+    BrowserUtil.applyLanguageFromQuery();
   }, []);
 
   // Store kiosk secret from URL param into localStorage, then strip from URL.

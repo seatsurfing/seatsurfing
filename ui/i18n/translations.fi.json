@@ -615,7 +615,7 @@
   "publicBooking": "Public booking",
   "publicBookingAvailable": "Allow public bookings",
   "publicBookingAvailableHint": "Enables a public, unauthenticated page where visitors can request a booking for spaces that have public booking enabled. Activation is done per space in the respective settings.",
-  "publicBookingConfirmInvalid": "This confirmation link is invalid or has expired.",
+  "publicBookingConfirmInvalid": "This confirmation link is invalid or has expired. Perhaps the booking has already been confirmed.",
   "publicBookingConfirmNewBooking": "Request a new booking",
   "publicBookingConfirmPending": "Thank you! Your booking request has been confirmed and is now pending approval.",
   "publicBookingConfirmUnavailable": "Sorry, this space is no longer available for the requested time slot.",
@@ -633,5 +633,6 @@
   "publicBookingDetailsDeleted": "Your booking has been cancelled.",
   "publicBookingDetailsInvalid": "This booking details link is invalid or has expired.",
   "orgSignupFailedDomainHint": "It's also possible that your chosen domain is no longer available.",
-  "orgSignupRetry": "Start a new sign-up"
+  "orgSignupRetry": "Start a new sign-up",
+  "publicBookingNoSpaces": "There are currently no spaces available for public booking."
 }

@@ -28,7 +28,7 @@
   "publicBooking": "Öffentliche Buchung",
   "publicBookingAvailable": "Öffentliche Buchungen zulassen",
   "publicBookingAvailableHint": "Aktiviert eine öffentliche, nicht authentifizierte Seite, auf der Besucher eine Buchung für dafür freigegebene Räume anfragen können. Die Freigabe erfolgt je Raum in den entsprechenden Einstellungen.",
-  "publicBookingConfirmInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen.",
+  "publicBookingConfirmInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen. Möglicherweise wurde die Buchung bereits bestätigt.",
   "publicBookingConfirmNewBooking": "Neue Buchung anfragen",
   "publicBookingConfirmPending": "Vielen Dank! Deine Buchungsanfrage wurde bestätigt und wartet nun auf Genehmigung.",
   "publicBookingConfirmUnavailable": "Leider ist dieser Platz für den gewählten Zeitraum nicht mehr verfügbar.",
@@ -636,5 +636,6 @@
   "publicBookingDetailsDeleted": "Deine Buchung wurde storniert.",
   "publicBookingDetailsInvalid": "Dieser Link zu den Buchungsdetails ist ungültig oder abgelaufen.",
   "orgSignupFailedDomainHint": "Möglicherweise ist deine gewünschte Domain inzwischen nicht mehr verfügbar.",
-  "orgSignupRetry": "Neue Registrierung starten"
+  "orgSignupRetry": "Neue Registrierung starten",
+  "publicBookingNoSpaces": "Derzeit sind keine Räume für öffentliche Buchungen verfügbar."
 }

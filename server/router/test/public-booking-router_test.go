@@ -18,6 +18,10 @@ import (
 )
 
 func createTestPublicBookingAuthState(t *testing.T, space *Space, enter, leave time.Time) string {
+	return createTestPublicBookingAuthStateWithLanguage(t, space, enter, leave, "en")
+}
+
+func createTestPublicBookingAuthStateWithLanguage(t *testing.T, space *Space, enter, leave time.Time, language string) string {
 	payload := PublicBookingRequestPayload{
 		SpaceID:  space.ID,
 		Enter:    enter,
@@ -25,7 +29,7 @@ func createTestPublicBookingAuthState(t *testing.T, space *Space, enter, leave t
 		Name:     "Jane Doe",
 		Email:    "jane.doe@test.com",
 		Subject:  "Test",
-		Language: "en",
+		Language: language,
 	}
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
@@ -177,6 +181,10 @@ func TestPublicBookingConfirmConcurrentOnlyCreatesOneBooking(t *testing.T) {
 // a space whose sole approver is adminUser, so the approve endpoint can
 // subsequently approve/decline it and trigger the (async) notification mail.
 func setUpPublicBookingRequiringApproval(t *testing.T, org *Organization, adminUser *User) *BookingDetails {
+	return setUpPublicBookingRequiringApprovalWithLanguage(t, org, adminUser, "en")
+}
+
+func setUpPublicBookingRequiringApprovalWithLanguage(t *testing.T, org *Organization, adminUser *User, language string) *BookingDetails {
 	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 	_, space := CreateTestLocationAndSpace(org)
 	enablePublicBookingForOrgAndSpace(org, space)
@@ -194,7 +202,7 @@ func setUpPublicBookingRequiringApproval(t *testing.T, org *Organization, adminU
 
 	enter := time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC)
 	leave := time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC)
-	id := createTestPublicBookingAuthState(t, space, enter, leave)
+	id := createTestPublicBookingAuthStateWithLanguage(t, space, enter, leave, language)
 
 	req := NewHTTPRequest("POST", "/public-booking/confirm/"+id, "", nil)
 	res := ExecuteTestRequest(req)
@@ -303,6 +311,58 @@ func TestPublicBookingApprovedMailContainsDetailsLink(t *testing.T) {
 	CheckStringNotEmpty(t, approved.PublicExternalID)
 	CheckTestBool(t, true, strings.Contains(mail, "ui/book/details/"+approved.PublicExternalID+"/"))
 	CheckTestBool(t, false, strings.Contains(mail, approved.ID))
+}
+
+func TestPublicBookingApprovedMailGermanDetailsLinkHasLangParam(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	pending := setUpPublicBookingRequiringApprovalWithLanguage(t, org, adminUser, "de")
+
+	SendMailMockContent = ""
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+pending.ID+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	mail := waitForSendMailMockContent(t, 2*time.Second)
+	approved, err := GetBookingRepository().GetOne(pending.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, true, strings.Contains(mail, "ui/book/details/"+approved.PublicExternalID+"/?lang=de"))
+}
+
+func TestPublicBookingApprovedMailEnglishDetailsLinkHasNoLangParam(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	pending := setUpPublicBookingRequiringApproval(t, org, adminUser)
+
+	SendMailMockContent = ""
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+pending.ID+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	mail := waitForSendMailMockContent(t, 2*time.Second)
+	CheckTestBool(t, false, strings.Contains(mail, "lang=de"))
+}
+
+func TestPublicBookingDeclinedMailGermanNewBookingLinkHasLangParam(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+	pending := setUpPublicBookingRequiringApprovalWithLanguage(t, org, adminUser, "de")
+
+	SendMailMockContent = ""
+	payload := `{"approved": false}`
+	req := NewHTTPRequest("POST", "/booking/"+pending.ID+"/approve", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	mail := waitForSendMailMockContent(t, 2*time.Second)
+	CheckTestBool(t, true, strings.Contains(mail, "ui/book/?lang=de"))
 }
 
 func TestPublicBookingDetailsReturnsBookingForApprovedFutureBooking(t *testing.T) {

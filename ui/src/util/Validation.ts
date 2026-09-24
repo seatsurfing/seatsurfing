@@ -3,6 +3,8 @@ export default class Validation {
     "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$";
   static readonly HUMAN_NAME_PATTERN =
     "^[\\p{L}\\p{N}\\-'.](?:[\\p{L}\\p{N} \\-'.]*[\\p{L}\\p{N}\\-'.])?$";
+  static readonly EMAIL_PATTERN =
+    "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
   static readonly ROLE_NAME_PATTERN =
     "^[\\p{L}\\p{N}_\\-](?:[\\p{L}\\p{N} _\\-]*[\\p{L}\\p{N}_\\-])?$";
 
