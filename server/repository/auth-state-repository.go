@@ -31,7 +31,7 @@ func GetAuthStateRepository() *AuthStateStore {
 }
 
 func (r *AuthStateStore) RunSchemaUpgrade(curVersion, targetVersion int) {
-	if curVersion < 57 {
+	if curVersion < 58 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE auth_states ADD COLUMN IF NOT EXISTS key VARCHAR NULL"); err != nil {
 			panic(err)
 		}
