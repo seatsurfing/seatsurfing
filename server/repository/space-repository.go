@@ -111,7 +111,7 @@ func (r *SpaceStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
-	if curVersion < 57 {
+	if curVersion < 58 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE spaces " +
 			"ADD COLUMN IF NOT EXISTS public_bookings_enabled boolean NOT NULL DEFAULT FALSE"); err != nil {
 			panic(err)
