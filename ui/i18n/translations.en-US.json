@@ -425,7 +425,6 @@
   "optional": "Enabled (default optional)",
   "org": "Organization",
   "orgId": "Instance ID",
-  "orgSignupFailed": "That didn't work as expected! Maybe your registration has timed out.",
   "orgSignupGoToLogin": "Continue to the admin panel",
   "orgSignupSuccess": "You're ready to go! Your Seatsurfing organization has been set up.",
   "outcome": "Outcome",
@@ -634,7 +633,10 @@
   "publicBookingDetailsDeleteConfirm": "Are you sure you want to cancel this booking?",
   "publicBookingDetailsDeleted": "Your booking has been cancelled.",
   "publicBookingDetailsInvalid": "This booking details link is invalid or has expired.",
-  "orgSignupFailedDomainHint": "It's also possible that your chosen domain is no longer available.",
   "orgSignupRetry": "Start a new sign-up",
+  "orgSignupFailedIntro": "We couldn't complete your sign-up. This may have one of the following reasons:",
+  "orgSignupFailedReasonAlreadyConfirmed": "You have already confirmed your sign-up and your Seatsurfing instance is ready to use. Please check your inbox (and your spam folder) for the confirmation email.",
+  "orgSignupFailedReasonDomain": "Your chosen domain is no longer available.",
+  "orgSignupFailedReasonTimeout": "Your registration has timed out.",
   "publicBookingNoSpaces": "There are currently no spaces available for public booking."
 }
