@@ -408,7 +408,6 @@
   "optional": "啟用（預設可選）",
   "org": "組織機構",
   "orgId": "實例ID",
-  "orgSignupFailed": "這沒有達到預期效果！也許您的註冊已超時。",
   "orgSignupGoToLogin": "繼續進入管理面板",
   "orgSignupSuccess": "你準備好了！您的 Seatsurfing 組織已建立。",
   "outcome": "Outcome",
@@ -632,6 +631,9 @@
   "publicBookingDetailsDeleteConfirm": "Are you sure you want to cancel this booking?",
   "publicBookingDetailsDeleted": "Your booking has been cancelled.",
   "publicBookingDetailsInvalid": "This booking details link is invalid or has expired.",
-  "orgSignupFailedDomainHint": "It's also possible that your chosen domain is no longer available.",
-  "orgSignupRetry": "Start a new sign-up"
+  "orgSignupRetry": "Start a new sign-up",
+  "orgSignupFailedIntro": "We couldn't complete your sign-up. This may have one of the following reasons:",
+  "orgSignupFailedReasonAlreadyConfirmed": "You have already confirmed your sign-up and your Seatsurfing instance is ready to use. Please check your inbox (and your spam folder) for the confirmation email.",
+  "orgSignupFailedReasonDomain": "Your chosen domain is no longer available.",
+  "orgSignupFailedReasonTimeout": "Your registration has timed out."
 }

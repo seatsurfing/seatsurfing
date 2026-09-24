@@ -80,8 +80,12 @@ class ConfirmSignup extends React.Component<Props, State> {
       } else {
         result = (
           <div>
-            <p>{this.props.t("orgSignupFailed")}</p>
-            <p>{this.props.t("orgSignupFailedDomainHint")}</p>
+            <p>{this.props.t("orgSignupFailedIntro")}</p>
+            <ul className="text-start">
+              <li>{this.props.t("orgSignupFailedReasonAlreadyConfirmed")}</li>
+              <li>{this.props.t("orgSignupFailedReasonTimeout")}</li>
+              <li>{this.props.t("orgSignupFailedReasonDomain")}</li>
+            </ul>
             <Link
               href="https://seatsurfing.io/sign-up"
               className="btn btn-primary"
@@ -95,8 +99,10 @@ class ConfirmSignup extends React.Component<Props, State> {
 
     return (
       <div className="container-center">
-        <div className="container-center-inner">
-          <SeatsurfingAppLogo />
+        <div className="container-center-inner-wide">
+          <div className="container-center-inner">
+            <SeatsurfingAppLogo />
+          </div>
           {loading}
           {result}
         </div>
