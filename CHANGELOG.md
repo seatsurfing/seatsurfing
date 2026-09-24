@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.128.3](https://github.com/seatsurfing/seatsurfing/compare/v1.128.2...v1.128.3) (2026-09-24)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** new booking filters "this week" and "next week" ([#2681](https://github.com/seatsurfing/seatsurfing/issues/2681)) ([f8f7858](https://github.com/seatsurfing/seatsurfing/commit/f8f78588a51bd3ae540896cb4f82d532baf2af94))
+* **booking-ui:** add lang query parameter for public booking mail links and update mail validation ([#2688](https://github.com/seatsurfing/seatsurfing/issues/2688)) ([80067a7](https://github.com/seatsurfing/seatsurfing/commit/80067a737796e447fd9a98085e50d611d3fd4d3c))
+* **main:** update texts on signup confirmation page ([#2687](https://github.com/seatsurfing/seatsurfing/issues/2687)) ([569e65c](https://github.com/seatsurfing/seatsurfing/commit/569e65ccf778bebe6779eac565a916faca44d998))
+
 ## [1.128.2](https://github.com/seatsurfing/seatsurfing/compare/v1.128.1...v1.128.2) (2026-09-24)
 
 
