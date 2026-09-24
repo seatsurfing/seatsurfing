@@ -143,6 +143,8 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 		if _, err := GetDatabase().DB().Exec("CREATE INDEX IF NOT EXISTS idx_bookings_location_time ON bookings(location_id, enter_time, leave_time)"); err != nil {
 			panic(err)
 		}
+	}
+	if curVersion < 58 {
 		// Public bookings (see public_bookings table) have no user account.
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ALTER COLUMN user_id DROP NOT NULL"); err != nil {
 			panic(err)
