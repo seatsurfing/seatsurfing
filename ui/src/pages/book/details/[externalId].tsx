@@ -8,6 +8,7 @@ import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Loading from "@/components/Loading";
 import ConfirmModal from "@/components/ConfirmModal";
 import Ajax from "@/util/Ajax";
+import BrowserUtil from "@/util/BrowserUtil";
 import Formatting from "@/util/Formatting";
 
 interface PublicBookingDetails {
@@ -46,6 +47,7 @@ class PublicBookingDetailsPage extends React.Component<Props, State> {
   }
 
   componentDidMount = async () => {
+    BrowserUtil.applyLanguageFromQuery();
     const { externalId } = this.props.router.query;
     if (typeof externalId !== "string" || externalId.length === 0) {
       return;
