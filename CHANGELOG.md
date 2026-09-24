@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.128.2](https://github.com/seatsurfing/seatsurfing/compare/v1.128.1...v1.128.2) (2026-09-24)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix DB upgrade to schema version 59 ([#2691](https://github.com/seatsurfing/seatsurfing/issues/2691)) ([4d3c5dd](https://github.com/seatsurfing/seatsurfing/commit/4d3c5dde0179a636043456bd4d6ba2d727656b1f))
+
 ## [1.128.1](https://github.com/seatsurfing/seatsurfing/compare/v1.128.0...v1.128.1) (2026-09-24)
 
 
