@@ -1,3 +1,5 @@
+import i18n from "../../i18n";
+
 export default class BrowserUtil {
   static LOCAL_STORAGE_KEY_SEARCH_VIEW = "searchListView";
   static LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW = "myBookingsListView";
@@ -27,7 +29,7 @@ export default class BrowserUtil {
     if (typeof window === "undefined") return;
     try {
       const lang = new URLSearchParams(window.location.search).get("lang");
-      if (!lang) return;
+      if (!lang || !Object.hasOwn(i18n.translations, lang)) return;
       window.localStorage.setItem("next-export-i18n-lang", lang);
       if (notify) document.dispatchEvent(new Event("localStorageLangChange"));
     } catch {
