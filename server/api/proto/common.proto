@@ -150,7 +150,7 @@ message AuthProvider {
 
 message AuthState {
   string id = 1;
-  string auth_provider_id = 2;
+  string key = 2;
   google.protobuf.Timestamp expiry = 3;
   int32 auth_state_type = 4;
   string payload = 5;

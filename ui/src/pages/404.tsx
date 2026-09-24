@@ -1,6 +1,6 @@
 import React from "react";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import SeatsurfingLogo from "@/components/SeatsurfingLogo";
+import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 
 interface Props {
   t: TranslationFunc;
@@ -15,7 +15,7 @@ class Error404 extends React.Component<Props> {
     return (
       <div className="container-center">
         <div className="container-center-inner">
-          <SeatsurfingLogo />
+          <SeatsurfingAppLogo />
           <p>
             <a href="/ui/">{this.props.t("error404")}</a>
           </p>

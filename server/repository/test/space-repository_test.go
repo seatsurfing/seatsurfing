@@ -237,12 +237,24 @@ func TestSpaceDeleteCascades(t *testing.T) {
 	}
 	CheckTestIsNil(t, GetRecurringBookingRepository().Create(recurringBooking))
 
+	pubBooking := &PublicBooking{Name: "Pub", Email: "pub@test.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(pubBooking))
+	booking2 := &Booking{SpaceID: space.ID, PublicID: NullUUID(pubBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(booking2))
+
+	otherPubBooking := &PublicBooking{Name: "OtherPub", Email: "otherpub@test.com"}
+	CheckTestIsNil(t, GetPublicBookingRepository().Create(otherPubBooking))
+	otherBooking2 := &Booking{SpaceID: otherSpace.ID, PublicID: NullUUID(otherPubBooking.ID), Enter: base.Add(2 * time.Hour), Leave: base.Add(3 * time.Hour)}
+	CheckTestIsNil(t, GetBookingRepository().Create(otherBooking2))
+
 	CheckTestIsNil(t, GetSpaceRepository().Delete(space))
 
 	// Dependent data for the deleted space is gone
 	_, err := GetBookingRepository().GetOne(booking.ID)
 	CheckTestBool(t, true, err != nil)
 	_, err = GetRecurringBookingRepository().GetOne(recurringBooking.ID)
+	CheckTestBool(t, true, err != nil)
+	_, err = GetPublicBookingRepository().GetOne(pubBooking.ID)
 	CheckTestBool(t, true, err != nil)
 	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	CheckTestBool(t, true, err == nil)
@@ -258,5 +270,7 @@ func TestSpaceDeleteCascades(t *testing.T) {
 	_, err = GetBookingRepository().GetOne(otherBooking.ID)
 	CheckTestIsNil(t, err)
 	_, err = GetSpaceRepository().GetOne(otherSpace.ID)
+	CheckTestIsNil(t, err)
+	_, err = GetPublicBookingRepository().GetOne(otherPubBooking.ID)
 	CheckTestIsNil(t, err)
 }

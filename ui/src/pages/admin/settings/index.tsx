@@ -20,6 +20,7 @@ import {
   HelpCircle as IconHelp,
   RefreshCw as IconRefresh,
   MoreVertical as IconMore,
+  ExternalLink as IconExternalLink,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -45,6 +46,7 @@ import ReloadModal from "@/components/ReloadModal";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import UpdateChecker from "@/util/UpdateChecker";
+import Navigation from "@/util/Navigation";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
 
@@ -87,6 +89,8 @@ interface State {
   enforceTOTP: number;
   kioskSecret: string;
   kioskModeEnabled: boolean;
+  publicBookingEnabled: boolean;
+  publicBookingEnabledSaved: boolean;
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
@@ -152,6 +156,8 @@ class Settings extends React.Component<Props, State> {
       enforceTOTP: Organization.ENFORCE_TOTP_DISABLED,
       kioskSecret: "",
       kioskModeEnabled: false,
+      publicBookingEnabled: false,
+      publicBookingEnabledSaved: false,
       hideReports: false,
       hideStats: false,
       installId: "",
@@ -267,6 +273,10 @@ class Settings extends React.Component<Props, State> {
           state.enforceTOTP = window.parseInt(s.value);
         if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
           state.kioskModeEnabled = s.value === "1";
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_ENABLED) {
+          state.publicBookingEnabled = s.value === "1";
+          state.publicBookingEnabledSaved = s.value === "1";
+        }
         if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
@@ -448,6 +458,10 @@ class Settings extends React.Component<Props, State> {
         this.state.kioskModeEnabled ? "1" : "0",
       ),
       new OrgSettings(
+        Organization.PREF_PUBLIC_BOOKING_ENABLED,
+        this.state.publicBookingEnabled ? "1" : "0",
+      ),
+      new OrgSettings(
         Organization.PREF_HIDE_REPORTS,
         this.state.hideReports ? "1" : "0",
       ),
@@ -461,6 +475,7 @@ class Settings extends React.Component<Props, State> {
       this.setState({
         submitting: false,
         showSavedModal: true,
+        publicBookingEnabledSaved: this.state.publicBookingEnabled,
       });
     } catch {
       this.setState({
@@ -1501,6 +1516,74 @@ class Settings extends React.Component<Props, State> {
               </Button>
             </Col>
           </Form.Group>
+
+          {/* PUBLIC BOOKING */}
+
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>
+              {this.props.t("publicBooking")}
+              <PremiumFeatureIcon />
+            </h4>
+          </div>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-publicBookingEnabled"
+                label={this.props.t("publicBookingAvailable")}
+                checked={
+                  this.state.publicBookingEnabled &&
+                  RuntimeConfig.INFOS.featurePublicBooking
+                }
+                disabled={!RuntimeConfig.INFOS.featurePublicBooking}
+                onChange={(e: any) =>
+                  this.setState({ publicBookingEnabled: e.target.checked })
+                }
+              />
+              <Form.Text className="text-muted">
+                {this.props.t("publicBookingAvailableHint")}
+              </Form.Text>
+            </Col>
+          </Form.Group>
+          {this.state.publicBookingEnabled && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
+                {this.props.t("publicBookingUrl")}
+              </Form.Label>
+              <Col sm="6">
+                <InputGroup>
+                  <Form.Control
+                    id="input-publicBookingUrl"
+                    type="text"
+                    value={
+                      Navigation.publicBookingUrl() +
+                      (this.state.publicBookingEnabledSaved
+                        ? ""
+                        : " (" + this.props.t("availableAfterSaving") + ")")
+                    }
+                    disabled={true}
+                    className={
+                      this.state.publicBookingEnabledSaved ? "" : "fst-italic"
+                    }
+                  />
+                  <CopyToClipboardButton
+                    text={Navigation.publicBookingUrl()}
+                    disabled={!this.state.publicBookingEnabledSaved}
+                  />
+                  <Button
+                    aria-label={this.props.t("publicBookingUrl")}
+                    variant="outline-secondary"
+                    href={Navigation.publicBookingUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    disabled={!this.state.publicBookingEnabledSaved}
+                  >
+                    <IconExternalLink className="feather" />
+                  </Button>
+                </InputGroup>
+              </Col>
+            </Form.Group>
+          )}
 
           {/* AUTH PROVIDERS */}
 

@@ -18,7 +18,6 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
-const passkeyAuthStateZeroID = "00000000-0000-0000-0000-000000000000"
 const passkeyAuthStateExpiry = 5 * time.Minute
 
 // passkeyMinResponseTime is the minimum duration enforced for finishPasskeyLogin
@@ -285,10 +284,10 @@ func (router *UserRouter) beginPasskeyRegistration(w http.ResponseWriter, r *htt
 		return
 	}
 	state := &AuthState{
-		AuthProviderID: user.ID,
-		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
-		AuthStateType:  AuthPasskeyRegistration,
-		Payload:        encryptedSD,
+		Expiry:        time.Now().Add(passkeyAuthStateExpiry),
+		AuthStateType: AuthPasskeyRegistration,
+		Payload:       encryptedSD,
+		Key:           user.ID,
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)
@@ -331,7 +330,7 @@ func (router *UserRouter) finishPasskeyRegistration(w http.ResponseWriter, r *ht
 		SendNotFound(w)
 		return
 	}
-	if state.AuthProviderID != user.ID {
+	if state.Key != user.ID {
 		SendForbidden(w)
 		return
 	}
@@ -510,10 +509,9 @@ func (router *AuthRouter) beginPasskeyLogin(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	state := &AuthState{
-		AuthProviderID: passkeyAuthStateZeroID,
-		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
-		AuthStateType:  AuthPasskeyLogin,
-		Payload:        encryptedPayload,
+		Expiry:        time.Now().Add(passkeyAuthStateExpiry),
+		AuthStateType: AuthPasskeyLogin,
+		Payload:       encryptedPayload,
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)
@@ -752,7 +750,7 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 			return passkey2FAHandled
 		}
 		// Ensure this challenge was issued for this specific user
-		if state.AuthProviderID != user.ID {
+		if state.Key != user.ID {
 			recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPasskey2FA, ErrorCode: AuthErrorPasskeyStateInvalid, ErrorDetail: "state was issued for a different user"})
 			SendForbidden(w)
 			return passkey2FAHandled
@@ -858,10 +856,10 @@ func (router *AuthRouter) handlePasskey2FA(w http.ResponseWriter, r *http.Reques
 		return passkey2FAHandled
 	}
 	state := &AuthState{
-		AuthProviderID: user.ID,
-		Expiry:         time.Now().Add(passkeyAuthStateExpiry),
-		AuthStateType:  AuthPasskey2FA,
-		Payload:        encryptedChallenge,
+		Expiry:        time.Now().Add(passkeyAuthStateExpiry),
+		AuthStateType: AuthPasskey2FA,
+		Payload:       encryptedChallenge,
+		Key:           user.ID,
 	}
 	if err := GetAuthStateRepository().Create(state); err != nil {
 		log.Println(err)

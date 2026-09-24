@@ -176,7 +176,7 @@ func TestAuthProviderRoundTrip(t *testing.T) {
 
 func TestAuthStateRoundTrip(t *testing.T) {
 	now := time.Now().UTC().Round(time.Second)
-	a := &AuthState{ID: "a1", AuthProviderID: "p1", Expiry: now, AuthStateType: AuthRequestState, Payload: "payload"}
+	a := &AuthState{ID: "a1", Key: "p1", Expiry: now, AuthStateType: AuthRequestState, Payload: "payload"}
 	got := authStateFromProto(authStateToProto(a))
 	if !got.Expiry.Equal(a.Expiry) {
 		t.Errorf("Expiry mismatch: got=%v want=%v", got.Expiry, a.Expiry)

@@ -254,10 +254,10 @@ func TestAuthVerify(t *testing.T) {
 	}
 	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
 	authState := &AuthState{
-		AuthProviderID: authProvider.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthResponseCache,
-		Payload:        string(payloadAuthStateJson),
+		Key:           authProvider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthResponseCache,
+		Payload:       string(payloadAuthStateJson),
 	}
 	GetAuthStateRepository().Create(authState)
 
@@ -568,10 +568,10 @@ func TestAuthProviderBinding(t *testing.T) {
 	}
 	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
 	authState := &AuthState{
-		AuthProviderID: authProvider1.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthResponseCache,
-		Payload:        string(payloadAuthStateJson),
+		Key:           authProvider1.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthResponseCache,
+		Payload:       string(payloadAuthStateJson),
 	}
 	GetAuthStateRepository().Create(authState)
 
@@ -592,10 +592,10 @@ func TestAuthProviderBinding(t *testing.T) {
 	}
 	payloadAuthStateJson2, _ := json.Marshal(payloadAuthState2)
 	authState2 := &AuthState{
-		AuthProviderID: authProvider2.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthResponseCache,
-		Payload:        string(payloadAuthStateJson2),
+		Key:           authProvider2.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthResponseCache,
+		Payload:       string(payloadAuthStateJson2),
 	}
 	GetAuthStateRepository().Create(authState2)
 
@@ -632,10 +632,10 @@ func TestAuthProviderBindingBackwardsCompatibility(t *testing.T) {
 	}
 	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
 	authState := &AuthState{
-		AuthProviderID: authProvider.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthResponseCache,
-		Payload:        string(payloadAuthStateJson),
+		Key:           authProvider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthResponseCache,
+		Payload:       string(payloadAuthStateJson),
 	}
 	GetAuthStateRepository().Create(authState)
 
@@ -666,10 +666,10 @@ func TestAuthVerifyDuplicateRequestWithinGraceWindow(t *testing.T) {
 	}
 	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
 	authState := &AuthState{
-		AuthProviderID: authProvider.ID,
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthResponseCache,
-		Payload:        string(payloadAuthStateJson),
+		Key:           authProvider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthResponseCache,
+		Payload:       string(payloadAuthStateJson),
 	}
 	GetAuthStateRepository().Create(authState)
 	createdState, err := GetAuthStateRepository().GetOne(authState.ID)
@@ -708,10 +708,10 @@ func TestAuthVerifyExpiredState(t *testing.T) {
 	}
 	payloadAuthStateJson, _ := json.Marshal(payloadAuthState)
 	authState := &AuthState{
-		AuthProviderID: authProvider.ID,
-		Expiry:         time.Now().Add(-1 * time.Minute),
-		AuthStateType:  AuthResponseCache,
-		Payload:        string(payloadAuthStateJson),
+		Key:           authProvider.ID,
+		Expiry:        time.Now().Add(-1 * time.Minute),
+		AuthStateType: AuthResponseCache,
+		Payload:       string(payloadAuthStateJson),
 	}
 	GetAuthStateRepository().Create(authState)
 
@@ -1083,10 +1083,9 @@ func TestAuthCompletePasswordResetExpiredState(t *testing.T) {
 	GetUserRepository().Update(user)
 
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(-time.Minute),
-		AuthStateType:  AuthResetPasswordRequest,
-		Payload:        user.ID,
+		Expiry:        time.Now().Add(-time.Minute),
+		AuthStateType: AuthResetPasswordRequest,
+		Payload:       user.ID,
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		t.Fatal(err)
@@ -1112,10 +1111,9 @@ func TestAuthCompleteUserInvitationExpiredState(t *testing.T) {
 	GetUserRepository().Update(user)
 
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(-time.Minute),
-		AuthStateType:  AuthInviteUser,
-		Payload:        user.ID,
+		Expiry:        time.Now().Add(-time.Minute),
+		AuthStateType: AuthInviteUser,
+		Payload:       user.ID,
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		t.Fatal(err)

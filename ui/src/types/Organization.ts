@@ -49,6 +49,7 @@ export default class Organization extends Entity {
   static readonly PREF_SYS_INSTALL_ID = "_sys_install_id";
   static readonly PREF_HIDE_REPORTS = "hide_reports";
   static readonly PREF_HIDE_STATS = "hide_stats";
+  static readonly PREF_PUBLIC_BOOKING_ENABLED = "public_booking_enabled";
 
   name: string;
   contactFirstname: string;

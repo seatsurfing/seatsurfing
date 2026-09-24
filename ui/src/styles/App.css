@@ -200,11 +200,18 @@ h2 {
 
 .seatsurfing-logo {
   width: 100%;
+  max-width: 330px;
   margin-bottom: 50px;
 }
 
 [data-bs-theme="dark"] .seatsurfing-logo {
   filter: invert(1);
+}
+
+.custom-logo {
+  max-width: 330px;
+  max-height: 80px;
+  margin-bottom: 50px;
 }
 
 /* Bootstrap's outline-secondary button hardcodes a light-mode gray

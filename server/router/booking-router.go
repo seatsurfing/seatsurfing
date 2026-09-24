@@ -56,6 +56,7 @@ type GetBookingResponse struct {
 	UserEmail     string           `json:"userEmail"`
 	UserFirstname string           `json:"userFirstname"`
 	UserLastname  string           `json:"userLastname"`
+	Public        bool             `json:"public"`
 	Approved      bool             `json:"approved"`
 	Space         GetSpaceResponse `json:"space"`
 	RecurringID   string           `json:"recurringId"`
@@ -132,6 +133,13 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 	if !router.isValidApproverForSpace(requestUser.ID, e.SpaceID) {
 		SendForbidden(w)
 		return
+	}
+	if e.PublicID != "" {
+		publicBookingEnabled, _ := GetSettingsRepository().GetBool(e.Space.Location.OrganizationID, SettingPublicBookingEnabled.Name)
+		if !publicBookingEnabled {
+			SendForbidden(w)
+			return
+		}
 	}
 	m := &SetBookingApprovalRequest{}
 	if UnmarshalBody(r, m) != nil {
@@ -409,6 +417,10 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
+	if e.PublicID != "" {
+		SendForbidden(w)
+		return
+	}
 	var m CreateBookingRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
@@ -447,6 +459,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.ID = e.ID
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
+	eNew.PublicID = e.PublicID
 	eNew.Approved = e.Approved
 	if m.UserEmail != "" {
 		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
@@ -1243,20 +1256,6 @@ func (router *BookingRouter) getSpaceRequiresApproval(orgID string, e *Space) bo
 }
 
 func (router *BookingRouter) sendMailNotification(e *Booking, notification BookingMailNotification) {
-	active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
-	if err != nil || !active {
-		return
-	}
-	user, err := GetUserRepository().GetOne(e.UserID)
-	if err != nil || user == nil {
-		log.Println(err)
-		return
-	}
-	org, err := GetOrganizationRepository().GetOne(user.OrganizationID)
-	if err != nil || org == nil {
-		log.Println(err)
-		return
-	}
 	space, err := GetSpaceRepository().GetOne(e.SpaceID)
 	if err != nil {
 		log.Println(err)
@@ -1267,6 +1266,53 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 		log.Println(err)
 		return
 	}
+
+	recipientEmail := ""
+	recipientName := ""
+	var org *Organization
+	language := ""
+	if e.UserID == "" {
+		// Public booking: no user account, no opt-out preference.
+		// Recipient info (including language, as submitted with the
+		// original booking request) is taken from e.PublicName/Email/
+		// Language as already loaded by the caller - the public_bookings
+		// row itself may already be gone by now (e.g. declining a booking
+		// deletes it before this notification is sent).
+		var err error
+		recipientEmail = e.PublicEmail
+		recipientName = SafeRecipientName(e.PublicName, e.PublicEmail)
+		org, err = GetOrganizationRepository().GetOne(location.OrganizationID)
+		if err != nil || org == nil {
+			log.Println(err)
+			return
+		}
+		language = org.Language
+		if e.PublicLanguage != "" {
+			language = e.PublicLanguage
+		}
+	} else {
+		active, err := GetUserPreferencesRepository().GetBool(e.UserID, PreferenceMailNotifications.Name)
+		if err != nil || !active {
+			return
+		}
+		user, err := GetUserRepository().GetOne(e.UserID)
+		if err != nil || user == nil {
+			log.Println(err)
+			return
+		}
+		org, err = GetOrganizationRepository().GetOne(user.OrganizationID)
+		if err != nil || org == nil {
+			log.Println(err)
+			return
+		}
+		recipientEmail = user.Email
+		recipientName = user.GetSafeRecipientName()
+		language = org.Language
+		if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
+			language = userLang
+		}
+	}
+
 	attachments := []*MailAttachment{}
 	if notification == BookingMailNotificationCreated || notification == BookingMailNotificationUpdated || notification == BookingMailNotificationApproved {
 		calDavEvent, err := router.getCalDavEventFromBooking(e)
@@ -1299,27 +1345,42 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	}
 	vars := map[string]string{
 		"orgDomain":     FormatURL(domain.DomainName) + "/",
-		"recipientName": user.GetSafeRecipientName(),
+		"recipientName": recipientName,
 		"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 		"areaName":      location.Name,
 		"spaceName":     space.Name,
 		"subject":       subject,
 	}
+	// Public bookers have no account, so their approved/declined mails use
+	// dedicated templates without the "your bookings" button (there is no
+	// bookings page for them to sign into).
+	isPublicBooking := e.UserID == ""
+	if isPublicBooking && notification == BookingMailNotificationApproved {
+		vars["detailsUrl"] = FormatURL(domain.DomainName) + "/ui/book/details/" + e.PublicExternalID + "/"
+	}
 	template := GetEmailTemplatePathBookingCreated()
 	if notification == BookingMailNotificationUpdated {
 		template = GetEmailTemplatePathBookingUpdated()
 	} else if notification == BookingMailNotificationDeclined {
-		template = GetEmailTemplatePathBookingDeclined()
+		if isPublicBooking {
+			template = GetEmailTemplatePathPublicBookingDeclined()
+		} else {
+			template = GetEmailTemplatePathBookingDeclined()
+		}
 	} else if notification == BookingMailNotificationApproved {
-		template = GetEmailTemplatePathBookingApproved()
+		if isPublicBooking {
+			template = GetEmailTemplatePathPublicBookingApproved()
+		} else {
+			template = GetEmailTemplatePathBookingApproved()
+		}
 	} else if notification == BookingMailNotificationDeleted {
-		template = GetEmailTemplatePathBookingDeleted()
+		if isPublicBooking {
+			template = GetEmailTemplatePathPublicBookingDeleted()
+		} else {
+			template = GetEmailTemplatePathBookingDeleted()
+		}
 	}
-	language := org.Language
-	if userLang, err := GetUserPreferencesRepository().Get(e.UserID, PreferenceMailLanguage.Name); err == nil && userLang != "" {
-		language = userLang
-	}
-	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: user.Email}, template, language, vars, attachments, org.ID); err != nil {
+	if err := SendEmailWithAttachmentsAndOrg(&MailAddress{Address: recipientEmail}, template, language, vars, attachments, org.ID); err != nil {
 		log.Println(err)
 		return
 	}
@@ -1392,11 +1453,22 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		return
 	}
 
-	// Get booking user info
-	bookingUser, err := GetUserRepository().GetOne(e.UserID)
-	if err != nil {
-		log.Println("Error getting booking user:", err)
-		return
+	// Get booking requester info (a real user, or a public booker)
+	bookingUserEmail := ""
+	if e.UserID == "" {
+		publicBooking, err := GetPublicBookingRepository().GetOne(string(e.PublicID))
+		if err != nil || publicBooking == nil {
+			log.Println("Error getting public booking:", err)
+			return
+		}
+		bookingUserEmail = publicBooking.Email
+	} else {
+		bookingUser, err := GetUserRepository().GetOne(e.UserID)
+		if err != nil {
+			log.Println("Error getting booking user:", err)
+			return
+		}
+		bookingUserEmail = bookingUser.Email
 	}
 
 	// Collect all unique approver user IDs who have the preference enabled
@@ -1444,7 +1516,7 @@ func (router *BookingRouter) sendApprovalRequestNotifications(e *Booking) {
 		vars := map[string]string{
 			"orgDomain":     FormatURL(domain.DomainName) + "/",
 			"recipientName": approver.GetSafeRecipientName(),
-			"userEmail":     bookingUser.Email,
+			"userEmail":     bookingUserEmail,
 			"date":          e.Enter.Format("2006-01-02 15:04") + " - " + e.Leave.Format("2006-01-02 15:04"),
 			"areaName":      location.Name,
 			"spaceName":     space.Name,
@@ -1507,6 +1579,11 @@ func (router *BookingRouter) copyToRestModel(e *BookingDetails) *GetBookingRespo
 	m.UserEmail = e.UserEmail
 	m.UserFirstname = e.UserFirstname
 	m.UserLastname = e.UserLastname
+	if e.UserID == "" {
+		m.Public = true
+		m.UserEmail = e.PublicEmail
+		m.UserFirstname = e.PublicName
+	}
 	m.SpaceID = e.SpaceID
 	m.Subject = e.Subject
 	m.Enter, _ = GetLocationRepository().AttachTimezoneInformation(e.Enter, &e.Space.Location)

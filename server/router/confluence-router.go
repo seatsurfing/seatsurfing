@@ -99,10 +99,9 @@ func (router *ConfluenceRouter) serverLogin(w http.ResponseWriter, r *http.Reque
 		UserID:    userID,
 	}
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(time.Minute * 5),
-		AuthStateType:  AuthAtlassian,
-		Payload:        marshalAuthStateLoginPayload(payload),
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthAtlassian,
+		Payload:       marshalAuthStateLoginPayload(payload),
 	}
 	if err := GetAuthStateRepository().Create(authState); err != nil {
 		recordAuthEvent(r, &AuthEvent{OrganizationID: org.ID, Email: userID, Method: AuthMethodConfluence, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to create auth state: " + err.Error()})

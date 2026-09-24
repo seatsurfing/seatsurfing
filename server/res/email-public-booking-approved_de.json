@@ -1,0 +1,18 @@
+{
+  "subject": "Deine Seatsurfing Buchung: Genehmigt",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "deine Buchung wurde genehmigt.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "paragraph": "Hier kannst du deine Buchungsdetails ansehen oder die Buchung stornieren:",
+      "label": "Details anzeigen",
+      "url": "{{detailsUrl}}"
+    }
+  ]
+}

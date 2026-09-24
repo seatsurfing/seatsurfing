@@ -4,7 +4,7 @@ import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import SeatsurfingLogo from "@/components/SeatsurfingLogo";
+import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Ajax from "@/util/Ajax";
 
 interface State {
@@ -96,7 +96,7 @@ class ConfirmSignup extends React.Component<Props, State> {
     return (
       <div className="container-center">
         <div className="container-center-inner">
-          <SeatsurfingLogo />
+          <SeatsurfingAppLogo />
           {loading}
           {result}
         </div>

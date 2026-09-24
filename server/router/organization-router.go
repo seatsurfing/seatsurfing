@@ -425,10 +425,9 @@ func (router *OrganizationRouter) update(w http.ResponseWriter, r *http.Request)
 		}
 		json, _ := json.Marshal(payload)
 		authState := &AuthState{
-			AuthStateType:  AuthChangeOrgEmail,
-			Payload:        string(json),
-			Expiry:         time.Now().Add(time.Minute * 5),
-			AuthProviderID: GetSettingsRepository().GetNullUUID(),
+			AuthStateType: AuthChangeOrgEmail,
+			Payload:       string(json),
+			Expiry:        time.Now().Add(time.Minute * 5),
 		}
 		if err := GetAuthStateRepository().Create(authState); err != nil {
 			log.Println(err)
@@ -487,10 +486,9 @@ func (router *OrganizationRouter) delete(w http.ResponseWriter, r *http.Request)
 		Code:           code,
 	}
 	authState := &AuthState{
-		AuthProviderID: GetSettingsRepository().GetNullUUID(),
-		Expiry:         time.Now().Add(time.Hour * 1),
-		AuthStateType:  AuthDeleteOrg,
-		Payload:        marshalAuthStateOrgDeletionRequestPayload(payload),
+		Expiry:        time.Now().Add(time.Hour * 1),
+		AuthStateType: AuthDeleteOrg,
+		Payload:       marshalAuthStateOrgDeletionRequestPayload(payload),
 	}
 	GetAuthStateRepository().Create(authState)
 	if err := router.SendOrgConfirmDeleteOrgEmail(user, authState.ID, e); err != nil {

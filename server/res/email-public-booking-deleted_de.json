@@ -1,0 +1,17 @@
+{
+  "subject": "Deine Seatsurfing Buchung: Storniert",
+  "headline": "Hallo {{recipientName}},",
+  "paragraphs": [
+    "deine Buchung wurde storniert.",
+    "Datum: {{date}}",
+    "Bereich: {{areaName}}",
+    "Platz: {{spaceName}}",
+    "Betreff: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "Neue Buchung",
+      "url": "{{orgDomain}}ui/book/"
+    }
+  ]
+}

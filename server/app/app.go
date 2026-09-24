@@ -590,6 +590,7 @@ func (a *App) InitializeRouter() {
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}
+	routers["/public-booking/"] = &PublicBookingRouter{}
 	builtInPrefixes := make([]string, 0, len(routers))
 	for route, r := range routers {
 		builtInPrefixes = append(builtInPrefixes, route)
@@ -724,6 +725,7 @@ func (a *App) InitializeSingleOrgSettings() {
 		GetSettingsRepository().Set(org.ID, api.SettingFeatureAuthProviders.Name, "1")
 		GetSettingsRepository().Set(org.ID, api.SettingFeatureRecurringBookings.Name, "1")
 		GetSettingsRepository().Set(org.ID, api.SettingFeatureKioskMode.Name, "1")
+		GetSettingsRepository().Set(org.ID, api.SettingFeaturePublicBooking.Name, "1")
 	}
 }
 

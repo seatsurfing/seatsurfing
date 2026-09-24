@@ -143,6 +143,11 @@ class Approvals extends React.Component<Props, State> {
         <td>{Formatting.getFormatterShort().format(booking.enter)}</td>
         <td>{Formatting.getFormatterShort().format(booking.leave)}</td>
         <td>{booking.subject}</td>
+        {RuntimeConfig.INFOS.publicBookingEnabled ? (
+          <td>{RendererUtils.state(booking.public)}</td>
+        ) : (
+          <></>
+        )}
         <td>
           <Button
             variant="success"
@@ -180,13 +185,16 @@ class Approvals extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
+    const removeColumns = RuntimeConfig.INFOS.publicBookingEnabled
+      ? [0, 8, 9]
+      : [0, 7, 8];
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-approvals", format: "xlsx" },
       [
         {
           name: "Seatsurfing Approvals",
           from: { table: "datatable" },
-          removeColumns: [0, 7, 8],
+          removeColumns,
         },
       ],
     );
@@ -278,6 +286,11 @@ class Approvals extends React.Component<Props, State> {
               <th>{this.props.t("enter")}</th>
               <th>{this.props.t("leave")}</th>
               <th>{this.props.t("subject")}</th>
+              {RuntimeConfig.INFOS.publicBookingEnabled ? (
+                <th>{this.props.t("public")}</th>
+              ) : (
+                <></>
+              )}
               <th></th>
               <th></th>
             </tr>
