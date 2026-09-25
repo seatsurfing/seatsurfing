@@ -69,18 +69,6 @@ export default class DateUtil {
     return this.getDateString(0);
   }
 
-  static convertToUTC = (date: Date): Date => {
-    return new Date(
-      date.getUTCFullYear(),
-      date.getUTCMonth(),
-      date.getUTCDate(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      date.getUTCSeconds(),
-      0,
-    );
-  };
-
   static convertToFakeUTCDate(d: Date): Date {
     return new Date(
       Date.UTC(
@@ -108,7 +96,7 @@ export default class DateUtil {
   }
 
   static isInFuture(date: Date): boolean {
-    return this.convertToUTC(date) > new Date();
+    return this.convertFromFakeUTCDate(date) > new Date();
   }
 
   static isAfterToday(date: Date): boolean {
@@ -116,7 +104,7 @@ export default class DateUtil {
   }
 
   static isInPast(date: Date): boolean {
-    return this.convertToUTC(date) < new Date();
+    return this.convertFromFakeUTCDate(date) < new Date();
   }
 
   static isToday(date: Date): boolean {

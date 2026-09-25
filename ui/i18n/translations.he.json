@@ -640,7 +640,6 @@
   "orgSignupFailedReasonTimeout": "Your registration has timed out.",
   "publicBookingNoSpaces": "There are currently no spaces available for public booking.",
   "bookingCalendar": "Booking calendar",
-  "month": "Month",
   "next": "Next",
   "previous": "Previous"
 }

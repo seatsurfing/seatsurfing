@@ -1,4 +1,4 @@
-import { momentLocalizer, View } from "react-big-calendar";
+import { momentLocalizer } from "react-big-calendar";
 import moment from "moment-timezone";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Formatting from "@/util/Formatting";
@@ -20,14 +20,11 @@ export default class CalendarUtil {
     return momentLocalizer(moment);
   }
 
-  // Returns the visible range of the given view in fake UTC, including the
-  // leading and trailing days of adjacent months shown in the month view.
-  static getRange(date: Date, view: View): { start: Date; end: Date } {
+  static getWeekRange(date: Date): { start: Date; end: Date } {
     CalendarUtil.setupMoment();
-    const unit = view === "month" ? "month" : "week";
     return {
-      start: moment(date).startOf(unit).startOf("week").toDate(),
-      end: moment(date).endOf(unit).endOf("week").toDate(),
+      start: moment(date).startOf("week").toDate(),
+      end: moment(date).endOf("week").toDate(),
     };
   }
 }

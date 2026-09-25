@@ -2,13 +2,14 @@ import React from "react";
 import { ChevronLeft as IconBack } from "react-feather";
 import { NextRouter } from "next/router";
 import Link from "next/link";
-import { Calendar, View } from "react-big-calendar";
+import { Calendar } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
 import withReadyRouter from "@/components/withReadyRouter";
 import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
   bookingToCalendarEvent,
   CalendarEvent,
@@ -24,7 +25,6 @@ import RendererUtils from "@/util/RendererUtils";
 interface State {
   loading: boolean;
   date: Date;
-  view: View;
   events: CalendarEvent[];
 }
 
@@ -42,7 +42,6 @@ class UserBookingCalendar extends React.Component<Props, State> {
     this.state = {
       loading: true,
       date: DateUtil.getNowFakeUTC(),
-      view: "week",
       events: [],
     };
   }
@@ -62,21 +61,20 @@ class UserBookingCalendar extends React.Component<Props, State> {
       return;
     }
     this.user = user;
-    await this.loadBookings(this.state.date, this.state.view);
+    await this.loadBookings(this.state.date);
   };
 
-  loadBookings = async (date: Date, view: View) => {
+  loadBookings = async (date: Date) => {
     if (!this.user) {
       return;
     }
     const requestId = ++this.requestCounter;
-    const range = CalendarUtil.getRange(date, view);
+    const range = CalendarUtil.getWeekRange(date);
     const list = await Booking.listFiltered(
       DateUtil.convertFromFakeUTCDate(range.start),
       DateUtil.convertFromFakeUTCDate(range.end),
       this.user.email,
       "",
-      true,
     );
     if (requestId !== this.requestCounter) {
       return;
@@ -89,12 +87,7 @@ class UserBookingCalendar extends React.Component<Props, State> {
 
   onNavigate = (date: Date) => {
     this.setState({ date });
-    this.loadBookings(date, this.state.view);
-  };
-
-  onView = (view: View) => {
-    this.setState({ view });
-    this.loadBookings(this.state.date, view);
+    this.loadBookings(date);
   };
 
   render() {
@@ -135,23 +128,20 @@ class UserBookingCalendar extends React.Component<Props, State> {
           style={{ height: "calc(100vh - 220px)", width: "100%" }}
           date={this.state.date}
           onNavigate={this.onNavigate}
-          view={this.state.view}
-          views={["week", "month"]}
-          onView={this.onView}
+          defaultView="week"
+          views={["week"]}
           onSelectEvent={(e: CalendarEvent) =>
             this.props.router.push(`/admin/bookings/${e.bookingId}`)
           }
-          messages={{
-            today: this.props.t("today"),
-            previous: this.props.t("previous"),
-            next: this.props.t("next"),
-            week: this.props.t("week"),
-            month: this.props.t("month"),
-          }}
           eventPropGetter={(event: CalendarEvent) =>
             event.approved === false ? { style: { opacity: 0.5 } } : {}
           }
-          components={{ event: createCustomEvent() }}
+          components={{
+            toolbar: (props: object) => (
+              <CustomToolbar toolbar={props as any} t={this.props.t} />
+            ),
+            event: createCustomEvent(),
+          }}
         />
       </FullLayout>
     );
