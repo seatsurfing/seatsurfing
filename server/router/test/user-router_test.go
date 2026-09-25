@@ -1071,6 +1071,40 @@ func TestUpdateUserInvalidName(t *testing.T) {
 	}
 }
 
+func TestCreateUserInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	invalidEmails := []string{"test@test", "test", "test@", "@test.com", "Name <test@test.com>", "ä@test.com"}
+	for _, email := range invalidEmails {
+		payload := "{\"email\": \"" + email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+		req := NewHTTPRequest("POST", "/user/", admin.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	payload := "{\"email\": \"" + uuid.New().String() + "@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req := NewHTTPRequest("POST", "/user/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+}
+
+func TestUpdateUserInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	invalidEmails := []string{"test@test", "test", "test@", "@test.com", "Name <test@test.com>", "ä@test.com"}
+	for _, email := range invalidEmails {
+		payload := "{\"email\": \"" + email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+		req := NewHTTPRequest("PUT", "/user/"+user.ID, admin.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
 func TestApiTokenGenerateForbidden(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
