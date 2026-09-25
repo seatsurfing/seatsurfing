@@ -17,6 +17,7 @@ interface PublicBookableSpace {
   locationId: string;
   locationName: string;
   requireSubject: boolean;
+  bookableDays: number[];
 }
 
 interface State {
@@ -112,6 +113,13 @@ class PublicBooking extends React.Component<Props, State> {
         enter = DateUtil.copyDate(maxDate, enter);
         leave = DateUtil.copyDate(maxDate, leave);
       }
+      const bookableDate = this.findBookableDate(
+        spaces[0],
+        enter,
+        maxDaysInAdvance,
+      );
+      enter = DateUtil.copyDate(bookableDate, enter);
+      leave = DateUtil.copyDate(bookableDate, leave);
       this.setState({
         loading: false,
         spaces: spaces,
@@ -135,6 +143,57 @@ class PublicBooking extends React.Component<Props, State> {
     return maxDate;
   };
 
+  isDateBookable = (
+    space: PublicBookableSpace | undefined,
+    date: Date,
+  ): boolean => {
+    if (!space || !space.bookableDays || space.bookableDays.length === 0) {
+      return true;
+    }
+    return space.bookableDays.includes(date.getDay());
+  };
+
+  findBookableDate = (
+    space: PublicBookableSpace,
+    start: Date,
+    maxDaysInAdvance: number,
+  ): Date => {
+    const today = DateUtil.getTodayStart();
+    const date = new Date(start);
+    for (let i = 0; i < 7; i++) {
+      const daysAhead = Math.round(
+        (DateUtil.setHoursToMin(date).getTime() - today.getTime()) /
+          (24 * 60 * 60 * 1000),
+      );
+      if (daysAhead > maxDaysInAdvance) {
+        break;
+      }
+      if (this.isDateBookable(space, date)) {
+        return date;
+      }
+      date.setDate(date.getDate() + 1);
+    }
+    return start;
+  };
+
+  onSpaceChange = (spaceId: string) => {
+    const space = this.state.spaces.find((s) => s.spaceId === spaceId);
+    if (!space || this.isDateBookable(space, this.state.enter)) {
+      this.setState({ spaceId: spaceId });
+      return;
+    }
+    const date = this.findBookableDate(
+      space,
+      this.state.enter,
+      this.state.maxDaysInAdvance,
+    );
+    this.setState({
+      spaceId: spaceId,
+      enter: DateUtil.copyDate(date, this.state.enter),
+      leave: DateUtil.copyDate(date, this.state.leave),
+    });
+  };
+
   onSubmit = async (e: any) => {
     e.preventDefault();
     if (!this.state.spaceId) {
@@ -142,7 +201,8 @@ class PublicBooking extends React.Component<Props, State> {
     }
     if (
       this.state.leave <= this.state.enter ||
-      !DateUtil.isSameDay(this.state.enter, this.state.leave)
+      !DateUtil.isSameDay(this.state.enter, this.state.leave) ||
+      !this.isDateBookable(this.getSelectedSpace(), this.state.enter)
     ) {
       this.setState({ error: true });
       return;
@@ -234,7 +294,7 @@ class PublicBooking extends React.Component<Props, State> {
             <Form.Label>{this.props.t("space")}</Form.Label>
             <Form.Select
               value={this.state.spaceId}
-              onChange={(e: any) => this.setState({ spaceId: e.target.value })}
+              onChange={(e: any) => this.onSpaceChange(e.target.value)}
               required={true}
             >
               {this.state.spaces.map((s) => (
@@ -269,6 +329,9 @@ class PublicBooking extends React.Component<Props, State> {
               enableTime={false}
               minDate={DateUtil.getTodayStart()}
               maxDate={this.getMaxDate()}
+              isDateDisabled={(date: Date) =>
+                !this.isDateBookable(this.getSelectedSpace(), date)
+              }
             />
           </Form.Group>
           <Form.Group className="mb-3">

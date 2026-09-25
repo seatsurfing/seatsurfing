@@ -31,6 +31,7 @@ type GetPublicBookableSpaceResponse struct {
 	LocationID     string `json:"locationId"`
 	LocationName   string `json:"locationName"`
 	RequireSubject bool   `json:"requireSubject"`
+	BookableDays   []int  `json:"bookableDays"`
 }
 
 type GetPublicBookableSpacesResponse struct {
@@ -156,6 +157,7 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 			LocationID:     location.ID,
 			LocationName:   location.Name,
 			RequireSubject: space.RequireSubject,
+			BookableDays:   weekdaysFromString(location.BookableDays),
 		})
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
