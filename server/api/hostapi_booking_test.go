@@ -62,3 +62,11 @@ func TestSpaceAvailabilityInfosRoundTrip(t *testing.T) {
 		t.Fatalf("round-trip mismatch:\n got=%+v\nwant=%+v", got, in)
 	}
 }
+
+func TestLocationInfosDropInvalidWeekdays(t *testing.T) {
+	in := []*LocationInfo{{BookableDays: []int{-1, 0, 6, 7, 1 << 40}}}
+	got := locationInfosFromProto(locationInfosToProto(in))
+	if !reflect.DeepEqual(got[0].BookableDays, []int{0, 6}) {
+		t.Fatalf("unexpected weekdays: %v", got[0].BookableDays)
+	}
+}

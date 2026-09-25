@@ -251,7 +251,10 @@ func locationInfosToProto(in []*LocationInfo) []*hostapipb.LocationInfo {
 	for _, l := range in {
 		days := make([]int32, 0, len(l.BookableDays))
 		for _, d := range l.BookableDays {
-			days = append(days, int32(d))
+			// Weekdays are 0 (Sunday) to 6; anything else is invalid data.
+			if d >= 0 && d <= 6 {
+				days = append(days, int32(d))
+			}
 		}
 		out = append(out, &hostapipb.LocationInfo{
 			Location:     locationToProto(&l.Location),
