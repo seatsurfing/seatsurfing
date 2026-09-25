@@ -17,7 +17,9 @@ FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.27-bookworm AS server-
 RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 ARG TARGETPLATFORM
-RUN xx-apt install -y libc6-dev binutils gcc
+# Multi-Arch packages must match the native version; security mirrors may lag behind per architecture
+RUN printf 'Package: libssl3:*\nPin: version %s\nPin-Priority: 1001\n' "$(dpkg-query -W -f='${Version}' libssl3)" > /etc/apt/preferences.d/libssl3 && \
+    xx-apt install -y libc6-dev binutils gcc
 WORKDIR /go/src/app
 COPY server/go.mod server/go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -30,7 +32,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.27-bookworm AS healthcheck-builder
 COPY --from=xx / /
 ARG TARGETPLATFORM
-RUN xx-apt install -y libc6-dev binutils gcc
+# Multi-Arch packages must match the native version; security mirrors may lag behind per architecture
+RUN printf 'Package: libssl3:*\nPin: version %s\nPin-Priority: 1001\n' "$(dpkg-query -W -f='${Version}' libssl3)" > /etc/apt/preferences.d/libssl3 && \
+    xx-apt install -y libc6-dev binutils gcc
 WORKDIR /go/src/healthcheck
 COPY healthcheck/ .
 RUN --mount=type=cache,target=/root/.cache/go-build \
