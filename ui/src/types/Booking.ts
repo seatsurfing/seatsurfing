@@ -158,7 +158,6 @@ export default class Booking extends Entity {
     end: Date,
     user: string,
     location: string,
-    overlap: boolean = false,
   ): Promise<Booking[]> {
     const queryParams = new URLSearchParams();
     queryParams.set(
@@ -168,7 +167,6 @@ export default class Booking extends Entity {
     queryParams.set("end", DateUtil.convertToFakeUTCDate(end).toISOString());
     if (user) queryParams.set("user", user);
     if (location) queryParams.set("location", location);
-    if (overlap) queryParams.set("overlap", "1");
     return Ajax.get(`/booking/filter/?${queryParams.toString()}`).then(
       (result) => {
         const list: Booking[] = [];
