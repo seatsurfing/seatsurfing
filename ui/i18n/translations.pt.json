@@ -577,6 +577,7 @@
   "verifyDomainHowto": "Para verificar o domínio {{domain}}, adicione o seguinte registro TXT ao seu servidor DNS:",
   "verifyEmailHint": "Digite o código de verificação que foi enviado para seu novo endereço de email para confirmar a alteração.",
   "verifyNow": "Verificar agora",
+  "month": "Mês",
   "week": "Semana",
   "weekStartDay": "First day of week",
   "weekly": "semanalmente",

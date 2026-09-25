@@ -595,6 +595,7 @@
   "verifyDomainHowto": "Um die Domain {{domain}} zu bestätigen, füge im DNS-Server der Domain bitte folgenden TXT-Record hinzu:",
   "verifyEmailHint": "Bitte überprüfe deine E-Mails und gib den Verifizierungscode ein, um fortzufahren.",
   "verifyNow": "Jetzt bestätigen",
+  "month": "Monat",
   "week": "Woche",
   "weekStartDay": "Wochenbeginn",
   "weekly": "wöchentlich",

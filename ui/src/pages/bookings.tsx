@@ -23,7 +23,7 @@ import AjaxError from "@/util/AjaxError";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import AlertModal from "@/components/AlertModal";
 
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import { Calendar, momentLocalizer, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
   bookingToCalendarEvent,
@@ -45,6 +45,7 @@ interface State {
   cancelSeries: boolean;
   calendarDate: Date;
   calendarShow: boolean;
+  calendarView: View;
   workdays: number[];
   alertMessage: string | null;
 }
@@ -73,6 +74,7 @@ class Bookings extends React.Component<Props, State> {
           BrowserUtil.LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW,
           "1",
         ) === "1")(),
+      calendarView: "week",
       workdays: [],
       alertMessage: null,
     };
@@ -316,13 +318,20 @@ class Bookings extends React.Component<Props, State> {
                 padding: "10px",
                 margin: "auto",
               }}
-              defaultView="week"
+              view={this.state.calendarView}
+              onView={(view: View) => this.setState({ calendarView: view })}
               date={this.state.calendarDate}
-              onNavigate={(newDate: Date) => {
+              drilldownView="week"
+              onNavigate={(newDate: Date, view: View) => {
                 const today = DateUtil.getTodayStart();
                 const navigateDate = DateUtil.setHoursToMin(new Date(newDate));
                 if (navigateDate >= today) {
                   this.setState({ calendarDate: newDate });
+                } else if (
+                  view === "month" &&
+                  moment(newDate).endOf("month").toDate() >= today
+                ) {
+                  this.setState({ calendarDate: new Date() });
                 }
               }}
               onSelectEvent={(e) => {
@@ -331,7 +340,7 @@ class Bookings extends React.Component<Props, State> {
               }}
               culture={Formatting.Language}
               length={7}
-              views={["week"]}
+              views={["week", "month"]}
               eventPropGetter={(event: CalendarEvent) => {
                 if (event.approved === false) {
                   return { style: { opacity: 0.5 } };

@@ -577,6 +577,7 @@
   "verifyDomainHowto": "כדי לאמת את שם התחום {{domain}}, נא להוסיף את רשומת ה־TXT הבאה לשרת ה־DNS שלך:",
   "verifyEmailHint": "Please enter the verification code that has been sent to your new email address in order to persist the changed email address.",
   "verifyNow": "לאמת כעת",
+  "month": "חודש",
   "week": "Week",
   "weekStartDay": "First day of week",
   "weekly": "weekly",
