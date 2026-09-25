@@ -118,19 +118,20 @@ type Location struct {
 // ─── Space ───────────────────────────────────────────────────────────────────
 
 type Space struct {
-	ID             string
-	LocationID     string
-	Name           string
-	X              uint
-	Y              uint
-	Width          uint
-	Height         uint
-	Rotation       uint
-	RequireSubject bool
-	Enabled        bool
-	KioskEnabled   bool
-	Shape          string
-	FontSize       string
+	ID                   string
+	LocationID           string
+	Name                 string
+	X                    uint
+	Y                    uint
+	Width                uint
+	Height               uint
+	Rotation             uint
+	RequireSubject       bool
+	Enabled              bool
+	KioskEnabled         bool
+	Shape                string
+	FontSize             string
+	PublicBookingEnabled bool
 }
 
 type SpaceDetails struct {
@@ -150,6 +151,11 @@ type Booking struct {
 	Approved              bool
 	Subject               string
 	RecurringID           NullUUID
+	PublicID              NullUUID
+	PublicExternalID      string
+	PublicName            string
+	PublicEmail           string
+	PublicLanguage        string
 	CreatedAtUTC          *time.Time
 	LastInfoMailSentAtUTC *time.Time
 	ReminderSentAtUTC     *time.Time
@@ -164,7 +170,33 @@ type BookingDetails struct {
 }
 
 func (b *BookingDetails) GetSafeRecipientName() string {
+	if b.UserID == "" && b.UserEmail == "" {
+		return SafeRecipientName(b.PublicName, b.PublicEmail)
+	}
 	return SafeRecipientName(b.UserFirstname, b.UserEmail)
+}
+
+// ─── PublicBooking ──────────────────────────────────────────────────────────
+
+type PublicBooking struct {
+	ID           string
+	ExternalID   string
+	Name         string
+	Email        string
+	Language     string
+	CreatedAtUTC *time.Time
+}
+
+// PublicBookingRequestPayload is used for JSON marshaling into AuthState.Payload
+// for the public-booking double-opt-in confirmation flow.
+type PublicBookingRequestPayload struct {
+	SpaceID  string    `json:"spaceId"`
+	Enter    time.Time `json:"enter"`
+	Leave    time.Time `json:"leave"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Subject  string    `json:"subject"`
+	Language string    `json:"language"`
 }
 
 // ─── AuthProvider ─────────────────────────────────────────────────────────────
@@ -213,14 +245,18 @@ const (
 	AuthPasskeyRegistration  AuthStateType = 10
 	AuthPasskeyLogin         AuthStateType = 11
 	AuthPasskey2FA           AuthStateType = 12
+	AuthPublicBooking        AuthStateType = 13
 )
 
 type AuthState struct {
-	ID             string
-	AuthProviderID string
-	Expiry         time.Time
-	AuthStateType  AuthStateType
-	Payload        string
+	ID            string
+	Expiry        time.Time
+	AuthStateType AuthStateType
+	Payload       string
+	// Key is an indexable lookup value (e.g. an OAuth provider ID, user ID
+	// or email) used to look up or rate-limit states by something other
+	// than the state's own ID, without decoding the JSON Payload.
+	Key string
 }
 
 // AuthStateLoginPayload is used for JSON marshaling into AuthState.Payload.
@@ -289,6 +325,8 @@ var (
 	SettingFeatureKioskMode               SettingName = SettingName{Name: "feature_kiosk_mode", Type: SettingTypeBool}
 	SettingHideReports                    SettingName = SettingName{Name: "hide_reports", Type: SettingTypeBool}
 	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
+	SettingPublicBookingEnabled           SettingName = SettingName{Name: "public_booking_enabled", Type: SettingTypeBool}
+	SettingFeaturePublicBooking           SettingName = SettingName{Name: "feature_public_booking", Type: SettingTypeBool}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────

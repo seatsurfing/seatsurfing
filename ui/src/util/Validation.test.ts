@@ -210,4 +210,28 @@ describe("Validation", () => {
       expect(regex.test("Name@Domain")).toBe(false);
     });
   });
+
+  describe("EMAIL_PATTERN", () => {
+    // browsers compile the pattern attribute with the "v" flag
+    const regex = new RegExp(Validation.EMAIL_PATTERN, "v");
+
+    it("should match valid email addresses", () => {
+      expect(regex.test("john.doe@example.com")).toBe(true);
+      expect(regex.test("a+b_c%d-e@sub.example.co.uk")).toBe(true);
+    });
+
+    it("should reject addresses without a top-level domain", () => {
+      expect(regex.test("sadasdqsdasd@sdasdasd")).toBe(false);
+      expect(regex.test("user@localhost")).toBe(false);
+      expect(regex.test("user@example.c")).toBe(false);
+    });
+
+    it("should reject malformed addresses", () => {
+      expect(regex.test("")).toBe(false);
+      expect(regex.test("user")).toBe(false);
+      expect(regex.test("@example.com")).toBe(false);
+      expect(regex.test("user@@example.com")).toBe(false);
+      expect(regex.test("user name@example.com")).toBe(false);
+    });
+  });
 });

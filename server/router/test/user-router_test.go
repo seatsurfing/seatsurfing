@@ -244,10 +244,10 @@ func TestUserMergeUsersExpiredRequest(t *testing.T) {
 	GetUserRepository().Update(source)
 
 	authState := &AuthState{
-		AuthProviderID: target.ID,
-		Expiry:         time.Now().Add(-time.Minute),
-		AuthStateType:  AuthMergeRequest,
-		Payload:        source.ID,
+		Key:           target.ID,
+		Expiry:        time.Now().Add(-time.Minute),
+		AuthStateType: AuthMergeRequest,
+		Payload:       source.ID,
 	}
 	GetAuthStateRepository().Create(authState)
 
@@ -573,15 +573,8 @@ func TestUserCreateWithInvitation(t *testing.T) {
 
 	// Verify auth state was created
 	newUser, _ := GetUserRepository().GetOne(userID)
-	authStates, _ := GetAuthStateRepository().GetByAuthProviderID(GetSettingsRepository().GetNullUUID())
-	foundAuthState := false
-	for _, state := range authStates {
-		if state.AuthStateType == AuthInviteUser {
-			foundAuthState = true
-			break
-		}
-	}
-	CheckTestBool(t, true, foundAuthState)
+	authStates, _ := GetAuthStateRepository().GetActiveByPayloadAndType(userID, AuthInviteUser)
+	CheckTestBool(t, true, len(authStates) > 0)
 	CheckTestBool(t, true, newUser != nil)
 }
 
@@ -666,15 +659,9 @@ func TestUserCompleteInvitation(t *testing.T) {
 	userID := res.Header().Get("X-Object-Id")
 
 	// Find auth state
-	authStates, _ := GetAuthStateRepository().GetByAuthProviderID(GetSettingsRepository().GetNullUUID())
-	var invitationState *AuthState
-	for _, state := range authStates {
-		if state.AuthStateType == AuthInviteUser {
-			invitationState = state
-			break
-		}
-	}
-	CheckTestBool(t, true, invitationState != nil)
+	authStates, _ := GetAuthStateRepository().GetActiveByPayloadAndType(userID, AuthInviteUser)
+	CheckTestBool(t, true, len(authStates) > 0)
+	invitationState := authStates[0]
 
 	// Complete invitation
 	payload = "{\"password\": \"" + TestPasswordNew + "\"}"

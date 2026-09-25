@@ -1,0 +1,17 @@
+{
+  "subject": "Your Seatsurfing booking: Cancelled",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Your booking has been cancelled.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "label": "New booking",
+      "url": "{{orgDomain}}ui/book/"
+    }
+  ]
+}

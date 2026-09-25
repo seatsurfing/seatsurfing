@@ -218,6 +218,7 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingFeatureGroups.Name+"', '0'), "+
 		"($1, '"+SettingFeatureKioskMode.Name+"', '0'), "+
 		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
+		"($1, '"+SettingFeaturePublicBooking.Name+"', '0'), "+
 		"($1, '"+SettingAllowAnyUser.Name+"', '1'), "+
 		"($1, '"+SettingDailyBasisBooking.Name+"', '0'), "+
 		"($1, '"+SettingNoAdminRestrictions.Name+"', '0'), "+
@@ -246,7 +247,8 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingEnforceTOTP.Name+"', '0'), "+
 		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
 		"($1, '"+SettingHideReports.Name+"', '0'), "+
-		"($1, '"+SettingHideStats.Name+"', '0') "+
+		"($1, '"+SettingHideStats.Name+"', '0'), "+
+		"($1, '"+SettingPublicBookingEnabled.Name+"', '0') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)
 	return err

@@ -148,8 +148,12 @@ func (router *KioskRouter) toKioskBooking(b *KioskBookingEntry, showNames bool, 
 	if showNames {
 		if b.UserFirstname != "" || b.UserLastname != "" {
 			owner = strings.TrimSpace(b.UserFirstname + " " + b.UserLastname)
-		} else {
+		} else if b.UserEmail != "" {
 			owner = b.UserEmail
+		} else if b.PublicName != "" {
+			owner = b.PublicName
+		} else {
+			owner = b.PublicEmail
 		}
 		ownerVisible = true
 	}

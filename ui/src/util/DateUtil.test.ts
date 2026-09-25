@@ -58,6 +58,72 @@ describe("DateUtil", () => {
     });
   });
 
+  describe("getMondayOfWeek / getSundayOfWeek", () => {
+    it("should return Monday 00:00 and Sunday 23:59 for a weekday", () => {
+      const wednesday = new Date(2026, 8, 23, 14, 30);
+      const monday = DateUtil.getMondayOfWeek(wednesday);
+      const sunday = DateUtil.getSundayOfWeek(wednesday);
+
+      expect(monday).toEqual(new Date(2026, 8, 21, 0, 0, 0, 0));
+      expect(sunday).toEqual(new Date(2026, 8, 27, 23, 59, 59, 999));
+      expect(wednesday).toEqual(new Date(2026, 8, 23, 14, 30));
+    });
+
+    it("should treat Sunday as last day of the week", () => {
+      const sundayInput = new Date(2026, 8, 27, 10, 0);
+      expect(DateUtil.getMondayOfWeek(sundayInput)).toEqual(
+        new Date(2026, 8, 21, 0, 0, 0, 0),
+      );
+    });
+
+    it("should return same day for Monday", () => {
+      const mondayInput = new Date(2026, 8, 21, 10, 0);
+      expect(DateUtil.getMondayOfWeek(mondayInput)).toEqual(
+        new Date(2026, 8, 21, 0, 0, 0, 0),
+      );
+    });
+
+    it("should apply week offset across month boundaries", () => {
+      const date = new Date(2026, 8, 30, 12, 0);
+      expect(DateUtil.getMondayOfWeek(date, 1)).toEqual(
+        new Date(2026, 9, 5, 0, 0, 0, 0),
+      );
+      expect(DateUtil.getSundayOfWeek(date, -1)).toEqual(
+        new Date(2026, 8, 27, 23, 59, 59, 999),
+      );
+    });
+  });
+
+  describe("getThisWeekMonday / getNextWeekMonday", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should be based on the current date", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 8, 23, 9, 0));
+
+      expect(DateUtil.getThisWeekMonday()).toEqual(new Date(2026, 8, 21));
+      expect(DateUtil.getThisWeekSunday()).toEqual(
+        new Date(2026, 8, 27, 23, 59, 59, 999),
+      );
+      expect(DateUtil.getNextWeekMonday()).toEqual(new Date(2026, 8, 28));
+      expect(DateUtil.getNextWeekSunday()).toEqual(
+        new Date(2026, 9, 4, 23, 59, 59, 999),
+      );
+    });
+
+    it("should format week boundaries as local date strings", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 8, 21, 0, 30));
+
+      expect(DateUtil.getThisWeekMondayDateString()).toBe("2026-09-21");
+      expect(DateUtil.getThisWeekSundayDateString()).toBe("2026-09-27");
+      expect(DateUtil.getLastWeekMondayDateString()).toBe("2026-09-14");
+      expect(DateUtil.getLastWeekSundayDateString()).toBe("2026-09-20");
+    });
+  });
+
   describe("parseTimeString", () => {
     it("should parse a valid HH:MM string", () => {
       expect(DateUtil.parseTimeString("08:30")).toBe("08:30");

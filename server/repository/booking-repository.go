@@ -144,6 +144,18 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 59 {
+		// Public bookings (see public_bookings table) have no user account.
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ALTER COLUMN user_id DROP NOT NULL"); err != nil {
+			panic(err)
+		}
+		// bookings points at its public_bookings row via public_id,
+		// analogous to recurring_id.
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings " +
+			"ADD COLUMN IF NOT EXISTS public_id uuid"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
@@ -198,6 +210,19 @@ func (r *BookingStore) PurgeOldBookings(batchSize int) (int, error) {
 		return int(rowsAffected), err
 	}
 
+	// delete orphaned public bookings
+	_, err = GetDatabase().DB().Exec(`
+		DELETE FROM public_bookings
+		WHERE id NOT IN (
+			SELECT DISTINCT public_id
+			FROM bookings
+			WHERE public_id IS NOT NULL
+		)
+	`)
+	if err != nil {
+		return int(rowsAffected), err
+	}
+
 	return int(rowsAffected), nil
 }
 
@@ -207,12 +232,12 @@ func (r *BookingStore) Create(e *Booking) error {
 	// rather than taken as input, so the denormalized columns always reflect
 	// the space's actual (immutable) location and organization.
 	err := GetDatabase().DB().QueryRow("INSERT INTO bookings "+
-		"(user_id, space_id, location_id, organization_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, created_at_utc) "+
-		"SELECT $1, $2, spaces.location_id, locations.organization_id, $3, $4, $5, $6, $7, $8, $9 "+
+		"(user_id, space_id, location_id, organization_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id, public_id, created_at_utc) "+
+		"SELECT $1, $2, spaces.location_id, locations.organization_id, $3, $4, $5, $6, $7, $8, $9, $10 "+
 		"FROM spaces INNER JOIN locations ON locations.id = spaces.location_id "+
 		"WHERE spaces.id = $2 "+
 		"RETURNING id",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), time.Now().UTC()).Scan(&id)
+		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), time.Now().UTC()).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -256,16 +281,41 @@ func AcquireBookingCreateLock(userID, locationID string) (func(), error) {
 
 func (r *BookingStore) GetOne(id string) (*BookingDetails, error) {
 	e := &BookingDetails{}
-	err := GetDatabase().DB().QueryRow("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.public_id, COALESCE(public_bookings.external_id::text, ''), bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"users.email, users.firstname, users.lastname "+
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
+		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, ''), COALESCE(public_bookings.language, '') "+
 		"FROM bookings "+
 		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"INNER JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
 		"WHERE bookings.id = $1",
-		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		id).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.PublicID, &e.PublicExternalID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail, &e.PublicLanguage)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+// GetOneByExternalID looks up a public booking by its public_bookings
+// external_id (used by the public booking details/cancel page), as opposed
+// to GetOne's internal id which is never exposed to unauthenticated callers.
+func (r *BookingStore) GetOneByExternalID(externalID string) (*BookingDetails, error) {
+	e := &BookingDetails{}
+	err := GetDatabase().DB().QueryRow("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.public_id, COALESCE(public_bookings.external_id::text, ''), bookings.created_at_utc, bookings.reminder_sent_at_utc, "+
+		"spaces.id, spaces.location_id, spaces.name, "+
+		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
+		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, ''), COALESCE(public_bookings.language, '') "+
+		"FROM bookings "+
+		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
+		"INNER JOIN locations ON spaces.location_id = locations.id "+
+		"LEFT JOIN users ON bookings.user_id = users.id "+
+		"INNER JOIN public_bookings ON public_bookings.id = bookings.public_id "+
+		"WHERE public_bookings.external_id = $1",
+		externalID).Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.PublicID, &e.PublicExternalID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail, &e.PublicLanguage)
 	if err != nil {
 		return nil, err
 	}
@@ -279,6 +329,8 @@ type KioskBookingEntry struct {
 	UserEmail     string
 	UserFirstname string
 	UserLastname  string
+	PublicName    string
+	PublicEmail   string
 	Enter         time.Time
 	Leave         time.Time
 	Subject       string
@@ -290,14 +342,15 @@ func (r *BookingStore) GetCurrentAndNextBySpaceID(spaceID string, now time.Time)
 	var current *KioskBookingEntry
 	c := &KioskBookingEntry{}
 	err := GetDatabase().DB().QueryRow(
-		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
+		"SELECT bookings.id, COALESCE(bookings.user_id::text, ''), COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, ''), bookings.enter_time, bookings.leave_time, bookings.subject "+
 			"FROM bookings "+
-			"INNER JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
 			"WHERE bookings.space_id = $1 "+
 			"AND bookings.enter_time <= $2 AND bookings.leave_time >= $2 "+
 			"AND bookings.approved = true "+
 			"ORDER BY bookings.enter_time ASC LIMIT 1",
-		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.UserFirstname, &c.UserLastname, &c.Enter, &c.Leave, &c.Subject)
+		spaceID, now).Scan(&c.ID, &c.UserID, &c.UserEmail, &c.UserFirstname, &c.UserLastname, &c.PublicName, &c.PublicEmail, &c.Enter, &c.Leave, &c.Subject)
 	if err == nil {
 		current = c
 	}
@@ -305,14 +358,15 @@ func (r *BookingStore) GetCurrentAndNextBySpaceID(spaceID string, now time.Time)
 	var next *KioskBookingEntry
 	n := &KioskBookingEntry{}
 	err2 := GetDatabase().DB().QueryRow(
-		"SELECT bookings.id, bookings.user_id, users.email, users.firstname, users.lastname, bookings.enter_time, bookings.leave_time, bookings.subject "+
+		"SELECT bookings.id, COALESCE(bookings.user_id::text, ''), COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, ''), bookings.enter_time, bookings.leave_time, bookings.subject "+
 			"FROM bookings "+
-			"INNER JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN users ON users.id = bookings.user_id "+
+			"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
 			"WHERE bookings.space_id = $1 "+
 			"AND bookings.enter_time > $2 "+
 			"AND bookings.approved = true "+
 			"ORDER BY bookings.enter_time ASC LIMIT 1",
-		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.UserFirstname, &n.UserLastname, &n.Enter, &n.Leave, &n.Subject)
+		spaceID, now).Scan(&n.ID, &n.UserID, &n.UserEmail, &n.UserFirstname, &n.UserLastname, &n.PublicName, &n.PublicEmail, &n.Enter, &n.Leave, &n.Subject)
 	if err2 == nil {
 		next = n
 	}
@@ -342,14 +396,16 @@ func (r *BookingStore) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (
 
 func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
+	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
-		"users.email, users.firstname, users.lastname " +
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), " +
+		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, '') " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
-		"INNER JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id " +
 		"WHERE bookings.organization_id = $1 AND enter_time < $3 AND leave_time > $2"
 	args := []any{organizationID, startTime, endTime}
 	if userEmail != "" {
@@ -368,7 +424,7 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 	defer rows.Close()
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -379,14 +435,16 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 
 func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
-	query := "SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
+	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
-		"users.email, users.firstname, users.lastname " +
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), " +
+		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, '') " +
 		"FROM bookings " +
 		"INNER JOIN spaces ON bookings.space_id = spaces.id " +
 		"INNER JOIN locations ON spaces.location_id = locations.id " +
-		"INNER JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN users ON bookings.user_id = users.id " +
+		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id " +
 		"CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(locations.tz, ''), NULLIF((SELECT value FROM settings WHERE organization_id = $1 AND name = 'default_timezone'), ''), 'UTC') AS tz) AS effective_tz " +
 		"WHERE bookings.organization_id = $1 " +
 		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) " +
@@ -409,7 +467,7 @@ func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail strin
 	defer rows.Close()
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.CreatedAtUTC, &e.ReminderSentAtUTC, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -482,9 +540,10 @@ func (r *BookingStore) Update(e *Booking) error {
 		"approved = $6, "+
 		"subject = $7, "+
 		"recurring_id = $8, "+
+		"public_id = $9, "+
 		"reminder_sent_at_utc = NULL "+
-		"WHERE id = $9",
-		e.UserID, e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), e.ID)
+		"WHERE id = $10",
+		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), e.ID)
 	return err
 }
 
@@ -546,6 +605,12 @@ func (r *BookingStore) Delete(e *BookingDetails) error {
 			"WHERE id = $1 "+
 			"AND (SELECT COUNT(*) FROM bookings WHERE recurring_id = $1) = 0", e.RecurringID)
 		if err != nil {
+			return err
+		}
+	}
+	// a public booking's public_bookings row is 1:1 and now orphaned
+	if e.PublicID != "" {
+		if _, err := GetDatabase().DB().Exec("DELETE FROM public_bookings WHERE id = $1", e.PublicID); err != nil {
 			return err
 		}
 	}
@@ -714,7 +779,7 @@ func calcLoad(rng DateRange, totalBookedMinutes, numSpaces, targetUtilizationHou
 // get all bookings by a specific user which overlap with the provided time range
 func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $4 AND user_id = $1 AND ("+
 		"($2 <= enter_time AND $3 > enter_time) OR "+ // (overlap start, can end at same time as next start)
@@ -741,7 +806,7 @@ func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave 
 // with the specified enter and leave times.
 func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id = $2 AND ("+
 		"($3 >= enter_time AND $3 <= leave_time) OR "+
@@ -784,7 +849,7 @@ func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave 
 	if err != nil {
 		return 0, err
 	}
-	rows, err := GetDatabase().DB().Query("SELECT id, user_id, space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id IN (SELECT id FROM spaces WHERE location_id = $2) AND ("+
 		"($3 >= enter_time AND $3 <= leave_time) OR "+
@@ -917,14 +982,16 @@ func (r *BookingStore) GetPresenceReport(organizationID string, location *Locati
 }
 
 func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*BookingDetails, error) {
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, bookings.user_id, bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, "+
+	rows, err := GetDatabase().DB().Query("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, "+
 		"spaces.id, spaces.location_id, spaces.name, "+
 		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"users.email, users.firstname, users.lastname "+
+		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
+		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, '') "+
 		"FROM bookings "+
 		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
 		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"INNER JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN users ON bookings.user_id = users.id "+
+		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
 		"WHERE bookings.approved = false AND "+
 		"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "+
 		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE group_id IN ("+
@@ -938,7 +1005,7 @@ func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*B
 	var result []*BookingDetails
 	for rows.Next() {
 		e := &BookingDetails{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname)
+		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID, &e.Space.ID, &e.Space.LocationID, &e.Space.Name, &e.Space.Location.ID, &e.Space.Location.OrganizationID, &e.Space.Location.Name, &e.Space.Location.Description, &e.Space.Location.Timezone, &e.UserEmail, &e.UserFirstname, &e.UserLastname, &e.PublicName, &e.PublicEmail)
 		if err != nil {
 			return nil, err
 		}

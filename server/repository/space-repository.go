@@ -111,15 +111,21 @@ func (r *SpaceStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 58 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE spaces " +
+			"ADD COLUMN IF NOT EXISTS public_bookings_enabled boolean NOT NULL DEFAULT FALSE"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *SpaceStore) Create(e *Space) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO spaces "+
-		"(name, location_id, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) "+
+		"(name, location_id, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size, public_bookings_enabled) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) "+
 		"RETURNING id",
-		e.Name, e.LocationID, e.X, e.Y, e.Width, e.Height, e.Rotation, e.RequireSubject, e.Enabled, e.KioskEnabled, e.Shape, e.FontSize).Scan(&id)
+		e.Name, e.LocationID, e.X, e.Y, e.Width, e.Height, e.Rotation, e.RequireSubject, e.Enabled, e.KioskEnabled, e.Shape, e.FontSize, e.PublicBookingEnabled).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -129,10 +135,10 @@ func (r *SpaceStore) Create(e *Space) error {
 
 func (r *SpaceStore) GetOne(id string) (*Space, error) {
 	e := &Space{}
-	err := GetDatabase().DB().QueryRow("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size "+
+	err := GetDatabase().DB().QueryRow("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size, public_bookings_enabled "+
 		"FROM spaces "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize)
+		id).Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize, &e.PublicBookingEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +208,7 @@ func (r *SpaceStore) GetAllInTime(locationID string, enter, leave time.Time) ([]
 
 func (r *SpaceStore) GetByKeyword(organizationID string, keyword string) ([]*Space, error) {
 	var result []*Space
-	rows, err := GetDatabase().DB().Query("SELECT spaces.id, spaces.location_id, spaces.name, spaces.x, spaces.y, spaces.width, spaces.height, spaces.rotation, spaces.require_subject, spaces.enabled, spaces.kiosk_enabled, spaces.shape, spaces.font_size "+
+	rows, err := GetDatabase().DB().Query("SELECT spaces.id, spaces.location_id, spaces.name, spaces.x, spaces.y, spaces.width, spaces.height, spaces.rotation, spaces.require_subject, spaces.enabled, spaces.kiosk_enabled, spaces.shape, spaces.font_size, spaces.public_bookings_enabled "+
 		"FROM spaces "+
 		"INNER JOIN locations ON locations.id = spaces.location_id "+
 		"WHERE locations.organization_id = $1 AND LOWER(spaces.name) LIKE '%' || $2 || '%'"+
@@ -213,7 +219,7 @@ func (r *SpaceStore) GetByKeyword(organizationID string, keyword string) ([]*Spa
 	defer rows.Close()
 	for rows.Next() {
 		e := &Space{}
-		err = rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize)
+		err = rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize, &e.PublicBookingEnabled)
 		if err != nil {
 			return nil, err
 		}
@@ -224,7 +230,7 @@ func (r *SpaceStore) GetByKeyword(organizationID string, keyword string) ([]*Spa
 
 func (r *SpaceStore) GetAll(locationID string) ([]*Space, error) {
 	var result []*Space
-	rows, err := GetDatabase().DB().Query("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size "+
+	rows, err := GetDatabase().DB().Query("SELECT id, location_id, name, x, y, width, height, rotation, require_subject, enabled, kiosk_enabled, shape, font_size, public_bookings_enabled "+
 		"FROM spaces "+
 		"WHERE location_id = $1 "+
 		"ORDER BY name", locationID)
@@ -234,7 +240,7 @@ func (r *SpaceStore) GetAll(locationID string) ([]*Space, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &Space{}
-		err = rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize)
+		err = rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize, &e.PublicBookingEnabled)
 		if err != nil {
 			return nil, err
 		}
@@ -242,6 +248,31 @@ func (r *SpaceStore) GetAll(locationID string) ([]*Space, error) {
 	}
 	return result, nil
 }
+
+// GetAllPublicBookable returns all enabled spaces (in enabled locations) that
+// are open for public, unauthenticated bookings within the given organization.
+func (r *SpaceStore) GetAllPublicBookable(organizationID string) ([]*Space, error) {
+	var result []*Space
+	rows, err := GetDatabase().DB().Query("SELECT spaces.id, spaces.location_id, spaces.name, spaces.x, spaces.y, spaces.width, spaces.height, spaces.rotation, spaces.require_subject, spaces.enabled, spaces.kiosk_enabled, spaces.shape, spaces.font_size, spaces.public_bookings_enabled "+
+		"FROM spaces "+
+		"INNER JOIN locations ON locations.id = spaces.location_id "+
+		"WHERE locations.organization_id = $1 AND spaces.public_bookings_enabled = TRUE AND spaces.enabled = TRUE AND locations.enabled = TRUE "+
+		"ORDER BY spaces.name", organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := &Space{}
+		err = rows.Scan(&e.ID, &e.LocationID, &e.Name, &e.X, &e.Y, &e.Width, &e.Height, &e.Rotation, &e.RequireSubject, &e.Enabled, &e.KioskEnabled, &e.Shape, &e.FontSize, &e.PublicBookingEnabled)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, e)
+	}
+	return result, nil
+}
+
 func (r *SpaceStore) Update(e *Space) error {
 	_, err := GetDatabase().DB().Exec("UPDATE spaces SET "+
 		"location_id = $1, "+
@@ -255,9 +286,10 @@ func (r *SpaceStore) Update(e *Space) error {
 		"enabled = $9, "+
 		"kiosk_enabled = $10, "+
 		"shape = $11, "+
-		"font_size = $12 "+
-		"WHERE id = $13",
-		e.LocationID, e.Name, e.X, e.Y, e.Width, e.Height, e.Rotation, e.RequireSubject, e.Enabled, e.KioskEnabled, e.Shape, e.FontSize, e.ID)
+		"font_size = $12, "+
+		"public_bookings_enabled = $13 "+
+		"WHERE id = $14",
+		e.LocationID, e.Name, e.X, e.Y, e.Width, e.Height, e.Rotation, e.RequireSubject, e.Enabled, e.KioskEnabled, e.Shape, e.FontSize, e.PublicBookingEnabled, e.ID)
 	return err
 }
 
@@ -266,6 +298,10 @@ func (r *SpaceStore) Delete(e *Space) error {
 		return err
 	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings WHERE space_id = $1", e.ID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM public_bookings WHERE id NOT IN " +
+		"(SELECT public_id FROM bookings WHERE public_id IS NOT NULL)"); err != nil {
 		return err
 	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM space_attribute_values WHERE entity_id = $1 AND entity_type = $2", e.ID, SpaceAttributeValueEntityTypeSpace); err != nil {

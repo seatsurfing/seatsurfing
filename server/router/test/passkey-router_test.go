@@ -467,10 +467,10 @@ func TestPasswordLoginPasskeyWrongUser(t *testing.T) {
 	createRouterTestPasskey(user2, "User2 Key")
 
 	state := &AuthState{
-		AuthProviderID: user1.ID,
-		AuthStateType:  AuthPasskey2FA,
-		Expiry:         time.Now().Add(5 * time.Minute),
-		Payload:        `{}`,
+		Key:           user1.ID,
+		AuthStateType: AuthPasskey2FA,
+		Expiry:        time.Now().Add(5 * time.Minute),
+		Payload:       `{}`,
 	}
 	GetAuthStateRepository().Create(state)
 

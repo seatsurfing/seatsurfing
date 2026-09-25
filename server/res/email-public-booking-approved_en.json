@@ -1,0 +1,18 @@
+{
+  "subject": "Your Seatsurfing booking: Approved",
+  "headline": "Hello {{recipientName}},",
+  "paragraphs": [
+    "Your booking has been approved.",
+    "Date: {{date}}",
+    "Area: {{areaName}}",
+    "Space: {{spaceName}}",
+    "Subject: {{subject}}"
+  ],
+  "buttons": [
+    {
+      "paragraph": "You can view your booking details or cancel it here:",
+      "label": "Show details",
+      "url": "{{detailsUrl}}"
+    }
+  ]
+}

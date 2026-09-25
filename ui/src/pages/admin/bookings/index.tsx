@@ -31,13 +31,22 @@ import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
 import RuntimeConfig from "@/components/RuntimeConfig";
 
+const FILTER_OPTIONS = [
+  "current",
+  "today",
+  "this_week",
+  "next_week",
+  "enter_leave",
+] as const;
+type FilterOption = (typeof FILTER_OPTIONS)[number];
+
 interface State {
   selectedItem: string;
   loading: boolean;
   start: Date;
   end: Date;
   filterUser: string;
-  filterOption: "enter_leave" | "current" | "today";
+  filterOption: FilterOption;
   filterLocation: string;
   cancelBookingItem: Booking | null;
   alertMessage: string | null;
@@ -88,12 +97,11 @@ class Bookings extends React.Component<Props, State> {
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
       filterUser: this.props.router.query["user"] as string,
-      filterOption:
-        this.props.router.query["filter"] === "today"
-          ? "today"
-          : this.props.router.query["filter"] === "enter_leave"
-            ? "enter_leave"
-            : "current",
+      filterOption: FILTER_OPTIONS.includes(
+        this.props.router.query["filter"] as FilterOption,
+      )
+        ? (this.props.router.query["filter"] as FilterOption)
+        : "current",
       filterLocation: this.props.router.query["location"] as string,
       cancelBookingItem: null,
       alertMessage: null,
@@ -135,29 +143,31 @@ class Bookings extends React.Component<Props, State> {
     );
   };
 
-  loadItems = async () => {
-    const end = DateUtil.setSecondsToMax(this.state.end);
-    const startOfToday = DateUtil.getTodayStart();
-    const endOfToday = DateUtil.getTodayEnd();
+  getFilterRange = (): [Date, Date] | null => {
+    switch (this.state.filterOption) {
+      case "enter_leave":
+        return [this.state.start, DateUtil.setSecondsToMax(this.state.end)];
+      case "today":
+        return [DateUtil.getTodayStart(), DateUtil.getTodayEnd()];
+      case "this_week":
+        return [DateUtil.getThisWeekMonday(), DateUtil.getThisWeekSunday()];
+      case "next_week":
+        return [DateUtil.getNextWeekMonday(), DateUtil.getNextWeekSunday()];
+      default:
+        return null;
+    }
+  };
 
-    this.data = await (this.state.filterOption === "enter_leave"
+  loadItems = async () => {
+    const range = this.getFilterRange();
+    this.data = await (range
       ? Booking.listFiltered(
-          this.state.start,
-          end,
+          range[0],
+          range[1],
           this.state.filterUser,
           this.state.filterLocation,
         )
-      : this.state.filterOption === "today"
-        ? Booking.listFiltered(
-            startOfToday,
-            endOfToday,
-            this.state.filterUser,
-            this.state.filterLocation,
-          )
-        : Booking.listCurrent(
-            this.state.filterUser,
-            this.state.filterLocation,
-          ));
+      : Booking.listCurrent(this.state.filterUser, this.state.filterLocation));
     this.setState({ loading: false });
     this.updateUrlParams(
       this.state.filterOption === "enter_leave"
@@ -247,6 +257,11 @@ class Bookings extends React.Component<Props, State> {
         <td>{Formatting.getFormatterShort().format(booking.enter)}</td>
         <td>{Formatting.getFormatterShort().format(booking.leave)}</td>
         <td>{booking.subject}</td>
+        {RuntimeConfig.INFOS.publicBookingEnabled ? (
+          <td>{RendererUtils.state(booking.public)}</td>
+        ) : (
+          <></>
+        )}
         <td>
           <Button
             variant="danger"
@@ -272,13 +287,14 @@ class Bookings extends React.Component<Props, State> {
   };
 
   exportTable = (e: any) => {
+    const actionColumn = RuntimeConfig.INFOS.publicBookingEnabled ? 8 : 7;
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-bookings", format: "xlsx" },
       [
         {
           name: "Seatsurfing Bookings",
           from: { table: "datatable" },
-          removeColumns: [0, 7],
+          removeColumns: [0, actionColumn],
         },
       ],
     );
@@ -338,37 +354,27 @@ class Bookings extends React.Component<Props, State> {
     const form = (
       <Form onSubmit={this.onFilterSubmit} id="form">
         <Form.Group as={Row}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="filter-select">
             {this.props.t("filter")}
           </Form.Label>
           <Col sm="4">
-            <Form.Check
-              type="radio"
-              label={this.props.t("filterBookingCurrent")}
-              name="radioGroup"
-              id="radioCurrent"
-              value="option2"
-              checked={this.state.filterOption === "current"}
-              onChange={(e) => this.setState({ filterOption: "current" })}
-            />
-            <Form.Check
-              type="radio"
-              label={this.props.t("today")}
-              name="radioGroup"
-              id="radioToday"
-              value="option2"
-              checked={this.state.filterOption === "today"}
-              onChange={(e) => this.setState({ filterOption: "today" })}
-            />
-            <Form.Check
-              type="radio"
-              label={this.props.t("filterBookingEnterLeave")}
-              name="radioGroup"
-              id="radioEnterLeave"
-              value="option1"
-              checked={this.state.filterOption === "enter_leave"}
-              onChange={(e) => this.setState({ filterOption: "enter_leave" })}
-            />
+            <Form.Select
+              id="filter-select"
+              value={this.state.filterOption}
+              onChange={(e: any) =>
+                this.setState({ filterOption: e.target.value as FilterOption })
+              }
+            >
+              <option value="current">
+                {this.props.t("filterBookingCurrent")}
+              </option>
+              <option value="today">{this.props.t("today")}</option>
+              <option value="this_week">{this.props.t("thisWeek")}</option>
+              <option value="next_week">{this.props.t("nextWeek")}</option>
+              <option value="enter_leave">
+                {this.props.t("filterBookingEnterLeave")}
+              </option>
+            </Form.Select>
           </Col>
         </Form.Group>
 
@@ -484,6 +490,11 @@ class Bookings extends React.Component<Props, State> {
               <th>{this.props.t("enter")}</th>
               <th>{this.props.t("leave")}</th>
               <th>{this.props.t("subject")}</th>
+              {RuntimeConfig.INFOS.publicBookingEnabled ? (
+                <th>{this.props.t("public")}</th>
+              ) : (
+                <></>
+              )}
               <th></th>
             </tr>
           </thead>

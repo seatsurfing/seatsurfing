@@ -47,6 +47,7 @@ var DatabaseTables = [...]string{
 	"organizations",
 	"organizations_domains",
 	"passkeys",
+	"public_bookings",
 	"recurring_bookings",
 	"refresh_tokens",
 	"role_permissions",

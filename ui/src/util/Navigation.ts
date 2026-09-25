@@ -1,4 +1,5 @@
 import CONSTANT from "@/util/Constant";
+import RuntimeConfig from "@/components/RuntimeConfig";
 
 export type PreferencesTab = "security" | "style" | "booking" | "integration";
 
@@ -70,5 +71,16 @@ export default class Navigation {
 
   static kioskUrl(spaceId: string, variant: "color" | "mono"): string {
     return `${window.location.origin}/ui/kiosk/${encodeURIComponent(spaceId)}/?variant=${encodeURIComponent(variant)}&lang=en&secret=${encodeURIComponent(CONSTANT.KIOSK_MODE_SECRET_PLACEHOLDER)}`;
+  }
+
+  // --------------
+  // PUBLIC BOOKING
+  // --------------
+
+  static publicBookingUrl(): string {
+    const origin = RuntimeConfig.INFOS.orgPrimaryDomain
+      ? `${window.location.protocol}//${RuntimeConfig.INFOS.orgPrimaryDomain}${window.location.port ? `:${window.location.port}` : ""}`
+      : window.location.origin;
+    return `${origin}/ui/book/`;
   }
 }

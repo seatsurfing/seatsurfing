@@ -197,6 +197,10 @@ func (r *LocationStore) Delete(e *Location) error {
 	if _, err := GetDatabase().DB().Exec("DELETE FROM recurring_bookings WHERE recurring_bookings.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM public_bookings WHERE id NOT IN " +
+		"(SELECT public_id FROM bookings WHERE public_id IS NOT NULL)"); err != nil {
+		return err
+	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_allowed_bookers WHERE spaces_allowed_bookers.space_id IN (SELECT spaces.id FROM spaces WHERE spaces.location_id = $1)", e.ID); err != nil {
 		return err
 	}
@@ -228,6 +232,10 @@ func (r *LocationStore) DeleteAll(organizationID string) error {
 		"recurring_bookings.space_id IN (SELECT spaces.id FROM spaces WHERE "+
 		"spaces.location_id IN (SELECT locations.id FROM locations WHERE locations.organization_id = $1)"+
 		")", organizationID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM public_bookings WHERE id NOT IN " +
+		"(SELECT public_id FROM bookings WHERE public_id IS NOT NULL)"); err != nil {
 		return err
 	}
 	// Delete space attribute values for locations to be deleted

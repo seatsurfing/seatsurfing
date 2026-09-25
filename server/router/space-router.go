@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -35,6 +36,7 @@ type CreateSpaceRequest struct {
 	Attributes            []SpaceAttributeValueRequest `json:"attributes" validate:"dive"`
 	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	PublicBookingEnabled  bool                         `json:"publicBookingEnabled"`
 }
 
 type UpdateSpaceRequest struct {
@@ -411,6 +413,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	// Process creates
 	if m.Creates != nil {
 		for _, mSpace := range m.Creates {
+			if err := router.validateApprovers(&mSpace, location.OrganizationID); err != nil {
+				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
+				continue
+			}
 			e := router.copyFromRestModel(&mSpace)
 			e.LocationID = vars["locationId"]
 			if err := GetSpaceRepository().Create(e); err != nil {
@@ -420,8 +426,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				if err := router.applySpaceAttributes(availableAttributes, e, &mSpace); err != nil {
 					log.Println("Could not apply space attributes:", err)
 				}
-				if err := router.applyApprovers(e, &mSpace); err != nil {
+				if err := router.applyApprovers(e, &mSpace, location.OrganizationID); err != nil {
 					log.Println("Could not apply approvers:", err)
+					log.Println(err)
+					continue
 				}
 				if err := router.applyAllowBookers(e, &mSpace); err != nil {
 					log.Println("Could not apply allow bookers:", err)
@@ -439,6 +447,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: "", Success: false})
 				continue
 			}
+			if err := router.validateApprovers(&mSpace.CreateSpaceRequest, location.OrganizationID); err != nil {
+				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: mSpace.ID, Success: false})
+				continue
+			}
 			e := router.copyFromRestModel(&mSpace.CreateSpaceRequest)
 			e.ID = mSpace.ID
 			e.LocationID = vars["locationId"]
@@ -449,8 +461,10 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				if err := router.applySpaceAttributes(availableAttributes, e, &mSpace.CreateSpaceRequest); err != nil {
 					log.Println("Could not apply space attributes:", err)
 				}
-				if err := router.applyApprovers(e, &mSpace.CreateSpaceRequest); err != nil {
+				if err := router.applyApprovers(e, &mSpace.CreateSpaceRequest, location.OrganizationID); err != nil {
 					log.Println("Could not apply approvers:", err)
+					res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: e.ID, Success: false})
+					continue
 				}
 				if err := router.applyAllowBookers(e, &mSpace.CreateSpaceRequest); err != nil {
 					log.Println("Could not apply allow bookers:", err)
@@ -535,6 +549,18 @@ func (router *SpaceRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.PublicBookingEnabled {
+		approvers, err := GetSpaceRepository().GetApproverGroupIDs(e.ID)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		if len(approvers) == 0 {
+			SendBadRequest(w)
+			return
+		}
+	}
 	if err := GetSpaceRepository().Update(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -593,6 +619,13 @@ func (router *SpaceRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if e.PublicBookingEnabled {
+		// A newly created space cannot have an approver group yet (this endpoint
+		// does not accept approver group assignment), so public booking can
+		// never be enabled at creation time here.
+		SendBadRequest(w)
+		return
+	}
 	if err := GetSpaceRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -647,7 +680,26 @@ func (router *SpaceRouter) applySpaceAttributes(availableAttributes []*SpaceAttr
 	return nil
 }
 
-func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest) error {
+func (router *SpaceRouter) validateApprovers(m *CreateSpaceRequest, organizationID string) error {
+	if m.PublicBookingEnabled && len(m.ApproverGroupIDs) == 0 {
+		return errors.New("space has public booking enabled and requires at least one approver group")
+	}
+	if len(m.ApproverGroupIDs) > 0 {
+		ok, err := GetGroupRepository().GroupsExistAndBelongToOrg(organizationID, m.ApproverGroupIDs)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return errors.New("one or more approver groups do not exist or do not belong to the organization")
+		}
+	}
+	return nil
+}
+
+func (router *SpaceRouter) applyApprovers(space *Space, m *CreateSpaceRequest, organizationID string) error {
+	if err := router.validateApprovers(m, organizationID); err != nil {
+		return err
+	}
 	existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
 	if err != nil {
 		return err
@@ -792,6 +844,31 @@ func (router *SpaceRouter) removeApprovers(w http.ResponseWriter, r *http.Reques
 	if UnmarshalBody(r, &approvers) != nil {
 		SendBadRequest(w)
 		return
+	}
+	if e.PublicBookingEnabled {
+		existingApprovers, err := GetSpaceRepository().GetApproverGroupIDs(e.ID)
+		if err != nil {
+			log.Println(err)
+			SendInternalServerError(w)
+			return
+		}
+		remaining := 0
+		for _, existing := range existingApprovers {
+			removed := false
+			for _, approver := range approvers {
+				if existing == approver {
+					removed = true
+					break
+				}
+			}
+			if !removed {
+				remaining++
+			}
+		}
+		if remaining == 0 {
+			SendBadRequest(w)
+			return
+		}
 	}
 	if err := GetSpaceRepository().RemoveApprovers(e, approvers); err != nil {
 		log.Println(err)
@@ -960,6 +1037,7 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.KioskEnabled = m.KioskEnabled
 	e.Shape = m.Shape
 	e.FontSize = m.FontSize
+	e.PublicBookingEnabled = m.PublicBookingEnabled
 	return e
 }
 
@@ -978,6 +1056,7 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.KioskEnabled = e.KioskEnabled
 	m.Shape = e.Shape
 	m.FontSize = e.FontSize
+	m.PublicBookingEnabled = e.PublicBookingEnabled
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {

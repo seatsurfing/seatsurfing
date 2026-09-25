@@ -133,28 +133,28 @@ export default class DateUtil {
     return this.formatToDateString(date);
   }
 
+  /**
+   * @param date Date object to format
+   * @returns formatted date string in "YYYY-MM-DD" format, based on local time
+   */
+  private static formatToLocalDateString(date: Date): string {
+    return this.formatToDateTimeString(date).split("T")[0];
+  }
+
   static getLastWeekMondayDateString(): string {
-    const d = new Date();
-    d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) - 7);
-    return this.formatToDateString(d);
+    return this.formatToLocalDateString(this.getMondayOfWeek(new Date(), -1));
   }
 
   static getLastWeekSundayDateString(): string {
-    const d = new Date();
-    d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) - 1);
-    return this.formatToDateString(d);
+    return this.formatToLocalDateString(this.getSundayOfWeek(new Date(), -1));
   }
 
   static getThisWeekMondayDateString(): string {
-    const d = new Date();
-    d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1));
-    return this.formatToDateString(d);
+    return this.formatToLocalDateString(this.getThisWeekMonday());
   }
 
   static getThisWeekSundayDateString(): string {
-    const d = new Date();
-    d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1) + 6);
-    return this.formatToDateString(d);
+    return this.formatToLocalDateString(this.getThisWeekSunday());
   }
 
   /**
@@ -343,6 +343,44 @@ export default class DateUtil {
     d.setDate(d.getDate() + (6 - d.getDay()));
     d.setHours(23, 59, 59, 999);
     return d;
+  }
+
+  /**
+   * @param date Date to use as basis (not modified)
+   * @param weekOffset number of weeks to add (e.g. -1 = last week, 1 = next week)
+   * @returns Monday of the date's week with time 00:00:00.000
+   */
+  static getMondayOfWeek(date: Date, weekOffset: number = 0): Date {
+    const d = this.setHoursToMin(date);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + weekOffset * 7);
+    return d;
+  }
+
+  /**
+   * @param date Date to use as basis (not modified)
+   * @param weekOffset number of weeks to add (e.g. -1 = last week, 1 = next week)
+   * @returns Sunday of the date's week with time 23:59:59.999
+   */
+  static getSundayOfWeek(date: Date, weekOffset: number = 0): Date {
+    const d = this.getMondayOfWeek(date, weekOffset);
+    d.setDate(d.getDate() + 6);
+    return this.setHoursToMax(d);
+  }
+
+  static getThisWeekMonday(): Date {
+    return this.getMondayOfWeek(new Date());
+  }
+
+  static getThisWeekSunday(): Date {
+    return this.getSundayOfWeek(new Date());
+  }
+
+  static getNextWeekMonday(): Date {
+    return this.getMondayOfWeek(new Date(), 1);
+  }
+
+  static getNextWeekSunday(): Date {
+    return this.getSundayOfWeek(new Date(), 1);
   }
 
   static getNowFakeUTC(): Date {

@@ -3,7 +3,7 @@ import { Button, Form } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
-import SeatsurfingLogo from "@/components/SeatsurfingLogo";
+import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Ajax from "@/util/Ajax";
 
 interface State {
@@ -58,7 +58,7 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
       return (
         <div className="container-center">
           <div className="container-center-inner">
-            <SeatsurfingLogo />
+            <SeatsurfingAppLogo />
             <p>{this.props.t("confirmDeleteOrgSuccess")}</p>
           </div>
         </div>
@@ -71,7 +71,7 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
           className="container-center-inner"
           onSubmit={this.onDeleteOrgSubmit}
         >
-          <SeatsurfingLogo />
+          <SeatsurfingAppLogo />
           <Form.Group>
             <Form.Control
               type="text"
