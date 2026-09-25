@@ -29,10 +29,6 @@ func TestSettingsForbidden(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 
-	req = NewHTTPRequest("GET", "/setting/"+SettingConfluenceServerSharedSecret.Name, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
-
 	req = NewHTTPRequest("GET", "/setting/", loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
@@ -85,8 +81,6 @@ func TestSettingsReadPublic(t *testing.T) {
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
 		SettingAllowAnyUser.Name,
-		SettingConfluenceServerSharedSecret.Name,
-		SettingConfluenceAnonymous.Name,
 	}
 
 	for _, name := range allowedSettings {
@@ -140,8 +134,6 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingMaxHoursPartiallyBookedEnabled.Name,
 		SettingAllowBookingsNonExistingUsers.Name,
 		SettingAllowAnyUser.Name,
-		SettingConfluenceServerSharedSecret.Name,
-		SettingConfluenceAnonymous.Name,
 		SettingFeatureNoUserLimit.Name,
 		SettingFeatureGroups.Name,
 		SettingFeatureCustomDomains.Name,

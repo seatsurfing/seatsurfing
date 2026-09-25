@@ -8,8 +8,6 @@ export default class Organization extends Entity {
 
   static readonly PREF_ALLOW_ANY_USER = "allow_any_user";
   static readonly PREF_DEFAULT_TIMEZONE = "default_timezone";
-  static readonly PREF_CONFLUENCE_SERVER_SHARED_SECRET =
-    "confluence_server_shared_secret";
   static readonly PREF_CUSTOM_LOGO_URL = "custom_logo_url";
   static readonly PREF_MAX_BOOKINGS_PER_USER = "max_bookings_per_user";
   static readonly PREF_MAX_CONCURRENT_BOOKINGS_PER_USER =

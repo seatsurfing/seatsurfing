@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"strconv"
 	"strings"
 	"sync"
@@ -161,15 +160,20 @@ func (r *UserStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			}
 		}
 	}
+	if curVersion < 60 {
+		if _, err := GetDatabase().DB().Exec("ALTER TABLE users DROP COLUMN IF EXISTS atlassian_id"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *UserStore) Create(e *User) error {
 	var id string
 	err := GetDatabase().DB().QueryRow("INSERT INTO users "+
-		"(organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, totp_secret, password_pending, password_update_required) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) "+
+		"(organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, totp_secret, password_pending, password_update_required) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) "+
 		"RETURNING id",
-		e.OrganizationID, strings.ToLower(e.Email), e.AccountType, CheckNullString(e.HashedPassword), CheckNullUUID(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, CheckNullString(e.TotpSecret), e.PasswordPending, e.PasswordUpdateRequired).Scan(&id)
+		e.OrganizationID, strings.ToLower(e.Email), e.AccountType, CheckNullString(e.HashedPassword), CheckNullUUID(e.AuthProviderID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, CheckNullString(e.TotpSecret), e.PasswordPending, e.PasswordUpdateRequired).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -190,10 +194,10 @@ func (r *UserStore) Create(e *User) error {
 
 func (r *UserStore) GetOne(id string) (*User, error) {
 	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE id = $1",
-		id).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		id).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 	if err != nil {
 		return nil, err
 	}
@@ -202,10 +206,10 @@ func (r *UserStore) GetOne(id string) (*User, error) {
 
 func (r *UserStore) GetByEmail(organizationID string, email string) (*User, error) {
 	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE LOWER(email) = $1 AND organization_id = $2",
-		strings.ToLower(email), organizationID).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		strings.ToLower(email), organizationID).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +218,7 @@ func (r *UserStore) GetByEmail(organizationID string, email string) (*User, erro
 
 func (r *UserStore) GetUsersWithEmail(email string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE LOWER(email) = $1",
 		strings.ToLower(email))
@@ -224,59 +228,18 @@ func (r *UserStore) GetUsersWithEmail(email string) ([]*User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, e)
 	}
 	return result, nil
-}
-
-func (r *UserStore) GetByAtlassianID(atlassianID string) (*User, error) {
-	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
-		"FROM users "+
-		"WHERE LOWER(atlassian_id) = $1",
-		strings.ToLower(atlassianID)).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
-	if err != nil {
-		return nil, err
-	}
-	return e, nil
-}
-
-func (r *UserStore) GetUsersWithAtlassianID(organizationID string) ([]*User, error) {
-	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
-		"FROM users "+
-		"WHERE organization_id = $1 AND (atlassian_id IS NOT NULL OR atlassian_id != '') "+
-		"ORDER BY email", organizationID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, e)
-	}
-	return result, nil
-}
-
-func (r *UserStore) UpdateAtlassianClientIDForUser(organizationID, userId, atlassianID string) error {
-	_, err := GetDatabase().DB().Exec("UPDATE users SET "+
-		"atlassian_id =  $3 "+
-		"WHERE organization_id = $1 AND id = $2",
-		organizationID, userId, strings.ToLower(atlassianID))
-	return err
 }
 
 func (r *UserStore) GetByKeyword(organizationID string, keyword string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE organization_id = $1 AND (LOWER(email) LIKE '%' || $2 || '%' OR LOWER(firstname) LIKE '%' || $2 || '%' OR LOWER(lastname) LIKE '%' || $2 || '%') "+
 		"ORDER BY email", organizationID, strings.ToLower(keyword))
@@ -286,7 +249,7 @@ func (r *UserStore) GetByKeyword(organizationID string, keyword string) ([]*User
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 		if err != nil {
 			return nil, err
 		}
@@ -297,7 +260,7 @@ func (r *UserStore) GetByKeyword(organizationID string, keyword string) ([]*User
 
 func (r *UserStore) GetAll(organizationID string, maxResults int, offset int) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE organization_id = $1 "+
 		"ORDER BY email "+
@@ -308,7 +271,7 @@ func (r *UserStore) GetAll(organizationID string, maxResults int, offset int) ([
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 		if err != nil {
 			return nil, err
 		}
@@ -319,7 +282,7 @@ func (r *UserStore) GetAll(organizationID string, maxResults int, offset int) ([
 
 func (r *UserStore) GetAllByIDs(userIDs []string) ([]*User, error) {
 	var result []*User
-	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE id = ANY($1) "+
 		"ORDER BY email",
@@ -330,7 +293,7 @@ func (r *UserStore) GetAllByIDs(userIDs []string) ([]*User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		e := &User{}
-		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		err = rows.Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 		if err != nil {
 			return nil, err
 		}
@@ -372,10 +335,10 @@ func (r *UserStore) GetAllIDs() ([]string, error) {
 
 func (r *UserStore) GetByApiToken(tokenHash string) (*User, error) {
 	e := &User{}
-	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, atlassian_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
+	err := GetDatabase().DB().QueryRow("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
 		"WHERE api_token = $1 AND account_type IN ($2, $3)",
-		tokenHash, AccountTypeServiceAccountRO, AccountTypeServiceAccountRW).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.AtlassianID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
+		tokenHash, AccountTypeServiceAccountRO, AccountTypeServiceAccountRW).Scan(&e.ID, &e.OrganizationID, &e.Email, &e.AccountType, &e.HashedPassword, &e.AuthProviderID, &e.Disabled, &e.BanExpiry, &e.Firstname, &e.Lastname, &e.LastActivityAtUTC, &e.TotpSecret, &e.PasswordPending, &e.PasswordUpdateRequired, &e.ApiToken)
 	if err != nil {
 		return nil, err
 	}
@@ -403,17 +366,16 @@ func (r *UserStore) Update(e *User) error {
 		"account_type = $3, "+
 		"password = $4, "+
 		"auth_provider_id = $5, "+
-		"atlassian_id = $6, "+
-		"disabled = $7, "+
-		"ban_expiry = $8, "+
-		"firstname = $9, "+
-		"lastname = $10, "+
-		"last_activity_at_utc = $11, "+
-		"totp_secret = $12, "+
-		"password_pending = $13, "+
-		"password_update_required = $14 "+
-		"WHERE id = $15",
-		e.OrganizationID, strings.ToLower(e.Email), e.AccountType, CheckNullString(e.HashedPassword), CheckNullUUID(e.AuthProviderID), CheckNullString(e.AtlassianID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, e.LastActivityAtUTC, CheckNullString(e.TotpSecret), e.PasswordPending, e.PasswordUpdateRequired, e.ID)
+		"disabled = $6, "+
+		"ban_expiry = $7, "+
+		"firstname = $8, "+
+		"lastname = $9, "+
+		"last_activity_at_utc = $10, "+
+		"totp_secret = $11, "+
+		"password_pending = $12, "+
+		"password_update_required = $13 "+
+		"WHERE id = $14",
+		e.OrganizationID, strings.ToLower(e.Email), e.AccountType, CheckNullString(e.HashedPassword), CheckNullUUID(e.AuthProviderID), e.Disabled, e.BanExpiry, e.Firstname, e.Lastname, e.LastActivityAtUTC, CheckNullString(e.TotpSecret), e.PasswordPending, e.PasswordUpdateRequired, e.ID)
 	if err != nil {
 		return err
 	}
@@ -513,36 +475,6 @@ func (r *UserStore) CheckPassword(hashedPassword, password string) bool {
 	return err == nil
 }
 
-func (r *UserStore) MergeUsers(source, target *User) error {
-	if source.OrganizationID != target.OrganizationID {
-		return errors.New("Organization ID of source and target users don't match")
-	}
-	if _, err := GetDatabase().DB().Exec("UPDATE bookings SET user_id = $2 WHERE user_id = $1", source.ID, target.ID); err != nil {
-		return err
-	}
-	if target.AtlassianID == "" {
-		target.AtlassianID = source.AtlassianID
-	}
-	sourceRoleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(source.ID)
-	if err != nil {
-		return err
-	}
-	// Union the two users' role assignments rather than picking a winner:
-	// with several roles per user there is no single "higher" role to choose.
-	for _, roleID := range sourceRoleIDs {
-		if err := GetUserRoleRepository().Add(target.ID, roleID, RoleAssignmentSourceManual); err != nil {
-			return err
-		}
-	}
-	if err := r.Delete(source); err != nil {
-		return err
-	}
-	if err := r.Update(target); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *UserStore) EnableUsersWithExpiredBan() error {
 	_, err := GetDatabase().DB().Exec("UPDATE users "+
 		"SET disabled = FALSE, ban_expiry = NULL "+
@@ -557,35 +489,6 @@ func (r *UserStore) CanCreateUser(org *Organization) bool {
 	}
 	curUsers, _ := GetUserRepository().GetCount(org.ID)
 	return curUsers < DefaultUserLimit
-}
-
-func (r *UserStore) DeleteObsoleteConfluenceAnonymousUsers() (int, error) {
-	timestamp := time.Now().Add(-24 * time.Hour)
-	rows, err := GetDatabase().DB().Query("DELETE FROM users u "+
-		"WHERE u.email LIKE 'confluence-anonymous-%' and "+
-		"u.id not in (select distinct aa.user_id from auth_attempts aa where aa.successful = true and aa.timestamp > $1) "+
-		"RETURNING u.id",
-		timestamp)
-	if err != nil {
-		return 0, err
-	}
-	var userIDs []string
-	defer rows.Close()
-	for rows.Next() {
-		var ID string
-		err = rows.Scan(&ID)
-		if err != nil {
-			return 0, err
-		}
-		userIDs = append(userIDs, ID)
-	}
-	if len(userIDs) > 0 {
-		if _, err := GetDatabase().DB().Exec("DELETE FROM bookings WHERE "+
-			"bookings.user_id = ANY($1)", pq.Array(&userIDs)); err != nil {
-			return 0, err
-		}
-	}
-	return len(userIDs), nil
 }
 
 func (r *UserStore) HasAnyUserInOrgPasswordSet(organizationID string) (bool, error) {

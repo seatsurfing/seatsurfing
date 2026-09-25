@@ -9,7 +9,6 @@ var unauthorizedRoutes = []string{
 	"/auth-provider/org/",
 	"/admin/",
 	"/ui/",
-	"/confluence",
 	"/robots.txt",
 	"/healthcheck/",
 	"/kiosk/",

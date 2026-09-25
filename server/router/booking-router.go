@@ -755,7 +755,6 @@ func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w 
 		}
 		user := &User{
 			Email:          userEmail,
-			AtlassianID:    NullString(""),
 			OrganizationID: org.ID,
 		}
 		err = GetUserRepository().Create(user)
