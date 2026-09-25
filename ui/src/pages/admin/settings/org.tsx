@@ -286,6 +286,7 @@ class EditOrg extends React.Component<Props, State> {
                 value={this.state.email}
                 onChange={(e: any) => this.setState({ email: e.target.value })}
                 required={true}
+                pattern={Validation.EMAIL_PATTERN}
               />
             </Col>
           </Form.Group>

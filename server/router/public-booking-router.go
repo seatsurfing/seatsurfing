@@ -236,7 +236,7 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 	}
 	language := normalizePublicBookingLanguage(m.Language)
 	name := strings.TrimSpace(m.Name)
-	if !IsValidHumanName(name) {
+	if !IsValidHumanName(name) || !ValidateEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}

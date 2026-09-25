@@ -57,6 +57,20 @@ func enablePublicBookingForOrgAndSpace(org *Organization, space *Space) *Space {
 	return space
 }
 
+func TestPublicBookingRequestInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space = enablePublicBookingForOrgAndSpace(org, space)
+
+	for _, email := range []string{"test@test", "test@test.c", "ä@test.com"} {
+		payload := `{"spaceId": "` + space.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "name": "Jane Doe", "email": "` + email + `"}`
+		req := NewHTTPRequest("POST", "/public-booking/"+org.ID+"/request", "", bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
 func TestPublicBookingConfirmPendingReturnsBookingTimes(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

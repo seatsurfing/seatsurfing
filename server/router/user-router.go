@@ -9,7 +9,6 @@ import (
 	"image/png"
 	"log"
 	"net/http"
-	"net/mail"
 	"strings"
 	"sync"
 	"time"
@@ -137,11 +136,6 @@ type ValidateTotpRequest struct {
 
 func isServiceAccountType(accountType int) bool {
 	return AccountType(accountType).IsServiceAccount()
-}
-
-func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
 }
 
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
@@ -703,7 +697,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
+	if !isServiceAccountType(m.AccountType) && !ValidateEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
@@ -883,7 +877,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
+	if !isServiceAccountType(m.AccountType) && !ValidateEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
