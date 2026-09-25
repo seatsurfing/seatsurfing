@@ -70,6 +70,11 @@ const (
 	HostAPIService_GroupUpdate_FullMethodName                    = "/seatsurfing.plugin.v1.HostAPIService/GroupUpdate"
 	HostAPIService_GroupDelete_FullMethodName                    = "/seatsurfing.plugin.v1.HostAPIService/GroupDelete"
 	HostAPIService_BookingGetOne_FullMethodName                  = "/seatsurfing.plugin.v1.HostAPIService/BookingGetOne"
+	HostAPIService_SearchLocationsForUser_FullMethodName         = "/seatsurfing.plugin.v1.HostAPIService/SearchLocationsForUser"
+	HostAPIService_GetSpaceAvailabilityForUser_FullMethodName    = "/seatsurfing.plugin.v1.HostAPIService/GetSpaceAvailabilityForUser"
+	HostAPIService_GetSpaceAttributes_FullMethodName             = "/seatsurfing.plugin.v1.HostAPIService/GetSpaceAttributes"
+	HostAPIService_CreateBookingForUser_FullMethodName           = "/seatsurfing.plugin.v1.HostAPIService/CreateBookingForUser"
+	HostAPIService_GetUpcomingBookingsForUser_FullMethodName     = "/seatsurfing.plugin.v1.HostAPIService/GetUpcomingBookingsForUser"
 	HostAPIService_SpaceGetOne_FullMethodName                    = "/seatsurfing.plugin.v1.HostAPIService/SpaceGetOne"
 	HostAPIService_SpaceGetCount_FullMethodName                  = "/seatsurfing.plugin.v1.HostAPIService/SpaceGetCount"
 	HostAPIService_LocationGetOne_FullMethodName                 = "/seatsurfing.plugin.v1.HostAPIService/LocationGetOne"
@@ -145,6 +150,13 @@ type HostAPIServiceClient interface {
 	GroupDelete(ctx context.Context, in *GroupMutateArgs, opts ...grpc.CallOption) (*ErrorReply, error)
 	// Bookings
 	BookingGetOne(ctx context.Context, in *BookingGetOneArgs, opts ...grpc.CallOption) (*BookingGetOneReply, error)
+	// User-scoped booking operations: each call acts as the given user and
+	// applies exactly the rules of the corresponding REST endpoint.
+	SearchLocationsForUser(ctx context.Context, in *SearchLocationsForUserArgs, opts ...grpc.CallOption) (*SearchLocationsForUserReply, error)
+	GetSpaceAvailabilityForUser(ctx context.Context, in *GetSpaceAvailabilityForUserArgs, opts ...grpc.CallOption) (*GetSpaceAvailabilityForUserReply, error)
+	GetSpaceAttributes(ctx context.Context, in *GetSpaceAttributesArgs, opts ...grpc.CallOption) (*GetSpaceAttributesReply, error)
+	CreateBookingForUser(ctx context.Context, in *CreateBookingForUserArgs, opts ...grpc.CallOption) (*CreateBookingForUserReply, error)
+	GetUpcomingBookingsForUser(ctx context.Context, in *GetUpcomingBookingsForUserArgs, opts ...grpc.CallOption) (*GetUpcomingBookingsForUserReply, error)
 	// Spaces
 	SpaceGetOne(ctx context.Context, in *SpaceGetOneArgs, opts ...grpc.CallOption) (*SpaceGetOneReply, error)
 	SpaceGetCount(ctx context.Context, in *SpaceGetCountArgs, opts ...grpc.CallOption) (*IntReply, error)
@@ -611,6 +623,56 @@ func (c *hostAPIServiceClient) BookingGetOne(ctx context.Context, in *BookingGet
 	return out, nil
 }
 
+func (c *hostAPIServiceClient) SearchLocationsForUser(ctx context.Context, in *SearchLocationsForUserArgs, opts ...grpc.CallOption) (*SearchLocationsForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchLocationsForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_SearchLocationsForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hostAPIServiceClient) GetSpaceAvailabilityForUser(ctx context.Context, in *GetSpaceAvailabilityForUserArgs, opts ...grpc.CallOption) (*GetSpaceAvailabilityForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSpaceAvailabilityForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_GetSpaceAvailabilityForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hostAPIServiceClient) GetSpaceAttributes(ctx context.Context, in *GetSpaceAttributesArgs, opts ...grpc.CallOption) (*GetSpaceAttributesReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSpaceAttributesReply)
+	err := c.cc.Invoke(ctx, HostAPIService_GetSpaceAttributes_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hostAPIServiceClient) CreateBookingForUser(ctx context.Context, in *CreateBookingForUserArgs, opts ...grpc.CallOption) (*CreateBookingForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateBookingForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_CreateBookingForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hostAPIServiceClient) GetUpcomingBookingsForUser(ctx context.Context, in *GetUpcomingBookingsForUserArgs, opts ...grpc.CallOption) (*GetUpcomingBookingsForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUpcomingBookingsForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_GetUpcomingBookingsForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *hostAPIServiceClient) SpaceGetOne(ctx context.Context, in *SpaceGetOneArgs, opts ...grpc.CallOption) (*SpaceGetOneReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SpaceGetOneReply)
@@ -837,6 +899,13 @@ type HostAPIServiceServer interface {
 	GroupDelete(context.Context, *GroupMutateArgs) (*ErrorReply, error)
 	// Bookings
 	BookingGetOne(context.Context, *BookingGetOneArgs) (*BookingGetOneReply, error)
+	// User-scoped booking operations: each call acts as the given user and
+	// applies exactly the rules of the corresponding REST endpoint.
+	SearchLocationsForUser(context.Context, *SearchLocationsForUserArgs) (*SearchLocationsForUserReply, error)
+	GetSpaceAvailabilityForUser(context.Context, *GetSpaceAvailabilityForUserArgs) (*GetSpaceAvailabilityForUserReply, error)
+	GetSpaceAttributes(context.Context, *GetSpaceAttributesArgs) (*GetSpaceAttributesReply, error)
+	CreateBookingForUser(context.Context, *CreateBookingForUserArgs) (*CreateBookingForUserReply, error)
+	GetUpcomingBookingsForUser(context.Context, *GetUpcomingBookingsForUserArgs) (*GetUpcomingBookingsForUserReply, error)
 	// Spaces
 	SpaceGetOne(context.Context, *SpaceGetOneArgs) (*SpaceGetOneReply, error)
 	SpaceGetCount(context.Context, *SpaceGetCountArgs) (*IntReply, error)
@@ -1001,6 +1070,21 @@ func (UnimplementedHostAPIServiceServer) GroupDelete(context.Context, *GroupMuta
 }
 func (UnimplementedHostAPIServiceServer) BookingGetOne(context.Context, *BookingGetOneArgs) (*BookingGetOneReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method BookingGetOne not implemented")
+}
+func (UnimplementedHostAPIServiceServer) SearchLocationsForUser(context.Context, *SearchLocationsForUserArgs) (*SearchLocationsForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchLocationsForUser not implemented")
+}
+func (UnimplementedHostAPIServiceServer) GetSpaceAvailabilityForUser(context.Context, *GetSpaceAvailabilityForUserArgs) (*GetSpaceAvailabilityForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSpaceAvailabilityForUser not implemented")
+}
+func (UnimplementedHostAPIServiceServer) GetSpaceAttributes(context.Context, *GetSpaceAttributesArgs) (*GetSpaceAttributesReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSpaceAttributes not implemented")
+}
+func (UnimplementedHostAPIServiceServer) CreateBookingForUser(context.Context, *CreateBookingForUserArgs) (*CreateBookingForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateBookingForUser not implemented")
+}
+func (UnimplementedHostAPIServiceServer) GetUpcomingBookingsForUser(context.Context, *GetUpcomingBookingsForUserArgs) (*GetUpcomingBookingsForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUpcomingBookingsForUser not implemented")
 }
 func (UnimplementedHostAPIServiceServer) SpaceGetOne(context.Context, *SpaceGetOneArgs) (*SpaceGetOneReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method SpaceGetOne not implemented")
@@ -1848,6 +1932,96 @@ func _HostAPIService_BookingGetOne_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HostAPIService_SearchLocationsForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchLocationsForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).SearchLocationsForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_SearchLocationsForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).SearchLocationsForUser(ctx, req.(*SearchLocationsForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HostAPIService_GetSpaceAvailabilityForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSpaceAvailabilityForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).GetSpaceAvailabilityForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_GetSpaceAvailabilityForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).GetSpaceAvailabilityForUser(ctx, req.(*GetSpaceAvailabilityForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HostAPIService_GetSpaceAttributes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSpaceAttributesArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).GetSpaceAttributes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_GetSpaceAttributes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).GetSpaceAttributes(ctx, req.(*GetSpaceAttributesArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HostAPIService_CreateBookingForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateBookingForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).CreateBookingForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_CreateBookingForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).CreateBookingForUser(ctx, req.(*CreateBookingForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HostAPIService_GetUpcomingBookingsForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUpcomingBookingsForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).GetUpcomingBookingsForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_GetUpcomingBookingsForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).GetUpcomingBookingsForUser(ctx, req.(*GetUpcomingBookingsForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _HostAPIService_SpaceGetOne_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SpaceGetOneArgs)
 	if err := dec(in); err != nil {
@@ -2332,6 +2506,26 @@ var HostAPIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BookingGetOne",
 			Handler:    _HostAPIService_BookingGetOne_Handler,
+		},
+		{
+			MethodName: "SearchLocationsForUser",
+			Handler:    _HostAPIService_SearchLocationsForUser_Handler,
+		},
+		{
+			MethodName: "GetSpaceAvailabilityForUser",
+			Handler:    _HostAPIService_GetSpaceAvailabilityForUser_Handler,
+		},
+		{
+			MethodName: "GetSpaceAttributes",
+			Handler:    _HostAPIService_GetSpaceAttributes_Handler,
+		},
+		{
+			MethodName: "CreateBookingForUser",
+			Handler:    _HostAPIService_CreateBookingForUser_Handler,
+		},
+		{
+			MethodName: "GetUpcomingBookingsForUser",
+			Handler:    _HostAPIService_GetUpcomingBookingsForUser_Handler,
 		},
 		{
 			MethodName: "SpaceGetOne",

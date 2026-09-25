@@ -213,6 +213,26 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 		SendForbidden(w)
 		return
 	}
+	attributes := []SearchAttribute{}
+	if r.URL.Query().Has("attributes") {
+		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
+	}
+	res, err := router.GetSpaceAvailabilityForUser(user, location, spaceID, enter, leave, attributes)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendJSON(w, res)
+}
+
+// GetSpaceAvailabilityForUser returns the spaces of location (or only
+// spaceID, if non-empty) matching attributes, with their availability between
+// enter and leave and whether user may book them. enter and leave must
+// already carry the location's timezone. Names of other users' bookings are
+// only included if user may see them. The caller must have verified that
+// user may access the location's organization.
+func (router *SpaceRouter) GetSpaceAvailabilityForUser(user *User, location *Location, spaceID string, enter, leave time.Time, attributes []SearchAttribute) ([]*GetSpaceAvailabilityResponse, error) {
 	var showNames bool = false
 	if HasPermission(user, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		showNames = true
@@ -221,9 +241,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	}
 	list, err := GetSpaceRepository().GetAllInTime(location.ID, enter, leave)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return nil, err
 	}
 	spaceIds := []string{}
 	for _, e := range list {
@@ -231,37 +249,23 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	}
 	attributeValues, err := GetSpaceAttributeValueRepository().GetAllForEntityList(spaceIds, SpaceAttributeValueEntityTypeSpace)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return nil, err
 	}
 	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return nil, err
 	}
 	spaceAllowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return nil, err
 	}
-	locationAllowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(locationId)
+	locationAllowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return nil, err
 	}
 	approvers, err := GetSpaceRepository().GetAllApproversForSpaceList(spaceIds)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	attributes := []SearchAttribute{}
-	if r.URL.Query().Has("attributes") {
-		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
+		return nil, err
 	}
 	isAllowedToBookLocation := router.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	isValidWeekday := IsLocationWeekdayBookable(location, user, enter, leave)
@@ -320,7 +324,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 			res = append(res, m)
 		}
 	}
-	SendJSON(w, res)
+	return res, nil
 }
 
 func (router *SpaceRouter) IsApprovalRequired(e *Space, approvers []*SpaceGroup) bool {

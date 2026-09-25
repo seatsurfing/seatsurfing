@@ -1,6 +1,9 @@
 package api
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 // errStr/strErr convert between a Go error and the string-based error
 // convention used in gRPC reply messages for application-level errors:
@@ -126,6 +129,26 @@ type HostAPI interface {
 	GetRoleIDByName(organizationID, name string) (string, error)
 	// AssignRoleToUser grants a role to a user.
 	AssignRoleToUser(userID, roleID string) error
+
+	// User-scoped booking operations (see hostapi_booking.go). Each acts as
+	// userID and applies the same rules as the corresponding REST endpoint.
+
+	// SearchLocationsForUser returns the locations of the user's organization
+	// matching attributes, like POST /location/search.
+	SearchLocationsForUser(userID string, enter, leave time.Time, attributes []SearchAttributeFilter) ([]*LocationInfo, error)
+	// GetSpaceAvailabilityForUser returns the spaces of a location matching
+	// attributes with their availability, like
+	// GET /location/{id}/space/availability.
+	GetSpaceAvailabilityForUser(userID, locationID string, enter, leave time.Time, attributes []SearchAttributeFilter) ([]*SpaceAvailabilityInfo, error)
+	// GetSpaceAttributes returns an organization's attribute definitions.
+	GetSpaceAttributes(organizationID string) ([]*SpaceAttributeDefinition, error)
+	// CreateBookingForUser books a space for the user themselves, like
+	// POST /booking/. Validation failures are reported in the result, not as
+	// an error.
+	CreateBookingForUser(userID, spaceID string, enter, leave time.Time, subject string) (*BookingCreateResult, error)
+	// GetUpcomingBookingsForUser returns the user's own bookings that have
+	// not ended yet, like GET /booking/.
+	GetUpcomingBookingsForUser(userID string) ([]*BookingDetails, error)
 
 	SendEmail(recipient, subject, body, language, orgID string) error
 	Encrypt(plaintext string) (string, error)

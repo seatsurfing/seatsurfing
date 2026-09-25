@@ -320,41 +320,43 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		router.getAll(w, r)
 		return
 	}
-	user := GetRequestUser(r)
-	list, err := GetLocationRepository().GetAll(user.OrganizationID)
+	res, err := router.SearchLocationsForUser(GetRequestUser(r), &m)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
+	SendJSON(w, res)
+}
+
+// SearchLocationsForUser returns the locations of user's organization that
+// match m.Attributes (all of them if there are none), including the
+// synthetic numSpaces, numFreeSpaces and buddyOnSite attributes.
+func (router *LocationRouter) SearchLocationsForUser(user *User, m *SearchLocationRequest) ([]*GetLocationResponse, error) {
+	list, err := GetLocationRepository().GetAll(user.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
 	attributeValues, err := GetSpaceAttributeValueRepository().GetAll(user.OrganizationID, SpaceAttributeValueEntityTypeLocation)
 	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return nil, err
 	}
 	if router.searchInputContains(&m.Attributes, SearchAttributeNumSpaces) {
 		attributeValues, err = router.searchAttachNumSpaces(attributeValues, user.OrganizationID)
 		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
+			return nil, err
 		}
 	}
 	if router.searchInputContains(&m.Attributes, SearchAttributeNumFreeSpaces) {
 		attributeValues, err = router.searchAttachNumFreeSpaces(attributeValues, user.OrganizationID, m.Enter, m.Leave)
 		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
+			return nil, err
 		}
 	}
 	if router.searchInputContains(&m.Attributes, SearchAttributeBuddyOnSite) {
 		attributeValues, err = router.searchAttachBuddiesOnSite(attributeValues, user, m.Enter, m.Leave)
 		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
+			return nil, err
 		}
 	}
 	res := []*GetLocationResponse{}
@@ -364,6 +366,9 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		locationIDs = append(locationIDs, e.ID)
 	}
 	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList(locationIDs)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, e := range list {
 		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
@@ -373,11 +378,10 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 					filteredLocationGroup = append(filteredLocationGroup, ab)
 				}
 			}
-			m := router.copyToRestModel(e, filteredLocationGroup)
-			res = append(res, m)
+			res = append(res, router.copyToRestModel(e, filteredLocationGroup))
 		}
 	}
-	SendJSON(w, res)
+	return res, nil
 }
 
 func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {

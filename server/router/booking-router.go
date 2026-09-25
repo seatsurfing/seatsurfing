@@ -379,20 +379,33 @@ func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *BookingRouter) getAll(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now().UTC().Add(time.Hour * -12)
-	list, err := GetBookingRepository().GetAllByUser(GetRequestUserID(r), startTime)
+	list, err := GetUpcomingBookingsForUser(GetRequestUser(r))
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	user := GetRequestUser(r)
+	res := []*GetBookingResponse{}
+	for _, e := range list {
+		res = append(res, router.copyToRestModel(e))
+	}
+	SendJSON(w, res)
+}
+
+// GetUpcomingBookingsForUser returns the user's own bookings that have not
+// ended yet, judged by the wall-clock time at each booking's location.
+func GetUpcomingBookingsForUser(user *User) ([]*BookingDetails, error) {
+	startTime := time.Now().UTC().Add(time.Hour * -12)
+	list, err := GetBookingRepository().GetAllByUser(user.ID, startTime)
+	if err != nil {
+		return nil, err
+	}
 	defaultTz, err := GetSettingsRepository().Get(user.OrganizationID, SettingDefaultTimezone.Name)
 	if err != nil {
 		defaultTz = "UTC"
 	}
 	nowAtOrg, _ := GetUTCNowInTimezone(defaultTz)
-	res := []*GetBookingResponse{}
+	res := []*BookingDetails{}
 	for _, e := range list {
 		var nowAtLocation time.Time
 		if e.Space.Location.Timezone == "" {
@@ -400,13 +413,11 @@ func (router *BookingRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		} else {
 			nowAtLocation, _ = GetUTCNowInTimezone(e.Space.Location.Timezone)
 		}
-		includeEntity := e.Leave.After(nowAtLocation)
-		if includeEntity {
-			m := router.copyToRestModel(e)
-			res = append(res, m)
+		if e.Leave.After(nowAtLocation) {
+			res = append(res, e)
 		}
 	}
-	SendJSON(w, res)
+	return res, nil
 }
 
 func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
@@ -630,68 +641,128 @@ func (router *BookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *htt
 	SendUpdated(w)
 }
 
+// BookingCreateError describes why a booking could not be created, as the
+// HTTP status and (optional) ResponseCode* value the REST API sends for it.
+type BookingCreateError struct {
+	StatusCode int
+	Code       int
+}
+
+func (e *BookingCreateError) Error() string {
+	return fmt.Sprintf("booking create failed: status %d, code %d", e.StatusCode, e.Code)
+}
+
+// Send writes the error to w the same way the REST handlers always have.
+func (e *BookingCreateError) Send(w http.ResponseWriter) {
+	switch e.StatusCode {
+	case http.StatusForbidden:
+		SendForbidden(w)
+	case http.StatusConflict:
+		SendAlreadyExistsCode(w, e.Code)
+	case http.StatusInternalServerError:
+		SendInternalServerError(w)
+	default:
+		if e.Code != 0 {
+			SendBadRequestCode(w, e.Code)
+		} else {
+			SendBadRequest(w)
+		}
+	}
+}
+
 func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	var m CreateBookingRequest
 	if UnmarshalValidateBody(r, &m) != nil {
 		SendBadRequest(w)
 		return
 	}
-	space, err := GetSpaceRepository().GetOne(m.SpaceID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	location, err := GetLocationRepository().GetOne(space.LocationID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
-	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
-		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
-			SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
-			return
-		}
-	}
 	requestUser := GetRequestUser(r)
-	if !CanAccessOrg(requestUser, location.OrganizationID) {
-		SendForbidden(w)
+	e, space, location, bErr := router.prepareBookingCreate(requestUser, &m)
+	if bErr != nil {
+		bErr.Send(w)
 		return
 	}
-
-	// test if location and space is enabled or user is space admin
-	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
-		SendBadRequest(w)
-		return
-	}
-
-	e, err := router.copyFromRestModel(&m, location)
-	if err != nil {
-		SendInternalServerError(w)
-		return
-	}
-	e.UserID = GetRequestUserID(r)
 	if m.UserEmail != "" && m.UserEmail != requestUser.Email {
 		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 			SendForbidden(w)
 			return
 		}
+		var err error
 		e.UserID, err = router.bookForUser(requestUser, m.UserEmail, w)
 		if err != nil {
 			SendInternalServerError(w)
 			return
 		}
 	}
+	if bErr := router.commitBookingCreate(requestUser, &m, e, space, location); bErr != nil {
+		bErr.Send(w)
+		return
+	}
+	SendCreated(w, e.ID)
+}
 
-	// Hold the create lock for the rest of this handler: it serializes this
+// CreateBookingForUser creates a booking on behalf of requestUser for
+// requestUser themselves (m.UserEmail is ignored), applying exactly the same
+// validation, locking, conflict and approval rules as POST /booking/. It is
+// the entry point for non-HTTP callers such as the plugin host API.
+func (router *BookingRouter) CreateBookingForUser(requestUser *User, m *CreateBookingRequest) (*Booking, *BookingCreateError) {
+	if requestUser == nil {
+		return nil, &BookingCreateError{StatusCode: http.StatusForbidden}
+	}
+	e, space, location, bErr := router.prepareBookingCreate(requestUser, m)
+	if bErr != nil {
+		return nil, bErr
+	}
+	if bErr := router.commitBookingCreate(requestUser, m, e, space, location); bErr != nil {
+		return nil, bErr
+	}
+	return e, nil
+}
+
+// prepareBookingCreate performs the checks that don't depend on the booked
+// user and converts m into a Booking for requestUser.
+func (router *BookingRouter) prepareBookingCreate(requestUser *User, m *CreateBookingRequest) (*Booking, *Space, *Location, *BookingCreateError) {
+	space, err := GetSpaceRepository().GetOne(m.SpaceID)
+	if err != nil {
+		return nil, nil, nil, &BookingCreateError{StatusCode: http.StatusBadRequest}
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		return nil, nil, nil, &BookingCreateError{StatusCode: http.StatusBadRequest}
+	}
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
+		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
+			return nil, nil, nil, &BookingCreateError{StatusCode: http.StatusBadRequest, Code: ResponseCodeBookingSubjectRequired}
+		}
+	}
+	if !CanAccessOrg(requestUser, location.OrganizationID) {
+		return nil, nil, nil, &BookingCreateError{StatusCode: http.StatusForbidden}
+	}
+
+	// test if location and space is enabled or user is space admin
+	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
+		return nil, nil, nil, &BookingCreateError{StatusCode: http.StatusBadRequest}
+	}
+
+	e, err := router.copyFromRestModel(m, location)
+	if err != nil {
+		return nil, nil, nil, &BookingCreateError{StatusCode: http.StatusInternalServerError}
+	}
+	e.UserID = requestUser.ID
+	return e, space, location, nil
+}
+
+// commitBookingCreate validates e against the booking rules and inserts it.
+func (router *BookingRouter) commitBookingCreate(requestUser *User, m *CreateBookingRequest, e *Booking, space *Space, location *Location) *BookingCreateError {
+	// Hold the create lock for the rest of this function: it serializes this
 	// request against any other concurrent create/update for the same user
 	// or location, so the checks below and the insert they guard can't race
 	// with another request's checks and insert.
 	releaseLock, err := AcquireBookingCreateLock(e.UserID, location.ID)
 	if err != nil {
 		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return &BookingCreateError{StatusCode: http.StatusInternalServerError}
 	}
 	defer releaseLock()
 
@@ -705,28 +776,24 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 	}
 	valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0)
 	if !valid {
-		SendBadRequestCode(w, code)
-		return
+		return &BookingCreateError{StatusCode: http.StatusBadRequest, Code: code}
 	}
 
 	conflicts, err := GetBookingRepository().GetConflicts(e.SpaceID, e.Enter, e.Leave, "")
 	if err != nil {
 		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return &BookingCreateError{StatusCode: http.StatusInternalServerError}
 	}
 	if len(conflicts) > 0 {
-		SendAlreadyExistsCode(w, ResponseCodeBookingSlotConflict)
-		return
+		return &BookingCreateError{StatusCode: http.StatusConflict, Code: ResponseCodeBookingSlotConflict}
 	}
 	e.Approved = !router.getSpaceRequiresApproval(location.OrganizationID, space)
 	if err := GetBookingRepository().Create(e); err != nil {
 		log.Println(err)
-		SendInternalServerError(w)
-		return
+		return &BookingCreateError{StatusCode: http.StatusInternalServerError}
 	}
 	go router.onBookingCreated(e)
-	SendCreated(w, e.ID)
+	return nil
 }
 
 func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w http.ResponseWriter) (string, error) {

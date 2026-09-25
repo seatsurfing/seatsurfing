@@ -747,13 +747,17 @@ func (x *HeaderValues) GetValues() []string {
 }
 
 type HttpRequest struct {
-	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Method        string                   `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
-	Path          string                   `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	RawQuery      string                   `protobuf:"bytes,3,opt,name=raw_query,json=rawQuery,proto3" json:"raw_query,omitempty"`
-	Headers       map[string]*HeaderValues `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Body          []byte                   `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
-	UserId        string                   `protobuf:"bytes,6,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	state    protoimpl.MessageState   `protogen:"open.v1"`
+	Method   string                   `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
+	Path     string                   `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	RawQuery string                   `protobuf:"bytes,3,opt,name=raw_query,json=rawQuery,proto3" json:"raw_query,omitempty"`
+	Headers  map[string]*HeaderValues `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Body     []byte                   `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
+	UserId   string                   `protobuf:"bytes,6,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	// host is the Host the request was sent to (http.Request.Host), which Go
+	// does not keep in the header map. remote_addr is http.Request.RemoteAddr.
+	Host          string `protobuf:"bytes,7,opt,name=host,proto3" json:"host,omitempty"`
+	RemoteAddr    string `protobuf:"bytes,8,opt,name=remote_addr,json=remoteAddr,proto3" json:"remote_addr,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -826,6 +830,20 @@ func (x *HttpRequest) GetBody() []byte {
 func (x *HttpRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetRemoteAddr() string {
+	if x != nil {
+		return x.RemoteAddr
 	}
 	return ""
 }
@@ -938,14 +956,17 @@ const file_plugin_proto_rawDesc = "" +
 	"\x13PluginSettingsReply\x12@\n" +
 	"\bsettings\x18\x01 \x03(\v2$.seatsurfing.plugin.v1.PluginSettingR\bsettings\"&\n" +
 	"\fHeaderValues\x12\x16\n" +
-	"\x06values\x18\x01 \x03(\tR\x06values\"\xaf\x02\n" +
+	"\x06values\x18\x01 \x03(\tR\x06values\"\xe4\x02\n" +
 	"\vHttpRequest\x12\x16\n" +
 	"\x06method\x18\x01 \x01(\tR\x06method\x12\x12\n" +
 	"\x04path\x18\x02 \x01(\tR\x04path\x12\x1b\n" +
 	"\traw_query\x18\x03 \x01(\tR\brawQuery\x12I\n" +
 	"\aheaders\x18\x04 \x03(\v2/.seatsurfing.plugin.v1.HttpRequest.HeadersEntryR\aheaders\x12\x12\n" +
 	"\x04body\x18\x05 \x01(\fR\x04body\x12\x17\n" +
-	"\auser_id\x18\x06 \x01(\tR\x06userId\x1a_\n" +
+	"\auser_id\x18\x06 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04host\x18\a \x01(\tR\x04host\x12\x1f\n" +
+	"\vremote_addr\x18\b \x01(\tR\n" +
+	"remoteAddr\x1a_\n" +
 	"\fHeadersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x129\n" +
 	"\x05value\x18\x02 \x01(\v2#.seatsurfing.plugin.v1.HeaderValuesR\x05value:\x028\x01\"\xf0\x01\n" +
