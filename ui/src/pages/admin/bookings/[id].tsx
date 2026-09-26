@@ -175,8 +175,8 @@ class EditBooking extends React.Component<Props, State> {
           const canSave =
             !DateUtil.isInPast(this.entity.leave) && !this.entity.public;
           this.setState({
-            enter: DateUtil.convertToUTC(this.entity.enter),
-            leave: DateUtil.convertToUTC(this.entity.leave),
+            enter: DateUtil.convertFromFakeUTCDate(this.entity.enter),
+            leave: DateUtil.convertFromFakeUTCDate(this.entity.leave),
             selectedLocationId: this.entity.space.locationId,
             selectedSpaceId: this.entity.space.id,
             selectedUserEmail: this.entity.user.email,
@@ -476,7 +476,7 @@ class EditBooking extends React.Component<Props, State> {
         num: this.maxBookingsPerUser,
       });
     }
-    const todayMorning = DateUtil.convertToUTC(new Date());
+    const todayMorning = DateUtil.convertFromFakeUTCDate(new Date());
     todayMorning.setHours(0, 0, 0);
     const enterTime = new Date(this.state.enter);
     if (this.dailyBasisBooking) {

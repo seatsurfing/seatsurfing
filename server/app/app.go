@@ -981,8 +981,8 @@ func (a *App) setupStaticUIRoutes(router *mux.Router) {
 	fs := http.FileServer(neuteredFileSystem{http.Dir(GetConfig().StaticUiPath)})
 	for _, attrPath := range attributesPaths {
 		path := strings.ReplaceAll(attrPath, "[", "{")
-		path = strings.ReplaceAll(path, "]", "}/")
-		router.Path(basePath + path).Handler(a.attributePathHandler(fs, basePath+"/", basePath+attrPath+"/"))
+		path = strings.ReplaceAll(path, "]", "}")
+		router.Path(basePath + path + "/").Handler(a.attributePathHandler(fs, basePath+"/", basePath+attrPath+"/"))
 	}
 	router.Path(basePath + "/").Handler(a.stripStaticPrefix(fs, basePath+"/"))
 	router.PathPrefix(basePath + "/").Handler(http.StripPrefix(basePath+"/", fs))

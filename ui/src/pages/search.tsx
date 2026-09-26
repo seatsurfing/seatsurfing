@@ -40,13 +40,12 @@ import {
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
 } from "react-feather";
-import { Calendar, momentLocalizer, View } from "react-big-calendar";
+import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
-import moment from "moment-timezone";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { getIcal } from "@/components/Ical";
 import {
@@ -76,6 +75,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import IconTextButton from "@/components/IconTextButton";
 import IconButton from "@/components/IconButton";
 import DateUtil from "@/util/DateUtil";
+import CalendarUtil from "@/util/CalendarUtil";
 import SearchUtil from "@/util/SearchUtil";
 import BrowserUtil from "@/util/BrowserUtil";
 import RendererUtils from "@/util/RendererUtils";
@@ -2835,15 +2835,7 @@ class Search extends React.Component<Props, State> {
       <CustomToolbar toolbar={props as any} t={this.props.t} />
     );
 
-    moment.tz.setDefault("UTC");
-    moment.locale(Formatting.Language);
-    const dow = RuntimeConfig.INFOS.weekStartDay;
-    if (moment.localeData().firstDayOfWeek() !== dow) {
-      moment.updateLocale(moment.locale(), {
-        week: { dow },
-      });
-    }
-    const spaceCalLocalizer = momentLocalizer(moment);
+    const spaceCalLocalizer = CalendarUtil.getLocalizer();
 
     const spaceCalendarModal = (
       <FullWidthModal
@@ -2875,11 +2867,11 @@ class Search extends React.Component<Props, State> {
             <div style={{ flex: 1, minHeight: 0 }}>
               <Calendar
                 showMultiDayTimes={true}
-                getNow={() => DateUtil.getNowFakeUTC()}
+                getNow={CalendarUtil.getNow}
                 localizer={spaceCalLocalizer}
                 events={spaceCalendarEvents}
-                startAccessor={(event: CalendarEvent) => event.enter}
-                endAccessor={(event: CalendarEvent) => event.leave}
+                startAccessor={CalendarUtil.startAccessor}
+                endAccessor={CalendarUtil.endAccessor}
                 style={{ height: "100%", width: "100%" }}
                 view={this.getSpaceCalendarView()}
                 onView={(view: View) => {
@@ -2895,12 +2887,7 @@ class Search extends React.Component<Props, State> {
                     : ["week", "month"]
                 }
                 drilldownView="week"
-                eventPropGetter={(event: CalendarEvent) => {
-                  if (event.approved === false) {
-                    return { style: { opacity: 0.5 } };
-                  }
-                  return {};
-                }}
+                eventPropGetter={CalendarUtil.eventPropGetter}
                 date={this.state.spaceCalendarDate}
                 onNavigate={(newDate: Date) => {
                   this.setState({ spaceCalendarDate: newDate }, () => {
@@ -2914,18 +2901,9 @@ class Search extends React.Component<Props, State> {
                 }}
                 step={180}
                 timeslots={1}
-                dayPropGetter={(date: Date) => {
-                  const bookableDays = this.getLocation()?.bookableDays ?? [];
-                  if (
-                    bookableDays.length > 0 &&
-                    !bookableDays.includes(date.getUTCDay())
-                  ) {
-                    return {
-                      style: { backgroundColor: "rgba(0, 0, 0, 0.05)" },
-                    };
-                  }
-                  return {};
-                }}
+                dayPropGetter={CalendarUtil.getDayPropGetter(
+                  this.getLocation()?.bookableDays ?? [],
+                )}
               />
             </div>
           )}
