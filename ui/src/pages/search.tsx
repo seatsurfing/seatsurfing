@@ -381,7 +381,7 @@ class Search extends React.Component<Props, State> {
             return;
           }
           this.getLocation()
-            ?.getAttributes()
+            ?.getAttributes(true)
             .then((attributes) => {
               this.loadMap(this.state.locationId).then(() => {
                 this.setState(
@@ -578,7 +578,7 @@ class Search extends React.Component<Props, State> {
   };
 
   loadLocations = async (): Promise<void> => {
-    return Location.list().then((list) => {
+    return Location.list(true).then((list) => {
       this.locations = list;
     });
   };
@@ -636,9 +636,9 @@ class Search extends React.Component<Props, State> {
 
   loadMap = async (locationId: string) => {
     this.setState({ loading: true });
-    return Location.get(locationId).then((location) => {
+    return Location.get(locationId, true).then((location) => {
       return this.loadSpaces(location.id).then(() => {
-        return Ajax.get(location.getMapUrl()).then((mapData) => {
+        return Ajax.get(location.getMapUrl(true)).then((mapData) => {
           this.mapData = mapData.json;
         });
       });
@@ -656,6 +656,7 @@ class Search extends React.Component<Props, State> {
       this.state.enter,
       leave,
       this.state.searchAttributesSpace,
+      true,
     );
   };
 
@@ -744,7 +745,7 @@ class Search extends React.Component<Props, State> {
       () => {
         this.updateUrlParams();
         this.getLocation()
-          ?.getAttributes()
+          ?.getAttributes(true)
           .then((attributes) => {
             this.loadMap(id).then(() => {
               this.setState(
@@ -1155,6 +1156,7 @@ class Search extends React.Component<Props, State> {
         space.id,
         weekStart,
         weekEnd,
+        true,
       );
       const bookings = (
         spaces.length > 0
@@ -1633,7 +1635,7 @@ class Search extends React.Component<Props, State> {
         () => {
           this.loadMap(this.state.locationId).then(() => {
             this.getLocation()
-              ?.getAttributes()
+              ?.getAttributes(true)
               .then((_attributes) => {
                 this.setState({ loading: false }, () => this.centerMap());
               });

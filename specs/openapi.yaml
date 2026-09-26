@@ -436,6 +436,23 @@ components:
         mapScale:
           type: number
           format: double
+        mapType:
+          type: string
+          enum: ["", designed]
+          description: Empty for an uploaded map image, `designed` for a floor plan created with the floor plan designer
+        allowedBookerGroupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of the groups allowed to book spaces in this location. Empty means everyone may book.
+        bookableDays:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          description: Weekdays (0 = Sunday … 6 = Saturday) on which the location can be booked. Empty means unrestricted.
 
     GetLocationResponse:
       type: object
@@ -465,6 +482,23 @@ components:
           type: integer
         mapMimeType:
           type: string
+        mapType:
+          type: string
+          enum: ["", designed]
+          description: Empty for an uploaded map image, `designed` for a floor plan created with the floor plan designer
+        allowedBookerGroupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of the groups allowed to book spaces in this location. Empty means everyone may book.
+        bookableDays:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          description: Weekdays (0 = Sunday … 6 = Saturday) on which the location can be booked. Empty means unrestricted.
 
     GetMapResponse:
       type: object
@@ -1569,6 +1603,22 @@ components:
     InternalServerError:
       description: Internal server error
 
+  parameters:
+    BookingContext:
+      name: context
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [booking]
+      description: |
+        Set to `booking` when requesting from the booking frontend. If the organization
+        setting `hide_disallowed_locations` is enabled, locations with a non-empty
+        `allowedBookerGroupIds` list are hidden from users who are not members of one
+        of these groups. Users with at least read access to `areas`, `bookings`,
+        `analytics` or `presence_report` can still see them, unless this parameter is
+        set to `booking`.
+
 paths:
   # ===========================
   # Authentication
@@ -2451,10 +2501,15 @@ paths:
     get:
       tags: [Locations]
       summary: Get all locations
-      description: Returns all locations in the user's organization.
+      description: |
+        Returns all locations in the user's organization. Locations hidden by the
+        `hide_disallowed_locations` setting are filtered according to the `context`
+        query parameter.
       operationId: getAllLocations
       security:
         - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: List of locations
@@ -2489,7 +2544,9 @@ paths:
     post:
       tags: [Locations]
       summary: Search locations
-      description: Searches locations with optional attribute filters (e.g. number of free spaces, buddies on site). If no attributes are provided, returns all locations.
+      description: |
+        Searches locations with optional attribute filters (e.g. number of free spaces, buddies on site). If no attributes are provided, returns all locations.
+        This endpoint is intended for the booking frontend: locations hidden by the `hide_disallowed_locations` setting are always filtered as if `context=booking` was set, including for users with administrative permissions.
       operationId: searchLocations
       security:
         - BearerAuth: []
@@ -2540,6 +2597,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: Location details
@@ -2615,6 +2673,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: Map data
@@ -2684,6 +2743,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: Location attribute values
@@ -2778,6 +2838,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: List of spaces
@@ -2791,6 +2852,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     post:
       tags: [Spaces]
       summary: Create a space
@@ -2840,6 +2903,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: Space details
@@ -2947,6 +3011,7 @@ paths:
           schema:
             type: string
           description: JSON-encoded array of SearchAttribute objects for filtering
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: Space availability data
@@ -2960,6 +3025,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /location/{locationId}/space/{id}/availability:
     get:
@@ -2992,6 +3059,7 @@ paths:
           schema:
             type: string
             format: date-time
+        - $ref: "#/components/parameters/BookingContext"
       responses:
         "200":
           description: Space availability data
@@ -3005,6 +3073,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /location/{locationId}/space/bulk:
     post:

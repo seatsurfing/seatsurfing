@@ -322,6 +322,7 @@ var (
 	SettingHideStats                      SettingName = SettingName{Name: "hide_stats", Type: SettingTypeBool}
 	SettingPublicBookingEnabled           SettingName = SettingName{Name: "public_booking_enabled", Type: SettingTypeBool}
 	SettingFeaturePublicBooking           SettingName = SettingName{Name: "feature_public_booking", Type: SettingTypeBool}
+	SettingHideDisallowedLocations        SettingName = SettingName{Name: "hide_disallowed_locations", Type: SettingTypeBool}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────
