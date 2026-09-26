@@ -150,6 +150,10 @@ type HostAPI interface {
 	// GetUpcomingBookingsForUser returns the user's own bookings that have
 	// not ended yet, like GET /booking/.
 	GetUpcomingBookingsForUser(userID string) ([]*BookingDetails, error)
+	// DeleteBookingForUser deletes a booking on behalf of the user, like
+	// DELETE /booking/{id}. Validation failures are reported in the result,
+	// not as an error.
+	DeleteBookingForUser(userID, bookingID string) (*BookingDeleteResult, error)
 
 	SendEmail(recipient, subject, body, language, orgID string) error
 	Encrypt(plaintext string) (string, error)

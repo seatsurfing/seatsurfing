@@ -78,6 +78,7 @@ service HostAPIService {
   rpc GetSpaceAttributesForUser(GetSpaceAttributesForUserArgs) returns (GetSpaceAttributesReply);
   rpc CreateBookingForUser(CreateBookingForUserArgs) returns (CreateBookingForUserReply);
   rpc GetUpcomingBookingsForUser(GetUpcomingBookingsForUserArgs) returns (GetUpcomingBookingsForUserReply);
+  rpc DeleteBookingForUser(DeleteBookingForUserArgs) returns (DeleteBookingForUserReply);
 
   // Spaces
   rpc SpaceGetOne(SpaceGetOneArgs) returns (SpaceGetOneReply);
@@ -253,6 +254,15 @@ message CreateBookingForUserReply {
 }
 message GetUpcomingBookingsForUserArgs { string user_id = 1; }
 message GetUpcomingBookingsForUserReply { repeated seatsurfing.plugin.v1.BookingDetails bookings = 1; string err = 2; }
+message DeleteBookingForUserArgs {
+  string user_id = 1;
+  string booking_id = 2;
+}
+message DeleteBookingForUserReply {
+  int32 status_code = 1;
+  int32 error_code = 2;
+  string err = 3;
+}
 
 // ─── Spaces ───────────────────────────────────────────────────────────────────
 

@@ -72,6 +72,14 @@ type BookingCreateResult struct {
 	ErrorCode  int
 }
 
+// BookingDeleteResult is the outcome of DeleteBookingForUser. StatusCode is
+// the HTTP status the REST API would have returned (204 on success) and
+// ErrorCode its X-Error-Code value (0 if none).
+type BookingDeleteResult struct {
+	StatusCode int
+	ErrorCode  int
+}
+
 // ─── Plugin side (gRPC client) ───────────────────────────────────────────────
 
 func (h *HostAPIGRPC) SearchLocationsForUser(userID string, enter, leave time.Time, attributes []SearchAttributeFilter) ([]*LocationInfo, error) {
@@ -143,6 +151,17 @@ func (h *HostAPIGRPC) GetUpcomingBookingsForUser(userID string) ([]*BookingDetai
 	return res, strErr(reply.Err)
 }
 
+func (h *HostAPIGRPC) DeleteBookingForUser(userID, bookingID string) (*BookingDeleteResult, error) {
+	reply, err := h.client.DeleteBookingForUser(context.Background(), &hostapipb.DeleteBookingForUserArgs{UserId: userID, BookingId: bookingID})
+	if err != nil {
+		return nil, err
+	}
+	if reply.Err != "" {
+		return nil, strErr(reply.Err)
+	}
+	return &BookingDeleteResult{StatusCode: int(reply.StatusCode), ErrorCode: int(reply.ErrorCode)}, nil
+}
+
 // ─── Host side (gRPC server) ─────────────────────────────────────────────────
 
 func (s *HostAPIGRPCServer) SearchLocationsForUser(ctx context.Context, a *hostapipb.SearchLocationsForUserArgs) (*hostapipb.SearchLocationsForUserReply, error) {
@@ -180,6 +199,14 @@ func (s *HostAPIGRPCServer) GetUpcomingBookingsForUser(ctx context.Context, a *h
 		reply.Bookings = append(reply.Bookings, bookingDetailsToProto(b))
 	}
 	return reply, nil
+}
+
+func (s *HostAPIGRPCServer) DeleteBookingForUser(ctx context.Context, a *hostapipb.DeleteBookingForUserArgs) (*hostapipb.DeleteBookingForUserReply, error) {
+	v, err := s.impl.DeleteBookingForUser(a.UserId, a.BookingId)
+	if err != nil || v == nil {
+		return &hostapipb.DeleteBookingForUserReply{Err: errStr(err)}, nil
+	}
+	return &hostapipb.DeleteBookingForUserReply{StatusCode: int32(v.StatusCode), ErrorCode: int32(v.ErrorCode)}, nil
 }
 
 // ─── Conversions ─────────────────────────────────────────────────────────────

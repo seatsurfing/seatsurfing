@@ -139,6 +139,8 @@ func bookingErrorStatus(kind service.BookingErrorKind) int {
 		return http.StatusConflict
 	case service.BookingErrorInternal:
 		return http.StatusInternalServerError
+	case service.BookingErrorNotFound:
+		return http.StatusNotFound
 	default:
 		return http.StatusBadRequest
 	}
@@ -167,4 +169,15 @@ func (h *hostAPIImpl) GetUpcomingBookingsForUser(userID string) ([]*api.BookingD
 		return nil, err
 	}
 	return service.GetBookingService().GetUpcomingBookingsForUser(user)
+}
+
+func (h *hostAPIImpl) DeleteBookingForUser(userID, bookingID string) (*api.BookingDeleteResult, error) {
+	user, err := getActiveUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	if bErr := service.GetBookingService().DeleteBooking(user, bookingID); bErr != nil {
+		return &api.BookingDeleteResult{StatusCode: bookingErrorStatus(bErr.Kind), ErrorCode: bErr.Code}, nil
+	}
+	return &api.BookingDeleteResult{StatusCode: http.StatusNoContent}, nil
 }

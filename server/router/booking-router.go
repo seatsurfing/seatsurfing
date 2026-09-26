@@ -502,50 +502,11 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 
 func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	e, err := GetBookingRepository().GetOne(vars["id"])
-	if err != nil {
-		SendNotFound(w)
+	if bErr := service.GetBookingService().DeleteBooking(GetRequestUser(r), vars["id"]); bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
-	space, err := GetSpaceRepository().GetOne(e.SpaceID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	location, err := GetLocationRepository().GetOne(space.LocationID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	if !CanAccessOrg(GetRequestUser(r), location.OrganizationID) {
-		SendForbidden(w)
-		return
-	}
-	if (e.UserID != GetRequestUserID(r)) && !HasPermission(GetRequestUser(r), location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
-		SendForbidden(w)
-		return
-	}
-	requestUser := GetRequestUser(r)
-
-	// leave must not be in past
-	now := time.Now().UTC()
-	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	if e.Booking.Leave.Before(now) {
-		SendBadRequest(w)
-		return
-	}
-
-	// Check for the date, if the booking request is too close with SettingsMaxHoursBeforeDelete and the deletion can not be performed
-	if service.GetBookingService().IsValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
-		go router.onBookingDeleted(&e.Booking, true)
-		if err := GetBookingRepository().Delete(e); err != nil {
-			SendInternalServerError(w)
-			return
-		}
-		SendUpdated(w)
-		return
-	}
-	SendForbiddenCode(w, ResponseCodeBookingMaxHoursBeforeDelete)
+	SendUpdated(w)
 }
 
 func (router *BookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *http.Request) {
@@ -591,6 +552,9 @@ func init() {
 	service.GetBookingService().SetOnCreated(func(e *Booking) {
 		(&BookingRouter{}).onBookingCreated(e)
 	})
+	service.GetBookingService().SetOnDeleted(func(e *Booking) {
+		(&BookingRouter{}).onBookingDeleted(e, true)
+	})
 }
 
 // sendBookingError writes a booking service error the way the booking
@@ -598,7 +562,13 @@ func init() {
 func sendBookingError(w http.ResponseWriter, e *service.BookingError) {
 	switch e.Kind {
 	case service.BookingErrorForbidden:
-		SendForbidden(w)
+		if e.Code != 0 {
+			SendForbiddenCode(w, e.Code)
+		} else {
+			SendForbidden(w)
+		}
+	case service.BookingErrorNotFound:
+		SendNotFound(w)
 	case service.BookingErrorConflict:
 		SendAlreadyExistsCode(w, e.Code)
 	case service.BookingErrorInternal:

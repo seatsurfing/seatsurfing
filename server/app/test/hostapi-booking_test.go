@@ -269,3 +269,45 @@ func TestHostAPIBookingRejectsForeignOrgAndDisabledUsers(t *testing.T) {
 		t.Fatal("expected error for unknown user")
 	}
 }
+
+func TestHostAPIDeleteBooking(t *testing.T) {
+	org, user, _, space := setupHostBookingTest(t)
+	h := NewHostAPI()
+
+	enter, leave := hostBookingDay(0, 8, 17)
+	created, _ := h.CreateBookingForUser(user.ID, space.ID, enter, leave, "")
+	CheckTestInt(t, http.StatusCreated, created.StatusCode)
+
+	otherUser := CreateTestUserInOrg(org)
+	res, err := h.DeleteBookingForUser(otherUser.ID, created.BookingID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, http.StatusForbidden, res.StatusCode)
+
+	res, err = h.DeleteBookingForUser(user.ID, created.BookingID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, http.StatusNoContent, res.StatusCode)
+	list, _ := h.GetUpcomingBookingsForUser(user.ID)
+	CheckTestInt(t, 0, len(list))
+
+	res, _ = h.DeleteBookingForUser(user.ID, created.BookingID)
+	CheckTestInt(t, http.StatusNotFound, res.StatusCode)
+
+	// Too close to the start.
+	GetSettingsRepository().Set(org.ID, SettingEnableMaxHourBeforeDelete.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "24")
+	soon := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(2 * time.Hour), Leave: time.Now().UTC().Add(3 * time.Hour)}
+	GetBookingRepository().Create(soon)
+	res, _ = h.DeleteBookingForUser(user.ID, soon.ID)
+	CheckTestInt(t, http.StatusForbidden, res.StatusCode)
+	CheckTestInt(t, ResponseCodeBookingMaxHoursBeforeDelete, res.ErrorCode)
+
+	user.Disabled = true
+	GetUserRepository().Update(user)
+	if _, err := h.DeleteBookingForUser(user.ID, soon.ID); err == nil {
+		t.Fatal("expected error for disabled user")
+	}
+}

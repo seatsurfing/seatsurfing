@@ -16,8 +16,9 @@ import (
 // BookingService holds the booking business and validation logic shared by
 // the REST API (package router) and the plugin host API.
 type BookingService struct {
-	onCreatedMu sync.RWMutex
-	onCreated   func(e *Booking)
+	hooksMu   sync.RWMutex
+	onCreated func(e *Booking)
+	onDeleted func(e *Booking)
 }
 
 var bookingService *BookingService
@@ -55,9 +56,10 @@ const (
 	BookingErrorForbidden                             // the user may not perform the operation
 	BookingErrorConflict                              // the space is already booked in the time slot
 	BookingErrorInternal                              // unexpected failure
+	BookingErrorNotFound                              // the booking does not exist
 )
 
-// BookingError describes why a booking could not be created. Code is one of
+// BookingError describes why a booking operation failed. Code is one of
 // the BookingCode* values, or 0.
 type BookingError struct {
 	Kind BookingErrorKind
@@ -90,18 +92,77 @@ type PreparedBooking struct {
 // SetOnCreated registers the function called (asynchronously) after a
 // booking was created, e.g. to send notifications. The router registers it.
 func (s *BookingService) SetOnCreated(f func(e *Booking)) {
-	s.onCreatedMu.Lock()
-	defer s.onCreatedMu.Unlock()
+	s.hooksMu.Lock()
+	defer s.hooksMu.Unlock()
 	s.onCreated = f
 }
 
+// SetOnDeleted registers the function called (asynchronously) when a
+// booking is deleted by DeleteBooking, e.g. to send notifications. The
+// router registers it.
+func (s *BookingService) SetOnDeleted(f func(e *Booking)) {
+	s.hooksMu.Lock()
+	defer s.hooksMu.Unlock()
+	s.onDeleted = f
+}
+
 func (s *BookingService) notifyCreated(e *Booking) {
-	s.onCreatedMu.RLock()
+	s.hooksMu.RLock()
 	f := s.onCreated
-	s.onCreatedMu.RUnlock()
+	s.hooksMu.RUnlock()
 	if f != nil {
 		go f(e)
 	}
+}
+
+func (s *BookingService) notifyDeleted(e *Booking) {
+	s.hooksMu.RLock()
+	f := s.onDeleted
+	s.hooksMu.RUnlock()
+	if f != nil {
+		go f(e)
+	}
+}
+
+// DeleteBooking deletes a booking on behalf of requestUser: their own
+// booking, or any booking of their organization with bookings admin
+// permission. Bookings that have already ended cannot be deleted, and the
+// organization's minimum time between deletion and start applies.
+func (s *BookingService) DeleteBooking(requestUser *User, bookingID string) *BookingError {
+	e, err := GetBookingRepository().GetOne(bookingID)
+	if err != nil {
+		return &BookingError{Kind: BookingErrorNotFound}
+	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil {
+		return &BookingError{Kind: BookingErrorInvalid}
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		return &BookingError{Kind: BookingErrorInvalid}
+	}
+	if !CanAccessOrg(requestUser, location.OrganizationID) {
+		return &BookingError{Kind: BookingErrorForbidden}
+	}
+	if e.UserID != requestUser.ID && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
+		return &BookingError{Kind: BookingErrorForbidden}
+	}
+
+	// leave must not be in past
+	now := time.Now().UTC()
+	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	if e.Booking.Leave.Before(now) {
+		return &BookingError{Kind: BookingErrorInvalid}
+	}
+
+	if !s.IsValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
+		return &BookingError{Kind: BookingErrorForbidden, Code: BookingCodeMaxHoursBeforeDelete}
+	}
+	s.notifyDeleted(&e.Booking)
+	if err := GetBookingRepository().Delete(e); err != nil {
+		return &BookingError{Kind: BookingErrorInternal}
+	}
+	return nil
 }
 
 // CreateBooking creates a booking for requestUser themselves, applying all

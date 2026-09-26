@@ -153,3 +153,68 @@ func TestBookingServiceForeignSpaceRevealsNothing(t *testing.T) {
 	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
 	CheckTestInt(t, 0, bErr.Code)
 }
+
+func TestBookingServiceDeleteBooking(t *testing.T) {
+	org, user, _, space := setupServiceTest(t)
+	svc := GetBookingService()
+	deleted := make(chan string, 1)
+	svc.SetOnDeleted(func(e *Booking) { deleted <- e.ID })
+	defer svc.SetOnDeleted(nil)
+
+	enter, leave := serviceTestSlot(0, 8, 17)
+	e, bErr := svc.CreateBooking(user, &BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave})
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+
+	// Other users of the organization and users of other organizations may
+	// not delete it.
+	otherUser := CreateTestUserInOrg(org)
+	bErr = svc.DeleteBooking(otherUser, e.ID)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
+	foreignUser := CreateTestUserInOrg(CreateTestOrg("other.com"))
+	bErr = svc.DeleteBooking(foreignUser, e.ID)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
+
+	if bErr := svc.DeleteBooking(user, e.ID); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	select {
+	case id := <-deleted:
+		CheckTestString(t, e.ID, id)
+	case <-time.After(5 * time.Second):
+		t.Fatal("OnDeleted was not called")
+	}
+	bErr = svc.DeleteBooking(user, e.ID)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorNotFound)
+}
+
+func TestBookingServiceDeleteBookingRules(t *testing.T) {
+	org, user, _, space := setupServiceTest(t)
+	svc := GetBookingService()
+	GetSettingsRepository().Set(org.ID, SettingEnableMaxHourBeforeDelete.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxHoursBeforeDelete.Name, "24")
+
+	// Starting too soon.
+	soon := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(2 * time.Hour), Leave: time.Now().UTC().Add(3 * time.Hour)}
+	GetBookingRepository().Create(soon)
+	bErr := svc.DeleteBooking(user, soon.ID)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
+	CheckTestInt(t, BookingCodeMaxHoursBeforeDelete, bErr.Code)
+
+	// Already ended.
+	past := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(-72 * time.Hour), Leave: time.Now().UTC().Add(-71 * time.Hour)}
+	GetBookingRepository().Create(past)
+	bErr = svc.DeleteBooking(user, past.ID)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorInvalid)
+
+	// Bookings admins may delete other users' bookings, ignoring the time
+	// limit only with "no admin restrictions".
+	admin := CreateTestUserOrgAdmin(org)
+	bErr = svc.DeleteBooking(admin, soon.ID)
+	CheckTestBool(t, true, bErr != nil && bErr.Code == BookingCodeMaxHoursBeforeDelete)
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "1")
+	if bErr := svc.DeleteBooking(admin, soon.ID); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+}

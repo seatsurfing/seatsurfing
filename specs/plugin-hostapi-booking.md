@@ -4,13 +4,13 @@
 
 Plugins run as separate processes and talk to the core through the gRPC host API (`server/api/hostapi.go`). Until now, that API offered only single-entity lookups for bookings, spaces and locations. A plugin could not search for free spaces, create a booking or list a user's bookings without re-implementing the booking rules.
 
-This spec adds five **user-scoped** host API methods. Each method acts as a given user and runs through the same code path as the matching REST endpoint. A plugin acting for a user therefore gets exactly that user's permissions and booking restrictions. This lets plugins offer booking functionality on behalf of users without duplicating the booking rules.
+This spec adds six **user-scoped** host API methods. Each method acts as a given user and runs through the same code path as the matching REST endpoint. A plugin acting for a user therefore gets exactly that user's permissions and booking restrictions. This lets plugins offer booking functionality on behalf of users without duplicating the booking rules.
 
 It also forwards the request's `Host` and `RemoteAddr` to plugins.
 
 ## Goals
 
-- Plugins can search locations and spaces, create bookings and list upcoming bookings on behalf of a user.
+- Plugins can search locations and spaces, create and delete bookings and list upcoming bookings on behalf of a user.
 - All booking rules keep a single implementation, shared by the REST API and the host API:
   - maximum bookings, advance days and duration limits
   - allowed booker groups
@@ -25,17 +25,17 @@ It also forwards the request's `Host` and `RemoteAddr` to plugins.
 ## Non-Goals
 
 - Booking on behalf of another user through the host API. `POST /booking/` with `userEmail` stays REST-only.
-- Updating or deleting bookings through the host API.
+- Updating bookings through the host API.
 
 ## Service Layer (`server/service`)
 
 The business and validation logic moves out of the REST handlers into a new service layer between `router` and `repository` (see "Layered Architecture" in `AGENTS.md`). The REST handlers and the host API both call these services; the host API does not call router functions.
 
-| Service           | Functions                                                                                                                                                                                                                                     | Used by                                                                                                                 |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `BookingService`  | `CreateBooking`, `PrepareCreate` / `CommitCreate`, `CheckBooking`, `GetUpcomingBookingsForUser`, `IsValidBookingDuration`, `IsValidBookingAdvance`, `IsValidMinHoursBooking`, `IsValidMaxUpcomingBookings`, `IsValidBookingHoursBeforeDelete` | `POST /booking/`, `PUT /booking/{id}`, `DELETE /booking/{id}`, `GET /booking/`, precheck, recurring and public bookings |
-| `SpaceService`    | `GetAvailabilityForUser`, `RequiresApproval`, `IsUserAllowedToBookSpace`, `IsApprovalRequired`                                                                                                                                                | `GET /location/{id}/space/availability`, recurring bookings                                                             |
-| `LocationService` | `SearchLocationsForUser`, `IsLocationWeekdayBookable`, `IsUserAllowedToBookLocation`, `WeekdaysFromString`                                                                                                                                    | `POST /location/search`, booking checks, public bookings                                                                |
+| Service           | Functions                                                                                                                                                                                                                                                      | Used by                                                                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `BookingService`  | `CreateBooking`, `PrepareCreate` / `CommitCreate`, `DeleteBooking`, `CheckBooking`, `GetUpcomingBookingsForUser`, `IsValidBookingDuration`, `IsValidBookingAdvance`, `IsValidMinHoursBooking`, `IsValidMaxUpcomingBookings`, `IsValidBookingHoursBeforeDelete` | `POST /booking/`, `PUT /booking/{id}`, `DELETE /booking/{id}`, `GET /booking/`, precheck, recurring and public bookings |
+| `SpaceService`    | `GetAvailabilityForUser`, `RequiresApproval`, `IsUserAllowedToBookSpace`, `IsApprovalRequired`                                                                                                                                                                 | `GET /location/{id}/space/availability`, recurring bookings                                                             |
+| `LocationService` | `SearchLocationsForUser`, `IsLocationWeekdayBookable`, `IsUserAllowedToBookLocation`, `WeekdaysFromString`                                                                                                                                                     | `POST /location/search`, booking checks, public bookings                                                                |
 
 Also in `service`:
 
@@ -43,7 +43,7 @@ Also in `service`:
 - **Attribute search** (`SearchAttribute`, `MatchesSearchAttributes`, `ValidateSearchAttributes`). The router keeps a type alias and a wrapper.
 - **Booking error codes** (`BookingCode*`). The router's `ResponseCodeBooking*` values refer to them.
 
-Services return domain values and a typed `BookingError` (kind plus error code), never HTTP responses. The router maps them to the same responses as before, so the REST API is unchanged. PrepareCreate/CommitCreate let the router book on behalf of another user (`userEmail`) between the two steps, in the same order as before. Notifications, CalDAV and plugin hooks after a booking is created are registered by the router through `BookingService.SetOnCreated`, so they run for bookings created through any entry point.
+Services return domain values and a typed `BookingError` (kind plus error code), never HTTP responses. The router maps them to the same responses as before, so the REST API is unchanged. PrepareCreate/CommitCreate let the router book on behalf of another user (`userEmail`) between the two steps, in the same order as before. Notifications, CalDAV and plugin hooks after a booking is created or deleted are registered by the router through `BookingService.SetOnCreated` and `SetOnDeleted`, so they run for bookings created or deleted through any entry point.
 
 ## Host API Additions
 
@@ -54,12 +54,13 @@ Services return domain values and a typed `BookingError` (kind plus error code),
 | `GetSpaceAttributesForUser(userID) ([]*SpaceAttributeDefinition, error)`                                                   | `GET /space-attribute/`                                                                    |
 | `CreateBookingForUser(userID, spaceID, enter, leave, subject) (*BookingCreateResult, error)`                               | `POST /booking/` for the user themselves                                                   |
 | `GetUpcomingBookingsForUser(userID) ([]*BookingDetails, error)`                                                            | `GET /booking/`                                                                            |
+| `DeleteBookingForUser(userID, bookingID) (*BookingDeleteResult, error)`                                                    | `DELETE /booking/{id}`                                                                     |
 
 Rules:
 
 - **Active users only.** The user must exist and not be disabled, the same requirement `VerifyAuthMiddleware` applies to REST calls. Otherwise the method returns an error.
 - **Own organization only.** Locations and spaces of other organizations are rejected: an error for availability, and `403` in `BookingCreateResult` for booking creation.
-- **Validation failures are results, not errors.** When `CreateBookingForUser` rejects a booking, it returns `StatusCode` and `ErrorCode` in `BookingCreateResult` (for example `409`/`1001` for a slot conflict) and a nil error. The error return is reserved for transport failures and unknown or disabled users.
+- **Validation failures are results, not errors.** When `CreateBookingForUser` or `DeleteBookingForUser` rejects a request, it returns `StatusCode` and `ErrorCode` in its result (for example `409`/`1001` for a slot conflict, or `403`/`1008` for a deletion too close to the start) and a nil error. A successful deletion reports `204`. The error return is reserved for transport failures and unknown or disabled users.
 - **Times are wall-clock times.** Their timezone is replaced by the location's, as the REST API does. Callers build them in UTC, which is what survives the protobuf `Timestamp` round trip.
 - **Filters are validated** with the same rules as the REST request bodies: valid attribute IDs and comparators only.
 
@@ -72,7 +73,7 @@ The new wire messages are additive (`hostapi.proto`), so existing plugins remain
 ## Tests
 
 - **`server/app/test/hostapi-booking_test.go`** calls the real host API implementation (`app.NewHostAPI()`) and covers:
-  - creating and listing bookings
+  - creating, listing and deleting bookings
   - slot conflicts
   - the maximum-bookings limit
   - invalid durations
@@ -87,6 +88,7 @@ The new wire messages are additive (`hostapi.proto`), so existing plugins remain
 - **`server/api/hostapi_booking_test.go`**: protobuf round-trip tests for the new messages.
 - **`server/service/test/`**: tests of the services themselves:
   - create, conflicts, invalid input, other organizations
+  - delete, including other users, admins, ended bookings and the minimum time before the start
   - booking for another user through prepare/commit
   - disabled spaces
   - `CheckBooking` error codes
