@@ -72,7 +72,7 @@ const (
 	HostAPIService_BookingGetOne_FullMethodName                  = "/seatsurfing.plugin.v1.HostAPIService/BookingGetOne"
 	HostAPIService_SearchLocationsForUser_FullMethodName         = "/seatsurfing.plugin.v1.HostAPIService/SearchLocationsForUser"
 	HostAPIService_GetSpaceAvailabilityForUser_FullMethodName    = "/seatsurfing.plugin.v1.HostAPIService/GetSpaceAvailabilityForUser"
-	HostAPIService_GetSpaceAttributes_FullMethodName             = "/seatsurfing.plugin.v1.HostAPIService/GetSpaceAttributes"
+	HostAPIService_GetSpaceAttributesForUser_FullMethodName      = "/seatsurfing.plugin.v1.HostAPIService/GetSpaceAttributesForUser"
 	HostAPIService_CreateBookingForUser_FullMethodName           = "/seatsurfing.plugin.v1.HostAPIService/CreateBookingForUser"
 	HostAPIService_GetUpcomingBookingsForUser_FullMethodName     = "/seatsurfing.plugin.v1.HostAPIService/GetUpcomingBookingsForUser"
 	HostAPIService_SpaceGetOne_FullMethodName                    = "/seatsurfing.plugin.v1.HostAPIService/SpaceGetOne"
@@ -154,7 +154,7 @@ type HostAPIServiceClient interface {
 	// applies exactly the rules of the corresponding REST endpoint.
 	SearchLocationsForUser(ctx context.Context, in *SearchLocationsForUserArgs, opts ...grpc.CallOption) (*SearchLocationsForUserReply, error)
 	GetSpaceAvailabilityForUser(ctx context.Context, in *GetSpaceAvailabilityForUserArgs, opts ...grpc.CallOption) (*GetSpaceAvailabilityForUserReply, error)
-	GetSpaceAttributes(ctx context.Context, in *GetSpaceAttributesArgs, opts ...grpc.CallOption) (*GetSpaceAttributesReply, error)
+	GetSpaceAttributesForUser(ctx context.Context, in *GetSpaceAttributesForUserArgs, opts ...grpc.CallOption) (*GetSpaceAttributesReply, error)
 	CreateBookingForUser(ctx context.Context, in *CreateBookingForUserArgs, opts ...grpc.CallOption) (*CreateBookingForUserReply, error)
 	GetUpcomingBookingsForUser(ctx context.Context, in *GetUpcomingBookingsForUserArgs, opts ...grpc.CallOption) (*GetUpcomingBookingsForUserReply, error)
 	// Spaces
@@ -643,10 +643,10 @@ func (c *hostAPIServiceClient) GetSpaceAvailabilityForUser(ctx context.Context, 
 	return out, nil
 }
 
-func (c *hostAPIServiceClient) GetSpaceAttributes(ctx context.Context, in *GetSpaceAttributesArgs, opts ...grpc.CallOption) (*GetSpaceAttributesReply, error) {
+func (c *hostAPIServiceClient) GetSpaceAttributesForUser(ctx context.Context, in *GetSpaceAttributesForUserArgs, opts ...grpc.CallOption) (*GetSpaceAttributesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetSpaceAttributesReply)
-	err := c.cc.Invoke(ctx, HostAPIService_GetSpaceAttributes_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, HostAPIService_GetSpaceAttributesForUser_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -903,7 +903,7 @@ type HostAPIServiceServer interface {
 	// applies exactly the rules of the corresponding REST endpoint.
 	SearchLocationsForUser(context.Context, *SearchLocationsForUserArgs) (*SearchLocationsForUserReply, error)
 	GetSpaceAvailabilityForUser(context.Context, *GetSpaceAvailabilityForUserArgs) (*GetSpaceAvailabilityForUserReply, error)
-	GetSpaceAttributes(context.Context, *GetSpaceAttributesArgs) (*GetSpaceAttributesReply, error)
+	GetSpaceAttributesForUser(context.Context, *GetSpaceAttributesForUserArgs) (*GetSpaceAttributesReply, error)
 	CreateBookingForUser(context.Context, *CreateBookingForUserArgs) (*CreateBookingForUserReply, error)
 	GetUpcomingBookingsForUser(context.Context, *GetUpcomingBookingsForUserArgs) (*GetUpcomingBookingsForUserReply, error)
 	// Spaces
@@ -1077,8 +1077,8 @@ func (UnimplementedHostAPIServiceServer) SearchLocationsForUser(context.Context,
 func (UnimplementedHostAPIServiceServer) GetSpaceAvailabilityForUser(context.Context, *GetSpaceAvailabilityForUserArgs) (*GetSpaceAvailabilityForUserReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetSpaceAvailabilityForUser not implemented")
 }
-func (UnimplementedHostAPIServiceServer) GetSpaceAttributes(context.Context, *GetSpaceAttributesArgs) (*GetSpaceAttributesReply, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetSpaceAttributes not implemented")
+func (UnimplementedHostAPIServiceServer) GetSpaceAttributesForUser(context.Context, *GetSpaceAttributesForUserArgs) (*GetSpaceAttributesReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSpaceAttributesForUser not implemented")
 }
 func (UnimplementedHostAPIServiceServer) CreateBookingForUser(context.Context, *CreateBookingForUserArgs) (*CreateBookingForUserReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateBookingForUser not implemented")
@@ -1968,20 +1968,20 @@ func _HostAPIService_GetSpaceAvailabilityForUser_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HostAPIService_GetSpaceAttributes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSpaceAttributesArgs)
+func _HostAPIService_GetSpaceAttributesForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSpaceAttributesForUserArgs)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HostAPIServiceServer).GetSpaceAttributes(ctx, in)
+		return srv.(HostAPIServiceServer).GetSpaceAttributesForUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HostAPIService_GetSpaceAttributes_FullMethodName,
+		FullMethod: HostAPIService_GetSpaceAttributesForUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostAPIServiceServer).GetSpaceAttributes(ctx, req.(*GetSpaceAttributesArgs))
+		return srv.(HostAPIServiceServer).GetSpaceAttributesForUser(ctx, req.(*GetSpaceAttributesForUserArgs))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2516,8 +2516,8 @@ var HostAPIService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _HostAPIService_GetSpaceAvailabilityForUser_Handler,
 		},
 		{
-			MethodName: "GetSpaceAttributes",
-			Handler:    _HostAPIService_GetSpaceAttributes_Handler,
+			MethodName: "GetSpaceAttributesForUser",
+			Handler:    _HostAPIService_GetSpaceAttributesForUser_Handler,
 		},
 		{
 			MethodName: "CreateBookingForUser",

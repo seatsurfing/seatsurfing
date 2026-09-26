@@ -3098,27 +3098,27 @@ func (x *GetSpaceAvailabilityForUserReply) GetErr() string {
 	return ""
 }
 
-type GetSpaceAttributesArgs struct {
+type GetSpaceAttributesForUserArgs struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrgId         string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetSpaceAttributesArgs) Reset() {
-	*x = GetSpaceAttributesArgs{}
+func (x *GetSpaceAttributesForUserArgs) Reset() {
+	*x = GetSpaceAttributesForUserArgs{}
 	mi := &file_hostapi_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetSpaceAttributesArgs) String() string {
+func (x *GetSpaceAttributesForUserArgs) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSpaceAttributesArgs) ProtoMessage() {}
+func (*GetSpaceAttributesForUserArgs) ProtoMessage() {}
 
-func (x *GetSpaceAttributesArgs) ProtoReflect() protoreflect.Message {
+func (x *GetSpaceAttributesForUserArgs) ProtoReflect() protoreflect.Message {
 	mi := &file_hostapi_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3130,14 +3130,14 @@ func (x *GetSpaceAttributesArgs) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSpaceAttributesArgs.ProtoReflect.Descriptor instead.
-func (*GetSpaceAttributesArgs) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetSpaceAttributesForUserArgs.ProtoReflect.Descriptor instead.
+func (*GetSpaceAttributesForUserArgs) Descriptor() ([]byte, []int) {
 	return file_hostapi_proto_rawDescGZIP(), []int{59}
 }
 
-func (x *GetSpaceAttributesArgs) GetOrgId() string {
+func (x *GetSpaceAttributesForUserArgs) GetUserId() string {
 	if x != nil {
-		return x.OrgId
+		return x.UserId
 	}
 	return ""
 }
@@ -4459,9 +4459,9 @@ const file_hostapi_proto_rawDesc = "" +
 	"attributes\"z\n" +
 	" GetSpaceAvailabilityForUserReply\x12D\n" +
 	"\x06spaces\x18\x01 \x03(\v2,.seatsurfing.plugin.v1.SpaceAvailabilityInfoR\x06spaces\x12\x10\n" +
-	"\x03err\x18\x02 \x01(\tR\x03err\"/\n" +
-	"\x16GetSpaceAttributesArgs\x12\x15\n" +
-	"\x06org_id\x18\x01 \x01(\tR\x05orgId\"r\n" +
+	"\x03err\x18\x02 \x01(\tR\x03err\"8\n" +
+	"\x1dGetSpaceAttributesForUserArgs\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"r\n" +
 	"\x17GetSpaceAttributesReply\x12E\n" +
 	"\n" +
 	"attributes\x18\x01 \x03(\v2%.seatsurfing.plugin.v1.SpaceAttributeR\n" +
@@ -4533,7 +4533,7 @@ const file_hostapi_proto_rawDesc = "" +
 	"\x06domain\x18\x01 \x01(\tR\x06domain\"?\n" +
 	"\x17GetEmailHTMLLayoutReply\x12\x12\n" +
 	"\x04html\x18\x01 \x01(\tR\x04html\x12\x10\n" +
-	"\x03err\x18\x02 \x01(\tR\x03err2\xf02\n" +
+	"\x03err\x18\x02 \x01(\tR\x03err2\xff2\n" +
 	"\x0eHostAPIService\x12^\n" +
 	"\vSettingsGet\x12&.seatsurfing.plugin.v1.SettingsGetArgs\x1a'.seatsurfing.plugin.v1.SettingsGetReply\x12f\n" +
 	"\x0fSettingsGetBool\x12&.seatsurfing.plugin.v1.SettingsGetArgs\x1a+.seatsurfing.plugin.v1.SettingsGetBoolReply\x12Y\n" +
@@ -4584,8 +4584,8 @@ const file_hostapi_proto_rawDesc = "" +
 	"\vGroupDelete\x12&.seatsurfing.plugin.v1.GroupMutateArgs\x1a!.seatsurfing.plugin.v1.ErrorReply\x12d\n" +
 	"\rBookingGetOne\x12(.seatsurfing.plugin.v1.BookingGetOneArgs\x1a).seatsurfing.plugin.v1.BookingGetOneReply\x12\x7f\n" +
 	"\x16SearchLocationsForUser\x121.seatsurfing.plugin.v1.SearchLocationsForUserArgs\x1a2.seatsurfing.plugin.v1.SearchLocationsForUserReply\x12\x8e\x01\n" +
-	"\x1bGetSpaceAvailabilityForUser\x126.seatsurfing.plugin.v1.GetSpaceAvailabilityForUserArgs\x1a7.seatsurfing.plugin.v1.GetSpaceAvailabilityForUserReply\x12s\n" +
-	"\x12GetSpaceAttributes\x12-.seatsurfing.plugin.v1.GetSpaceAttributesArgs\x1a..seatsurfing.plugin.v1.GetSpaceAttributesReply\x12y\n" +
+	"\x1bGetSpaceAvailabilityForUser\x126.seatsurfing.plugin.v1.GetSpaceAvailabilityForUserArgs\x1a7.seatsurfing.plugin.v1.GetSpaceAvailabilityForUserReply\x12\x81\x01\n" +
+	"\x19GetSpaceAttributesForUser\x124.seatsurfing.plugin.v1.GetSpaceAttributesForUserArgs\x1a..seatsurfing.plugin.v1.GetSpaceAttributesReply\x12y\n" +
 	"\x14CreateBookingForUser\x12/.seatsurfing.plugin.v1.CreateBookingForUserArgs\x1a0.seatsurfing.plugin.v1.CreateBookingForUserReply\x12\x8b\x01\n" +
 	"\x1aGetUpcomingBookingsForUser\x125.seatsurfing.plugin.v1.GetUpcomingBookingsForUserArgs\x1a6.seatsurfing.plugin.v1.GetUpcomingBookingsForUserReply\x12^\n" +
 	"\vSpaceGetOne\x12&.seatsurfing.plugin.v1.SpaceGetOneArgs\x1a'.seatsurfing.plugin.v1.SpaceGetOneReply\x12Z\n" +
@@ -4679,7 +4679,7 @@ var file_hostapi_proto_goTypes = []any{
 	(*SearchLocationsForUserReply)(nil),      // 56: seatsurfing.plugin.v1.SearchLocationsForUserReply
 	(*GetSpaceAvailabilityForUserArgs)(nil),  // 57: seatsurfing.plugin.v1.GetSpaceAvailabilityForUserArgs
 	(*GetSpaceAvailabilityForUserReply)(nil), // 58: seatsurfing.plugin.v1.GetSpaceAvailabilityForUserReply
-	(*GetSpaceAttributesArgs)(nil),           // 59: seatsurfing.plugin.v1.GetSpaceAttributesArgs
+	(*GetSpaceAttributesForUserArgs)(nil),    // 59: seatsurfing.plugin.v1.GetSpaceAttributesForUserArgs
 	(*GetSpaceAttributesReply)(nil),          // 60: seatsurfing.plugin.v1.GetSpaceAttributesReply
 	(*CreateBookingForUserArgs)(nil),         // 61: seatsurfing.plugin.v1.CreateBookingForUserArgs
 	(*CreateBookingForUserReply)(nil),        // 62: seatsurfing.plugin.v1.CreateBookingForUserReply
@@ -4802,7 +4802,7 @@ var file_hostapi_proto_depIdxs = []int32{
 	48,  // 84: seatsurfing.plugin.v1.HostAPIService.BookingGetOne:input_type -> seatsurfing.plugin.v1.BookingGetOneArgs
 	55,  // 85: seatsurfing.plugin.v1.HostAPIService.SearchLocationsForUser:input_type -> seatsurfing.plugin.v1.SearchLocationsForUserArgs
 	57,  // 86: seatsurfing.plugin.v1.HostAPIService.GetSpaceAvailabilityForUser:input_type -> seatsurfing.plugin.v1.GetSpaceAvailabilityForUserArgs
-	59,  // 87: seatsurfing.plugin.v1.HostAPIService.GetSpaceAttributes:input_type -> seatsurfing.plugin.v1.GetSpaceAttributesArgs
+	59,  // 87: seatsurfing.plugin.v1.HostAPIService.GetSpaceAttributesForUser:input_type -> seatsurfing.plugin.v1.GetSpaceAttributesForUserArgs
 	61,  // 88: seatsurfing.plugin.v1.HostAPIService.CreateBookingForUser:input_type -> seatsurfing.plugin.v1.CreateBookingForUserArgs
 	63,  // 89: seatsurfing.plugin.v1.HostAPIService.GetUpcomingBookingsForUser:input_type -> seatsurfing.plugin.v1.GetUpcomingBookingsForUserArgs
 	65,  // 90: seatsurfing.plugin.v1.HostAPIService.SpaceGetOne:input_type -> seatsurfing.plugin.v1.SpaceGetOneArgs
@@ -4867,7 +4867,7 @@ var file_hostapi_proto_depIdxs = []int32{
 	49,  // 149: seatsurfing.plugin.v1.HostAPIService.BookingGetOne:output_type -> seatsurfing.plugin.v1.BookingGetOneReply
 	56,  // 150: seatsurfing.plugin.v1.HostAPIService.SearchLocationsForUser:output_type -> seatsurfing.plugin.v1.SearchLocationsForUserReply
 	58,  // 151: seatsurfing.plugin.v1.HostAPIService.GetSpaceAvailabilityForUser:output_type -> seatsurfing.plugin.v1.GetSpaceAvailabilityForUserReply
-	60,  // 152: seatsurfing.plugin.v1.HostAPIService.GetSpaceAttributes:output_type -> seatsurfing.plugin.v1.GetSpaceAttributesReply
+	60,  // 152: seatsurfing.plugin.v1.HostAPIService.GetSpaceAttributesForUser:output_type -> seatsurfing.plugin.v1.GetSpaceAttributesReply
 	62,  // 153: seatsurfing.plugin.v1.HostAPIService.CreateBookingForUser:output_type -> seatsurfing.plugin.v1.CreateBookingForUserReply
 	64,  // 154: seatsurfing.plugin.v1.HostAPIService.GetUpcomingBookingsForUser:output_type -> seatsurfing.plugin.v1.GetUpcomingBookingsForUserReply
 	66,  // 155: seatsurfing.plugin.v1.HostAPIService.SpaceGetOne:output_type -> seatsurfing.plugin.v1.SpaceGetOneReply

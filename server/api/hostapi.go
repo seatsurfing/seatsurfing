@@ -140,8 +140,9 @@ type HostAPI interface {
 	// attributes with their availability, like
 	// GET /location/{id}/space/availability.
 	GetSpaceAvailabilityForUser(userID, locationID string, enter, leave time.Time, attributes []SearchAttributeFilter) ([]*SpaceAvailabilityInfo, error)
-	// GetSpaceAttributes returns an organization's attribute definitions.
-	GetSpaceAttributes(organizationID string) ([]*SpaceAttributeDefinition, error)
+	// GetSpaceAttributesForUser returns the attribute definitions of the
+	// user's organization.
+	GetSpaceAttributesForUser(userID string) ([]*SpaceAttributeDefinition, error)
 	// CreateBookingForUser books a space for the user themselves, like
 	// POST /booking/. Validation failures are reported in the result, not as
 	// an error.

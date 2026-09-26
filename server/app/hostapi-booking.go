@@ -106,8 +106,12 @@ func (h *hostAPIImpl) GetSpaceAvailabilityForUser(userID, locationID string, ent
 	return res, nil
 }
 
-func (h *hostAPIImpl) GetSpaceAttributes(organizationID string) ([]*api.SpaceAttributeDefinition, error) {
-	list, err := GetSpaceAttributeRepository().GetAll(organizationID)
+func (h *hostAPIImpl) GetSpaceAttributesForUser(userID string) ([]*api.SpaceAttributeDefinition, error) {
+	user, err := getActiveUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	list, err := GetSpaceAttributeRepository().GetAll(user.OrganizationID)
 	if err != nil {
 		return nil, err
 	}

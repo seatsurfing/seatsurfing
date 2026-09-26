@@ -138,3 +138,18 @@ func TestBookingServiceCheckBooking(t *testing.T) {
 	CheckTestBool(t, false, valid)
 	CheckTestInt(t, BookingCodeInvalidWeekday, code)
 }
+
+func TestBookingServiceForeignSpaceRevealsNothing(t *testing.T) {
+	_, _, _, space := setupServiceTest(t)
+	space.RequireSubject = true
+	GetSpaceRepository().Update(space)
+	org2 := CreateTestOrg("other.com")
+	foreignUser := CreateTestUserInOrg(org2)
+	enter, leave := serviceTestSlot(0, 8, 17)
+
+	// Without a subject, a same-organization user would get
+	// BookingCodeSubjectRequired; a foreign user only learns "forbidden".
+	_, bErr := GetBookingService().CreateBooking(foreignUser, &BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave})
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
+	CheckTestInt(t, 0, bErr.Code)
+}

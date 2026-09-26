@@ -51,7 +51,7 @@ Services return domain values and a typed `BookingError` (kind plus error code),
 | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `SearchLocationsForUser(userID, enter, leave, []SearchAttributeFilter) ([]*LocationInfo, error)`                           | `POST /location/search`, plus location attribute values and an `Allowed` flag for the user |
 | `GetSpaceAvailabilityForUser(userID, locationID, enter, leave, []SearchAttributeFilter) ([]*SpaceAvailabilityInfo, error)` | `GET /location/{id}/space/availability`, without other users' bookings                     |
-| `GetSpaceAttributes(organizationID) ([]*SpaceAttributeDefinition, error)`                                                  | `GET /space-attribute/`                                                                    |
+| `GetSpaceAttributesForUser(userID) ([]*SpaceAttributeDefinition, error)`                                                   | `GET /space-attribute/`                                                                    |
 | `CreateBookingForUser(userID, spaceID, enter, leave, subject) (*BookingCreateResult, error)`                               | `POST /booking/` for the user themselves                                                   |
 | `GetUpcomingBookingsForUser(userID) ([]*BookingDetails, error)`                                                            | `GET /booking/`                                                                            |
 

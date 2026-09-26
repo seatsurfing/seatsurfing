@@ -146,7 +146,7 @@ func TestHostAPISpaceAvailabilityAndAttributes(t *testing.T) {
 	}
 	GetSpaceAttributeValueRepository().Set(attr.ID, space2.ID, SpaceAttributeValueEntityTypeSpace, "1")
 
-	defs, err := h.GetSpaceAttributes(org.ID)
+	defs, err := h.GetSpaceAttributesForUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -260,6 +260,12 @@ func TestHostAPIBookingRejectsForeignOrgAndDisabledUsers(t *testing.T) {
 		t.Fatal("expected error for disabled user")
 	}
 	if _, err := h.GetUpcomingBookingsForUser("00000000-0000-0000-0000-000000000000"); err == nil {
+		t.Fatal("expected error for unknown user")
+	}
+	if _, err := h.GetSpaceAttributesForUser(user.ID); err == nil {
+		t.Fatal("expected error for disabled user")
+	}
+	if _, err := h.GetSpaceAttributesForUser("00000000-0000-0000-0000-000000000000"); err == nil {
 		t.Fatal("expected error for unknown user")
 	}
 }

@@ -101,8 +101,8 @@ func (h *HostAPIGRPC) GetSpaceAvailabilityForUser(userID, locationID string, ent
 	return spaceAvailabilityInfosFromProto(reply.Spaces), strErr(reply.Err)
 }
 
-func (h *HostAPIGRPC) GetSpaceAttributes(organizationID string) ([]*SpaceAttributeDefinition, error) {
-	reply, err := h.client.GetSpaceAttributes(context.Background(), &hostapipb.GetSpaceAttributesArgs{OrgId: organizationID})
+func (h *HostAPIGRPC) GetSpaceAttributesForUser(userID string) ([]*SpaceAttributeDefinition, error) {
+	reply, err := h.client.GetSpaceAttributesForUser(context.Background(), &hostapipb.GetSpaceAttributesForUserArgs{UserId: userID})
 	if err != nil {
 		return nil, err
 	}
@@ -155,8 +155,8 @@ func (s *HostAPIGRPCServer) GetSpaceAvailabilityForUser(ctx context.Context, a *
 	return &hostapipb.GetSpaceAvailabilityForUserReply{Spaces: spaceAvailabilityInfosToProto(v), Err: errStr(err)}, nil
 }
 
-func (s *HostAPIGRPCServer) GetSpaceAttributes(ctx context.Context, a *hostapipb.GetSpaceAttributesArgs) (*hostapipb.GetSpaceAttributesReply, error) {
-	v, err := s.impl.GetSpaceAttributes(a.OrgId)
+func (s *HostAPIGRPCServer) GetSpaceAttributesForUser(ctx context.Context, a *hostapipb.GetSpaceAttributesForUserArgs) (*hostapipb.GetSpaceAttributesReply, error) {
+	v, err := s.impl.GetSpaceAttributesForUser(a.UserId)
 	return &hostapipb.GetSpaceAttributesReply{Attributes: spaceAttributesToProto(v), Err: errStr(err)}, nil
 }
 

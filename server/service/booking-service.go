@@ -135,14 +135,16 @@ func (s *BookingService) PrepareCreate(requestUser *User, in *BookingInput) (*Pr
 	if err != nil {
 		return nil, &BookingError{Kind: BookingErrorInvalid}
 	}
+	// Check organization access before any space-specific rule, so nothing
+	// about another organization's spaces is revealed.
+	if !CanAccessOrg(requestUser, location.OrganizationID) {
+		return nil, &BookingError{Kind: BookingErrorForbidden}
+	}
 	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
 	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
 		if space.RequireSubject && len(strings.TrimSpace(in.Subject)) < 3 {
 			return nil, &BookingError{Kind: BookingErrorInvalid, Code: BookingCodeSubjectRequired}
 		}
-	}
-	if !CanAccessOrg(requestUser, location.OrganizationID) {
-		return nil, &BookingError{Kind: BookingErrorForbidden}
 	}
 	// Disabled locations and spaces can only be booked by space admins.
 	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {

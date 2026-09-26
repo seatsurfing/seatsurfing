@@ -75,7 +75,7 @@ service HostAPIService {
   // applies exactly the rules of the corresponding REST endpoint.
   rpc SearchLocationsForUser(SearchLocationsForUserArgs) returns (SearchLocationsForUserReply);
   rpc GetSpaceAvailabilityForUser(GetSpaceAvailabilityForUserArgs) returns (GetSpaceAvailabilityForUserReply);
-  rpc GetSpaceAttributes(GetSpaceAttributesArgs) returns (GetSpaceAttributesReply);
+  rpc GetSpaceAttributesForUser(GetSpaceAttributesForUserArgs) returns (GetSpaceAttributesReply);
   rpc CreateBookingForUser(CreateBookingForUserArgs) returns (CreateBookingForUserReply);
   rpc GetUpcomingBookingsForUser(GetUpcomingBookingsForUserArgs) returns (GetUpcomingBookingsForUserReply);
 
@@ -235,7 +235,7 @@ message GetSpaceAvailabilityForUserArgs {
   repeated SearchAttribute attributes = 5;
 }
 message GetSpaceAvailabilityForUserReply { repeated SpaceAvailabilityInfo spaces = 1; string err = 2; }
-message GetSpaceAttributesArgs { string org_id = 1; }
+message GetSpaceAttributesForUserArgs { string user_id = 1; }
 message GetSpaceAttributesReply { repeated SpaceAttribute attributes = 1; string err = 2; }
 message CreateBookingForUserArgs {
   string user_id = 1;
