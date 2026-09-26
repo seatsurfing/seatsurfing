@@ -158,7 +158,7 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 			LocationID:     location.ID,
 			LocationName:   location.Name,
 			RequireSubject: space.RequireSubject,
-			BookableDays:   weekdaysFromString(location.BookableDays),
+			BookableDays:   service.WeekdaysFromString(location.BookableDays),
 		})
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
