@@ -290,11 +290,9 @@ class MyPage extends React.Component<Props, State> {
     this.loadData();
   };
 
-  loadData = () => {
-    Entity.list().then((list) => {
-      this.data = list;
-      this.setState({ loading: false });
-    });
+  loadData = async () => {
+    this.data = await Entity.list();
+    this.setState({ loading: false });
   };
 }
 
@@ -316,7 +314,7 @@ export default withTranslation(MyPage as any);
 - All HTTP calls go through the static `Ajax` class in `util/Ajax.ts`.
 - Entity types have static API methods: `Entity.list()`, `Entity.getSelf()`, `Entity.create()`, etc.
 - Entities extend a base `Entity` class with `serialize()` / `deserialize()` methods.
-- Promises use `.then()` / `.catch()` chains (not async/await in class components).
+- Promises use `async`/`await` with `try`/`catch` for error handling (not `.then()` / `.catch()` chains), including in class component methods.
 - Token refresh is handled automatically with a mutex lock in `Ajax`.
 - Global HTTP error handling: `Ajax` exposes static callback hooks (`onForbidden`, `onNotFound`, `onBadRequest`, `onConflict`, `onServerError`, ...) that it invokes based on response status (403, 404, 400, 409, 500/network errors). `pages/_app.tsx` wires each hook to a dedicated modal component (`ForbiddenModal`, `NotFoundModal`, `BadRequestModal`, `ConflictModal`, `ServerErrorModal`) in `componentDidMount`/`componentWillUnmount`. Add new cross-cutting HTTP-status UI this way rather than handling the status in each call site.
 
@@ -521,7 +519,7 @@ Feature specs follow this structure:
 - Do not introduce global state outside the established singleton pattern.
 - Do not add new ORM or query builder dependencies. Raw SQL with `database/sql` is the standard.
 - Do not use `context.Context` for passing business data. It is used only for request-scoped auth data (`UserID`, `SessionID`).
-- Do not use async/await in class components. Use `.then()` / `.catch()` chains.
+- Do not use `.then()` / `.catch()` chains. Use `async`/`await` with `try`/`catch`, including in class components.
 - Do not use CSS-in-JS, Tailwind, or styled-components. Use Bootstrap + CSS files.
 - Do not introduce Redux, Zustand, or any global state library in the frontend.
 - Do not modify existing migration version blocks. Only append new blocks with higher version numbers.
