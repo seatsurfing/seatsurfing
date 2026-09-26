@@ -214,6 +214,10 @@ func (router *LocationRouter) getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
+	router.sendAll(w, r, IsBookingContextRequest(r))
+}
+
+func (router *LocationRouter) sendAll(w http.ResponseWriter, r *http.Request, bookingContext bool) {
 	user := GetRequestUser(r)
 	list, err := GetLocationRepository().GetAll(user.OrganizationID)
 	if err != nil {
@@ -232,7 +236,7 @@ func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	list, err = FilterVisibleLocations(user, list, allowedBookers, IsBookingContextRequest(r))
+	list, err = FilterVisibleLocations(user, list, allowedBookers, bookingContext)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -335,7 +339,8 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(m.Attributes) == 0 {
-		router.getAll(w, r)
+		// Search is only used by the booking frontend, so always apply the booking context
+		router.sendAll(w, r, true)
 		return
 	}
 	user := GetRequestUser(r)

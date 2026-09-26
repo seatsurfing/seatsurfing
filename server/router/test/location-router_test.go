@@ -704,17 +704,22 @@ func TestLocationsHideForDisallowedBookersList(t *testing.T) {
 	CheckTestString(t, "B Restricted Visible", names[1])
 
 	// Search endpoint always applies the booking context filter, also for users with areas permission
-	payload := `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": [{"attributeId": "numSpaces", "comparator": "gt", "value": "0"}]}`
-	for _, userID := range []string{otherUser.ID, areasReader.ID} {
-		req := NewHTTPRequest("POST", "/location/search", userID, bytes.NewBufferString(payload))
-		res := ExecuteTestRequest(req)
-		CheckTestResponseCode(t, http.StatusOK, res.Code)
-		var resBody []*GetLocationResponse
-		json.Unmarshal(res.Body.Bytes(), &resBody)
-		CheckTestInt(t, 2, len(resBody))
-		for _, e := range resBody {
-			if e.Name == "C Restricted Hidden" {
-				t.Fatalf("Expected hidden location not to be returned by search")
+	payloads := []string{
+		`{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": [{"attributeId": "numSpaces", "comparator": "gt", "value": "0"}]}`,
+		`{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": []}`,
+	}
+	for _, payload := range payloads {
+		for _, userID := range []string{otherUser.ID, areasReader.ID} {
+			req := NewHTTPRequest("POST", "/location/search", userID, bytes.NewBufferString(payload))
+			res := ExecuteTestRequest(req)
+			CheckTestResponseCode(t, http.StatusOK, res.Code)
+			var resBody []*GetLocationResponse
+			json.Unmarshal(res.Body.Bytes(), &resBody)
+			CheckTestInt(t, 2, len(resBody))
+			for _, e := range resBody {
+				if e.Name == "C Restricted Hidden" {
+					t.Fatalf("Expected hidden location not to be returned by search")
+				}
 			}
 		}
 	}
