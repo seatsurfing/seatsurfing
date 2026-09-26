@@ -1,7 +1,6 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
 import Organization from "./Organization";
-import MergeRequest from "./MergeRequest";
 import { BuddyBooking } from "./Buddy";
 import { PermissionMap } from "./Permission";
 
@@ -19,7 +18,6 @@ export default class User extends Entity {
   email: string;
   firstname: string;
   lastname: string;
-  atlassianId: string;
   organizationId: string;
   organization: Organization;
   authProviderId: string;
@@ -41,7 +39,6 @@ export default class User extends Entity {
     this.email = "";
     this.firstname = "";
     this.lastname = "";
-    this.atlassianId = "";
     this.organizationId = "";
     this.organization = new Organization();
     this.authProviderId = "";
@@ -79,9 +76,6 @@ export default class User extends Entity {
     if (input.organization) {
       this.organization.deserialize(input.organization);
     }
-    if (input.atlassianId) {
-      this.atlassianId = input.atlassianId;
-    }
     if (input.authProviderId) {
       this.authProviderId = input.authProviderId;
     }
@@ -118,32 +112,6 @@ export default class User extends Entity {
       this.getBackendUrl() + this.id + "/password",
       payload,
     ).then(() => undefined);
-  }
-
-  static async initMerge(targetUserEmail: string): Promise<void> {
-    let payload = { email: targetUserEmail };
-    return Ajax.postData("/user/merge/init", payload).then(() => undefined);
-  }
-
-  static async finishMerge(actionId: string): Promise<void> {
-    return Ajax.postData("/user/merge/finish/" + actionId, null).then(
-      () => undefined,
-    );
-  }
-
-  static async getMergeRequests(): Promise<MergeRequest[]> {
-    return Ajax.get("/user/merge").then((result) => {
-      let list: MergeRequest[] = [];
-      (result.json as []).forEach((item: any) => {
-        let e: MergeRequest = new MergeRequest(
-          item.id,
-          item.email,
-          item.userId,
-        );
-        list.push(e);
-      });
-      return list;
-    });
   }
 
   static async getCount(): Promise<number> {

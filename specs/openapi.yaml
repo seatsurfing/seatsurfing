@@ -113,8 +113,6 @@ tags:
     description: Organization statistics and reports
   - name: Search
     description: Global search across users, locations, spaces, and groups
-  - name: Confluence
-    description: Atlassian Confluence SSO integration
   - name: Healthcheck
     description: Application health check
   - name: Update Check
@@ -878,8 +876,6 @@ components:
         lastname:
           type: string
           maxLength: 128
-        atlassianId:
-          type: string
         role:
           type: integer
           description: "0=User, 1=SpaceAdmin, 2=OrgAdmin, 3=SuperAdmin, 50=ServiceAccountRO, 51=ServiceAccountRW"
@@ -909,8 +905,6 @@ components:
         firstname:
           type: string
         lastname:
-          type: string
-        atlassianId:
           type: string
         role:
           type: integer
@@ -981,28 +975,6 @@ components:
         created:
           type: string
           format: date-time
-
-    InitMergeUsersRequest:
-      type: object
-      required: [email]
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 254
-
-    GetMergeRequestResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        userId:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
 
     GenerateTotpResponse:
       type: object
@@ -1384,7 +1356,7 @@ components:
         method:
           type: string
           description: Authentication method (empty for legacy records)
-          enum: ["", password, totp, passkey, passkey_2fa, oauth, confluence]
+          enum: ["", password, totp, passkey, passkey_2fa, oauth]
         authProviderId:
           type: string
           format: uuid
@@ -1706,8 +1678,8 @@ paths:
   /auth/verify/{id}:
     get:
       tags: [Authentication]
-      summary: Verify OAuth/Atlassian login
-      description: Retrieve JWT tokens after a successful OAuth or Atlassian SSO login. The `id` is the auth state ID received after the OAuth callback redirect.
+      summary: Verify OAuth login
+      description: Retrieve JWT tokens after a successful OAuth SSO login. The `id` is the auth state ID received after the OAuth callback redirect.
       operationId: verifyLogin
       security: []
       parameters:
@@ -4348,70 +4320,6 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /user/merge/init:
-    post:
-      tags: [Users]
-      summary: Initiate user merge
-      description: Initiates a merge request from the authenticated user to the target user (identified by email). The target user must confirm the merge.
-      operationId: mergeInit
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/InitMergeUsersRequest"
-      responses:
-        "204":
-          $ref: "#/components/responses/Updated"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /user/merge/finish/{id}:
-    post:
-      tags: [Users]
-      summary: Complete user merge
-      description: Confirms and completes a merge request. Merges the source user into the authenticated (target) user.
-      operationId: mergeFinish
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Merge request auth state ID
-      responses:
-        "204":
-          $ref: "#/components/responses/Updated"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /user/merge:
-    get:
-      tags: [Users]
-      summary: Get pending merge requests
-      description: Returns all pending merge requests targeting the authenticated user.
-      operationId: getMergeRequests
-      security:
-        - BearerAuth: []
-      responses:
-        "200":
-          description: List of merge requests
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GetMergeRequestResponse"
-
   /auth-provider/{id}/mapping:
     parameters:
       - name: id
@@ -5205,7 +5113,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [password, totp, passkey, passkey_2fa, oauth, confluence]
+            enum: [password, totp, passkey, passkey_2fa, oauth]
           description: Filter by authentication method
         - name: success
           in: query
@@ -5577,38 +5485,6 @@ paths:
                 $ref: "#/components/schemas/GetSearchResultsResponse"
         "403":
           $ref: "#/components/responses/Forbidden"
-
-  # ===========================
-  # Confluence
-  # ===========================
-  /confluence/{orgID}/{jwt}:
-    get:
-      tags: [Confluence]
-      summary: Confluence server SSO login
-      description: Authenticates a user via Atlassian Confluence Server JWT. Redirects to the booking UI on success. No direct authentication required (whitelisted route).
-      operationId: confluenceServerLogin
-      security: []
-      parameters:
-        - name: orgID
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Organization ID
-        - name: jwt
-          in: path
-          required: true
-          schema:
-            type: string
-          description: JWT signed with the Confluence shared secret
-      responses:
-        "307":
-          description: Redirect to booking UI (success or failure page)
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          description: Organization not found (plain text response)
 
   # ===========================
   # Healthcheck

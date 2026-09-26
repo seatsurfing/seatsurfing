@@ -338,8 +338,6 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 	if router.isValidSettingNameReadPublic(name) ||
 		name == SettingAllowAnyUser.Name ||
-		name == SettingConfluenceServerSharedSecret.Name ||
-		name == SettingConfluenceAnonymous.Name ||
 		name == SysSettingOrgSignupDelete ||
 		name == SysSettingAdminMenuItems ||
 		name == SysSettingAdminWelcomeScreens ||
@@ -359,8 +357,6 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 
 func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 	if name == SettingAllowAnyUser.Name ||
-		name == SettingConfluenceServerSharedSecret.Name ||
-		name == SettingConfluenceAnonymous.Name ||
 		name == SettingEnableMaxHourBeforeDelete.Name ||
 		name == SettingMaxBookingsPerUser.Name ||
 		name == SettingMaxConcurrentBookingsPerUser.Name ||
@@ -397,12 +393,6 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingAllowAnyUser.Name {
 		return SettingAllowAnyUser.Type
-	}
-	if name == SettingConfluenceServerSharedSecret.Name {
-		return SettingConfluenceServerSharedSecret.Type
-	}
-	if name == SettingConfluenceAnonymous.Name {
-		return SettingConfluenceAnonymous.Type
 	}
 	if name == SettingMaxBookingsPerUser.Name {
 		return SettingMaxBookingsPerUser.Type
@@ -546,9 +536,6 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 		return true
 	}
 	if name == SettingDefaultTimezone.Name && !IsValidTimeZone(value) {
-		return false
-	}
-	if name == SettingConfluenceServerSharedSecret.Name && len(value) > 256 {
 		return false
 	}
 	if name == SettingSubjectDefault.Name {
