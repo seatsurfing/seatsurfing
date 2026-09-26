@@ -3371,3 +3371,36 @@ func TestBookingsApproveCrossTenant(t *testing.T) {
 		t.Fatal("victim booking must not have been approved by a cross-tenant caller")
 	}
 }
+
+func TestBookingsNoConflictBackToBack(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	_, space := CreateTestLocationAndSpace(org)
+
+	// Create #1
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T09:00:00+02:00\", \"leave\": \"2030-09-01T12:00:00+02:00\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Create #2, starting exactly when #1 ends
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T12:00:00+02:00\", \"leave\": \"2030-09-01T15:00:00+02:00\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Create #3, ending exactly when #1 starts
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T07:00:00+02:00\", \"leave\": \"2030-09-01T09:00:00+02:00\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Create #4, overlapping #2 by one minute
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T14:59:00+02:00\", \"leave\": \"2030-09-01T17:00:00+02:00\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+}

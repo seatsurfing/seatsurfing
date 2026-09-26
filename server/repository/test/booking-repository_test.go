@@ -382,6 +382,156 @@ func TestBookingRepositoryGetAllByOrgOverlapping(t *testing.T) {
 	CheckTestInt(t, 0, len(list))
 }
 
+func TestBookingRepositoryGetConflictsHalfOpen(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	at := func(h, m int) time.Time {
+		return time.Date(2030, 9, 1, h, m, 0, 0, time.Local)
+	}
+	existing := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       at(10, 0),
+		Leave:       at(11, 0),
+		RecurringID: NullUUID(""),
+	}
+	if err := GetBookingRepository().Create(existing); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		name     string
+		enter    time.Time
+		leave    time.Time
+		expected int
+	}{
+		{"ends when existing starts", at(9, 0), at(10, 0), 0},
+		{"starts when existing ends", at(11, 0), at(12, 0), 0},
+		{"before", at(8, 0), at(9, 0), 0},
+		{"after", at(12, 0), at(13, 0), 0},
+		{"overlaps start", at(9, 0), at(10, 1), 1},
+		{"overlaps end", at(10, 59), at(12, 0), 1},
+		{"identical", at(10, 0), at(11, 0), 1},
+		{"within", at(10, 15), at(10, 45), 1},
+		{"surrounds", at(9, 0), at(12, 0), 1},
+	}
+	for _, c := range cases {
+		conflicts, err := GetBookingRepository().GetConflicts(space.ID, c.enter, c.leave, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(conflicts) != c.expected {
+			t.Fatalf("%s: expected %d conflicts, got %d", c.name, c.expected, len(conflicts))
+		}
+	}
+
+	// Excluding the existing booking itself yields no conflict
+	conflicts, err := GetBookingRepository().GetConflicts(space.ID, at(10, 0), at(11, 0), existing.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(conflicts))
+}
+
+func TestBookingRepositoryGetTimeRangeByUserHalfOpen(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	otherUser := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+
+	at := func(h, m int) time.Time {
+		return time.Date(2030, 9, 1, h, m, 0, 0, time.Local)
+	}
+	existing := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       at(10, 0),
+		Leave:       at(11, 0),
+		RecurringID: NullUUID(""),
+	}
+	if err := GetBookingRepository().Create(existing); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		name     string
+		enter    time.Time
+		leave    time.Time
+		expected int
+	}{
+		{"ends when existing starts", at(9, 0), at(10, 0), 0},
+		{"starts when existing ends", at(11, 0), at(12, 0), 0},
+		{"overlaps start", at(9, 0), at(10, 1), 1},
+		{"overlaps end", at(10, 59), at(12, 0), 1},
+		{"identical", at(10, 0), at(11, 0), 1},
+		{"within", at(10, 15), at(10, 45), 1},
+		{"surrounds", at(9, 0), at(12, 0), 1},
+	}
+	for _, c := range cases {
+		list, err := GetBookingRepository().GetTimeRangeByUser(user.ID, c.enter, c.leave, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(list) != c.expected {
+			t.Fatalf("%s: expected %d bookings, got %d", c.name, c.expected, len(list))
+		}
+	}
+
+	// Bookings of other users are not returned
+	list, err := GetBookingRepository().GetTimeRangeByUser(otherUser.ID, at(10, 0), at(11, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(list))
+}
+
+func TestBookingRepositoryGetConcurrentHalfOpen(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location, space := CreateTestLocationAndSpace(org)
+	location.Timezone = "UTC"
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+
+	at := func(h, m int) time.Time {
+		return time.Date(2030, 9, 1, h, m, 0, 0, time.UTC)
+	}
+	existing := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       at(10, 0),
+		Leave:       at(11, 0),
+		RecurringID: NullUUID(""),
+	}
+	if err := GetBookingRepository().Create(existing); err != nil {
+		t.Fatal(err)
+	}
+
+	num, err := GetBookingRepository().GetConcurrent(location, at(11, 0), at(12, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, num)
+
+	num, err = GetBookingRepository().GetConcurrent(location, at(9, 0), at(10, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, num)
+
+	num, err = GetBookingRepository().GetConcurrent(location, at(10, 30), at(12, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, num)
+}
+
 func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
