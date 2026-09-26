@@ -721,7 +721,7 @@ class Login extends React.Component<Props, State> {
             <Link href="/resetpw">{this.props.t("forgotPassword")}</Link>
           </p>
         </Form>
-        {copyrightFooter}
+        <CopyrightFooter />
       </div>
     );
   }
