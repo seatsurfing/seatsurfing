@@ -11,6 +11,11 @@ if [[ "$*" == *"--install"* ]]; then
     (cd "$SCRIPT_DIR/ui" && npm ci)
 fi
 
+RUN_SERVER_CMD="./run.sh"
+if [[ "$*" == *"--clear-db"* ]]; then
+    RUN_SERVER_CMD="./run.sh --clear-db"
+fi
+
 SESSION="seatsurfing-dev"
 
 tmux new-session -d -s "$SESSION" -x 220 -y 50
@@ -25,7 +30,7 @@ tmux send-keys -t "$SESSION:0.0" "cd '$SCRIPT_DIR/ui' && npm run dev" Enter
 tmux send-keys -t "$SESSION:0.1" "cd '$SCRIPT_DIR/ui' && npm run test" Enter
 
 # Top right: backend
-tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && ./run.sh" Enter
+tmux send-keys -t "$SESSION:0.2" "cd '$SCRIPT_DIR/server' && $RUN_SERVER_CMD" Enter
 
 # Bottom: dev console (full width)
 tmux split-window -v -f -t "$SESSION:0"
@@ -50,15 +55,7 @@ cd '$SCRIPT_DIR' \
   && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; \
 } \
 && export -f restartServer \
-&& clearDatabase() { \
-  tmux send-keys -t '$SESSION:0.2' C-c '' Enter \
-  && sleep 1 \
-  && docker exec postgres-seatsurfing psql -U postgres -c 'DROP DATABASE IF EXISTS seatsurfing;' \
-  && docker exec postgres-seatsurfing psql -U postgres -c 'CREATE DATABASE seatsurfing;' \
-  && tmux send-keys -t '$SESSION:0.2' \"cd '$SCRIPT_DIR/server' && ./run.sh\" Enter; \
-} \
-&& export -f clearDatabase \
-&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\n- restartServer: restarts the backend server\n- clearDatabase: restarts with a clean new database\n- prettierFormat: runs code formatting\n- add-missing-translations: adds missing translations\n\nHappy Seatsurfing … 🏄\n\n' \
+&& printf '\nLogin: http://localhost:3000/ui/ (user: admin@seatsurfing.local / password: Sea!surf1ng)\nMails: http://localhost:8025\n\nCommands:\n- restartServer: restarts the backend server\n- prettierFormat: runs code formatting\n- add-missing-translations: adds missing translations\n\nTip: run ./dev.sh --clear-db to start with a clean, empty database.\n\nHappy Seatsurfing … 🏄\n\n' \
 ; bash \
 ; tmux kill-session -t '$SESSION'\
 "
