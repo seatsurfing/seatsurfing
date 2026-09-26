@@ -793,38 +793,11 @@ func (router *AuthRouter) parseOS(ua string) string {
 	return "Unknown OS"
 }
 
-func (router *AuthRouter) handleAtlassianVerify(r *http.Request, authState *AuthState, w http.ResponseWriter) {
-	payload := unmarshalAuthStateLoginPayload(authState.Payload)
-	user, err := GetUserRepository().GetByAtlassianID(payload.UserID)
-	if err != nil {
-		// organization is not determinable here, so no auth event is recorded
-		SendNotFound(w)
-		return
-	}
-	if user.Disabled {
-		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodConfluence, ErrorCode: AuthErrorUserDisabled})
-		SendNotFound(w)
-		return
-	}
-	if user.AccountType.IsServiceAccount() {
-		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodConfluence, ErrorCode: AuthErrorServiceAccount})
-		SendNotFound(w)
-		return
-	}
-	GetAuthStateRepository().MarkForDeletion(authState, authStateVerifyGraceWindow)
-
-	router.createAndSendJWT(w, r, user, AuthMethodConfluence, "", "", "")
-}
-
 func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
 	if err != nil {
 		SendNotFound(w)
-		return
-	}
-	if authState.AuthStateType == AuthAtlassian {
-		router.handleAtlassianVerify(r, authState, w)
 		return
 	}
 	if authState.AuthStateType != AuthResponseCache {

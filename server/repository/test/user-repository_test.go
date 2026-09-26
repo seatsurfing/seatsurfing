@@ -100,57 +100,6 @@ func TestUsersCountHumanScopedByOrg(t *testing.T) {
 	CheckTestInt(t, 1, res)
 }
 
-func TestDeleteObsoleteConfluenceAnonymousUsers(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	u1 := CreateTestUserInOrg(org) // Regular user 1
-	u2 := CreateTestUserInOrg(org) // Regular user 2
-
-	// Confluence User 1 with recent login (not to be deleted)
-	cu1 := CreateTestUserInOrgWithName(org, "confluence-anonymous-"+uuid.New().String()+"@test.com", UserRoleUser)
-	GetAuthAttemptRepository().RecordAuthEvent(&AuthEvent{User: cu1, Successful: true, Method: AuthMethodPassword, BanCheck: true})
-
-	// Confluence User 2 without login (to be deleted)
-	CreateTestUserInOrgWithName(org, "confluence-anonymous-"+uuid.New().String()+"@test.com", UserRoleUser)
-
-	// Confluence User 3 with old login (to be deleted)
-	cu3 := CreateTestUserInOrgWithName(org, "confluence-anonymous-"+uuid.New().String()+"@test.com", UserRoleUser)
-	la := &AuthAttempt{
-		UserID:     cu3.ID,
-		Email:      cu3.Email,
-		Timestamp:  time.Now().Add(-26 * time.Hour),
-		Successful: true,
-	}
-	GetAuthAttemptRepository().Create(la)
-
-	// Confluence User 4 with recent failed login (to be deleted)
-	cu4 := CreateTestUserInOrgWithName(org, "confluence-anonymous-"+uuid.New().String()+"@test.com", UserRoleUser)
-	la = &AuthAttempt{
-		UserID:     cu4.ID,
-		Email:      cu4.Email,
-		Timestamp:  time.Now().Add(-5 * time.Hour),
-		Successful: false,
-	}
-	GetAuthAttemptRepository().Create(la)
-
-	num, err := GetUserRepository().DeleteObsoleteConfluenceAnonymousUsers()
-	CheckTestBool(t, true, err == nil)
-	CheckTestInt(t, 3, num)
-
-	users, _ := GetUserRepository().GetAll(org.ID, 10000, 0)
-	CheckTestInt(t, 3, len(users))
-
-	invalid := false
-	for _, user := range users {
-		if !((user.ID == u1.ID) ||
-			(user.ID == u2.ID) ||
-			(user.ID == cu1.ID)) {
-			invalid = true
-		}
-	}
-	CheckTestBool(t, false, invalid)
-}
-
 func TestUsersLastActivity(t *testing.T) {
 	ClearTestDB()
 

@@ -103,11 +103,12 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
               &nbsp;{formatter.format(this.state.leave as Date)}
             </p>
           )}
-          {this.state.status === "unavailable" && (
-            <Link href="/book/" className="btn btn-primary">
-              {this.props.t("publicBookingConfirmNewBooking")}
-            </Link>
-          )}
+          {this.state.status === "unavailable" ||
+            (this.state.status === "invalid" && (
+              <Link href="/book/" className="btn btn-primary">
+                {this.props.t("publicBookingConfirmNewBooking")}
+              </Link>
+            ))}
         </div>
       </div>
     );

@@ -113,6 +113,20 @@ func TestOrganizationsUpdateWithoutMailChange(t *testing.T) {
 	CheckTestString(t, "en", resBody2.Language)
 }
 
+func TestOrganizationsUpdateInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	for _, email := range []string{"test@test", "test@test.c", "ä@test.com"} {
+		payload := `{"name": "Some Company Ltd.", "firstname": "Foo", "lastname": "Bar", "email": "` + email + `", "language": "en"}`
+		req := NewHTTPRequest("PUT", "/organization/"+org.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
 func TestOrganizationsUpdateWithMailChange(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

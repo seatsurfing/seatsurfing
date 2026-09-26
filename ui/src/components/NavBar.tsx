@@ -1,18 +1,7 @@
 import React from "react";
-import {
-  Navbar,
-  Nav,
-  Modal,
-  Button,
-  Form,
-  Badge,
-  Container,
-  NavLink,
-} from "react-bootstrap";
+import { Navbar, Nav, Container, NavLink } from "react-bootstrap";
 import RuntimeConfig from "./RuntimeConfig";
 import {
-  Users as IconMerge,
-  Bell as IconAlert,
   Settings as IconSettings,
   Calendar as IconCalendar,
   PlusSquare as IconPlus,
@@ -24,7 +13,6 @@ import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
 import Link from "next/link";
 import { TranslationFunc, withTranslation } from "./withTranslation";
-import MergeRequest from "@/types/MergeRequest";
 import User from "@/types/User";
 import Ajax from "@/util/Ajax";
 import LanguageSelector from "./LanguageSelector";
@@ -32,13 +20,6 @@ import ThemeSelector from "./ThemeSelector";
 import RendererUtils from "@/util/RendererUtils";
 
 interface State {
-  showMergeInit: boolean;
-  showMergeNextStep: boolean;
-  showMergeRequests: boolean;
-  targetUserEmail: string;
-  invalidTargetUserEmail: boolean;
-  mergeRequests: MergeRequest[];
-  allowMergeInit: boolean;
   allowAdmin: boolean;
 }
 
@@ -51,13 +32,6 @@ class NavBar extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      showMergeInit: false,
-      showMergeNextStep: false,
-      showMergeRequests: false,
-      targetUserEmail: "",
-      invalidTargetUserEmail: false,
-      mergeRequests: [],
-      allowMergeInit: false,
       allowAdmin: false,
     };
   }
@@ -70,13 +44,7 @@ class NavBar extends React.Component<Props, State> {
   };
 
   loadData = () => {
-    User.getMergeRequests().then((list) => {
-      this.setState({ mergeRequests: list });
-    });
     User.getSelf().then((user) => {
-      if (user.email === user.atlassianId) {
-        this.setState({ allowMergeInit: true });
-      }
       if (Object.values(user.permissions).some((level) => level > 0)) {
         this.setState({ allowAdmin: true });
       }
@@ -88,62 +56,9 @@ class NavBar extends React.Component<Props, State> {
     RuntimeConfig.logOut();
   };
 
-  showMergeModal = (e: any) => {
-    e.preventDefault();
-    this.setState({ showMergeInit: true });
-  };
-
-  showMergeRequestsModal = (e: any) => {
-    e.preventDefault();
-    this.setState({ showMergeRequests: true });
-  };
-
-  initMerge = () => {
-    User.initMerge(this.state.targetUserEmail)
-      .then(() => {
-        this.setState({
-          showMergeInit: false,
-          showMergeNextStep: true,
-        });
-      })
-      .catch(() => {
-        this.setState({
-          invalidTargetUserEmail: true,
-        });
-      });
-  };
-
-  openWebUI = () => {
-    if (typeof window !== "undefined") {
-      window.open(window.location.href);
-    }
-  };
-
-  acceptMergeRequest = (id: string) => {
-    User.finishMerge(id).then(() => {
-      this.setState({
-        showMergeRequests: false,
-      });
-      this.loadData();
-    });
-  };
-
-  renderMergeRequest = (item: MergeRequest) => {
-    return (
-      <p key={item.id}>
-        {item.email}{" "}
-        <Button size="sm" onClick={() => this.acceptMergeRequest(item.id)}>
-          {this.props.t("accept")}
-        </Button>
-      </p>
-    );
-  };
-
   render() {
     let signOffButton = <></>;
     let adminButton = <></>;
-    let initMergeButton = <></>;
-    let mergeRequestsButton = <></>;
     let collapsable = <></>;
     let buddies = <></>;
 
@@ -162,24 +77,6 @@ class NavBar extends React.Component<Props, State> {
       signOffButton = (
         <Nav.Link onClick={this.logOut}>{this.props.t("logout")}</Nav.Link>
       );
-      if (this.state.mergeRequests.length > 0) {
-        mergeRequestsButton = (
-          <Nav.Link onClick={this.showMergeRequestsModal} className="icon-link">
-            <IconAlert className="feather feather-lg" />
-            <Badge pill={true} bg="light" className="badge-top">
-              {this.state.mergeRequests.length}
-            </Badge>
-          </Nav.Link>
-        );
-      }
-    } else {
-      if (this.state.allowMergeInit) {
-        initMergeButton = (
-          <Nav.Link onClick={this.showMergeModal} className="icon-link">
-            <IconMerge className="feather feather-lg" />
-          </Nav.Link>
-        );
-      }
     }
 
     if (RuntimeConfig.INFOS.showNames && !RuntimeConfig.INFOS.disableBuddies) {
@@ -232,8 +129,6 @@ class NavBar extends React.Component<Props, State> {
           {adminButton}
         </Nav>
         <Nav className="ms-auto">
-          {initMergeButton}
-          {mergeRequestsButton}
           <Nav.Link as="span" className="icon-link d-none d-xl-flex pe-none">
             <IconUser className="feather feather-lg" />
             <span
@@ -288,82 +183,6 @@ class NavBar extends React.Component<Props, State> {
             {collapsable}
           </Container>
         </Navbar>
-        <Modal
-          show={this.state.showMergeInit}
-          onHide={() => this.setState({ showMergeInit: false })}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>{this.props.t("mergeUserAccounts")}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>{this.props.t("mergeUserAccountsHint")}</p>
-            <Form
-              onSubmit={(e) => {
-                e.preventDefault();
-                this.initMerge();
-              }}
-            >
-              <Form.Group>
-                <Form.Control
-                  type="email"
-                  placeholder={this.props.t("emailPlaceholder")}
-                  required={true}
-                  value={this.state.targetUserEmail}
-                  onChange={(e: any) =>
-                    this.setState({
-                      targetUserEmail: e.target.value,
-                      invalidTargetUserEmail: false,
-                    })
-                  }
-                  isInvalid={this.state.invalidTargetUserEmail}
-                  autoFocus={true}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {this.props.t("errorInvalidEmail")}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => this.setState({ showMergeInit: false })}
-            >
-              {this.props.t("cancel")}
-            </Button>
-            <Button variant="primary" onClick={this.initMerge}>
-              {this.props.t("requestMerge")}
-            </Button>
-          </Modal.Footer>
-        </Modal>
-        <Modal
-          show={this.state.showMergeNextStep}
-          onHide={() => this.setState({ showMergeNextStep: false })}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>{this.props.t("mergeUserAccounts")}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>{this.props.t("mergeUserAccountsNextStepHint")}</p>
-            <Button onClick={this.openWebUI}>
-              {this.props.t("openWebUI")}
-            </Button>
-          </Modal.Body>
-        </Modal>
-        <Modal
-          show={this.state.showMergeRequests}
-          onHide={() => this.setState({ showMergeRequests: false })}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>{this.props.t("mergeUserAccounts")}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>{this.props.t("introIncomingMergeRequests")}</p>
-            {this.state.mergeRequests.map((item) =>
-              this.renderMergeRequest(item),
-            )}
-          </Modal.Body>
-        </Modal>
       </>
     );
   }

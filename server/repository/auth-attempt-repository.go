@@ -33,7 +33,6 @@ const (
 	AuthMethodPasskey    = "passkey"
 	AuthMethodPasskey2FA = "passkey_2fa"
 	AuthMethodOAuth      = "oauth"
-	AuthMethodConfluence = "confluence"
 )
 
 const (
@@ -62,7 +61,6 @@ const (
 	AuthErrorUserCreateFailed      = "user_create_failed"
 	AuthErrorOrgMismatch           = "org_mismatch"
 	AuthErrorInternal              = "internal_error"
-	AuthErrorConfluenceJwtInvalid  = "confluence_jwt_invalid"
 )
 
 const maxAuthErrorDetailLength = 2000
@@ -290,7 +288,7 @@ func (r *AuthAttemptRepository) checkBanUser(user *User) error {
 	// the latest committed data. "disabled = FALSE" makes this idempotent.
 	// Only count failed attempts for methods that can actually trigger a ban
 	// (password, TOTP, passkey) plus legacy rows recorded before the method
-	// column existed. OAuth/Confluence failures are persisted for the audit
+	// column existed. OAuth failures are persisted for the audit
 	// log but must not contribute to banning a user out of password login.
 	res, err := GetDatabase().DB().Exec("UPDATE users SET disabled = TRUE, ban_expiry = $2 "+
 		"WHERE id = $1 AND disabled = FALSE AND ("+

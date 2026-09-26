@@ -57,6 +57,20 @@ func enablePublicBookingForOrgAndSpace(org *Organization, space *Space) *Space {
 	return space
 }
 
+func TestPublicBookingRequestInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space = enablePublicBookingForOrgAndSpace(org, space)
+
+	for _, email := range []string{"test@test", "test@test.c", "ä@test.com"} {
+		payload := `{"spaceId": "` + space.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "name": "Jane Doe", "email": "` + email + `"}`
+		req := NewHTTPRequest("POST", "/public-booking/"+org.ID+"/request", "", bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
 func TestPublicBookingConfirmPendingReturnsBookingTimes(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -544,4 +558,41 @@ func TestPublicBookingDeleteReturnsNotFoundForPendingBooking(t *testing.T) {
 	if _, err := GetBookingRepository().GetOne(pending.ID); err != nil {
 		t.Fatal("expected booking to still exist")
 	}
+}
+
+func TestPublicBookingGetSpacesReturnsBookableDays(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	location.BookableDays = "1,3,5"
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Spaces))
+	CheckTestInt(t, 3, len(resBody.Spaces[0].BookableDays))
+	CheckTestInt(t, 1, resBody.Spaces[0].BookableDays[0])
+	CheckTestInt(t, 3, resBody.Spaces[0].BookableDays[1])
+	CheckTestInt(t, 5, resBody.Spaces[0].BookableDays[2])
+}
+
+func TestPublicBookingGetSpacesReturnsEmptyBookableDaysWhenUnrestricted(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Spaces))
+	CheckTestInt(t, 0, len(resBody.Spaces[0].BookableDays))
 }

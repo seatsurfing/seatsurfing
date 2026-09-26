@@ -55,7 +55,11 @@ func (r *SettingsStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
-	// nothing yet
+	if curVersion < 60 {
+		if _, err := GetDatabase().DB().Exec("DELETE FROM settings WHERE name IN ('confluence_server_shared_secret', 'confluence_anonymous')"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *SettingsStore) Set(organizationID string, name string, value string) error {
@@ -226,8 +230,6 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingShowNames.Name+"', '0'), "+
 		"($1, '"+SettingAllowBookingsNonExistingUsers.Name+"', '0'), "+
 		"($1, '"+SettingDisableBuddies.Name+"', '0'), "+
-		"($1, '"+SettingConfluenceServerSharedSecret.Name+"', ''), "+
-		"($1, '"+SettingConfluenceAnonymous.Name+"', '0'), "+
 		"($1, '"+SettingMaxBookingsPerUser.Name+"', '10'), "+
 		"($1, '"+SettingMaxConcurrentBookingsPerUser.Name+"', '0'), "+
 		"($1, '"+SettingEnableMaxHourBeforeDelete.Name+"', '0'), "+

@@ -13,7 +13,6 @@ func TestUserRoundTrip(t *testing.T) {
 		Email:                  "test@example.com",
 		Firstname:              "Test",
 		Lastname:               "User",
-		AtlassianID:            "atl-1",
 		HashedPassword:         "hash",
 		AuthProviderID:         "auth-1",
 		PasswordPending:        true,
@@ -47,7 +46,7 @@ func TestUserRoundTripNilOptionalFields(t *testing.T) {
 	if got.LastActivityAtUTC != nil {
 		t.Errorf("expected nil LastActivityAtUTC, got %v", got.LastActivityAtUTC)
 	}
-	if got.AtlassianID != "" || got.HashedPassword != "" || got.AuthProviderID != "" {
+	if got.HashedPassword != "" || got.AuthProviderID != "" {
 		t.Errorf("expected empty NullString/NullUUID fields, got %+v", got)
 	}
 }

@@ -21,6 +21,7 @@ interface Props {
   value: Date;
   minDate?: Date | undefined;
   maxDate?: Date | undefined;
+  isDateDisabled?: (date: Date) => boolean;
   onChange: (value: Date) => void;
 }
 
@@ -88,6 +89,7 @@ class DateTimePicker extends React.Component<Props, State> {
           time_24hr: RuntimeConfig.INFOS.use24HourTime,
           minDate: this.props.minDate,
           maxDate: this.props.maxDate,
+          disable: this.props.isDateDisabled ? [this.props.isDateDisabled] : [],
           locale: {
             ...this.state.locale,
             firstDayOfWeek: RuntimeConfig.INFOS.weekStartDay,

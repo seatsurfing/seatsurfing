@@ -594,7 +594,6 @@ func (a *App) InitializeRouter() {
 	routers["/search/"] = &SearchRouter{}
 	routers["/setting/"] = &SettingsRouter{}
 	routers["/space-attribute/"] = &SpaceAttributeRouter{}
-	routers["/confluence/"] = &ConfluenceRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}
@@ -750,16 +749,9 @@ func (a *App) onTimerTick() {
 	if err := GetUserRepository().EnableUsersWithExpiredBan(); err != nil {
 		log.Println(err)
 	}
-	num, err := GetUserRepository().DeleteObsoleteConfluenceAnonymousUsers()
-	if err != nil {
-		log.Println(err)
-	}
-	if num > 0 {
-		log.Printf("Deleted %d anonymous Confluence users", num)
-	}
 
 	// purge max. 100 bookings after retention period (if enabled)
-	num, err = GetBookingRepository().PurgeOldBookings(100)
+	num, err := GetBookingRepository().PurgeOldBookings(100)
 	if err != nil {
 		log.Println(err)
 	}
