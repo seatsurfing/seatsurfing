@@ -125,7 +125,8 @@ func (r *BookingStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 		// bookings at scale. Safe to denormalize because a space's location_id
 		// and a location's organization_id are both immutable once set (the
 		// routers never let either change), so these columns never go stale
-		// after being populated at booking creation time.
+		// after being populated at booking creation time. Moving a booking
+		// to another space refreshes them (see Update).
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS location_id uuid"); err != nil {
 			panic(err)
 		}
@@ -541,7 +542,11 @@ func (r *BookingStore) Update(e *Booking) error {
 		"subject = $7, "+
 		"recurring_id = $8, "+
 		"public_id = $9, "+
-		"reminder_sent_at_utc = NULL "+
+		"reminder_sent_at_utc = NULL, "+
+		// A booking may move to a space in another location, so refresh the
+		// denormalized columns from the (possibly new) space.
+		"location_id = (SELECT spaces.location_id FROM spaces WHERE spaces.id = $2), "+
+		"organization_id = (SELECT locations.organization_id FROM spaces INNER JOIN locations ON locations.id = spaces.location_id WHERE spaces.id = $2) "+
 		"WHERE id = $10",
 		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), e.ID)
 	return err

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -17,6 +15,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -379,32 +378,15 @@ func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *BookingRouter) getAll(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now().UTC().Add(time.Hour * -12)
-	list, err := GetBookingRepository().GetAllByUser(GetRequestUserID(r), startTime)
+	list, err := service.GetBookingService().GetUpcomingBookingsForUser(GetRequestUser(r))
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	user := GetRequestUser(r)
-	defaultTz, err := GetSettingsRepository().Get(user.OrganizationID, SettingDefaultTimezone.Name)
-	if err != nil {
-		defaultTz = "UTC"
-	}
-	nowAtOrg, _ := GetUTCNowInTimezone(defaultTz)
 	res := []*GetBookingResponse{}
 	for _, e := range list {
-		var nowAtLocation time.Time
-		if e.Space.Location.Timezone == "" {
-			nowAtLocation = nowAtOrg
-		} else {
-			nowAtLocation, _ = GetUTCNowInTimezone(e.Space.Location.Timezone)
-		}
-		includeEntity := e.Leave.After(nowAtLocation)
-		if includeEntity {
-			m := router.copyToRestModel(e)
-			res = append(res, m)
-		}
+		res = append(res, router.copyToRestModel(e))
 	}
 	SendJSON(w, res)
 }
@@ -488,16 +470,14 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer releaseLock()
 
-	bookingReq := &CreateBookingRequest{
+	bookingReq := &service.BookingInput{
 		SpaceID: m.SpaceID,
 		Subject: m.Subject,
-		BookingRequest: BookingRequest{
-			Enter: eNew.Enter,
-			Leave: eNew.Leave,
-		},
+		Enter:   eNew.Enter,
+		Leave:   eNew.Leave,
 	}
 
-	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, eNew.ID, 0); !valid {
+	if valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, eNew.ID, 0); !valid {
 		SendBadRequestCode(w, code)
 		return
 	}
@@ -522,72 +502,11 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 
 func (router *BookingRouter) delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	e, err := GetBookingRepository().GetOne(vars["id"])
-	if err != nil {
-		SendNotFound(w)
+	if bErr := service.GetBookingService().DeleteBooking(GetRequestUser(r), vars["id"]); bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
-	space, err := GetSpaceRepository().GetOne(e.SpaceID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	location, err := GetLocationRepository().GetOne(space.LocationID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	if !CanAccessOrg(GetRequestUser(r), location.OrganizationID) {
-		SendForbidden(w)
-		return
-	}
-	if (e.UserID != GetRequestUserID(r)) && !HasPermission(GetRequestUser(r), location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
-		SendForbidden(w)
-		return
-	}
-	requestUser := GetRequestUser(r)
-
-	// leave must not be in past
-	now := time.Now().UTC()
-	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	if e.Booking.Leave.Before(now) {
-		SendBadRequest(w)
-		return
-	}
-
-	// Check for the date, if the booking request is too close with SettingsMaxHoursBeforeDelete and the deletion can not be performed
-	if router.IsValidBookingHoursBeforeDelete(e, requestUser, location.OrganizationID) {
-		go router.onBookingDeleted(&e.Booking, true)
-		if err := GetBookingRepository().Delete(e); err != nil {
-			SendInternalServerError(w)
-			return
-		}
-		SendUpdated(w)
-		return
-	}
-	SendForbiddenCode(w, ResponseCodeBookingMaxHoursBeforeDelete)
-}
-
-func (router *BookingRouter) checkBookingCreateUpdate(m *CreateBookingRequest, location *Location, requestUser *User, bookingID string, upcomingBookingsMarkup int) (bool, int) {
-	if valid, code := router.isValidBookingRequest(m, location, requestUser, location.OrganizationID, bookingID, upcomingBookingsMarkup); !valid {
-		return false, code
-	}
-	if !router.isValidConcurrent(m, location, bookingID) {
-		return false, ResponseCodeBookingLocationMaxConcurrent
-	}
-	if valid, code := router.isValidBookingWeekday(&m.BookingRequest, location, requestUser); !valid {
-		return false, code
-	}
-	return true, 0
-}
-
-// isValidBookingWeekday checks the location's optional bookable-weekdays
-// restriction against every calendar day the booking spans.
-func (router *BookingRouter) isValidBookingWeekday(m *BookingRequest, location *Location, user *User) (bool, int) {
-	if !IsLocationWeekdayBookable(location, user, m.Enter, m.Leave) {
-		return false, ResponseCodeBookingInvalidWeekday
-	}
-	return true, 0
+	SendUpdated(w)
 }
 
 func (router *BookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *http.Request) {
@@ -616,18 +535,51 @@ func (router *BookingRouter) preBookingCreateCheck(w http.ResponseWriter, r *htt
 		SendInternalServerError(w)
 		return
 	}
-	bookingReq := &CreateBookingRequest{
-		SpaceID: "",
-		BookingRequest: BookingRequest{
-			Enter: enterNew,
-			Leave: leaveNew,
-		},
+	bookingReq := &service.BookingInput{
+		Enter: enterNew,
+		Leave: leaveNew,
 	}
-	if valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0); !valid {
+	if valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", 0); !valid {
 		SendBadRequestCode(w, code)
 		return
 	}
 	SendUpdated(w)
+}
+
+func init() {
+	// Notifications, CalDAV and plugin hooks for bookings created through the
+	// booking service (REST API and plugin host API alike).
+	service.GetBookingService().SetOnCreated(func(e *Booking) {
+		(&BookingRouter{}).onBookingCreated(e)
+	})
+	service.GetBookingService().SetOnDeleted(func(e *Booking) {
+		(&BookingRouter{}).onBookingDeleted(e, true)
+	})
+}
+
+// sendBookingError writes a booking service error the way the booking
+// endpoints always have.
+func sendBookingError(w http.ResponseWriter, e *service.BookingError) {
+	switch e.Kind {
+	case service.BookingErrorForbidden:
+		if e.Code != 0 {
+			SendForbiddenCode(w, e.Code)
+		} else {
+			SendForbidden(w)
+		}
+	case service.BookingErrorNotFound:
+		SendNotFound(w)
+	case service.BookingErrorConflict:
+		SendAlreadyExistsCode(w, e.Code)
+	case service.BookingErrorInternal:
+		SendInternalServerError(w)
+	default:
+		if e.Code != 0 {
+			SendBadRequestCode(w, e.Code)
+		} else {
+			SendBadRequest(w)
+		}
+	}
 }
 
 func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
@@ -636,97 +588,35 @@ func (router *BookingRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	space, err := GetSpaceRepository().GetOne(m.SpaceID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	location, err := GetLocationRepository().GetOne(space.LocationID)
-	if err != nil {
-		SendBadRequest(w)
-		return
-	}
-	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
-	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
-		if space.RequireSubject && len(strings.TrimSpace(m.Subject)) < 3 {
-			SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
-			return
-		}
-	}
 	requestUser := GetRequestUser(r)
-	if !CanAccessOrg(requestUser, location.OrganizationID) {
-		SendForbidden(w)
+	bookings := service.GetBookingService()
+	p, bErr := bookings.PrepareCreate(requestUser, &service.BookingInput{
+		SpaceID: m.SpaceID,
+		Subject: m.Subject,
+		Enter:   m.Enter,
+		Leave:   m.Leave,
+	})
+	if bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
-
-	// test if location and space is enabled or user is space admin
-	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
-		SendBadRequest(w)
-		return
-	}
-
-	e, err := router.copyFromRestModel(&m, location)
-	if err != nil {
-		SendInternalServerError(w)
-		return
-	}
-	e.UserID = GetRequestUserID(r)
 	if m.UserEmail != "" && m.UserEmail != requestUser.Email {
-		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
+		if !HasPermission(requestUser, p.Location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 			SendForbidden(w)
 			return
 		}
-		e.UserID, err = router.bookForUser(requestUser, m.UserEmail, w)
+		var err error
+		p.Booking.UserID, err = router.bookForUser(requestUser, m.UserEmail, w)
 		if err != nil {
 			SendInternalServerError(w)
 			return
 		}
 	}
-
-	// Hold the create lock for the rest of this handler: it serializes this
-	// request against any other concurrent create/update for the same user
-	// or location, so the checks below and the insert they guard can't race
-	// with another request's checks and insert.
-	releaseLock, err := AcquireBookingCreateLock(e.UserID, location.ID)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
+	if bErr := bookings.CommitCreate(requestUser, p); bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
-	defer releaseLock()
-
-	bookingReq := &CreateBookingRequest{
-		SpaceID: m.SpaceID,
-		Subject: m.Subject,
-		BookingRequest: BookingRequest{
-			Enter: e.Enter,
-			Leave: e.Leave,
-		},
-	}
-	valid, code := router.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0)
-	if !valid {
-		SendBadRequestCode(w, code)
-		return
-	}
-
-	conflicts, err := GetBookingRepository().GetConflicts(e.SpaceID, e.Enter, e.Leave, "")
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if len(conflicts) > 0 {
-		SendAlreadyExistsCode(w, ResponseCodeBookingSlotConflict)
-		return
-	}
-	e.Approved = !router.getSpaceRequiresApproval(location.OrganizationID, space)
-	if err := GetBookingRepository().Create(e); err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	go router.onBookingCreated(e)
-	SendCreated(w, e.ID)
+	SendCreated(w, p.Booking.ID)
 }
 
 func (router *BookingRouter) bookForUser(requestUser *User, userEmail string, w http.ResponseWriter) (string, error) {
@@ -865,257 +755,6 @@ func (router *BookingRouter) getPresenceReport(w http.ResponseWriter, r *http.Re
 	SendJSON(w, res)
 }
 
-func (router *BookingRouter) IsValidBookingDuration(m *BookingRequest, orgID string, user *User) bool {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
-		return true
-	}
-	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
-	maxDurationHours, _ := GetSettingsRepository().GetInt(orgID, SettingMaxBookingDurationHours.Name)
-	if dailyBasisBooking && (maxDurationHours%24 != 0) {
-		maxDurationHours += (24 - (maxDurationHours % 24))
-	}
-
-	// Due to daylight saving time, days can have more or less than 24 hours
-	if dailyBasisBooking {
-		correction := 0
-		now := m.Enter
-		for now.Before(m.Leave) {
-			hoursOnDate := router.getHoursOnDate(&now)
-			now = now.AddDate(0, 0, 1)
-			correction += (hoursOnDate - 24)
-		}
-		durationNotRounded := int(math.Round(m.Leave.Sub(m.Enter).Minutes()) / 60)
-		return ((durationNotRounded-correction)%24 == 0) && (durationNotRounded <= (maxDurationHours + correction))
-	}
-
-	// For non-daily-basis bookings, check exact duration
-	duration := math.Floor(m.Leave.Sub(m.Enter).Minutes()) / 60
-	if duration < 0 || duration > float64(maxDurationHours) {
-		return false
-	}
-	return true
-}
-
-func (router *BookingRouter) getHoursOnDate(t *time.Time) int {
-	start := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-	end := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location())
-	durationNotRounded := int(math.Round(end.Sub(start).Minutes()) / 60)
-	return durationNotRounded
-}
-
-func (router *BookingRouter) IsValidBookingAdvance(m *BookingRequest, orgID string, user *User) (bool, int) {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	maxAdvanceDays, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
-	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
-
-	nowExact := time.Now().UTC()
-	// booking already started today and hasn't ended yet -> always valid
-	if m.Enter.Before(nowExact) && m.Enter.Year() == nowExact.Year() && m.Enter.YearDay() == nowExact.YearDay() && m.Leave.After(nowExact) {
-		return true, 0
-	}
-
-	// allow Enter-Date in past if at least this morning
-	now := time.Date(nowExact.Year(), nowExact.Month(), nowExact.Day(), 0, 0, 0, 0, nowExact.Location())
-	if dailyBasisBooking {
-		now = now.Add(-12 * time.Hour)
-	}
-	if m.Leave.Before(now) { // Leave must not be in past
-		return false, ResponseCodeBookingInPast
-	}
-	advanceDays := math.Floor(m.Enter.Sub(now).Hours() / 24)
-	if advanceDays >= 0 && noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
-		return true, 0
-	}
-
-	if advanceDays < 0 {
-		return false, ResponseCodeBookingInPast
-	}
-	if advanceDays > float64(maxAdvanceDays) {
-		return false, ResponseCodeBookingTooManyDaysInAdvance
-	}
-	return true, 0
-}
-
-func (router *BookingRouter) IsValidMaxUpcomingBookings(orgID string, user *User, upcomingBookingsMarkup int) bool {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
-		return true
-	}
-	maxUpcoming, _ := GetSettingsRepository().GetInt(orgID, SettingMaxBookingsPerUser.Name)
-	curUpcoming, _ := GetBookingRepository().GetAllByUser(user.ID, time.Now().UTC())
-	return len(curUpcoming)+upcomingBookingsMarkup < maxUpcoming
-}
-
-func (router *BookingRouter) isValidMaxConcurrentBookingsForUser(orgID string, user *User, m *BookingRequest, bookingID string) bool {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(orgID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && HasPermission(user, orgID, PermissionBookings, PermissionLevelAdmin) {
-		return true
-	}
-	maxConcurrent, _ := GetSettingsRepository().GetInt(orgID, SettingMaxConcurrentBookingsPerUser.Name)
-	// 0 = no limit
-	if maxConcurrent == 0 {
-		return true
-	}
-	curAtTime, _ := GetBookingRepository().GetTimeRangeByUser(user.ID, m.Enter, m.Leave, bookingID)
-	return len(curAtTime) < maxConcurrent
-}
-
-func (router *BookingRouter) isValidBookingRequest(m *CreateBookingRequest, location *Location, user *User, orgID string, bookingID string, upcomingBookingsMarkup int) (bool, int) {
-	if !IsValidBookingSubject(m.Subject) {
-		return false, ResponseCodeBookingInvalidSubject
-	}
-	isUpdate := bookingID != ""
-	if !router.IsValidBookingDuration(&m.BookingRequest, orgID, user) {
-		return false, ResponseCodeBookingInvalidBookingDuration
-	}
-	valid, errorCode := router.IsValidBookingAdvance(&m.BookingRequest, orgID, user)
-	if !valid {
-		return false, errorCode
-	}
-	if !router.isValidMaxConcurrentBookingsForUser(orgID, user, &m.BookingRequest, bookingID) {
-		return false, ResponseCodeBookingMaxConcurrentForUser
-	}
-	if !router.isValidMinHoursBooking(&m.BookingRequest, orgID, user) {
-		return false, ResponseCodeBookingInvalidMinBookingDuration
-	}
-	if !isUpdate {
-		if !router.IsValidMaxUpcomingBookings(orgID, user, upcomingBookingsMarkup) {
-			return false, ResponseCodeBookingTooManyUpcomingBookings
-		}
-	}
-	if m.SpaceID == "" {
-		return true, 0
-	}
-
-	// check allowed space and location bookers
-	groupMemberships, _ := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
-	allowedSpaceBookers, _ := GetSpaceRepository().GetAllAllowedBookersForSpaceList([]string{m.SpaceID})
-	if len(allowedSpaceBookers) > 0 {
-		allowed := false
-		for _, allowedBooker := range allowedSpaceBookers {
-			for _, group := range groupMemberships {
-				if group.ID == allowedBooker.GroupID {
-					allowed = true
-					break
-				}
-			}
-		}
-		if !allowed {
-			return false, ResponseCodeBookingNotAllowedBooker
-		}
-	}
-	allowedLocationBookers, _ := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
-	if len(allowedLocationBookers) > 0 {
-		allowed := false
-		for _, allowedBooker := range allowedLocationBookers {
-			for _, group := range groupMemberships {
-				if group.ID == allowedBooker.GroupID {
-					allowed = true
-					break
-				}
-			}
-		}
-		if !allowed {
-			return false, ResponseCodeBookingNotAllowedBooker
-		}
-	}
-	return true, 0
-}
-
-func (router *BookingRouter) isValidConcurrent(m *CreateBookingRequest, location *Location, bookingID string) bool {
-	if location.MaxConcurrentBookings == 0 {
-		return true
-	}
-	bookings, err := GetBookingRepository().GetConcurrent(location, m.Enter, m.Leave, bookingID)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if bookings >= int(location.MaxConcurrentBookings) {
-		return false
-	}
-	return true
-}
-
-func (router *BookingRouter) IsValidBookingHoursBeforeDelete(e *BookingDetails, user *User, organizationID string) bool {
-
-	// test if user is admin and "no admin" restrictions is enabled
-	noAdminRestrictions, err := GetSettingsRepository().GetBool(organizationID, SettingNoAdminRestrictions.Name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if noAdminRestrictions && HasPermission(user, organizationID, PermissionBookings, PermissionLevelAdmin) {
-		return true
-	}
-
-	// test "max hour before delete" settings
-	enable_check, err := GetSettingsRepository().GetBool(organizationID, SettingEnableMaxHourBeforeDelete.Name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if !enable_check {
-		return true
-	}
-	max_hours, err := GetSettingsRepository().GetInt(organizationID, SettingMaxHoursBeforeDelete.Name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if max_hours == 0 {
-		return true
-	}
-
-	// get the enter time in the location's time zone
-	location, err := GetLocationRepository().GetOne(e.Space.Location.ID)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	enterTime, err := GetLocationRepository().AttachTimezoneInformation(e.Enter, location)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	now := time.Now()
-	difference_in_hours := int64(enterTime.Sub(now).Hours()) // int64 rounds down
-	return difference_in_hours >= int64(max_hours)
-}
-
-func (router *BookingRouter) isValidMinHoursBooking(e *BookingRequest, organizationID string, user *User) bool {
-	noAdminRestrictions, _ := GetSettingsRepository().GetBool(organizationID, SettingNoAdminRestrictions.Name)
-	if noAdminRestrictions && HasPermission(user, organizationID, PermissionBookings, PermissionLevelAdmin) {
-		return true
-	}
-	min_hours, err := GetSettingsRepository().GetInt(organizationID, SettingMinBookingDurationHours.Name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if min_hours == 0 {
-		return true
-	}
-
-	enterTime := e.Enter
-	leaveTime := e.Leave
-
-	// if daily based bookings is *NOT* enabled, we have to add 1s to the leave time
-	dailyBasisBooking, err := GetSettingsRepository().GetBool(organizationID, SettingDailyBasisBooking.Name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if !dailyBasisBooking {
-		leaveTime = leaveTime.Add(time.Second)
-	}
-
-	difference_in_hours := int64(leaveTime.Sub(enterTime).Hours())
-	return difference_in_hours >= int64(min_hours)
-}
-
 func (router *BookingRouter) getCalDavConfig(userID string) (*CaldavConfig, error) {
 	prefs, err := GetUserPreferencesRepository().GetAll(userID)
 	if err != nil {
@@ -1243,15 +882,6 @@ func (router *BookingRouter) isValidApproverForSpace(userID, spaceID string) boo
 		}
 	}
 	return false
-}
-
-func (router *BookingRouter) getSpaceRequiresApproval(orgID string, e *Space) bool {
-	groupsEnabled, _ := GetSettingsRepository().GetBool(orgID, SettingFeatureGroups.Name)
-	if !groupsEnabled {
-		return false
-	}
-	approvers, _ := GetSpaceRepository().GetApproverGroupIDs(e.ID)
-	return len(approvers) > 0
 }
 
 func (router *BookingRouter) sendMailNotification(e *Booking, notification BookingMailNotification) {

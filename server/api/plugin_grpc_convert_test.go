@@ -1,18 +1,23 @@
 package api
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestPluginHTTPRequestRoundTrip(t *testing.T) {
 	req := PluginHTTPRequest{
-		Method:   "POST",
-		Path:     "/subscription/webhook",
-		RawQuery: "a=b",
-		Headers:  map[string][]string{"Content-Type": {"application/json"}, "X-Multi": {"a", "b"}},
-		Body:     []byte(`{"ok":true}`),
-		UserID:   "u1",
+		Method:     "POST",
+		Path:       "/subscription/webhook",
+		RawQuery:   "a=b",
+		Headers:    map[string][]string{"Content-Type": {"application/json"}, "X-Multi": {"a", "b"}},
+		Body:       []byte(`{"ok":true}`),
+		UserID:     "u1",
+		Host:       "acme.example.com",
+		RemoteAddr: "10.0.0.1:1234",
 	}
 	got := PluginHTTPRequestFromProto(PluginHTTPRequestToProto(req))
-	if got.Method != req.Method || got.Path != req.Path || got.RawQuery != req.RawQuery || got.UserID != req.UserID {
+	if got.Method != req.Method || got.Path != req.Path || got.RawQuery != req.RawQuery || got.UserID != req.UserID || got.Host != req.Host || got.RemoteAddr != req.RemoteAddr {
 		t.Fatalf("round-trip mismatch:\n got=%+v\nwant=%+v", got, req)
 	}
 	if string(got.Body) != string(req.Body) {
@@ -44,15 +49,15 @@ func TestPluginHTTPResponseRoundTrip(t *testing.T) {
 
 func TestAdminUIMenuItemsRoundTrip(t *testing.T) {
 	items := []AdminUIMenuItem{
-		{ID: "i1", Title: "Item 1", Source: "/s1", Visibility: "admin", Icon: "Cloud"},
-		{ID: "i2", Title: "Item 2", Source: "/s2", Visibility: "spaceadmin", Icon: "Gift"},
+		{ID: "i1", Title: "Item 1", Source: "/s1", Visibility: "admin", Icon: "Cloud", RequiredPermissionsAny: []Permission{}},
+		{ID: "i2", Title: "Item 2", Source: "/s2", Visibility: "spaceadmin", Icon: "Gift", RequiredPermissionsAny: []Permission{}},
 	}
 	got := AdminUIMenuItemsFromProto(AdminUIMenuItemsToProto(items))
 	if len(got) != len(items) {
 		t.Fatalf("length mismatch: got=%d want=%d", len(got), len(items))
 	}
 	for i := range items {
-		if got[i] != items[i] {
+		if !reflect.DeepEqual(got[i], items[i]) {
 			t.Errorf("item %d mismatch: got=%+v want=%+v", i, got[i], items[i])
 		}
 	}

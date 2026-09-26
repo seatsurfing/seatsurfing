@@ -36,7 +36,8 @@ Seatsurfing is a desk booking / hot-desking web application. The repo is a monor
 server/
   main.go                  # Entry point — sequential initialization
   config/config.go         # Singleton config from env vars (sync.Once)
-  repository/              # Database layer — one file per entity
+  repository/              # Data access layer — one file per entity
+  service/                 # Business and validation logic — one file per domain
   router/                  # HTTP handlers — one file per entity
   api/                     # Plugin interface definitions
   plugin/                  # Plugin loader (.so files)
@@ -50,11 +51,14 @@ server/
 | Element              | Convention                                          | Example                          |
 | -------------------- | --------------------------------------------------- | -------------------------------- |
 | Repository file      | `<entity>-repository.go`                            | `booking-repository.go`          |
+| Service file         | `<entity>-service.go`                               | `booking-service.go`             |
 | Router file          | `<entity>-router.go`                                | `booking-router.go`              |
 | Repository test      | `<entity>-repository_test.go` in `repository/test/` | `booking-repository_test.go`     |
+| Service test         | `<entity>-service_test.go` in `service/test/`       | `booking-service_test.go`        |
 | Router test          | `<entity>-router_test.go` in `router/test/`         | `booking-router_test.go`         |
 | Struct type          | PascalCase, singular                                | `Booking`, `User`, `Space`       |
 | Repository singleton | `Get<Entity>Repository()`                           | `GetBookingRepository()`         |
+| Service singleton    | `Get<Entity>Service()`                              | `GetBookingService()`            |
 | Test function        | `Test<Entity><Scenario>`                            | `TestBookingsCRUD`               |
 | Test helper          | `CreateTest<Entity>(...)`                           | `CreateTestOrg("test.com")`      |
 | Assertion helper     | `CheckTest<Type>(t, expected, actual)`              | `CheckTestString(t, "foo", val)` |
@@ -81,6 +85,33 @@ func GetBookingRepository() *BookingRepository {
 }
 ```
 
+### Layered Architecture
+
+The backend is organized in three layers. **Every new implementation must respect this layering**; do not add business logic to a layer where it does not belong, even if the surrounding legacy code does.
+
+| Layer      | Package              | Responsibility                                                                                                                                                                        | May call                                             |
+| ---------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Repository | `server/repository/` | Data access only: SQL queries, schema migrations, mapping rows to entities. No business rules, no permission checks.                                                                  | `api`, `config`, `util`                              |
+| Service    | `server/service/`    | Business and validation logic: booking rules, availability, search, permission evaluation. Transport-agnostic: no `http.ResponseWriter`, `*http.Request`, REST DTOs or JSON handling. | `repository`, `api`, `config`, `util`                |
+| Router     | `server/router/`     | HTTP transport: parse and validate request bodies, authenticate, map service results and errors to REST responses.                                                                    | `service`, `repository` (simple CRUD), `api`, `util` |
+
+Rules:
+
+- **Dependencies point downwards only**: `router` → `service` → `repository`. A service must never import `router`; a repository must never import `service` or `router`.
+- **Business logic lives in services.** Any rule that decides whether an operation is allowed or how it behaves (validation, limits, permissions, approval, conflict detection, time zone handling) belongs in a service, even if only one handler needs it today. Handlers stay thin: decode → call service → encode.
+- **One implementation per rule.** Every entry point — REST handlers, the plugin host API (`app/`), timers — calls the same service function. Never duplicate a rule in a handler or reach into another entry point's code (e.g. the host API must not call router functions).
+- **Services return domain values and typed errors**, never HTTP status codes or REST models. The caller maps them (see `sendBookingError` in `router/booking-router.go`). Error codes sent as `X-Error-Code` are defined next to the service that produces them (e.g. `service.BookingCode*`) and aliased by the router.
+- **Side effects of the transport layer are injected**, not imported: e.g. notifications, CalDAV and plugin hooks after a booking is created are registered via `BookingService.SetOnCreated` from package `router`.
+- Pure CRUD without business rules may call repositories directly from a router; as soon as a rule is added, move it into a service.
+- Existing routers still contain business logic that predates this layering. When changing such logic, move it into the corresponding service instead of extending it in place.
+
+### Service Pattern
+
+- One file per domain in `server/service/`: `<entity>-service.go` with a `<Entity>Service` struct and a `Get<Entity>Service()` singleton (same `sync.Once` pattern as repositories).
+- Services are stateless apart from injected callbacks; methods take the acting `*User` explicitly and check organization access (`CanAccessOrg`) and permissions (`HasPermission`) themselves.
+- Input types are plain structs (e.g. `service.BookingInput`), not REST DTOs.
+- Shared helpers that services need (permission evaluation in `service/permissions.go`, attribute search in `service/search.go`) live in `service`; the router keeps thin wrappers or type aliases for existing call sites.
+
 ### Repository Pattern
 
 - One file per entity in `server/repository/`.
@@ -104,6 +135,7 @@ func GetBookingRepository() *BookingRepository {
 ### Router / HTTP Handler Pattern
 
 - One file per entity in `server/router/`.
+- Handlers contain transport logic only and delegate business rules to `server/service/` (see Layered Architecture).
 - Router struct implements the `api.Route` interface with `SetupRoutes(s *mux.Router)`.
 - Route registration is done centrally in `app/app.go` via `PathPrefix` subrouters.
 - **Handler signature**: `func (router *EntityRouter) handlerName(w http.ResponseWriter, r *http.Request)`.
@@ -248,7 +280,7 @@ Plugins are `.so` shared libraries loaded from `plugins/` directory. They implem
 
 ### Dot Imports
 
-The codebase uses dot imports (`. "package"`) extensively for internal packages (`repository`, `router`, `util`, `config`, `api`). Follow this convention in new files within the same packages.
+The codebase uses dot imports (`. "package"`) extensively for internal packages (`repository`, `router`, `util`, `config`, `api`). Follow this convention in new files within the same packages. Import `service` **without** a dot in `router` and `app` (`service.GetBookingService()`), so calls across the layer boundary stay visible.
 
 ---
 
@@ -347,8 +379,9 @@ export default withTranslation(MyPage as any);
 #### Structure
 
 - Repository tests: `server/repository/test/<entity>-repository_test.go`
+- Service tests: `server/service/test/<entity>-service_test.go` — test business rules directly, without HTTP.
 - Router tests: `server/router/test/<entity>-router_test.go`
-- Both share a `test_test.go` with `TestMain` that calls `testutil.TestRunner(m)`.
+- Each test package has a `test_test.go` with `TestMain` that calls `testutil.TestRunner(m)`.
 
 #### Test Setup
 
