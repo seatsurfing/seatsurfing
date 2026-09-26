@@ -618,6 +618,6 @@
   "orgSignupFailedReasonDomain": "Deine gewünschte Domain ist inzwischen nicht mehr verfügbar.",
   "orgSignupFailedReasonTimeout": "Deine Registrierung ist bereits abgelaufen.",
   "publicBookingNoSpaces": "Derzeit sind keine Räume für öffentliche Buchungen verfügbar.",
-  "hideForDisallowedBookers": "Für andere Nutzer ausblenden",
+  "hideForDisallowedBookers": "Für andere ausblenden",
   "hideForDisallowedBookersHint": "Wenn aktiviert, sehen Nutzer, die diesen Standort nicht buchen dürfen, ihn nicht."
 }
