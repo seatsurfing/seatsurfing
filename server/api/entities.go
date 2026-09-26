@@ -99,19 +99,20 @@ type Group struct {
 // ─── Location ────────────────────────────────────────────────────────────────
 
 type Location struct {
-	ID                    string
-	OrganizationID        string
-	Name                  string
-	MapWidth              uint
-	MapHeight             uint
-	MapScale              float64
-	MapMimeType           string
-	MapType               string
-	Description           string
-	MaxConcurrentBookings uint
-	Timezone              string
-	Enabled               bool
-	BookableDays          string
+	ID                       string
+	OrganizationID           string
+	Name                     string
+	MapWidth                 uint
+	MapHeight                uint
+	MapScale                 float64
+	MapMimeType              string
+	MapType                  string
+	Description              string
+	MaxConcurrentBookings    uint
+	Timezone                 string
+	Enabled                  bool
+	BookableDays             string
+	HideForDisallowedBookers bool
 }
 
 // ─── Space ───────────────────────────────────────────────────────────────────

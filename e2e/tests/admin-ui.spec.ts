@@ -72,6 +72,38 @@ test("crud location", async ({ page }) => {
   await expect(page.getByRole("cell", { name: name })).toHaveCount(0);
 });
 
+test("hide location for disallowed bookers", async ({ page }) => {
+  const name = "Location " + Math.random().toString().substr(2);
+
+  // Navigate to "Areas" and add a new area
+  await page.getByRole("link", { name: "Areas" }).click();
+  await expect(page).toHaveURL(/locations\/$/);
+  await page.getByRole("link", { name: "Add" }).click();
+  await expect(page).toHaveURL(/locations\/add\/$/);
+
+  // Fill the basic information and hide the area for disallowed bookers
+  await page.getByPlaceholder("Name").fill(name);
+  const hideCheckbox = page.getByLabel("Hide for other users");
+  await expect(hideCheckbox).not.toBeChecked();
+  await hideCheckbox.check();
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Record saved.")).toBeVisible();
+  await expect(page).toHaveURL(/locations\/.+\/$/);
+
+  // Re-open area from list and check that the setting has been persisted
+  await page.getByRole("link", { name: "Back" }).click();
+  await expect(page).toHaveURL(/locations\/$/);
+  await page.getByRole("cell", { name: name }).click();
+  await expect(page).toHaveURL(/locations\/.+\/$/);
+  await expect(page.getByLabel("Hide for other users")).toBeChecked();
+
+  // Delete area
+  await page.getByRole("button", { name: "Delete" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await expect(page).toHaveURL(/locations\/$/);
+  await expect(page.getByRole("cell", { name: name })).toHaveCount(0);
+});
+
 test("auth events", async ({ page }) => {
   // Navigate to "Audit"
   await page.getByRole("link", { name: "Audit" }).click();

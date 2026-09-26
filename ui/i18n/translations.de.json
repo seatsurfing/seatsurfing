@@ -617,5 +617,7 @@
   "orgSignupFailedReasonAlreadyConfirmed": "Du hast deine Registrierung bereits bestätigt und deine Seatsurfing-Instanz ist fertig eingerichtet. Bitte prüfe dein Postfach (und deinen Spam-Ordner) auf die Bestätigungs-E-Mail.",
   "orgSignupFailedReasonDomain": "Deine gewünschte Domain ist inzwischen nicht mehr verfügbar.",
   "orgSignupFailedReasonTimeout": "Deine Registrierung ist bereits abgelaufen.",
-  "publicBookingNoSpaces": "Derzeit sind keine Räume für öffentliche Buchungen verfügbar."
+  "publicBookingNoSpaces": "Derzeit sind keine Räume für öffentliche Buchungen verfügbar.",
+  "hideForDisallowedBookers": "Für andere Nutzer ausblenden",
+  "hideForDisallowedBookersHint": "Wenn aktiviert, sehen Nutzer, die diesen Standort nicht buchen dürfen, ihn nicht."
 }

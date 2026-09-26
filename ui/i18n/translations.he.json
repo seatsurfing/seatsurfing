@@ -616,5 +616,7 @@
   "orgSignupFailedReasonAlreadyConfirmed": "You have already confirmed your sign-up and your Seatsurfing instance is ready to use. Please check your inbox (and your spam folder) for the confirmation email.",
   "orgSignupFailedReasonDomain": "Your chosen domain is no longer available.",
   "orgSignupFailedReasonTimeout": "Your registration has timed out.",
-  "publicBookingNoSpaces": "There are currently no spaces available for public booking."
+  "publicBookingNoSpaces": "There are currently no spaces available for public booking.",
+  "hideForDisallowedBookers": "Hide for other users",
+  "hideForDisallowedBookersHint": "If enabled, users who are not allowed to book this location will not see it."
 }
