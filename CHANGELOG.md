@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.130.0](https://github.com/seatsurfing/seatsurfing/compare/v1.129.0...v1.130.0) (2026-09-26)
+
+
+### ✨ Features
+
+* **server:** expose user-scoped booking operations to plugins via host API ([#2703](https://github.com/seatsurfing/seatsurfing/issues/2703)) ([4427d9e](https://github.com/seatsurfing/seatsurfing/commit/4427d9ef1bcc57b4aaf5b6f69e62b8aaf2082d18))
+
 ## [1.129.0](https://github.com/seatsurfing/seatsurfing/compare/v1.128.3...v1.129.0) (2026-09-26)
 
 
