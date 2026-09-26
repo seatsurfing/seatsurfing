@@ -17,6 +17,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -946,7 +947,7 @@ func TestBookingsMaxHoursRespectsLocationTimezone(t *testing.T) {
 	GetSpaceRepository().Create(space)
 
 	now, _ := GetUTCNowInTimezone(timezone) // create now as UTC time (without timezone information)
-	router := &BookingRouter{}
+	router := service.GetBookingService()
 
 	// test booking one hour in future can not be deleted
 	bookingOneHourInFuture := &BookingDetails{
@@ -1490,8 +1491,8 @@ func TestBookingsNegativeBookingDuration(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * -2).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 }
 
@@ -1505,8 +1506,8 @@ func TestBookingsValidBookingDuration(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 8).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1523,15 +1524,15 @@ func TestBookingsInvalidBookingDuration(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 14).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 
-	res = router.IsValidBookingDuration(m, org.ID, adminUser)
+	res = router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, true, res)
 
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
-	res = router.IsValidBookingDuration(m, org.ID, adminUser)
+	res = router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, false, res)
 
 }
@@ -1549,8 +1550,8 @@ func TestBookingsDailyBasisBookingValid(t *testing.T) {
 		Leave: time.Date(tm.Year(), tm.Month(), tm.Day(), 23, 59, 59, 0, tm.Location()),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1567,8 +1568,8 @@ func TestBookingsDailyBasisBookingSameDayValid(t *testing.T) {
 		Leave: time.Date(tm.Year(), tm.Month(), tm.Day(), 23, 59, 59, 0, tm.Location()),
 	}
 
-	router := &BookingRouter{}
-	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, _ := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1585,8 +1586,8 @@ func TestBookingsDailyBasisBookingInvalidEnter(t *testing.T) {
 		Leave: time.Date(tm.Year(), tm.Month(), tm.Day(), 23, 59, 59, 0, tm.Location()),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 }
 
@@ -1603,8 +1604,8 @@ func TestBookingsDailyBasisBookingInvalidLeave(t *testing.T) {
 		Leave: time.Date(tm.Year(), tm.Month(), tm.Day(), 23, 50, 59, 0, tm.Location()),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 }
 
@@ -1621,8 +1622,8 @@ func TestBookingsDailyBasisBookingRoundBookingDurationUp(t *testing.T) {
 		Leave: time.Date(tm.Year(), tm.Month(), tm.Day(), 23, 59, 59, 0, tm.Location()),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1637,8 +1638,8 @@ func TestBookingsValidBorderBookingDuration(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 4).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1655,15 +1656,15 @@ func TestBookingsInvalidBorderBookingDuration(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 4).Add(time.Minute * 1).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res := router.IsValidBookingDuration(m, org.ID, user)
+	router := service.GetBookingService()
+	res := router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 
-	res = router.IsValidBookingDuration(m, org.ID, adminUser)
+	res = router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, true, res)
 
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
-	res = router.IsValidBookingDuration(m, org.ID, adminUser)
+	res = router.IsValidBookingDuration(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, false, res)
 }
 
@@ -1680,13 +1681,13 @@ func TestBookingsPastEnterDate(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 1).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, errorCode := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 	CheckTestInt(t, ResponseCodeBookingInPast, errorCode)
 
 	// also admins cannot book in past
-	res, errorCode = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, errorCode = router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, false, res)
 	CheckTestInt(t, ResponseCodeBookingInPast, errorCode)
 }
@@ -1702,8 +1703,8 @@ func TestBookingsOngoingTodayEnterDate(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 1).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, errorCode := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 	CheckTestInt(t, 0, errorCode)
 }
@@ -1721,8 +1722,8 @@ func TestBookingsEarlyMorningEnterDate(t *testing.T) {
 		Leave: time.Date(now.Year(), now.Month(), now.Day(), 23, 0, 0, 0, now.Location()),
 	}
 
-	router := &BookingRouter{}
-	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, _ := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1737,8 +1738,8 @@ func TestBookingsValidFutureAdvanceDate(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 2 * 24).Add(time.Hour * 5).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, _ := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, true, res)
 }
 
@@ -1753,8 +1754,8 @@ func TestBookingsValidBorderAdvanceDate(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 5 * 24).Add(time.Hour * 5).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res, code := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, code := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestInt(t, 0, code)
 	CheckTestBool(t, true, res)
 }
@@ -1772,16 +1773,16 @@ func TestBookingsInvalidBorderAdvanceDate(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 6 * 24).Add(time.Hour * 5).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res, errorCode := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, errorCode := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 	CheckTestInt(t, ResponseCodeBookingTooManyDaysInAdvance, errorCode)
 
-	res, _ = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, _ = router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, true, res)
 
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
-	res, errorCode = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, errorCode = router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, false, res)
 	CheckTestInt(t, ResponseCodeBookingTooManyDaysInAdvance, errorCode)
 }
@@ -1800,15 +1801,15 @@ func TestBookingsInvalidFutureAdvanceDate(t *testing.T) {
 		Leave: time.Now().Add(time.Hour * 7 * 24).Add(time.Hour * 5).UTC(),
 	}
 
-	router := &BookingRouter{}
-	res, _ := router.IsValidBookingAdvance(m, org.ID, user)
+	router := service.GetBookingService()
+	res, _ := router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, user)
 	CheckTestBool(t, false, res)
 
-	res, _ = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, _ = router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, true, res)
 
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "0")
-	res, _ = router.IsValidBookingAdvance(m, org.ID, adminUser)
+	res, _ = router.IsValidBookingAdvance(m.Enter, m.Leave, org.ID, adminUser)
 	CheckTestBool(t, false, res)
 }
 
@@ -1818,7 +1819,7 @@ func TestBookingsValidMaxUpcomingBookings(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1")
 	user := CreateTestUserInOrg(org)
 
-	router := &BookingRouter{}
+	router := service.GetBookingService()
 	res := router.IsValidMaxUpcomingBookings(org.ID, user, 0)
 	CheckTestBool(t, true, res)
 }
@@ -1849,7 +1850,7 @@ func TestBookingsInvalidMaxUpcomingBookings(t *testing.T) {
 	}
 	GetBookingRepository().Create(b)
 
-	router := &BookingRouter{}
+	router := service.GetBookingService()
 	res := router.IsValidMaxUpcomingBookings(org.ID, user, 0)
 	CheckTestBool(t, false, res)
 }

@@ -13,6 +13,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -83,7 +84,6 @@ func (router *RecurringBookingRouter) preBookingCreateCheck(w http.ResponseWrite
 		SendInternalServerError(w)
 		return
 	}
-	bookingRouter := &BookingRouter{}
 	bookings, err := GetRecurringBookingRepository().CreateBookings(e)
 	if err != nil {
 		SendBadRequest(w)
@@ -91,14 +91,12 @@ func (router *RecurringBookingRouter) preBookingCreateCheck(w http.ResponseWrite
 	}
 	res := make([]CreateRecurringBookingResponse, 0)
 	for idx, b := range bookings {
-		bookingReq := &CreateBookingRequest{
+		bookingReq := &service.BookingInput{
 			SpaceID: b.SpaceID,
-			BookingRequest: BookingRequest{
-				Enter: b.Enter,
-				Leave: b.Leave,
-			},
+			Enter:   b.Enter,
+			Leave:   b.Leave,
 		}
-		valid, code := bookingRouter.checkBookingCreateUpdate(bookingReq, location, requestUser, "", idx)
+		valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", idx)
 		if valid {
 			conflicts, _ := GetBookingRepository().GetConflicts(e.SpaceID, b.Enter, b.Leave, "")
 			if len(conflicts) > 0 {
@@ -252,8 +250,7 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 		SendInternalServerError(w)
 		return
 	}
-	bookingRouter := &BookingRouter{}
-	spaceRequiresApproval := bookingRouter.getSpaceRequiresApproval(location.OrganizationID, space)
+	spaceRequiresApproval := service.GetSpaceService().RequiresApproval(location.OrganizationID, space)
 	bookings, err := GetRecurringBookingRepository().CreateBookings(e)
 	if err != nil {
 		SendBadRequest(w)
@@ -262,15 +259,13 @@ func (router *RecurringBookingRouter) create(w http.ResponseWriter, r *http.Requ
 
 	res := make([]CreateRecurringBookingResponse, 0)
 	for _, b := range bookings {
-		bookingReq := &CreateBookingRequest{
+		bookingReq := &service.BookingInput{
 			SpaceID: b.SpaceID,
 			Subject: b.Subject,
-			BookingRequest: BookingRequest{
-				Enter: b.Enter,
-				Leave: b.Leave,
-			},
+			Enter:   b.Enter,
+			Leave:   b.Leave,
 		}
-		valid, code := bookingRouter.checkBookingCreateUpdate(bookingReq, location, requestUser, "", 0)
+		valid, code := service.GetBookingService().CheckBooking(bookingReq, location, requestUser, "", 0)
 		if valid {
 			conflicts, _ := GetBookingRepository().GetConflicts(e.SpaceID, b.Enter, b.Leave, "")
 			if len(conflicts) > 0 {

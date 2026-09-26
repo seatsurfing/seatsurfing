@@ -23,6 +23,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -82,9 +83,9 @@ type SearchLocationRequest struct {
 }
 
 const (
-	SearchAttributeNumSpaces     string = "numSpaces"
-	SearchAttributeNumFreeSpaces string = "numFreeSpaces"
-	SearchAttributeBuddyOnSite   string = "buddyOnSite"
+	SearchAttributeNumSpaces     = service.SearchAttributeNumSpaces
+	SearchAttributeNumFreeSpaces = service.SearchAttributeNumFreeSpaces
+	SearchAttributeBuddyOnSite   = service.SearchAttributeBuddyOnSite
 )
 
 func (router *LocationRouter) SetupRoutes(s *mux.Router) {
@@ -256,80 +257,6 @@ func (router *LocationRouter) sendAll(w http.ResponseWriter, r *http.Request, bo
 	SendJSON(w, res)
 }
 
-func (router *LocationRouter) searchInputContains(m *[]SearchAttribute, attributeID string) bool {
-	for _, e := range *m {
-		if e.AttributeID == attributeID {
-			return true
-		}
-	}
-	return false
-}
-
-func (router *LocationRouter) searchAttachNumSpaces(attributeValues []*SpaceAttributeValue, organizationID string) ([]*SpaceAttributeValue, error) {
-	totalSpaces, err := GetSpaceRepository().GetTotalCountMap(organizationID)
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range totalSpaces {
-		attributeValues = append(attributeValues, &SpaceAttributeValue{
-			AttributeID: SearchAttributeNumSpaces,
-			EntityID:    k,
-			EntityType:  SpaceAttributeValueEntityTypeLocation,
-			Value:       strconv.Itoa(v),
-		})
-	}
-	return attributeValues, nil
-}
-
-func (router *LocationRouter) searchAttachNumFreeSpaces(attributeValues []*SpaceAttributeValue, organizationID string, enter, leave time.Time) ([]*SpaceAttributeValue, error) {
-	freeSpaces, err := GetSpaceRepository().GetFreeCountMap(organizationID, enter, leave)
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range freeSpaces {
-		attributeValues = append(attributeValues, &SpaceAttributeValue{
-			AttributeID: SearchAttributeNumFreeSpaces,
-			EntityID:    k,
-			EntityType:  SpaceAttributeValueEntityTypeLocation,
-			Value:       strconv.Itoa(v),
-		})
-	}
-	return attributeValues, nil
-}
-
-func (router *LocationRouter) searchAttachBuddiesOnSite(attributeValues []*SpaceAttributeValue, user *User, enter, leave time.Time) ([]*SpaceAttributeValue, error) {
-	buddies, err := GetBuddyRepository().GetAllByOwner(user.ID)
-	if err != nil {
-		return nil, err
-	}
-	usersOnSite, err := GetSpaceRepository().GetBookingUserIDMap(user.OrganizationID, enter, leave)
-	if err != nil {
-		return nil, err
-	}
-	buddiesOnSite := make(map[string][]string)
-	for locationID, userIDs := range usersOnSite {
-		buddiesOnSite[locationID] = []string{}
-		for _, buddy := range buddies {
-			if slices.Contains(userIDs, buddy.BuddyID) {
-				buddiesOnSite[locationID] = append(buddiesOnSite[locationID], buddy.ID)
-			}
-		}
-	}
-	for k, v := range buddiesOnSite {
-		json, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		attributeValues = append(attributeValues, &SpaceAttributeValue{
-			AttributeID: SearchAttributeBuddyOnSite,
-			EntityID:    k,
-			EntityType:  SpaceAttributeValueEntityTypeLocation,
-			Value:       string(json),
-		})
-	}
-	return attributeValues, nil
-}
-
 func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 	var m SearchLocationRequest
 	if err := UnmarshalValidateBody(r, &m); err != nil {
@@ -342,74 +269,15 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		router.sendAll(w, r, true)
 		return
 	}
-	user := GetRequestUser(r)
-	list, err := GetLocationRepository().GetAll(user.OrganizationID)
+	list, err := service.GetLocationService().SearchLocationsForUser(GetRequestUser(r), m.Enter, m.Leave, m.Attributes)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
-	}
-	attributeValues, err := GetSpaceAttributeValueRepository().GetAll(user.OrganizationID, SpaceAttributeValueEntityTypeLocation)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	if router.searchInputContains(&m.Attributes, SearchAttributeNumSpaces) {
-		attributeValues, err = router.searchAttachNumSpaces(attributeValues, user.OrganizationID)
-		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
-		}
-	}
-	if router.searchInputContains(&m.Attributes, SearchAttributeNumFreeSpaces) {
-		attributeValues, err = router.searchAttachNumFreeSpaces(attributeValues, user.OrganizationID, m.Enter, m.Leave)
-		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
-		}
-	}
-	if router.searchInputContains(&m.Attributes, SearchAttributeBuddyOnSite) {
-		attributeValues, err = router.searchAttachBuddiesOnSite(attributeValues, user, m.Enter, m.Leave)
-		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
-		}
 	}
 	res := []*GetLocationResponse{}
-
-	locationIDs := []string{}
 	for _, e := range list {
-		locationIDs = append(locationIDs, e.ID)
-	}
-	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList(locationIDs)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	// Search is only used by the booking frontend, so always apply the booking context
-	list, err = FilterVisibleLocations(user, list, allowedBookers, true)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-
-	for _, e := range list {
-		if MatchesSearchAttributes(e.ID, &m.Attributes, attributeValues) {
-			filteredLocationGroup := []*LocationGroup{}
-			for _, ab := range allowedBookers {
-				if ab.LocationID == e.ID {
-					filteredLocationGroup = append(filteredLocationGroup, ab)
-				}
-			}
-			m := router.copyToRestModel(e, filteredLocationGroup)
-			res = append(res, m)
-		}
+		res = append(res, router.copyToRestModel(e.Location, e.AllowedBookers))
 	}
 	SendJSON(w, res)
 }
@@ -765,20 +633,6 @@ func weekdaysToString(days []int) string {
 	return strings.Join(parts, ",")
 }
 
-func weekdaysFromString(csv string) []int {
-	days := []int{}
-	if csv == "" {
-		return days
-	}
-	for _, part := range strings.Split(csv, ",") {
-		d, err := strconv.Atoi(part)
-		if err == nil {
-			days = append(days, d)
-		}
-	}
-	return days
-}
-
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
 	e := &Location{}
 	e.Name = m.Name
@@ -806,7 +660,7 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.MaxConcurrentBookings = e.MaxConcurrentBookings
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
-	m.BookableDays = weekdaysFromString(e.BookableDays)
+	m.BookableDays = service.WeekdaysFromString(e.BookableDays)
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}
@@ -828,69 +682,10 @@ func IsBookingContextRequest(r *http.Request) bool {
 	return r.URL.Query().Get("context") == "booking"
 }
 
-// isHideDisallowedLocationsEnabled reports whether the organization hides
-// locations from users who are not allowed to book them.
-func isHideDisallowedLocationsEnabled(organizationID string) bool {
-	enabled, _ := GetSettingsRepository().GetBool(organizationID, SettingHideDisallowedLocations.Name)
-	return enabled
-}
-
-// canSeeHiddenLocations reports whether the user may see locations which are
-// hidden for users not listed as allowed bookers. This applies to everyone
-// managing areas or working with bookings and reports in the administration,
-// but not when the request is made from the booking frontend (bookingContext).
-func canSeeHiddenLocations(user *User, organizationID string, bookingContext bool) bool {
-	if bookingContext {
-		return false
-	}
-	perms := GetEffectivePermissions(user, organizationID)
-	return perms[PermissionAreas] >= PermissionLevelRead ||
-		perms[PermissionBookings] >= PermissionLevelRead ||
-		perms[PermissionAnalytics] >= PermissionLevelRead ||
-		perms[PermissionPresenceReport] >= PermissionLevelRead
-}
-
-// isLocationVisible reports whether a location is visible to a user who is a
-// member of userGroups. A location is only hidden if it restricts its allowed
-// bookers to groups the user is not a member of.
-func isLocationVisible(location *Location, allowedBookers []*LocationGroup, userGroups []*Group) bool {
-	restricted := false
-	for _, allowedBooker := range allowedBookers {
-		if allowedBooker.LocationID != location.ID {
-			continue
-		}
-		restricted = true
-		for _, userGroup := range userGroups {
-			if allowedBooker.GroupID == userGroup.ID {
-				return true
-			}
-		}
-	}
-	return !restricted
-}
-
 // IsLocationVisibleForUser reports whether the location is visible to the
-// user, considering the organization's settings, the location's allowed
-// bookers and the user's permissions.
+// user, see service.LocationService.IsLocationVisibleForUser.
 func IsLocationVisibleForUser(user *User, location *Location, bookingContext bool) (bool, error) {
-	if !isHideDisallowedLocationsEnabled(location.OrganizationID) {
-		return true, nil
-	}
-	if canSeeHiddenLocations(user, location.OrganizationID, bookingContext) {
-		return true, nil
-	}
-	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
-	if err != nil {
-		return false, err
-	}
-	if len(allowedBookers) == 0 {
-		return true, nil
-	}
-	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
-	if err != nil {
-		return false, err
-	}
-	return isLocationVisible(location, allowedBookers, userGroups), nil
+	return service.GetLocationService().IsLocationVisibleForUser(user, location, bookingContext)
 }
 
 func CheckLocationVisible(w http.ResponseWriter, r *http.Request, user *User, location *Location) bool {
@@ -908,20 +703,5 @@ func CheckLocationVisible(w http.ResponseWriter, r *http.Request, user *User, lo
 }
 
 func FilterVisibleLocations(user *User, list []*Location, allowedBookers []*LocationGroup, bookingContext bool) ([]*Location, error) {
-	if len(allowedBookers) == 0 ||
-		!isHideDisallowedLocationsEnabled(user.OrganizationID) ||
-		canSeeHiddenLocations(user, user.OrganizationID, bookingContext) {
-		return list, nil
-	}
-	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
-	if err != nil {
-		return nil, err
-	}
-	res := []*Location{}
-	for _, e := range list {
-		if isLocationVisible(e, allowedBookers, userGroups) {
-			res = append(res, e)
-		}
-	}
-	return res, nil
+	return service.GetLocationService().FilterVisibleLocations(user, list, allowedBookers, bookingContext)
 }

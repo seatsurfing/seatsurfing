@@ -1163,3 +1163,23 @@ func TestBookingRepositoryGetLoadMultiWithTargetUtilization(t *testing.T) {
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 50, loads[0])
 }
+
+func TestBookingRepositoryUpdateRefreshesLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space1 := CreateTestLocationAndSpace(org)
+	location2, space2 := CreateTestLocationAndSpace(org)
+	booking := CreateTestBooking9To5(user, space1, 1)
+
+	booking.SpaceID = space2.ID
+	if err := GetBookingRepository().Update(booking); err != nil {
+		t.Fatal(err)
+	}
+	var locationID, organizationID string
+	if err := GetDatabase().DB().QueryRow("SELECT location_id, organization_id FROM bookings WHERE id = $1", booking.ID).Scan(&locationID, &organizationID); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, location2.ID, locationID)
+	CheckTestString(t, org.ID, organizationID)
+}

@@ -11,6 +11,7 @@ package seatsurfing.plugin.v1;
 option go_package = "github.com/seatsurfing/seatsurfing/server/api/hostapipb";
 
 import "common.proto";
+import "google/protobuf/timestamp.proto";
 
 service HostAPIService {
   // Settings
@@ -69,6 +70,15 @@ service HostAPIService {
 
   // Bookings
   rpc BookingGetOne(BookingGetOneArgs) returns (BookingGetOneReply);
+
+  // User-scoped booking operations: each call acts as the given user and
+  // applies exactly the rules of the corresponding REST endpoint.
+  rpc SearchLocationsForUser(SearchLocationsForUserArgs) returns (SearchLocationsForUserReply);
+  rpc GetSpaceAvailabilityForUser(GetSpaceAvailabilityForUserArgs) returns (GetSpaceAvailabilityForUserReply);
+  rpc GetSpaceAttributesForUser(GetSpaceAttributesForUserArgs) returns (GetSpaceAttributesReply);
+  rpc CreateBookingForUser(CreateBookingForUserArgs) returns (CreateBookingForUserReply);
+  rpc GetUpcomingBookingsForUser(GetUpcomingBookingsForUserArgs) returns (GetUpcomingBookingsForUserReply);
+  rpc DeleteBookingForUser(DeleteBookingForUserArgs) returns (DeleteBookingForUserReply);
 
   // Spaces
   rpc SpaceGetOne(SpaceGetOneArgs) returns (SpaceGetOneReply);
@@ -186,6 +196,73 @@ message GroupMutateArgs { seatsurfing.plugin.v1.Group group = 1; }
 
 message BookingGetOneArgs { string id = 1; }
 message BookingGetOneReply { seatsurfing.plugin.v1.BookingDetails booking = 1; string err = 2; }
+
+message SearchAttribute { string attribute_id = 1; string comparator = 2; string value = 3; }
+message AttributeValue { string attribute_id = 1; string value = 2; }
+message SpaceAttribute {
+  string id = 1;
+  string organization_id = 2;
+  string label = 3;
+  int32 type = 4;
+  bool space_applicable = 5;
+  bool location_applicable = 6;
+}
+message LocationInfo {
+  seatsurfing.plugin.v1.Location location = 1;
+  repeated AttributeValue attributes = 2;
+  bool allowed = 3;
+  repeated int32 bookable_days = 4;
+}
+message SpaceAvailabilityInfo {
+  seatsurfing.plugin.v1.Space space = 1;
+  repeated AttributeValue attributes = 2;
+  bool available = 3;
+  bool allowed = 4;
+  bool approval_required = 5;
+}
+
+message SearchLocationsForUserArgs {
+  string user_id = 1;
+  google.protobuf.Timestamp enter = 2;
+  google.protobuf.Timestamp leave = 3;
+  repeated SearchAttribute attributes = 4;
+}
+message SearchLocationsForUserReply { repeated LocationInfo locations = 1; string err = 2; }
+message GetSpaceAvailabilityForUserArgs {
+  string user_id = 1;
+  string location_id = 2;
+  google.protobuf.Timestamp enter = 3;
+  google.protobuf.Timestamp leave = 4;
+  repeated SearchAttribute attributes = 5;
+}
+message GetSpaceAvailabilityForUserReply { repeated SpaceAvailabilityInfo spaces = 1; string err = 2; }
+message GetSpaceAttributesForUserArgs { string user_id = 1; }
+message GetSpaceAttributesReply { repeated SpaceAttribute attributes = 1; string err = 2; }
+message CreateBookingForUserArgs {
+  string user_id = 1;
+  string space_id = 2;
+  google.protobuf.Timestamp enter = 3;
+  google.protobuf.Timestamp leave = 4;
+  string subject = 5;
+}
+message CreateBookingForUserReply {
+  string booking_id = 1;
+  bool approved = 2;
+  int32 status_code = 3;
+  int32 error_code = 4;
+  string err = 5;
+}
+message GetUpcomingBookingsForUserArgs { string user_id = 1; }
+message GetUpcomingBookingsForUserReply { repeated seatsurfing.plugin.v1.BookingDetails bookings = 1; string err = 2; }
+message DeleteBookingForUserArgs {
+  string user_id = 1;
+  string booking_id = 2;
+}
+message DeleteBookingForUserReply {
+  int32 status_code = 1;
+  int32 error_code = 2;
+  string err = 3;
+}
 
 // ─── Spaces ───────────────────────────────────────────────────────────────────
 
