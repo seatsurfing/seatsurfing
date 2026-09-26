@@ -12,8 +12,7 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import JwtDecoder from "@/util/JwtDecoder";
 import Loading from "@/components/Loading";
 import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
-import LanguageSelector from "@/components/LanguageSelector";
-import ThemeSelector from "@/components/ThemeSelector";
+import CopyrightFooter from "@/components/CopyrightFooter";
 import Validation from "@/util/Validation";
 import Navigation from "@/util/Navigation";
 import AjaxError from "@/util/AjaxError";
@@ -419,23 +418,6 @@ class Login extends React.Component<Props, State> {
       );
     }
 
-    const copyrightFooter = (
-      <div className="copyright-footer">
-        &copy;&nbsp;
-        <a
-          href="https://seatsurfing.io"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Seatsurfing
-        </a>
-        <div className="footer-selectors">
-          <ThemeSelector compactBreakpoint="md" />
-          <LanguageSelector compactBreakpoint="md" />
-        </div>
-      </div>
-    );
-
     if (this.state.domainNotFound) {
       return (
         <div className="container-signin">
@@ -489,7 +471,7 @@ class Login extends React.Component<Props, State> {
               </Button>
             </p>
           </Form>
-          {copyrightFooter}
+          <CopyrightFooter />
         </div>
       );
     }
