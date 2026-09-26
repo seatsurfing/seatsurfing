@@ -277,11 +277,15 @@ export default class Space extends Entity {
     enter: Date,
     leave: Date,
     attributes?: SearchAttribute[],
+    bookingContext: boolean = false,
   ): Promise<Space[]> {
     let params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}`;
     params += `&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
     if (attributes && attributes.length > 0) {
       params += `&attributes=${encodeURIComponent(JSON.stringify(attributes.map((a) => a.serialize())))}`;
+    }
+    if (bookingContext) {
+      params += "&context=booking";
     }
     const result = await Ajax.get(
       `/location/${encodeURIComponent(locationId)}/space/availability?${params}`,
@@ -294,8 +298,12 @@ export default class Space extends Entity {
     spaceId: string,
     enter: Date,
     leave: Date,
+    bookingContext: boolean = false,
   ): Promise<Space[]> {
-    const params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
+    let params = `enter=${encodeURIComponent(DateUtil.convertToFakeUTCDate(enter).toISOString())}&leave=${encodeURIComponent(DateUtil.convertToFakeUTCDate(leave).toISOString())}`;
+    if (bookingContext) {
+      params += "&context=booking";
+    }
     const result = await Ajax.get(
       `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(spaceId)}/availability?${params}`,
     );

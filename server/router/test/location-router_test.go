@@ -650,8 +650,12 @@ func createTestHiddenLocation(org *Organization, name string, hide bool, allowed
 	return location
 }
 
-func getTestLocationNames(t *testing.T, userID string) []string {
-	req := NewHTTPRequest("GET", "/location/", userID, nil)
+func getTestLocationNames(t *testing.T, userID string, bookingContext bool) []string {
+	url := "/location/"
+	if bookingContext {
+		url += "?context=booking"
+	}
+	req := NewHTTPRequest("GET", url, userID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []*GetLocationResponse
@@ -676,30 +680,42 @@ func TestLocationsHideForDisallowedBookersList(t *testing.T) {
 	createTestHiddenLocation(org, "C Restricted Hidden", true, []string{group.ID})
 
 	// Allowed booker sees all locations
-	names := getTestLocationNames(t, allowedUser.ID)
+	names := getTestLocationNames(t, allowedUser.ID, false)
+	CheckTestInt(t, 3, len(names))
+	names = getTestLocationNames(t, allowedUser.ID, true)
 	CheckTestInt(t, 3, len(names))
 
-	// Other user does not see the hidden restricted location
-	names = getTestLocationNames(t, otherUser.ID)
+	// Other user does not see the hidden restricted location, regardless of context
+	for _, bookingContext := range []bool{false, true} {
+		names = getTestLocationNames(t, otherUser.ID, bookingContext)
+		CheckTestInt(t, 2, len(names))
+		CheckTestString(t, "A Unrestricted", names[0])
+		CheckTestString(t, "B Restricted Visible", names[1])
+	}
+
+	// Users with areas permission see all locations outside the booking context
+	names = getTestLocationNames(t, areasReader.ID, false)
+	CheckTestInt(t, 3, len(names))
+
+	// Users with areas permission don't see the hidden location in the booking context
+	names = getTestLocationNames(t, areasReader.ID, true)
 	CheckTestInt(t, 2, len(names))
 	CheckTestString(t, "A Unrestricted", names[0])
 	CheckTestString(t, "B Restricted Visible", names[1])
 
-	// Users with areas permission see all locations
-	names = getTestLocationNames(t, areasReader.ID)
-	CheckTestInt(t, 3, len(names))
-
-	// Search endpoint applies the same filter
+	// Search endpoint always applies the booking context filter, also for users with areas permission
 	payload := `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": [{"attributeId": "numSpaces", "comparator": "gt", "value": "0"}]}`
-	req := NewHTTPRequest("POST", "/location/search", otherUser.ID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody []*GetLocationResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 2, len(resBody))
-	for _, e := range resBody {
-		if e.Name == "C Restricted Hidden" {
-			t.Fatalf("Expected hidden location not to be returned by search")
+	for _, userID := range []string{otherUser.ID, areasReader.ID} {
+		req := NewHTTPRequest("POST", "/location/search", userID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+		var resBody []*GetLocationResponse
+		json.Unmarshal(res.Body.Bytes(), &resBody)
+		CheckTestInt(t, 2, len(resBody))
+		for _, e := range resBody {
+			if e.Name == "C Restricted Hidden" {
+				t.Fatalf("Expected hidden location not to be returned by search")
+			}
 		}
 	}
 }
@@ -729,9 +745,21 @@ func TestLocationsHideForDisallowedBookersSingle(t *testing.T) {
 		res = ExecuteTestRequest(req)
 		CheckTestResponseCode(t, http.StatusOK, res.Code)
 
+		req = NewHTTPRequest("GET", path+"?context=booking", otherUser.ID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+		req = NewHTTPRequest("GET", path+"?context=booking", allowedUser.ID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+
 		req = NewHTTPRequest("GET", path, admin.ID, nil)
 		res = ExecuteTestRequest(req)
 		CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+		req = NewHTTPRequest("GET", path+"?context=booking", admin.ID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 	}
 
 	spaces, _ := GetSpaceRepository().GetAll(location.ID)
