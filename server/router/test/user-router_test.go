@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -180,102 +179,6 @@ func TestUserGetCount(t *testing.T) {
 	var resBody *GetUserCountResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 1, resBody.Count)
-}
-
-func TestUserMergeUsers(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	source := CreateTestUserInOrg(org)
-	target := CreateTestUserInOrg(org)
-
-	// Prepare source
-	source.AtlassianID = NullString(source.Email)
-	GetUserRepository().Update(source)
-
-	// Init from source
-	loginResponseSource := LoginTestUser(source.ID)
-	payload := "{\"email\": \"" + target.Email + "\"}"
-	req := NewHTTPRequest("POST", "/user/merge/init", loginResponseSource.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-
-	// Get merge request list from target
-	loginResponseTarget := LoginTestUser(target.ID)
-	req = NewHTTPRequest("GET", "/user/merge", loginResponseTarget.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody []GetMergeRequestResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 1, len(resBody))
-	CheckTestString(t, source.ID, resBody[0].UserID)
-	CheckTestString(t, source.Email, resBody[0].Email)
-
-	// Complete from target
-	req = NewHTTPRequest("POST", "/user/merge/finish/"+resBody[0].ID, loginResponseTarget.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-
-	// Check if source user is gone
-	user, err := GetUserRepository().GetOne(source.ID)
-	if err == nil || user != nil {
-		t.Fatal("Expected source user to be deleted")
-	}
-
-	// Check if target user has inherited source user's properties
-	user, err = GetUserRepository().GetOne(target.ID)
-	if err != nil || user == nil {
-		t.Fatal("Expected source user to be deleted")
-	}
-	CheckTestString(t, string(source.AtlassianID), string(user.AtlassianID))
-
-	// Check if request is invalid now
-	req = NewHTTPRequest("POST", "/user/merge/finish/"+resBody[0].ID, loginResponseTarget.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
-}
-
-func TestUserMergeUsersExpiredRequest(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	source := CreateTestUserInOrg(org)
-	target := CreateTestUserInOrg(org)
-
-	source.AtlassianID = NullString(source.Email)
-	GetUserRepository().Update(source)
-
-	authState := &AuthState{
-		Key:           target.ID,
-		Expiry:        time.Now().Add(-time.Minute),
-		AuthStateType: AuthMergeRequest,
-		Payload:       source.ID,
-	}
-	GetAuthStateRepository().Create(authState)
-
-	loginResponseTarget := LoginTestUser(target.ID)
-
-	// Expired request is not listed
-	req := NewHTTPRequest("GET", "/user/merge", loginResponseTarget.UserID, nil)
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody []GetMergeRequestResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 0, len(resBody))
-
-	// Expired request cannot be completed
-	payload := "{\"email\": \"" + target.Email + "\"}"
-	req = NewHTTPRequest("POST", "/user/merge/finish/"+authState.ID, loginResponseTarget.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
-
-	// Both users still exist
-	user, err := GetUserRepository().GetOne(source.ID)
-	if err != nil || user == nil {
-		t.Fatal("Expected source user to still exist")
-	}
-	user, err = GetUserRepository().GetOne(target.ID)
-	if err != nil || user == nil {
-		t.Fatal("Expected target user to still exist")
-	}
 }
 
 // TODO test domain in org!
@@ -1067,6 +970,40 @@ func TestUpdateUserInvalidName(t *testing.T) {
 		payload = "{\"email\": \"" + user.Email + "\", \"firstname\": \"John\", \"lastname\": \"" + name + "\", \"password\": \"\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
 		req = NewHTTPRequest("PUT", "/user/"+user.ID, admin.ID, bytes.NewBufferString(payload))
 		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
+func TestCreateUserInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	invalidEmails := []string{"test@test", "test", "test@", "@test.com", "Name <test@test.com>", "ä@test.com"}
+	for _, email := range invalidEmails {
+		payload := "{\"email\": \"" + email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+		req := NewHTTPRequest("POST", "/user/", admin.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	payload := "{\"email\": \"" + uuid.New().String() + "@test.com\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"" + TestPassword + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req := NewHTTPRequest("POST", "/user/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+}
+
+func TestUpdateUserInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+
+	invalidEmails := []string{"test@test", "test", "test@", "@test.com", "Name <test@test.com>", "ä@test.com"}
+	for _, email := range invalidEmails {
+		payload := "{\"email\": \"" + email + "\", \"firstname\": \"John\", \"lastname\": \"Doe\", \"password\": \"\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+		req := NewHTTPRequest("PUT", "/user/"+user.ID, admin.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
 		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 	}
 }

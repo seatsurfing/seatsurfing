@@ -24,7 +24,8 @@ message User {
   string email = 3;
   string firstname = 4;
   string lastname = 5;
-  string atlassian_id = 6;
+  reserved 6;
+  reserved "atlassian_id";
   string hashed_password = 7;
   string auth_provider_id = 8;
   bool password_pending = 9;

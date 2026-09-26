@@ -520,6 +520,21 @@ func TestBookingsCreateNonExistingUserForeignDomain(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
+func TestBookingsCreateNonExistingUserInvalidEmail(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingAllowBookingsNonExistingUsers.Name, "1")
+	_, space := CreateTestLocationAndSpace(org)
+
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"userEmail\": \"ä@test.com\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestBookingsList(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

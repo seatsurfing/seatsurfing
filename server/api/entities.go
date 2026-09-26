@@ -30,7 +30,6 @@ type User struct {
 	Email                  string
 	Firstname              string
 	Lastname               string
-	AtlassianID            NullString
 	HashedPassword         NullString
 	AuthProviderID         NullUUID
 	PasswordPending        bool
@@ -235,8 +234,6 @@ type AuthStateType int
 const (
 	AuthRequestState         AuthStateType = 1
 	AuthResponseCache        AuthStateType = 2
-	AuthAtlassian            AuthStateType = 3
-	AuthMergeRequest         AuthStateType = 4
 	AuthResetPasswordRequest AuthStateType = 5
 	AuthChangeOrgEmail       AuthStateType = 6
 	AuthDeleteOrg            AuthStateType = 7
@@ -290,8 +287,6 @@ var (
 	SettingDatabaseVersion                SettingName = SettingName{Name: "db_version", Type: SettingTypeInt}
 	SettingEmailFooterPrefix              SettingName = SettingName{Name: "email_footer_", Type: SettingTypeString}
 	SettingAllowAnyUser                   SettingName = SettingName{Name: "allow_any_user", Type: SettingTypeBool}
-	SettingConfluenceServerSharedSecret   SettingName = SettingName{Name: "confluence_server_shared_secret", Type: SettingTypeString}
-	SettingConfluenceAnonymous            SettingName = SettingName{Name: "confluence_anonymous", Type: SettingTypeBool}
 	SettingMaxBookingsPerUser             SettingName = SettingName{Name: "max_bookings_per_user", Type: SettingTypeInt}
 	SettingMaxConcurrentBookingsPerUser   SettingName = SettingName{Name: "max_concurrent_bookings_per_user", Type: SettingTypeInt}
 	SettingMaxDaysInAdvance               SettingName = SettingName{Name: "max_days_in_advance", Type: SettingTypeInt}

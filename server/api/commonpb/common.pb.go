@@ -72,7 +72,6 @@ type User struct {
 	Email                  string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
 	Firstname              string                 `protobuf:"bytes,4,opt,name=firstname,proto3" json:"firstname,omitempty"`
 	Lastname               string                 `protobuf:"bytes,5,opt,name=lastname,proto3" json:"lastname,omitempty"`
-	AtlassianId            string                 `protobuf:"bytes,6,opt,name=atlassian_id,json=atlassianId,proto3" json:"atlassian_id,omitempty"`
 	HashedPassword         string                 `protobuf:"bytes,7,opt,name=hashed_password,json=hashedPassword,proto3" json:"hashed_password,omitempty"`
 	AuthProviderId         string                 `protobuf:"bytes,8,opt,name=auth_provider_id,json=authProviderId,proto3" json:"auth_provider_id,omitempty"`
 	PasswordPending        bool                   `protobuf:"varint,9,opt,name=password_pending,json=passwordPending,proto3" json:"password_pending,omitempty"`
@@ -149,13 +148,6 @@ func (x *User) GetFirstname() string {
 func (x *User) GetLastname() string {
 	if x != nil {
 		return x.Lastname
-	}
-	return ""
-}
-
-func (x *User) GetAtlassianId() string {
-	if x != nil {
-		return x.AtlassianId
 	}
 	return ""
 }
@@ -1259,14 +1251,13 @@ var File_common_proto protoreflect.FileDescriptor
 const file_common_proto_rawDesc = "" +
 	"\n" +
 	"\fcommon.proto\x12\x15seatsurfing.plugin.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\a\n" +
-	"\x05Empty\"\xfb\x04\n" +
+	"\x05Empty\"\xec\x04\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
 	"\x0forganization_id\x18\x02 \x01(\tR\x0eorganizationId\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x1c\n" +
 	"\tfirstname\x18\x04 \x01(\tR\tfirstname\x12\x1a\n" +
-	"\blastname\x18\x05 \x01(\tR\blastname\x12!\n" +
-	"\fatlassian_id\x18\x06 \x01(\tR\vatlassianId\x12'\n" +
+	"\blastname\x18\x05 \x01(\tR\blastname\x12'\n" +
 	"\x0fhashed_password\x18\a \x01(\tR\x0ehashedPassword\x12(\n" +
 	"\x10auth_provider_id\x18\b \x01(\tR\x0eauthProviderId\x12)\n" +
 	"\x10password_pending\x18\t \x01(\bR\x0fpasswordPending\x128\n" +
@@ -1279,7 +1270,7 @@ const file_common_proto_rawDesc = "" +
 	"\vtotp_secret\x18\x0f \x01(\tR\n" +
 	"totpSecret\x12\x1b\n" +
 	"\tapi_token\x18\x10 \x01(\tR\bapiToken\x12!\n" +
-	"\faccount_type\x18\x11 \x01(\x05R\vaccountTypeJ\x04\b\v\x10\fR\x04role\"\x88\x02\n" +
+	"\faccount_type\x18\x11 \x01(\x05R\vaccountTypeJ\x04\b\x06\x10\aJ\x04\b\v\x10\fR\fatlassian_idR\x04role\"\x88\x02\n" +
 	"\fOrganization\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12+\n" +

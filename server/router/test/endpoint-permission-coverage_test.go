@@ -23,8 +23,6 @@ var baselineRoutes = map[string]string{
 	// The user's own identity and session.
 	"GET /user/me":             "own profile",
 	"GET /user/session":        "own active sessions",
-	"GET /user/merge":          "own merge requests",
-	"POST /user/merge/init":    "own account merge",
 	"GET /user/passkey/":       "own passkeys",
 	"POST /user/totp/generate": "own second factor",
 	"GET /user/totp/generate":  "own second factor",
@@ -86,7 +84,7 @@ func substitute(template string) string {
 func isUnauthorizedPrefix(path string) bool {
 	for _, p := range []string{
 		"/auth/", "/organization/domain/", "/organization/deleteorg/",
-		"/auth-provider/org/", "/admin/", "/ui/", "/confluence",
+		"/auth-provider/org/", "/admin/", "/ui/",
 		"/robots.txt", "/healthcheck", "/kiosk/", "/uc/",
 	} {
 		if strings.HasPrefix(path, p) {

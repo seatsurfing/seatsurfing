@@ -9,7 +9,6 @@ import (
 	"image/png"
 	"log"
 	"net/http"
-	"net/mail"
 	"strings"
 	"sync"
 	"time"
@@ -66,7 +65,6 @@ type CreateUserRequest struct {
 	Email          string `json:"email" validate:"required,max=256"`
 	Firstname      string `json:"firstname" validate:"required,max=128"`
 	Lastname       string `json:"lastname" validate:"required,max=128"`
-	AtlassianID    string `json:"atlassianId"`
 	AccountType    int    `json:"accountType"`
 	AuthProviderID string `json:"authProviderId"`
 	Password       string `json:"password"`
@@ -103,22 +101,12 @@ type GetUserInfoSmall struct {
 	Lastname  string `json:"lastname"`
 }
 
-type GetMergeRequestResponse struct {
-	ID     string `json:"id"`
-	UserID string `json:"userId"`
-	Email  string `json:"email"`
-}
-
 type GetUserCountResponse struct {
 	Count int `json:"count"`
 }
 
 type SetPasswordRequest struct {
 	Password string `json:"password" validate:"required,min=8,max=64"`
-}
-
-type InitMergeUsersRequest struct {
-	Email string `json:"email" validate:"required,email,max=256"`
 }
 
 type GenerateTotpResponse struct {
@@ -139,11 +127,6 @@ func isServiceAccountType(accountType int) bool {
 	return AccountType(accountType).IsServiceAccount()
 }
 
-func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
 func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/passkey/", router.listPasskeys).Methods("GET")
 	s.HandleFunc("/passkey/registration/begin", router.beginPasskeyRegistration).Methods("POST")
@@ -162,9 +145,6 @@ func (router *UserRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/roles", router.getRoles).Methods("GET")
 	s.HandleFunc("/{id}/roles", router.setRoles).Methods("PUT")
 	s.HandleFunc("/{id}/permissions", router.getPermissions).Methods("GET")
-	s.HandleFunc("/merge/init", router.mergeInit).Methods("POST")
-	s.HandleFunc("/merge/finish/{id}", router.mergeFinish).Methods("POST")
-	s.HandleFunc("/merge", router.getMergeRequests).Methods("GET")
 	s.HandleFunc("/count", router.getCount).Methods("GET")
 	s.HandleFunc("/session", router.getActiveSessions).Methods("GET")
 	s.HandleFunc("/me", router.getSelf).Methods("GET")
@@ -387,75 +367,6 @@ func (router *UserRouter) generateTotp(w http.ResponseWriter, r *http.Request) {
 		StateID: authState.ID,
 	}
 	SendJSON(w, res)
-}
-
-func (router *UserRouter) getMergeRequests(w http.ResponseWriter, r *http.Request) {
-	target := GetRequestUser(r)
-	list, err := GetAuthStateRepository().GetActiveByKeyAndType(target.ID, AuthMergeRequest)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
-		return
-	}
-	res := []*GetMergeRequestResponse{}
-	for _, e := range list {
-		source, err := GetUserRepository().GetOne(e.Payload)
-		if err == nil && source != nil {
-			m := &GetMergeRequestResponse{
-				ID:     e.ID,
-				UserID: source.ID,
-				Email:  source.Email,
-			}
-			res = append(res, m)
-		}
-	}
-	SendJSON(w, res)
-}
-
-func (router *UserRouter) mergeInit(w http.ResponseWriter, r *http.Request) {
-	var m InitMergeUsersRequest
-	if UnmarshalValidateBody(r, &m) != nil {
-		SendBadRequest(w)
-		return
-	}
-	source := GetRequestUser(r)
-	target, err := GetUserRepository().GetByEmail(source.OrganizationID, m.Email)
-	if err != nil || target == nil {
-		SendNotFound(w)
-		return
-	}
-	authState := &AuthState{
-		Expiry:        time.Now().Add(time.Minute * 60),
-		AuthStateType: AuthMergeRequest,
-		Payload:       source.ID,
-		Key:           target.ID,
-	}
-	if err := GetAuthStateRepository().Create(authState); err != nil {
-		SendInternalServerError(w)
-		return
-	}
-	SendUpdated(w)
-}
-
-func (router *UserRouter) mergeFinish(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	target := GetRequestUser(r)
-	authState, err := GetAuthStateRepository().GetOneActive(vars["id"])
-	if err != nil || authState == nil || authState.AuthStateType != AuthMergeRequest || authState.Key != target.ID {
-		SendNotFound(w)
-		return
-	}
-	source, err := GetUserRepository().GetOne(authState.Payload)
-	if err != nil || source == nil {
-		SendBadRequest(w)
-		return
-	}
-	if err := GetUserRepository().MergeUsers(source, target); err != nil {
-		SendInternalServerError(w)
-		return
-	}
-	GetAuthStateRepository().Delete(authState)
-	SendUpdated(w)
 }
 
 func (router *UserRouter) getCount(w http.ResponseWriter, r *http.Request) {
@@ -703,7 +614,7 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
-	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
+	if !isServiceAccountType(m.AccountType) && !ValidateEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
@@ -794,7 +705,6 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	eNew.TotpSecret = e.TotpSecret
-	eNew.AtlassianID = e.AtlassianID
 
 	existingUser, err := GetUserRepository().GetByEmail(e.OrganizationID, eNew.Email)
 	if err == nil && existingUser != nil {
@@ -883,7 +793,7 @@ func (router *UserRouter) create(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	if !isServiceAccountType(m.AccountType) && !isValidEmail(m.Email) {
+	if !isServiceAccountType(m.AccountType) && !ValidateEmail(m.Email) {
 		SendBadRequest(w)
 		return
 	}
@@ -1003,7 +913,6 @@ func (router *UserRouter) copyToRestModel(e *User, admin bool, hasPasskeys bool,
 	m.Email = e.Email
 	m.Firstname = e.Firstname
 	m.Lastname = e.Lastname
-	m.AtlassianID = string(e.AtlassianID)
 	m.AccountType = int(e.AccountType)
 	m.RoleIDs = roleIDs
 	if m.RoleIDs == nil {

@@ -564,6 +564,7 @@ class EditUser extends React.Component<Props, State> {
                     this.setState({ email: e.target.value })
                   }
                   required={true}
+                  pattern={Validation.EMAIL_PATTERN}
                   readOnly={isOwnUser}
                 />
               </Col>

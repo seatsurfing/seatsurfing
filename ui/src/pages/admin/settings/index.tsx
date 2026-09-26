@@ -53,7 +53,6 @@ import AlertModal from "@/components/AlertModal";
 interface State {
   allowAnyUser: boolean;
   defaultTimezone: string;
-  confluenceServerSharedSecret: string;
   customLogoUrl: string;
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
@@ -120,7 +119,6 @@ class Settings extends React.Component<Props, State> {
     this.state = {
       allowAnyUser: true,
       defaultTimezone: "",
-      confluenceServerSharedSecret: "",
       customLogoUrl: "",
       maxBookingsPerUser: 0,
       maxConcurrentBookingsPerUser: 0,
@@ -221,8 +219,6 @@ class Settings extends React.Component<Props, State> {
           state.allowAnyUser = s.value === "1";
         if (s.name === Organization.PREF_DEFAULT_TIMEZONE)
           state.defaultTimezone = s.value;
-        if (s.name === Organization.PREF_CONFLUENCE_SERVER_SHARED_SECRET)
-          state.confluenceServerSharedSecret = s.value;
         if (s.name === Organization.PREF_CUSTOM_LOGO_URL)
           state.customLogoUrl = s.value;
         if (s.name === Organization.PREF_MAX_BOOKINGS_PER_USER)
@@ -351,10 +347,6 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_DEFAULT_TIMEZONE,
         this.state.defaultTimezone,
-      ),
-      new OrgSettings(
-        Organization.PREF_CONFLUENCE_SERVER_SHARED_SECRET,
-        this.state.confluenceServerSharedSecret,
       ),
       new OrgSettings(
         Organization.PREF_CUSTOM_LOGO_URL,
@@ -1009,27 +1001,6 @@ class Settings extends React.Component<Props, State> {
                   <option key={tz}>{tz}</option>
                 ))}
               </Form.Select>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="input-confluenceServerSharedSecret"
-            >
-              {this.props.t("confluenceServerSharedSecret")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="input-confluenceServerSharedSecret"
-                type="text"
-                value={this.state.confluenceServerSharedSecret}
-                onChange={(e: any) =>
-                  this.setState({
-                    confluenceServerSharedSecret: e.target.value,
-                  })
-                }
-              />
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

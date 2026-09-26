@@ -5,7 +5,6 @@ import "@/styles/NavBar.css";
 import "@/styles/CenterContent.css";
 import "@/styles/Dashboard.css";
 import "@/styles/EditLocation.css";
-import "@/styles/ConfluenceHint.css";
 import "@/styles/Login.css";
 import "@/styles/Search.css";
 import "@/styles/Calendar.css";
@@ -296,13 +295,6 @@ class App extends React.Component<Props, State> {
   render() {
     if (typeof window !== "undefined") {
       if (window !== window.parent) {
-        // Add Confluence JS
-        if (!document.getElementById("confluence-js")) {
-          const script = document.createElement("script");
-          script.id = "confluence-js";
-          script.src = "https://connect-cdn.atl-paas.net/all.js";
-          document.head.appendChild(script);
-        }
         RuntimeConfig.EMBEDDED = true;
       }
     }

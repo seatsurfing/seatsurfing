@@ -24,3 +24,24 @@ func TestGetOrgIDsByValue(t *testing.T) {
 	CheckTestBool(t, true, Contains(res, org1.ID))
 	CheckTestBool(t, true, Contains(res, org3.ID))
 }
+
+func TestSettingsSchemaUpgradeRemovesConfluenceSettings(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+
+	GetSettingsRepository().Set(org.ID, "confluence_server_shared_secret", "secret")
+	GetSettingsRepository().Set(org.ID, "confluence_anonymous", "1")
+	GetSettingsRepository().Set(org.ID, "unrelated_setting", "1")
+
+	GetSettingsRepository().RunSchemaUpgrade(59, 60)
+
+	res, err := GetSettingsRepository().GetOrgIDsByValue("confluence_server_shared_secret", "secret")
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(res))
+	res, err = GetSettingsRepository().GetOrgIDsByValue("confluence_anonymous", "1")
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(res))
+	res, err = GetSettingsRepository().GetOrgIDsByValue("unrelated_setting", "1")
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(res))
+}

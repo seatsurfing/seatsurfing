@@ -23,7 +23,6 @@ export default class AuthAttempt {
     "passkey",
     "passkey_2fa",
     "oauth",
-    "confluence",
   ];
 
   static readonly ERROR_CODES = [
@@ -52,7 +51,6 @@ export default class AuthAttempt {
     "user_create_failed",
     "org_mismatch",
     "internal_error",
-    "confluence_jwt_invalid",
   ];
 
   id: string;

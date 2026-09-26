@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.129.0](https://github.com/seatsurfing/seatsurfing/compare/v1.128.3...v1.129.0) (2026-09-26)
+
+
+### ✨ Features
+
+* **server:** remove obsolete Confluence feature ([#2698](https://github.com/seatsurfing/seatsurfing/issues/2698)) ([29c01d5](https://github.com/seatsurfing/seatsurfing/commit/29c01d51a0ad3f971c0d3ed3ade73839e88aae72))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** respect locations bookable days for public bookings ([#2700](https://github.com/seatsurfing/seatsurfing/issues/2700)) ([6e5faf2](https://github.com/seatsurfing/seatsurfing/commit/6e5faf24ff681b19674087cb1173c97912bb763a))
+* **booking-ui:** show "new booking" button when confirm link is invalid ([#2699](https://github.com/seatsurfing/seatsurfing/issues/2699)) ([7b8db0a](https://github.com/seatsurfing/seatsurfing/commit/7b8db0a60a777136fd9f3a9fcc0af62f8e7faa55))
+* **deps:** bump google.golang.org/grpc from 1.83.2 to 1.84.0 in /server in the minor-and-patch group ([#2701](https://github.com/seatsurfing/seatsurfing/issues/2701)) ([0424651](https://github.com/seatsurfing/seatsurfing/commit/0424651f521a41165a82ddd60000b3b049e4ea91))
+* **main:** add month view to calendar ([#2696](https://github.com/seatsurfing/seatsurfing/issues/2696)) ([b1c2d97](https://github.com/seatsurfing/seatsurfing/commit/b1c2d9746119834ef1d21607719febb1903bcc28))
+* **server:** update email validation ([#2697](https://github.com/seatsurfing/seatsurfing/issues/2697)) ([c252e44](https://github.com/seatsurfing/seatsurfing/commit/c252e44d02092d030f7cfcb7affd6dddc23fe4a6))
+
 ## [1.128.3](https://github.com/seatsurfing/seatsurfing/compare/v1.128.2...v1.128.3) (2026-09-24)
 
 
