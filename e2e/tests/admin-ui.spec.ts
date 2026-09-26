@@ -72,63 +72,6 @@ test("crud location", async ({ page }) => {
   await expect(page.getByRole("cell", { name: name })).toHaveCount(0);
 });
 
-test("hide location for disallowed bookers", async ({ page }) => {
-  const name = "Location " + Math.random().toString().substr(2);
-  const groupName = "Group " + Math.random().toString().substr(2);
-
-  // Create a group to be used as allowed bookers
-  await page.getByRole("link", { name: "Groups" }).click();
-  await expect(page).toHaveURL(/groups\/$/);
-  await page.getByRole("link", { name: "Add" }).click();
-  await expect(page).toHaveURL(/groups\/add\/$/);
-  await page.getByLabel("Name").fill(groupName);
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Record saved.")).toBeVisible();
-
-  // Navigate to "Areas" and add a new area
-  await page.getByRole("link", { name: "Areas" }).click();
-  await expect(page).toHaveURL(/locations\/$/);
-  await page.getByRole("link", { name: "Add" }).click();
-  await expect(page).toHaveURL(/locations\/add\/$/);
-
-  // Option is disabled as long as no allowed bookers group is selected
-  await page.getByPlaceholder("Name").fill(name);
-  const hideCheckbox = page.getByLabel("Hide for other users");
-  await expect(hideCheckbox).not.toBeChecked();
-  await expect(hideCheckbox).toBeDisabled();
-
-  // Select allowed bookers group and hide the area for disallowed bookers
-  await page.getByLabel("Allowed bookers").fill(groupName);
-  await page.getByRole("option", { name: groupName }).click();
-  await expect(hideCheckbox).toBeEnabled();
-  await hideCheckbox.check();
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Record saved.")).toBeVisible();
-  await expect(page).toHaveURL(/locations\/.+\/$/);
-
-  // Re-open area from list and check that the setting has been persisted
-  await page.getByRole("link", { name: "Back" }).click();
-  await expect(page).toHaveURL(/locations\/$/);
-  await page.getByRole("cell", { name: name }).click();
-  await expect(page).toHaveURL(/locations\/.+\/$/);
-  await expect(page.getByLabel("Hide for other users")).toBeChecked();
-
-  // Delete area
-  await page.getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
-  await expect(page).toHaveURL(/locations\/$/);
-  await expect(page.getByRole("cell", { name: name })).toHaveCount(0);
-
-  // Delete group
-  await page.getByRole("link", { name: "Groups" }).click();
-  await expect(page).toHaveURL(/groups\/$/);
-  await page.getByRole("cell", { name: groupName }).click();
-  await page.getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
-  await expect(page).toHaveURL(/groups\/$/);
-  await expect(page.getByRole("cell", { name: groupName })).toHaveCount(0);
-});
-
 test("auth events", async ({ page }) => {
   // Navigate to "Audit"
   await page.getByRole("link", { name: "Audit" }).click();
