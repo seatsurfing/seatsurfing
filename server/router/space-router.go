@@ -11,6 +11,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 )
 
 type SpaceRouter struct {
@@ -217,151 +218,49 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	if r.URL.Query().Has("attributes") {
 		json.Unmarshal([]byte(r.URL.Query().Get("attributes")), &attributes)
 	}
-	res, err := router.GetSpaceAvailabilityForUser(user, location, spaceID, enter, leave, attributes)
+	list, err := service.GetSpaceService().GetAvailabilityForUser(user, location, spaceID, enter, leave, attributes)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	SendJSON(w, res)
-}
-
-// GetSpaceAvailabilityForUser returns the spaces of location (or only
-// spaceID, if non-empty) matching attributes, with their availability between
-// enter and leave and whether user may book them. enter and leave must
-// already carry the location's timezone. Names of other users' bookings are
-// only included if user may see them. The caller must have verified that
-// user may access the location's organization.
-func (router *SpaceRouter) GetSpaceAvailabilityForUser(user *User, location *Location, spaceID string, enter, leave time.Time, attributes []SearchAttribute) ([]*GetSpaceAvailabilityResponse, error) {
-	var showNames bool = false
-	if HasPermission(user, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
-		showNames = true
-	} else {
-		showNames, _ = GetSettingsRepository().GetBool(location.OrganizationID, SettingShowNames.Name)
-	}
-	list, err := GetSpaceRepository().GetAllInTime(location.ID, enter, leave)
-	if err != nil {
-		return nil, err
-	}
-	spaceIds := []string{}
-	for _, e := range list {
-		spaceIds = append(spaceIds, e.Space.ID)
-	}
-	attributeValues, err := GetSpaceAttributeValueRepository().GetAllForEntityList(spaceIds, SpaceAttributeValueEntityTypeSpace)
-	if err != nil {
-		return nil, err
-	}
-	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
-	if err != nil {
-		return nil, err
-	}
-	spaceAllowedBookers, err := GetSpaceRepository().GetAllAllowedBookersForSpaceList(spaceIds)
-	if err != nil {
-		return nil, err
-	}
-	locationAllowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
-	if err != nil {
-		return nil, err
-	}
-	approvers, err := GetSpaceRepository().GetAllApproversForSpaceList(spaceIds)
-	if err != nil {
-		return nil, err
-	}
-	isAllowedToBookLocation := router.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
-	isValidWeekday := IsLocationWeekdayBookable(location, user, enter, leave)
 	res := []*GetSpaceAvailabilityResponse{}
 	for _, e := range list {
-		if spaceID != "" && e.ID != spaceID {
-			continue
+		m := &GetSpaceAvailabilityResponse{}
+		m.ID = e.Space.ID
+		m.LocationID = e.Space.LocationID
+		m.Name = e.Space.Name
+		m.X = e.Space.X
+		m.Y = e.Space.Y
+		m.Width = e.Space.Width
+		m.Height = e.Space.Height
+		m.Rotation = e.Space.Rotation
+		m.RequireSubject = e.Space.RequireSubject
+		m.Enabled = e.Space.Enabled
+		m.Shape = e.Space.Shape
+		m.FontSize = e.Space.FontSize
+		m.Available = e.Available
+		m.IsAllowed = e.Allowed
+		m.IsApprovalRequired = e.ApprovalRequired
+		router.appendAttributesToRestModel(&m.GetSpaceResponse, e.Attributes)
+		m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
+		for _, booking := range e.Bookings {
+			m.Bookings = append(m.Bookings, &GetSpaceAvailabilityBookingsResponse{
+				BookingID:     booking.BookingID,
+				RecurringID:   booking.RecurringID,
+				UserID:        booking.UserID,
+				UserEmail:     booking.UserEmail,
+				UserFirstname: booking.UserFirstname,
+				UserLastname:  booking.UserLastname,
+				Enter:         booking.Enter,
+				Leave:         booking.Leave,
+				Subject:       booking.Subject,
+				Approved:      booking.Approved,
+			})
 		}
-		if MatchesSearchAttributes(e.ID, &attributes, attributeValues) {
-			m := &GetSpaceAvailabilityResponse{}
-			m.ID = e.ID
-			m.LocationID = e.LocationID
-			m.Name = e.Name
-			m.X = e.X
-			m.Y = e.Y
-			m.Width = e.Width
-			m.Height = e.Height
-			m.Rotation = e.Rotation
-			m.RequireSubject = e.RequireSubject
-			m.Enabled = e.Enabled
-			m.Shape = e.Shape
-			m.FontSize = e.FontSize
-			m.Available = e.Available
-			m.IsAllowed = isAllowedToBookLocation && router.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups) && isValidWeekday
-			m.IsApprovalRequired = router.IsApprovalRequired(&e.Space, approvers)
-			router.appendAttributesToRestModel(&m.GetSpaceResponse, attributeValues)
-			m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
-			for _, booking := range e.Bookings {
-				var showName bool = showNames
-				enter, _ := GetLocationRepository().AttachTimezoneInformation(booking.Enter, location)
-				leave, _ := GetLocationRepository().AttachTimezoneInformation(booking.Leave, location)
-				outUserId := ""
-				outUserEmail := ""
-				outUserFirstname := ""
-				outUserLastname := ""
-				if showName || user.Email == booking.UserEmail {
-					outUserId = booking.UserID
-					outUserEmail = booking.UserEmail
-					outUserFirstname = booking.UserFirstname
-					outUserLastname = booking.UserLastname
-				}
-				entry := &GetSpaceAvailabilityBookingsResponse{
-					BookingID:     booking.BookingID,
-					RecurringID:   booking.RecurringID,
-					UserID:        outUserId,
-					UserEmail:     outUserEmail,
-					UserFirstname: outUserFirstname,
-					UserLastname:  outUserLastname,
-					Enter:         enter,
-					Leave:         leave,
-					Subject:       booking.Subject,
-					Approved:      booking.Approved,
-				}
-				m.Bookings = append(m.Bookings, entry)
-			}
-			res = append(res, m)
-		}
+		res = append(res, m)
 	}
-	return res, nil
-}
-
-func (router *SpaceRouter) IsApprovalRequired(e *Space, approvers []*SpaceGroup) bool {
-	for _, approver := range approvers {
-		if approver.SpaceID == e.ID {
-			return true
-		}
-	}
-	return false
-}
-
-func (router *SpaceRouter) IsUserAllowedToBookSpace(e *Space, allowedBookers []*SpaceGroup, userGroups []*Group) bool {
-	restricted := false
-	for _, allowedBooker := range allowedBookers {
-		if allowedBooker.SpaceID == e.ID {
-			restricted = true
-			for _, userGroup := range userGroups {
-				if allowedBooker.GroupID == userGroup.ID {
-					return true
-				}
-			}
-		}
-	}
-	return !restricted
-}
-
-func (router *SpaceRouter) IsUserAllowedToBookLocation(allowedBookers []*LocationGroup, userGroups []*Group) bool {
-	restricted := false
-	for _, allowedBooker := range allowedBookers {
-		restricted = true
-		for _, userGroup := range userGroups {
-			if allowedBooker.GroupID == userGroup.ID {
-				return true
-			}
-		}
-	}
-	return !restricted
+	SendJSON(w, res)
 }
 
 func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {

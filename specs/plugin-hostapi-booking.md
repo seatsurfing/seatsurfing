@@ -27,18 +27,23 @@ It also forwards the request's `Host` and `RemoteAddr` to plugins.
 - Booking on behalf of another user through the host API. `POST /booking/` with `userEmail` stays REST-only.
 - Updating or deleting bookings through the host API.
 
-## Refactoring in `server/router`
+## Service Layer (`server/service`)
 
-The REST handlers become thin wrappers around exported functions:
+The business and validation logic moves out of the REST handlers into a new service layer between `router` and `repository` (see "Layered Architecture" in `AGENTS.md`). The REST handlers and the host API both call these services; the host API does not call router functions.
 
-| Function                                                                                             | Extracted from                          |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `(*BookingRouter).CreateBookingForUser(user, *CreateBookingRequest) (*Booking, *BookingCreateError)` | `POST /booking/`                        |
-| `GetUpcomingBookingsForUser(user) ([]*BookingDetails, error)`                                        | `GET /booking/`                         |
-| `(*SpaceRouter).GetSpaceAvailabilityForUser(user, location, spaceID, enter, leave, attributes)`      | `GET /location/{id}/space/availability` |
-| `(*LocationRouter).SearchLocationsForUser(user, *SearchLocationRequest)`                             | `POST /location/search`                 |
+| Service           | Functions                                                                                                                                                                                                                                     | Used by                                                                                                                 |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `BookingService`  | `CreateBooking`, `PrepareCreate` / `CommitCreate`, `CheckBooking`, `GetUpcomingBookingsForUser`, `IsValidBookingDuration`, `IsValidBookingAdvance`, `IsValidMinHoursBooking`, `IsValidMaxUpcomingBookings`, `IsValidBookingHoursBeforeDelete` | `POST /booking/`, `PUT /booking/{id}`, `DELETE /booking/{id}`, `GET /booking/`, precheck, recurring and public bookings |
+| `SpaceService`    | `GetAvailabilityForUser`, `RequiresApproval`, `IsUserAllowedToBookSpace`, `IsApprovalRequired`                                                                                                                                                | `GET /location/{id}/space/availability`, recurring bookings                                                             |
+| `LocationService` | `SearchLocationsForUser`, `IsLocationWeekdayBookable`, `IsUserAllowedToBookLocation`, `WeekdaysFromString`                                                                                                                                    | `POST /location/search`, booking checks, public bookings                                                                |
 
-`BookingCreateError` carries the HTTP status and the `X-Error-Code` value (`ResponseCode*`). `BookingCreateError.Send(w)` writes it the way the handler always has, so REST responses are unchanged.
+Also in `service`:
+
+- **Permission evaluation** (`GetEffectivePermissions`, `HasPermission`, `HasAnyPermission`, `CanAccessOrg`). The router's functions of the same names delegate to them.
+- **Attribute search** (`SearchAttribute`, `MatchesSearchAttributes`, `ValidateSearchAttributes`). The router keeps a type alias and a wrapper.
+- **Booking error codes** (`BookingCode*`). The router's `ResponseCodeBooking*` values refer to them.
+
+Services return domain values and a typed `BookingError` (kind plus error code), never HTTP responses. The router maps them to the same responses as before, so the REST API is unchanged. PrepareCreate/CommitCreate let the router book on behalf of another user (`userEmail`) between the two steps, in the same order as before. Notifications, CalDAV and plugin hooks after a booking is created are registered by the router through `BookingService.SetOnCreated`, so they run for bookings created through any entry point.
 
 ## Host API Additions
 
@@ -80,4 +85,13 @@ The new wire messages are additive (`hostapi.proto`), so existing plugins remain
   - other organizations
   - disabled and unknown users
 - **`server/api/hostapi_booking_test.go`**: protobuf round-trip tests for the new messages.
+- **`server/service/test/`**: tests of the services themselves:
+  - create, conflicts, invalid input, other organizations
+  - booking for another user through prepare/commit
+  - disabled spaces
+  - `CheckBooking` error codes
+  - redaction of other bookers in availability
+  - approval
+  - location search and weekday rules
+  - search attribute validation
 - **Regression:** the existing booking, space and location router tests cover the refactored REST handlers.

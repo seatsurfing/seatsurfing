@@ -11,6 +11,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -193,18 +194,17 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 		// Public bookings must not span across a day boundary.
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
-	bookingRequest := &BookingRequest{Enter: enter, Leave: leave}
-	bookingRouter := &BookingRouter{}
-	if !bookingRouter.IsValidBookingDuration(bookingRequest, orgID, nil) {
+	bookings := service.GetBookingService()
+	if !bookings.IsValidBookingDuration(enter, leave, orgID, nil) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
-	if valid, _ := bookingRouter.IsValidBookingAdvance(bookingRequest, orgID, nil); !valid {
+	if valid, _ := bookings.IsValidBookingAdvance(enter, leave, orgID, nil); !valid {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
-	if !bookingRouter.isValidMinHoursBooking(bookingRequest, orgID, nil) {
+	if !bookings.IsValidMinHoursBooking(enter, leave, orgID, nil) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
-	if !IsLocationWeekdayBookable(location, nil, enter, leave) {
+	if !service.GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	return space, location, enter, leave, true

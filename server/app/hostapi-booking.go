@@ -3,17 +3,16 @@ package app
 import (
 	"errors"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
-	. "github.com/seatsurfing/seatsurfing/server/router"
+	"github.com/seatsurfing/seatsurfing/server/service"
 )
 
-// User-scoped booking operations of the host API. They share their logic
-// with the REST handlers (see the *ForUser functions in package router), so
-// a plugin acting on behalf of a user gets exactly that user's permissions.
+// User-scoped booking operations of the host API. They are implemented by
+// the services in package service, which the REST handlers use as well, so a
+// plugin acting on behalf of a user gets exactly that user's permissions.
 
 var errHostAPIUserNotAllowed = errors.New("user not found or disabled")
 
@@ -27,24 +26,20 @@ func getActiveUser(userID string) (*api.User, error) {
 	return user, nil
 }
 
-func searchAttributesFromAPI(in []api.SearchAttributeFilter) []SearchAttribute {
-	out := make([]SearchAttribute, 0, len(in))
+func searchAttributesFromAPI(in []api.SearchAttributeFilter) ([]service.SearchAttribute, error) {
+	out := make([]service.SearchAttribute, 0, len(in))
 	for _, a := range in {
-		out = append(out, SearchAttribute{AttributeID: a.AttributeID, Comparator: a.Comparator, Value: a.Value})
+		out = append(out, service.SearchAttribute{AttributeID: a.AttributeID, Comparator: a.Comparator, Value: a.Value})
 	}
-	return out
+	return out, service.ValidateSearchAttributes(out)
 }
 
-func userGroupIDs(userID string) ([]string, error) {
-	groups, err := GetGroupRepository().GetAllWhereUserIsMember(userID)
-	if err != nil {
-		return nil, err
+func attributeValuesToAPI(in []*SpaceAttributeValue) []api.AttributeValue {
+	out := make([]api.AttributeValue, 0, len(in))
+	for _, v := range in {
+		out = append(out, api.AttributeValue{AttributeID: v.AttributeID, Value: v.Value})
 	}
-	ids := make([]string, 0, len(groups))
-	for _, g := range groups {
-		ids = append(ids, g.ID)
-	}
-	return ids, nil
+	return out
 }
 
 func (h *hostAPIImpl) SearchLocationsForUser(userID string, enter, leave time.Time, attributes []api.SearchAttributeFilter) ([]*api.LocationInfo, error) {
@@ -52,60 +47,22 @@ func (h *hostAPIImpl) SearchLocationsForUser(userID string, enter, leave time.Ti
 	if err != nil {
 		return nil, err
 	}
-	req := &SearchLocationRequest{Enter: enter, Leave: leave, Attributes: searchAttributesFromAPI(attributes)}
-	if err := GetValidator().Struct(req); err != nil {
-		return nil, err
-	}
-	locations, err := (&LocationRouter{}).SearchLocationsForUser(user, req)
+	attrs, err := searchAttributesFromAPI(attributes)
 	if err != nil {
 		return nil, err
 	}
-	groupIDs, err := userGroupIDs(user.ID)
-	if err != nil {
-		return nil, err
-	}
-	locationIDs := make([]string, 0, len(locations))
-	for _, l := range locations {
-		locationIDs = append(locationIDs, l.ID)
-	}
-	attributeValues, err := GetSpaceAttributeValueRepository().GetAllForEntityList(locationIDs, SpaceAttributeValueEntityTypeLocation)
+	locations, err := service.GetLocationService().SearchLocationsForUser(user, enter, leave, attrs)
 	if err != nil {
 		return nil, err
 	}
 	res := []*api.LocationInfo{}
 	for _, l := range locations {
-		allowed := len(l.AllowedBookerGroupIDs) == 0
-		for _, id := range l.AllowedBookerGroupIDs {
-			if slices.Contains(groupIDs, id) {
-				allowed = true
-				break
-			}
-		}
-		info := &api.LocationInfo{
-			Location: api.Location{
-				ID:                    l.ID,
-				OrganizationID:        l.OrganizationID,
-				Name:                  l.Name,
-				MapWidth:              l.MapWidth,
-				MapHeight:             l.MapHeight,
-				MapScale:              l.MapScale,
-				MapMimeType:           l.MapMimeType,
-				MapType:               l.MapType,
-				Description:           l.Description,
-				MaxConcurrentBookings: l.MaxConcurrentBookings,
-				Timezone:              l.Timezone,
-				Enabled:               l.Enabled,
-			},
-			Attributes:   []api.AttributeValue{},
-			Allowed:      allowed,
-			BookableDays: l.BookableDays,
-		}
-		for _, v := range attributeValues {
-			if v.EntityID == l.ID {
-				info.Attributes = append(info.Attributes, api.AttributeValue{AttributeID: v.AttributeID, Value: v.Value})
-			}
-		}
-		res = append(res, info)
+		res = append(res, &api.LocationInfo{
+			Location:     *l.Location,
+			Attributes:   attributeValuesToAPI(l.Attributes),
+			Allowed:      l.AllowedForUser,
+			BookableDays: service.WeekdaysFromString(l.Location.BookableDays),
+		})
 	}
 	return res, nil
 }
@@ -116,11 +73,11 @@ func (h *hostAPIImpl) GetSpaceAvailabilityForUser(userID, locationID string, ent
 		return nil, err
 	}
 	location, err := GetLocationRepository().GetOne(locationID)
-	if err != nil || location == nil || !CanAccessOrg(user, location.OrganizationID) {
+	if err != nil || location == nil || !service.CanAccessOrg(user, location.OrganizationID) {
 		return nil, errors.New("location not found")
 	}
-	attrs := searchAttributesFromAPI(attributes)
-	if err := GetValidator().Var(attrs, "dive"); err != nil {
+	attrs, err := searchAttributesFromAPI(attributes)
+	if err != nil {
 		return nil, err
 	}
 	enter, err = GetLocationRepository().AttachTimezoneInformation(enter, location)
@@ -131,38 +88,20 @@ func (h *hostAPIImpl) GetSpaceAvailabilityForUser(userID, locationID string, ent
 	if err != nil {
 		return nil, err
 	}
-	list, err := (&SpaceRouter{}).GetSpaceAvailabilityForUser(user, location, "", enter, leave, attrs)
+	list, err := service.GetSpaceService().GetAvailabilityForUser(user, location, "", enter, leave, attrs)
 	if err != nil {
 		return nil, err
 	}
+	// Other users' bookings (e.Bookings) are deliberately not exposed.
 	res := []*api.SpaceAvailabilityInfo{}
 	for _, s := range list {
-		info := &api.SpaceAvailabilityInfo{
-			Space: api.Space{
-				ID:                   s.ID,
-				LocationID:           s.LocationID,
-				Name:                 s.Name,
-				X:                    s.X,
-				Y:                    s.Y,
-				Width:                s.Width,
-				Height:               s.Height,
-				Rotation:             s.Rotation,
-				RequireSubject:       s.RequireSubject,
-				Enabled:              s.Enabled,
-				KioskEnabled:         s.KioskEnabled,
-				Shape:                s.Shape,
-				FontSize:             s.FontSize,
-				PublicBookingEnabled: s.PublicBookingEnabled,
-			},
-			Attributes:       []api.AttributeValue{},
+		res = append(res, &api.SpaceAvailabilityInfo{
+			Space:            s.Space,
+			Attributes:       attributeValuesToAPI(s.Attributes),
 			Available:        s.Available,
-			Allowed:          s.IsAllowed,
-			ApprovalRequired: s.IsApprovalRequired,
-		}
-		for _, a := range s.Attributes {
-			info.Attributes = append(info.Attributes, api.AttributeValue{AttributeID: a.AttributeID, Value: a.Value})
-		}
-		res = append(res, info)
+			Allowed:          s.Allowed,
+			ApprovalRequired: s.ApprovalRequired,
+		})
 	}
 	return res, nil
 }
@@ -186,25 +125,34 @@ func (h *hostAPIImpl) GetSpaceAttributes(organizationID string) ([]*api.SpaceAtt
 	return res, nil
 }
 
+// bookingErrorStatus maps a booking service error to the HTTP status the REST
+// API responds with, which is what BookingCreateResult reports.
+func bookingErrorStatus(kind service.BookingErrorKind) int {
+	switch kind {
+	case service.BookingErrorForbidden:
+		return http.StatusForbidden
+	case service.BookingErrorConflict:
+		return http.StatusConflict
+	case service.BookingErrorInternal:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusBadRequest
+	}
+}
+
 func (h *hostAPIImpl) CreateBookingForUser(userID, spaceID string, enter, leave time.Time, subject string) (*api.BookingCreateResult, error) {
 	user, err := getActiveUser(userID)
 	if err != nil {
 		return nil, err
 	}
-	m := &CreateBookingRequest{
+	e, bErr := service.GetBookingService().CreateBooking(user, &service.BookingInput{
 		SpaceID: spaceID,
 		Subject: subject,
-		BookingRequest: BookingRequest{
-			Enter: enter,
-			Leave: leave,
-		},
-	}
-	if err := GetValidator().Struct(m); err != nil {
-		return &api.BookingCreateResult{StatusCode: http.StatusBadRequest}, nil
-	}
-	e, bErr := (&BookingRouter{}).CreateBookingForUser(user, m)
+		Enter:   enter,
+		Leave:   leave,
+	})
 	if bErr != nil {
-		return &api.BookingCreateResult{StatusCode: bErr.StatusCode, ErrorCode: bErr.Code}, nil
+		return &api.BookingCreateResult{StatusCode: bookingErrorStatus(bErr.Kind), ErrorCode: bErr.Code}, nil
 	}
 	return &api.BookingCreateResult{BookingID: e.ID, Approved: e.Approved, StatusCode: http.StatusCreated}, nil
 }
@@ -214,5 +162,5 @@ func (h *hostAPIImpl) GetUpcomingBookingsForUser(userID string) ([]*api.BookingD
 	if err != nil {
 		return nil, err
 	}
-	return GetUpcomingBookingsForUser(user)
+	return service.GetBookingService().GetUpcomingBookingsForUser(user)
 }
