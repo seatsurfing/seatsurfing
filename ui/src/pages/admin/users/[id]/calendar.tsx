@@ -2,7 +2,7 @@ import React from "react";
 import { ChevronLeft as IconBack } from "react-feather";
 import { NextRouter } from "next/router";
 import Link from "next/link";
-import { Calendar } from "react-big-calendar";
+import { Calendar, View } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import FullLayout from "@/components/FullLayout";
 import Loading from "@/components/Loading";
@@ -25,6 +25,7 @@ import RendererUtils from "@/util/RendererUtils";
 interface State {
   loading: boolean;
   date: Date;
+  view: View;
   events: CalendarEvent[];
 }
 
@@ -42,6 +43,7 @@ class UserBookingCalendar extends React.Component<Props, State> {
     this.state = {
       loading: true,
       date: DateUtil.getNowFakeUTC(),
+      view: "week",
       events: [],
     };
   }
@@ -61,15 +63,15 @@ class UserBookingCalendar extends React.Component<Props, State> {
       return;
     }
     this.user = user;
-    await this.loadBookings(this.state.date);
+    await this.loadBookings(this.state.date, this.state.view);
   };
 
-  loadBookings = async (date: Date) => {
+  loadBookings = async (date: Date, view: View) => {
     if (!this.user) {
       return;
     }
     const requestId = ++this.requestCounter;
-    const range = CalendarUtil.getWeekRange(date);
+    const range = CalendarUtil.getRange(view, date);
     const list = await Booking.listFiltered(
       DateUtil.convertFromFakeUTCDate(range.start),
       DateUtil.convertFromFakeUTCDate(range.end),
@@ -87,7 +89,12 @@ class UserBookingCalendar extends React.Component<Props, State> {
 
   onNavigate = (date: Date) => {
     this.setState({ date });
-    this.loadBookings(date);
+    this.loadBookings(date, this.state.view);
+  };
+
+  onView = (view: View) => {
+    this.setState({ view });
+    this.loadBookings(this.state.date, view);
   };
 
   render() {
@@ -128,8 +135,10 @@ class UserBookingCalendar extends React.Component<Props, State> {
           style={{ height: "calc(100vh - 220px)", width: "100%" }}
           date={this.state.date}
           onNavigate={this.onNavigate}
-          defaultView="week"
-          views={["week"]}
+          view={this.state.view}
+          onView={this.onView}
+          views={["week", "month"]}
+          drilldownView="week"
           onSelectEvent={(e: CalendarEvent) =>
             this.props.router.push(`/admin/bookings/${e.bookingId}`)
           }

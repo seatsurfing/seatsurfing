@@ -406,7 +406,7 @@ class EditUser extends React.Component<Props, State> {
       !this.isServiceAccount(this.entity.accountType) &&
       RuntimeConfig.hasPermission(Permission.Bookings, PermissionLevel.Read) ? (
         <Link
-          href={`/admin/calendar/${this.entity.id}`}
+          href={`/admin/users/${this.entity.id}/calendar`}
           className="btn btn-sm btn-outline-secondary"
         >
           <IconCalendar className="feather" /> {this.props.t("bookingCalendar")}
