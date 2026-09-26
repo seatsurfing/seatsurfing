@@ -1109,3 +1109,40 @@ func TestSpaceRouterBulkUpdateForeignOrgApproverGroup(t *testing.T) {
 	}
 	CheckTestBool(t, false, unchanged.PublicBookingEnabled)
 }
+
+func TestSpacesAvailabilityTouching(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	locationID, spaceID1, spaceID2, _ := createTestSpaces(t, loginResponse)
+
+	// Booking ending exactly when the requested window starts
+	payload := "{\"spaceId\": \"" + spaceID1 + "\", \"enter\": \"2030-09-01T07:00:00+02:00\", \"leave\": \"2030-09-01T08:30:00+02:00\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Booking starting exactly when the requested window ends
+	payload = "{\"spaceId\": \"" + spaceID2 + "\", \"enter\": \"2030-09-01T17:00:00+02:00\", \"leave\": \"2030-09-01T19:00:00+02:00\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Check
+	enter := "2030-09-01T08:30:00+02:00"
+	leave := "2030-09-01T17:00:00+02:00"
+	req = NewHTTPRequest("GET", "/location/"+locationID+"/space/availability?enter="+url.QueryEscape(enter)+"&leave="+url.QueryEscape(leave), loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 3 {
+		t.Fatalf("Expected array with 3 elements")
+	}
+	CheckTestBool(t, true, resBody[0].Available)
+	CheckTestBool(t, true, resBody[1].Available)
+	CheckTestBool(t, true, resBody[2].Available)
+}

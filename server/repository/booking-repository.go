@@ -771,26 +771,15 @@ func calcLoad(rng DateRange, totalBookedMinutes, numSpaces, targetUtilizationHou
 	return int(math.RoundToEven(res))
 }
 
-// various scenarios
-//
-//	   |-----------|    (base)
-//	|------|            (overlap start)
-//	           |------| (overlap end)
-//	 |----------------| (bigger than)
-//	       |---|        (within)
-//
-// bigger than should be covered by overlap start / end checks
-//
-// get all bookings by a specific user which overlap with the provided time range
+// GetTimeRangeByUser returns all bookings by a specific user which overlap
+// with the provided time range. Time ranges are half-open, so a booking may
+// start at the exact time another one ends.
 func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
 	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
-		"WHERE id::text != $4 AND user_id = $1 AND ("+
-		"($2 <= enter_time AND $3 > enter_time) OR "+ // (overlap start, can end at same time as next start)
-		"($2 < leave_time AND $3 >= leave_time) OR "+ // (overlap end, start can equal previous leave time)
-		"($2 >= enter_time AND $3 <= leave_time)"+ // (within)
-		") "+
+		"WHERE id::text != $4 AND user_id = $1 AND "+
+		"enter_time < $3 AND leave_time > $2 "+
 		"ORDER BY enter_time", userID, enter, leave, excludeBookingID)
 	if err != nil {
 		return nil, err
@@ -808,17 +797,14 @@ func (r *BookingStore) GetTimeRangeByUser(userID string, enter time.Time, leave 
 }
 
 // GetConflicts returns bookings for a specific space which overlap
-// with the specified enter and leave times.
+// with the specified enter and leave times. Time ranges are half-open, so
+// back-to-back bookings (one ending when the next starts) do not conflict.
 func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.Time, excludeBookingID string) ([]*Booking, error) {
 	var result []*Booking
 	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
-		"WHERE id::text != $1 AND space_id = $2 AND ("+
-		"($3 >= enter_time AND $3 <= leave_time) OR "+
-		"($4 >= enter_time AND $4 <= leave_time) OR "+
-		"(enter_time >= $3 AND enter_time <= $4) OR "+
-		"(leave_time >= $3 AND leave_time <= $4)"+
-		") "+
+		"WHERE id::text != $1 AND space_id = $2 AND "+
+		"enter_time < $4 AND leave_time > $3 "+
 		"ORDER BY enter_time", excludeBookingID, spaceID, enter, leave)
 	if err != nil {
 		return nil, err
@@ -856,12 +842,8 @@ func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave 
 	}
 	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
 		"FROM bookings "+
-		"WHERE id::text != $1 AND space_id IN (SELECT id FROM spaces WHERE location_id = $2) AND ("+
-		"($3 >= enter_time AND $3 <= leave_time) OR "+
-		"($4 >= enter_time AND $4 <= leave_time) OR "+
-		"(enter_time >= $3 AND enter_time <= $4) OR "+
-		"(leave_time >= $3 AND leave_time <= $4)"+
-		") "+
+		"WHERE id::text != $1 AND space_id IN (SELECT id FROM spaces WHERE location_id = $2) AND "+
+		"enter_time < $4 AND leave_time > $3 "+
 		"ORDER BY enter_time", excludeBookingID, location.ID, enter, leave)
 	if err == sql.ErrNoRows {
 		return 0, nil
