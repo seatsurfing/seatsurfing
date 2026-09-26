@@ -126,12 +126,12 @@ class UserBookingCalendar extends React.Component<Props, State> {
       <FullLayout headline={headline} buttons={buttons}>
         <Calendar
           showMultiDayTimes={true}
-          getNow={() => DateUtil.getNowFakeUTC()}
+          getNow={CalendarUtil.getNow}
           localizer={CalendarUtil.getLocalizer()}
           culture={Formatting.Language}
           events={this.state.events}
-          startAccessor={(event: CalendarEvent) => event.enter}
-          endAccessor={(event: CalendarEvent) => event.leave}
+          startAccessor={CalendarUtil.startAccessor}
+          endAccessor={CalendarUtil.endAccessor}
           style={{ height: "calc(100vh - 220px)", width: "100%" }}
           date={this.state.date}
           onNavigate={this.onNavigate}
@@ -142,9 +142,7 @@ class UserBookingCalendar extends React.Component<Props, State> {
           onSelectEvent={(e: CalendarEvent) =>
             this.props.router.push(`/admin/bookings/${e.bookingId}`)
           }
-          eventPropGetter={(event: CalendarEvent) =>
-            event.approved === false ? { style: { opacity: 0.5 } } : {}
-          }
+          eventPropGetter={CalendarUtil.eventPropGetter}
           components={{
             toolbar: (props: object) => (
               <CustomToolbar toolbar={props as any} t={this.props.t} />
