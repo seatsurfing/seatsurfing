@@ -446,13 +446,6 @@ components:
             type: string
             format: uuid
           description: IDs of the groups allowed to book spaces in this location. Empty means everyone may book.
-        hideForDisallowedBookers:
-          type: boolean
-          description: |
-            Hide the location from users who are not members of one of the groups in
-            `allowedBookerGroupIds`. Has no effect if `allowedBookerGroupIds` is empty.
-            See the `context` query parameter for how users with administrative
-            permissions are affected.
         bookableDays:
           type: array
           items:
@@ -499,13 +492,6 @@ components:
             type: string
             format: uuid
           description: IDs of the groups allowed to book spaces in this location. Empty means everyone may book.
-        hideForDisallowedBookers:
-          type: boolean
-          description: |
-            Hide the location from users who are not members of one of the groups in
-            `allowedBookerGroupIds`. Has no effect if `allowedBookerGroupIds` is empty.
-            See the `context` query parameter for how users with administrative
-            permissions are affected.
         bookableDays:
           type: array
           items:
@@ -1626,11 +1612,12 @@ components:
         type: string
         enum: [booking]
       description: |
-        Set to `booking` when requesting from the booking frontend. Locations with
-        `hideForDisallowedBookers` enabled are always hidden from users who are not
-        members of one of the location's allowed booker groups. Users with at least
-        read access to `areas`, `bookings`, `analytics` or `presence_report` can
-        still see them, unless this parameter is set to `booking`.
+        Set to `booking` when requesting from the booking frontend. If the organization
+        setting `hide_disallowed_locations` is enabled, locations with a non-empty
+        `allowedBookerGroupIds` list are hidden from users who are not members of one
+        of these groups. Users with at least read access to `areas`, `bookings`,
+        `analytics` or `presence_report` can still see them, unless this parameter is
+        set to `booking`.
 
 paths:
   # ===========================
@@ -2515,8 +2502,9 @@ paths:
       tags: [Locations]
       summary: Get all locations
       description: |
-        Returns all locations in the user's organization. Locations hidden for
-        disallowed bookers are filtered according to the `context` query parameter.
+        Returns all locations in the user's organization. Locations hidden by the
+        `hide_disallowed_locations` setting are filtered according to the `context`
+        query parameter.
       operationId: getAllLocations
       security:
         - BearerAuth: []
@@ -2558,7 +2546,7 @@ paths:
       summary: Search locations
       description: |
         Searches locations with optional attribute filters (e.g. number of free spaces, buddies on site). If no attributes are provided, returns all locations.
-        This endpoint is intended for the booking frontend: locations hidden for disallowed bookers are always filtered as if `context=booking` was set, including for users with administrative permissions.
+        This endpoint is intended for the booking frontend: locations hidden by the `hide_disallowed_locations` setting are always filtered as if `context=booking` was set, including for users with administrative permissions.
       operationId: searchLocations
       security:
         - BearerAuth: []

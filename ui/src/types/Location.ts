@@ -14,7 +14,6 @@ export default class Location extends Entity {
   mapScale: number;
   mapType: string;
   allowedBookerGroupIds: string[];
-  hideForDisallowedBookers: boolean;
   /** weekdays (0=Sunday..6=Saturday) the location can be booked on; empty array means unrestricted */
   bookableDays: number[];
 
@@ -31,7 +30,6 @@ export default class Location extends Entity {
     this.mapScale = 1.0;
     this.mapType = "";
     this.allowedBookerGroupIds = [];
-    this.hideForDisallowedBookers = false;
     this.bookableDays = [];
   }
 
@@ -45,7 +43,6 @@ export default class Location extends Entity {
       mapScale: this.mapScale,
       mapType: this.mapType,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
-      hideForDisallowedBookers: this.hideForDisallowedBookers,
       bookableDays: this.bookableDays,
     });
   }
@@ -65,7 +62,6 @@ export default class Location extends Entity {
     if (input.allowedBookerGroupIds) {
       this.allowedBookerGroupIds = input.allowedBookerGroupIds;
     }
-    this.hideForDisallowedBookers = !!input.hideForDisallowedBookers;
     this.bookableDays = input.bookableDays || [];
   }
 

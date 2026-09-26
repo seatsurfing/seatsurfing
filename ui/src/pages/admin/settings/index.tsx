@@ -74,6 +74,7 @@ interface State {
   allowOrgDelete: boolean;
   selectedAuthProvider: string;
   disableBuddies: boolean;
+  hideDisallowedLocations: boolean;
   loading: boolean;
   submitting: boolean;
   showSavedModal: boolean;
@@ -140,6 +141,7 @@ class Settings extends React.Component<Props, State> {
       allowOrgDelete: false,
       selectedAuthProvider: "",
       disableBuddies: false,
+      hideDisallowedLocations: false,
       loading: true,
       submitting: false,
       showSavedModal: false,
@@ -253,6 +255,8 @@ class Settings extends React.Component<Props, State> {
           state.allowBookingNonExistUsers = s.value === "1";
         if (s.name === Organization.PREF_DISABLE_BUDDIES)
           state.disableBuddies = s.value === "1";
+        if (s.name === Organization.PREF_HIDE_DISALLOWED_LOCATIONS)
+          state.hideDisallowedLocations = s.value === "1";
         if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED_ENABLED)
           state.maxHoursPartiallyBookedEnabled = s.value === "1";
         if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED)
@@ -371,6 +375,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_DISABLE_BUDDIES,
         this.state.disableBuddies ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_HIDE_DISALLOWED_LOCATIONS,
+        this.state.hideDisallowedLocations ? "1" : "0",
       ),
       new OrgSettings(
         Organization.PREF_MAX_BOOKINGS_PER_USER,
@@ -1239,6 +1247,19 @@ class Settings extends React.Component<Props, State> {
                 checked={this.state.noAdminRestrictions}
                 onChange={(e: any) =>
                   this.setState({ noAdminRestrictions: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} hidden={!RuntimeConfig.INFOS.featureGroups}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-hideDisallowedLocations"
+                label={this.props.t("hideDisallowedLocations")}
+                checked={this.state.hideDisallowedLocations}
+                onChange={(e: any) =>
+                  this.setState({ hideDisallowedLocations: e.target.checked })
                 }
               />
             </Col>

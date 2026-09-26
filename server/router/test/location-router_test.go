@@ -594,44 +594,11 @@ func TestLocationGetAttributesCrossTenant(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
-func TestLocationsHideForDisallowedBookersCRUD(t *testing.T) {
-	ClearTestDB()
-	org := CreateTestOrg("test.com")
-	user := CreateTestUserOrgAdmin(org)
-	loginResponse := LoginTestUser(user.ID)
-
-	payload := `{"name": "Location 1", "hideForDisallowedBookers": true}`
-	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
-	res := ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusCreated, res.Code)
-	id := res.Header().Get("X-Object-Id")
-
-	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody *GetLocationResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestBool(t, true, resBody.HideForDisallowedBookers)
-
-	payload = `{"name": "Location 1", "hideForDisallowedBookers": false}`
-	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
-
-	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
-	res = ExecuteTestRequest(req)
-	CheckTestResponseCode(t, http.StatusOK, res.Code)
-	var resBody2 *GetLocationResponse
-	json.Unmarshal(res.Body.Bytes(), &resBody2)
-	CheckTestBool(t, false, resBody2.HideForDisallowedBookers)
-}
-
-func createTestHiddenLocation(org *Organization, name string, hide bool, allowedBookers []string) *Location {
+func createTestRestrictedLocation(org *Organization, name string, allowedBookers []string) *Location {
 	location := &Location{
-		OrganizationID:           org.ID,
-		Name:                     name,
-		Enabled:                  true,
-		HideForDisallowedBookers: hide,
+		OrganizationID: org.ID,
+		Name:           name,
+		Enabled:        true,
 	}
 	if err := GetLocationRepository().Create(location); err != nil {
 		panic(err)
@@ -667,41 +634,54 @@ func getTestLocationNames(t *testing.T, userID string, bookingContext bool) []st
 	return names
 }
 
-func TestLocationsHideForDisallowedBookersList(t *testing.T) {
+func searchTestLocationNames(t *testing.T, userID string, payload string) []string {
+	req := NewHTTPRequest("POST", "/location/search", userID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	names := []string{}
+	for _, e := range resBody {
+		names = append(names, e.Name)
+	}
+	return names
+}
+
+func TestLocationsHideDisallowedList(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	allowedUser := CreateTestUserInOrg(org)
-	otherUser := CreateTestUserInOrg(org)
+	GetSettingsRepository().Set(org.ID, SettingHideDisallowedLocations.Name, "1")
+	userA := CreateTestUserInOrg(org)
+	userB := CreateTestUserInOrg(org)
 	areasReader := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionAreas: PermissionLevelRead})
-	group := CreateTestGroup(org, allowedUser)
+	groupA := CreateTestGroup(org, userA)
+	groupB := CreateTestGroup(org, userB)
 
-	createTestHiddenLocation(org, "A Unrestricted", true, []string{})
-	createTestHiddenLocation(org, "B Restricted Visible", false, []string{group.ID})
-	createTestHiddenLocation(org, "C Restricted Hidden", true, []string{group.ID})
+	createTestRestrictedLocation(org, "1 Unrestricted", []string{})
+	createTestRestrictedLocation(org, "2 Restricted A", []string{groupA.ID})
+	createTestRestrictedLocation(org, "3 Restricted B", []string{groupB.ID})
 
-	// Allowed booker sees all locations
-	names := getTestLocationNames(t, allowedUser.ID, false)
-	CheckTestInt(t, 3, len(names))
-	names = getTestLocationNames(t, allowedUser.ID, true)
-	CheckTestInt(t, 3, len(names))
-
-	// Other user does not see the hidden restricted location, regardless of context
+	// Users only see unrestricted locations and those they are allowed to book, regardless of context
 	for _, bookingContext := range []bool{false, true} {
-		names = getTestLocationNames(t, otherUser.ID, bookingContext)
+		names := getTestLocationNames(t, userA.ID, bookingContext)
 		CheckTestInt(t, 2, len(names))
-		CheckTestString(t, "A Unrestricted", names[0])
-		CheckTestString(t, "B Restricted Visible", names[1])
+		CheckTestString(t, "1 Unrestricted", names[0])
+		CheckTestString(t, "2 Restricted A", names[1])
+
+		names = getTestLocationNames(t, userB.ID, bookingContext)
+		CheckTestInt(t, 2, len(names))
+		CheckTestString(t, "1 Unrestricted", names[0])
+		CheckTestString(t, "3 Restricted B", names[1])
 	}
 
 	// Users with areas permission see all locations outside the booking context
-	names = getTestLocationNames(t, areasReader.ID, false)
+	names := getTestLocationNames(t, areasReader.ID, false)
 	CheckTestInt(t, 3, len(names))
 
-	// Users with areas permission don't see the hidden location in the booking context
+	// Users with areas permission don't see hidden locations in the booking context
 	names = getTestLocationNames(t, areasReader.ID, true)
-	CheckTestInt(t, 2, len(names))
-	CheckTestString(t, "A Unrestricted", names[0])
-	CheckTestString(t, "B Restricted Visible", names[1])
+	CheckTestInt(t, 1, len(names))
+	CheckTestString(t, "1 Unrestricted", names[0])
 
 	// Search endpoint always applies the booking context filter, also for users with areas permission
 	payloads := []string{
@@ -709,30 +689,50 @@ func TestLocationsHideForDisallowedBookersList(t *testing.T) {
 		`{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": []}`,
 	}
 	for _, payload := range payloads {
-		for _, userID := range []string{otherUser.ID, areasReader.ID} {
-			req := NewHTTPRequest("POST", "/location/search", userID, bytes.NewBufferString(payload))
-			res := ExecuteTestRequest(req)
-			CheckTestResponseCode(t, http.StatusOK, res.Code)
-			var resBody []*GetLocationResponse
-			json.Unmarshal(res.Body.Bytes(), &resBody)
-			CheckTestInt(t, 2, len(resBody))
-			for _, e := range resBody {
-				if e.Name == "C Restricted Hidden" {
-					t.Fatalf("Expected hidden location not to be returned by search")
-				}
-			}
-		}
+		names = searchTestLocationNames(t, userA.ID, payload)
+		CheckTestInt(t, 2, len(names))
+		CheckTestString(t, "1 Unrestricted", names[0])
+		CheckTestString(t, "2 Restricted A", names[1])
+
+		names = searchTestLocationNames(t, areasReader.ID, payload)
+		CheckTestInt(t, 1, len(names))
+		CheckTestString(t, "1 Unrestricted", names[0])
 	}
 }
 
-func TestLocationsHideForDisallowedBookersSingle(t *testing.T) {
+func TestLocationsHideDisallowedSettingDisabled(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	userA := CreateTestUserInOrg(org)
+	userB := CreateTestUserInOrg(org)
+	groupA := CreateTestGroup(org, userA)
+	location := createTestRestrictedLocation(org, "Restricted A", []string{groupA.ID})
+
+	// Without the setting, restricted locations are visible (but not bookable) for everyone
+	for _, bookingContext := range []bool{false, true} {
+		names := getTestLocationNames(t, userB.ID, bookingContext)
+		CheckTestInt(t, 1, len(names))
+	}
+	names := searchTestLocationNames(t, userB.ID, `{"enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "attributes": []}`)
+	CheckTestInt(t, 1, len(names))
+	req := NewHTTPRequest("GET", "/location/"+location.ID+"?context=booking", userB.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	GetSettingsRepository().Set(org.ID, SettingHideDisallowedLocations.Name, "0")
+	names = getTestLocationNames(t, userB.ID, true)
+	CheckTestInt(t, 1, len(names))
+}
+
+func TestLocationsHideDisallowedSingle(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingHideDisallowedLocations.Name, "1")
 	allowedUser := CreateTestUserInOrg(org)
 	otherUser := CreateTestUserInOrg(org)
 	admin := CreateTestUserOrgAdmin(org)
 	group := CreateTestGroup(org, allowedUser)
-	location := createTestHiddenLocation(org, "Hidden", true, []string{group.ID})
+	location := createTestRestrictedLocation(org, "Hidden", []string{group.ID})
 
 	paths := []string{
 		"/location/" + location.ID,
@@ -775,9 +775,8 @@ func TestLocationsHideForDisallowedBookersSingle(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
-	// Without the flag, the location is visible (but not bookable) for everyone
-	location.HideForDisallowedBookers = false
-	GetLocationRepository().Update(location)
+	// After disabling the setting, the location is visible (but not bookable) for everyone
+	GetSettingsRepository().Set(org.ID, SettingHideDisallowedLocations.Name, "0")
 	for _, path := range paths {
 		req := NewHTTPRequest("GET", path, otherUser.ID, nil)
 		res := ExecuteTestRequest(req)

@@ -430,7 +430,6 @@ interface State {
   showEditSpaceDetailsModal: boolean;
   selectedSpaceMouseDownTimestamp: number;
   locationAllowBookers: any[] | undefined;
-  hideForDisallowedBookers: boolean;
   showDesignerModal: boolean;
   gridEnabled: boolean;
   outline: boolean;
@@ -484,7 +483,6 @@ class EditLocation extends React.Component<Props, State> {
       showEditSpaceDetailsModal: false,
       selectedSpaceMouseDownTimestamp: 0,
       locationAllowBookers: [],
-      hideForDisallowedBookers: false,
       showDesignerModal: false,
       gridEnabled: false,
       outline: false,
@@ -572,8 +570,6 @@ class EditLocation extends React.Component<Props, State> {
                               location.allowedBookerGroupIds.includes(g.id),
                             )
                           : [],
-                      hideForDisallowedBookers:
-                        location.hideForDisallowedBookers,
                       loading: false,
                     });
                   });
@@ -715,8 +711,6 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
       ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
       : [];
-    this.entity.hideForDisallowedBookers =
-      this.canHideForDisallowedBookers() && this.state.hideForDisallowedBookers;
     this.entity
       .save()
       .then(() => {
@@ -1624,13 +1618,6 @@ class EditLocation extends React.Component<Props, State> {
     });
   };
 
-  canHideForDisallowedBookers = (): boolean => {
-    return (
-      RuntimeConfig.INFOS.featureGroups &&
-      (this.state.locationAllowBookers?.length ?? 0) > 0
-    );
-  };
-
   getAttributeById = (id: string): SpaceAttribute | null => {
     let a: SpaceAttribute | null = null;
     this.state.availableAttributes.forEach((cur) => {
@@ -2337,37 +2324,6 @@ class EditLocation extends React.Component<Props, State> {
                 multiple={true}
                 onChange={this.onLocationAllowBookersSearchSelected}
                 defaultSelected={this.state.locationAllowBookers}
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="location-hide-for-disallowed-bookers"
-            >
-              {this.props.t("hideForDisallowedBookers")}
-              {RuntimeConfig.INFOS.featureGroups && (
-                <HintTooltip
-                  hint={this.props.t("hideForDisallowedBookersHint")}
-                />
-              )}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Check
-                type="checkbox"
-                id="location-hide-for-disallowed-bookers"
-                label={RendererUtils.capitalize(this.props.t("yes"))}
-                disabled={!this.canHideForDisallowedBookers()}
-                checked={
-                  this.canHideForDisallowedBookers() &&
-                  this.state.hideForDisallowedBookers
-                }
-                onChange={(e: any) =>
-                  this.setState({
-                    hideForDisallowedBookers: e.target.checked,
-                  })
-                }
               />
             </Col>
           </Form.Group>

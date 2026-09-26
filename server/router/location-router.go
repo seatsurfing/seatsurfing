@@ -30,16 +30,15 @@ type LocationRouter struct {
 }
 
 type CreateLocationRequest struct {
-	Name                     string   `json:"name" validate:"required,max=128"`
-	Description              string   `json:"description" validate:"max=512"`
-	MaxConcurrentBookings    uint     `json:"maxConcurrentBookings"`
-	Timezone                 string   `json:"timezone" validate:"max=32"`
-	Enabled                  bool     `json:"enabled"`
-	MapScale                 float64  `json:"mapScale"`
-	MapType                  string   `json:"mapType" validate:"omitempty,oneof=designed"`
-	AllowedBookerGroupIDs    []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
-	HideForDisallowedBookers bool     `json:"hideForDisallowedBookers"`
-	BookableDays             []int    `json:"bookableDays" validate:"dive,min=0,max=6"`
+	Name                  string   `json:"name" validate:"required,max=128"`
+	Description           string   `json:"description" validate:"max=512"`
+	MaxConcurrentBookings uint     `json:"maxConcurrentBookings"`
+	Timezone              string   `json:"timezone" validate:"max=32"`
+	Enabled               bool     `json:"enabled"`
+	MapScale              float64  `json:"mapScale"`
+	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
+	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
+	BookableDays          []int    `json:"bookableDays" validate:"dive,min=0,max=6"`
 }
 
 type GetLocationResponse struct {
@@ -790,7 +789,6 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.MapScale = m.MapScale
 	e.MapType = m.MapType
 	e.BookableDays = weekdaysToString(m.BookableDays)
-	e.HideForDisallowedBookers = m.HideForDisallowedBookers
 	return e
 }
 
@@ -809,7 +807,6 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
 	m.BookableDays = weekdaysFromString(e.BookableDays)
-	m.HideForDisallowedBookers = e.HideForDisallowedBookers
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}
@@ -831,6 +828,13 @@ func IsBookingContextRequest(r *http.Request) bool {
 	return r.URL.Query().Get("context") == "booking"
 }
 
+// isHideDisallowedLocationsEnabled reports whether the organization hides
+// locations from users who are not allowed to book them.
+func isHideDisallowedLocationsEnabled(organizationID string) bool {
+	enabled, _ := GetSettingsRepository().GetBool(organizationID, SettingHideDisallowedLocations.Name)
+	return enabled
+}
+
 // canSeeHiddenLocations reports whether the user may see locations which are
 // hidden for users not listed as allowed bookers. This applies to everyone
 // managing areas or working with bookings and reports in the administration,
@@ -847,12 +851,9 @@ func canSeeHiddenLocations(user *User, organizationID string, bookingContext boo
 }
 
 // isLocationVisible reports whether a location is visible to a user who is a
-// member of userGroups. A location is only hidden if it is flagged as such and
-// restricts its allowed bookers to groups the user is not a member of.
+// member of userGroups. A location is only hidden if it restricts its allowed
+// bookers to groups the user is not a member of.
 func isLocationVisible(location *Location, allowedBookers []*LocationGroup, userGroups []*Group) bool {
-	if !location.HideForDisallowedBookers {
-		return true
-	}
 	restricted := false
 	for _, allowedBooker := range allowedBookers {
 		if allowedBooker.LocationID != location.ID {
@@ -869,9 +870,10 @@ func isLocationVisible(location *Location, allowedBookers []*LocationGroup, user
 }
 
 // IsLocationVisibleForUser reports whether the location is visible to the
-// user, considering the location's allowed bookers and the user's permissions.
+// user, considering the organization's settings, the location's allowed
+// bookers and the user's permissions.
 func IsLocationVisibleForUser(user *User, location *Location, bookingContext bool) (bool, error) {
-	if !location.HideForDisallowedBookers {
+	if !isHideDisallowedLocationsEnabled(location.OrganizationID) {
 		return true, nil
 	}
 	if canSeeHiddenLocations(user, location.OrganizationID, bookingContext) {
@@ -880,6 +882,9 @@ func IsLocationVisibleForUser(user *User, location *Location, bookingContext boo
 	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
 	if err != nil {
 		return false, err
+	}
+	if len(allowedBookers) == 0 {
+		return true, nil
 	}
 	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
 	if err != nil {
@@ -903,14 +908,9 @@ func CheckLocationVisible(w http.ResponseWriter, r *http.Request, user *User, lo
 }
 
 func FilterVisibleLocations(user *User, list []*Location, allowedBookers []*LocationGroup, bookingContext bool) ([]*Location, error) {
-	hasHidden := false
-	for _, e := range list {
-		if e.HideForDisallowedBookers {
-			hasHidden = true
-			break
-		}
-	}
-	if !hasHidden || canSeeHiddenLocations(user, user.OrganizationID, bookingContext) {
+	if len(allowedBookers) == 0 ||
+		!isHideDisallowedLocationsEnabled(user.OrganizationID) ||
+		canSeeHiddenLocations(user, user.OrganizationID, bookingContext) {
 		return list, nil
 	}
 	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)

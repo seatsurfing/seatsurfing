@@ -615,6 +615,5 @@
   "yes": "yes",
   "yesterday": "Yesterday",
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
-  "hideForDisallowedBookers": "Hide for others",
-  "hideForDisallowedBookersHint": "If enabled, users who are not allowed to book this location will not see it."
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
 }
