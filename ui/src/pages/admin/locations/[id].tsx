@@ -9,8 +9,6 @@ import {
   Table,
   Dropdown,
   Modal,
-  OverlayTrigger,
-  Tooltip,
 } from "react-bootstrap";
 import {
   ChevronLeft as IconBack,
@@ -27,7 +25,6 @@ import {
   Grid as IconGrid,
   Eye as IconEye,
   Type as IconFontSize,
-  Info as IconHelp,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -54,6 +51,7 @@ import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
 import FloorPlanDesigner from "@/components/FloorPlanDesigner";
 import WeekdaySelection from "@/components/WeekdaySelection";
 import ConfirmModal from "@/components/ConfirmModal";
+import HintTooltip from "@/components/HintTooltip";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (
   <svg
@@ -718,7 +716,7 @@ class EditLocation extends React.Component<Props, State> {
       ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
       : [];
     this.entity.hideForDisallowedBookers =
-      RuntimeConfig.INFOS.featureGroups && this.state.hideForDisallowedBookers;
+      this.canHideForDisallowedBookers() && this.state.hideForDisallowedBookers;
     this.entity
       .save()
       .then(() => {
@@ -1271,15 +1269,6 @@ class EditLocation extends React.Component<Props, State> {
     });
   };
 
-  renderHintTooltip = (hint: string) => (
-    <OverlayTrigger placement="right" overlay={<Tooltip>{hint}</Tooltip>}>
-      <IconHelp
-        size={16}
-        style={{ marginLeft: "6px", cursor: "pointer", color: "#6c757d" }}
-      />
-    </OverlayTrigger>
-  );
-
   getSpaceAttributeRows = () => {
     const res: any = [];
     this.state.availableAttributes.forEach((a) => {
@@ -1497,8 +1486,9 @@ class EditLocation extends React.Component<Props, State> {
             <Form.Group as={Row}>
               <Form.Label column sm="4" htmlFor="search-approvers-input">
                 {this.props.t("approvers")}
-                {RuntimeConfig.INFOS.featureGroups &&
-                  this.renderHintTooltip(this.props.t("setApproversHint"))}
+                {RuntimeConfig.INFOS.featureGroups && (
+                  <HintTooltip hint={this.props.t("setApproversHint")} />
+                )}
               </Form.Label>
               <Col sm="8">
                 <GroupSearchTypeahead
@@ -1515,8 +1505,9 @@ class EditLocation extends React.Component<Props, State> {
             <Form.Group as={Row}>
               <Form.Label column sm="4" htmlFor="search-allowbookers-input">
                 {this.props.t("allowBookers")}
-                {RuntimeConfig.INFOS.featureGroups &&
-                  this.renderHintTooltip(this.props.t("setAllowBookersHint"))}
+                {RuntimeConfig.INFOS.featureGroups && (
+                  <HintTooltip hint={this.props.t("setAllowBookersHint")} />
+                )}
               </Form.Label>
               <Col sm="8">
                 <GroupSearchTypeahead
@@ -1537,11 +1528,13 @@ class EditLocation extends React.Component<Props, State> {
             >
               <Form.Label column sm="4" htmlFor="space-public-booking-enabled">
                 {this.props.t("publicBooking")}
-                {this.renderHintTooltip(
-                  (this.getSelectedSpace()?.approvers?.length ?? 0) === 0
-                    ? this.props.t("publicBookingSpaceRequiresApproversHint")
-                    : this.props.t("publicBookingSpaceEnabledHint"),
-                )}
+                <HintTooltip
+                  hint={
+                    (this.getSelectedSpace()?.approvers?.length ?? 0) === 0
+                      ? this.props.t("publicBookingSpaceRequiresApproversHint")
+                      : this.props.t("publicBookingSpaceEnabledHint")
+                  }
+                />
               </Form.Label>
               <Col sm="8">
                 <Form.Check
@@ -1631,6 +1624,13 @@ class EditLocation extends React.Component<Props, State> {
     });
   };
 
+  canHideForDisallowedBookers = (): boolean => {
+    return (
+      RuntimeConfig.INFOS.featureGroups &&
+      (this.state.locationAllowBookers?.length ?? 0) > 0
+    );
+  };
+
   getAttributeById = (id: string): SpaceAttribute | null => {
     let a: SpaceAttribute | null = null;
     this.state.availableAttributes.forEach((cur) => {
@@ -1673,26 +1673,23 @@ class EditLocation extends React.Component<Props, State> {
           );
         } else {
           input = (
-            <>
-              <Form.Control
-                type="text"
-                id={`loc-attr-${av.attributeId}`}
-                aria-describedby={`loc-attr-${av.attributeId}-help`}
-                value={this.state.attributeValues[idx].value}
-                onChange={(e: any) =>
-                  this.setAttribute(av.attributeId, e.target.value)
-                }
-              />
-              <Form.Text id={`loc-attr-${av.attributeId}-help`} muted>
-                {this.props.t("markdownSupported")}
-              </Form.Text>
-            </>
+            <Form.Control
+              type="text"
+              id={`loc-attr-${av.attributeId}`}
+              value={this.state.attributeValues[idx].value}
+              onChange={(e: any) =>
+                this.setAttribute(av.attributeId, e.target.value)
+              }
+            />
           );
         }
         let row = (
           <Form.Group as={Row} key={av.attributeId}>
             <Form.Label column sm="2" htmlFor={`loc-attr-${av.attributeId}`}>
               {a.label}
+              {a.type !== 1 && a.type !== 2 && (
+                <HintTooltip hint={this.props.t("markdownSupported")} />
+              )}
             </Form.Label>
             <Col sm="4">{input}</Col>
             <Col sm="1" style={{ marginTop: "3px" }}>
@@ -2119,6 +2116,7 @@ class EditLocation extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="location-description">
               {this.props.t("description")}
+              <HintTooltip hint={this.props.t("markdownSupported")} />
             </Form.Label>
             <Col sm="4">
               <Form.Control
@@ -2132,7 +2130,6 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ description: e.target.value })
                 }
               />
-              <Form.Text muted>{this.props.t("markdownSupported")}</Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -2327,6 +2324,9 @@ class EditLocation extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="location-allowed-bookers">
               {this.props.t("allowBookers")}
+              {RuntimeConfig.INFOS.featureGroups && (
+                <HintTooltip hint={this.props.t("setAllowBookersHint")} />
+              )}
             </Form.Label>
             <Col sm="4">
               <GroupSearchTypeahead
@@ -2338,12 +2338,6 @@ class EditLocation extends React.Component<Props, State> {
                 onChange={this.onLocationAllowBookersSearchSelected}
                 defaultSelected={this.state.locationAllowBookers}
               />
-              <Form.Text
-                className="text-muted"
-                hidden={!RuntimeConfig.INFOS.featureGroups}
-              >
-                {this.props.t("setAllowBookersHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -2353,26 +2347,28 @@ class EditLocation extends React.Component<Props, State> {
               htmlFor="location-hide-for-disallowed-bookers"
             >
               {this.props.t("hideForDisallowedBookers")}
+              {RuntimeConfig.INFOS.featureGroups && (
+                <HintTooltip
+                  hint={this.props.t("hideForDisallowedBookersHint")}
+                />
+              )}
             </Form.Label>
             <Col sm="4">
               <Form.Check
                 type="checkbox"
                 id="location-hide-for-disallowed-bookers"
                 label={RendererUtils.capitalize(this.props.t("yes"))}
-                disabled={!RuntimeConfig.INFOS.featureGroups}
-                checked={this.state.hideForDisallowedBookers}
+                disabled={!this.canHideForDisallowedBookers()}
+                checked={
+                  this.canHideForDisallowedBookers() &&
+                  this.state.hideForDisallowedBookers
+                }
                 onChange={(e: any) =>
                   this.setState({
                     hideForDisallowedBookers: e.target.checked,
                   })
                 }
               />
-              <Form.Text
-                className="text-muted"
-                hidden={!RuntimeConfig.INFOS.featureGroups}
-              >
-                {this.props.t("hideForDisallowedBookersHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
         </Form>
