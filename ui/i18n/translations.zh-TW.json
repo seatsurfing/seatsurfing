@@ -552,6 +552,7 @@
   "verifyDomainHowto": "若要驗證網域 {{domain}}，請將下列 TXT 記錄新增至您的 DNS 伺服器：",
   "verifyEmailHint": "請輸入已傳送至您的新電子郵件地址的驗證碼，以便保留變更的電子郵件地址。",
   "verifyNow": "立即驗證",
+  "month": "月",
   "week": "週",
   "weekStartDay": "First day of week",
   "weekly": "每週",

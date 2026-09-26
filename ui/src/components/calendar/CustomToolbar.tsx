@@ -19,13 +19,20 @@ interface Props {
 }
 
 const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
-  const weekStart = moment(toolbar.date).clone().startOf("week");
-  const weekEnd = moment(toolbar.date).clone().endOf("week");
-  const formatter = Formatting.getFormatterDate();
   const isDayView = toolbar.view === "day";
+  const isMonthView = toolbar.view === "month";
+  const periodUnit = isMonthView ? "month" : "week";
+  const periodStart = moment(toolbar.date).clone().startOf(periodUnit);
+  const periodEnd = moment(toolbar.date).clone().endOf(periodUnit);
+  const formatter = Formatting.getFormatterDate();
+  const availableViews = Array.isArray(toolbar.views)
+    ? toolbar.views
+    : Object.keys(toolbar.views ?? {});
+  const canToggleMonth =
+    availableViews.includes("week") && availableViews.includes("month");
 
   const eventWeeks = (events ?? []).reduce((map, event) => {
-    const weekKey = moment(event.enter).startOf("week").valueOf();
+    const weekKey = moment(event.enter).startOf(periodUnit).valueOf();
     const existing = map.get(weekKey);
     if (!existing || event.enter.getTime() < existing.getTime()) {
       map.set(weekKey, event.enter);
@@ -35,7 +42,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
   const sortedEventWeeks = Array.from(eventWeeks.entries()).sort(
     (a, b) => a[0] - b[0],
   );
-  const currentWeekStartMs = weekStart.valueOf();
+  const currentWeekStartMs = periodStart.valueOf();
   const nextEventWeek = sortedEventWeeks.find(
     ([weekMs]) => weekMs > currentWeekStartMs,
   );
@@ -102,6 +109,26 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
           </button>
         </>
       )}{" "}
+      {canToggleMonth && (
+        <div className="btn-group btn-group-sm" role="group">
+          <button
+            type="button"
+            className={`btn ${isMonthView ? "btn-outline-secondary" : "btn-secondary"}`}
+            aria-pressed={!isMonthView}
+            onClick={() => toolbar.onView("week")}
+          >
+            {t("week")}
+          </button>
+          <button
+            type="button"
+            className={`btn ${isMonthView ? "btn-secondary" : "btn-outline-secondary"}`}
+            aria-pressed={isMonthView}
+            onClick={() => toolbar.onView("month")}
+          >
+            {t("month")}
+          </button>
+        </div>
+      )}{" "}
       <span
         className="toolbar-label"
         style={{
@@ -113,7 +140,9 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
       >
         {isDayView
           ? formatter.format(toolbar.date)
-          : `${formatter.format(weekStart.toDate())} – ${formatter.format(weekEnd.toDate())}`}
+          : isMonthView
+            ? toolbar.label
+            : `${formatter.format(periodStart.toDate())} – ${formatter.format(periodEnd.toDate())}`}
       </span>
     </div>
   );

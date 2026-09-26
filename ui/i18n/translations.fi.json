@@ -552,6 +552,7 @@
   "verifyDomainHowto": "Vahvistaaksesi verkkotunnuksen {{domain}} lisää seuraava TXT-tietue DNS-palvelimellesi:",
   "verifyEmailHint": "Anna uuteen sähköpostiosoitteeseesi lähetetty vahvistuskoodi, jotta sähköpostiosoitteen muutos tallennetaan.",
   "verifyNow": "Vahvista nyt",
+  "month": "Kuukausi",
   "week": "Viikko",
   "weekStartDay": "Viikon ensimmäinen päivä",
   "weekly": "viikoittain",

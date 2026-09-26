@@ -554,6 +554,7 @@
   "verifyDomainHowto": "Para verificar el dominio {{domain}}, añade el siguiente registro TXT a tu servidor DNS:",
   "verifyEmailHint": "Por favor introduce el código de verificación que se ha enviado a tu nueva dirección de correo para guardar el cambio de dirección.",
   "verifyNow": "Verificar ahora",
+  "month": "Mes",
   "week": "Semana",
   "weekStartDay": "First day of week",
   "weekly": "semanal",

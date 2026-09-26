@@ -554,6 +554,7 @@
   "verifyDomainHowto": "Om domein {{domain}} te verifiëren, voegt u de volgende TXT-record toe aan uw DNS-server:",
   "verifyEmailHint": "Voer de verificatiecode in die naar uw nieuwe e-mailadres is verzonden om het gewijzigde e-mailadres te behouden.",
   "verifyNow": "Nu verifiëren",
+  "month": "Maand",
   "week": "Week",
   "weekStartDay": "First day of week",
   "weekly": "wekelijks",

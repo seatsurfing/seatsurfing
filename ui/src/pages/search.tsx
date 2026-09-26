@@ -40,7 +40,7 @@ import {
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
 } from "react-feather";
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import { Calendar, momentLocalizer, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
   bookingToCalendarEvent,
@@ -140,6 +140,7 @@ interface State {
 
   showSpaceCalendar: boolean;
   spaceCalendarDate: Date;
+  spaceCalendarView: View;
   spaceCalendarBookings: Booking[];
   spaceCalendarLoading: boolean;
   spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
@@ -249,6 +250,7 @@ class Search extends React.Component<Props, State> {
 
       showSpaceCalendar: false,
       spaceCalendarDate: new Date(),
+      spaceCalendarView: "week",
       spaceCalendarBookings: [],
       spaceCalendarLoading: false,
       spaceCalendarReturnTo: "showBookingNames",
@@ -1129,12 +1131,22 @@ class Search extends React.Component<Props, State> {
       });
   };
 
+  getSpaceCalendarView = (): View =>
+    this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
+      ? "day"
+      : this.state.spaceCalendarView;
+
   loadSpaceCalendarBookings = async (date: Date) => {
     const space = this.state.selectedSpace;
     if (!space) return;
 
-    const weekStart = DateUtil.getWeekStart(date);
-    const weekEnd = DateUtil.getWeekEnd(date);
+    let weekStart = DateUtil.getWeekStart(date);
+    let weekEnd = DateUtil.getWeekEnd(date);
+    if (this.getSpaceCalendarView() === "month") {
+      weekStart = new Date(date.getFullYear(), date.getMonth(), 1 - 7);
+      weekEnd = new Date(date.getFullYear(), date.getMonth() + 1, 7);
+      weekEnd.setHours(23, 59, 59, 999);
+    }
 
     this.setState({ spaceCalendarLoading: true });
     try {
@@ -1174,6 +1186,7 @@ class Search extends React.Component<Props, State> {
       {
         showSpaceCalendar: true,
         spaceCalendarDate: date,
+        spaceCalendarView: "week",
         spaceCalendarReturnTo: returnTo,
       },
       () => {
@@ -2868,13 +2881,20 @@ class Search extends React.Component<Props, State> {
                 startAccessor={(event: CalendarEvent) => event.enter}
                 endAccessor={(event: CalendarEvent) => event.leave}
                 style={{ height: "100%", width: "100%" }}
-                view={
+                view={this.getSpaceCalendarView()}
+                onView={(view: View) => {
+                  this.setState({ spaceCalendarView: view }, () => {
+                    this.loadSpaceCalendarBookings(
+                      this.state.spaceCalendarDate,
+                    );
+                  });
+                }}
+                views={
                   this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
-                    ? "day"
-                    : "week"
+                    ? ["day"]
+                    : ["week", "month"]
                 }
-                onView={() => {}}
-                views={["week", "day"]}
+                drilldownView="week"
                 eventPropGetter={(event: CalendarEvent) => {
                   if (event.approved === false) {
                     return { style: { opacity: 0.5 } };

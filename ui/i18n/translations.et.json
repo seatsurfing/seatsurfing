@@ -554,6 +554,7 @@
   "verifyDomainHowto": "Domeeni {{domain}} kinnitamiseks lisa oma DNS-serverisse järgmine TXT-kirje:",
   "verifyEmailHint": "Muudetud e-posti aadressi kinnitamiseks sisesta uuele aadressile saadetud kinnituskood.",
   "verifyNow": "Kinnita nüüd",
+  "month": "Kuu",
   "week": "Nädal",
   "weekStartDay": "Nädala esimene päev",
   "weekly": "Iganädalane",

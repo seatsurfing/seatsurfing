@@ -554,6 +554,7 @@
   "verifyDomainHowto": "To verify domain {{domain}}, please add the following TXT record to your DNS server:",
   "verifyEmailHint": "Please enter the verification code that has been sent to your new email address in order to persist the changed email address.",
   "verifyNow": "Verify now",
+  "month": "Mese",
   "week": "Week",
   "weekStartDay": "First day of week",
   "weekly": "weekly",
