@@ -1,5 +1,12 @@
 #!/bin/sh
 
+CLEAR_DB=0
+for arg in "$@"; do
+    case "$arg" in
+        --clear-db) CLEAR_DB=1 ;;
+    esac
+done
+
 # (Re)start postgres and create databases (if they do not exist)
 if docker ps --format '{{.Names}}' | grep -q '^postgres-seatsurfing$'; then
     echo "Postgres database already running, skipping start …"
@@ -16,6 +23,10 @@ else
         --name postgres-seatsurfing \
         postgres:18-alpine
     until docker exec postgres-seatsurfing pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+fi
+if [ "$CLEAR_DB" = "1" ]; then
+    echo "Clearing Seatsurfing database …"
+    docker exec postgres-seatsurfing psql -U postgres -c "DROP DATABASE IF EXISTS seatsurfing"
 fi
 docker exec postgres-seatsurfing psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='seatsurfing'" | grep -q 1 || docker exec postgres-seatsurfing psql -U postgres -c "CREATE DATABASE seatsurfing"
 docker exec postgres-seatsurfing psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='seatsurfing_test'" | grep -q 1 || docker exec postgres-seatsurfing psql -U postgres -c "CREATE DATABASE seatsurfing_test"
