@@ -242,3 +242,49 @@ form#filter-locations-form .row {
   background-color: transparent !important;
   color: #0d6efd !important;
 }
+
+.public-booking-map {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-dialog.public-booking-map-modal {
+  --bs-modal-width: 95vw;
+  max-width: 95vw;
+  height: calc(100% - var(--bs-modal-margin) * 2);
+}
+
+.public-booking-map-modal .modal-content {
+  height: 100%;
+}
+
+.public-booking-map-modal .modal-body {
+  display: flex;
+  min-height: 0;
+}
+
+.public-booking-map-modal-header-tabs {
+  padding-bottom: 0;
+  align-items: flex-end;
+}
+
+.public-booking-map-modal-header-tabs .nav-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: 0;
+  margin-bottom: -1px;
+}
+
+.public-booking-map-modal-header-tabs .nav-link {
+  white-space: nowrap;
+}
+
+.public-booking-map-modal-header-tabs .btn-close {
+  align-self: center;
+}

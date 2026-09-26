@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Button, Alert } from "react-bootstrap";
+import { Form, Button, Alert, InputGroup, Modal, Nav } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
@@ -10,6 +10,7 @@ import BrowserUtil from "@/util/BrowserUtil";
 import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Validation from "@/util/Validation";
+import RendererUtils from "@/util/RendererUtils";
 
 interface PublicBookableSpace {
   spaceId: string;
@@ -18,6 +19,21 @@ interface PublicBookableSpace {
   locationName: string;
   requireSubject: boolean;
   bookableDays: number[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  shape: string;
+  fontSize: string;
+}
+
+interface PublicLocationMap {
+  width: number;
+  height: number;
+  scale: number;
+  mimeType: string;
+  data: string;
 }
 
 interface State {
@@ -34,6 +50,12 @@ interface State {
   submitted: boolean;
   error: boolean;
   customLogoUrl: string;
+  showMap: boolean;
+  mapData: PublicLocationMap | null;
+  mapLoading: boolean;
+  mapModalOpen: boolean;
+  mapContainerWidth: number;
+  mapContainerHeight: number;
 }
 
 interface Props {
@@ -44,6 +66,8 @@ interface Props {
 
 class PublicBooking extends React.Component<Props, State> {
   orgId: string = "";
+  mapCache: { [locationId: string]: PublicLocationMap | null } = {};
+  mapContainerObserver: ResizeObserver | null = null;
 
   constructor(props: any) {
     super(props);
@@ -66,12 +90,40 @@ class PublicBooking extends React.Component<Props, State> {
       submitted: false,
       error: false,
       customLogoUrl: "",
+      showMap: false,
+      mapData: null,
+      mapLoading: false,
+      mapModalOpen: false,
+      mapContainerWidth: 0,
+      mapContainerHeight: 0,
     };
   }
 
   componentDidMount = () => {
     BrowserUtil.applyLanguageFromQuery();
     this.loadOrgAndSpaces();
+  };
+
+  componentWillUnmount = () => {
+    this.mapContainerObserver?.disconnect();
+  };
+
+  // Tracks the size of the map container in the modal so that the floor
+  // plan can be scaled to fill it completely.
+  setMapContainerRef = (el: HTMLDivElement | null) => {
+    this.mapContainerObserver?.disconnect();
+    this.mapContainerObserver = null;
+    if (!el) {
+      return;
+    }
+    this.mapContainerObserver = new ResizeObserver((entries) => {
+      const rect = entries[0].contentRect;
+      this.setState({
+        mapContainerWidth: rect.width,
+        mapContainerHeight: rect.height,
+      });
+    });
+    this.mapContainerObserver.observe(el);
   };
 
   loadOrgAndSpaces = async () => {
@@ -104,6 +156,7 @@ class PublicBooking extends React.Component<Props, State> {
         return;
       }
       const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
+      const showMap: boolean = res.json.showMap === true;
       const maxDate = new Date();
       maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
       maxDate.setHours(23, 59, 59, 999);
@@ -127,9 +180,52 @@ class PublicBooking extends React.Component<Props, State> {
         maxDaysInAdvance: maxDaysInAdvance,
         enter: enter,
         leave: leave,
+        showMap: showMap,
       });
     } catch {
       this.props.router.replace("/404");
+    }
+  };
+
+  loadMap = async (locationId: string) => {
+    if (!(locationId in this.mapCache)) {
+      this.setState({ mapData: null, mapLoading: true });
+      try {
+        const res = await Ajax.get(
+          "/public-booking/" +
+            encodeURIComponent(this.orgId) +
+            "/location/" +
+            encodeURIComponent(locationId) +
+            "/map",
+          () => true,
+        );
+        this.mapCache[locationId] = res.json;
+      } catch {
+        this.mapCache[locationId] = null;
+      }
+    }
+    if (this.getSelectedSpace()?.locationId === locationId) {
+      this.setState({
+        mapData: this.mapCache[locationId],
+        mapLoading: false,
+      });
+    }
+  };
+
+  getLocations = (): { id: string; name: string }[] => {
+    const locations: { id: string; name: string }[] = [];
+    this.state.spaces.forEach((s) => {
+      if (!locations.find((l) => l.id === s.locationId)) {
+        locations.push({ id: s.locationId, name: s.locationName });
+      }
+    });
+    return locations;
+  };
+
+  onLocationChange = (locationId: string) => {
+    const space = this.state.spaces.find((s) => s.locationId === locationId);
+    if (space) {
+      this.onSpaceChange(space.spaceId);
     }
   };
 
@@ -178,6 +274,14 @@ class PublicBooking extends React.Component<Props, State> {
 
   onSpaceChange = (spaceId: string) => {
     const space = this.state.spaces.find((s) => s.spaceId === spaceId);
+    const prevLocationId = this.getSelectedSpace()?.locationId;
+    if (
+      this.state.mapModalOpen &&
+      space &&
+      space.locationId !== prevLocationId
+    ) {
+      this.setState({ mapData: null }, () => this.loadMap(space.locationId));
+    }
     if (!space || this.isDateBookable(space, this.state.enter)) {
       this.setState({ spaceId: spaceId });
       return;
@@ -227,6 +331,191 @@ class PublicBooking extends React.Component<Props, State> {
     } catch {
       this.setState({ submitting: false, error: true });
     }
+  };
+
+  renderMapSpace = (item: PublicBookableSpace) => {
+    const selected = item.spaceId === this.state.spaceId;
+    const boxStyle: React.CSSProperties = {
+      position: "absolute",
+      left: item.x,
+      top: item.y,
+      width: item.width,
+      height: item.height,
+      transform: `rotate(${item.rotation}deg)`,
+      cursor: "pointer",
+      backgroundColor: selected ? "var(--bs-primary)" : undefined,
+      borderRadius: item.shape === "circle" ? "50%" : undefined,
+      clipPath:
+        item.shape === "trapezoid"
+          ? "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)"
+          : undefined,
+    };
+    const innerStyle: React.CSSProperties = {
+      transform: `rotate(${-item.rotation}deg)`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      height: "100%",
+    };
+    const textStyle: React.CSSProperties = {
+      textAlign: "center",
+      fontSize: RendererUtils.spaceFontSizePx(item.fontSize),
+    };
+    const className =
+      "space space-box" +
+      (selected ? "" : " space-available") +
+      (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
+        ? " space-box-vertical"
+        : "");
+    return (
+      <div
+        key={item.spaceId}
+        style={boxStyle}
+        className={className}
+        role="button"
+        tabIndex={0}
+        aria-label={item.spaceName}
+        aria-pressed={selected}
+        onClick={() => this.onMapSpaceSelect(item.spaceId)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            this.onMapSpaceSelect(item.spaceId);
+          }
+        }}
+      >
+        <div style={innerStyle}>
+          <p style={textStyle}>{item.spaceName}</p>
+        </div>
+      </div>
+    );
+  };
+
+  openMapModal = () => {
+    const selectedSpace = this.getSelectedSpace();
+    if (!selectedSpace) {
+      return;
+    }
+    this.setState({ mapModalOpen: true });
+    this.loadMap(selectedSpace.locationId);
+  };
+
+  onMapSpaceSelect = (spaceId: string) => {
+    this.onSpaceChange(spaceId);
+    this.setState({ mapModalOpen: false });
+  };
+
+  renderMap = () => {
+    const mapData = this.state.mapData;
+    const selectedSpace = this.getSelectedSpace();
+    if (!selectedSpace) {
+      return <></>;
+    }
+    if (this.state.mapLoading) {
+      return <Loading />;
+    }
+    if (!mapData) {
+      return <p>{this.props.t("publicBookingNoMap")}</p>;
+    }
+    const mapWidth = mapData.width * mapData.scale;
+    const mapHeight = mapData.height * mapData.scale;
+    const fitScale =
+      this.state.mapContainerWidth > 0 &&
+      this.state.mapContainerHeight > 0 &&
+      mapWidth > 0 &&
+      mapHeight > 0
+        ? Math.min(
+            this.state.mapContainerWidth / mapWidth,
+            this.state.mapContainerHeight / mapHeight,
+          )
+        : 1;
+    const scaledStyle: React.CSSProperties = {
+      width: mapWidth * fitScale + "px",
+      height: mapHeight * fitScale + "px",
+      flexShrink: 0,
+    };
+    const floorPlanStyle: React.CSSProperties = {
+      position: "relative",
+      width: mapWidth + "px",
+      height: mapHeight + "px",
+      transform: `scale(${fitScale})`,
+      transformOrigin: "top left",
+      backgroundSize: "contain",
+      backgroundRepeat: "no-repeat",
+      backgroundImage:
+        "url(data:image/" + mapData.mimeType + ";base64," + mapData.data + ")",
+    };
+    const spaces = this.state.spaces.filter(
+      (s) => s.locationId === selectedSpace.locationId,
+    );
+    return (
+      <div
+        className="public-booking-map border rounded bg-body-secondary"
+        data-testid="public-booking-map"
+        ref={this.setMapContainerRef}
+      >
+        <div style={scaledStyle}>
+          <div style={floorPlanStyle}>
+            {spaces.map((s) => this.renderMapSpace(s))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  renderMapModal = () => {
+    if (!this.state.showMap) {
+      return <></>;
+    }
+    return (
+      <Modal
+        show={this.state.mapModalOpen}
+        onHide={() => this.setState({ mapModalOpen: false })}
+        size="xl"
+        dialogClassName="public-booking-map-modal"
+      >
+        <Modal.Header
+          closeButton
+          className={
+            this.getLocations().length > 1
+              ? "public-booking-map-modal-header-tabs"
+              : undefined
+          }
+        >
+          {this.getLocations().length > 1 ? (
+            <Nav
+              variant="tabs"
+              aria-label={this.props.t("area")}
+              activeKey={this.getSelectedSpace()?.locationId}
+              onSelect={(key) => key && this.onLocationChange(key)}
+            >
+              {this.getLocations().map((l) => (
+                <Nav.Item key={l.id}>
+                  <Nav.Link eventKey={l.id}>{l.name}</Nav.Link>
+                </Nav.Item>
+              ))}
+            </Nav>
+          ) : (
+            <Modal.Title>{this.getSelectedSpace()?.locationName}</Modal.Title>
+          )}
+        </Modal.Header>
+        <Modal.Body>{this.renderMap()}</Modal.Body>
+        <Modal.Footer>
+          {this.state.mapData && !this.state.mapLoading && (
+            <span className="text-muted me-auto">
+              {this.props.t("publicBookingSelectOnMap")}
+            </span>
+          )}
+          <Button
+            variant="secondary"
+            onClick={() => this.setState({ mapModalOpen: false })}
+          >
+            {this.props.t("close")}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
   };
 
   render() {
@@ -290,20 +579,28 @@ class PublicBooking extends React.Component<Props, State> {
               maxLength={256}
             />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="select-space">
             <Form.Label>{this.props.t("space")}</Form.Label>
-            <Form.Select
-              value={this.state.spaceId}
-              onChange={(e: any) => this.onSpaceChange(e.target.value)}
-              required={true}
-            >
-              {this.state.spaces.map((s) => (
-                <option key={s.spaceId} value={s.spaceId}>
-                  {s.locationName} / {s.spaceName}
-                </option>
-              ))}
-            </Form.Select>
+            <InputGroup>
+              <Form.Select
+                value={this.state.spaceId}
+                onChange={(e: any) => this.onSpaceChange(e.target.value)}
+                required={true}
+              >
+                {this.state.spaces.map((s) => (
+                  <option key={s.spaceId} value={s.spaceId}>
+                    {s.locationName} / {s.spaceName}
+                  </option>
+                ))}
+              </Form.Select>
+              {this.state.showMap && (
+                <Button variant="outline-secondary" onClick={this.openMapModal}>
+                  {this.props.t("publicBookingShowFloorplan")}
+                </Button>
+              )}
+            </InputGroup>
           </Form.Group>
+          {this.renderMapModal()}
           <Form.Group className="mb-3">
             <Form.Label>{this.props.t("subject")}</Form.Label>
             <Form.Control

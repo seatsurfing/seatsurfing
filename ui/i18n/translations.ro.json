@@ -616,5 +616,10 @@
   "orgSignupFailedReasonAlreadyConfirmed": "You have already confirmed your sign-up and your Seatsurfing instance is ready to use. Please check your inbox (and your spam folder) for the confirmation email.",
   "orgSignupFailedReasonDomain": "Your chosen domain is no longer available.",
   "orgSignupFailedReasonTimeout": "Your registration has timed out.",
-  "publicBookingNoSpaces": "There are currently no spaces available for public booking."
+  "publicBookingNoSpaces": "There are currently no spaces available for public booking.",
+  "publicBookingSelectOnMap": "Click on a space in the floor plan to select it.",
+  "publicBookingShowMap": "Show floor plan on public booking page",
+  "publicBookingShowMapHint": "Visitors can select a space directly on the floor plan of the respective area. Only spaces with public booking enabled are shown.",
+  "publicBookingNoMap": "No floor plan is available for this area.",
+  "publicBookingShowFloorplan": "Floor plan"
 }

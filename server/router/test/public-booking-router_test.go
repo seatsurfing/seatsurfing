@@ -596,3 +596,149 @@ func TestPublicBookingGetSpacesReturnsEmptyBookableDaysWhenUnrestricted(t *testi
 	CheckTestInt(t, 1, len(resBody.Spaces))
 	CheckTestInt(t, 0, len(resBody.Spaces[0].BookableDays))
 }
+
+func setTestLocationMap(t *testing.T, location *Location) {
+	locationMap := &LocationMap{
+		MimeType: "png",
+		Width:    100,
+		Height:   50,
+		Scale:    1.0,
+		Data:     []byte{1, 2, 3},
+	}
+	if err := GetLocationRepository().SetMap(location, locationMap); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPublicBookingGetSpacesShowMapDisabledByDefault(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space.X = 10
+	space.Y = 20
+	space.Width = 30
+	space.Height = 40
+	space.Rotation = 90
+	space.Shape = "circle"
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, false, resBody.ShowMap)
+	// Space geometry must not be disclosed if the map is disabled
+	CheckTestInt(t, 1, len(resBody.Spaces))
+	CheckTestUint(t, 0, resBody.Spaces[0].X)
+	CheckTestUint(t, 0, resBody.Spaces[0].Y)
+	CheckTestUint(t, 0, resBody.Spaces[0].Width)
+	CheckTestUint(t, 0, resBody.Spaces[0].Height)
+	CheckTestUint(t, 0, resBody.Spaces[0].Rotation)
+	CheckTestString(t, "", resBody.Spaces[0].Shape)
+	CheckTestString(t, "", resBody.Spaces[0].FontSize)
+}
+
+func TestPublicBookingGetSpacesReturnsShowMapAndCoordinates(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space.X = 10
+	space.Y = 20
+	space.Width = 30
+	space.Height = 40
+	space.Rotation = 90
+	space.Shape = "circle"
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowMap.Name, "1")
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.ShowMap)
+	CheckTestInt(t, 1, len(resBody.Spaces))
+	CheckTestUint(t, 10, resBody.Spaces[0].X)
+	CheckTestUint(t, 20, resBody.Spaces[0].Y)
+	CheckTestUint(t, 30, resBody.Spaces[0].Width)
+	CheckTestUint(t, 40, resBody.Spaces[0].Height)
+	CheckTestUint(t, 90, resBody.Spaces[0].Rotation)
+	CheckTestString(t, "circle", resBody.Spaces[0].Shape)
+}
+
+func TestPublicBookingGetMap(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowMap.Name, "1")
+	setTestLocationMap(t, location)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/location/"+location.ID+"/map", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetMapResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestUint(t, 100, resBody.Width)
+	CheckTestUint(t, 50, resBody.Height)
+	CheckTestString(t, "png", resBody.MimeType)
+	CheckTestString(t, "AQID", resBody.Data)
+}
+
+func TestPublicBookingGetMapShowMapDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	setTestLocationMap(t, location)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/location/"+location.ID+"/map", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPublicBookingGetMapPublicBookingDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowMap.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingEnabled.Name, "0")
+	setTestLocationMap(t, location)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/location/"+location.ID+"/map", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPublicBookingGetMapLocationWithoutPublicSpace(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowMap.Name, "1")
+	otherLocation, _ := CreateTestLocationAndSpace(org)
+	setTestLocationMap(t, otherLocation)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/location/"+otherLocation.ID+"/map", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPublicBookingGetMapForeignOrgLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowMap.Name, "1")
+
+	org2 := CreateTestOrg("test2.com")
+	location2, space2 := CreateTestLocationAndSpace(org2)
+	enablePublicBookingForOrgAndSpace(org2, space2)
+	setTestLocationMap(t, location2)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/location/"+location2.ID+"/map", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}

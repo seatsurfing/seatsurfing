@@ -1,6 +1,7 @@
 package router
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -32,11 +33,19 @@ type GetPublicBookableSpaceResponse struct {
 	LocationName   string `json:"locationName"`
 	RequireSubject bool   `json:"requireSubject"`
 	BookableDays   []int  `json:"bookableDays"`
+	X              uint   `json:"x"`
+	Y              uint   `json:"y"`
+	Width          uint   `json:"width"`
+	Height         uint   `json:"height"`
+	Rotation       uint   `json:"rotation"`
+	Shape          string `json:"shape"`
+	FontSize       string `json:"fontSize"`
 }
 
 type GetPublicBookableSpacesResponse struct {
 	Spaces           []GetPublicBookableSpaceResponse `json:"spaces"`
 	MaxDaysInAdvance int                              `json:"maxDaysInAdvance"`
+	ShowMap          bool                             `json:"showMap"`
 }
 
 type CreatePublicBookingRequest struct {
@@ -65,6 +74,7 @@ type PublicBookingDetailsResponse struct {
 
 func (router *PublicBookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{orgId}/spaces", router.getSpaces).Methods("GET")
+	s.HandleFunc("/{orgId}/location/{locationId}/map", router.getMap).Methods("GET")
 	s.HandleFunc("/{orgId}/request", router.request).Methods("POST")
 	s.HandleFunc("/confirm/{id}", router.confirm).Methods("POST")
 	s.HandleFunc("/details/{externalId}", router.details).Methods("GET")
@@ -145,26 +155,90 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 		SendInternalServerError(w)
 		return
 	}
+	// Space geometry is only disclosed if the org has enabled the map for
+	// public bookings; otherwise the floor plan layout stays private.
+	showMap, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingShowMap.Name)
 	res := []GetPublicBookableSpaceResponse{}
 	for _, space := range spaces {
 		location, err := GetLocationRepository().GetOne(space.LocationID)
 		if err != nil {
 			continue
 		}
-		res = append(res, GetPublicBookableSpaceResponse{
+		item := GetPublicBookableSpaceResponse{
 			SpaceID:        space.ID,
 			SpaceName:      space.Name,
 			LocationID:     location.ID,
 			LocationName:   location.Name,
 			RequireSubject: space.RequireSubject,
 			BookableDays:   weekdaysFromString(location.BookableDays),
-		})
+		}
+		if showMap {
+			item.X = space.X
+			item.Y = space.Y
+			item.Width = space.Width
+			item.Height = space.Height
+			item.Rotation = space.Rotation
+			item.Shape = space.Shape
+			item.FontSize = space.FontSize
+		}
+		res = append(res, item)
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
 	SendJSON(w, GetPublicBookableSpacesResponse{
 		Spaces:           res,
 		MaxDaysInAdvance: maxDaysInAdvance,
+		ShowMap:          showMap,
 	})
+}
+
+// getMap serves a location's floor plan to the public booking page. It is
+// only available if public booking and the "show map" setting are enabled
+// for the org, and only for enabled locations of that org which contain at
+// least one public-bookable space, so that no other floor plans are exposed.
+func (router *PublicBookingRouter) getMap(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orgID := vars["orgId"]
+	if !router.isPublicBookingEnabledForOrg(orgID) {
+		SendNotFound(w)
+		return
+	}
+	showMap, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingShowMap.Name)
+	if !showMap {
+		SendNotFound(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(vars["locationId"])
+	if err != nil || location.OrganizationID != orgID || !location.Enabled {
+		SendNotFound(w)
+		return
+	}
+	spaces, err := GetSpaceRepository().GetAllPublicBookable(orgID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	hasPublicSpace := false
+	for _, space := range spaces {
+		if space.LocationID == location.ID {
+			hasPublicSpace = true
+			break
+		}
+	}
+	if !hasPublicSpace {
+		SendNotFound(w)
+		return
+	}
+	res, err := buildLocationMapResponse(location)
+	if err == sql.ErrNoRows {
+		SendNotFound(w)
+		return
+	} else if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendJSON(w, res)
 }
 
 // validateSpaceAndTimes re-checks every condition that makes a slot

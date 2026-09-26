@@ -160,6 +160,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingHideStats.Name,
 		SettingPublicBookingEnabled.Name,
 		SettingFeaturePublicBooking.Name,
+		SettingPublicBookingShowMap.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
