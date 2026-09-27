@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.131.0](https://github.com/seatsurfing/seatsurfing/compare/v1.130.0...v1.131.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **booking-ui:** add map option for public bookings ([#2711](https://github.com/seatsurfing/seatsurfing/issues/2711)) ([a78e426](https://github.com/seatsurfing/seatsurfing/commit/a78e4261dbfa93cd3be582c0e18a11b316f5ca1c))
+
+
+### 🐛 Bug Fixes
+
+* **main:** add protection against clickjacking attacks ([#2715](https://github.com/seatsurfing/seatsurfing/issues/2715)) ([c423eb7](https://github.com/seatsurfing/seatsurfing/commit/c423eb7c7992cc68a0c6789c2c7d3da80463c3fe))
+
 ## [1.130.0](https://github.com/seatsurfing/seatsurfing/compare/v1.129.0...v1.130.0) (2026-09-27)
 
 
