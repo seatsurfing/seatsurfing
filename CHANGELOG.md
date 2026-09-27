@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.131.1](https://github.com/seatsurfing/seatsurfing/compare/v1.131.0...v1.131.1) (2026-09-27)
+
+
+### 🐛 Bug Fixes
+
+* **main:** add protection against clickjacking attacks for base path and admin area ([#2717](https://github.com/seatsurfing/seatsurfing/issues/2717)) ([476a539](https://github.com/seatsurfing/seatsurfing/commit/476a5399d6d2bf043fa18d604ff650341c5b2561))
+
 ## [1.131.0](https://github.com/seatsurfing/seatsurfing/compare/v1.130.0...v1.131.0) (2026-09-27)
 
 
