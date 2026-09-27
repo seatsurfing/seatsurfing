@@ -135,6 +135,9 @@ func (router *SpaceRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if !CheckLocationVisible(w, r, user, location) {
+		return
+	}
 	attributes, err := GetSpaceAttributeValueRepository().GetAllForEntity(e.ID, SpaceAttributeValueEntityTypeSpace)
 	if err != nil {
 		log.Println(err)
@@ -212,6 +215,9 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 	user := GetRequestUser(r)
 	if !CanAccessOrg(user, location.OrganizationID) {
 		SendForbidden(w)
+		return
+	}
+	if !CheckLocationVisible(w, r, user, location) {
 		return
 	}
 	attributes := []SearchAttribute{}
@@ -389,6 +395,9 @@ func (router *SpaceRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	if !CanAccessOrg(user, location.OrganizationID) {
 		SendForbidden(w)
+		return
+	}
+	if !CheckLocationVisible(w, r, user, location) {
 		return
 	}
 	list, err := GetSpaceRepository().GetAll(location.ID)

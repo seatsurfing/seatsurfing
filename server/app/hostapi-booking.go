@@ -76,6 +76,14 @@ func (h *hostAPIImpl) GetSpaceAvailabilityForUser(userID, locationID string, ent
 	if err != nil || location == nil || !service.CanAccessOrg(user, location.OrganizationID) {
 		return nil, errors.New("location not found")
 	}
+	// Plugins act on behalf of the user as a booker.
+	visible, err := service.GetLocationService().IsLocationVisibleForUser(user, location, true)
+	if err != nil {
+		return nil, err
+	}
+	if !visible {
+		return nil, errors.New("location not found")
+	}
 	attrs, err := searchAttributesFromAPI(attributes)
 	if err != nil {
 		return nil, err

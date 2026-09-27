@@ -1,7 +1,9 @@
 package service
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"slices"
 	"strconv"
 	"strings"
@@ -86,6 +88,13 @@ func (s *LocationService) SearchLocationsForUser(user *User, enter, leave time.T
 		return nil, err
 	}
 
+	// Searching is always done from the booking perspective, so locations
+	// hidden from non-allowed bookers are hidden for admins, too.
+	hideDisallowed, err := s.IsHideDisallowedLocationsEnabled(user.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
 	res := []*UserLocation{}
 	for _, e := range list {
 		if !MatchesSearchAttributes(e.ID, &attributes, attributeValues) {
@@ -103,6 +112,9 @@ func (s *LocationService) SearchLocationsForUser(user *User, enter, leave time.T
 			}
 		}
 		item.AllowedForUser = s.IsUserAllowedToBookLocation(item.AllowedBookers, userGroups)
+		if hideDisallowed && !item.AllowedForUser {
+			continue
+		}
 		res = append(res, item)
 	}
 	return res, nil
@@ -121,6 +133,111 @@ func (s *LocationService) IsUserAllowedToBookLocation(allowedBookers []*Location
 		}
 	}
 	return !restricted
+}
+
+// IsHideDisallowedLocationsEnabled reports whether the organization hides
+// locations from users who are not allowed to book them. A missing setting
+// means disabled; any other error is returned so that callers fail closed
+// instead of exposing hidden locations.
+func (s *LocationService) IsHideDisallowedLocationsEnabled(organizationID string) (bool, error) {
+	enabled, err := GetSettingsRepository().GetBool(organizationID, SettingHideDisallowedLocations.Name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return enabled, nil
+}
+
+// CanSeeHiddenLocations reports whether the user may see locations which are
+// hidden for users not listed as allowed bookers. This applies to everyone
+// managing areas or working with bookings and reports in the administration,
+// but not when acting from the booking perspective (bookingContext).
+func (s *LocationService) CanSeeHiddenLocations(user *User, organizationID string, bookingContext bool) bool {
+	if bookingContext {
+		return false
+	}
+	perms := GetEffectivePermissions(user, organizationID)
+	return perms[PermissionAreas] >= PermissionLevelRead ||
+		perms[PermissionBookings] >= PermissionLevelRead ||
+		perms[PermissionAnalytics] >= PermissionLevelRead ||
+		perms[PermissionPresenceReport] >= PermissionLevelRead
+}
+
+// isLocationVisible reports whether a location is visible to a user who is a
+// member of userGroups. A location is only hidden if it restricts its allowed
+// bookers to groups the user is not a member of.
+func isLocationVisible(location *Location, allowedBookers []*LocationGroup, userGroups []*Group) bool {
+	restricted := false
+	for _, allowedBooker := range allowedBookers {
+		if allowedBooker.LocationID != location.ID {
+			continue
+		}
+		restricted = true
+		for _, userGroup := range userGroups {
+			if allowedBooker.GroupID == userGroup.ID {
+				return true
+			}
+		}
+	}
+	return !restricted
+}
+
+// IsLocationVisibleForUser reports whether the location is visible to the
+// user, considering the organization's settings, the location's allowed
+// bookers and the user's permissions.
+func (s *LocationService) IsLocationVisibleForUser(user *User, location *Location, bookingContext bool) (bool, error) {
+	hideDisallowed, err := s.IsHideDisallowedLocationsEnabled(location.OrganizationID)
+	if err != nil {
+		return false, err
+	}
+	if !hideDisallowed {
+		return true, nil
+	}
+	if s.CanSeeHiddenLocations(user, location.OrganizationID, bookingContext) {
+		return true, nil
+	}
+	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(location.ID)
+	if err != nil {
+		return false, err
+	}
+	if len(allowedBookers) == 0 {
+		return true, nil
+	}
+	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	if err != nil {
+		return false, err
+	}
+	return isLocationVisible(location, allowedBookers, userGroups), nil
+}
+
+// FilterVisibleLocations removes the locations from list which are hidden
+// from user. allowedBookers must contain the allowed bookers of all
+// locations in list.
+func (s *LocationService) FilterVisibleLocations(user *User, list []*Location, allowedBookers []*LocationGroup, bookingContext bool) ([]*Location, error) {
+	if len(allowedBookers) == 0 ||
+		s.CanSeeHiddenLocations(user, user.OrganizationID, bookingContext) {
+		return list, nil
+	}
+	hideDisallowed, err := s.IsHideDisallowedLocationsEnabled(user.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+	if !hideDisallowed {
+		return list, nil
+	}
+	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	res := []*Location{}
+	for _, e := range list {
+		if isLocationVisible(e, allowedBookers, userGroups) {
+			res = append(res, e)
+		}
+	}
+	return res, nil
 }
 
 // IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)

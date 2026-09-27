@@ -614,5 +614,6 @@
   "workingHoursHintOnlyDaily": "Bookings are only possible on a daily basis.",
   "yes": "yes",
   "yesterday": "Yesterday",
-  "yourDomainPlaceholder": "seatsurfing.your-domain.com"
+  "yourDomainPlaceholder": "seatsurfing.your-domain.com",
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
 }

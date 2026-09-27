@@ -81,6 +81,7 @@ func TestSettingsReadPublic(t *testing.T) {
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
 		SettingAllowAnyUser.Name,
+		SettingHideDisallowedLocations.Name,
 	}
 
 	for _, name := range allowedSettings {
@@ -160,6 +161,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingHideStats.Name,
 		SettingPublicBookingEnabled.Name,
 		SettingFeaturePublicBooking.Name,
+		SettingHideDisallowedLocations.Name,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,

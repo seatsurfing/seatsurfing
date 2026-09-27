@@ -217,7 +217,7 @@ class Preferences extends React.Component<Props, State> {
   };
 
   loadLocations = async (): Promise<void> => {
-    this.locations = await Location.list();
+    this.locations = await Location.list(true);
   };
 
   onSubmit = async (e: any) => {

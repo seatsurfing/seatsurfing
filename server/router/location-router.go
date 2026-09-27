@@ -118,6 +118,9 @@ func (router *LocationRouter) getAttributes(w http.ResponseWriter, r *http.Reque
 		SendForbidden(w)
 		return
 	}
+	if !CheckLocationVisible(w, r, user, e) {
+		return
+	}
 	list, err := GetSpaceAttributeValueRepository().GetAllForEntity(e.ID, SpaceAttributeValueEntityTypeLocation)
 	if err != nil {
 		log.Println(err)
@@ -201,6 +204,9 @@ func (router *LocationRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if !CheckLocationVisible(w, r, user, e) {
+		return
+	}
 
 	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(e.ID)
 	res := router.copyToRestModel(e, allowedBookers)
@@ -208,6 +214,10 @@ func (router *LocationRouter) getOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
+	router.sendAll(w, r, IsBookingContextRequest(r))
+}
+
+func (router *LocationRouter) sendAll(w http.ResponseWriter, r *http.Request, bookingContext bool) {
 	user := GetRequestUser(r)
 	list, err := GetLocationRepository().GetAll(user.OrganizationID)
 	if err != nil {
@@ -221,6 +231,17 @@ func (router *LocationRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		locationIDs = append(locationIDs, e.ID)
 	}
 	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocationList(locationIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	list, err = FilterVisibleLocations(user, list, allowedBookers, bookingContext)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 
 	res := []*GetLocationResponse{}
 	for _, e := range list {
@@ -244,7 +265,8 @@ func (router *LocationRouter) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(m.Attributes) == 0 {
-		router.getAll(w, r)
+		// Search is only used by the booking frontend, so always apply the booking context
+		router.sendAll(w, r, true)
 		return
 	}
 	list, err := service.GetLocationService().SearchLocationsForUser(GetRequestUser(r), m.Enter, m.Leave, m.Attributes)
@@ -393,6 +415,9 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if !CheckLocationVisible(w, r, user, e) {
+		return
+	}
 	if e.MapType == "designed" {
 		var designData string
 		plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
@@ -448,6 +473,9 @@ func (router *LocationRouter) getFloorPlanDesign(w http.ResponseWriter, r *http.
 	user := GetRequestUser(r)
 	if !CanAccessOrg(user, e.OrganizationID) {
 		SendForbidden(w)
+		return
+	}
+	if !CheckLocationVisible(w, r, user, e) {
 		return
 	}
 	plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
@@ -644,4 +672,36 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	}
 
 	return m
+}
+
+// IsBookingContextRequest reports whether the request was made from the
+// booking frontend (indicated by the query parameter "context=booking"). In
+// this context, hidden locations are filtered for users with administrative
+// permissions as well, so that they see the same locations as regular users.
+func IsBookingContextRequest(r *http.Request) bool {
+	return r.URL.Query().Get("context") == "booking"
+}
+
+// IsLocationVisibleForUser reports whether the location is visible to the
+// user, see service.LocationService.IsLocationVisibleForUser.
+func IsLocationVisibleForUser(user *User, location *Location, bookingContext bool) (bool, error) {
+	return service.GetLocationService().IsLocationVisibleForUser(user, location, bookingContext)
+}
+
+func CheckLocationVisible(w http.ResponseWriter, r *http.Request, user *User, location *Location) bool {
+	visible, err := IsLocationVisibleForUser(user, location, IsBookingContextRequest(r))
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return false
+	}
+	if !visible {
+		SendNotFound(w)
+		return false
+	}
+	return true
+}
+
+func FilterVisibleLocations(user *User, list []*Location, allowedBookers []*LocationGroup, bookingContext bool) ([]*Location, error) {
+	return service.GetLocationService().FilterVisibleLocations(user, list, allowedBookers, bookingContext)
 }
