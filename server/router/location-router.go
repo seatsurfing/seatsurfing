@@ -459,10 +459,7 @@ func buildLocationMapResponse(e *Location) (*GetMapResponse, error) {
 	}
 	locationMap, err := GetLocationRepository().GetMap(e)
 	if err != nil {
-		if err != sql.ErrNoRows {
-			log.Println(err)
-		}
-		return nil, sql.ErrNoRows
+		return nil, err
 	}
 	return &GetMapResponse{
 		Width:    locationMap.Width,
