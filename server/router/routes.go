@@ -439,13 +439,14 @@ func SetCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UI pages that must never be rendered inside a third-party frame (clickjacking).
+// UI pages that must never be rendered inside a third-party frame (clickjacking),
+// including the complete admin area.
 // All other UI pages stay embeddable for the MS Teams and Confluence integrations,
 // which load /ui/login/success/<id>/ and the booking UI in an iframe, so only the
 // exact /ui/login/ page (form login and IdP selection) is protected, not its children.
 // Keep in sync with ui/src/util/FrameProtection.ts.
 var nonFramableUIPaths = []string{"/ui/login"}
-var nonFramableUIPathPrefixes = []string{"/ui/resetpw", "/ui/setpw", "/ui/book"}
+var nonFramableUIPathPrefixes = []string{"/ui/resetpw", "/ui/setpw", "/ui/book", "/ui/admin"}
 
 func IsNonFramableUIPath(p string) bool {
 	p = strings.TrimSuffix(p, "/")

@@ -20,6 +20,10 @@ func TestSecurityHeadersNonFramableUIPaths(t *testing.T) {
 		"/ui/book/",
 		"/ui/book/details/abc/",
 		"/ui/book/confirm/abc/",
+		"/ui/admin",
+		"/ui/admin/",
+		"/ui/admin/dashboard/",
+		"/ui/admin/users/2a4d7a4a-1b3c-4e5f-8a9b-0c1d2e3f4a5b/",
 	}
 	for _, p := range paths {
 		req := httptest.NewRequest("GET", p, nil)
@@ -46,6 +50,7 @@ func TestSecurityHeadersFramableUIPaths(t *testing.T) {
 		"/ui/loginx/",
 		"/ui/booking/",
 		"/ui/resetpwx/",
+		"/ui/administration/",
 		"/auth/login",
 	}
 	for _, p := range paths {

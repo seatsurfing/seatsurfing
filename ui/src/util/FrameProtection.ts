@@ -4,7 +4,7 @@
 // trigger a new document request, so the UI enforces the same list itself.
 // Keep in sync with nonFramableUIPaths in server/router/routes.go.
 const nonFramablePaths = ["/login"];
-const nonFramablePathPrefixes = ["/resetpw", "/setpw", "/book"];
+const nonFramablePathPrefixes = ["/resetpw", "/setpw", "/book", "/admin"];
 
 export default class FrameProtection {
   static isNonFramablePath(pathname: string): boolean {

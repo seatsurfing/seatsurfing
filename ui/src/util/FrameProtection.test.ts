@@ -24,6 +24,12 @@ describe("FrameProtection", () => {
       );
     });
 
+    it("should protect the complete admin area", () => {
+      expect(FrameProtection.isNonFramablePath("/admin")).toBe(true);
+      expect(FrameProtection.isNonFramablePath("/admin/dashboard")).toBe(true);
+      expect(FrameProtection.isNonFramablePath("/admin/users/[id]")).toBe(true);
+    });
+
     it("should not protect pages used by the MS Teams and Confluence integrations", () => {
       expect(FrameProtection.isNonFramablePath("/login/success/[id]")).toBe(
         false,
@@ -39,6 +45,7 @@ describe("FrameProtection", () => {
       expect(FrameProtection.isNonFramablePath("/loginx")).toBe(false);
       expect(FrameProtection.isNonFramablePath("/bookings")).toBe(false);
       expect(FrameProtection.isNonFramablePath("/resetpwx")).toBe(false);
+      expect(FrameProtection.isNonFramablePath("/administration")).toBe(false);
     });
   });
 });
