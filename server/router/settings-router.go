@@ -46,15 +46,16 @@ type SettingsRouterWelcomeScreen struct {
 }
 
 type SettingsRouterBookingUIIntegration struct {
-	ID                     string   `json:"id"`
-	Title                  string   `json:"title"`
-	Source                 string   `json:"src"`
-	Icon                   string   `json:"icon"`
-	TagName                string   `json:"tagName"`
-	Width                  int      `json:"width"`
-	RequiredPermission     string   `json:"requiredPermission,omitempty"`
-	RequiredLevel          int      `json:"requiredLevel,omitempty"`
-	RequiredPermissionsAny []string `json:"requiredPermissionsAny,omitempty"`
+	ID                     string            `json:"id"`
+	Title                  string            `json:"title"`
+	Source                 string            `json:"src"`
+	Icon                   string            `json:"icon"`
+	TagName                string            `json:"tagName"`
+	Width                  int               `json:"width"`
+	RequiredPermission     string            `json:"requiredPermission,omitempty"`
+	RequiredLevel          int               `json:"requiredLevel,omitempty"`
+	RequiredPermissionsAny []string          `json:"requiredPermissionsAny,omitempty"`
+	Titles                 map[string]string `json:"titles,omitempty"`
 }
 
 // BookingUIIntegrationDefaultWidth is the panel width (in pixels) used when a
@@ -674,7 +675,7 @@ func (router *SettingsRouter) getAdminMenuItems(user *User) *GetSettingsResponse
 func (router *SettingsRouter) getBookingUIIntegrations(user *User) *GetSettingsResponse {
 	res := []SettingsRouterBookingUIIntegration{}
 	for _, plg := range GetPlugins() {
-		for _, item := range plg.GetBookingUIIntegrations() {
+		for _, item := range plg.GetBookingUIIntegrations(user.OrganizationID) {
 			if !router.canSeeBookingUIIntegration(user, item) {
 				continue
 			}
@@ -700,6 +701,7 @@ func (router *SettingsRouter) getBookingUIIntegrations(user *User) *GetSettingsR
 				RequiredPermission:     string(item.RequiredPermission),
 				RequiredLevel:          int(item.RequiredLevel),
 				RequiredPermissionsAny: anyPerms,
+				Titles:                 item.Titles,
 			}
 			res = append(res, resItem)
 		}

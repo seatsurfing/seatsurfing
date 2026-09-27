@@ -2121,6 +2121,7 @@ class Search extends React.Component<Props, State> {
               src={Ajax.getBackendUrl() + src}
               tagName={activeIntegration.tagName}
               style={{ width: "100%", height: "100%" }}
+              onDataChanged={this.refreshPage}
             />
           </div>
         );

@@ -150,6 +150,26 @@ export default class RuntimeConfig {
     return true;
   };
 
+  /**
+   * Picks the title to show for a booking UI integration: the entry for the
+   * signed-in user's exact language, then its base language (e.g. "de" for
+   * "de-CH"), then the plugin's non-localized title.
+   */
+  static pickBookingUIIntegrationTitle = (item: any): string => {
+    const titles = item.titles;
+    if (titles) {
+      const lang = RuntimeConfig.getLanguage();
+      if (titles[lang]) {
+        return titles[lang];
+      }
+      const base = lang.split("-")[0];
+      if (titles[base]) {
+        return titles[base];
+      }
+    }
+    return item.title;
+  };
+
   static EMBEDDED: boolean = false;
   static INFOS: RuntimeUserInfos;
 

@@ -119,10 +119,10 @@ func (p *PluginGRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 	return AdminUIMenuItemsFromProto(resp.Items)
 }
 
-func (p *PluginGRPC) GetBookingUIIntegrations() []BookingUIIntegration {
+func (p *PluginGRPC) GetBookingUIIntegrations(organizationID string) []BookingUIIntegration {
 	ctx, cancel := p.ctx()
 	defer cancel()
-	resp, err := p.client.GetBookingUIIntegrations(ctx, &commonpb.Empty{})
+	resp, err := p.client.GetBookingUIIntegrations(ctx, &pluginpb.GetPublicSettingsRequest{OrganizationId: organizationID})
 	if err != nil {
 		if status.Code(err) != codes.Unimplemented {
 			log.Println("GetBookingUIIntegrations RPC error:", err)

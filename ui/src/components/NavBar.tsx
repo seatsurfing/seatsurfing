@@ -114,6 +114,7 @@ class NavBar extends React.Component<Props, State> {
           this.dynamicIcons.set(item.icon, PluginIcon);
         }
         const active = this.props.activeIntegrationId === item.id;
+        const title = RuntimeConfig.pickBookingUIIntegrationTitle(item);
         return (
           <Nav.Link
             key={"integration-" + item.id}
@@ -124,7 +125,7 @@ class NavBar extends React.Component<Props, State> {
               <PluginIcon className="feather feather-lg" />
             ) : (
               <>
-                <PluginIcon className="feather" /> {item.title}
+                <PluginIcon className="feather" /> {title}
               </>
             )}
           </Nav.Link>

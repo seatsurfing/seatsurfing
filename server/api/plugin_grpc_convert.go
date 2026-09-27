@@ -138,6 +138,7 @@ func BookingUIIntegrationsToProto(items []BookingUIIntegration) []*pluginpb.Book
 			RequiredPermission:     string(it.RequiredPermission),
 			RequiredLevel:          int32(it.RequiredLevel),
 			RequiredPermissionsAny: anyPerms,
+			Titles:                 it.Titles,
 		})
 	}
 	return out
@@ -163,6 +164,7 @@ func BookingUIIntegrationsFromProto(items []*pluginpb.BookingUIIntegration) []Bo
 			RequiredPermission:     Permission(it.RequiredPermission),
 			RequiredLevel:          PermissionLevel(it.RequiredLevel),
 			RequiredPermissionsAny: anyPerms,
+			Titles:                 it.Titles,
 		})
 	}
 	return out

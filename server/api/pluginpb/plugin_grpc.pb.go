@@ -64,7 +64,10 @@ type SeatsurfingPluginServiceClient interface {
 	GetUnauthorizedRoutes(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*StringListReply, error)
 	RunSchemaUpdates(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*commonpb.Empty, error)
 	GetAdminUIMenuItems(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*AdminUIMenuItemsReply, error)
-	GetBookingUIIntegrations(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BookingUIIntegrationsReply, error)
+	// GetBookingUIIntegrations takes the same request as GetPublicSettings: an
+	// organization ID, so a plugin can hide an integration for organizations
+	// that have not enabled the underlying feature.
+	GetBookingUIIntegrations(ctx context.Context, in *GetPublicSettingsRequest, opts ...grpc.CallOption) (*BookingUIIntegrationsReply, error)
 	// Permissions this plugin contributes to the role editor. A plugin that
 	// does not implement it declares none, and its menu items fall back to the
 	// coarse visibility below.
@@ -147,7 +150,7 @@ func (c *seatsurfingPluginServiceClient) GetAdminUIMenuItems(ctx context.Context
 	return out, nil
 }
 
-func (c *seatsurfingPluginServiceClient) GetBookingUIIntegrations(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BookingUIIntegrationsReply, error) {
+func (c *seatsurfingPluginServiceClient) GetBookingUIIntegrations(ctx context.Context, in *GetPublicSettingsRequest, opts ...grpc.CallOption) (*BookingUIIntegrationsReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BookingUIIntegrationsReply)
 	err := c.cc.Invoke(ctx, SeatsurfingPluginService_GetBookingUIIntegrations_FullMethodName, in, out, cOpts...)
@@ -322,7 +325,10 @@ type SeatsurfingPluginServiceServer interface {
 	GetUnauthorizedRoutes(context.Context, *commonpb.Empty) (*StringListReply, error)
 	RunSchemaUpdates(context.Context, *commonpb.Empty) (*commonpb.Empty, error)
 	GetAdminUIMenuItems(context.Context, *commonpb.Empty) (*AdminUIMenuItemsReply, error)
-	GetBookingUIIntegrations(context.Context, *commonpb.Empty) (*BookingUIIntegrationsReply, error)
+	// GetBookingUIIntegrations takes the same request as GetPublicSettings: an
+	// organization ID, so a plugin can hide an integration for organizations
+	// that have not enabled the underlying feature.
+	GetBookingUIIntegrations(context.Context, *GetPublicSettingsRequest) (*BookingUIIntegrationsReply, error)
 	// Permissions this plugin contributes to the role editor. A plugin that
 	// does not implement it declares none, and its menu items fall back to the
 	// coarse visibility below.
@@ -370,7 +376,7 @@ func (UnimplementedSeatsurfingPluginServiceServer) RunSchemaUpdates(context.Cont
 func (UnimplementedSeatsurfingPluginServiceServer) GetAdminUIMenuItems(context.Context, *commonpb.Empty) (*AdminUIMenuItemsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAdminUIMenuItems not implemented")
 }
-func (UnimplementedSeatsurfingPluginServiceServer) GetBookingUIIntegrations(context.Context, *commonpb.Empty) (*BookingUIIntegrationsReply, error) {
+func (UnimplementedSeatsurfingPluginServiceServer) GetBookingUIIntegrations(context.Context, *GetPublicSettingsRequest) (*BookingUIIntegrationsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetBookingUIIntegrations not implemented")
 }
 func (UnimplementedSeatsurfingPluginServiceServer) GetPermissionDefinitions(context.Context, *commonpb.Empty) (*PermissionDefinitionsReply, error) {
@@ -531,7 +537,7 @@ func _SeatsurfingPluginService_GetAdminUIMenuItems_Handler(srv interface{}, ctx 
 }
 
 func _SeatsurfingPluginService_GetBookingUIIntegrations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(commonpb.Empty)
+	in := new(GetPublicSettingsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -543,7 +549,7 @@ func _SeatsurfingPluginService_GetBookingUIIntegrations_Handler(srv interface{},
 		FullMethod: SeatsurfingPluginService_GetBookingUIIntegrations_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SeatsurfingPluginServiceServer).GetBookingUIIntegrations(ctx, req.(*commonpb.Empty))
+		return srv.(SeatsurfingPluginServiceServer).GetBookingUIIntegrations(ctx, req.(*GetPublicSettingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

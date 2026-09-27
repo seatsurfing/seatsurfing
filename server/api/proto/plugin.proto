@@ -23,7 +23,10 @@ service SeatsurfingPluginService {
   rpc GetUnauthorizedRoutes(seatsurfing.plugin.v1.Empty) returns (StringListReply);
   rpc RunSchemaUpdates(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
   rpc GetAdminUIMenuItems(seatsurfing.plugin.v1.Empty) returns (AdminUIMenuItemsReply);
-  rpc GetBookingUIIntegrations(seatsurfing.plugin.v1.Empty) returns (BookingUIIntegrationsReply);
+  // GetBookingUIIntegrations takes the same request as GetPublicSettings: an
+  // organization ID, so a plugin can hide an integration for organizations
+  // that have not enabled the underlying feature.
+  rpc GetBookingUIIntegrations(GetPublicSettingsRequest) returns (BookingUIIntegrationsReply);
   // Permissions this plugin contributes to the role editor. A plugin that
   // does not implement it declares none, and its menu items fall back to the
   // coarse visibility below.
@@ -104,6 +107,10 @@ message BookingUIIntegration {
   // to see this item. Takes precedence over required_permission when
   // non-empty.
   repeated string required_permissions_any = 9;
+  // Optional language code (e.g. "de", "en-GB") -> localized title map. The
+  // frontend picks the signed-in user's exact language, then its base
+  // language, then falls back to title.
+  map<string, string> titles = 10;
 }
 
 message BookingUIIntegrationsReply {

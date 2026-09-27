@@ -34,7 +34,10 @@ type SeatsurfingPlugin interface {
 	// GetBookingUIIntegrations returns the booking UI's own integrations this
 	// plugin contributes: zero, one, or more nav items shown in the booking
 	// UI's top navigation bar, each opening a panel beside the map.
-	GetBookingUIIntegrations() []BookingUIIntegration
+	// organizationID lets a plugin hide an integration for organizations that
+	// have not enabled the underlying feature (same shape as
+	// GetPublicSettings).
+	GetBookingUIIntegrations(organizationID string) []BookingUIIntegration
 	// GetPermissionDefinitions returns the permissions this plugin
 	// contributes to the role editor. Keys must begin with
 	// PluginPermissionPrefix. Returning none is valid: the plugin's menu items
@@ -107,7 +110,30 @@ type BookingUIIntegration struct {
 	// (at RequiredLevel) is enough to see this item. Takes precedence over
 	// RequiredPermission when non-empty.
 	RequiredPermissionsAny []Permission
+	// Titles optionally maps a language code (e.g. "de", "en-GB") to a
+	// localized title. The frontend picks the entry for the signed-in user's
+	// exact language, then its base language, then falls back to Title.
+	Titles map[string]string
 }
+
+// PluginEmbed custom elements mounted for a BookingUIIntegration (and for
+// AdminUIMenuItem/AdminWelcomeScreen) may dispatch two DOM CustomEvents that
+// the host listens for:
+//
+//   - "plugin-token-expired": the element's access token was rejected by the
+//     backend. The host refreshes it (reusing the same refresh-token flow and
+//     mutex as its own requests) and sets the new value as the element's
+//     accessToken property, or falls back to the host's normal
+//     session-expired handling if the refresh itself fails.
+//   - "plugin-data-changed": booking data changed as a side effect of using
+//     the integration (e.g. a chat assistant created or cancelled a
+//     booking). The booking UI reloads the current search results in
+//     response, keeping the selected location, date and view.
+//
+// The host also proactively pushes a refreshed access token to every mounted
+// element whenever it refreshes its own (see ui/src/util/Ajax.ts and
+// ui/src/components/PluginEmbed.tsx), so "plugin-token-expired" only matters
+// for a token that expires between those refreshes.
 
 type AdminWelcomeScreen struct {
 	Source            string

@@ -22,6 +22,12 @@ export default class Ajax {
   static onBadRequest: (() => void) | null = null;
   static onConflict: (() => void) | null = null;
 
+  // Dispatched on window whenever refreshAccessToken() stores a new access
+  // token, so long-lived mounted plugin elements (PluginEmbed) can push the
+  // fresh token to themselves without waiting for it to expire.
+  static readonly ACCESS_TOKEN_REFRESHED_EVENT =
+    "seatsurfing-access-token-refreshed";
+
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
   private static HEADER_X_OBJECT_ID: string = "X-Object-Id";
@@ -158,6 +164,13 @@ export default class Ajax {
                   Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
                     json.refreshToken,
                   );
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent(Ajax.ACCESS_TOKEN_REFRESHED_EVENT, {
+                        detail: { accessToken: c.accessToken },
+                      }),
+                    );
+                  }
                   release();
                   resolve();
                 })

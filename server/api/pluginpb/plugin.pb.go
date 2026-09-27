@@ -301,8 +301,12 @@ type BookingUIIntegration struct {
 	// to see this item. Takes precedence over required_permission when
 	// non-empty.
 	RequiredPermissionsAny []string `protobuf:"bytes,9,rep,name=required_permissions_any,json=requiredPermissionsAny,proto3" json:"required_permissions_any,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// Optional language code (e.g. "de", "en-GB") -> localized title map. The
+	// frontend picks the signed-in user's exact language, then its base
+	// language, then falls back to title.
+	Titles        map[string]string `protobuf:"bytes,10,rep,name=titles,proto3" json:"titles,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BookingUIIntegration) Reset() {
@@ -394,6 +398,13 @@ func (x *BookingUIIntegration) GetRequiredLevel() int32 {
 func (x *BookingUIIntegration) GetRequiredPermissionsAny() []string {
 	if x != nil {
 		return x.RequiredPermissionsAny
+	}
+	return nil
+}
+
+func (x *BookingUIIntegration) GetTitles() map[string]string {
+	if x != nil {
+		return x.Titles
 	}
 	return nil
 }
@@ -1092,7 +1103,7 @@ const file_plugin_proto_rawDesc = "" +
 	"\btag_name\x18\x06 \x01(\tR\atagName\x12/\n" +
 	"\x13required_permission\x18\a \x01(\tR\x12requiredPermission\x12%\n" +
 	"\x0erequired_level\x18\b \x01(\x05R\rrequiredLevel\x128\n" +
-	"\x18required_permissions_any\x18\t \x03(\tR\x16requiredPermissionsAny\"\xab\x02\n" +
+	"\x18required_permissions_any\x18\t \x03(\tR\x16requiredPermissionsAny\"\xb7\x03\n" +
 	"\x14BookingUIIntegration\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -1102,7 +1113,12 @@ const file_plugin_proto_rawDesc = "" +
 	"\x05width\x18\x06 \x01(\x05R\x05width\x12/\n" +
 	"\x13required_permission\x18\a \x01(\tR\x12requiredPermission\x12%\n" +
 	"\x0erequired_level\x18\b \x01(\x05R\rrequiredLevel\x128\n" +
-	"\x18required_permissions_any\x18\t \x03(\tR\x16requiredPermissionsAny\"_\n" +
+	"\x18required_permissions_any\x18\t \x03(\tR\x16requiredPermissionsAny\x12O\n" +
+	"\x06titles\x18\n" +
+	" \x03(\v27.seatsurfing.plugin.v1.BookingUIIntegration.TitlesEntryR\x06titles\x1a9\n" +
+	"\vTitlesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"_\n" +
 	"\x1aBookingUIIntegrationsReply\x12A\n" +
 	"\x05items\x18\x01 \x03(\v2+.seatsurfing.plugin.v1.BookingUIIntegrationR\x05items\"O\n" +
 	"\x14PermissionDefinition\x12\x10\n" +
@@ -1151,14 +1167,14 @@ const file_plugin_proto_rawDesc = "" +
 	"\x04body\x18\x03 \x01(\fR\x04body\x1a_\n" +
 	"\fHeadersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x129\n" +
-	"\x05value\x18\x02 \x01(\v2#.seatsurfing.plugin.v1.HeaderValuesR\x05value:\x028\x012\xf9\x0e\n" +
+	"\x05value\x18\x02 \x01(\v2#.seatsurfing.plugin.v1.HeaderValuesR\x05value:\x028\x012\x8c\x0f\n" +
 	"\x18SeatsurfingPluginService\x12Q\n" +
 	"\vGetBasePath\x12\x1c.seatsurfing.plugin.v1.Empty\x1a$.seatsurfing.plugin.v1.BasePathReply\x12V\n" +
 	"\x0eGetRoutePrefix\x12\x1c.seatsurfing.plugin.v1.Empty\x1a&.seatsurfing.plugin.v1.StringListReply\x12]\n" +
 	"\x15GetUnauthorizedRoutes\x12\x1c.seatsurfing.plugin.v1.Empty\x1a&.seatsurfing.plugin.v1.StringListReply\x12N\n" +
 	"\x10RunSchemaUpdates\x12\x1c.seatsurfing.plugin.v1.Empty\x1a\x1c.seatsurfing.plugin.v1.Empty\x12a\n" +
-	"\x13GetAdminUIMenuItems\x12\x1c.seatsurfing.plugin.v1.Empty\x1a,.seatsurfing.plugin.v1.AdminUIMenuItemsReply\x12k\n" +
-	"\x18GetBookingUIIntegrations\x12\x1c.seatsurfing.plugin.v1.Empty\x1a1.seatsurfing.plugin.v1.BookingUIIntegrationsReply\x12k\n" +
+	"\x13GetAdminUIMenuItems\x12\x1c.seatsurfing.plugin.v1.Empty\x1a,.seatsurfing.plugin.v1.AdminUIMenuItemsReply\x12~\n" +
+	"\x18GetBookingUIIntegrations\x12/.seatsurfing.plugin.v1.GetPublicSettingsRequest\x1a1.seatsurfing.plugin.v1.BookingUIIntegrationsReply\x12k\n" +
 	"\x18GetPermissionDefinitions\x12\x1c.seatsurfing.plugin.v1.Empty\x1a1.seatsurfing.plugin.v1.PermissionDefinitionsReply\x12E\n" +
 	"\aOnTimer\x12\x1c.seatsurfing.plugin.v1.Empty\x1a\x1c.seatsurfing.plugin.v1.Empty\x12D\n" +
 	"\x06OnInit\x12\x1c.seatsurfing.plugin.v1.Empty\x1a\x1c.seatsurfing.plugin.v1.Empty\x12e\n" +
@@ -1187,7 +1203,7 @@ func file_plugin_proto_rawDescGZIP() []byte {
 	return file_plugin_proto_rawDescData
 }
 
-var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_plugin_proto_goTypes = []any{
 	(*IdRequest)(nil),                  // 0: seatsurfing.plugin.v1.IdRequest
 	(*StringListReply)(nil),            // 1: seatsurfing.plugin.v1.StringListReply
@@ -1206,67 +1222,69 @@ var file_plugin_proto_goTypes = []any{
 	(*HeaderValues)(nil),               // 14: seatsurfing.plugin.v1.HeaderValues
 	(*HttpRequest)(nil),                // 15: seatsurfing.plugin.v1.HttpRequest
 	(*HttpResponse)(nil),               // 16: seatsurfing.plugin.v1.HttpResponse
-	nil,                                // 17: seatsurfing.plugin.v1.HttpRequest.HeadersEntry
-	nil,                                // 18: seatsurfing.plugin.v1.HttpResponse.HeadersEntry
-	(*commonpb.Empty)(nil),             // 19: seatsurfing.plugin.v1.Empty
+	nil,                                // 17: seatsurfing.plugin.v1.BookingUIIntegration.TitlesEntry
+	nil,                                // 18: seatsurfing.plugin.v1.HttpRequest.HeadersEntry
+	nil,                                // 19: seatsurfing.plugin.v1.HttpResponse.HeadersEntry
+	(*commonpb.Empty)(nil),             // 20: seatsurfing.plugin.v1.Empty
 }
 var file_plugin_proto_depIdxs = []int32{
-	4,  // 0: seatsurfing.plugin.v1.BookingUIIntegrationsReply.items:type_name -> seatsurfing.plugin.v1.BookingUIIntegration
-	6,  // 1: seatsurfing.plugin.v1.PermissionDefinitionsReply.definitions:type_name -> seatsurfing.plugin.v1.PermissionDefinition
-	3,  // 2: seatsurfing.plugin.v1.AdminUIMenuItemsReply.items:type_name -> seatsurfing.plugin.v1.AdminUIMenuItem
-	9,  // 3: seatsurfing.plugin.v1.AdminWelcomeScreenReply.screen:type_name -> seatsurfing.plugin.v1.AdminWelcomeScreen
-	12, // 4: seatsurfing.plugin.v1.PluginSettingsReply.settings:type_name -> seatsurfing.plugin.v1.PluginSetting
-	17, // 5: seatsurfing.plugin.v1.HttpRequest.headers:type_name -> seatsurfing.plugin.v1.HttpRequest.HeadersEntry
-	18, // 6: seatsurfing.plugin.v1.HttpResponse.headers:type_name -> seatsurfing.plugin.v1.HttpResponse.HeadersEntry
-	14, // 7: seatsurfing.plugin.v1.HttpRequest.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
-	14, // 8: seatsurfing.plugin.v1.HttpResponse.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
-	19, // 9: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBasePath:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 10: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 11: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 12: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 13: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 14: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBookingUIIntegrations:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 15: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPermissionDefinitions:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 16: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 17: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:input_type -> seatsurfing.plugin.v1.Empty
-	19, // 18: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:input_type -> seatsurfing.plugin.v1.Empty
-	11, // 19: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:input_type -> seatsurfing.plugin.v1.GetPublicSettingsRequest
-	15, // 20: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:input_type -> seatsurfing.plugin.v1.HttpRequest
-	0,  // 21: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 22: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 23: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 24: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 25: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 26: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 27: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 28: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
-	0,  // 29: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:input_type -> seatsurfing.plugin.v1.IdRequest
-	2,  // 30: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBasePath:output_type -> seatsurfing.plugin.v1.BasePathReply
-	1,  // 31: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:output_type -> seatsurfing.plugin.v1.StringListReply
-	1,  // 32: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:output_type -> seatsurfing.plugin.v1.StringListReply
-	19, // 33: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:output_type -> seatsurfing.plugin.v1.Empty
-	8,  // 34: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:output_type -> seatsurfing.plugin.v1.AdminUIMenuItemsReply
-	5,  // 35: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBookingUIIntegrations:output_type -> seatsurfing.plugin.v1.BookingUIIntegrationsReply
-	7,  // 36: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPermissionDefinitions:output_type -> seatsurfing.plugin.v1.PermissionDefinitionsReply
-	19, // 37: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 38: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:output_type -> seatsurfing.plugin.v1.Empty
-	10, // 39: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:output_type -> seatsurfing.plugin.v1.AdminWelcomeScreenReply
-	13, // 40: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:output_type -> seatsurfing.plugin.v1.PluginSettingsReply
-	16, // 41: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:output_type -> seatsurfing.plugin.v1.HttpResponse
-	19, // 42: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 43: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 44: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 45: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 46: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 47: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 48: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 49: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:output_type -> seatsurfing.plugin.v1.Empty
-	19, // 50: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:output_type -> seatsurfing.plugin.v1.Empty
-	30, // [30:51] is the sub-list for method output_type
-	9,  // [9:30] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	17, // 0: seatsurfing.plugin.v1.BookingUIIntegration.titles:type_name -> seatsurfing.plugin.v1.BookingUIIntegration.TitlesEntry
+	4,  // 1: seatsurfing.plugin.v1.BookingUIIntegrationsReply.items:type_name -> seatsurfing.plugin.v1.BookingUIIntegration
+	6,  // 2: seatsurfing.plugin.v1.PermissionDefinitionsReply.definitions:type_name -> seatsurfing.plugin.v1.PermissionDefinition
+	3,  // 3: seatsurfing.plugin.v1.AdminUIMenuItemsReply.items:type_name -> seatsurfing.plugin.v1.AdminUIMenuItem
+	9,  // 4: seatsurfing.plugin.v1.AdminWelcomeScreenReply.screen:type_name -> seatsurfing.plugin.v1.AdminWelcomeScreen
+	12, // 5: seatsurfing.plugin.v1.PluginSettingsReply.settings:type_name -> seatsurfing.plugin.v1.PluginSetting
+	18, // 6: seatsurfing.plugin.v1.HttpRequest.headers:type_name -> seatsurfing.plugin.v1.HttpRequest.HeadersEntry
+	19, // 7: seatsurfing.plugin.v1.HttpResponse.headers:type_name -> seatsurfing.plugin.v1.HttpResponse.HeadersEntry
+	14, // 8: seatsurfing.plugin.v1.HttpRequest.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
+	14, // 9: seatsurfing.plugin.v1.HttpResponse.HeadersEntry.value:type_name -> seatsurfing.plugin.v1.HeaderValues
+	20, // 10: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBasePath:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 11: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 12: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 13: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 14: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:input_type -> seatsurfing.plugin.v1.Empty
+	11, // 15: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBookingUIIntegrations:input_type -> seatsurfing.plugin.v1.GetPublicSettingsRequest
+	20, // 16: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPermissionDefinitions:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 17: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 18: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:input_type -> seatsurfing.plugin.v1.Empty
+	20, // 19: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:input_type -> seatsurfing.plugin.v1.Empty
+	11, // 20: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:input_type -> seatsurfing.plugin.v1.GetPublicSettingsRequest
+	15, // 21: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:input_type -> seatsurfing.plugin.v1.HttpRequest
+	0,  // 22: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 23: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 24: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 25: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 26: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 27: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 28: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 29: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:input_type -> seatsurfing.plugin.v1.IdRequest
+	0,  // 30: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:input_type -> seatsurfing.plugin.v1.IdRequest
+	2,  // 31: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBasePath:output_type -> seatsurfing.plugin.v1.BasePathReply
+	1,  // 32: seatsurfing.plugin.v1.SeatsurfingPluginService.GetRoutePrefix:output_type -> seatsurfing.plugin.v1.StringListReply
+	1,  // 33: seatsurfing.plugin.v1.SeatsurfingPluginService.GetUnauthorizedRoutes:output_type -> seatsurfing.plugin.v1.StringListReply
+	20, // 34: seatsurfing.plugin.v1.SeatsurfingPluginService.RunSchemaUpdates:output_type -> seatsurfing.plugin.v1.Empty
+	8,  // 35: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminUIMenuItems:output_type -> seatsurfing.plugin.v1.AdminUIMenuItemsReply
+	5,  // 36: seatsurfing.plugin.v1.SeatsurfingPluginService.GetBookingUIIntegrations:output_type -> seatsurfing.plugin.v1.BookingUIIntegrationsReply
+	7,  // 37: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPermissionDefinitions:output_type -> seatsurfing.plugin.v1.PermissionDefinitionsReply
+	20, // 38: seatsurfing.plugin.v1.SeatsurfingPluginService.OnTimer:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 39: seatsurfing.plugin.v1.SeatsurfingPluginService.OnInit:output_type -> seatsurfing.plugin.v1.Empty
+	10, // 40: seatsurfing.plugin.v1.SeatsurfingPluginService.GetAdminWelcomeScreen:output_type -> seatsurfing.plugin.v1.AdminWelcomeScreenReply
+	13, // 41: seatsurfing.plugin.v1.SeatsurfingPluginService.GetPublicSettings:output_type -> seatsurfing.plugin.v1.PluginSettingsReply
+	16, // 42: seatsurfing.plugin.v1.SeatsurfingPluginService.HandleHTTPRequest:output_type -> seatsurfing.plugin.v1.HttpResponse
+	20, // 43: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserCreated:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 44: seatsurfing.plugin.v1.SeatsurfingPluginService.OnUserUpdated:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 45: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeUserDelete:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 46: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationCreated:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 47: seatsurfing.plugin.v1.SeatsurfingPluginService.OnOrganizationUpdated:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 48: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBeforeOrganizationDelete:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 49: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingCreated:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 50: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingUpdated:output_type -> seatsurfing.plugin.v1.Empty
+	20, // 51: seatsurfing.plugin.v1.SeatsurfingPluginService.OnBookingDeleted:output_type -> seatsurfing.plugin.v1.Empty
+	31, // [31:52] is the sub-list for method output_type
+	10, // [10:31] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_plugin_proto_init() }
@@ -1280,7 +1298,7 @@ func file_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plugin_proto_rawDesc), len(file_plugin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
