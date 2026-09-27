@@ -31,6 +31,7 @@ const (
 	SeatsurfingPluginService_GetUnauthorizedRoutes_FullMethodName      = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetUnauthorizedRoutes"
 	SeatsurfingPluginService_RunSchemaUpdates_FullMethodName           = "/seatsurfing.plugin.v1.SeatsurfingPluginService/RunSchemaUpdates"
 	SeatsurfingPluginService_GetAdminUIMenuItems_FullMethodName        = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetAdminUIMenuItems"
+	SeatsurfingPluginService_GetBookingUIIntegrations_FullMethodName   = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetBookingUIIntegrations"
 	SeatsurfingPluginService_GetPermissionDefinitions_FullMethodName   = "/seatsurfing.plugin.v1.SeatsurfingPluginService/GetPermissionDefinitions"
 	SeatsurfingPluginService_OnTimer_FullMethodName                    = "/seatsurfing.plugin.v1.SeatsurfingPluginService/OnTimer"
 	SeatsurfingPluginService_OnInit_FullMethodName                     = "/seatsurfing.plugin.v1.SeatsurfingPluginService/OnInit"
@@ -63,6 +64,7 @@ type SeatsurfingPluginServiceClient interface {
 	GetUnauthorizedRoutes(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*StringListReply, error)
 	RunSchemaUpdates(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*commonpb.Empty, error)
 	GetAdminUIMenuItems(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*AdminUIMenuItemsReply, error)
+	GetBookingUIIntegrations(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BookingUIIntegrationsReply, error)
 	// Permissions this plugin contributes to the role editor. A plugin that
 	// does not implement it declares none, and its menu items fall back to the
 	// coarse visibility below.
@@ -139,6 +141,16 @@ func (c *seatsurfingPluginServiceClient) GetAdminUIMenuItems(ctx context.Context
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AdminUIMenuItemsReply)
 	err := c.cc.Invoke(ctx, SeatsurfingPluginService_GetAdminUIMenuItems_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *seatsurfingPluginServiceClient) GetBookingUIIntegrations(ctx context.Context, in *commonpb.Empty, opts ...grpc.CallOption) (*BookingUIIntegrationsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BookingUIIntegrationsReply)
+	err := c.cc.Invoke(ctx, SeatsurfingPluginService_GetBookingUIIntegrations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +322,7 @@ type SeatsurfingPluginServiceServer interface {
 	GetUnauthorizedRoutes(context.Context, *commonpb.Empty) (*StringListReply, error)
 	RunSchemaUpdates(context.Context, *commonpb.Empty) (*commonpb.Empty, error)
 	GetAdminUIMenuItems(context.Context, *commonpb.Empty) (*AdminUIMenuItemsReply, error)
+	GetBookingUIIntegrations(context.Context, *commonpb.Empty) (*BookingUIIntegrationsReply, error)
 	// Permissions this plugin contributes to the role editor. A plugin that
 	// does not implement it declares none, and its menu items fall back to the
 	// coarse visibility below.
@@ -356,6 +369,9 @@ func (UnimplementedSeatsurfingPluginServiceServer) RunSchemaUpdates(context.Cont
 }
 func (UnimplementedSeatsurfingPluginServiceServer) GetAdminUIMenuItems(context.Context, *commonpb.Empty) (*AdminUIMenuItemsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAdminUIMenuItems not implemented")
+}
+func (UnimplementedSeatsurfingPluginServiceServer) GetBookingUIIntegrations(context.Context, *commonpb.Empty) (*BookingUIIntegrationsReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBookingUIIntegrations not implemented")
 }
 func (UnimplementedSeatsurfingPluginServiceServer) GetPermissionDefinitions(context.Context, *commonpb.Empty) (*PermissionDefinitionsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPermissionDefinitions not implemented")
@@ -510,6 +526,24 @@ func _SeatsurfingPluginService_GetAdminUIMenuItems_Handler(srv interface{}, ctx 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SeatsurfingPluginServiceServer).GetAdminUIMenuItems(ctx, req.(*commonpb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SeatsurfingPluginService_GetBookingUIIntegrations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(commonpb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SeatsurfingPluginServiceServer).GetBookingUIIntegrations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SeatsurfingPluginService_GetBookingUIIntegrations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SeatsurfingPluginServiceServer).GetBookingUIIntegrations(ctx, req.(*commonpb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -810,6 +844,10 @@ var SeatsurfingPluginService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAdminUIMenuItems",
 			Handler:    _SeatsurfingPluginService_GetAdminUIMenuItems_Handler,
+		},
+		{
+			MethodName: "GetBookingUIIntegrations",
+			Handler:    _SeatsurfingPluginService_GetBookingUIIntegrations_Handler,
 		},
 		{
 			MethodName: "GetPermissionDefinitions",

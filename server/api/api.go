@@ -31,6 +31,10 @@ type SeatsurfingPlugin interface {
 	GetUnauthorizedRoutes() []string
 	RunSchemaUpdates()
 	GetAdminUIMenuItems() []AdminUIMenuItem
+	// GetBookingUIIntegrations returns the booking UI's own integrations this
+	// plugin contributes: zero, one, or more nav items shown in the booking
+	// UI's top navigation bar, each opening a panel beside the map.
+	GetBookingUIIntegrations() []BookingUIIntegration
 	// GetPermissionDefinitions returns the permissions this plugin
 	// contributes to the role editor. Keys must begin with
 	// PluginPermissionPrefix. Returning none is valid: the plugin's menu items
@@ -76,6 +80,32 @@ type AdminUIMenuItem struct {
 	// (at RequiredLevel) is enough to see this item. Takes precedence over
 	// RequiredPermission when non-empty, for a plugin whose single UI surface
 	// spans several independently-grantable permissions.
+	RequiredPermissionsAny []Permission
+}
+
+// BookingUIIntegration describes one nav item a plugin contributes to the
+// booking UI's top navigation bar. Clicking it opens a panel beside the
+// search/map view that hosts the custom element named by TagName, mounted
+// from the JS module at Source (same mechanism as AdminUIMenuItem).
+type BookingUIIntegration struct {
+	ID     string
+	Title  string
+	Source string
+	Icon   string
+	// TagName is the custom element tag to mount for this integration's panel
+	// once the JS module at Source has been loaded.
+	TagName string
+	// Width is the panel's desired width in pixels. Zero/unset falls back to
+	// a host-defined default (200px). The host clamps this to a sane range.
+	Width int
+	// RequiredPermission is the permission a user must hold to see this item,
+	// and RequiredLevel the level at which. Empty means visible to every
+	// authenticated user, since the booking UI itself has no admin gate.
+	RequiredPermission Permission
+	RequiredLevel      PermissionLevel
+	// RequiredPermissionsAny lists alternative permissions, any one of which
+	// (at RequiredLevel) is enough to see this item. Takes precedence over
+	// RequiredPermission when non-empty.
 	RequiredPermissionsAny []Permission
 }
 

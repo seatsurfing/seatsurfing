@@ -77,6 +77,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingHideStats.Name,
 		SettingPublicBookingEnabled.Name,
 		SettingFeaturePublicBooking.Name,
+		SysSettingBookingUIIntegrations,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -162,6 +163,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingPublicBookingEnabled.Name,
 		SettingFeaturePublicBooking.Name,
 		SettingHideDisallowedLocations.Name,
+		SysSettingBookingUIIntegrations,
 	}
 	forbiddenSettings := []string{
 		SettingDatabaseVersion.Name,
@@ -244,16 +246,17 @@ func TestSettingsCRUDMany(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody)
-	CheckTestInt(t, 10, len(resBody))
+	CheckTestInt(t, 11, len(resBody))
 	CheckTestString(t, SettingAllowAnyUser.Name, resBody[0].Name)
 	CheckTestString(t, SettingMaxBookingsPerUser.Name, resBody[1].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody[2].Name)
 	CheckTestString(t, SysSettingAdminWelcomeScreens, resBody[3].Name)
 	CheckTestString(t, SysSettingAdminMenuItems, resBody[4].Name)
-	CheckTestString(t, SysSettingVersion, resBody[5].Name)
+	CheckTestString(t, SysSettingBookingUIIntegrations, resBody[5].Name)
+	CheckTestString(t, SysSettingVersion, resBody[6].Name)
 	CheckTestString(t, "1", resBody[0].Value)
 	CheckTestString(t, "5", resBody[1].Value)
-	CheckTestString(t, GetProductVersion(), resBody[5].Value)
+	CheckTestString(t, GetProductVersion(), resBody[6].Value)
 
 	payload = `[{"name": "allow_any_user", "value": "0"}, {"name": "max_bookings_per_user", "value": "3"}]`
 	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
@@ -265,11 +268,11 @@ func TestSettingsCRUDMany(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody2 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
-	CheckTestInt(t, 10, len(resBody2))
+	CheckTestInt(t, 11, len(resBody2))
 	CheckTestString(t, SettingAllowAnyUser.Name, resBody2[0].Name)
 	CheckTestString(t, SettingMaxBookingsPerUser.Name, resBody2[1].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody2[2].Name)
-	CheckTestString(t, SysSettingVersion, resBody2[5].Name)
+	CheckTestString(t, SysSettingVersion, resBody2[6].Name)
 	CheckTestString(t, "0", resBody2[0].Value)
 	CheckTestString(t, "3", resBody2[1].Value)
 
@@ -292,10 +295,10 @@ func TestSettingsMaxHoursBeforeDelete(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody3 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
-	CheckTestInt(t, 9, len(resBody3))
+	CheckTestInt(t, 10, len(resBody3))
 	CheckTestString(t, SettingMaxHoursBeforeDelete.Name, resBody3[0].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody3[1].Name)
-	CheckTestString(t, SysSettingVersion, resBody3[4].Name)
+	CheckTestString(t, SysSettingVersion, resBody3[5].Name)
 	CheckTestString(t, "2", resBody3[0].Value)
 }
 
@@ -316,10 +319,10 @@ func TestSettingsMinHoursBookingDuration(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 	var resBody3 []GetSettingsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody3)
-	CheckTestInt(t, 9, len(resBody3))
+	CheckTestInt(t, 10, len(resBody3))
 	CheckTestString(t, SettingMinBookingDurationHours.Name, resBody3[0].Name)
 	CheckTestString(t, SysSettingOrgSignupDelete, resBody3[1].Name)
-	CheckTestString(t, SysSettingVersion, resBody3[4].Name)
+	CheckTestString(t, SysSettingVersion, resBody3[5].Name)
 	CheckTestString(t, "2", resBody3[0].Value)
 }
 

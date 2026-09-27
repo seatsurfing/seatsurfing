@@ -133,4 +133,34 @@ describe("RuntimeConfig permission checks", () => {
       ).toBe(false);
     });
   });
+
+  describe("canSeeBookingUIIntegration", () => {
+    it("is visible to everyone when the plugin declares no permission", () => {
+      expect(RuntimeConfig.canSeeBookingUIIntegration({})).toBe(true);
+    });
+
+    it("honours a permission declared by the plugin", () => {
+      const item = {
+        requiredPermission: "plugin.plus.exchange",
+        requiredLevel: PermissionLevel.Read,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(false);
+      RuntimeConfig.INFOS.permissions = {
+        "plugin.plus.exchange": PermissionLevel.Read,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(true);
+    });
+
+    it("honours any one of several alternative permissions", () => {
+      const item = {
+        requiredPermissionsAny: ["plugin.plus.exchange", "plugin.plus.scim"],
+        requiredLevel: PermissionLevel.Admin,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(false);
+      RuntimeConfig.INFOS.permissions = {
+        "plugin.plus.scim": PermissionLevel.Admin,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(true);
+    });
+  });
 });

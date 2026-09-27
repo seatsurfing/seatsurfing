@@ -226,6 +226,23 @@ form#filter-locations-form .row {
   }
 }
 
+.booking-ui-integration-panel {
+  position: fixed;
+  top: 70px;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  overflow: auto;
+  background-color: var(--bs-body-bg);
+  border-left: 1px solid var(--bs-border-color);
+}
+
+@media only screen and (max-width: 575.98px) {
+  .booking-ui-integration-panel {
+    width: 100% !important;
+  }
+}
+
 /* Override react-zoom-pan-pinch v4 CSS module fit-content sizing
    so the wrapper fills its parent and centerOnInit works correctly. */
 .react-transform-wrapper {

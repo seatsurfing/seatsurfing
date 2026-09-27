@@ -39,6 +39,7 @@ interface RuntimeUserInfos {
   permissions: PermissionMap;
   pluginMenuItems: any[];
   pluginWelcomeScreens: any[];
+  bookingUIIntegrations: any[];
   featureGroups: boolean;
   featureAuthProviders: boolean;
   featureKioskMode: boolean;
@@ -125,6 +126,30 @@ export default class RuntimeConfig {
       : RuntimeConfig.hasAnyPermission();
   };
 
+  /**
+   * Decides whether a plugin's booking UI integration should be shown to the
+   * signed-in user. This mirrors canSeePluginMenuItem, except a plugin that
+   * declares no permission at all is visible to everyone: unlike the admin
+   * menu, the booking UI has no coarse admin/spaceadmin gate to fall back
+   * to. This is presentation only - the server independently filters the
+   * same list before it ever reaches the client.
+   */
+  static canSeeBookingUIIntegration = (item: any): boolean => {
+    if (item.requiredPermissionsAny && item.requiredPermissionsAny.length) {
+      const level = item.requiredLevel ?? PermissionLevel.Admin;
+      return item.requiredPermissionsAny.some((p: string) =>
+        RuntimeConfig.hasPermission(p, level),
+      );
+    }
+    if (item.requiredPermission) {
+      return RuntimeConfig.hasPermission(
+        item.requiredPermission,
+        item.requiredLevel ?? PermissionLevel.Admin,
+      );
+    }
+    return true;
+  };
+
   static EMBEDDED: boolean = false;
   static INFOS: RuntimeUserInfos;
 
@@ -157,6 +182,7 @@ export default class RuntimeConfig {
       permissions: {},
       pluginMenuItems: [],
       pluginWelcomeScreens: [],
+      bookingUIIntegrations: [],
       featureGroups: false,
       featureAuthProviders: false,
       featureKioskMode: false,
@@ -254,6 +280,10 @@ export default class RuntimeConfig {
           : [];
       if (s.name === "_sys_admin_welcome_screens")
         RuntimeConfig.INFOS.pluginWelcomeScreens = s.value
+          ? JSON.parse(s.value)
+          : [];
+      if (s.name === "_sys_booking_ui_integrations")
+        RuntimeConfig.INFOS.bookingUIIntegrations = s.value
           ? JSON.parse(s.value)
           : [];
       if (s.name === "feature_groups")

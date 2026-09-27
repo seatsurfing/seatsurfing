@@ -1,4 +1,5 @@
 import React from "react";
+import dynamic from "next/dynamic";
 import { Navbar, Nav, Container, NavLink } from "react-bootstrap";
 import RuntimeConfig from "./RuntimeConfig";
 import {
@@ -8,6 +9,7 @@ import {
   User as IconUser,
   Heart as IconBuddies,
   Shield as IconAdmin,
+  Grid as IconIntegration,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import withReadyRouter from "./withReadyRouter";
@@ -26,9 +28,13 @@ interface State {
 interface Props {
   router: NextRouter;
   t: TranslationFunc;
+  activeIntegrationId?: string | null;
+  onToggleIntegration?: (id: string) => void;
 }
 
 class NavBar extends React.Component<Props, State> {
+  dynamicIcons: Map<string, any> = new Map();
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -93,6 +99,38 @@ class NavBar extends React.Component<Props, State> {
       );
     }
 
+    const bookingUIIntegrationItems = RuntimeConfig.INFOS.bookingUIIntegrations
+      .filter((item) => RuntimeConfig.canSeeBookingUIIntegration(item))
+      .map((item) => {
+        let PluginIcon = this.dynamicIcons.get(item.icon);
+        if (!PluginIcon) {
+          PluginIcon = item.icon
+            ? dynamic(
+                () =>
+                  import("react-feather/dist/icons/" + item.icon.toLowerCase()),
+                { ssr: true },
+              )
+            : IconIntegration;
+          this.dynamicIcons.set(item.icon, PluginIcon);
+        }
+        const active = this.props.activeIntegrationId === item.id;
+        return (
+          <Nav.Link
+            key={"integration-" + item.id}
+            active={active}
+            onClick={() => this.props.onToggleIntegration?.(item.id)}
+          >
+            {RuntimeConfig.EMBEDDED ? (
+              <PluginIcon className="feather feather-lg" />
+            ) : (
+              <>
+                <PluginIcon className="feather" /> {item.title}
+              </>
+            )}
+          </Nav.Link>
+        );
+      });
+
     collapsable = (
       <>
         <Nav activeKey={this.props.router.pathname}>
@@ -127,6 +165,7 @@ class NavBar extends React.Component<Props, State> {
             )}
           </Nav.Link>
           {adminButton}
+          {bookingUIIntegrationItems}
         </Nav>
         <Nav className="ms-auto">
           <Nav.Link as="span" className="icon-link d-none d-xl-flex pe-none">

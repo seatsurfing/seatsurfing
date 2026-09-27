@@ -23,6 +23,7 @@ service SeatsurfingPluginService {
   rpc GetUnauthorizedRoutes(seatsurfing.plugin.v1.Empty) returns (StringListReply);
   rpc RunSchemaUpdates(seatsurfing.plugin.v1.Empty) returns (seatsurfing.plugin.v1.Empty);
   rpc GetAdminUIMenuItems(seatsurfing.plugin.v1.Empty) returns (AdminUIMenuItemsReply);
+  rpc GetBookingUIIntegrations(seatsurfing.plugin.v1.Empty) returns (BookingUIIntegrationsReply);
   // Permissions this plugin contributes to the role editor. A plugin that
   // does not implement it declares none, and its menu items fall back to the
   // coarse visibility below.
@@ -81,6 +82,32 @@ message AdminUIMenuItem {
   // non-empty, for a plugin whose single UI surface spans several
   // independently-grantable permissions.
   repeated string required_permissions_any = 9;
+}
+
+message BookingUIIntegration {
+  string id = 1;
+  string title = 2;
+  // source is the URL of the JS module that registers the integration's UI
+  // as the custom element named by tag_name.
+  string source = 3;
+  string icon = 4;
+  // tag_name is the custom element tag to mount for this integration's panel
+  // once the JS module at source has been loaded.
+  string tag_name = 5;
+  // Desired panel width in pixels. Zero means "use the host default".
+  int32 width = 6;
+  // The permission a user must hold to see this item, and the level at
+  // which. Empty means visible to every authenticated user.
+  string required_permission = 7;
+  int32 required_level = 8;
+  // Alternative permissions, any one of which (at required_level) is enough
+  // to see this item. Takes precedence over required_permission when
+  // non-empty.
+  repeated string required_permissions_any = 9;
+}
+
+message BookingUIIntegrationsReply {
+  repeated BookingUIIntegration items = 1;
 }
 
 message PermissionDefinition {
