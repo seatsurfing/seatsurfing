@@ -117,8 +117,8 @@ type BookingUIIntegration struct {
 }
 
 // PluginEmbed custom elements mounted for a BookingUIIntegration (and for
-// AdminUIMenuItem/AdminWelcomeScreen) may dispatch two DOM CustomEvents that
-// the host listens for:
+// AdminUIMenuItem/AdminWelcomeScreen) may dispatch three DOM CustomEvents
+// that the host listens for:
 //
 //   - "plugin-token-expired": the element's access token was rejected by the
 //     backend. The host refreshes it (reusing the same refresh-token flow and
@@ -129,6 +129,10 @@ type BookingUIIntegration struct {
 //     the integration (e.g. a chat assistant created or cancelled a
 //     booking). The booking UI reloads the current search results in
 //     response, keeping the selected location, date and view.
+//   - "plugin-close": the plugin has its own close control (e.g. a chat
+//     assistant's close button) and wants the host to close the panel it's
+//     embedded in. For a BookingUIIntegration this is the same as clicking
+//     the integration's own nav item again.
 //
 // The host also proactively pushes a refreshed access token to every mounted
 // element whenever it refreshes its own (see ui/src/util/Ajax.ts and

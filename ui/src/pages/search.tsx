@@ -274,6 +274,13 @@ class Search extends React.Component<Props, State> {
     );
   };
 
+  // Same as clicking the active nav item again, but driven by the plugin's
+  // own close control (e.g. a chat assistant's close button) via
+  // PluginEmbed's onClose.
+  closeIntegration = () => {
+    this.setState({ activeIntegrationId: null }, () => this.centerMap());
+  };
+
   getActiveBookingUIIntegration = (): any | null => {
     if (!this.state.activeIntegrationId) {
       return null;
@@ -2146,6 +2153,7 @@ class Search extends React.Component<Props, State> {
               tagName={activeIntegration.tagName}
               style={{ width: "100%", height: "100%" }}
               onDataChanged={this.refreshPage}
+              onClose={this.closeIntegration}
             />
           </div>
         );

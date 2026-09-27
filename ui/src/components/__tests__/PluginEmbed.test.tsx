@@ -219,4 +219,26 @@ describe("PluginEmbed", () => {
 
     expect(onDataChanged).toHaveBeenCalledTimes(1);
   });
+
+  it("forwards plugin-close to onClose", async () => {
+    const src = "/plugin-g.js";
+    const onClose = vi.fn();
+    const { div } = renderIntoDiv(
+      <PluginEmbed
+        id="test-g"
+        src={src}
+        tagName="plugin-test-el"
+        onClose={onClose}
+      />,
+    );
+    resolvePendingScript(src);
+    await flush();
+
+    const el = div.querySelector("plugin-test-el") as any;
+    act(() => {
+      el.dispatchEvent(new CustomEvent("plugin-close"));
+    });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

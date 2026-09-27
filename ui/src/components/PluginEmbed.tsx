@@ -12,6 +12,10 @@ interface Props {
   // booking data changed as a side effect of using the integration (e.g. a
   // chat assistant created or cancelled a booking).
   onDataChanged?: () => void;
+  // Called when the mounted element dispatches "plugin-close", i.e. the
+  // plugin has its own close control (e.g. a chat assistant's close
+  // button) and wants the host to close the panel it's embedded in.
+  onClose?: () => void;
 }
 
 // Plugin JS modules load asynchronously (<script type="module">), so the
@@ -120,6 +124,10 @@ export default class PluginEmbed extends React.Component<Props, State> {
     this.props.onDataChanged?.();
   };
 
+  private handleClose = () => {
+    this.props.onClose?.();
+  };
+
   // Pull side of keeping the mounted element's access token fresh: the
   // element dispatches this when the backend rejects its current token. This
   // reuses the same refresh-token flow (and mutex) as the host's own
@@ -170,6 +178,7 @@ export default class PluginEmbed extends React.Component<Props, State> {
     );
     el.removeEventListener("plugin-data-changed", this.handleDataChanged);
     el.removeEventListener("plugin-token-expired", this.handleTokenExpired);
+    el.removeEventListener("plugin-close", this.handleClose);
   }
 
   private attachElement = (el: HTMLElement | null) => {
@@ -191,6 +200,7 @@ export default class PluginEmbed extends React.Component<Props, State> {
     );
     el.addEventListener("plugin-data-changed", this.handleDataChanged);
     el.addEventListener("plugin-token-expired", this.handleTokenExpired);
+    el.addEventListener("plugin-close", this.handleClose);
   };
 
   render() {
