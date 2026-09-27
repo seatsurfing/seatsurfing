@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.130.0](https://github.com/seatsurfing/seatsurfing/compare/v1.129.0...v1.130.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **admin-ui:** add option to hide locations from not allowed users ([#2708](https://github.com/seatsurfing/seatsurfing/issues/2708)) ([927b4e8](https://github.com/seatsurfing/seatsurfing/commit/927b4e86dc83057e5f7cb8aecc90d37eb9cad71e))
+* **server:** expose user-scoped booking operations to plugins via host API ([#2703](https://github.com/seatsurfing/seatsurfing/issues/2703)) ([4427d9e](https://github.com/seatsurfing/seatsurfing/commit/4427d9ef1bcc57b4aaf5b6f69e62b8aaf2082d18))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** add language and theme switch to public booking page ([#2707](https://github.com/seatsurfing/seatsurfing/issues/2707)) ([85700ea](https://github.com/seatsurfing/seatsurfing/commit/85700ea53890d7223833b334dcec2a00c6c82706))
+* **server:** allow back-to-back bookings of the same space ([#2710](https://github.com/seatsurfing/seatsurfing/issues/2710)) ([1806fd9](https://github.com/seatsurfing/seatsurfing/commit/1806fd94dcdc8e1c804f674f1c4c0ed62e12b6a6))
+
 ## [1.129.0](https://github.com/seatsurfing/seatsurfing/compare/v1.128.3...v1.129.0) (2026-09-26)
 
 
