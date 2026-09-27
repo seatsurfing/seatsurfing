@@ -118,8 +118,19 @@ class NavBar extends React.Component<Props, State> {
         return (
           <Nav.Link
             key={"integration-" + item.id}
+            as={Link}
+            href={"/search?openIntegration=" + encodeURIComponent(item.id)}
             active={active}
-            onClick={() => this.props.onToggleIntegration?.(item.id)}
+            onClick={(e: React.MouseEvent) => {
+              // Already on the booking page: toggle the panel in place
+              // instead of navigating (which would just reload it).
+              if (this.props.onToggleIntegration) {
+                e.preventDefault();
+                this.props.onToggleIntegration(item.id);
+              }
+              // Otherwise, let the Link navigate to /search, which opens
+              // the integration itself once it has mounted there.
+            }}
           >
             {RuntimeConfig.EMBEDDED ? (
               <PluginIcon className="feather feather-lg" />

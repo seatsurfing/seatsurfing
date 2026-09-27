@@ -374,6 +374,31 @@ class Search extends React.Component<Props, State> {
       return;
     }
     this.loadItems();
+    this.openIntegrationFromQuery();
+  };
+
+  // Lets NavBar's booking UI integration nav items work from any page: they
+  // navigate to /search?openIntegration=<id>, and this opens the panel once
+  // the page has mounted here, then strips the one-shot param from the URL.
+  openIntegrationFromQuery = () => {
+    const id = this.props.router.query["openIntegration"];
+    if (typeof id !== "string" || !id) {
+      return;
+    }
+    const integration = RuntimeConfig.INFOS.bookingUIIntegrations.find(
+      (item) =>
+        item.id === id && RuntimeConfig.canSeeBookingUIIntegration(item),
+    );
+    if (!integration) {
+      return;
+    }
+    this.setState({ activeIntegrationId: id });
+    const { openIntegration, ...query } = this.props.router.query;
+    this.props.router.replace(
+      { pathname: this.props.router.pathname, query },
+      undefined,
+      { shallow: true },
+    );
   };
 
   componentWillUnmount = () => {
