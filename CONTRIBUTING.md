@@ -37,7 +37,7 @@
    ./run.sh
    ```
 
-   _Optionally: Add a custom `.env` file in the folder `./server` to set additional environment variables._
+   _Optionally: Add a custom `.env` file in the folder `./server` to set additional environment variables. To start with a fresh database, add use --clear-db switch._
 
 You should now be able to access the UI at http://localhost:3000/ui/. To login, use the default admin login (user `admin@seatsurfing.local` and password `Sea!surf1ng`). To check notification e-mails sent by the system open the MailHog interface at http://localhost:8025/.
 

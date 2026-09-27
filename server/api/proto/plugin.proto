@@ -140,6 +140,10 @@ message HttpRequest {
   map<string, HeaderValues> headers = 4;
   bytes body = 5;
   string user_id = 6;
+  // host is the Host the request was sent to (http.Request.Host), which Go
+  // does not keep in the header map. remote_addr is http.Request.RemoteAddr.
+  string host = 7;
+  string remote_addr = 8;
 }
 
 message HttpResponse {

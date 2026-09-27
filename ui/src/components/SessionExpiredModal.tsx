@@ -2,6 +2,7 @@ import React from "react";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import { Button, Modal } from "react-bootstrap";
 import Router, { NextRouter } from "next/router";
+import RuntimeConfig from "./RuntimeConfig";
 
 interface Props {
   t: TranslationFunc;
@@ -23,16 +24,19 @@ class SessionExpiredModal extends React.Component<Props> {
         <Modal.Body>
           <p>{this.props.t("sessionExpiredBody")}</p>
         </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="primary"
-            onClick={() => {
-              this.toLogin(Router);
-            }}
-          >
-            {this.props.t("sessionExpiredLogin")}
-          </Button>
-        </Modal.Footer>
+        {/* The login page is not framable, so there is nothing to link to when embedded. */}
+        {!RuntimeConfig.EMBEDDED && (
+          <Modal.Footer>
+            <Button
+              variant="primary"
+              onClick={() => {
+                this.toLogin(Router);
+              }}
+            >
+              {this.props.t("sessionExpiredLogin")}
+            </Button>
+          </Modal.Footer>
+        )}
       </Modal>
     );
   }

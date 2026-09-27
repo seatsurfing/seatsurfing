@@ -69,8 +69,22 @@ export default class Location extends Entity {
     return "/location/";
   }
 
-  getMapUrl(): string {
-    return "/location/" + this.id + "/map";
+  getMapUrl(bookingContext: boolean = false): string {
+    return (
+      "/location/" +
+      this.id +
+      "/map" +
+      Location.bookingContextQuery(bookingContext)
+    );
+  }
+
+  /**
+   * Returns the query string to append when requesting locations from the
+   * booking frontend. In this context, locations hidden for disallowed bookers
+   * are filtered for users with administrative permissions as well.
+   */
+  static bookingContextQuery(bookingContext: boolean): string {
+    return bookingContext ? "?context=booking" : "";
   }
 
   async save(): Promise<Location> {
@@ -113,18 +127,23 @@ export default class Location extends Entity {
     );
   }
 
-  async getAttributes(): Promise<SpaceAttributeValue[]> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/attribute").then(
-      (result) => {
-        const list: SpaceAttributeValue[] = [];
-        (result.json as []).forEach((item) => {
-          let e: SpaceAttributeValue = new SpaceAttributeValue();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
-    );
+  async getAttributes(
+    bookingContext: boolean = false,
+  ): Promise<SpaceAttributeValue[]> {
+    return Ajax.get(
+      this.getBackendUrl() +
+        this.id +
+        "/attribute" +
+        Location.bookingContextQuery(bookingContext),
+    ).then((result) => {
+      const list: SpaceAttributeValue[] = [];
+      (result.json as []).forEach((item) => {
+        let e: SpaceAttributeValue = new SpaceAttributeValue();
+        e.deserialize(item);
+        list.push(e);
+      });
+      return list;
+    });
   }
 
   async setAttribute(attributeId: string, value: string): Promise<void> {
@@ -143,16 +162,23 @@ export default class Location extends Entity {
     ).then(() => undefined);
   }
 
-  static async get(id: string): Promise<Location> {
-    return Ajax.get("/location/" + id).then((result) => {
+  static async get(
+    id: string,
+    bookingContext: boolean = false,
+  ): Promise<Location> {
+    return Ajax.get(
+      "/location/" + id + Location.bookingContextQuery(bookingContext),
+    ).then((result) => {
       let e: Location = new Location();
       e.deserialize(result.json);
       return e;
     });
   }
 
-  static async list(): Promise<Location[]> {
-    return Ajax.get("/location/").then((result) => {
+  static async list(bookingContext: boolean = false): Promise<Location[]> {
+    return Ajax.get(
+      "/location/" + Location.bookingContextQuery(bookingContext),
+    ).then((result) => {
       let list: Location[] = [];
       (result.json as []).forEach((item) => {
         let e: Location = new Location();

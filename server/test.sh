@@ -16,6 +16,10 @@ cd repository/test
 go test -v -cover
 cd ../..
 
+cd service/test
+go test -v -cover
+cd ../..
+
 cd router/test
 go test -v -cover
 cd ../..

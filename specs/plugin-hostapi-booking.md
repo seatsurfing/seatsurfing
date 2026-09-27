@@ -1,0 +1,99 @@
+# Feature Spec: User-Scoped Booking Operations in the Plugin Host API
+
+## Overview
+
+Plugins run as separate processes and talk to the core through the gRPC host API (`server/api/hostapi.go`). Until now, that API offered only single-entity lookups for bookings, spaces and locations. A plugin could not search for free spaces, create a booking or list a user's bookings without re-implementing the booking rules.
+
+This spec adds six **user-scoped** host API methods. Each method acts as a given user and runs through the same code path as the matching REST endpoint. A plugin acting for a user therefore gets exactly that user's permissions and booking restrictions. This lets plugins offer booking functionality on behalf of users without duplicating the booking rules.
+
+It also forwards the request's `Host` and `RemoteAddr` to plugins.
+
+## Goals
+
+- Plugins can search locations and spaces, create and delete bookings and list upcoming bookings on behalf of a user.
+- All booking rules keep a single implementation, shared by the REST API and the host API:
+  - maximum bookings, advance days and duration limits
+  - allowed booker groups
+  - bookable weekdays
+  - conflicts
+  - approval
+  - disabled spaces and locations
+  - timezone handling
+  - follow-up actions: mails, CalDAV and plugin hooks
+- Plugins can tell which host (organization domain) a forwarded HTTP request was sent to.
+
+## Non-Goals
+
+- Booking on behalf of another user through the host API. `POST /booking/` with `userEmail` stays REST-only.
+- Updating bookings through the host API.
+
+## Service Layer (`server/service`)
+
+The business and validation logic moves out of the REST handlers into a new service layer between `router` and `repository` (see "Layered Architecture" in `AGENTS.md`). The REST handlers and the host API both call these services; the host API does not call router functions.
+
+| Service           | Functions                                                                                                                                                                                                                                                      | Used by                                                                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `BookingService`  | `CreateBooking`, `PrepareCreate` / `CommitCreate`, `DeleteBooking`, `CheckBooking`, `GetUpcomingBookingsForUser`, `IsValidBookingDuration`, `IsValidBookingAdvance`, `IsValidMinHoursBooking`, `IsValidMaxUpcomingBookings`, `IsValidBookingHoursBeforeDelete` | `POST /booking/`, `PUT /booking/{id}`, `DELETE /booking/{id}`, `GET /booking/`, precheck, recurring and public bookings |
+| `SpaceService`    | `GetAvailabilityForUser`, `RequiresApproval`, `IsUserAllowedToBookSpace`, `IsApprovalRequired`                                                                                                                                                                 | `GET /location/{id}/space/availability`, recurring bookings                                                             |
+| `LocationService` | `SearchLocationsForUser`, `IsLocationWeekdayBookable`, `IsUserAllowedToBookLocation`, `WeekdaysFromString`                                                                                                                                                     | `POST /location/search`, booking checks, public bookings                                                                |
+
+Also in `service`:
+
+- **Permission evaluation** (`GetEffectivePermissions`, `HasPermission`, `HasAnyPermission`, `CanAccessOrg`). The router's functions of the same names delegate to them.
+- **Attribute search** (`SearchAttribute`, `MatchesSearchAttributes`, `ValidateSearchAttributes`). The router keeps a type alias and a wrapper.
+- **Booking error codes** (`BookingCode*`). The router's `ResponseCodeBooking*` values refer to them.
+
+Services return domain values and a typed `BookingError` (kind plus error code), never HTTP responses. The router maps them to the same responses as before, so the REST API is unchanged. PrepareCreate/CommitCreate let the router book on behalf of another user (`userEmail`) between the two steps, in the same order as before. Notifications, CalDAV and plugin hooks after a booking is created or deleted are registered by the router through `BookingService.SetOnCreated` and `SetOnDeleted`, so they run for bookings created or deleted through any entry point.
+
+## Host API Additions
+
+| Method                                                                                                                     | Behaves like                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `SearchLocationsForUser(userID, enter, leave, []SearchAttributeFilter) ([]*LocationInfo, error)`                           | `POST /location/search`, plus location attribute values and an `Allowed` flag for the user |
+| `GetSpaceAvailabilityForUser(userID, locationID, enter, leave, []SearchAttributeFilter) ([]*SpaceAvailabilityInfo, error)` | `GET /location/{id}/space/availability`, without other users' bookings                     |
+| `GetSpaceAttributesForUser(userID) ([]*SpaceAttributeDefinition, error)`                                                   | `GET /space-attribute/`                                                                    |
+| `CreateBookingForUser(userID, spaceID, enter, leave, subject) (*BookingCreateResult, error)`                               | `POST /booking/` for the user themselves                                                   |
+| `GetUpcomingBookingsForUser(userID) ([]*BookingDetails, error)`                                                            | `GET /booking/`                                                                            |
+| `DeleteBookingForUser(userID, bookingID) (*BookingDeleteResult, error)`                                                    | `DELETE /booking/{id}`                                                                     |
+
+Rules:
+
+- **Active users only.** The user must exist and not be disabled, the same requirement `VerifyAuthMiddleware` applies to REST calls. Otherwise the method returns an error.
+- **Own organization only.** Locations and spaces of other organizations are rejected: an error for availability, and `403` in `BookingCreateResult` for booking creation.
+- **Validation failures are results, not errors.** When `CreateBookingForUser` or `DeleteBookingForUser` rejects a request, it returns `StatusCode` and `ErrorCode` in its result (for example `409`/`1001` for a slot conflict, or `403`/`1008` for a deletion too close to the start) and a nil error. A successful deletion reports `204`. The error return is reserved for transport failures and unknown or disabled users.
+- **Times are wall-clock times.** Their timezone is replaced by the location's, as the REST API does. Callers build them in UTC, which is what survives the protobuf `Timestamp` round trip.
+- **Filters are validated** with the same rules as the REST request bodies: valid attribute IDs and comparators only.
+
+The new wire messages are additive (`hostapi.proto`), so existing plugins remain compatible.
+
+## Forwarded Request Metadata
+
+`api.PluginHTTPRequest` gains two fields, `Host` and `RemoteAddr`, filled from `http.Request.Host` and `http.Request.RemoteAddr` (`plugin.proto` `HttpRequest` fields 7 and 8). Go does not keep `Host` in the header map, so plugins had no way to see it before.
+
+## Tests
+
+- **`server/app/test/hostapi-booking_test.go`** calls the real host API implementation (`app.NewHostAPI()`) and covers:
+  - creating, listing and deleting bookings
+  - slot conflicts
+  - the maximum-bookings limit
+  - invalid durations
+  - disabled spaces
+  - allowed booker groups for spaces and locations
+  - approval
+  - availability and attribute filters
+  - invalid comparators
+  - location search, including `numFreeSpaces`
+  - other organizations
+  - disabled and unknown users
+- **`server/api/hostapi_booking_test.go`**: protobuf round-trip tests for the new messages.
+- **`server/service/test/`**: tests of the services themselves:
+  - create, conflicts, invalid input, other organizations
+  - delete, including other users, admins, ended bookings and the minimum time before the start
+  - booking for another user through prepare/commit
+  - disabled spaces
+  - `CheckBooking` error codes
+  - redaction of other bookers in availability
+  - approval
+  - location search and weekday rules
+  - search attribute validation
+- **Regression:** the existing booking, space and location router tests cover the refactored REST handlers.

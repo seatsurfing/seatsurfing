@@ -254,6 +254,12 @@ func (a *App) registerPluginOnConnect(inst *PluginInstance) {
 // It wraps the real repository singletons and utility functions.
 type hostAPIImpl struct{}
 
+// NewHostAPI returns the host's in-process api.HostAPI implementation, the
+// same one served to plugins over gRPC. Used by tests that call it directly.
+func NewHostAPI() api.HostAPI {
+	return &hostAPIImpl{}
+}
+
 func (h *hostAPIImpl) GetSettingsRepository() api.SettingsRepository {
 	return GetSettingsRepository()
 }
@@ -355,12 +361,14 @@ func (a *App) forwardToPlugin(inst *PluginInstance, w http.ResponseWriter, r *ht
 	}
 
 	req := api.PluginHTTPRequest{
-		Method:   r.Method,
-		Path:     r.URL.Path,
-		RawQuery: r.URL.RawQuery,
-		Headers:  map[string][]string(r.Header),
-		Body:     body,
-		UserID:   userID,
+		Method:     r.Method,
+		Path:       r.URL.Path,
+		RawQuery:   r.URL.RawQuery,
+		Headers:    map[string][]string(r.Header),
+		Body:       body,
+		UserID:     userID,
+		Host:       r.Host,
+		RemoteAddr: r.RemoteAddr,
 	}
 
 	resp := plg.HandleHTTPRequest(req)
@@ -491,7 +499,7 @@ func (a *App) StartHostAPIGRPCServer() {
 			PermitWithoutStream: true,
 		}),
 	)
-	hostapipb.RegisterHostAPIServiceServer(a.hostAPIGRPCServer, api.NewHostAPIGRPCServer(&hostAPIImpl{}))
+	hostapipb.RegisterHostAPIServiceServer(a.hostAPIGRPCServer, api.NewHostAPIGRPCServer(NewHostAPI()))
 	go func() {
 		log.Println("HostAPI gRPC server listening on", GetConfig().HostAPIListenAddr)
 		if err := a.hostAPIGRPCServer.Serve(lis); err != nil {

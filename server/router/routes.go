@@ -21,6 +21,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
@@ -39,19 +40,19 @@ var (
 )
 
 var (
-	ResponseCodeBookingSlotConflict              = 1001
-	ResponseCodeBookingLocationMaxConcurrent     = 1002
-	ResponseCodeBookingTooManyUpcomingBookings   = 1003
-	ResponseCodeBookingTooManyDaysInAdvance      = 1004
-	ResponseCodeBookingInvalidBookingDuration    = 1005
-	ResponseCodeBookingMaxConcurrentForUser      = 1006
-	ResponseCodeBookingInvalidMinBookingDuration = 1007
-	ResponseCodeBookingMaxHoursBeforeDelete      = 1008
-	ResponseCodeBookingNotAllowedBooker          = 1009
-	ResponseCodeBookingSubjectRequired           = 1010
-	ResponseCodeBookingInPast                    = 1011
-	ResponseCodeBookingInvalidSubject            = 1012
-	ResponseCodeBookingInvalidWeekday            = 1013
+	ResponseCodeBookingSlotConflict              = service.BookingCodeSlotConflict
+	ResponseCodeBookingLocationMaxConcurrent     = service.BookingCodeLocationMaxConcurrent
+	ResponseCodeBookingTooManyUpcomingBookings   = service.BookingCodeTooManyUpcomingBookings
+	ResponseCodeBookingTooManyDaysInAdvance      = service.BookingCodeTooManyDaysInAdvance
+	ResponseCodeBookingInvalidBookingDuration    = service.BookingCodeInvalidBookingDuration
+	ResponseCodeBookingMaxConcurrentForUser      = service.BookingCodeMaxConcurrentForUser
+	ResponseCodeBookingInvalidMinBookingDuration = service.BookingCodeInvalidMinBookingDuration
+	ResponseCodeBookingMaxHoursBeforeDelete      = service.BookingCodeMaxHoursBeforeDelete
+	ResponseCodeBookingNotAllowedBooker          = service.BookingCodeNotAllowedBooker
+	ResponseCodeBookingSubjectRequired           = service.BookingCodeSubjectRequired
+	ResponseCodeBookingInPast                    = service.BookingCodeInPast
+	ResponseCodeBookingInvalidSubject            = service.BookingCodeInvalidSubject
+	ResponseCodeBookingInvalidWeekday            = service.BookingCodeInvalidWeekday
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
@@ -438,9 +439,40 @@ func SetCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UI pages that must never be rendered inside a third-party frame (clickjacking),
+// including the complete admin area.
+// All other UI pages stay embeddable for the MS Teams and Confluence integrations,
+// which load /ui/login/success/<id>/ and the booking UI in an iframe, so only the
+// exact /ui/login/ page (form login and IdP selection) is protected, not its children.
+// /ui/ only redirects to /ui/login/ and is never loaded by the integrations.
+// Keep in sync with ui/src/util/FrameProtection.ts.
+var nonFramableUIPaths = []string{"/ui", "/ui/login"}
+var nonFramableUIPathPrefixes = []string{"/ui/resetpw", "/ui/setpw", "/ui/book", "/ui/admin"}
+
+func IsNonFramableUIPath(p string) bool {
+	p = strings.TrimSuffix(p, "/")
+	if slices.Contains(nonFramableUIPaths, p) {
+		return true
+	}
+	for _, prefix := range nonFramableUIPathPrefixes {
+		if p == prefix || strings.HasPrefix(p, prefix+"/") {
+			return true
+		}
+	}
+	return false
+}
+
 func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
+	csp := []string{}
 	if strings.ToLower(config.GetConfig().PublicScheme) == "https" {
-		w.Header().Set("Content-Security-Policy", "upgrade-insecure-requests")
+		csp = append(csp, "upgrade-insecure-requests")
+	}
+	if IsNonFramableUIPath(r.URL.Path) {
+		csp = append(csp, "frame-ancestors 'self'")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+	}
+	if len(csp) > 0 {
+		w.Header().Set("Content-Security-Policy", strings.Join(csp, "; "))
 	}
 	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(self), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -488,45 +520,9 @@ func GetRequestUser(r *http.Request) *User {
 	return user
 }
 
-// CanAccessOrg reports organization membership. It is not a privilege check:
-// every authenticated user has baseline access to their own organization.
+// CanAccessOrg reports organization membership. See service.CanAccessOrg.
 func CanAccessOrg(user *User, organizationID string) bool {
-	return user.OrganizationID == organizationID
-}
-
-// IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)
-// falls on one of the location's bookable weekdays, honoring the org's
-// no-admin-restrictions setting for those who manage other people's bookings.
-func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time.Time) bool {
-	if location.BookableDays == "" {
-		return true
-	}
-	if HasPermission(user, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
-		noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
-		if noAdminRestrictions {
-			return true
-		}
-	}
-	allowedDays := map[time.Weekday]bool{}
-	for _, s := range strings.Split(location.BookableDays, ",") {
-		n, err := strconv.Atoi(strings.TrimSpace(s))
-		if err != nil {
-			continue
-		}
-		allowedDays[time.Weekday(n)] = true
-	}
-	day := time.Date(enter.Year(), enter.Month(), enter.Day(), 0, 0, 0, 0, enter.Location())
-	// leave is exclusive: the last day to check is the calendar day just before leave,
-	// so a leave of exactly midnight does not pull in the following day.
-	lastInstant := leave.Add(-time.Nanosecond)
-	lastDay := time.Date(lastInstant.Year(), lastInstant.Month(), lastInstant.Day(), 0, 0, 0, 0, lastInstant.Location())
-	for !day.After(lastDay) {
-		if !allowedDays[day.Weekday()] {
-			return false
-		}
-		day = day.AddDate(0, 0, 1)
-	}
-	return true
+	return service.CanAccessOrg(user, organizationID)
 }
 
 func IsTotpEnforcedForUser(user *User) bool {

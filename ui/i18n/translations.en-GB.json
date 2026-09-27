@@ -22,6 +22,9 @@
   "allowBookingNonExistUsers": "Allow bookings for non-existing users (create on booking, admins only)",
   "allowRecurringBookings": "Allow recurring bookings",
   "analysis": "Analysis",
+  "frameBlockedBody": "For security reasons, this page cannot be displayed inside another application. Please open it in a new browser window or reload the app to sign in again.",
+  "frameBlockedTitle": "This page cannot be displayed here.",
+  "openInNewWindow": "Open in new window",
   "public": "Public",
   "publicBooking": "Public booking",
   "publicBookingAvailable": "Allow public bookings",
@@ -39,6 +42,11 @@
   "publicBookingNotEditableHint": "This is a public booking and cannot be edited.",
   "publicBookingRequestError": "Something went wrong. Please check your input and try again.",
   "publicBookingRequestSubmitted": "Thank you! Please check your emails to confirm your booking request.",
+  "publicBookingSelectOnMap": "Click on a space in the floor plan to select it.",
+  "publicBookingNoMap": "No floor plan is available for this area.",
+  "publicBookingShowFloorplan": "Floor plan",
+  "publicBookingShowMap": "Show floor plan",
+  "publicBookingShowMapHint": "Visitors can select a space directly on the floor plan of the respective area. Only spaces with public booking enabled are shown.",
   "publicBookingSpaceEnabledHint": "Visitors without an account can request a booking for this space on the public booking page. Every request requires approval.",
   "publicBookingSpaceRequiresApproversHint": "Add at least one approver group above to allow public bookings for this space.",
   "publicBookingSubmit": "Request booking",
@@ -617,5 +625,6 @@
   "workingHoursHintOnlyDaily": "Bookings are only possible on a daily basis.",
   "yes": "yes",
   "yesterday": "Yesterday",
-  "yourDomainPlaceholder": "seatsurfing.your-domain.com"
+  "yourDomainPlaceholder": "seatsurfing.your-domain.com",
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
 }

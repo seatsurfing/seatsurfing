@@ -7,6 +7,11 @@ type PluginHTTPRequest struct {
 	Headers  map[string][]string
 	Body     []byte
 	UserID   string
+	// Host is the Host the request was sent to (http.Request.Host); Go does
+	// not keep it in Headers.
+	Host string
+	// RemoteAddr is the host-side http.Request.RemoteAddr.
+	RemoteAddr string
 }
 
 type PluginHTTPResponse struct {
