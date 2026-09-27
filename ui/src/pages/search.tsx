@@ -1947,9 +1947,8 @@ class Search extends React.Component<Props, State> {
             this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
               ? 0
               : `calc(100% - ${integrationPanelWidth}px)`,
-          overflow: "hidden",
         }
-      : {};
+      : { width: "100%" };
 
     let listOrMap: React.JSX.Element;
     if (this.locations.length === 0 || !this.state.locationId) {
@@ -2000,7 +1999,7 @@ class Search extends React.Component<Props, State> {
       });
       listOrMap = (
         <div
-          className="h-100 w-100 position-absolute bg-body-secondary"
+          className="h-100 position-absolute bg-body-secondary"
           style={{ position: "relative", ...contentAreaStyle }}
         >
           <TransformWrapper

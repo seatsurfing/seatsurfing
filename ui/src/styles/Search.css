@@ -228,7 +228,7 @@ form#filter-locations-form .row {
 
 .booking-ui-integration-panel {
   position: fixed;
-  top: 70px;
+  top: 48px;
   right: 0;
   bottom: 0;
   z-index: 90;
