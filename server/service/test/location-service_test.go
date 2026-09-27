@@ -69,3 +69,37 @@ func TestValidateSearchAttributes(t *testing.T) {
 	CheckTestBool(t, true, ValidateSearchAttributes([]SearchAttribute{{Comparator: "like"}}) != nil)
 	CheckTestBool(t, true, ValidateSearchAttributes([]SearchAttribute{{Value: CreateTestString(257)}}) != nil)
 }
+
+func TestLocationServiceHideDisallowedSetting(t *testing.T) {
+	org, user, _, _ := setupServiceTest(t)
+	restricted := &Location{OrganizationID: org.ID, Name: "Restricted", Enabled: true}
+	GetLocationRepository().Create(restricted)
+	GetLocationRepository().ReplaceAllowedBookers(restricted, []string{CreateTestGroup(org, nil).ID})
+	svc := GetLocationService()
+
+	// Enabled: the restricted location is hidden.
+	GetSettingsRepository().Set(org.ID, SettingHideDisallowedLocations.Name, "1")
+	enabled, err := svc.IsHideDisallowedLocationsEnabled(org.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, true, enabled)
+	visible, err := svc.IsLocationVisibleForUser(user, restricted, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, false, visible)
+
+	// Missing setting: defaults to disabled without an error.
+	GetSettingsRepository().Delete(org.ID, SettingHideDisallowedLocations.Name)
+	enabled, err = svc.IsHideDisallowedLocationsEnabled(org.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, false, enabled)
+	visible, err = svc.IsLocationVisibleForUser(user, restricted, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, true, visible)
+}
