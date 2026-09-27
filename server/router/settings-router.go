@@ -350,7 +350,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
 		name == SettingKioskModeEnabled.Name ||
-		name == SettingPublicBookingShowMap.Name {
+		name == SettingPublicBookingShowMap.Name ||
+		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
 	return false
@@ -386,7 +387,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingKioskSecret.Name ||
 		name == SettingKioskModeEnabled.Name ||
 		name == SettingPublicBookingEnabled.Name ||
-		name == SettingPublicBookingShowMap.Name {
+		name == SettingPublicBookingShowMap.Name ||
+		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
 	return false
@@ -467,6 +469,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingHideStats.Name {
 		return SettingHideStats.Type
+	}
+	if name == SettingHideDisallowedLocations.Name {
+		return SettingHideDisallowedLocations.Type
 	}
 	if name == SettingSubjectDefault.Name {
 		return SettingSubjectDefault.Type

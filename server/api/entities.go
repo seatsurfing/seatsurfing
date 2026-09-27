@@ -323,6 +323,7 @@ var (
 	SettingPublicBookingEnabled           SettingName = SettingName{Name: "public_booking_enabled", Type: SettingTypeBool}
 	SettingFeaturePublicBooking           SettingName = SettingName{Name: "feature_public_booking", Type: SettingTypeBool}
 	SettingPublicBookingShowMap           SettingName = SettingName{Name: "public_booking_show_map", Type: SettingTypeBool}
+	SettingHideDisallowedLocations        SettingName = SettingName{Name: "hide_disallowed_locations", Type: SettingTypeBool}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────

@@ -49,6 +49,7 @@ import UpdateChecker from "@/util/UpdateChecker";
 import Navigation from "@/util/Navigation";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
+import HintTooltip from "@/components/HintTooltip";
 
 interface State {
   allowAnyUser: boolean;
@@ -74,6 +75,7 @@ interface State {
   allowOrgDelete: boolean;
   selectedAuthProvider: string;
   disableBuddies: boolean;
+  hideDisallowedLocations: boolean;
   loading: boolean;
   submitting: boolean;
   showSavedModal: boolean;
@@ -141,6 +143,7 @@ class Settings extends React.Component<Props, State> {
       allowOrgDelete: false,
       selectedAuthProvider: "",
       disableBuddies: false,
+      hideDisallowedLocations: false,
       loading: true,
       submitting: false,
       showSavedModal: false,
@@ -255,6 +258,8 @@ class Settings extends React.Component<Props, State> {
           state.allowBookingNonExistUsers = s.value === "1";
         if (s.name === Organization.PREF_DISABLE_BUDDIES)
           state.disableBuddies = s.value === "1";
+        if (s.name === Organization.PREF_HIDE_DISALLOWED_LOCATIONS)
+          state.hideDisallowedLocations = s.value === "1";
         if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED_ENABLED)
           state.maxHoursPartiallyBookedEnabled = s.value === "1";
         if (s.name === Organization.PREF_MAX_HOURS_PARTIALLY_BOOKED)
@@ -375,6 +380,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_DISABLE_BUDDIES,
         this.state.disableBuddies ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_HIDE_DISALLOWED_LOCATIONS,
+        this.state.hideDisallowedLocations ? "1" : "0",
       ),
       new OrgSettings(
         Organization.PREF_MAX_BOOKINGS_PER_USER,
@@ -910,6 +919,7 @@ class Settings extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="input-customLogoUrl">
               {this.props.t("customLogoUrl")}
+              <HintTooltip hint={this.props.t("customLogoUrlHint")} />
             </Form.Label>
             <Col sm="4">
               <UrlInput
@@ -920,9 +930,6 @@ class Settings extends React.Component<Props, State> {
                   this.setState({ customLogoUrl: e.target.value })
                 }
               />
-              <Form.Text className="text-muted">
-                {this.props.t("customLogoUrlHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1129,6 +1136,7 @@ class Settings extends React.Component<Props, State> {
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="input-maxDaysInAdvance">
               {this.props.t("maxDaysInAdvance")}
+              <HintTooltip hint={this.props.t("maxDaysInAdvanceHint")} />
             </Form.Label>
             <Col sm="4">
               <InputGroup>
@@ -1145,9 +1153,6 @@ class Settings extends React.Component<Props, State> {
                 />
                 <InputGroup.Text>{this.props.t("days")}</InputGroup.Text>
               </InputGroup>
-              <Form.Text className="text-muted">
-                {this.props.t("maxDaysInAdvanceHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1247,6 +1252,19 @@ class Settings extends React.Component<Props, State> {
                 checked={this.state.noAdminRestrictions}
                 onChange={(e: any) =>
                   this.setState({ noAdminRestrictions: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} hidden={!RuntimeConfig.INFOS.featureGroups}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-hideDisallowedLocations"
+                label={this.props.t("hideDisallowedLocations")}
+                checked={this.state.hideDisallowedLocations}
+                onChange={(e: any) =>
+                  this.setState({ hideDisallowedLocations: e.target.checked })
                 }
               />
             </Col>
@@ -1437,7 +1455,14 @@ class Settings extends React.Component<Props, State> {
               <Form.Check
                 type="checkbox"
                 id="check-kioskModeEnabled"
-                label={this.props.t("kioskModeAvailable")}
+                label={
+                  <>
+                    {this.props.t("kioskModeAvailable")}
+                    <HintTooltip
+                      hint={this.props.t("kioskModeAvailableHint")}
+                    />
+                  </>
+                }
                 checked={
                   this.state.kioskModeEnabled &&
                   RuntimeConfig.INFOS.featureKioskMode
@@ -1447,9 +1472,6 @@ class Settings extends React.Component<Props, State> {
                   this.setState({ kioskModeEnabled: e.target.checked })
                 }
               />
-              <Form.Text className="text-muted">
-                {this.props.t("kioskModeAvailableHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1509,7 +1531,14 @@ class Settings extends React.Component<Props, State> {
               <Form.Check
                 type="checkbox"
                 id="check-publicBookingEnabled"
-                label={this.props.t("publicBookingAvailable")}
+                label={
+                  <>
+                    {this.props.t("publicBookingAvailable")}
+                    <HintTooltip
+                      hint={this.props.t("publicBookingAvailableHint")}
+                    />
+                  </>
+                }
                 checked={
                   this.state.publicBookingEnabled &&
                   RuntimeConfig.INFOS.featurePublicBooking
@@ -1519,9 +1548,6 @@ class Settings extends React.Component<Props, State> {
                   this.setState({ publicBookingEnabled: e.target.checked })
                 }
               />
-              <Form.Text className="text-muted">
-                {this.props.t("publicBookingAvailableHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1620,8 +1646,14 @@ class Settings extends React.Component<Props, State> {
                   <Form.Check
                     type="checkbox"
                     id="check-allowAnyUser"
-                    title={this.props.t("allowAnyUserTooltip")}
-                    label={this.props.t("allowAnyUser")}
+                    label={
+                      <>
+                        {this.props.t("allowAnyUser")}
+                        <HintTooltip
+                          hint={this.props.t("allowAnyUserTooltip")}
+                        />
+                      </>
+                    }
                     checked={this.state.allowAnyUser}
                     disabled={this.authProviders.length === 0}
                     onChange={(e: any) =>

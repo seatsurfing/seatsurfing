@@ -621,5 +621,6 @@
   "publicBookingShowMap": "Show floor plan on public booking page",
   "publicBookingShowMapHint": "Visitors can select a space directly on the floor plan of the respective area. Only spaces with public booking enabled are shown.",
   "publicBookingNoMap": "No floor plan is available for this area.",
-  "publicBookingShowFloorplan": "Floor plan"
+  "publicBookingShowFloorplan": "Floor plan",
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
 }

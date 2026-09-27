@@ -28,12 +28,14 @@ func headerValuesFromProto(h map[string]*pluginpb.HeaderValues) map[string][]str
 
 func PluginHTTPRequestToProto(req PluginHTTPRequest) *pluginpb.HttpRequest {
 	return &pluginpb.HttpRequest{
-		Method:   req.Method,
-		Path:     req.Path,
-		RawQuery: req.RawQuery,
-		Headers:  headerValuesToProto(req.Headers),
-		Body:     req.Body,
-		UserId:   req.UserID,
+		Method:     req.Method,
+		Path:       req.Path,
+		RawQuery:   req.RawQuery,
+		Headers:    headerValuesToProto(req.Headers),
+		Body:       req.Body,
+		UserId:     req.UserID,
+		Host:       req.Host,
+		RemoteAddr: req.RemoteAddr,
 	}
 }
 
@@ -42,12 +44,14 @@ func PluginHTTPRequestFromProto(p *pluginpb.HttpRequest) PluginHTTPRequest {
 		return PluginHTTPRequest{}
 	}
 	return PluginHTTPRequest{
-		Method:   p.Method,
-		Path:     p.Path,
-		RawQuery: p.RawQuery,
-		Headers:  headerValuesFromProto(p.Headers),
-		Body:     p.Body,
-		UserID:   p.UserId,
+		Method:     p.Method,
+		Path:       p.Path,
+		RawQuery:   p.RawQuery,
+		Headers:    headerValuesFromProto(p.Headers),
+		Body:       p.Body,
+		UserID:     p.UserId,
+		Host:       p.Host,
+		RemoteAddr: p.RemoteAddr,
 	}
 }
 

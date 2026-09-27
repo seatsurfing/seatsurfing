@@ -11,6 +11,7 @@ import DateUtil from "@/util/DateUtil";
 import DateTimePicker from "@/components/DateTimePicker";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
+import CopyrightFooter from "@/components/CopyrightFooter";
 
 interface PublicBookableSpace {
   spaceId: string;
@@ -530,6 +531,7 @@ class PublicBooking extends React.Component<Props, State> {
             <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
             <p>{this.props.t("publicBookingNoSpaces")}</p>
           </div>
+          <CopyrightFooter />
         </div>
       );
     }
@@ -541,6 +543,7 @@ class PublicBooking extends React.Component<Props, State> {
             <SeatsurfingAppLogo customLogoUrl={this.state.customLogoUrl} />
             <p>{this.props.t("publicBookingRequestSubmitted")}</p>
           </div>
+          <CopyrightFooter />
         </div>
       );
     }
@@ -668,6 +671,7 @@ class PublicBooking extends React.Component<Props, State> {
             {this.props.t("publicBookingSubmit")}
           </Button>
         </Form>
+        <CopyrightFooter />
       </div>
     );
   }

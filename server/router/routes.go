@@ -21,6 +21,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
@@ -39,19 +40,19 @@ var (
 )
 
 var (
-	ResponseCodeBookingSlotConflict              = 1001
-	ResponseCodeBookingLocationMaxConcurrent     = 1002
-	ResponseCodeBookingTooManyUpcomingBookings   = 1003
-	ResponseCodeBookingTooManyDaysInAdvance      = 1004
-	ResponseCodeBookingInvalidBookingDuration    = 1005
-	ResponseCodeBookingMaxConcurrentForUser      = 1006
-	ResponseCodeBookingInvalidMinBookingDuration = 1007
-	ResponseCodeBookingMaxHoursBeforeDelete      = 1008
-	ResponseCodeBookingNotAllowedBooker          = 1009
-	ResponseCodeBookingSubjectRequired           = 1010
-	ResponseCodeBookingInPast                    = 1011
-	ResponseCodeBookingInvalidSubject            = 1012
-	ResponseCodeBookingInvalidWeekday            = 1013
+	ResponseCodeBookingSlotConflict              = service.BookingCodeSlotConflict
+	ResponseCodeBookingLocationMaxConcurrent     = service.BookingCodeLocationMaxConcurrent
+	ResponseCodeBookingTooManyUpcomingBookings   = service.BookingCodeTooManyUpcomingBookings
+	ResponseCodeBookingTooManyDaysInAdvance      = service.BookingCodeTooManyDaysInAdvance
+	ResponseCodeBookingInvalidBookingDuration    = service.BookingCodeInvalidBookingDuration
+	ResponseCodeBookingMaxConcurrentForUser      = service.BookingCodeMaxConcurrentForUser
+	ResponseCodeBookingInvalidMinBookingDuration = service.BookingCodeInvalidMinBookingDuration
+	ResponseCodeBookingMaxHoursBeforeDelete      = service.BookingCodeMaxHoursBeforeDelete
+	ResponseCodeBookingNotAllowedBooker          = service.BookingCodeNotAllowedBooker
+	ResponseCodeBookingSubjectRequired           = service.BookingCodeSubjectRequired
+	ResponseCodeBookingInPast                    = service.BookingCodeInPast
+	ResponseCodeBookingInvalidSubject            = service.BookingCodeInvalidSubject
+	ResponseCodeBookingInvalidWeekday            = service.BookingCodeInvalidWeekday
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 
@@ -488,45 +489,9 @@ func GetRequestUser(r *http.Request) *User {
 	return user
 }
 
-// CanAccessOrg reports organization membership. It is not a privilege check:
-// every authenticated user has baseline access to their own organization.
+// CanAccessOrg reports organization membership. See service.CanAccessOrg.
 func CanAccessOrg(user *User, organizationID string) bool {
-	return user.OrganizationID == organizationID
-}
-
-// IsLocationWeekdayBookable checks whether every calendar day in [enter, leave)
-// falls on one of the location's bookable weekdays, honoring the org's
-// no-admin-restrictions setting for those who manage other people's bookings.
-func IsLocationWeekdayBookable(location *Location, user *User, enter, leave time.Time) bool {
-	if location.BookableDays == "" {
-		return true
-	}
-	if HasPermission(user, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
-		noAdminRestrictions, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingNoAdminRestrictions.Name)
-		if noAdminRestrictions {
-			return true
-		}
-	}
-	allowedDays := map[time.Weekday]bool{}
-	for _, s := range strings.Split(location.BookableDays, ",") {
-		n, err := strconv.Atoi(strings.TrimSpace(s))
-		if err != nil {
-			continue
-		}
-		allowedDays[time.Weekday(n)] = true
-	}
-	day := time.Date(enter.Year(), enter.Month(), enter.Day(), 0, 0, 0, 0, enter.Location())
-	// leave is exclusive: the last day to check is the calendar day just before leave,
-	// so a leave of exactly midnight does not pull in the following day.
-	lastInstant := leave.Add(-time.Nanosecond)
-	lastDay := time.Date(lastInstant.Year(), lastInstant.Month(), lastInstant.Day(), 0, 0, 0, 0, lastInstant.Location())
-	for !day.After(lastDay) {
-		if !allowedDays[day.Weekday()] {
-			return false
-		}
-		day = day.AddDate(0, 0, 1)
-	}
-	return true
+	return service.CanAccessOrg(user, organizationID)
 }
 
 func IsTotpEnforcedForUser(user *User) bool {

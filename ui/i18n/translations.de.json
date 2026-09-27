@@ -622,5 +622,6 @@
   "publicBookingShowMap": "Raumplan auf öffentlicher Buchungsseite anzeigen",
   "publicBookingShowMapHint": "Besucher können einen Platz direkt auf dem Raumplan des jeweiligen Bereichs auswählen. Es werden nur Plätze angezeigt, für die öffentliche Buchungen aktiviert sind.",
   "publicBookingNoMap": "Für diesen Bereich ist kein Raumplan verfügbar.",
-  "publicBookingShowFloorplan": "Raumplan"
+  "publicBookingShowFloorplan": "Raumplan",
+  "hideDisallowedLocations": "Bereiche für Nutzer ausblenden, die sie nicht buchen dürfen"
 }

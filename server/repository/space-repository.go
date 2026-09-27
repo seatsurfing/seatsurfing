@@ -183,7 +183,7 @@ func (r *SpaceStore) GetAllInTime(locationID string, enter, leave time.Time) ([]
 		"FROM bookings "+
 		"INNER JOIN users ON users.id = bookings.user_id "+
 		"WHERE bookings.location_id = $1 "+
-		"AND bookings.enter_time <= $3 AND bookings.leave_time >= $2 "+
+		"AND bookings.enter_time < $3 AND bookings.leave_time > $2 "+
 		"ORDER BY bookings.enter_time ASC", locationID, enter, leave)
 	if err != nil {
 		return nil, err
