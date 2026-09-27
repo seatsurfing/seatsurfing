@@ -12,6 +12,7 @@ import (
 func TestSecurityHeadersNonFramableUIPaths(t *testing.T) {
 	ClearTestDB()
 	paths := []string{
+		"/ui/",
 		"/ui/login/",
 		"/ui/login",
 		"/ui/resetpw/",
@@ -37,11 +38,17 @@ func TestSecurityHeadersNonFramableUIPaths(t *testing.T) {
 	}
 }
 
+func TestSecurityHeadersNonFramableUIPathWithoutTrailingSlash(t *testing.T) {
+	ClearTestDB()
+	// /ui (without trailing slash) matches no route and returns an empty 404
+	// without passing the middleware, so only the path check itself is tested.
+	CheckTestBool(t, true, IsNonFramableUIPath("/ui"))
+}
+
 func TestSecurityHeadersFramableUIPaths(t *testing.T) {
 	ClearTestDB()
 	// Pages loaded inside the MS Teams / Confluence iframe must stay embeddable.
 	paths := []string{
-		"/ui/",
 		"/ui/search/",
 		"/ui/bookings/",
 		"/ui/preferences/",

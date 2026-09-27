@@ -3,6 +3,10 @@ import FrameProtection from "./FrameProtection";
 
 describe("FrameProtection", () => {
   describe("isNonFramablePath", () => {
+    it("should protect the root page redirecting to the login form", () => {
+      expect(FrameProtection.isNonFramablePath("/")).toBe(true);
+    });
+
     it("should protect the login form and IdP selection", () => {
       expect(FrameProtection.isNonFramablePath("/login")).toBe(true);
       expect(FrameProtection.isNonFramablePath("/login/")).toBe(true);
@@ -35,7 +39,6 @@ describe("FrameProtection", () => {
         false,
       );
       expect(FrameProtection.isNonFramablePath("/login/failed")).toBe(false);
-      expect(FrameProtection.isNonFramablePath("/")).toBe(false);
       expect(FrameProtection.isNonFramablePath("/search")).toBe(false);
       expect(FrameProtection.isNonFramablePath("/bookings")).toBe(false);
       expect(FrameProtection.isNonFramablePath("/preferences")).toBe(false);

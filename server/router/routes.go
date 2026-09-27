@@ -444,8 +444,9 @@ func SetCorsHeaders(w http.ResponseWriter, r *http.Request) {
 // All other UI pages stay embeddable for the MS Teams and Confluence integrations,
 // which load /ui/login/success/<id>/ and the booking UI in an iframe, so only the
 // exact /ui/login/ page (form login and IdP selection) is protected, not its children.
+// /ui/ only redirects to /ui/login/ and is never loaded by the integrations.
 // Keep in sync with ui/src/util/FrameProtection.ts.
-var nonFramableUIPaths = []string{"/ui/login"}
+var nonFramableUIPaths = []string{"/ui", "/ui/login"}
 var nonFramableUIPathPrefixes = []string{"/ui/resetpw", "/ui/setpw", "/ui/book", "/ui/admin"}
 
 func IsNonFramableUIPath(p string) bool {
