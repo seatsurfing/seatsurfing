@@ -33,6 +33,8 @@ import ConflictModal from "@/components/ConflictModal";
 import User from "@/types/User";
 import Router from "next/router";
 import Theme from "@/util/Theme";
+import FrameProtection from "@/util/FrameProtection";
+import FrameBlocked from "@/components/FrameBlocked";
 
 interface State {
   isLoading: boolean;
@@ -297,6 +299,13 @@ class App extends React.Component<Props, State> {
       if (window !== window.parent) {
         RuntimeConfig.EMBEDDED = true;
       }
+    }
+
+    if (
+      FrameProtection.isFramed() &&
+      FrameProtection.isNonFramablePath(this.props.router.pathname)
+    ) {
+      return <FrameBlocked />;
     }
 
     if (this.state.isLoading) {
