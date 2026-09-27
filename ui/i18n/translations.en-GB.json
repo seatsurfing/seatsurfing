@@ -42,7 +42,7 @@
   "publicBookingSelectOnMap": "Click on a space in the floor plan to select it.",
   "publicBookingNoMap": "No floor plan is available for this area.",
   "publicBookingShowFloorplan": "Floor plan",
-  "publicBookingShowMap": "Show floor plan on public booking page",
+  "publicBookingShowMap": "Show floor plan",
   "publicBookingShowMapHint": "Visitors can select a space directly on the floor plan of the respective area. Only spaces with public booking enabled are shown.",
   "publicBookingSpaceEnabledHint": "Visitors without an account can request a booking for this space on the public booking page. Every request requires approval.",
   "publicBookingSpaceRequiresApproversHint": "Add at least one approver group above to allow public bookings for this space.",

@@ -477,7 +477,6 @@ class PublicBooking extends React.Component<Props, State> {
         dialogClassName="public-booking-map-modal"
       >
         <Modal.Header
-          closeButton
           className={
             this.getLocations().length > 1
               ? "public-booking-map-modal-header-tabs"

@@ -1555,7 +1555,14 @@ class Settings extends React.Component<Props, State> {
               <Form.Check
                 type="checkbox"
                 id="check-publicBookingShowMap"
-                label={this.props.t("publicBookingShowMap")}
+                label={
+                  <>
+                    {this.props.t("publicBookingShowMap")}
+                    <HintTooltip
+                      hint={this.props.t("publicBookingShowMapHint")}
+                    />
+                  </>
+                }
                 checked={
                   this.state.publicBookingShowMap &&
                   RuntimeConfig.INFOS.featurePublicBooking
@@ -1568,9 +1575,6 @@ class Settings extends React.Component<Props, State> {
                   this.setState({ publicBookingShowMap: e.target.checked })
                 }
               />
-              <Form.Text className="text-muted">
-                {this.props.t("publicBookingShowMapHint")}
-              </Form.Text>
             </Col>
           </Form.Group>
           {this.state.publicBookingEnabled && (

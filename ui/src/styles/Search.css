@@ -284,7 +284,3 @@ form#filter-locations-form .row {
 .public-booking-map-modal-header-tabs .nav-link {
   white-space: nowrap;
 }
-
-.public-booking-map-modal-header-tabs .btn-close {
-  align-self: center;
-}
