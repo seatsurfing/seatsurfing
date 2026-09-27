@@ -620,5 +620,8 @@
   "publicBookingShowMapHint": "Visitors can select a space directly on the floor plan of the respective area. Only spaces with public booking enabled are shown.",
   "publicBookingNoMap": "No floor plan is available for this area.",
   "publicBookingShowFloorplan": "Floor plan",
-  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
+  "frameBlockedBody": "For security reasons, this page cannot be displayed inside another application. Please open it in a new browser window or reload the app to sign in again.",
+  "frameBlockedTitle": "This page cannot be displayed here.",
+  "openInNewWindow": "Open in new window"
 }
