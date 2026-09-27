@@ -597,7 +597,7 @@ class PublicBooking extends React.Component<Props, State> {
                 ))}
               </Form.Select>
               {this.state.showMap && (
-                <Button variant="outline-secondary" onClick={this.openMapModal}>
+<Button variant="outline-secondary" type="button" onClick={this.openMapModal}>
                   {this.props.t("publicBookingShowFloorplan")}
                 </Button>
               )}
