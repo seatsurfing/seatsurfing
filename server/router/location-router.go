@@ -418,48 +418,56 @@ func (router *LocationRouter) getMap(w http.ResponseWriter, r *http.Request) {
 	if !CheckLocationVisible(w, r, user, e) {
 		return
 	}
+	res, err := buildLocationMapResponse(e)
+	if err == sql.ErrNoRows {
+		SendNotFound(w)
+		return
+	} else if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	SendJSON(w, res)
+}
+
+// buildLocationMapResponse returns the floor plan of a location, either the
+// rendered design (for designed maps) or the uploaded image. It performs no
+// authorization checks; callers must do so. sql.ErrNoRows is returned if
+// the location has no uploaded map.
+func buildLocationMapResponse(e *Location) (*GetMapResponse, error) {
 	if e.MapType == "designed" {
 		var designData string
 		plan, err := GetLocationFloorPlanRepository().GetDesign(e.ID)
 		if err == sql.ErrNoRows {
 			designData = `{"elements":[]}`
 		} else if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
+			return nil, err
 		} else {
 			designData = plan.DesignData
 		}
 		svgData, width, height, err := renderFloorPlanSVG(designData)
 		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
+			return nil, err
 		}
-		res := &GetMapResponse{
+		return &GetMapResponse{
 			Width:    width,
 			Height:   height,
 			MimeType: "svg+xml",
 			Scale:    1.0,
 			Data:     base64.StdEncoding.EncodeToString(svgData),
-		}
-		SendJSON(w, res)
-		return
+		}, nil
 	}
 	locationMap, err := GetLocationRepository().GetMap(e)
 	if err != nil {
-		log.Println(err)
-		SendNotFound(w)
-		return
+		return nil, err
 	}
-	res := &GetMapResponse{
+	return &GetMapResponse{
 		Width:    locationMap.Width,
 		Height:   locationMap.Height,
 		MimeType: locationMap.MimeType,
 		Scale:    locationMap.Scale,
 		Data:     base64.StdEncoding.EncodeToString(locationMap.Data),
-	}
-	SendJSON(w, res)
+	}, nil
 }
 
 func (router *LocationRouter) getFloorPlanDesign(w http.ResponseWriter, r *http.Request) {

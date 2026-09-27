@@ -92,6 +92,7 @@ interface State {
   kioskModeEnabled: boolean;
   publicBookingEnabled: boolean;
   publicBookingEnabledSaved: boolean;
+  publicBookingShowMap: boolean;
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
@@ -159,6 +160,7 @@ class Settings extends React.Component<Props, State> {
       kioskModeEnabled: false,
       publicBookingEnabled: false,
       publicBookingEnabledSaved: false,
+      publicBookingShowMap: false,
       hideReports: false,
       hideStats: false,
       installId: "",
@@ -278,6 +280,8 @@ class Settings extends React.Component<Props, State> {
           state.publicBookingEnabled = s.value === "1";
           state.publicBookingEnabledSaved = s.value === "1";
         }
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_SHOW_MAP)
+          state.publicBookingShowMap = s.value === "1";
         if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
@@ -461,6 +465,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_PUBLIC_BOOKING_ENABLED,
         this.state.publicBookingEnabled ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_PUBLIC_BOOKING_SHOW_MAP,
+        this.state.publicBookingShowMap ? "1" : "0",
       ),
       new OrgSettings(
         Organization.PREF_HIDE_REPORTS,
@@ -1538,6 +1546,33 @@ class Settings extends React.Component<Props, State> {
                 disabled={!RuntimeConfig.INFOS.featurePublicBooking}
                 onChange={(e: any) =>
                   this.setState({ publicBookingEnabled: e.target.checked })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col sm="6">
+              <Form.Check
+                type="checkbox"
+                id="check-publicBookingShowMap"
+                label={
+                  <>
+                    {this.props.t("publicBookingShowMap")}
+                    <HintTooltip
+                      hint={this.props.t("publicBookingShowMapHint")}
+                    />
+                  </>
+                }
+                checked={
+                  this.state.publicBookingShowMap &&
+                  RuntimeConfig.INFOS.featurePublicBooking
+                }
+                disabled={
+                  !RuntimeConfig.INFOS.featurePublicBooking ||
+                  !this.state.publicBookingEnabled
+                }
+                onChange={(e: any) =>
+                  this.setState({ publicBookingShowMap: e.target.checked })
                 }
               />
             </Col>

@@ -618,5 +618,10 @@
   "orgSignupFailedReasonDomain": "Deine gewünschte Domain ist inzwischen nicht mehr verfügbar.",
   "orgSignupFailedReasonTimeout": "Deine Registrierung ist bereits abgelaufen.",
   "publicBookingNoSpaces": "Derzeit sind keine Räume für öffentliche Buchungen verfügbar.",
+  "publicBookingSelectOnMap": "Klicke im Raumplan auf einen Platz, um ihn auszuwählen.",
+  "publicBookingShowMap": "Raumplan anzeigen",
+  "publicBookingShowMapHint": "Besucher können einen Platz direkt auf dem Raumplan des jeweiligen Bereichs auswählen. Es werden nur Plätze angezeigt, für die öffentliche Buchungen aktiviert sind.",
+  "publicBookingNoMap": "Für diesen Bereich ist kein Raumplan verfügbar.",
+  "publicBookingShowFloorplan": "Raumplan",
   "hideDisallowedLocations": "Bereiche für Nutzer ausblenden, die sie nicht buchen dürfen"
 }
