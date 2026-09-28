@@ -80,6 +80,11 @@ service HostAPIService {
   rpc GetUpcomingBookingsForUser(GetUpcomingBookingsForUserArgs) returns (GetUpcomingBookingsForUserReply);
   rpc DeleteBookingForUser(DeleteBookingForUserArgs) returns (DeleteBookingForUserReply);
 
+  // User-scoped buddy operations: buddies are the colleagues a user follows.
+  rpc GetBuddiesForUser(GetBuddiesForUserArgs) returns (GetBuddiesForUserReply);
+  rpc GetBuddyScheduleForUser(GetBuddyScheduleForUserArgs) returns (GetBuddyScheduleForUserReply);
+  rpc FindSpacesNearBuddiesForUser(FindSpacesNearBuddiesForUserArgs) returns (FindSpacesNearBuddiesForUserReply);
+
   // Spaces
   rpc SpaceGetOne(SpaceGetOneArgs) returns (SpaceGetOneReply);
   rpc SpaceGetCount(SpaceGetCountArgs) returns (IntReply);
@@ -262,6 +267,57 @@ message DeleteBookingForUserReply {
   int32 status_code = 1;
   int32 error_code = 2;
   string err = 3;
+}
+
+// ─── Buddies ──────────────────────────────────────────────────────────────────
+
+message BuddyInfo {
+  string id = 1;
+  string buddy_user_id = 2;
+  string email = 3;
+  string firstname = 4;
+  string lastname = 5;
+}
+message GetBuddiesForUserArgs { string user_id = 1; }
+message GetBuddiesForUserReply { repeated BuddyInfo buddies = 1; string err = 2; }
+
+message BuddyScheduleInfo {
+  BuddyInfo buddy = 1;
+  string location_id = 2;
+  string location_name = 3;
+  string space_id = 4;
+  string space_name = 5;
+  google.protobuf.Timestamp enter = 6;
+  google.protobuf.Timestamp leave = 7;
+}
+message GetBuddyScheduleForUserArgs {
+  string user_id = 1;
+  repeated string buddy_ids = 2;
+  google.protobuf.Timestamp enter = 3;
+  google.protobuf.Timestamp leave = 4;
+}
+message GetBuddyScheduleForUserReply { repeated BuddyScheduleInfo schedule = 1; string err = 2; }
+
+message NearBuddySpaceInfo {
+  seatsurfing.plugin.v1.Space space = 1;
+  bool available = 2;
+  bool allowed = 3;
+  bool approval_required = 4;
+  double distance = 5;
+  repeated string near_buddy_ids = 6;
+}
+message FindSpacesNearBuddiesForUserArgs {
+  string user_id = 1;
+  repeated string buddy_ids = 2;
+  google.protobuf.Timestamp enter = 3;
+  google.protobuf.Timestamp leave = 4;
+}
+message FindSpacesNearBuddiesForUserReply {
+  string location_id = 1;
+  string location_name = 2;
+  repeated NearBuddySpaceInfo spaces = 3;
+  repeated string found_buddy_ids = 4;
+  string err = 5;
 }
 
 // ─── Spaces ───────────────────────────────────────────────────────────────────

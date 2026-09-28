@@ -155,6 +155,22 @@ type HostAPI interface {
 	// not as an error.
 	DeleteBookingForUser(userID, bookingID string) (*BookingDeleteResult, error)
 
+	// User-scoped buddy operations (see hostapi_buddy.go). Buddies are the
+	// colleagues a user follows; all three return an empty/zero result
+	// without an error if the buddies feature is disabled for the user's
+	// organization (SettingShowNames off, or SettingDisableBuddies on).
+
+	// GetBuddiesForUser returns the user's buddies, like GET /buddy/.
+	GetBuddiesForUser(userID string) ([]*BuddyInfo, error)
+	// GetBuddyScheduleForUser returns where the buddies in buddyIDs (or all
+	// of the user's buddies, if empty) are booked in the given time slot.
+	GetBuddyScheduleForUser(userID string, buddyIDs []string, enter, leave time.Time) ([]*BuddyScheduleInfo, error)
+	// FindSpacesNearBuddiesForUser returns the spaces available to the user
+	// in enter/leave at whichever location holds the most of the buddies in
+	// buddyIDs (or all of the user's buddies, if empty), ranked by proximity
+	// to their seats.
+	FindSpacesNearBuddiesForUser(userID string, buddyIDs []string, enter, leave time.Time) (*NearBuddiesResult, error)
+
 	SendEmail(recipient, subject, body, language, orgID string) error
 	Encrypt(plaintext string) (string, error)
 	Decrypt(ciphertext string) (string, error)

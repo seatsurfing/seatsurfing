@@ -8,8 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 )
 
 type BuddyRouter struct {
@@ -52,12 +52,7 @@ func (router *BuddyRouter) SetupRoutes(s *mux.Router) {
 }
 
 func (router *BuddyRouter) isFeatureEnabled(orgID string) bool {
-	showNames, _ := GetSettingsRepository().GetBool(orgID, SettingShowNames.Name)
-	if !showNames {
-		return false
-	}
-	disableBuddies, _ := GetSettingsRepository().GetBool(orgID, SettingDisableBuddies.Name)
-	return !disableBuddies
+	return service.GetBuddyService().IsEnabled(orgID)
 }
 
 func (router *BuddyRouter) getAll(w http.ResponseWriter, r *http.Request) {
