@@ -79,6 +79,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
         type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("PREV")}
+        aria-label={t("previous")}
       >
         <IconArrowLeft className="feather" />
       </button>{" "}
@@ -86,6 +87,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
         type="button"
         className="btn btn-sm btn-outline-secondary"
         onClick={() => toolbar.onNavigate("NEXT")}
+        aria-label={t("next")}
       >
         <IconArrowRight className="feather" />
       </button>{" "}

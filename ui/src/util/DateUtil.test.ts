@@ -17,6 +17,29 @@ describe("DateUtil", () => {
     });
   });
 
+  describe("convertFromFakeUTCDate", () => {
+    it("should map UTC components to local components", () => {
+      const fakeUTC = new Date(Date.UTC(2030, 8, 7, 22, 15, 30, 0));
+      const local = DateUtil.convertFromFakeUTCDate(fakeUTC);
+
+      expect(local.getFullYear()).toBe(2030);
+      expect(local.getMonth()).toBe(8);
+      expect(local.getDate()).toBe(7);
+      expect(local.getHours()).toBe(22);
+      expect(local.getMinutes()).toBe(15);
+      expect(local.getSeconds()).toBe(30);
+    });
+
+    it("should be the inverse of convertToFakeUTCDate", () => {
+      const local = new Date(2030, 0, 1, 23, 59, 59, 0);
+      const roundTrip = DateUtil.convertFromFakeUTCDate(
+        DateUtil.convertToFakeUTCDate(local),
+      );
+
+      expect(roundTrip.getTime()).toBe(local.getTime());
+    });
+  });
+
   describe("getTodayStart", () => {
     it("should return date with time 00:00:00.000", () => {
       const todayStart = DateUtil.getTodayStart();
