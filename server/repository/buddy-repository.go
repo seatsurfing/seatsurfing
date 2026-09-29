@@ -14,7 +14,9 @@ type Buddy struct {
 }
 
 type BuddyDetails struct {
-	BuddyEmail string
+	BuddyEmail     string
+	BuddyFirstname string
+	BuddyLastname  string
 	Buddy
 }
 
@@ -82,11 +84,11 @@ func (r *BuddyRepository) GetByOwnerAndBuddy(ownerID, buddyID string) (*Buddy, e
 func (r *BuddyRepository) GetOne(id string) (*BuddyDetails, error) {
 	e := &BuddyDetails{}
 	err := GetDatabase().DB().QueryRow("SELECT buddies.id, buddies.owner_id, buddies.buddy_id, "+
-		"users.email "+
+		"users.email, users.firstname, users.lastname "+
 		"FROM buddies "+
 		"INNER JOIN users ON buddies.buddy_id = users.id "+
 		"WHERE buddies.id = $1",
-		id).Scan(&e.ID, &e.OwnerID, &e.BuddyID, &e.BuddyEmail)
+		id).Scan(&e.ID, &e.OwnerID, &e.BuddyID, &e.BuddyEmail, &e.BuddyFirstname, &e.BuddyLastname)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +98,7 @@ func (r *BuddyRepository) GetOne(id string) (*BuddyDetails, error) {
 func (r *BuddyRepository) GetAllByOwner(ownerID string) ([]*BuddyDetails, error) {
 	var result []*BuddyDetails
 	rows, err := GetDatabase().DB().Query("SELECT buddies.id, buddies.owner_id, buddies.buddy_id, "+
-		"users.email "+
+		"users.email, users.firstname, users.lastname "+
 		"FROM buddies "+
 		"INNER JOIN users ON buddies.buddy_id = users.id "+
 		"WHERE owner_id = $1 "+
@@ -107,7 +109,7 @@ func (r *BuddyRepository) GetAllByOwner(ownerID string) ([]*BuddyDetails, error)
 	defer rows.Close()
 	for rows.Next() {
 		e := &BuddyDetails{}
-		err = rows.Scan(&e.ID, &e.OwnerID, &e.BuddyID, &e.BuddyEmail)
+		err = rows.Scan(&e.ID, &e.OwnerID, &e.BuddyID, &e.BuddyEmail, &e.BuddyFirstname, &e.BuddyLastname)
 		if err != nil {
 			return nil, err
 		}
