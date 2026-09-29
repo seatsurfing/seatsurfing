@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.131.1](https://github.com/seatsurfing/seatsurfing/compare/v1.131.0...v1.131.1) (2026-09-27)
+
+
+### 🐛 Bug Fixes
+
+* **main:** add protection against clickjacking attacks for base path and admin area ([#2717](https://github.com/seatsurfing/seatsurfing/issues/2717)) ([476a539](https://github.com/seatsurfing/seatsurfing/commit/476a5399d6d2bf043fa18d604ff650341c5b2561))
+
+## [1.131.0](https://github.com/seatsurfing/seatsurfing/compare/v1.130.0...v1.131.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **booking-ui:** add map option for public bookings ([#2711](https://github.com/seatsurfing/seatsurfing/issues/2711)) ([a78e426](https://github.com/seatsurfing/seatsurfing/commit/a78e4261dbfa93cd3be582c0e18a11b316f5ca1c))
+
+
+### 🐛 Bug Fixes
+
+* **main:** add protection against clickjacking attacks ([#2715](https://github.com/seatsurfing/seatsurfing/issues/2715)) ([c423eb7](https://github.com/seatsurfing/seatsurfing/commit/c423eb7c7992cc68a0c6789c2c7d3da80463c3fe))
+
+## [1.130.0](https://github.com/seatsurfing/seatsurfing/compare/v1.129.0...v1.130.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **admin-ui:** add option to hide locations from not allowed users ([#2708](https://github.com/seatsurfing/seatsurfing/issues/2708)) ([927b4e8](https://github.com/seatsurfing/seatsurfing/commit/927b4e86dc83057e5f7cb8aecc90d37eb9cad71e))
+* **server:** expose user-scoped booking operations to plugins via host API ([#2703](https://github.com/seatsurfing/seatsurfing/issues/2703)) ([4427d9e](https://github.com/seatsurfing/seatsurfing/commit/4427d9ef1bcc57b4aaf5b6f69e62b8aaf2082d18))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** add language and theme switch to public booking page ([#2707](https://github.com/seatsurfing/seatsurfing/issues/2707)) ([85700ea](https://github.com/seatsurfing/seatsurfing/commit/85700ea53890d7223833b334dcec2a00c6c82706))
+* **server:** allow back-to-back bookings of the same space ([#2710](https://github.com/seatsurfing/seatsurfing/issues/2710)) ([1806fd9](https://github.com/seatsurfing/seatsurfing/commit/1806fd94dcdc8e1c804f674f1c4c0ed62e12b6a6))
+
 ## [1.129.0](https://github.com/seatsurfing/seatsurfing/compare/v1.128.3...v1.129.0) (2026-09-26)
 
 

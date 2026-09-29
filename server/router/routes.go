@@ -439,9 +439,40 @@ func SetCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UI pages that must never be rendered inside a third-party frame (clickjacking),
+// including the complete admin area.
+// All other UI pages stay embeddable for the MS Teams and Confluence integrations,
+// which load /ui/login/success/<id>/ and the booking UI in an iframe, so only the
+// exact /ui/login/ page (form login and IdP selection) is protected, not its children.
+// /ui/ only redirects to /ui/login/ and is never loaded by the integrations.
+// Keep in sync with ui/src/util/FrameProtection.ts.
+var nonFramableUIPaths = []string{"/ui", "/ui/login"}
+var nonFramableUIPathPrefixes = []string{"/ui/resetpw", "/ui/setpw", "/ui/book", "/ui/admin"}
+
+func IsNonFramableUIPath(p string) bool {
+	p = strings.TrimSuffix(p, "/")
+	if slices.Contains(nonFramableUIPaths, p) {
+		return true
+	}
+	for _, prefix := range nonFramableUIPathPrefixes {
+		if p == prefix || strings.HasPrefix(p, prefix+"/") {
+			return true
+		}
+	}
+	return false
+}
+
 func SetSecurityHeaders(w http.ResponseWriter, r *http.Request) {
+	csp := []string{}
 	if strings.ToLower(config.GetConfig().PublicScheme) == "https" {
-		w.Header().Set("Content-Security-Policy", "upgrade-insecure-requests")
+		csp = append(csp, "upgrade-insecure-requests")
+	}
+	if IsNonFramableUIPath(r.URL.Path) {
+		csp = append(csp, "frame-ancestors 'self'")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+	}
+	if len(csp) > 0 {
+		w.Header().Set("Content-Security-Policy", strings.Join(csp, "; "))
 	}
 	w.Header().Set("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(self), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()")
 	w.Header().Set("X-Content-Type-Options", "nosniff")

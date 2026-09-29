@@ -23,6 +23,9 @@
   "allowBookingNonExistUsers": "Buchungen für nicht existierende Benutzer zulassen (Erstellen beim Buchen, Admins Only)",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "analysis": "Auswertung",
+  "frameBlockedBody": "Aus Sicherheitsgründen kann diese Seite nicht innerhalb einer anderen Anwendung angezeigt werden. Bitte öffnen Sie sie in einem neuen Browserfenster oder laden Sie die App neu, um sich erneut anzumelden.",
+  "frameBlockedTitle": "Diese Seite kann hier nicht angezeigt werden.",
+  "openInNewWindow": "In neuem Fenster öffnen",
   "public": "Öffentlich",
   "publicBooking": "Öffentliche Buchung",
   "publicBookingAvailable": "Öffentliche Buchungen zulassen",
@@ -618,5 +621,13 @@
   "orgSignupFailedReasonDomain": "Deine gewünschte Domain ist inzwischen nicht mehr verfügbar.",
   "orgSignupFailedReasonTimeout": "Deine Registrierung ist bereits abgelaufen.",
   "publicBookingNoSpaces": "Derzeit sind keine Räume für öffentliche Buchungen verfügbar.",
+  "bookingCalendar": "Buchungskalender",
+  "next": "Weiter",
+  "previous": "Zurück",
+  "publicBookingSelectOnMap": "Klicke im Raumplan auf einen Platz, um ihn auszuwählen.",
+  "publicBookingShowMap": "Raumplan anzeigen",
+  "publicBookingShowMapHint": "Besucher können einen Platz direkt auf dem Raumplan des jeweiligen Bereichs auswählen. Es werden nur Plätze angezeigt, für die öffentliche Buchungen aktiviert sind.",
+  "publicBookingNoMap": "Für diesen Bereich ist kein Raumplan verfügbar.",
+  "publicBookingShowFloorplan": "Raumplan",
   "hideDisallowedLocations": "Bereiche für Nutzer ausblenden, die sie nicht buchen dürfen"
 }

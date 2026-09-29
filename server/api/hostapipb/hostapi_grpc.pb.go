@@ -76,6 +76,9 @@ const (
 	HostAPIService_CreateBookingForUser_FullMethodName           = "/seatsurfing.plugin.v1.HostAPIService/CreateBookingForUser"
 	HostAPIService_GetUpcomingBookingsForUser_FullMethodName     = "/seatsurfing.plugin.v1.HostAPIService/GetUpcomingBookingsForUser"
 	HostAPIService_DeleteBookingForUser_FullMethodName           = "/seatsurfing.plugin.v1.HostAPIService/DeleteBookingForUser"
+	HostAPIService_GetBuddiesForUser_FullMethodName              = "/seatsurfing.plugin.v1.HostAPIService/GetBuddiesForUser"
+	HostAPIService_GetBuddyScheduleForUser_FullMethodName        = "/seatsurfing.plugin.v1.HostAPIService/GetBuddyScheduleForUser"
+	HostAPIService_FindSpacesNearBuddiesForUser_FullMethodName   = "/seatsurfing.plugin.v1.HostAPIService/FindSpacesNearBuddiesForUser"
 	HostAPIService_SpaceGetOne_FullMethodName                    = "/seatsurfing.plugin.v1.HostAPIService/SpaceGetOne"
 	HostAPIService_SpaceGetCount_FullMethodName                  = "/seatsurfing.plugin.v1.HostAPIService/SpaceGetCount"
 	HostAPIService_LocationGetOne_FullMethodName                 = "/seatsurfing.plugin.v1.HostAPIService/LocationGetOne"
@@ -159,6 +162,10 @@ type HostAPIServiceClient interface {
 	CreateBookingForUser(ctx context.Context, in *CreateBookingForUserArgs, opts ...grpc.CallOption) (*CreateBookingForUserReply, error)
 	GetUpcomingBookingsForUser(ctx context.Context, in *GetUpcomingBookingsForUserArgs, opts ...grpc.CallOption) (*GetUpcomingBookingsForUserReply, error)
 	DeleteBookingForUser(ctx context.Context, in *DeleteBookingForUserArgs, opts ...grpc.CallOption) (*DeleteBookingForUserReply, error)
+	// User-scoped buddy operations: buddies are the colleagues a user follows.
+	GetBuddiesForUser(ctx context.Context, in *GetBuddiesForUserArgs, opts ...grpc.CallOption) (*GetBuddiesForUserReply, error)
+	GetBuddyScheduleForUser(ctx context.Context, in *GetBuddyScheduleForUserArgs, opts ...grpc.CallOption) (*GetBuddyScheduleForUserReply, error)
+	FindSpacesNearBuddiesForUser(ctx context.Context, in *FindSpacesNearBuddiesForUserArgs, opts ...grpc.CallOption) (*FindSpacesNearBuddiesForUserReply, error)
 	// Spaces
 	SpaceGetOne(ctx context.Context, in *SpaceGetOneArgs, opts ...grpc.CallOption) (*SpaceGetOneReply, error)
 	SpaceGetCount(ctx context.Context, in *SpaceGetCountArgs, opts ...grpc.CallOption) (*IntReply, error)
@@ -685,6 +692,36 @@ func (c *hostAPIServiceClient) DeleteBookingForUser(ctx context.Context, in *Del
 	return out, nil
 }
 
+func (c *hostAPIServiceClient) GetBuddiesForUser(ctx context.Context, in *GetBuddiesForUserArgs, opts ...grpc.CallOption) (*GetBuddiesForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBuddiesForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_GetBuddiesForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hostAPIServiceClient) GetBuddyScheduleForUser(ctx context.Context, in *GetBuddyScheduleForUserArgs, opts ...grpc.CallOption) (*GetBuddyScheduleForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBuddyScheduleForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_GetBuddyScheduleForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hostAPIServiceClient) FindSpacesNearBuddiesForUser(ctx context.Context, in *FindSpacesNearBuddiesForUserArgs, opts ...grpc.CallOption) (*FindSpacesNearBuddiesForUserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FindSpacesNearBuddiesForUserReply)
+	err := c.cc.Invoke(ctx, HostAPIService_FindSpacesNearBuddiesForUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *hostAPIServiceClient) SpaceGetOne(ctx context.Context, in *SpaceGetOneArgs, opts ...grpc.CallOption) (*SpaceGetOneReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SpaceGetOneReply)
@@ -919,6 +956,10 @@ type HostAPIServiceServer interface {
 	CreateBookingForUser(context.Context, *CreateBookingForUserArgs) (*CreateBookingForUserReply, error)
 	GetUpcomingBookingsForUser(context.Context, *GetUpcomingBookingsForUserArgs) (*GetUpcomingBookingsForUserReply, error)
 	DeleteBookingForUser(context.Context, *DeleteBookingForUserArgs) (*DeleteBookingForUserReply, error)
+	// User-scoped buddy operations: buddies are the colleagues a user follows.
+	GetBuddiesForUser(context.Context, *GetBuddiesForUserArgs) (*GetBuddiesForUserReply, error)
+	GetBuddyScheduleForUser(context.Context, *GetBuddyScheduleForUserArgs) (*GetBuddyScheduleForUserReply, error)
+	FindSpacesNearBuddiesForUser(context.Context, *FindSpacesNearBuddiesForUserArgs) (*FindSpacesNearBuddiesForUserReply, error)
 	// Spaces
 	SpaceGetOne(context.Context, *SpaceGetOneArgs) (*SpaceGetOneReply, error)
 	SpaceGetCount(context.Context, *SpaceGetCountArgs) (*IntReply, error)
@@ -1101,6 +1142,15 @@ func (UnimplementedHostAPIServiceServer) GetUpcomingBookingsForUser(context.Cont
 }
 func (UnimplementedHostAPIServiceServer) DeleteBookingForUser(context.Context, *DeleteBookingForUserArgs) (*DeleteBookingForUserReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteBookingForUser not implemented")
+}
+func (UnimplementedHostAPIServiceServer) GetBuddiesForUser(context.Context, *GetBuddiesForUserArgs) (*GetBuddiesForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBuddiesForUser not implemented")
+}
+func (UnimplementedHostAPIServiceServer) GetBuddyScheduleForUser(context.Context, *GetBuddyScheduleForUserArgs) (*GetBuddyScheduleForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBuddyScheduleForUser not implemented")
+}
+func (UnimplementedHostAPIServiceServer) FindSpacesNearBuddiesForUser(context.Context, *FindSpacesNearBuddiesForUserArgs) (*FindSpacesNearBuddiesForUserReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method FindSpacesNearBuddiesForUser not implemented")
 }
 func (UnimplementedHostAPIServiceServer) SpaceGetOne(context.Context, *SpaceGetOneArgs) (*SpaceGetOneReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method SpaceGetOne not implemented")
@@ -2056,6 +2106,60 @@ func _HostAPIService_DeleteBookingForUser_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HostAPIService_GetBuddiesForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBuddiesForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).GetBuddiesForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_GetBuddiesForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).GetBuddiesForUser(ctx, req.(*GetBuddiesForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HostAPIService_GetBuddyScheduleForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBuddyScheduleForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).GetBuddyScheduleForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_GetBuddyScheduleForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).GetBuddyScheduleForUser(ctx, req.(*GetBuddyScheduleForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HostAPIService_FindSpacesNearBuddiesForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindSpacesNearBuddiesForUserArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostAPIServiceServer).FindSpacesNearBuddiesForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostAPIService_FindSpacesNearBuddiesForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostAPIServiceServer).FindSpacesNearBuddiesForUser(ctx, req.(*FindSpacesNearBuddiesForUserArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _HostAPIService_SpaceGetOne_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SpaceGetOneArgs)
 	if err := dec(in); err != nil {
@@ -2564,6 +2668,18 @@ var HostAPIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteBookingForUser",
 			Handler:    _HostAPIService_DeleteBookingForUser_Handler,
+		},
+		{
+			MethodName: "GetBuddiesForUser",
+			Handler:    _HostAPIService_GetBuddiesForUser_Handler,
+		},
+		{
+			MethodName: "GetBuddyScheduleForUser",
+			Handler:    _HostAPIService_GetBuddyScheduleForUser_Handler,
+		},
+		{
+			MethodName: "FindSpacesNearBuddiesForUser",
+			Handler:    _HostAPIService_FindSpacesNearBuddiesForUser_Handler,
 		},
 		{
 			MethodName: "SpaceGetOne",
