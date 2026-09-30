@@ -231,7 +231,11 @@ form#filter-locations-form .row {
   top: 48px;
   right: 0;
   bottom: 0;
-  z-index: 90;
+  /* Above .search-config-outer (100), so the booking filter card can't cover
+     the panel's lower portion on mobile, where the panel is full-width and
+     both are fixed-positioned; still well below Bootstrap's fixed navbar
+     (1030) and modals (1050+). */
+  z-index: 105;
   overflow: auto;
   background-color: var(--bs-body-bg);
   border-left: 1px solid var(--bs-border-color);

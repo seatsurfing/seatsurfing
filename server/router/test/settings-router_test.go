@@ -448,3 +448,141 @@ func TestSettingsGetTimezones(t *testing.T) {
 		t.Fatal("Expected non-empty timezone list")
 	}
 }
+
+func getBookingUIIntegrations(t *testing.T, userID string) []SettingsRouterBookingUIIntegration {
+	req := NewHTTPRequest("GET", "/setting/"+SysSettingBookingUIIntegrations, userID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody GetSettingsResponse
+	if err := json.Unmarshal(res.Body.Bytes(), &resBody); err != nil {
+		t.Fatal(err)
+	}
+	var items []SettingsRouterBookingUIIntegration
+	if err := json.Unmarshal([]byte(resBody.Value), &items); err != nil {
+		t.Fatal(err)
+	}
+	return items
+}
+
+func findBookingUIIntegration(items []SettingsRouterBookingUIIntegration, id string) *SettingsRouterBookingUIIntegration {
+	for i := range items {
+		if items[i].ID == id {
+			return &items[i]
+		}
+	}
+	return nil
+}
+
+// fakeBookingUIPluginID identifies the plugin permissions registered for
+// TestBookingUIIntegrationsPermissionFiltering, so they can be unregistered
+// again afterwards (RegisterPermission has no per-test scoping otherwise).
+const fakeBookingUIPluginID = "fake-booking-ui-test-plugin"
+
+func TestBookingUIIntegrationsPermissionFiltering(t *testing.T) {
+	ClearTestDB()
+	ResetPluginsForTest()
+	defer ResetPluginsForTest()
+	// "plugin.chat"/"plugin.other" must be registered in the permission
+	// catalogue for a role granting them to actually take effect:
+	// GetEffectivePermissions drops any permission the catalogue doesn't
+	// know, so a role referencing an unregistered plugin permission would
+	// otherwise silently grant nothing.
+	RegisterPermission(PermissionDefinition{
+		Key:           "plugin.chat",
+		AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelAdmin},
+		PluginID:      fakeBookingUIPluginID,
+	})
+	RegisterPermission(PermissionDefinition{
+		Key:           "plugin.other",
+		AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin},
+		PluginID:      fakeBookingUIPluginID,
+	})
+	defer UnregisterPluginPermissions(fakeBookingUIPluginID)
+
+	org := CreateTestOrg("test.com")
+	plainUser := CreateTestUserInOrg(org)
+	chatUser := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		"plugin.chat": PermissionLevelRead,
+	})
+
+	RegisterPlugin(&fakeBookingUIPlugin{
+		integrations: []BookingUIIntegration{
+			{ID: "everyone", Title: "Everyone"},
+			{
+				ID:                 "chat",
+				Title:              "Chat",
+				RequiredPermission: "plugin.chat",
+				RequiredLevel:      PermissionLevelRead,
+			},
+			{
+				ID:                     "admin-any",
+				Title:                  "Admin Any",
+				RequiredPermissionsAny: []Permission{"plugin.chat", "plugin.other"},
+				RequiredLevel:          PermissionLevelAdmin,
+			},
+		},
+	})
+
+	// A plain user with no permissions at all sees only the integration that
+	// declares none.
+	plainItems := getBookingUIIntegrations(t, plainUser.ID)
+	if findBookingUIIntegration(plainItems, "everyone") == nil {
+		t.Error("expected plain user to see the 'everyone' integration")
+	}
+	if findBookingUIIntegration(plainItems, "chat") != nil {
+		t.Error("expected plain user not to see the 'chat' integration")
+	}
+	if findBookingUIIntegration(plainItems, "admin-any") != nil {
+		t.Error("expected plain user not to see the 'admin-any' integration")
+	}
+
+	// A user holding "plugin.chat" at Read sees "everyone" and "chat", but
+	// not "admin-any" (which requires Admin level).
+	chatItems := getBookingUIIntegrations(t, chatUser.ID)
+	if findBookingUIIntegration(chatItems, "everyone") == nil {
+		t.Error("expected chat user to see the 'everyone' integration")
+	}
+	if findBookingUIIntegration(chatItems, "chat") == nil {
+		t.Error("expected chat user to see the 'chat' integration")
+	}
+	if findBookingUIIntegration(chatItems, "admin-any") != nil {
+		t.Error("expected chat user not to see the 'admin-any' integration (requires Admin level)")
+	}
+}
+
+func TestBookingUIIntegrationsWidthClamping(t *testing.T) {
+	ClearTestDB()
+	ResetPluginsForTest()
+	defer ResetPluginsForTest()
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	RegisterPlugin(&fakeBookingUIPlugin{
+		integrations: []BookingUIIntegration{
+			{ID: "unset", Title: "Unset"},
+			{ID: "too-small", Title: "Too Small", Width: 1},
+			{ID: "too-big", Title: "Too Big", Width: 99999},
+			{ID: "in-range", Title: "In Range", Width: 300},
+		},
+	})
+
+	items := getBookingUIIntegrations(t, user.ID)
+
+	tests := []struct {
+		id    string
+		width int
+	}{
+		{"unset", BookingUIIntegrationDefaultWidth},
+		{"too-small", BookingUIIntegrationMinWidth},
+		{"too-big", BookingUIIntegrationMaxWidth},
+		{"in-range", 300},
+	}
+	for _, tc := range tests {
+		item := findBookingUIIntegration(items, tc.id)
+		if item == nil {
+			t.Fatalf("expected integration %q to be present", tc.id)
+		}
+		CheckTestInt(t, tc.width, item.Width)
+	}
+}

@@ -141,7 +141,9 @@ export default class PluginEmbed extends React.Component<Props, State> {
       return;
     }
     try {
-      await Ajax.refreshAccessToken(refreshToken);
+      // Force: the backend just rejected the current token, so the locally
+      // cached expiry can't be trusted to decide whether a refresh is due.
+      await Ajax.refreshAccessToken(refreshToken, true);
     } catch {
       Ajax.onUnauthorized?.();
       return;

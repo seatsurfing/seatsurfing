@@ -144,7 +144,9 @@ describe("PluginEmbed", () => {
       await Promise.resolve();
     });
 
-    expect(refreshSpy).toHaveBeenCalledWith("refresh-1");
+    // force=true: the backend just rejected this token, so the refresh must
+    // not be skipped just because the locally cached expiry still looks valid.
+    expect(refreshSpy).toHaveBeenCalledWith("refresh-1", true);
     expect(el.accessToken).toBe("token-3");
     expect(Ajax.onUnauthorized).not.toHaveBeenCalled();
   });
