@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.132.0](https://github.com/seatsurfing/seatsurfing/compare/v1.131.1...v1.132.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **admin-ui:** add calendar view for user bookings ([#2684](https://github.com/seatsurfing/seatsurfing/issues/2684)) ([1dc9d0d](https://github.com/seatsurfing/seatsurfing/commit/1dc9d0dcc997367018c3631c1bffe32e99bea428))
+* **server:** add buddy schedule lookup and seat-proximity search ([#2720](https://github.com/seatsurfing/seatsurfing/issues/2720)) ([93c7131](https://github.com/seatsurfing/seatsurfing/commit/93c7131f36b4af4ecd3044b24494aa0b23b7e7d4))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump brace-expansion in /ui ([#2726](https://github.com/seatsurfing/seatsurfing/issues/2726)) ([a4bc4df](https://github.com/seatsurfing/seatsurfing/commit/a4bc4df077fc86335d8c4678e9a9c1a73cef9470))
+* **deps:** bump github.com/go-webauthn/webauthn from 0.18.1 to 0.18.2 in /server in the minor-and-patch group ([#2722](https://github.com/seatsurfing/seatsurfing/issues/2722)) ([0559dfd](https://github.com/seatsurfing/seatsurfing/commit/0559dfdbf126dcef9fe91a56cd8435e555e6a8b4))
+* **deps:** bump moment from 2.30.1 to 2.31.0 in /ui ([#2725](https://github.com/seatsurfing/seatsurfing/issues/2725)) ([a6a9631](https://github.com/seatsurfing/seatsurfing/commit/a6a96313ef88232ff75a63c9b29ececbf162cd74))
+* **deps:** bump next from 16.3.5 to 16.3.6 in /ui in the production-dependencies group across 1 directory ([#2723](https://github.com/seatsurfing/seatsurfing/issues/2723)) ([e075885](https://github.com/seatsurfing/seatsurfing/commit/e075885516c9b7dc9bd5e91792f2e97bc442ca8f))
+
 ## [1.131.1](https://github.com/seatsurfing/seatsurfing/compare/v1.131.0...v1.131.1) (2026-09-27)
 
 
