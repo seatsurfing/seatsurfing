@@ -131,3 +131,29 @@ func TestGroupAddMembersEmpty(t *testing.T) {
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 0, len(res))
 }
+
+func TestGroupDeleteRemovesSpaceAssignments(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	g1 := CreateTestGroup(org, nil)
+	g2 := CreateTestGroup(org, nil)
+	CheckTestBool(t, true, GetSpaceRepository().AddApprovers(space, []string{g1.ID, g2.ID}) == nil)
+	CheckTestBool(t, true, GetSpaceRepository().AddAllowedBookers(space, []string{g1.ID, g2.ID}) == nil)
+
+	CheckTestBool(t, true, GetGroupRepository().Delete(g1) == nil)
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(approvers))
+	CheckTestString(t, g2.ID, approvers[0])
+	bookers, err := GetSpaceRepository().GetAllowedBookersGroupIDs(space)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(bookers))
+	CheckTestString(t, g2.ID, bookers[0])
+
+	CheckTestBool(t, true, GetGroupRepository().DeleteAll(org.ID) == nil)
+	approvers, _ = GetSpaceRepository().GetApproverGroupIDs(space.ID)
+	CheckTestInt(t, 0, len(approvers))
+	bookers, _ = GetSpaceRepository().GetAllowedBookersGroupIDs(space)
+	CheckTestInt(t, 0, len(bookers))
+}

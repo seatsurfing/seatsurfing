@@ -117,6 +117,16 @@ func (r *SpaceStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 61 {
+		// Groups used to be deleted without removing their space approver and
+		// allowed booker assignments, leaving rows that reference no group.
+		for _, table := range []string{"spaces_approvers", "spaces_allowed_bookers"} {
+			if _, err := GetDatabase().DB().Exec("DELETE FROM " + table +
+				" WHERE group_id NOT IN (SELECT id FROM groups)"); err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 func (r *SpaceStore) Create(e *Space) error {
