@@ -118,11 +118,21 @@ func (r *SpaceStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 		}
 	}
 	if curVersion < 61 {
-		// Groups used to be deleted without removing their space approver and
-		// allowed booker assignments, leaving rows that reference no group.
-		for _, table := range []string{"spaces_approvers", "spaces_allowed_bookers"} {
+		// Groups used to be deleted without removing their group assignments,
+		// leaving rows that reference no group. Remove those, then let the
+		// database cascade deletes so they cannot reappear.
+		for _, table := range []string{"spaces_approvers", "spaces_allowed_bookers", "locations_allowed_bookers"} {
 			if _, err := GetDatabase().DB().Exec("DELETE FROM " + table +
 				" WHERE group_id NOT IN (SELECT id FROM groups)"); err != nil {
+				panic(err)
+			}
+			if _, err := GetDatabase().DB().Exec("ALTER TABLE " + table +
+				" DROP CONSTRAINT IF EXISTS fk_" + table + "_group"); err != nil {
+				panic(err)
+			}
+			if _, err := GetDatabase().DB().Exec("ALTER TABLE " + table +
+				" ADD CONSTRAINT fk_" + table + "_group FOREIGN KEY (group_id) " +
+				"REFERENCES groups(id) ON DELETE CASCADE"); err != nil {
 				panic(err)
 			}
 		}

@@ -215,6 +215,10 @@ func (r *GroupStore) Delete(e *Group) error {
 		"group_id = $1", e.ID); err != nil {
 		return err
 	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE "+
+		"group_id = $1", e.ID); err != nil {
+		return err
+	}
 	_, err := GetDatabase().DB().Exec("DELETE FROM groups WHERE id = $1", e.ID)
 	return err
 }
@@ -229,6 +233,10 @@ func (r *GroupStore) DeleteAll(organizationID string) error {
 		return err
 	}
 	if _, err := GetDatabase().DB().Exec("DELETE FROM spaces_allowed_bookers WHERE "+
+		"group_id IN (SELECT id from groups WHERE organization_id = $1)", organizationID); err != nil {
+		return err
+	}
+	if _, err := GetDatabase().DB().Exec("DELETE FROM locations_allowed_bookers WHERE "+
 		"group_id IN (SELECT id from groups WHERE organization_id = $1)", organizationID); err != nil {
 		return err
 	}
