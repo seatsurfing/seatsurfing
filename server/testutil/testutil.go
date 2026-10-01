@@ -41,7 +41,7 @@ var DatabaseTables = [...]string{
 	"buddies",
 	"debug_time_issues",
 	"groups",
-	"location_allowed_bookers",
+	"locations_allowed_bookers",
 	"locations",
 	"mail_logs",
 	"organizations",
@@ -335,14 +335,18 @@ func CreateTestBooking9To5(user *User, space *Space, offsetDay int) *Booking {
 }
 
 func DropTestDB() {
-	for _, s := range DatabaseTables {
-		GetDatabase().DB().Exec("DROP TABLE IF EXISTS " + s)
+	// Two passes: tables referenced by foreign keys can only be dropped once
+	// the tables referencing them are gone.
+	for pass := 0; pass < 2; pass++ {
+		for _, s := range DatabaseTables {
+			GetDatabase().DB().Exec("DROP TABLE IF EXISTS " + s)
+		}
 	}
 }
 
 func ClearTestDB() {
 	for _, s := range DatabaseTables {
-		GetDatabase().DB().Exec("TRUNCATE " + s)
+		GetDatabase().DB().Exec("TRUNCATE " + s + " CASCADE")
 	}
 }
 

@@ -274,3 +274,49 @@ func TestSpaceDeleteCascades(t *testing.T) {
 	_, err = GetPublicBookingRepository().GetOne(otherPubBooking.ID)
 	CheckTestIsNil(t, err)
 }
+
+func TestSpaceSchemaUpgrade61RemovesOrphanedGroupAssignments(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	group := CreateTestGroup(org, nil)
+	orphanID := "00000000-0000-4000-8000-000000000001"
+	tables := []string{"spaces_approvers", "spaces_allowed_bookers", "locations_allowed_bookers"}
+	for _, table := range tables {
+		// Constraints exist after the initial upgrade; drop them to seed orphans
+		_, err := GetDatabase().DB().Exec("ALTER TABLE " + table + " DROP CONSTRAINT IF EXISTS fk_" + table + "_group")
+		CheckTestBool(t, true, err == nil)
+		ownerColumn, ownerID := "space_id", space.ID
+		if table == "locations_allowed_bookers" {
+			ownerColumn, ownerID = "location_id", location.ID
+		}
+		for _, groupID := range []string{group.ID, orphanID} {
+			_, err = GetDatabase().DB().Exec("INSERT INTO "+table+" ("+ownerColumn+", group_id) VALUES ($1, $2)", ownerID, groupID)
+			CheckTestBool(t, true, err == nil)
+		}
+	}
+
+	GetSpaceRepository().RunSchemaUpgrade(60, 61)
+
+	for _, table := range tables {
+		var count, orphans int
+		err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM " + table).Scan(&count)
+		CheckTestBool(t, true, err == nil)
+		CheckTestInt(t, 1, count)
+		err = GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM "+table+" WHERE group_id = $1", orphanID).Scan(&orphans)
+		CheckTestBool(t, true, err == nil)
+		CheckTestInt(t, 0, orphans)
+	}
+
+	// Assignments can no longer reference a missing group, and deleting a group cascades
+	err := GetSpaceRepository().AddApprovers(space, []string{orphanID})
+	CheckTestBool(t, false, err == nil)
+	_, err = GetDatabase().DB().Exec("DELETE FROM groups WHERE id = $1", group.ID)
+	CheckTestBool(t, true, err == nil)
+	for _, table := range tables {
+		var count int
+		err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM " + table).Scan(&count)
+		CheckTestBool(t, true, err == nil)
+		CheckTestInt(t, 0, count)
+	}
+}

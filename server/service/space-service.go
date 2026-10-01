@@ -91,6 +91,11 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 	if err != nil {
 		return nil, err
 	}
+	// Approver groups only take effect while the groups feature is enabled
+	// (see RequiresApproval), so the hint shown to the user must match.
+	if groupsEnabled, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingFeatureGroups.Name); !groupsEnabled {
+		approvers = nil
+	}
 	locations := GetLocationService()
 	isAllowedToBookLocation := locations.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	isValidWeekday := locations.IsLocationWeekdayBookable(location, user, enter, leave)

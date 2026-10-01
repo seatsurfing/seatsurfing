@@ -54,3 +54,41 @@ func TestSpaceServiceRequiresApproval(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 	CheckTestBool(t, true, GetSpaceService().RequiresApproval(org.ID, space))
 }
+
+func TestSpaceServiceAvailabilityApprovalRequired(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	group := CreateTestGroup(org, user)
+	GetSpaceRepository().AddApprovers(space, []string{group.ID})
+	enter, leave := serviceTestSlot(0, 8, 17)
+	location, _ = GetLocationRepository().GetOne(location.ID)
+	enter, _ = GetLocationRepository().AttachTimezoneInformation(enter, location)
+	leave, _ = GetLocationRepository().AttachTimezoneInformation(leave, location)
+
+	// Groups feature disabled: approver groups have no effect
+	list, err := GetSpaceService().GetAvailabilityForUser(user, location, space.ID, enter, leave, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(list))
+	CheckTestBool(t, false, list[0].ApprovalRequired)
+
+	// Groups feature enabled
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	list, err = GetSpaceService().GetAvailabilityForUser(user, location, space.ID, enter, leave, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(list))
+	CheckTestBool(t, true, list[0].ApprovalRequired)
+
+	// Deleting the approver group removes the approval requirement
+	if err := GetGroupRepository().Delete(group); err != nil {
+		t.Fatal(err)
+	}
+	list, err = GetSpaceService().GetAvailabilityForUser(user, location, space.ID, enter, leave, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(list))
+	CheckTestBool(t, false, list[0].ApprovalRequired)
+}
