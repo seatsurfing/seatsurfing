@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.132.1](https://github.com/seatsurfing/seatsurfing/compare/v1.132.0...v1.132.1) (2026-10-01)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `0ebad35` to `389cad2` ([#2729](https://github.com/seatsurfing/seatsurfing/issues/2729)) ([60cb9ff](https://github.com/seatsurfing/seatsurfing/commit/60cb9fff4ece48ae1261dc6f72af90c318bae61f))
+* **server:** remove space approver/booker assignments when a group is deleted ([#2727](https://github.com/seatsurfing/seatsurfing/issues/2727)) ([828f2f5](https://github.com/seatsurfing/seatsurfing/commit/828f2f564185700ade3fa3820e63eab198ee25f4))
+
 ## [1.132.0](https://github.com/seatsurfing/seatsurfing/compare/v1.131.1...v1.132.0) (2026-09-30)
 
 
