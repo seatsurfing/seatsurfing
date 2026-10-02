@@ -9,6 +9,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import withPermission from "@/components/withPermission";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import HintTooltip from "@/components/HintTooltip";
 import Validation from "@/util/Validation";
 import AjaxError from "@/util/AjaxError";
 import ErrorText from "@/types/ErrorText";
@@ -142,16 +143,41 @@ class EditRole extends React.Component<Props, State> {
     return label === permissionLabelKey(key) ? key : label;
   };
 
+  /** Explains each level for permissions with more than a simple on/off choice. */
+  permissionHint = (definition: PermissionDefinition): string | null => {
+    if (definition.allowedLevels.length <= 2) {
+      return null;
+    }
+    const lines: string[] = [];
+    for (const level of definition.allowedLevels) {
+      if (level === PermissionLevel.None) {
+        continue;
+      }
+      const levelKey = permissionLevelLabelKey(level)
+        .replace("permissionLevel", "")
+        .toLowerCase();
+      const hintKey = "permissionHint_" + definition.key + "_" + levelKey;
+      const hint = this.props.t(hintKey);
+      if (hint === hintKey) {
+        return null;
+      }
+      lines.push(this.props.t(permissionLevelLabelKey(level)) + ": " + hint);
+    }
+    return lines.join("\n");
+  };
+
   renderPermissionRow = (
     definition: PermissionDefinition,
     readOnly: boolean,
   ) => {
     const current =
       this.state.permissions[definition.key] ?? PermissionLevel.None;
+    const hint = this.permissionHint(definition);
     return (
       <Form.Group as={Row} key={definition.key} className="mb-2">
         <Form.Label column sm="4">
           {this.permissionLabel(definition.key)}
+          {hint && <HintTooltip hint={hint} />}
         </Form.Label>
         <Col sm="8">
           {/* Only the levels this permission actually declares are offered:
