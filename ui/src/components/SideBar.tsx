@@ -70,7 +70,7 @@ class SideBar extends React.Component<Props, State> {
    */
   updateApprovalCount = async (): Promise<boolean> => {
     if (
-      !RuntimeConfig.hasPermission(Permission.Approvals, PermissionLevel.Admin)
+      !RuntimeConfig.hasPermission(Permission.Approvals, PermissionLevel.Write)
     ) {
       return true;
     }
@@ -347,7 +347,7 @@ class SideBar extends React.Component<Props, State> {
             )}
             {RuntimeConfig.hasPermission(
               Permission.Approvals,
-              PermissionLevel.Admin,
+              PermissionLevel.Write,
             ) && (
               <li className="nav-item">
                 <Nav.Link

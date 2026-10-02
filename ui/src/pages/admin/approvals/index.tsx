@@ -329,7 +329,7 @@ export default withTranslation(
     withPermission(
       Approvals as any,
       Permission.Approvals,
-      PermissionLevel.Admin,
+      PermissionLevel.Write,
     ) as any,
   ),
 );

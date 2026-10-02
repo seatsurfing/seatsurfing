@@ -293,6 +293,59 @@ func (s *BookingService) GetUpcomingBookingsForUser(user *User) ([]*BookingDetai
 	return res, nil
 }
 
+// ─── Approvals ───────────────────────────────────────────────────────────────
+
+// CanApproveBookingsInSpace reports whether user may approve or decline
+// pending bookings of the space. Approvals at write level are limited to
+// spaces whose approver groups include the user; admin level covers every
+// space of the organization.
+func (s *BookingService) CanApproveBookingsInSpace(user *User, organizationID, spaceID string) bool {
+	if !HasPermission(user, organizationID, PermissionApprovals, PermissionLevelWrite) {
+		return false
+	}
+	if HasPermission(user, organizationID, PermissionApprovals, PermissionLevelAdmin) {
+		return true
+	}
+	approverGroups, err := GetSpaceRepository().GetApproverGroupIDs(spaceID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	if len(approverGroups) == 0 {
+		return true
+	}
+	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	for _, group := range userGroups {
+		for _, approverGroup := range approverGroups {
+			if group.ID == approverGroup {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// GetPendingApprovals returns the pending bookings the user may decide on.
+func (s *BookingService) GetPendingApprovals(user *User) ([]*BookingDetails, error) {
+	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		return GetBookingRepository().GetBookingsRequiringApprovalInOrg(user.OrganizationID)
+	}
+	return GetBookingRepository().GetBookingsRequiringApproval(user.ID)
+}
+
+// GetPendingApprovalsCount returns the number of pending bookings the user
+// may decide on.
+func (s *BookingService) GetPendingApprovalsCount(user *User) (int, error) {
+	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		return GetBookingRepository().GetBookingsCountRequiringApprovalInOrg(user.OrganizationID)
+	}
+	return GetBookingRepository().GetBookingsCountRequiringApproval(user.ID)
+}
+
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 // CheckBooking validates a booking to be created (bookingID empty) or

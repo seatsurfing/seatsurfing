@@ -1333,3 +1333,33 @@ func TestBookingRepositoryUpdateRefreshesLocation(t *testing.T) {
 	CheckTestString(t, location2.ID, locationID)
 	CheckTestString(t, org.ID, organizationID)
 }
+
+func TestBookingRepositoryGetBookingsRequiringApprovalInOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space1 := CreateTestLocationAndSpace(org)
+	_, space2 := CreateTestLocationAndSpace(org)
+	booking1 := CreateTestBooking9To5(user, space1, 1)
+	CreateTestBooking9To5(user, space2, 2)
+	approved := CreateTestBooking9To5(user, space1, 3)
+	approved.Approved = true
+	GetBookingRepository().Update(approved)
+	CreateTestBooking9To5(user, space1, -2)
+
+	otherOrg := CreateTestOrg("other.com")
+	_, otherSpace := CreateTestLocationAndSpace(otherOrg)
+	CreateTestBooking9To5(CreateTestUserInOrg(otherOrg), otherSpace, 1)
+
+	bookings, err := GetBookingRepository().GetBookingsRequiringApprovalInOrg(org.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 2, len(bookings))
+	CheckTestString(t, booking1.ID, bookings[0].ID)
+	count, err := GetBookingRepository().GetBookingsCountRequiringApprovalInOrg(org.ID)
+	if err != nil {
+		t.Fatalf("Expected nil error, but got %s\n%s", err, debug.Stack())
+	}
+	CheckTestInt(t, 2, count)
+}

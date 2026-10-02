@@ -124,12 +124,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendBadRequest(w)
 		return
 	}
-	if !HasPermission(requestUser, location.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
-		SendForbidden(w)
-		return
-	}
-
-	if !router.isValidApproverForSpace(requestUser.ID, e.SpaceID) {
+	if !service.GetBookingService().CanApproveBookingsInSpace(requestUser, location.OrganizationID, e.SpaceID) {
 		SendForbidden(w)
 		return
 	}
@@ -177,11 +172,11 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 
 func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
 		SendForbidden(w)
 		return
 	}
-	count, err := GetBookingRepository().GetBookingsCountRequiringApproval(user.ID)
+	count, err := service.GetBookingService().GetPendingApprovalsCount(user)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -195,11 +190,11 @@ func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *
 
 func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
 		SendForbidden(w)
 		return
 	}
-	list, err := GetBookingRepository().GetBookingsRequiringApproval(user.ID)
+	list, err := service.GetBookingService().GetPendingApprovals(user)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -858,30 +853,6 @@ func (router *BookingRouter) updateCalDavEvent(e *Booking) {
 	}
 	e.CalDavID = caldavEvent.ID
 	GetBookingRepository().Update(e)
-}
-
-func (router *BookingRouter) isValidApproverForSpace(userID, spaceID string) bool {
-	approverGroups, err := GetSpaceRepository().GetApproverGroupIDs(spaceID)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if len(approverGroups) == 0 {
-		return true
-	}
-	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(userID)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	for _, group := range userGroups {
-		for _, approverGroup := range approverGroups {
-			if group.ID == approverGroup {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func (router *BookingRouter) sendMailNotification(e *Booking, notification BookingMailNotification) {

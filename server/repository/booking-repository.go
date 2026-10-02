@@ -968,23 +968,37 @@ func (r *BookingStore) GetPresenceReport(organizationID string, location *Locati
 	return res, nil
 }
 
+const bookingsPendingApprovalSelect = "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, " +
+	"spaces.id, spaces.location_id, spaces.name, " +
+	"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, " +
+	"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), " +
+	"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, '') " +
+	"FROM bookings " +
+	"INNER JOIN spaces ON bookings.space_id = spaces.id " +
+	"INNER JOIN locations ON spaces.location_id = locations.id " +
+	"LEFT JOIN users ON bookings.user_id = users.id " +
+	"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id " +
+	"WHERE bookings.approved = false AND " +
+	"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "
+
 func (r *BookingStore) GetBookingsRequiringApproval(approverUserID string) ([]*BookingDetails, error) {
-	rows, err := GetDatabase().DB().Query("SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, "+
-		"spaces.id, spaces.location_id, spaces.name, "+
-		"locations.id, locations.organization_id, locations.name, locations.description, locations.tz, "+
-		"COALESCE(users.email, ''), COALESCE(users.firstname, ''), COALESCE(users.lastname, ''), "+
-		"COALESCE(public_bookings.name, ''), COALESCE(public_bookings.email, '') "+
-		"FROM bookings "+
-		"INNER JOIN spaces ON bookings.space_id = spaces.id "+
-		"INNER JOIN locations ON spaces.location_id = locations.id "+
-		"LEFT JOIN users ON bookings.user_id = users.id "+
-		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id "+
-		"WHERE bookings.approved = false AND "+
-		"bookings.leave_time >= NOW() - INTERVAL '24 hours' AND "+
+	return r.queryBookingsRequiringApproval(bookingsPendingApprovalSelect+
 		"bookings.space_id IN (SELECT space_id FROM spaces_approvers WHERE group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		")) "+
 		"ORDER BY bookings.enter_time ASC", approverUserID)
+}
+
+// GetBookingsRequiringApprovalInOrg returns every pending booking of the
+// organization, regardless of the approver groups of its space.
+func (r *BookingStore) GetBookingsRequiringApprovalInOrg(organizationID string) ([]*BookingDetails, error) {
+	return r.queryBookingsRequiringApproval(bookingsPendingApprovalSelect+
+		"bookings.organization_id = $1 "+
+		"ORDER BY bookings.enter_time ASC", organizationID)
+}
+
+func (r *BookingStore) queryBookingsRequiringApproval(query string, args ...any) ([]*BookingDetails, error) {
+	rows, err := GetDatabase().DB().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -1010,6 +1024,19 @@ func (r *BookingStore) GetBookingsCountRequiringApproval(approverUserID string) 
 		"space_id IN (SELECT space_id FROM spaces_approvers WHERE group_id IN ("+
 		"SELECT group_id FROM users_groups WHERE user_id = $1"+
 		"))", approverUserID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *BookingStore) GetBookingsCountRequiringApprovalInOrg(organizationID string) (int, error) {
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(1) "+
+		"FROM bookings "+
+		"WHERE approved = false AND "+
+		"leave_time >= NOW() - INTERVAL '24 hours' AND "+
+		"organization_id = $1", organizationID).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
