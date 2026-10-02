@@ -228,6 +228,9 @@ class Bookings extends React.Component<Props, State> {
         )
       : Booking.listCurrent(this.state.filterUser, this.state.filterLocation));
     this.setState({ loading: false });
+    if (this.state.activeTab !== "all") {
+      return;
+    }
     this.updateUrlParams(
       this.state.filterOption === "enter_leave"
         ? DateUtil.formatToDateTimeString(this.state.start)
