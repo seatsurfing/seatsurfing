@@ -630,6 +630,7 @@
   "publicBookingNoMap": "Für diesen Bereich ist kein Raumplan verfügbar.",
   "publicBookingShowFloorplan": "Raumplan",
   "hideDisallowedLocations": "Bereiche für Nutzer ausblenden, die sie nicht buchen dürfen",
+  "period": "Zeitraum",
   "permissionHint_bookings_admin": "Zusätzlich Buchungen im Namen anderer Benutzer anlegen, ändern und löschen.",
   "permissionHint_bookings_read": "Buchungen aller Benutzer einsehen und sehen, wer welchen Platz gebucht hat.",
   "permissionHint_groups_admin": "Zusätzlich Gruppen anlegen, umbenennen und löschen.",

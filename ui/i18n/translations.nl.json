@@ -629,6 +629,7 @@
   "frameBlockedBody": "For security reasons, this page cannot be displayed inside another application. Please open it in a new browser window or reload the app to sign in again.",
   "frameBlockedTitle": "This page cannot be displayed here.",
   "openInNewWindow": "Open in new window",
+  "period": "Period",
   "permissionHint_bookings_admin": "Additionally create, change and delete bookings on behalf of other users.",
   "permissionHint_bookings_read": "View the bookings of all users and see who booked which space.",
   "permissionHint_groups_admin": "Additionally create, rename and delete groups.",
