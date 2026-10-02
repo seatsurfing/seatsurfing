@@ -1841,7 +1841,9 @@ class Search extends React.Component<Props, State> {
           onClick={() => {
             const newWorkdays = isActive
               ? this.state.recurrence.weekdays.filter((d) => d !== index)
-              : [...this.state.recurrence.weekdays, index];
+              : [...this.state.recurrence.weekdays, index].sort(
+                  (a, b) => a - b,
+                );
             this.setState(
               {
                 recurrence: { ...this.state.recurrence, weekdays: newWorkdays },
