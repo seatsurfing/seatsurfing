@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import RuntimeConfig from "../RuntimeConfig";
 import { Permission, PermissionLevel } from "@/types/Permission";
 
@@ -131,6 +131,78 @@ describe("RuntimeConfig permission checks", () => {
           "spaceadmin",
         ),
       ).toBe(false);
+    });
+  });
+
+  describe("canSeeBookingUIIntegration", () => {
+    it("is visible to everyone when the plugin declares no permission", () => {
+      expect(RuntimeConfig.canSeeBookingUIIntegration({})).toBe(true);
+    });
+
+    it("honours a permission declared by the plugin", () => {
+      const item = {
+        requiredPermission: "plugin.plus.exchange",
+        requiredLevel: PermissionLevel.Read,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(false);
+      RuntimeConfig.INFOS.permissions = {
+        "plugin.plus.exchange": PermissionLevel.Read,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(true);
+    });
+
+    it("honours any one of several alternative permissions", () => {
+      const item = {
+        requiredPermissionsAny: ["plugin.plus.exchange", "plugin.plus.scim"],
+        requiredLevel: PermissionLevel.Admin,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(false);
+      RuntimeConfig.INFOS.permissions = {
+        "plugin.plus.scim": PermissionLevel.Admin,
+      };
+      expect(RuntimeConfig.canSeeBookingUIIntegration(item)).toBe(true);
+    });
+  });
+
+  describe("pickBookingUIIntegrationTitle", () => {
+    afterEach(() => {
+      window.localStorage.removeItem("next-export-i18n-lang");
+    });
+
+    it("falls back to the plain title when no titles map is given", () => {
+      expect(
+        RuntimeConfig.pickBookingUIIntegrationTitle({ title: "Chat" }),
+      ).toBe("Chat");
+    });
+
+    it("prefers the exact language", () => {
+      window.localStorage.setItem("next-export-i18n-lang", "de");
+      expect(
+        RuntimeConfig.pickBookingUIIntegrationTitle({
+          title: "Chat",
+          titles: { de: "Chatten", "en-GB": "Chat (UK)" },
+        }),
+      ).toBe("Chatten");
+    });
+
+    it("falls back to the base language for a regional code", () => {
+      window.localStorage.setItem("next-export-i18n-lang", "de-CH");
+      expect(
+        RuntimeConfig.pickBookingUIIntegrationTitle({
+          title: "Chat",
+          titles: { de: "Chatten" },
+        }),
+      ).toBe("Chatten");
+    });
+
+    it("falls back to the plain title when the language is not in the map", () => {
+      window.localStorage.setItem("next-export-i18n-lang", "fr");
+      expect(
+        RuntimeConfig.pickBookingUIIntegrationTitle({
+          title: "Chat",
+          titles: { de: "Chatten" },
+        }),
+      ).toBe("Chat");
     });
   });
 });

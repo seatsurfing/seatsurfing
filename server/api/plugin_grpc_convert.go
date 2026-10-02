@@ -121,6 +121,55 @@ func AdminUIMenuItemsFromProto(items []*pluginpb.AdminUIMenuItem) []AdminUIMenuI
 	return out
 }
 
+func BookingUIIntegrationsToProto(items []BookingUIIntegration) []*pluginpb.BookingUIIntegration {
+	out := make([]*pluginpb.BookingUIIntegration, 0, len(items))
+	for _, it := range items {
+		anyPerms := make([]string, 0, len(it.RequiredPermissionsAny))
+		for _, p := range it.RequiredPermissionsAny {
+			anyPerms = append(anyPerms, string(p))
+		}
+		out = append(out, &pluginpb.BookingUIIntegration{
+			Id:                     it.ID,
+			Title:                  it.Title,
+			Source:                 it.Source,
+			Icon:                   it.Icon,
+			TagName:                it.TagName,
+			Width:                  int32(it.Width),
+			RequiredPermission:     string(it.RequiredPermission),
+			RequiredLevel:          int32(it.RequiredLevel),
+			RequiredPermissionsAny: anyPerms,
+			Titles:                 it.Titles,
+		})
+	}
+	return out
+}
+
+func BookingUIIntegrationsFromProto(items []*pluginpb.BookingUIIntegration) []BookingUIIntegration {
+	out := make([]BookingUIIntegration, 0, len(items))
+	for _, it := range items {
+		if it == nil {
+			continue
+		}
+		anyPerms := make([]Permission, 0, len(it.RequiredPermissionsAny))
+		for _, p := range it.RequiredPermissionsAny {
+			anyPerms = append(anyPerms, Permission(p))
+		}
+		out = append(out, BookingUIIntegration{
+			ID:                     it.Id,
+			Title:                  it.Title,
+			Source:                 it.Source,
+			Icon:                   it.Icon,
+			TagName:                it.TagName,
+			Width:                  int(it.Width),
+			RequiredPermission:     Permission(it.RequiredPermission),
+			RequiredLevel:          PermissionLevel(it.RequiredLevel),
+			RequiredPermissionsAny: anyPerms,
+			Titles:                 it.Titles,
+		})
+	}
+	return out
+}
+
 // PermissionDefinitionsToProto/FromProto carry a plugin's contributed
 // permissions across the RPC boundary.
 func PermissionDefinitionsToProto(defs []PermissionDefinition) []*pluginpb.PermissionDefinition {

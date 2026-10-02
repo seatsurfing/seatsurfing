@@ -119,6 +119,19 @@ func (p *PluginGRPC) GetAdminUIMenuItems() []AdminUIMenuItem {
 	return AdminUIMenuItemsFromProto(resp.Items)
 }
 
+func (p *PluginGRPC) GetBookingUIIntegrations(organizationID string) []BookingUIIntegration {
+	ctx, cancel := p.ctx()
+	defer cancel()
+	resp, err := p.client.GetBookingUIIntegrations(ctx, &pluginpb.GetPublicSettingsRequest{OrganizationId: organizationID})
+	if err != nil {
+		if status.Code(err) != codes.Unimplemented {
+			log.Println("GetBookingUIIntegrations RPC error:", err)
+		}
+		return []BookingUIIntegration{}
+	}
+	return BookingUIIntegrationsFromProto(resp.Items)
+}
+
 // GetPermissionDefinitions asks the plugin which permissions it contributes.
 // A plugin built against the older contract does not implement the call; that
 // is not an error, it simply declares none and falls back to Visibility.

@@ -22,6 +22,12 @@ export default class Ajax {
   static onBadRequest: (() => void) | null = null;
   static onConflict: (() => void) | null = null;
 
+  // Dispatched on window whenever refreshAccessToken() stores a new access
+  // token, so long-lived mounted plugin elements (PluginEmbed) can push the
+  // fresh token to themselves without waiting for it to expire.
+  static readonly ACCESS_TOKEN_REFRESHED_EVENT =
+    "seatsurfing-access-token-refreshed";
+
   private static REFRESH_URL: string = "/auth/refresh";
   private static REFRESH_TOKEN_MUTEX: Mutex = new Mutex();
   private static HEADER_X_OBJECT_ID: string = "X-Object-Id";
@@ -121,13 +127,24 @@ export default class Ajax {
     }
   }
 
-  static async refreshAccessToken(refreshToken: string): Promise<void> {
+  // force skips the locally-cached-expiry check and always hits the refresh
+  // endpoint. Used when the backend itself rejected the current token (e.g.
+  // a plugin's "plugin-token-expired" event) - the local expiry can lag a
+  // server-side revocation or clock skew, and without force, a still-rejected
+  // token would just be handed back unchanged.
+  static async refreshAccessToken(
+    refreshToken: string,
+    force: boolean = false,
+  ): Promise<void> {
     // Acquire mutex so that refreshing the token is not refreshed concurrently
     return Ajax.REFRESH_TOKEN_MUTEX.acquire().then((release) => {
       return new Promise<void>(function (resolve, reject) {
         // Once it's our turn, check if we really need to refresh the token
         const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
-        if (new Date().getTime() < credentials.accessTokenExpiry.getTime()) {
+        if (
+          !force &&
+          new Date().getTime() < credentials.accessTokenExpiry.getTime()
+        ) {
           // Token is still valid, nothing to do
           release();
           resolve();
@@ -158,6 +175,13 @@ export default class Ajax {
                   Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
                     json.refreshToken,
                   );
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent(Ajax.ACCESS_TOKEN_REFRESHED_EVENT, {
+                        detail: { accessToken: c.accessToken },
+                      }),
+                    );
+                  }
                   release();
                   resolve();
                 })

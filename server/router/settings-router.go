@@ -45,16 +45,41 @@ type SettingsRouterWelcomeScreen struct {
 	TagName string `json:"tagName"`
 }
 
+type SettingsRouterBookingUIIntegration struct {
+	ID                     string            `json:"id"`
+	Title                  string            `json:"title"`
+	Source                 string            `json:"src"`
+	Icon                   string            `json:"icon"`
+	TagName                string            `json:"tagName"`
+	Width                  int               `json:"width"`
+	RequiredPermission     string            `json:"requiredPermission,omitempty"`
+	RequiredLevel          int               `json:"requiredLevel,omitempty"`
+	RequiredPermissionsAny []string          `json:"requiredPermissionsAny,omitempty"`
+	Titles                 map[string]string `json:"titles,omitempty"`
+}
+
+// BookingUIIntegrationDefaultWidth is the panel width (in pixels) used when a
+// plugin does not specify one.
+const BookingUIIntegrationDefaultWidth = 200
+
+// BookingUIIntegrationMinWidth/MaxWidth clamp a plugin-supplied width so a
+// misbehaving plugin can't request an absurd panel size.
+const (
+	BookingUIIntegrationMinWidth = 100
+	BookingUIIntegrationMaxWidth = 600
+)
+
 var (
-	ErrAlreadyExists               = errors.New("resource already exists")
-	SysSettingOrgSignupDelete      = "_sys_org_signup_delete"
-	SysSettingVersion              = "_sys_version"
-	SysSettingAdminMenuItems       = "_sys_admin_menu_items"
-	SysSettingAdminWelcomeScreens  = "_sys_admin_welcome_screens"
-	SysSettingOrgPrimaryDomain     = "_sys_org_primary_domain"
-	SysSettingDisablePasswordLogin = "_sys_disable_password_login"
-	SysSettingOrgLanguage          = "_sys_org_language"
-	SysSettingInstallID            = "_sys_install_id"
+	ErrAlreadyExists                = errors.New("resource already exists")
+	SysSettingOrgSignupDelete       = "_sys_org_signup_delete"
+	SysSettingVersion               = "_sys_version"
+	SysSettingAdminMenuItems        = "_sys_admin_menu_items"
+	SysSettingBookingUIIntegrations = "_sys_booking_ui_integrations"
+	SysSettingAdminWelcomeScreens   = "_sys_admin_welcome_screens"
+	SysSettingOrgPrimaryDomain      = "_sys_org_primary_domain"
+	SysSettingDisablePasswordLogin  = "_sys_disable_password_login"
+	SysSettingOrgLanguage           = "_sys_org_language"
+	SysSettingInstallID             = "_sys_install_id"
 )
 
 func (router *SettingsRouter) SetupRoutes(s *mux.Router) {
@@ -92,6 +117,10 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	if vars["name"] == SysSettingAdminWelcomeScreens {
 		list, _ := GetSettingsRepository().GetAll(user.OrganizationID)
 		SendJSON(w, router.getAdminWelcomeScreens(user, list))
+		return
+	}
+	if vars["name"] == SysSettingBookingUIIntegrations {
+		SendJSON(w, router.getBookingUIIntegrations(user))
 		return
 	}
 	if vars["name"] == SysSettingOrgPrimaryDomain {
@@ -203,6 +232,11 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	if HasAnyPermission(user, user.OrganizationID) {
 		res = append(res, router.getAdminMenuItems(user))
 	}
+	// Booking UI integrations have no admin gate of their own - every
+	// authenticated user sees the booking UI, so this is appended
+	// unconditionally rather than behind HasAnyPermission like the admin-only
+	// menu items/welcome screens above.
+	res = append(res, router.getBookingUIIntegrations(user))
 	org, _ := GetOrganizationRepository().GetOne(user.OrganizationID)
 	res = append(res, router.getSysSettingVersion())
 	res = append(res, router.getSysSettingOrgPrimaryDomain(org))
@@ -324,6 +358,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SysSettingVersion ||
 		name == SysSettingDisablePasswordLogin ||
 		name == SysSettingOrgLanguage ||
+		name == SysSettingBookingUIIntegrations ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingHideReports.Name ||
 		name == SettingHideStats.Name ||
@@ -636,6 +671,82 @@ func (router *SettingsRouter) getAdminMenuItems(user *User) *GetSettingsResponse
 		Name:  SysSettingAdminMenuItems,
 		Value: string(jsonBytes),
 	}
+}
+
+// getBookingUIIntegrations returns the booking UI integrations the given
+// user may see. Items are filtered here rather than in the frontend so that
+// a plugin's panel is not advertised to someone the plugin would refuse
+// anyway.
+func (router *SettingsRouter) getBookingUIIntegrations(user *User) *GetSettingsResponse {
+	res := []SettingsRouterBookingUIIntegration{}
+	for _, plg := range GetPlugins() {
+		for _, item := range plg.GetBookingUIIntegrations(user.OrganizationID) {
+			if !router.canSeeBookingUIIntegration(user, item) {
+				continue
+			}
+			anyPerms := make([]string, 0, len(item.RequiredPermissionsAny))
+			for _, p := range item.RequiredPermissionsAny {
+				anyPerms = append(anyPerms, string(p))
+			}
+			width := item.Width
+			if width <= 0 {
+				width = BookingUIIntegrationDefaultWidth
+			} else if width < BookingUIIntegrationMinWidth {
+				width = BookingUIIntegrationMinWidth
+			} else if width > BookingUIIntegrationMaxWidth {
+				width = BookingUIIntegrationMaxWidth
+			}
+			resItem := SettingsRouterBookingUIIntegration{
+				ID:                     item.ID,
+				Title:                  item.Title,
+				Source:                 item.Source,
+				Icon:                   item.Icon,
+				TagName:                item.TagName,
+				Width:                  width,
+				RequiredPermission:     string(item.RequiredPermission),
+				RequiredLevel:          int(item.RequiredLevel),
+				RequiredPermissionsAny: anyPerms,
+				Titles:                 item.Titles,
+			}
+			res = append(res, resItem)
+		}
+	}
+	jsonBytes, err := json.Marshal(res)
+	if err != nil {
+		log.Println("Error marshalling booking UI integrations:", err)
+		return nil
+	}
+	return &GetSettingsResponse{
+		Name:  SysSettingBookingUIIntegrations,
+		Value: string(jsonBytes),
+	}
+}
+
+// canSeeBookingUIIntegration applies the permission a plugin declares for a
+// booking UI integration. Unlike admin menu items, no RequiredPermission at
+// all means visible to every authenticated user - the booking UI has no
+// coarse "admin"/"spaceadmin" gate to fall back to.
+func (router *SettingsRouter) canSeeBookingUIIntegration(user *User, item BookingUIIntegration) bool {
+	if len(item.RequiredPermissionsAny) > 0 {
+		level := item.RequiredLevel
+		if level <= PermissionLevelNone {
+			level = PermissionLevelAdmin
+		}
+		for _, p := range item.RequiredPermissionsAny {
+			if HasPermission(user, user.OrganizationID, p, level) {
+				return true
+			}
+		}
+		return false
+	}
+	if item.RequiredPermission != "" {
+		level := item.RequiredLevel
+		if level <= PermissionLevelNone {
+			level = PermissionLevelAdmin
+		}
+		return HasPermission(user, user.OrganizationID, item.RequiredPermission, level)
+	}
+	return true
 }
 
 // canSeeAdminMenuItem applies the permission a plugin declares for a menu

@@ -82,6 +82,7 @@ import RendererUtils from "@/util/RendererUtils";
 import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
+import PluginEmbed from "@/components/PluginEmbed";
 
 interface State {
   earliestEnterDate: Date;
@@ -146,6 +147,7 @@ interface State {
   spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
   windowWidth: number;
   alertMessage: string | null;
+  activeIntegrationId: string | null;
 }
 
 interface Props {
@@ -255,11 +257,39 @@ class Search extends React.Component<Props, State> {
       spaceCalendarLoading: false,
       spaceCalendarReturnTo: "showBookingNames",
       windowWidth: typeof window !== "undefined" ? window.innerWidth : 1024,
+      activeIntegrationId: null,
     };
   }
 
   onWindowResize = () => {
     this.setState({ windowWidth: window.innerWidth }, () => this.centerMap());
+  };
+
+  toggleIntegration = (id: string) => {
+    this.setState(
+      (prevState) => ({
+        activeIntegrationId: prevState.activeIntegrationId === id ? null : id,
+      }),
+      () => this.centerMap(),
+    );
+  };
+
+  // Same as clicking the active nav item again, but driven by the plugin's
+  // own close control (e.g. a chat assistant's close button) via
+  // PluginEmbed's onClose.
+  closeIntegration = () => {
+    this.setState({ activeIntegrationId: null }, () => this.centerMap());
+  };
+
+  getActiveBookingUIIntegration = (): any | null => {
+    if (!this.state.activeIntegrationId) {
+      return null;
+    }
+    return (
+      RuntimeConfig.INFOS.bookingUIIntegrations.find(
+        (item) => item.id === this.state.activeIntegrationId,
+      ) ?? null
+    );
   };
 
   onKeyDown = (e: KeyboardEvent) => {
@@ -351,6 +381,31 @@ class Search extends React.Component<Props, State> {
       return;
     }
     this.loadItems();
+    this.openIntegrationFromQuery();
+  };
+
+  // Lets NavBar's booking UI integration nav items work from any page: they
+  // navigate to /search?openIntegration=<id>, and this opens the panel once
+  // the page has mounted here, then strips the one-shot param from the URL.
+  openIntegrationFromQuery = () => {
+    const id = this.props.router.query["openIntegration"];
+    if (typeof id !== "string" || !id) {
+      return;
+    }
+    const integration = RuntimeConfig.INFOS.bookingUIIntegrations.find(
+      (item) =>
+        item.id === id && RuntimeConfig.canSeeBookingUIIntegration(item),
+    );
+    if (!integration) {
+      return;
+    }
+    this.setState({ activeIntegrationId: id });
+    const { openIntegration, ...query } = this.props.router.query;
+    this.props.router.replace(
+      { pathname: this.props.router.pathname, query },
+      undefined,
+      { shallow: true },
+    );
   };
 
   componentWillUnmount = () => {
@@ -1914,10 +1969,23 @@ class Search extends React.Component<Props, State> {
       </div>
     );
 
+    const activeIntegration = this.getActiveBookingUIIntegration();
+    const integrationPanelWidth = activeIntegration
+      ? activeIntegration.width || 200
+      : 0;
+    const contentAreaStyle: React.CSSProperties = activeIntegration
+      ? {
+          width:
+            this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
+              ? 0
+              : `calc(100% - ${integrationPanelWidth}px)`,
+        }
+      : { width: "100%" };
+
     let listOrMap: React.JSX.Element;
     if (this.locations.length === 0 || !this.state.locationId) {
       listOrMap = (
-        <div className="container-signin">
+        <div className="container-signin" style={contentAreaStyle}>
           <Form className="form-signin">
             <div
               style={{ paddingBottom: "100px" }}
@@ -1930,7 +1998,7 @@ class Search extends React.Component<Props, State> {
       );
     } else if (this.state.listView) {
       listOrMap = (
-        <div className="container-signin">
+        <div className="container-signin" style={contentAreaStyle}>
           <Form className="form-signin">
             <ListGroup className="space-list">
               {this.data.map((item) => this.renderListItem(item))}
@@ -1963,8 +2031,8 @@ class Search extends React.Component<Props, State> {
       });
       listOrMap = (
         <div
-          className="h-100 w-100 position-absolute bg-body-secondary"
-          style={{ position: "relative" }}
+          className="h-100 position-absolute bg-body-secondary"
+          style={{ position: "relative", ...contentAreaStyle }}
         >
           <TransformWrapper
             ref={this.transformWrapperRef}
@@ -2054,6 +2122,42 @@ class Search extends React.Component<Props, State> {
           </TransformWrapper>
         </div>
       );
+    }
+
+    let bookingUIIntegrationPanel: React.JSX.Element | null = null;
+    if (activeIntegration && activeIntegration.src) {
+      const src = activeIntegration.src as string;
+      const isAbsolute =
+        src.startsWith("http://") ||
+        src.startsWith("https://") ||
+        src.startsWith("//");
+      if (isAbsolute) {
+        console.error(
+          "Booking UI integration URL must be relative, absolute URLs are not allowed:",
+          src,
+        );
+      } else {
+        bookingUIIntegrationPanel = (
+          <div
+            className="booking-ui-integration-panel"
+            style={{
+              width:
+                this.state.windowWidth < RendererUtils.BREAKPOINT_SMALL
+                  ? "100%"
+                  : integrationPanelWidth,
+            }}
+          >
+            <PluginEmbed
+              id={"booking-ui-integration-" + activeIntegration.id}
+              src={Ajax.getBackendUrl() + src}
+              tagName={activeIntegration.tagName}
+              style={{ width: "100%", height: "100%" }}
+              onDataChanged={this.refreshPage}
+              onClose={this.closeIntegration}
+            />
+          </div>
+        );
+      }
     }
 
     const configContainer = (
@@ -3001,7 +3105,10 @@ class Search extends React.Component<Props, State> {
 
     return (
       <>
-        <NavBar />
+        <NavBar
+          activeIntegrationId={this.state.activeIntegrationId}
+          onToggleIntegration={this.toggleIntegration}
+        />
         {locationInfoModal}
         {searchModal}
         {confirmModal}
@@ -3011,6 +3118,7 @@ class Search extends React.Component<Props, State> {
         {successModal}
         {errorModal}
         {listOrMap}
+        {bookingUIIntegrationPanel}
         <Loading visible={this.state.loading} />
         {configContainer}
         <AlertModal

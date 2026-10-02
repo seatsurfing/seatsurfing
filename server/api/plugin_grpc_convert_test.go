@@ -63,6 +63,41 @@ func TestAdminUIMenuItemsRoundTrip(t *testing.T) {
 	}
 }
 
+func TestBookingUIIntegrationsRoundTrip(t *testing.T) {
+	items := []BookingUIIntegration{
+		{
+			ID:                     "chat",
+			Title:                  "Chat",
+			Source:                 "/s1",
+			Icon:                   "MessageSquare",
+			TagName:                "cloud-chat",
+			Width:                  320,
+			RequiredPermission:     "",
+			RequiredPermissionsAny: []Permission{},
+			Titles:                 map[string]string{"de": "Chatten", "en-GB": "Chat"},
+		},
+		{
+			ID:                     "reports",
+			Title:                  "Reports",
+			Source:                 "/s2",
+			Icon:                   "BarChart",
+			TagName:                "cloud-reports",
+			RequiredPermission:     "plugin.reports",
+			RequiredLevel:          PermissionLevelRead,
+			RequiredPermissionsAny: []Permission{},
+		},
+	}
+	got := BookingUIIntegrationsFromProto(BookingUIIntegrationsToProto(items))
+	if len(got) != len(items) {
+		t.Fatalf("length mismatch: got=%d want=%d", len(got), len(items))
+	}
+	for i := range items {
+		if !reflect.DeepEqual(got[i], items[i]) {
+			t.Errorf("item %d mismatch: got=%+v want=%+v", i, got[i], items[i])
+		}
+	}
+}
+
 func TestAdminWelcomeScreenRoundTrip(t *testing.T) {
 	s := &AdminWelcomeScreen{Source: "/welcome.html", SkipOnSettingTrue: "skip_welcome"}
 	got := AdminWelcomeScreenFromProto(AdminWelcomeScreenToProto(s))

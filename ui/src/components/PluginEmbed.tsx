@@ -8,6 +8,14 @@ interface Props {
   style?: React.CSSProperties;
   onNavigate?: (path: string) => void;
   onSkipWelcomeScreen?: (reload: boolean) => void;
+  // Called when the mounted element dispatches "plugin-data-changed", i.e.
+  // booking data changed as a side effect of using the integration (e.g. a
+  // chat assistant created or cancelled a booking).
+  onDataChanged?: () => void;
+  // Called when the mounted element dispatches "plugin-close", i.e. the
+  // plugin has its own close control (e.g. a chat assistant's close
+  // button) and wants the host to close the panel it's embedded in.
+  onClose?: () => void;
 }
 
 // Plugin JS modules load asynchronously (<script type="module">), so the
@@ -56,6 +64,10 @@ export default class PluginEmbed extends React.Component<Props, State> {
   componentDidMount() {
     this.mounted = true;
     this.setup();
+    window.addEventListener(
+      Ajax.ACCESS_TOKEN_REFRESHED_EVENT,
+      this.handleAccessTokenRefreshed,
+    );
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -71,6 +83,10 @@ export default class PluginEmbed extends React.Component<Props, State> {
   componentWillUnmount() {
     this.mounted = false;
     this.detachListeners(this.element);
+    window.removeEventListener(
+      Ajax.ACCESS_TOKEN_REFRESHED_EVENT,
+      this.handleAccessTokenRefreshed,
+    );
   }
 
   private setup() {
@@ -104,6 +120,55 @@ export default class PluginEmbed extends React.Component<Props, State> {
     }
   };
 
+  private handleDataChanged = () => {
+    this.props.onDataChanged?.();
+  };
+
+  private handleClose = () => {
+    this.props.onClose?.();
+  };
+
+  // Pull side of keeping the mounted element's access token fresh: the
+  // element dispatches this when the backend rejects its current token. This
+  // reuses the same refresh-token flow (and mutex) as the host's own
+  // requests, so it never races a refresh already in flight. If the refresh
+  // itself fails, the token is truly gone, so fall back to the host's normal
+  // session-expired handling instead of leaving the panel stuck.
+  private handleTokenExpired = async () => {
+    const refreshToken = Ajax.PERSISTER.readRefreshTokenFromLocalStorage();
+    if (!refreshToken) {
+      Ajax.onUnauthorized?.();
+      return;
+    }
+    try {
+      // Force: the backend just rejected the current token, so the locally
+      // cached expiry can't be trusted to decide whether a refresh is due.
+      await Ajax.refreshAccessToken(refreshToken, true);
+    } catch {
+      Ajax.onUnauthorized?.();
+      return;
+    }
+    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+    if (!credentials.accessToken) {
+      Ajax.onUnauthorized?.();
+      return;
+    }
+    if (this.element) {
+      (this.element as any).accessToken = credentials.accessToken;
+    }
+  };
+
+  // Push side of keeping the mounted element's access token fresh: whenever
+  // the host refreshes its own token (e.g. ahead of one of its own
+  // requests), it broadcasts the new value so a long-lived panel never has
+  // to wait for its token to actually expire first.
+  private handleAccessTokenRefreshed = (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    if (this.element && detail && typeof detail.accessToken === "string") {
+      (this.element as any).accessToken = detail.accessToken;
+    }
+  };
+
   private detachListeners(el: HTMLElement | null) {
     if (!el) {
       return;
@@ -113,6 +178,9 @@ export default class PluginEmbed extends React.Component<Props, State> {
       "plugin-skip-welcome-screen",
       this.handleSkipWelcomeScreen,
     );
+    el.removeEventListener("plugin-data-changed", this.handleDataChanged);
+    el.removeEventListener("plugin-token-expired", this.handleTokenExpired);
+    el.removeEventListener("plugin-close", this.handleClose);
   }
 
   private attachElement = (el: HTMLElement | null) => {
@@ -132,6 +200,9 @@ export default class PluginEmbed extends React.Component<Props, State> {
       "plugin-skip-welcome-screen",
       this.handleSkipWelcomeScreen,
     );
+    el.addEventListener("plugin-data-changed", this.handleDataChanged);
+    el.addEventListener("plugin-token-expired", this.handleTokenExpired);
+    el.addEventListener("plugin-close", this.handleClose);
   };
 
   render() {

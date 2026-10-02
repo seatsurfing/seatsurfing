@@ -18,3 +18,13 @@ func GetPlugins() []SeatsurfingPlugin {
 	copy(plugins, registeredPlugins)
 	return plugins
 }
+
+// ResetPluginsForTest clears every registered plugin. Test-only: production
+// code has no supported way to unregister a plugin once connected, but tests
+// that RegisterPlugin a fake need to undo it so it doesn't leak into other
+// tests sharing the same process.
+func ResetPluginsForTest() {
+	registeredPluginsMu.Lock()
+	defer registeredPluginsMu.Unlock()
+	registeredPlugins = nil
+}
