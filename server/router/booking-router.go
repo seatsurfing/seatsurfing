@@ -172,14 +172,9 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 
 func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
-		SendForbidden(w)
-		return
-	}
-	count, err := service.GetBookingService().GetPendingApprovalsCount(user)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
+	count, bErr := service.GetBookingService().GetPendingApprovalsCount(user)
+	if bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
 	res := &GetPendingApprovalsCountResponse{
@@ -190,14 +185,9 @@ func (router *BookingRouter) getPendingApprovalsCount(w http.ResponseWriter, r *
 
 func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
-		SendForbidden(w)
-		return
-	}
-	list, err := service.GetBookingService().GetPendingApprovals(user)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
+	list, bErr := service.GetBookingService().GetPendingApprovals(user)
+	if bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
 	res := []*GetBookingResponse{}

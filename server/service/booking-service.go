@@ -330,20 +330,42 @@ func (s *BookingService) CanApproveBookingsInSpace(user *User, organizationID, s
 }
 
 // GetPendingApprovals returns the pending bookings the user may decide on.
-func (s *BookingService) GetPendingApprovals(user *User) ([]*BookingDetails, error) {
-	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
-		return GetBookingRepository().GetBookingsRequiringApprovalInOrg(user.OrganizationID)
+func (s *BookingService) GetPendingApprovals(user *User) ([]*BookingDetails, *BookingError) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
+		return nil, &BookingError{Kind: BookingErrorForbidden}
 	}
-	return GetBookingRepository().GetBookingsRequiringApproval(user.ID)
+	var list []*BookingDetails
+	var err error
+	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		list, err = GetBookingRepository().GetBookingsRequiringApprovalInOrg(user.OrganizationID)
+	} else {
+		list, err = GetBookingRepository().GetBookingsRequiringApproval(user.ID)
+	}
+	if err != nil {
+		log.Println(err)
+		return nil, &BookingError{Kind: BookingErrorInternal}
+	}
+	return list, nil
 }
 
 // GetPendingApprovalsCount returns the number of pending bookings the user
 // may decide on.
-func (s *BookingService) GetPendingApprovalsCount(user *User) (int, error) {
-	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
-		return GetBookingRepository().GetBookingsCountRequiringApprovalInOrg(user.OrganizationID)
+func (s *BookingService) GetPendingApprovalsCount(user *User) (int, *BookingError) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
+		return 0, &BookingError{Kind: BookingErrorForbidden}
 	}
-	return GetBookingRepository().GetBookingsCountRequiringApproval(user.ID)
+	var count int
+	var err error
+	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		count, err = GetBookingRepository().GetBookingsCountRequiringApprovalInOrg(user.OrganizationID)
+	} else {
+		count, err = GetBookingRepository().GetBookingsCountRequiringApproval(user.ID)
+	}
+	if err != nil {
+		log.Println(err)
+		return 0, &BookingError{Kind: BookingErrorInternal}
+	}
+	return count, nil
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────
