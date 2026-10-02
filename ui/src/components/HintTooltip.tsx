@@ -7,7 +7,10 @@ interface Props {
 }
 
 const HintTooltip: React.FC<Props> = ({ hint }) => (
-  <OverlayTrigger placement="right" overlay={<Tooltip>{hint}</Tooltip>}>
+  <OverlayTrigger
+    placement="right"
+    overlay={<Tooltip style={{ whiteSpace: "pre-line" }}>{hint}</Tooltip>}
+  >
     <IconHelp
       size={16}
       style={{ marginLeft: "6px", cursor: "pointer", color: "#6c757d" }}
