@@ -626,5 +626,6 @@
   "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
   "frameBlockedBody": "For security reasons, this page cannot be displayed inside another application. Please open it in a new browser window or reload the app to sign in again.",
   "frameBlockedTitle": "This page cannot be displayed here.",
-  "openInNewWindow": "Open in new window"
+  "openInNewWindow": "Open in new window",
+  "period": "Period"
 }

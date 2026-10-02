@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Form, Col, Row, Button } from "react-bootstrap";
+import { Table, Form, Col, Row, Button, Nav } from "react-bootstrap";
 import {
   Plus as IconPlus,
   Search as IconSearch,
@@ -30,6 +30,7 @@ import Location from "@/types/Location";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import UserBookingCalendar from "@/components/calendar/UserBookingCalendar";
 
 const FILTER_OPTIONS = [
   "current",
@@ -40,7 +41,12 @@ const FILTER_OPTIONS = [
 ] as const;
 type FilterOption = (typeof FILTER_OPTIONS)[number];
 
+type BookingsTab = "all" | "user";
+
 interface State {
+  activeTab: BookingsTab;
+  calendarUser: string;
+  calendarUserInput: string;
   selectedItem: string;
   loading: boolean;
   start: Date;
@@ -91,12 +97,19 @@ class Bookings extends React.Component<Props, State> {
         : DateUtil.setHoursToMax(defaultDate);
     };
 
+    const activeTab: BookingsTab =
+      this.props.router.query["tab"] === "user" ? "user" : "all";
+    const queryUser = this.props.router.query["user"] as string;
+
     this.state = {
+      activeTab,
+      calendarUser: activeTab === "user" ? (queryUser ?? "") : "",
+      calendarUserInput: activeTab === "user" ? (queryUser ?? "") : "",
       selectedItem: "",
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
-      filterUser: this.props.router.query["user"] as string,
+      filterUser: (activeTab === "all" ? queryUser : undefined) as string,
       filterOption: FILTER_OPTIONS.includes(
         this.props.router.query["filter"] as FilterOption,
       )
@@ -140,6 +153,52 @@ class Bookings extends React.Component<Props, State> {
       },
       undefined,
       { shallow: true },
+    );
+  };
+
+  updateUserTabUrlParams = () => {
+    this.props.router.replace(
+      {
+        pathname: this.props.router.pathname,
+        query: {
+          tab: "user",
+          ...(this.state.calendarUser && { user: this.state.calendarUser }),
+        },
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
+
+  onTabSelect = (key: string | null) => {
+    if (key === "user") {
+      this.setState({ activeTab: "user" }, this.updateUserTabUrlParams);
+    } else if (key === "all") {
+      this.setState({ activeTab: "all" }, () =>
+        this.updateUrlParams(
+          this.state.filterOption === "enter_leave"
+            ? DateUtil.formatToDateTimeString(this.state.start)
+            : null,
+          this.state.filterOption === "enter_leave"
+            ? DateUtil.formatToDateTimeString(this.state.end)
+            : null,
+          this.state.filterOption,
+          this.state.filterUser,
+          this.state.filterLocation,
+        ),
+      );
+    }
+  };
+
+  onCalendarUserSelected = (selected: any) => {
+    this.setState({ calendarUserInput: selected[0]?.email ?? "" });
+  };
+
+  onCalendarUserSubmit = (e: any) => {
+    e.preventDefault();
+    this.setState(
+      { calendarUser: this.state.calendarUserInput },
+      this.updateUserTabUrlParams,
     );
   };
 
@@ -332,30 +391,67 @@ class Bookings extends React.Component<Props, State> {
         <IconDownload className="feather" /> {this.props.t("download")}
       </a>
     );
+    const addButton = RuntimeConfig.hasPermission(
+      Permission.Bookings,
+      PermissionLevel.Admin,
+    ) ? (
+      <Link
+        href="/admin/bookings/add"
+        className="btn btn-sm btn-outline-secondary"
+      >
+        <IconPlus className="feather" /> {this.props.t("add")}
+      </Link>
+    ) : (
+      <></>
+    );
     const buttons = (
       <>
         {this.data && this.data.length > 0 ? downloadButton : <></>}
         {searchButton}
-        {RuntimeConfig.hasPermission(
-          Permission.Bookings,
-          PermissionLevel.Admin,
-        ) ? (
-          <Link
-            href="/admin/bookings/add"
-            className="btn btn-sm btn-outline-secondary"
-          >
-            <IconPlus className="feather" /> {this.props.t("add")}
-          </Link>
-        ) : (
-          <></>
-        )}
+        {addButton}
       </>
+    );
+    const nav = (
+      <Nav
+        variant="tabs"
+        className="mb-3"
+        activeKey={this.state.activeTab}
+        onSelect={this.onTabSelect}
+      >
+        <Nav.Item>
+          <Nav.Link eventKey="all">{this.props.t("all")}</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="user">{this.props.t("user")}</Nav.Link>
+        </Nav.Item>
+      </Nav>
     );
     const form = (
       <Form onSubmit={this.onFilterSubmit} id="form">
         <Form.Group as={Row}>
+          <Form.Label column sm="2" htmlFor="area-select">
+            {this.props.t("area")}
+          </Form.Label>
+          <Col sm="4">
+            <Form.Select
+              id="area-select"
+              value={this.state.filterLocation}
+              onChange={(e: any) =>
+                this.setState({ filterLocation: e.target.value })
+              }
+            >
+              <option value="">({this.props.t("all")})</option>
+              {this.locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </Form.Select>
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row}>
           <Form.Label column sm="2" htmlFor="filter-select">
-            {this.props.t("filter")}
+            {this.props.t("period")}
           </Form.Label>
           <Col sm="4">
             <Form.Select
@@ -427,33 +523,56 @@ class Bookings extends React.Component<Props, State> {
             />
           </Col>
         </Form.Group>
-        <Form.Group as={Row}>
-          <Form.Label column sm="2" htmlFor="area-select">
-            {this.props.t("area")}
-          </Form.Label>
-          <Col sm="4">
-            <Form.Select
-              id="area-select"
-              value={this.state.filterLocation}
-              onChange={(e: any) =>
-                this.setState({ filterLocation: e.target.value })
-              }
-            >
-              <option value="">({this.props.t("all")})</option>
-              {this.locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-        </Form.Group>
       </Form>
     );
+
+    if (this.state.activeTab === "user") {
+      return (
+        <FullLayout
+          headline={this.props.t("bookings")}
+          buttons={
+            <>
+              {searchButton}
+              {addButton}
+            </>
+          }
+        >
+          {nav}
+          <Form onSubmit={this.onCalendarUserSubmit} id="form">
+            <Form.Group as={Row}>
+              <Form.Label column sm="2">
+                {this.props.t("user")}
+              </Form.Label>
+              <Col sm="4">
+                <UserSearchTypeahead
+                  t={this.props.t}
+                  defaultSelected={[{ email: this.state.calendarUserInput }]}
+                  multiple={false}
+                  onChange={this.onCalendarUserSelected}
+                />
+              </Col>
+            </Form.Group>
+          </Form>
+          {this.state.calendarUser ? (
+            <UserBookingCalendar
+              key={this.state.calendarUser}
+              t={this.props.t}
+              userEmail={this.state.calendarUser}
+              onSelectBooking={(id: string) =>
+                this.setState({ selectedItem: id })
+              }
+            />
+          ) : (
+            <></>
+          )}
+        </FullLayout>
+      );
+    }
 
     if (this.state.loading) {
       return (
         <FullLayout headline={this.props.t("bookings")}>
+          {nav}
           {form}
           <Loading />
         </FullLayout>
@@ -464,6 +583,7 @@ class Bookings extends React.Component<Props, State> {
     if (rows.length === 0) {
       return (
         <FullLayout headline={this.props.t("bookings")} buttons={buttons}>
+          {nav}
           {form}
           <p>{this.props.t("noRecords")}</p>
         </FullLayout>
@@ -471,6 +591,7 @@ class Bookings extends React.Component<Props, State> {
     }
     return (
       <FullLayout headline={this.props.t("bookings")} buttons={buttons}>
+        {nav}
         {form}
         <Table
           striped={true}

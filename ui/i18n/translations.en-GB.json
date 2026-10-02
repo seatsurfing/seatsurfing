@@ -456,6 +456,7 @@
   "passwordRequirements": "Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character.",
   "passwordUpdateInfo": "Your current password needs to be changed. Please select a new password that is different to the current one.",
   "pending": "Pending",
+  "period": "Period",
   "permission.analytics": "Utilization statistics",
   "permission.approvals": "Booking approvals",
   "permission.areas": "Areas, floor plans and spaces",
