@@ -41,7 +41,7 @@ export type PermissionMap = { [key: string]: number };
  * as-is by the caller when no translation exists.
  */
 export function permissionLabelKey(key: PermissionKey): string {
-  return "permission." + key;
+  return "permission_" + key;
 }
 
 /** Translation key for an access level's display name. */
