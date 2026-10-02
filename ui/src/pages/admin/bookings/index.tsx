@@ -98,7 +98,9 @@ class Bookings extends React.Component<Props, State> {
     };
 
     const activeTab: BookingsTab =
-      this.props.router.query["tab"] === "user" ? "user" : "all";
+      this.props.router.query["tab"] === "user" && this.canSearchUsers()
+        ? "user"
+        : "all";
     const queryUser = this.props.router.query["user"] as string;
 
     this.state = {
@@ -109,7 +111,9 @@ class Bookings extends React.Component<Props, State> {
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
-      filterUser: (activeTab === "all" ? queryUser : undefined) as string,
+      filterUser: (activeTab === "all" && this.canSearchUsers()
+        ? queryUser
+        : undefined) as string,
       filterOption: FILTER_OPTIONS.includes(
         this.props.router.query["filter"] as FilterOption,
       )
@@ -129,6 +133,10 @@ class Bookings extends React.Component<Props, State> {
     );
     this.loadItems();
   };
+
+  canSearchUsers = (): boolean =>
+    RuntimeConfig.hasPermission(Permission.Users, PermissionLevel.Read) ||
+    RuntimeConfig.hasPermission(Permission.Groups, PermissionLevel.Write);
 
   updateUrlParams = (
     enter: string | null,
@@ -424,9 +432,13 @@ class Bookings extends React.Component<Props, State> {
         <Nav.Item>
           <Nav.Link eventKey="all">{this.props.t("all")}</Nav.Link>
         </Nav.Item>
-        <Nav.Item>
-          <Nav.Link eventKey="user">{this.props.t("user")}</Nav.Link>
-        </Nav.Item>
+        {this.canSearchUsers() ? (
+          <Nav.Item>
+            <Nav.Link eventKey="user">{this.props.t("user")}</Nav.Link>
+          </Nav.Item>
+        ) : (
+          <></>
+        )}
       </Nav>
     );
     const form = (
@@ -513,7 +525,7 @@ class Bookings extends React.Component<Props, State> {
             />
           </Col>
         </Form.Group>
-        <Form.Group as={Row}>
+        <Form.Group as={Row} hidden={!this.canSearchUsers()}>
           <Form.Label column sm="2">
             {this.props.t("user")}
           </Form.Label>
