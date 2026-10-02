@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime/debug"
+	"slices"
 	"strconv"
 	"sync"
 	"testing"
@@ -3093,7 +3094,9 @@ func TestBookingsGetICalForeignUser(t *testing.T) {
 func TestBookingsApproveNonApprover(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	adminUser := CreateTestUserOrgAdmin(org)
+	adminUser := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelWrite,
+	})
 	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
 	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
 
@@ -3403,4 +3406,88 @@ func TestBookingsNoConflictBackToBack(t *testing.T) {
 	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusConflict, res.Code)
+}
+
+func TestBookingsApproveAdminLevelWithoutGroupMembership(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	approvalAdmin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelAdmin,
+	})
+	group := &Group{Name: "Approver Group", OrganizationID: org.ID}
+	GetGroupRepository().Create(group)
+	_, space := CreateTestLocationAndSpace(org)
+	GetSpaceRepository().AddApprovers(space, []string{group.ID})
+	booking := CreateTestBooking9To5(user, space, 1)
+
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+booking.ID+"/approve", approvalAdmin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	approved, err := GetBookingRepository().GetOne(booking.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, true, approved.Approved)
+}
+
+func TestBookingsPendingApprovalsByLevel(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	groupApprover := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelWrite,
+	})
+	approvalAdmin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelAdmin,
+	})
+	group1 := &Group{Name: "Group 1", OrganizationID: org.ID}
+	GetGroupRepository().Create(group1)
+	GetGroupRepository().AddMembers(group1, []string{groupApprover.ID})
+	group2 := &Group{Name: "Group 2", OrganizationID: org.ID}
+	GetGroupRepository().Create(group2)
+	_, space1 := CreateTestLocationAndSpace(org)
+	GetSpaceRepository().AddApprovers(space1, []string{group1.ID})
+	_, space2 := CreateTestLocationAndSpace(org)
+	GetSpaceRepository().AddApprovers(space2, []string{group2.ID})
+	booking1 := CreateTestBooking9To5(user, space1, 1)
+	booking2 := CreateTestBooking9To5(user, space2, 1)
+
+	otherOrg := CreateTestOrg("other.com")
+	_, otherSpace := CreateTestLocationAndSpace(otherOrg)
+	CreateTestBooking9To5(CreateTestUserInOrg(otherOrg), otherSpace, 1)
+
+	getPending := func(userID string) ([]*GetBookingResponse, int) {
+		req := NewHTTPRequest("GET", "/booking/pendingapprovals/", userID, nil)
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+		var list []*GetBookingResponse
+		json.Unmarshal(res.Body.Bytes(), &list)
+		req = NewHTTPRequest("GET", "/booking/pendingapprovals/count", userID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+		var count *GetPendingApprovalsCountResponse
+		json.Unmarshal(res.Body.Bytes(), &count)
+		return list, count.Count
+	}
+
+	list, count := getPending(groupApprover.ID)
+	CheckTestInt(t, 1, len(list))
+	CheckTestInt(t, 1, count)
+	CheckTestString(t, booking1.ID, list[0].ID)
+
+	list, count = getPending(approvalAdmin.ID)
+	CheckTestInt(t, 2, len(list))
+	CheckTestInt(t, 2, count)
+	ids := []string{list[0].ID, list[1].ID}
+	if !slices.Contains(ids, booking1.ID) || !slices.Contains(ids, booking2.ID) {
+		t.Fatalf("expected bookings %s and %s, got %v", booking1.ID, booking2.ID, ids)
+	}
+
+	payload := `{"approved": true}`
+	req := NewHTTPRequest("POST", "/booking/"+booking2.ID+"/approve", groupApprover.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }

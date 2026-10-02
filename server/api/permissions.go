@@ -75,7 +75,9 @@ var builtInPermissions = []PermissionDefinition{
 	{Key: PermissionAreas, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
 	{Key: PermissionSpaceAttributes, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
 	{Key: PermissionBookings, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead, PermissionLevelAdmin}},
-	{Key: PermissionApprovals, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelAdmin}},
+	// Write approves bookings of spaces whose approver groups include the
+	// user, admin approves every pending booking of the organization.
+	{Key: PermissionApprovals, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelWrite, PermissionLevelAdmin}},
 	{Key: PermissionAnalytics, AllowedLevels: []PermissionLevel{PermissionLevelNone, PermissionLevelRead}},
 	// Separate from PermissionAnalytics because it covers personal data - who
 	// was in the office and when - rather than aggregate occupancy. The two

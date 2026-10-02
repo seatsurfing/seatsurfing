@@ -293,6 +293,81 @@ func (s *BookingService) GetUpcomingBookingsForUser(user *User) ([]*BookingDetai
 	return res, nil
 }
 
+// ─── Approvals ───────────────────────────────────────────────────────────────
+
+// CanApproveBookingsInSpace reports whether user may approve or decline
+// pending bookings of the space. Approvals at write level are limited to
+// spaces whose approver groups include the user; admin level covers every
+// space of the organization.
+func (s *BookingService) CanApproveBookingsInSpace(user *User, organizationID, spaceID string) bool {
+	if !HasPermission(user, organizationID, PermissionApprovals, PermissionLevelWrite) {
+		return false
+	}
+	if HasPermission(user, organizationID, PermissionApprovals, PermissionLevelAdmin) {
+		return true
+	}
+	approverGroups, err := GetSpaceRepository().GetApproverGroupIDs(spaceID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	if len(approverGroups) == 0 {
+		return true
+	}
+	userGroups, err := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	for _, group := range userGroups {
+		for _, approverGroup := range approverGroups {
+			if group.ID == approverGroup {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// GetPendingApprovals returns the pending bookings the user may decide on.
+func (s *BookingService) GetPendingApprovals(user *User) ([]*BookingDetails, *BookingError) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
+		return nil, &BookingError{Kind: BookingErrorForbidden}
+	}
+	var list []*BookingDetails
+	var err error
+	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		list, err = GetBookingRepository().GetBookingsRequiringApprovalInOrg(user.OrganizationID)
+	} else {
+		list, err = GetBookingRepository().GetBookingsRequiringApproval(user.ID)
+	}
+	if err != nil {
+		log.Println(err)
+		return nil, &BookingError{Kind: BookingErrorInternal}
+	}
+	return list, nil
+}
+
+// GetPendingApprovalsCount returns the number of pending bookings the user
+// may decide on.
+func (s *BookingService) GetPendingApprovalsCount(user *User) (int, *BookingError) {
+	if !HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelWrite) {
+		return 0, &BookingError{Kind: BookingErrorForbidden}
+	}
+	var count int
+	var err error
+	if HasPermission(user, user.OrganizationID, PermissionApprovals, PermissionLevelAdmin) {
+		count, err = GetBookingRepository().GetBookingsCountRequiringApprovalInOrg(user.OrganizationID)
+	} else {
+		count, err = GetBookingRepository().GetBookingsCountRequiringApproval(user.ID)
+	}
+	if err != nil {
+		log.Println(err)
+		return 0, &BookingError{Kind: BookingErrorInternal}
+	}
+	return count, nil
+}
+
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 // CheckBooking validates a booking to be created (bookingID empty) or

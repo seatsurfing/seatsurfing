@@ -72,6 +72,19 @@ func (r *RoleStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
+	if curVersion < 62 {
+		// Approvals gained a write level limited to the user's approver
+		// groups, which is what the admin level granted until now. Admin
+		// level now covers every pending booking of the organization, and
+		// stays with roles meant to grant the full catalogue.
+		if _, err := GetDatabase().DB().Exec(
+			"UPDATE role_permissions SET level = $1 "+
+				"WHERE permission = $2 AND level = $3 "+
+				"AND role_id IN (SELECT id FROM roles WHERE system = FALSE AND auto_grant_plugin_permissions = FALSE)",
+			int(PermissionLevelWrite), string(PermissionApprovals), int(PermissionLevelAdmin)); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // legacyRoleColumnExists reports whether users.role is still present. The
@@ -212,7 +225,7 @@ func floorPlanAdminPermissions() map[Permission]PermissionLevel {
 		PermissionAreas:           PermissionLevelAdmin,
 		PermissionSpaceAttributes: PermissionLevelAdmin,
 		PermissionBookings:        PermissionLevelAdmin,
-		PermissionApprovals:       PermissionLevelAdmin,
+		PermissionApprovals:       PermissionLevelWrite,
 		PermissionAnalytics:       PermissionLevelRead,
 		PermissionPresenceReport:  PermissionLevelRead,
 		PermissionUsers:           PermissionLevelRead,

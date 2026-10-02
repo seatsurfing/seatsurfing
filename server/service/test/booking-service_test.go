@@ -218,3 +218,29 @@ func TestBookingServiceDeleteBookingRules(t *testing.T) {
 		t.Fatalf("unexpected error %v", bErr)
 	}
 }
+
+func TestBookingServicePendingApprovalsRequireWritePermission(t *testing.T) {
+	org, user, _, space := setupServiceTest(t)
+	approver := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelWrite,
+	})
+	group := CreateTestGroup(org, user)
+	GetGroupRepository().AddMembers(group, []string{approver.ID})
+	GetSpaceRepository().AddApprovers(space, []string{group.ID})
+	CreateTestBooking9To5(CreateTestUserInOrg(org), space, 1)
+	svc := GetBookingService()
+
+	list, bErr := svc.GetPendingApprovals(user)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
+	CheckTestInt(t, 0, len(list))
+	count, bErr := svc.GetPendingApprovalsCount(user)
+	CheckTestBool(t, true, bErr != nil && bErr.Kind == BookingErrorForbidden)
+	CheckTestInt(t, 0, count)
+
+	list, bErr = svc.GetPendingApprovals(approver)
+	CheckTestIsNil(t, bErr)
+	CheckTestInt(t, 1, len(list))
+	count, bErr = svc.GetPendingApprovalsCount(approver)
+	CheckTestIsNil(t, bErr)
+	CheckTestInt(t, 1, count)
+}
