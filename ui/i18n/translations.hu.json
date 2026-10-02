@@ -628,5 +628,14 @@
   "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
   "frameBlockedBody": "For security reasons, this page cannot be displayed inside another application. Please open it in a new browser window or reload the app to sign in again.",
   "frameBlockedTitle": "This page cannot be displayed here.",
-  "openInNewWindow": "Open in new window"
+  "openInNewWindow": "Open in new window",
+  "permissionHint_bookings_admin": "Additionally create, change and delete bookings on behalf of other users.",
+  "permissionHint_bookings_read": "View the bookings of all users and see who booked which space.",
+  "permissionHint_groups_admin": "Additionally create, rename and delete groups.",
+  "permissionHint_groups_read": "View groups and their members.",
+  "permissionHint_groups_write": "Additionally add and remove group members.",
+  "permissionHint_roles_admin": "Additionally create, edit and delete roles, assign them to users and map them to authentication providers.",
+  "permissionHint_roles_read": "View roles and which users hold them.",
+  "permissionHint_users_admin": "Additionally create, edit and delete users.",
+  "permissionHint_users_read": "View users and their details."
 }
