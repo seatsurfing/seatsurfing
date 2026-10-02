@@ -4,6 +4,7 @@ import Formatting from "../util/Formatting";
 import DateUtil from "../util/DateUtil";
 
 export default class RecurringBooking extends Entity {
+  static CadenceNone: number = 0;
   static CadenceDaily: number = 1;
   static CadenceWeekly: number = 2;
 
@@ -23,7 +24,7 @@ export default class RecurringBooking extends Entity {
     this.enter = new Date();
     this.leave = new Date();
     this.end = new Date();
-    this.cadence = 0;
+    this.cadence = RecurringBooking.CadenceNone;
     this.cycle = 0;
     this.weekdays = [];
   }
@@ -56,7 +57,7 @@ export default class RecurringBooking extends Entity {
     this.leave = new Date(input.leave);
     this.end = new Date(input.end);
     this.spaceId = input.spaceId || "";
-    this.cadence = input.cadence || 0;
+    this.cadence = input.cadence || RecurringBooking.CadenceNone;
     this.cycle = input.cycle || 0;
     if (input.subject) {
       this.subject = input.subject;

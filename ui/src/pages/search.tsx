@@ -236,7 +236,7 @@ class Search extends React.Component<Props, State> {
       recurrence: {
         active: false,
         finalNumBookings: 0,
-        cadence: 0, // 1 = daily, 2 = weekly, 3 = monthly
+        cadence: RecurringBooking.CadenceNone,
         cycle: 1, // every x days/weeks/months
         weekdays: [], // only used if cadence is weekly
         end: new Date(this.recurrenceMaxEndDate.valueOf()),
@@ -507,10 +507,6 @@ class Search extends React.Component<Props, State> {
             state.prefWorkdayStart = "00:00";
             state.prefWorkdayEnd = "23:59";
           }
-          state.recurrence = {
-            ...self.state.recurrence,
-            weekdays: state.prefWorkdays,
-          };
           self.setState(
             {
               ...state,
@@ -1766,17 +1762,13 @@ class Search extends React.Component<Props, State> {
   };
 
   resetRecurrence = () => {
-    const weekdays = Object.assign([], this.state.prefWorkdays);
-    if (weekdays.indexOf(this.state.enter.getDay()) === -1) {
-      weekdays.push(this.state.enter.getDay());
-    }
     this.setState({
       recurrence: {
         active: false,
         finalNumBookings: 0,
-        cadence: 0,
+        cadence: RecurringBooking.CadenceNone,
         cycle: 1,
-        weekdays,
+        weekdays: [this.state.enter.getDay()],
         end: new Date(this.recurrenceMaxEndDate.valueOf()),
         precheckLoading: false,
         precheckResults: [],
@@ -1835,7 +1827,10 @@ class Search extends React.Component<Props, State> {
 
   renderWeekdayButtons = () => {
     const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
-    return weekdays.map((day, index) => {
+    const weekStartDay = RuntimeConfig.INFOS.weekStartDay;
+    return [0, 1, 2, 3, 4, 5, 6].map((offset) => {
+      const index = (weekStartDay + offset) % 7;
+      const day = weekdays[index];
       const isActive = this.state.recurrence.weekdays.includes(index);
       return (
         <Button
@@ -2623,16 +2618,24 @@ class Search extends React.Component<Props, State> {
                         recurrence: {
                           ...this.state.recurrence,
                           cadence: window.parseInt(e.target.value),
-                          active: window.parseInt(e.target.value) !== 0,
+                          active:
+                            window.parseInt(e.target.value) !==
+                            RecurringBooking.CadenceNone,
                         },
                       },
                       () => this.onRecurrenceOptionsChanged(),
                     );
                   }}
                 >
-                  <option value="0">{this.props.t("never")}</option>
-                  <option value="1">{this.props.t("daily")}</option>
-                  <option value="2">{this.props.t("weekly")}</option>
+                  <option value={RecurringBooking.CadenceNone}>
+                    {this.props.t("never")}
+                  </option>
+                  <option value={RecurringBooking.CadenceDaily}>
+                    {this.props.t("daily")}
+                  </option>
+                  <option value={RecurringBooking.CadenceWeekly}>
+                    {this.props.t("weekly")}
+                  </option>
                 </Form.Select>
               </Col>
             </Form.Group>
@@ -2667,7 +2670,8 @@ class Search extends React.Component<Props, State> {
                     }}
                   />
                   <InputGroup.Text>
-                    {this.state.recurrence.cadence === 1
+                    {this.state.recurrence.cadence ===
+                    RecurringBooking.CadenceDaily
                       ? this.props.t("days")
                       : this.props.t("weeks")}
                   </InputGroup.Text>
@@ -2677,11 +2681,13 @@ class Search extends React.Component<Props, State> {
             <Form.Group
               as={Row}
               className={
-                this.state.recurrence.cadence === 2
+                this.state.recurrence.cadence === RecurringBooking.CadenceWeekly
                   ? "d-flex margin-top-10"
                   : ""
               }
-              hidden={this.state.recurrence.cadence !== 2}
+              hidden={
+                this.state.recurrence.cadence !== RecurringBooking.CadenceWeekly
+              }
             >
               <Form.Label column sm="4">
                 {this.props.t("on")}:
