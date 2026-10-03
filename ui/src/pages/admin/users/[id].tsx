@@ -82,6 +82,7 @@ class EditUser extends React.Component<Props, State> {
   usersMax: number = 0;
   usersCur: number = -1;
   roles: Role[] = [];
+  initialAuthMethod: string | null = null;
 
   constructor(props: any) {
     super(props);
@@ -178,13 +179,8 @@ class EditUser extends React.Component<Props, State> {
         const isServiceAccount =
           user.accountType === User.AccountTypeServiceAccountRO ||
           user.accountType === User.AccountTypeServiceAccountRW;
-        if (
-          RuntimeConfig.INFOS.disablePasswordLogin &&
-          !isServiceAccount &&
-          user.id !== RuntimeConfig.INFOS.userId
-        ) {
-          authMethod = User.AuthMethodProvider;
-        }
+        // Keep the existing auth method until the admin explicitly changes it
+        this.initialAuthMethod = isServiceAccount ? null : authMethod;
         const apiTokenConfigured = isServiceAccount
           ? await User.getApiTokenStatus(user.id).catch(() => false)
           : false;
@@ -226,8 +222,10 @@ class EditUser extends React.Component<Props, State> {
       // Only send invitation if email changed or explicitly requested
       const emailChanged = this.state.email !== this.state.originalEmail;
       const isNewUser = !this.entity.id;
+      // Invitations set a password, which is pointless if password login is disabled
       this.entity.sendInvitation =
-        isNewUser || emailChanged || this.state.resendInvitation;
+        !RuntimeConfig.INFOS.disablePasswordLogin &&
+        (isNewUser || emailChanged || this.state.resendInvitation);
       this.entity.password = "";
       this.entity.authProviderId = "";
     } else if (this.state.authMethod === User.AuthMethodProvider) {
@@ -300,6 +298,8 @@ class EditUser extends React.Component<Props, State> {
     let authMethod = this.state.authMethod;
     if (this.isServiceAccount(accountType)) {
       authMethod = User.AuthMethodPassword;
+    } else if (this.initialAuthMethod) {
+      authMethod = this.initialAuthMethod;
     } else if (RuntimeConfig.INFOS.disablePasswordLogin) {
       authMethod = User.AuthMethodProvider;
     }
@@ -791,7 +791,8 @@ class EditUser extends React.Component<Props, State> {
               isOwnUser ||
               this.isServiceAccount(this.state.accountType) ||
               !this.entity.id ||
-              this.state.authMethod !== User.AuthMethodInvitation
+              this.state.authMethod !== User.AuthMethodInvitation ||
+              RuntimeConfig.INFOS.disablePasswordLogin
             }
           >
             <Col sm="6">
