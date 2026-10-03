@@ -99,7 +99,9 @@ class EditUser extends React.Component<Props, State> {
       requirePassword: false,
       password: "",
       changePassword: false,
-      authMethod: User.AuthMethodPassword,
+      authMethod: RuntimeConfig.INFOS.disablePasswordLogin
+        ? User.AuthMethodProvider
+        : User.AuthMethodPassword,
       authProviderId: "",
       sendInvitation: false,
       resendInvitation: false,
@@ -176,6 +178,13 @@ class EditUser extends React.Component<Props, State> {
         const isServiceAccount =
           user.accountType === User.AccountTypeServiceAccountRO ||
           user.accountType === User.AccountTypeServiceAccountRW;
+        if (
+          RuntimeConfig.INFOS.disablePasswordLogin &&
+          !isServiceAccount &&
+          user.id !== RuntimeConfig.INFOS.userId
+        ) {
+          authMethod = User.AuthMethodProvider;
+        }
         const apiTokenConfigured = isServiceAccount
           ? await User.getApiTokenStatus(user.id).catch(() => false)
           : false;
@@ -288,7 +297,13 @@ class EditUser extends React.Component<Props, State> {
     let changePassword = this.isServiceAccount(accountType)
       ? true
       : this.state.changePassword;
-    this.setState({ accountType, changePassword });
+    let authMethod = this.state.authMethod;
+    if (this.isServiceAccount(accountType)) {
+      authMethod = User.AuthMethodPassword;
+    } else if (RuntimeConfig.INFOS.disablePasswordLogin) {
+      authMethod = User.AuthMethodProvider;
+    }
+    this.setState({ accountType, changePassword, authMethod });
     if (changePassword) {
       this.generatePassword();
     }
@@ -656,26 +671,38 @@ class EditUser extends React.Component<Props, State> {
           {/* Auth method selection for non-service accounts */}
           <Form.Group
             as={Row}
-            hidden={
-              isOwnUser ||
-              this.isServiceAccount(this.state.accountType) ||
-              RuntimeConfig.INFOS.disablePasswordLogin
-            }
+            hidden={isOwnUser || this.isServiceAccount(this.state.accountType)}
           >
-            <Form.Label htmlFor="auth-method-password" column sm="2">
+            <Form.Label
+              htmlFor={
+                RuntimeConfig.INFOS.disablePasswordLogin
+                  ? "auth-method-provider"
+                  : "auth-method-password"
+              }
+              column
+              sm="2"
+            >
               {this.props.t("authMethod")}
             </Form.Label>
             <Col sm="4">
-              <Form.Check
-                type="radio"
-                id="auth-method-password"
-                name="authMethod"
-                label={this.props.t("authMethodPassword")}
-                checked={this.state.authMethod === User.AuthMethodPassword}
-                onChange={() =>
-                  this.setState({ authMethod: User.AuthMethodPassword })
-                }
-              />
+              {RuntimeConfig.INFOS.disablePasswordLogin &&
+                this.authProviders.length === 0 && (
+                  <Alert variant="warning">
+                    {this.props.t("authProviderRequiredHint")}
+                  </Alert>
+                )}
+              {!RuntimeConfig.INFOS.disablePasswordLogin && (
+                <Form.Check
+                  type="radio"
+                  id="auth-method-password"
+                  name="authMethod"
+                  label={this.props.t("authMethodPassword")}
+                  checked={this.state.authMethod === User.AuthMethodPassword}
+                  onChange={() =>
+                    this.setState({ authMethod: User.AuthMethodPassword })
+                  }
+                />
+              )}
               {this.authProviders.length > 0 && (
                 <Form.Check
                   type="radio"
@@ -688,16 +715,18 @@ class EditUser extends React.Component<Props, State> {
                   }
                 />
               )}
-              <Form.Check
-                type="radio"
-                id="auth-method-invitation"
-                name="authMethod"
-                label={this.props.t("authMethodInvitation")}
-                checked={this.state.authMethod === User.AuthMethodInvitation}
-                onChange={() =>
-                  this.setState({ authMethod: User.AuthMethodInvitation })
-                }
-              />
+              {!RuntimeConfig.INFOS.disablePasswordLogin && (
+                <Form.Check
+                  type="radio"
+                  id="auth-method-invitation"
+                  name="authMethod"
+                  label={this.props.t("authMethodInvitation")}
+                  checked={this.state.authMethod === User.AuthMethodInvitation}
+                  onChange={() =>
+                    this.setState({ authMethod: User.AuthMethodInvitation })
+                  }
+                />
+              )}
             </Col>
           </Form.Group>
 
@@ -707,8 +736,7 @@ class EditUser extends React.Component<Props, State> {
             hidden={
               isOwnUser ||
               this.isServiceAccount(this.state.accountType) ||
-              this.state.authMethod !== User.AuthMethodProvider ||
-              RuntimeConfig.INFOS.disablePasswordLogin
+              this.state.authMethod !== User.AuthMethodProvider
             }
           >
             <Form.Label htmlFor="authProvider" column sm="2">

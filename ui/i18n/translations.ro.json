@@ -638,5 +638,6 @@
   "permissionHint_roles_admin": "Additionally create, edit and delete roles, assign them to users and map them to authentication providers.",
   "permissionHint_roles_read": "View roles and which users hold them.",
   "permissionHint_users_admin": "Additionally create, edit and delete users.",
-  "permissionHint_users_read": "View users and their details."
+  "permissionHint_users_read": "View users and their details.",
+  "authProviderRequiredHint": "Password login is disabled. Please create an identity provider in the settings first."
 }
