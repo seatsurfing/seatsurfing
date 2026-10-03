@@ -64,6 +64,7 @@ var (
 	ResponseCodePasswordUpdateRequired = 5001
 
 	ResponseCodeAuthProviderAlreadyExists = 6001
+	ResponseCodeAuthProviderHasUsers      = 6002
 
 	ResponseCodeRoleWouldLeaveOrgWithoutAdmin = 7001
 	ResponseCodeRoleEscalationNotAllowed      = 7002

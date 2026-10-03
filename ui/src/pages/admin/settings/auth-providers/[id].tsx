@@ -233,8 +233,17 @@ class EditAuthProvider extends React.Component<Props, State> {
     try {
       await this.entity.delete();
       this.setState({ goBack: true });
-    } catch {
-      this.setState({ error: true });
+    } catch (e) {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
+      this.setState({
+        error: true,
+        errorText: code
+          ? ErrorText.getTextForAppCode(code, this.props.t)
+          : this.props.t("errorUnknown"),
+      });
     }
   };
 
