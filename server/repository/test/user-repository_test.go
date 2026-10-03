@@ -83,6 +83,34 @@ func TestUsersCountHuman(t *testing.T) {
 	CheckTestInt(t, 4, res)
 }
 
+func TestUsersGetByKeywordServiceAccounts(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	person := &User{Email: "max.person@test.com", OrganizationID: org.ID}
+	GetUserRepository().Create(person)
+	ro := &User{Email: "max.ro@test.com", OrganizationID: org.ID, AccountType: AccountTypeServiceAccountRO}
+	GetUserRepository().Create(ro)
+	rw := &User{Email: "max.rw@test.com", OrganizationID: org.ID, AccountType: AccountTypeServiceAccountRW}
+	GetUserRepository().Create(rw)
+
+	list, err := GetUserRepository().GetByKeyword(org.ID, "max", false)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 1, len(list))
+	CheckTestString(t, person.ID, list[0].ID)
+
+	list, err = GetUserRepository().GetByKeyword(org.ID, "max.rw", false)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 0, len(list))
+
+	// Service accounts are found if explicitly requested
+	list, err = GetUserRepository().GetByKeyword(org.ID, "max", true)
+	CheckTestBool(t, true, err == nil)
+	CheckTestInt(t, 3, len(list))
+	CheckTestString(t, person.ID, list[0].ID)
+	CheckTestString(t, ro.ID, list[1].ID)
+	CheckTestString(t, rw.ID, list[2].ID)
+}
+
 func TestUsersCountHumanScopedByOrg(t *testing.T) {
 	ClearTestDB()
 	org1 := CreateTestOrg("test1.com")

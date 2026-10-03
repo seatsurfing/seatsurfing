@@ -575,7 +575,7 @@ func (router *UserRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	var list []*User
 	var err error
 	if strings.TrimSpace(search) != "" {
-		list, err = GetUserRepository().GetByKeyword(user.OrganizationID, strings.TrimSpace(search))
+		list, err = GetUserRepository().GetByKeyword(user.OrganizationID, strings.TrimSpace(search), true)
 	} else {
 		list, err = GetUserRepository().GetAll(user.OrganizationID, 1000, 0)
 	}
