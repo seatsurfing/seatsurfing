@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.133.0](https://github.com/seatsurfing/seatsurfing/compare/v1.132.1...v1.133.0) (2026-10-03)
+
+
+### ✨ Features
+
+* **admin-ui:** add approval permission for org ([#2734](https://github.com/seatsurfing/seatsurfing/issues/2734)) ([4e52113](https://github.com/seatsurfing/seatsurfing/commit/4e5211310d49bfc76311c06d2dd2a40c07d1b804))
+* **admin-ui:** add user tab to bookings UI ([#2733](https://github.com/seatsurfing/seatsurfing/issues/2733)) ([90ac24e](https://github.com/seatsurfing/seatsurfing/commit/90ac24ed797d8b047c735f4e06be5b243ecb7d5f))
+* **server:** add booking UI integrations to the plugin API ([#2714](https://github.com/seatsurfing/seatsurfing/issues/2714)) ([e3041be](https://github.com/seatsurfing/seatsurfing/commit/e3041beee098cdba87923c1b057f9d0dc39fcba9))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add tooltips for roles ([#2732](https://github.com/seatsurfing/seatsurfing/issues/2732)) ([48dbfe5](https://github.com/seatsurfing/seatsurfing/commit/48dbfe530347fcb3cd1dde38e3833ed51538e508))
+* **admin-ui:** fix labels for permission radio buttons ([#2735](https://github.com/seatsurfing/seatsurfing/issues/2735)) ([f2595b9](https://github.com/seatsurfing/seatsurfing/commit/f2595b921c9cadda47891d66fdc2e14ba97663b6))
+* **booking-ui:** order weekdays for recurring bookings and uncheck by default ([#2736](https://github.com/seatsurfing/seatsurfing/issues/2736)) ([5877bf7](https://github.com/seatsurfing/seatsurfing/commit/5877bf783bd951bcad0d677a63f8704766c34dc2))
+
 ## [1.132.1](https://github.com/seatsurfing/seatsurfing/compare/v1.132.0...v1.132.1) (2026-10-01)
 
 
