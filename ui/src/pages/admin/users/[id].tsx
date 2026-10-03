@@ -82,7 +82,9 @@ class EditUser extends React.Component<Props, State> {
   usersMax: number = 0;
   usersCur: number = -1;
   roles: Role[] = [];
-  initialAuthMethod: string | null = null;
+  // Auth settings of the person account, remembered while a service account type is selected
+  savedPersonAuth: { authMethod: string; changePassword: boolean } | null =
+    null;
 
   constructor(props: any) {
     super(props);
@@ -179,8 +181,6 @@ class EditUser extends React.Component<Props, State> {
         const isServiceAccount =
           user.accountType === User.AccountTypeServiceAccountRO ||
           user.accountType === User.AccountTypeServiceAccountRW;
-        // Keep the existing auth method until the admin explicitly changes it
-        this.initialAuthMethod = isServiceAccount ? null : authMethod;
         const apiTokenConfigured = isServiceAccount
           ? await User.getApiTokenStatus(user.id).catch(() => false)
           : false;
@@ -292,19 +292,24 @@ class EditUser extends React.Component<Props, State> {
   };
 
   changeAccountType = (accountType: number) => {
-    let changePassword = this.isServiceAccount(accountType)
-      ? true
-      : this.state.changePassword;
+    const wasServiceAccount = this.isServiceAccount(this.state.accountType);
+    const isServiceAccount = this.isServiceAccount(accountType);
     let authMethod = this.state.authMethod;
-    if (this.isServiceAccount(accountType)) {
+    let changePassword = this.state.changePassword;
+    if (isServiceAccount && !wasServiceAccount) {
+      this.savedPersonAuth = { authMethod, changePassword };
       authMethod = User.AuthMethodPassword;
-    } else if (this.initialAuthMethod) {
-      authMethod = this.initialAuthMethod;
-    } else if (RuntimeConfig.INFOS.disablePasswordLogin) {
-      authMethod = User.AuthMethodProvider;
+      changePassword = true;
+    } else if (!isServiceAccount && wasServiceAccount) {
+      if (this.savedPersonAuth) {
+        ({ authMethod, changePassword } = this.savedPersonAuth);
+        this.savedPersonAuth = null;
+      } else if (RuntimeConfig.INFOS.disablePasswordLogin) {
+        authMethod = User.AuthMethodProvider;
+      }
     }
     this.setState({ accountType, changePassword, authMethod });
-    if (changePassword) {
+    if (isServiceAccount && !wasServiceAccount) {
       this.generatePassword();
     }
   };
