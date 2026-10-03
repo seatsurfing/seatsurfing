@@ -99,11 +99,13 @@ func TestMigrationPreservesEffectiveAccess(t *testing.T) {
 
 	// Space admin becomes the Floor Plan Administrator role.
 	perms := effectivePermissions(t, spaceAdmin)
-	for _, p := range []Permission{PermissionAreas, PermissionSpaceAttributes, PermissionBookings, PermissionApprovals} {
+	for _, p := range []Permission{PermissionAreas, PermissionSpaceAttributes, PermissionBookings} {
 		if perms[p] != PermissionLevelAdmin {
 			t.Fatalf("expected space admin to retain admin on %s, got %d", p, perms[p])
 		}
 	}
+	// Space admins could only approve for their own approver groups.
+	CheckTestInt(t, int(PermissionLevelWrite), int(perms[PermissionApprovals]))
 	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionAnalytics]))
 	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionUsers]))
 	CheckTestInt(t, int(PermissionLevelRead), int(perms[PermissionGroups]))
@@ -219,4 +221,43 @@ func TestMigrationIsIdempotent(t *testing.T) {
 	CheckTestInt(t, 3, len(roles))
 	assigned, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
 	CheckTestInt(t, 1, len(assigned))
+}
+
+// Admin level for approvals used to be limited to the user's approver groups,
+// which is now the write level. Roles granting the full catalogue keep admin.
+func TestMigrationDowngradesApprovalsAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	custom := CreateTestRole(org, "Approvers", map[Permission]PermissionLevel{
+		PermissionApprovals: PermissionLevelAdmin,
+		PermissionBookings:  PermissionLevelAdmin,
+	})
+	system := &Role{
+		OrganizationID: org.ID,
+		Name:           "System",
+		System:         true,
+		Permissions:    map[Permission]PermissionLevel{PermissionApprovals: PermissionLevelAdmin},
+	}
+	if err := GetRoleRepository().Create(system); err != nil {
+		t.Fatal(err)
+	}
+	api := &Role{
+		OrganizationID:             org.ID,
+		Name:                       "API",
+		AutoGrantPluginPermissions: true,
+		Permissions:                map[Permission]PermissionLevel{PermissionApprovals: PermissionLevelAdmin},
+	}
+	if err := GetRoleRepository().Create(api); err != nil {
+		t.Fatal(err)
+	}
+
+	GetRoleRepository().RunSchemaUpgrade(61, 62)
+
+	custom, _ = GetRoleRepository().GetOne(custom.ID)
+	CheckTestInt(t, int(PermissionLevelWrite), int(custom.Permissions[PermissionApprovals]))
+	CheckTestInt(t, int(PermissionLevelAdmin), int(custom.Permissions[PermissionBookings]))
+	system, _ = GetRoleRepository().GetOne(system.ID)
+	CheckTestInt(t, int(PermissionLevelAdmin), int(system.Permissions[PermissionApprovals]))
+	api, _ = GetRoleRepository().GetOne(api.ID)
+	CheckTestInt(t, int(PermissionLevelAdmin), int(api.Permissions[PermissionApprovals]))
 }
