@@ -638,5 +638,7 @@
   "permissionHint_roles_admin": "Additionally create, edit and delete roles, assign them to users and map them to authentication providers.",
   "permissionHint_roles_read": "View roles and which users hold them.",
   "permissionHint_users_admin": "Additionally create, edit and delete users.",
-  "permissionHint_users_read": "View users and their details."
+  "permissionHint_users_read": "View users and their details.",
+  "permissionHint_approvals_admin": "Approve or decline pending bookings for all spaces of the organization.",
+  "permissionHint_approvals_write": "Approve or decline pending bookings for spaces whose approver groups include the user, as well as for spaces without approver groups."
 }
