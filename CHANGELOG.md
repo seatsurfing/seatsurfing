@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.133.1](https://github.com/seatsurfing/seatsurfing/compare/v1.133.0...v1.133.1) (2026-10-04)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add error message when deleting auth provider with existing users ([#2741](https://github.com/seatsurfing/seatsurfing/issues/2741)) ([00b4502](https://github.com/seatsurfing/seatsurfing/commit/00b450269a20ecd9b70b084a68ec7baf67ff1afa))
+* **admin-ui:** fix user edit form if DISABLE_PASSWORD_LOGIN is set ([#2740](https://github.com/seatsurfing/seatsurfing/issues/2740)) ([cf53e0e](https://github.com/seatsurfing/seatsurfing/commit/cf53e0e915782c29b4c99b76fb4d4dead510b772))
+* **main:** filter service accounts from user searches ([#2742](https://github.com/seatsurfing/seatsurfing/issues/2742)) ([7ef162f](https://github.com/seatsurfing/seatsurfing/commit/7ef162f21f254f34c394a609afad7e4d6d9f4d78))
+
 ## [1.133.0](https://github.com/seatsurfing/seatsurfing/compare/v1.132.1...v1.133.0) (2026-10-03)
 
 
