@@ -217,7 +217,7 @@ func (router *AuthProviderRouter) delete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if hasUsers {
-		SendBadRequest(w)
+		SendBadRequestCode(w, ResponseCodeAuthProviderHasUsers)
 		return
 	}
 
