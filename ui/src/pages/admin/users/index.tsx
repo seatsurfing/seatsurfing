@@ -105,9 +105,7 @@ class Users extends React.Component<Props, State> {
         <td>{RendererUtils.fullname(user.firstname, user.lastname)}</td>
         <td>{accountType}</td>
         <td>{role}</td>
-        <td hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
-          {authProvider}
-        </td>
+        <td>{authProvider}</td>
       </tr>
     );
   };
@@ -187,9 +185,7 @@ class Users extends React.Component<Props, State> {
               <th>{this.props.t("name")}</th>
               <th>{this.props.t("accountType")}</th>
               <th>{this.props.t("roles")}</th>
-              <th hidden={RuntimeConfig.INFOS.disablePasswordLogin}>
-                {this.props.t("loginMeans")}
-              </th>
+              <th>{this.props.t("loginMeans")}</th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

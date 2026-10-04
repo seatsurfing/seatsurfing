@@ -101,7 +101,7 @@ func (router *SearchRouter) getResults(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *SearchRouter) addUserResults(user *User, keyword string, res *GetSearchResultsResponse) error {
-	list, err := GetUserRepository().GetByKeyword(user.OrganizationID, keyword)
+	list, err := GetUserRepository().GetByKeyword(user.OrganizationID, keyword, false)
 	if err != nil {
 		return err
 	}

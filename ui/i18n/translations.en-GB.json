@@ -72,6 +72,7 @@
   "authMethodInvitation": "Send invitation email",
   "authMethodPassword": "Password authentication",
   "authMethodProvider": "Identity provider",
+  "authProviderRequiredHint": "Password login is disabled. Please create an identity provider in the settings first.",
   "authProvider": "Auth provider",
   "authProviders": "Auth providers",
   "autherror_bound_to_auth_provider": "User must log in via auth provider",

@@ -276,9 +276,12 @@ func TestBuddiesSearch(t *testing.T) {
 	GetSettingsRepository().Set(otherOrg.ID, SettingShowNames.Name, "1")
 	CreateTestUserInOrgWithName(otherOrg, "alice2@other.com", UserRoleUser)
 
+	serviceAccount := &User{Email: "alice.service@test.com", OrganizationID: org.ID, AccountType: AccountTypeServiceAccountRO}
+	GetUserRepository().Create(serviceAccount)
+
 	loginResponse := LoginTestUser(bob.ID)
 
-	// Matches by email keyword
+	// Matches by email keyword, service accounts are excluded
 	req := NewHTTPRequest("GET", "/buddy/search?q=alice", loginResponse.UserID, nil)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)

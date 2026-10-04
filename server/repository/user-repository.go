@@ -237,12 +237,14 @@ func (r *UserStore) GetUsersWithEmail(email string) ([]*User, error) {
 	return result, nil
 }
 
-func (r *UserStore) GetByKeyword(organizationID string, keyword string) ([]*User, error) {
+// GetByKeyword searches the organization's users by email, first and last name.
+// Service accounts are only included if includeServiceAccounts is true.
+func (r *UserStore) GetByKeyword(organizationID string, keyword string, includeServiceAccounts bool) ([]*User, error) {
 	var result []*User
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+
 		"FROM users "+
-		"WHERE organization_id = $1 AND (LOWER(email) LIKE '%' || $2 || '%' OR LOWER(firstname) LIKE '%' || $2 || '%' OR LOWER(lastname) LIKE '%' || $2 || '%') "+
-		"ORDER BY email", organizationID, strings.ToLower(keyword))
+		"WHERE organization_id = $1 AND ($3 OR account_type NOT IN ($4, $5)) AND (LOWER(email) LIKE '%' || $2 || '%' OR LOWER(firstname) LIKE '%' || $2 || '%' OR LOWER(lastname) LIKE '%' || $2 || '%') "+
+		"ORDER BY email", organizationID, strings.ToLower(keyword), includeServiceAccounts, AccountTypeServiceAccountRO, AccountTypeServiceAccountRW)
 	if err != nil {
 		return nil, err
 	}
