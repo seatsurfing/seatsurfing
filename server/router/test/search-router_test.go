@@ -66,6 +66,12 @@ func TestSearchUsers(t *testing.T) {
 		OrganizationID: org2.ID,
 	}
 	GetUserRepository().Create(u6)
+	u7 := &User{
+		Email:          "max.service@test.com",
+		OrganizationID: org.ID,
+		AccountType:    AccountTypeServiceAccountRW,
+	}
+	GetUserRepository().Create(u7)
 
 	req := NewHTTPRequest("GET", "/search/?query=max&includeUsers=1", loginResponseOrgAdmin.UserID, nil)
 	res := ExecuteTestRequest(req)
@@ -73,7 +79,7 @@ func TestSearchUsers(t *testing.T) {
 	var resBodyOrgAdmin *GetSearchResultsResponse
 	json.Unmarshal(res.Body.Bytes(), &resBodyOrgAdmin)
 
-	// search result is ordered by email
+	// search result is ordered by email, service accounts are excluded
 	CheckTestInt(t, 4, len(resBodyOrgAdmin.Users))
 	CheckTestString(t, u2.Email, resBodyOrgAdmin.Users[0].Email)
 	CheckTestString(t, u3.Firstname, resBodyOrgAdmin.Users[1].Firstname)

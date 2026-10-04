@@ -90,7 +90,7 @@ func (router *BuddyRouter) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, err := GetUserRepository().GetByKeyword(user.OrganizationID, keyword)
+	list, err := GetUserRepository().GetByKeyword(user.OrganizationID, keyword, false)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
