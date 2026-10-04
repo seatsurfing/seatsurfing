@@ -310,6 +310,27 @@ func TestUserListWithServiceAccount(t *testing.T) {
 	CheckTestInt(t, 2, len(resBody))
 }
 
+func TestUserSearchIncludesServiceAccounts(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	person := &User{Email: "max.person@test.com", OrganizationID: org.ID}
+	GetUserRepository().Create(person)
+	sa := &User{Email: "max.service@test.com", OrganizationID: org.ID, AccountType: AccountTypeServiceAccountRW}
+	GetUserRepository().Create(sa)
+
+	req := NewHTTPRequest("GET", "/user/?q=max", loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetUserResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, len(resBody))
+	CheckTestString(t, person.ID, resBody[0].ID)
+	CheckTestString(t, sa.ID, resBody[1].ID)
+}
+
 func TestUserCreateWithServiceAccount(t *testing.T) {
 	ClearTestDB()
 

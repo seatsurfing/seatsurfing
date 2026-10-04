@@ -24,6 +24,7 @@ export const enum ResponseCode {
   PasswordUpdateRequired = 5001,
 
   AuthProviderNameExists = 6001,
+  AuthProviderHasUsers = 6002,
 
   RoleWouldLeaveOrgWithoutAdmin = 7001,
   RoleEscalationNotAllowed = 7002,
@@ -67,6 +68,7 @@ export default class ErrorText {
         t("errorGroupNameAlreadyExists"),
       [ResponseCode.AuthProviderNameExists]: () =>
         t("errorAuthProviderNameExists"),
+      [ResponseCode.AuthProviderHasUsers]: () => t("errorAuthProviderHasUsers"),
       [ResponseCode.RoleWouldLeaveOrgWithoutAdmin]: () =>
         t("errorRoleWouldLeaveOrgWithoutAdmin"),
       [ResponseCode.RoleEscalationNotAllowed]: () =>

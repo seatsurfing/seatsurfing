@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
@@ -306,6 +307,7 @@ func TestAuthProviderDeletionProtection(t *testing.T) {
 	req = NewHTTPRequest("DELETE", "/auth-provider/"+providerID, loginResponse.UserID, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeAuthProviderHasUsers), res.Header().Get("X-Error-Code"))
 
 	// Unbind user from provider
 	user.AuthProviderID = NullUUID("")
