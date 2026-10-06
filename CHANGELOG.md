@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.133.2](https://github.com/seatsurfing/seatsurfing/compare/v1.133.1...v1.133.2) (2026-10-06)
+
+
+### 🐛 Bug Fixes
+
+* **server:** fix permission check for adding attribute to location ([#2746](https://github.com/seatsurfing/seatsurfing/issues/2746)) ([2c108f8](https://github.com/seatsurfing/seatsurfing/commit/2c108f8925c4ff4d204417cd55046d7fe1814930))
+* **server:** fix permission check for getting recurring booking ical ([#2745](https://github.com/seatsurfing/seatsurfing/issues/2745)) ([1093cb1](https://github.com/seatsurfing/seatsurfing/commit/1093cb1ef291ad5d38a8ba973e47bc4a287fd708))
+
 ## [1.133.1](https://github.com/seatsurfing/seatsurfing/compare/v1.133.0...v1.133.1) (2026-10-04)
 
 
