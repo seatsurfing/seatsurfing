@@ -52,6 +52,9 @@ interface State {
   error: boolean;
   customLogoUrl: string;
   showMap: boolean;
+  showAvailability: boolean;
+  availability: { [spaceId: string]: boolean } | null;
+  mapLocationId: string;
   mapData: PublicLocationMap | null;
   mapLoading: boolean;
   mapModalOpen: boolean;
@@ -69,6 +72,7 @@ class PublicBooking extends React.Component<Props, State> {
   orgId: string = "";
   mapCache: { [locationId: string]: PublicLocationMap | null } = {};
   mapContainerObserver: ResizeObserver | null = null;
+  availabilityRequestId: number = 0;
 
   constructor(props: any) {
     super(props);
@@ -92,6 +96,9 @@ class PublicBooking extends React.Component<Props, State> {
       error: false,
       customLogoUrl: "",
       showMap: false,
+      showAvailability: false,
+      availability: null,
+      mapLocationId: "",
       mapData: null,
       mapLoading: false,
       mapModalOpen: false,
@@ -158,6 +165,7 @@ class PublicBooking extends React.Component<Props, State> {
       }
       const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
       const showMap: boolean = res.json.showMap === true;
+      const showAvailability: boolean = res.json.showAvailability === true;
       const maxDate = new Date();
       maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
       maxDate.setHours(23, 59, 59, 999);
@@ -168,21 +176,24 @@ class PublicBooking extends React.Component<Props, State> {
         leave = DateUtil.copyDate(maxDate, leave);
       }
       const bookableDate = this.findBookableDate(
-        spaces[0],
+        (date) => spaces.some((s) => this.isDateBookable(s, date)),
         enter,
         maxDaysInAdvance,
       );
       enter = DateUtil.copyDate(bookableDate, enter);
       leave = DateUtil.copyDate(bookableDate, leave);
-      this.setState({
-        loading: false,
-        spaces: spaces,
-        spaceId: spaces[0].spaceId,
-        maxDaysInAdvance: maxDaysInAdvance,
-        enter: enter,
-        leave: leave,
-        showMap: showMap,
-      });
+      this.setState(
+        {
+          loading: false,
+          spaces: spaces,
+          maxDaysInAdvance: maxDaysInAdvance,
+          enter: enter,
+          leave: leave,
+          showMap: showMap,
+          showAvailability: showAvailability,
+        },
+        this.onTimesChanged,
+      );
     } catch {
       this.props.router.replace("/404");
     }
@@ -205,7 +216,7 @@ class PublicBooking extends React.Component<Props, State> {
         this.mapCache[locationId] = null;
       }
     }
-    if (this.getSelectedSpace()?.locationId === locationId) {
+    if (this.state.mapLocationId === locationId) {
       this.setState({
         mapData: this.mapCache[locationId],
         mapLoading: false,
@@ -224,10 +235,15 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   onLocationChange = (locationId: string) => {
-    const space = this.state.spaces.find((s) => s.locationId === locationId);
-    if (space) {
-      this.onSpaceChange(space.spaceId);
-    }
+    this.setState({ mapLocationId: locationId, mapData: null }, () =>
+      this.loadMap(locationId),
+    );
+  };
+
+  getMapLocationName = (): string | undefined => {
+    return this.state.spaces.find(
+      (s) => s.locationId === this.state.mapLocationId,
+    )?.locationName;
   };
 
   getSelectedSpace = (): PublicBookableSpace | undefined => {
@@ -250,8 +266,19 @@ class PublicBooking extends React.Component<Props, State> {
     return space.bookableDays.includes(date.getDay());
   };
 
+  isDateBookableForAnySpace = (date: Date): boolean => {
+    return this.state.spaces.some((s) => this.isDateBookable(s, date));
+  };
+
+  isSpaceAvailable = (space: PublicBookableSpace | undefined): boolean => {
+    if (!space || !this.isDateBookable(space, this.state.enter)) {
+      return false;
+    }
+    return this.state.availability?.[space.spaceId] !== false;
+  };
+
   findBookableDate = (
-    space: PublicBookableSpace,
+    isBookable: (date: Date) => boolean,
     start: Date,
     maxDaysInAdvance: number,
   ): Date => {
@@ -265,7 +292,7 @@ class PublicBooking extends React.Component<Props, State> {
       if (daysAhead > maxDaysInAdvance) {
         break;
       }
-      if (this.isDateBookable(space, date)) {
+      if (isBookable(date)) {
         return date;
       }
       date.setDate(date.getDate() + 1);
@@ -274,29 +301,57 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   onSpaceChange = (spaceId: string) => {
-    const space = this.state.spaces.find((s) => s.spaceId === spaceId);
-    const prevLocationId = this.getSelectedSpace()?.locationId;
-    if (
-      this.state.mapModalOpen &&
-      space &&
-      space.locationId !== prevLocationId
-    ) {
-      this.setState({ mapData: null }, () => this.loadMap(space.locationId));
+    this.setState({ spaceId: spaceId });
+  };
+
+  setTimes = (enter: Date, leave: Date) => {
+    this.setState({ enter: enter, leave: leave }, this.onTimesChanged);
+  };
+
+  onTimesChanged = () => {
+    this.resetUnavailableSpace();
+    this.loadAvailability();
+  };
+
+  resetUnavailableSpace = () => {
+    if (this.state.spaceId && !this.isSpaceAvailable(this.getSelectedSpace())) {
+      this.setState({ spaceId: "" });
     }
-    if (!space || this.isDateBookable(space, this.state.enter)) {
-      this.setState({ spaceId: spaceId });
+  };
+
+  loadAvailability = async () => {
+    if (!this.state.showAvailability) {
       return;
     }
-    const date = this.findBookableDate(
-      space,
-      this.state.enter,
-      this.state.maxDaysInAdvance,
-    );
-    this.setState({
-      spaceId: spaceId,
-      enter: DateUtil.copyDate(date, this.state.enter),
-      leave: DateUtil.copyDate(date, this.state.leave),
-    });
+    const requestId = ++this.availabilityRequestId;
+    if (this.state.leave <= this.state.enter) {
+      this.setState({ availability: null });
+      return;
+    }
+    const enter = DateUtil.convertToFakeUTCDate(this.state.enter).toISOString();
+    const leave = DateUtil.convertToFakeUTCDate(this.state.leave).toISOString();
+    let availability: { [spaceId: string]: boolean } | null = null;
+    try {
+      const res = await Ajax.get(
+        "/public-booking/" +
+          encodeURIComponent(this.orgId) +
+          "/availability?enter=" +
+          encodeURIComponent(enter) +
+          "&leave=" +
+          encodeURIComponent(leave),
+        () => true,
+      );
+      availability = {};
+      for (const item of res.json || []) {
+        availability[item.spaceId] = item.available;
+      }
+    } catch {
+      availability = null;
+    }
+    if (requestId !== this.availabilityRequestId) {
+      return;
+    }
+    this.setState({ availability: availability }, this.resetUnavailableSpace);
   };
 
   onSubmit = async (e: any) => {
@@ -307,7 +362,7 @@ class PublicBooking extends React.Component<Props, State> {
     if (
       this.state.leave <= this.state.enter ||
       !DateUtil.isSameDay(this.state.enter, this.state.leave) ||
-      !this.isDateBookable(this.getSelectedSpace(), this.state.enter)
+      !this.isSpaceAvailable(this.getSelectedSpace())
     ) {
       this.setState({ error: true });
       return;
@@ -336,6 +391,7 @@ class PublicBooking extends React.Component<Props, State> {
 
   renderMapSpace = (item: PublicBookableSpace) => {
     const selected = item.spaceId === this.state.spaceId;
+    const available = this.isSpaceAvailable(item);
     const boxStyle: React.CSSProperties = {
       position: "absolute",
       left: item.x,
@@ -343,7 +399,7 @@ class PublicBooking extends React.Component<Props, State> {
       width: item.width,
       height: item.height,
       transform: `rotate(${item.rotation}deg)`,
-      cursor: "pointer",
+      cursor: available ? "pointer" : "not-allowed",
       backgroundColor: selected ? "var(--bs-primary)" : undefined,
       borderRadius: item.shape === "circle" ? "50%" : undefined,
       clipPath:
@@ -365,7 +421,7 @@ class PublicBooking extends React.Component<Props, State> {
     };
     const className =
       "space space-box" +
-      (selected ? "" : " space-available") +
+      (selected ? "" : available ? " space-available" : " space-notavailable") +
       (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
         ? " space-box-vertical"
         : "");
@@ -378,9 +434,10 @@ class PublicBooking extends React.Component<Props, State> {
         tabIndex={0}
         aria-label={item.spaceName}
         aria-pressed={selected}
-        onClick={() => this.onMapSpaceSelect(item.spaceId)}
+        aria-disabled={!available}
+        onClick={() => available && this.onMapSpaceSelect(item.spaceId)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (available && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault();
             this.onMapSpaceSelect(item.spaceId);
           }
@@ -394,12 +451,14 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   openMapModal = () => {
-    const selectedSpace = this.getSelectedSpace();
-    if (!selectedSpace) {
+    const locationId =
+      this.getSelectedSpace()?.locationId || this.state.spaces[0]?.locationId;
+    if (!locationId) {
       return;
     }
-    this.setState({ mapModalOpen: true });
-    this.loadMap(selectedSpace.locationId);
+    this.setState({ mapModalOpen: true, mapLocationId: locationId }, () =>
+      this.loadMap(locationId),
+    );
   };
 
   onMapSpaceSelect = (spaceId: string) => {
@@ -409,10 +468,6 @@ class PublicBooking extends React.Component<Props, State> {
 
   renderMap = () => {
     const mapData = this.state.mapData;
-    const selectedSpace = this.getSelectedSpace();
-    if (!selectedSpace) {
-      return <></>;
-    }
     if (this.state.mapLoading) {
       return <Loading />;
     }
@@ -448,7 +503,7 @@ class PublicBooking extends React.Component<Props, State> {
         "url(data:image/" + mapData.mimeType + ";base64," + mapData.data + ")",
     };
     const spaces = this.state.spaces.filter(
-      (s) => s.locationId === selectedSpace.locationId,
+      (s) => s.locationId === this.state.mapLocationId,
     );
     return (
       <div
@@ -487,7 +542,7 @@ class PublicBooking extends React.Component<Props, State> {
             <Nav
               variant="tabs"
               aria-label={this.props.t("area")}
-              activeKey={this.getSelectedSpace()?.locationId}
+              activeKey={this.state.mapLocationId}
               onSelect={(key) => key && this.onLocationChange(key)}
             >
               {this.getLocations().map((l) => (
@@ -497,7 +552,7 @@ class PublicBooking extends React.Component<Props, State> {
               ))}
             </Nav>
           ) : (
-            <Modal.Title>{this.getSelectedSpace()?.locationName}</Modal.Title>
+            <Modal.Title>{this.getMapLocationName()}</Modal.Title>
           )}
         </Modal.Header>
         <Modal.Body>{this.renderMap()}</Modal.Body>
@@ -547,6 +602,9 @@ class PublicBooking extends React.Component<Props, State> {
       );
     }
 
+    const noSpaceAvailable = !this.state.spaces.some((s) =>
+      this.isSpaceAvailable(s),
+    );
     return (
       <div className="container-center">
         <Form className="container-center-inner-wide" onSubmit={this.onSubmit}>
@@ -581,6 +639,56 @@ class PublicBooking extends React.Component<Props, State> {
               maxLength={256}
             />
           </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>{this.props.t("date")}</Form.Label>
+            <DateTimePicker
+              value={this.state.enter}
+              onChange={(value: Date) =>
+                this.setTimes(
+                  DateUtil.copyDate(value, this.state.enter),
+                  DateUtil.copyDate(value, this.state.leave),
+                )
+              }
+              required={true}
+              enableTime={false}
+              minDate={DateUtil.getTodayStart()}
+              maxDate={this.getMaxDate()}
+              isDateDisabled={(date: Date) =>
+                !this.isDateBookableForAnySpace(date)
+              }
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>{this.props.t("enter")}</Form.Label>
+            <DateTimePicker
+              value={this.state.enter}
+              onChange={(value: Date) =>
+                this.setTimes(
+                  DateUtil.copyTime(value, this.state.enter),
+                  this.state.leave,
+                )
+              }
+              required={true}
+              noCalendar={true}
+              enableTime={true}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>{this.props.t("leave")}</Form.Label>
+            <DateTimePicker
+              value={this.state.leave}
+              onChange={(value: Date) =>
+                this.setTimes(
+                  this.state.enter,
+                  DateUtil.copyTime(value, this.state.leave),
+                )
+              }
+              required={true}
+              noCalendar={true}
+              enableTime={true}
+              minDate={new Date(this.state.enter.getTime() + 60 * 1000)}
+            />
+          </Form.Group>
           <Form.Group className="mb-3" controlId="select-space">
             <Form.Label>{this.props.t("space")}</Form.Label>
             <InputGroup>
@@ -589,11 +697,22 @@ class PublicBooking extends React.Component<Props, State> {
                 onChange={(e: any) => this.onSpaceChange(e.target.value)}
                 required={true}
               >
-                {this.state.spaces.map((s) => (
-                  <option key={s.spaceId} value={s.spaceId}>
-                    {s.locationName} / {s.spaceName}
-                  </option>
-                ))}
+                <option value="" disabled={true}>
+                  {this.props.t("pleaseSelect")}
+                </option>
+                {this.state.spaces.map((s) => {
+                  const available = this.isSpaceAvailable(s);
+                  return (
+                    <option
+                      key={s.spaceId}
+                      value={s.spaceId}
+                      disabled={!available}
+                    >
+                      {s.locationName} / {s.spaceName}
+                      {!available && " (" + this.props.t("notAvailable") + ")"}
+                    </option>
+                  );
+                })}
               </Form.Select>
               {this.state.showMap && (
                 <Button
@@ -605,6 +724,11 @@ class PublicBooking extends React.Component<Props, State> {
                 </Button>
               )}
             </InputGroup>
+            {noSpaceAvailable && (
+              <Form.Text className="text-danger">
+                {this.props.t("publicBookingNoSpaceAvailable")}
+              </Form.Text>
+            )}
           </Form.Group>
           {this.renderMapModal()}
           <Form.Group className="mb-3">
@@ -618,58 +742,10 @@ class PublicBooking extends React.Component<Props, State> {
               maxLength={256}
             />
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>{this.props.t("date")}</Form.Label>
-            <DateTimePicker
-              value={this.state.enter}
-              onChange={(value: Date) =>
-                this.setState({
-                  enter: DateUtil.copyDate(value, this.state.enter),
-                  leave: DateUtil.copyDate(value, this.state.leave),
-                })
-              }
-              required={true}
-              enableTime={false}
-              minDate={DateUtil.getTodayStart()}
-              maxDate={this.getMaxDate()}
-              isDateDisabled={(date: Date) =>
-                !this.isDateBookable(this.getSelectedSpace(), date)
-              }
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>{this.props.t("enter")}</Form.Label>
-            <DateTimePicker
-              value={this.state.enter}
-              onChange={(value: Date) =>
-                this.setState({
-                  enter: DateUtil.copyTime(value, this.state.enter),
-                })
-              }
-              required={true}
-              noCalendar={true}
-              enableTime={true}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>{this.props.t("leave")}</Form.Label>
-            <DateTimePicker
-              value={this.state.leave}
-              onChange={(value: Date) =>
-                this.setState({
-                  leave: DateUtil.copyTime(value, this.state.leave),
-                })
-              }
-              required={true}
-              noCalendar={true}
-              enableTime={true}
-              minDate={new Date(this.state.enter.getTime() + 60 * 1000)}
-            />
-          </Form.Group>
           <Button
             variant="primary"
             type="submit"
-            disabled={this.state.submitting}
+            disabled={this.state.submitting || noSpaceAvailable}
           >
             {this.props.t("publicBookingSubmit")}
           </Button>

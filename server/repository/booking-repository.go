@@ -823,6 +823,30 @@ func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.
 
 // GetConcurrent returns concurrent bookings for a specific location
 // within the specified enter and leave times.
+// GetBookedSpaceIDs returns the IDs of all spaces in the location which have
+// at least one booking overlapping [enter, leave), including public bookings
+// which have no user.
+func (r *BookingStore) GetBookedSpaceIDs(organizationID, locationID string, enter, leave time.Time) ([]string, error) {
+	var result []string
+	rows, err := GetDatabase().DB().Query("SELECT DISTINCT space_id "+
+		"FROM bookings "+
+		"WHERE organization_id = $1 AND location_id = $2 AND "+
+		"enter_time < $4 AND leave_time > $3",
+		organizationID, locationID, enter, leave)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var spaceID string
+		if err := rows.Scan(&spaceID); err != nil {
+			return nil, err
+		}
+		result = append(result, spaceID)
+	}
+	return result, rows.Err()
+}
+
 func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave time.Time, excludeBookingID string) (int, error) {
 	var getNumActive = func(bookings []*Booking, timestamp time.Time) int {
 		res := 0

@@ -144,6 +144,70 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 	return res, nil
 }
 
+// GetPublicAvailability reports for each public-bookable space of the
+// organization whether it can still be booked between enter and leave. enter
+// and leave are wall-clock times which are interpreted in the time zone of
+// each space's location. A space is unavailable if it is already booked, its
+// location is not bookable on that weekday, or the location's concurrent
+// booking limit is reached.
+func (s *SpaceService) GetPublicAvailability(organizationID string, enter, leave time.Time) (map[string]bool, error) {
+	spaces, err := GetSpaceRepository().GetAllPublicBookable(organizationID)
+	if err != nil {
+		return nil, err
+	}
+	spacesByLocation := map[string][]*Space{}
+	for _, space := range spaces {
+		spacesByLocation[space.LocationID] = append(spacesByLocation[space.LocationID], space)
+	}
+	res := map[string]bool{}
+	for locationID, locationSpaces := range spacesByLocation {
+		location, err := GetLocationRepository().GetOne(locationID)
+		if err != nil {
+			return nil, err
+		}
+		available, booked, err := s.getPublicLocationAvailability(location, enter, leave)
+		if err != nil {
+			return nil, err
+		}
+		for _, space := range locationSpaces {
+			res[space.ID] = available && !booked[space.ID]
+		}
+	}
+	return res, nil
+}
+
+func (s *SpaceService) getPublicLocationAvailability(location *Location, enter, leave time.Time) (bool, map[string]bool, error) {
+	booked := map[string]bool{}
+	enter, err := GetLocationRepository().AttachTimezoneInformation(enter, location)
+	if err != nil {
+		return false, booked, err
+	}
+	leave, err = GetLocationRepository().AttachTimezoneInformation(leave, location)
+	if err != nil {
+		return false, booked, err
+	}
+	if !GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {
+		return false, booked, nil
+	}
+	if location.MaxConcurrentBookings > 0 {
+		concurrent, err := GetBookingRepository().GetConcurrent(location, enter, leave, "")
+		if err != nil {
+			return false, booked, err
+		}
+		if concurrent >= int(location.MaxConcurrentBookings) {
+			return false, booked, nil
+		}
+	}
+	spaceIDs, err := GetBookingRepository().GetBookedSpaceIDs(location.OrganizationID, location.ID, enter, leave)
+	if err != nil {
+		return false, booked, err
+	}
+	for _, id := range spaceIDs {
+		booked[id] = true
+	}
+	return true, booked, nil
+}
+
 // IsApprovalRequired reports whether any of approvers belongs to space e.
 func (s *SpaceService) IsApprovalRequired(e *Space, approvers []*SpaceGroup) bool {
 	for _, approver := range approvers {

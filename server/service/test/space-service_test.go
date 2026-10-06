@@ -2,6 +2,7 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -91,4 +92,30 @@ func TestSpaceServiceAvailabilityApprovalRequired(t *testing.T) {
 	}
 	CheckTestInt(t, 1, len(list))
 	CheckTestBool(t, false, list[0].ApprovalRequired)
+}
+
+func TestSpaceServicePublicAvailability(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	space.PublicBookingEnabled = true
+	GetSpaceRepository().Update(space)
+	space2 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space2)
+	disabledSpace := &Space{LocationID: location.ID, Enabled: false, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(disabledSpace)
+	GetBookingRepository().Create(&Booking{
+		SpaceID: space.ID,
+		Enter:   time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC),
+	})
+
+	res, err := GetSpaceService().GetPublicAvailability(org.ID, time.Date(2030, 1, 2, 16, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 18, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 2, len(res))
+	CheckTestBool(t, false, res[space.ID])
+	CheckTestBool(t, true, res[space2.ID])
+
+	res, _ = GetSpaceService().GetPublicAvailability(org.ID, time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 18, 0, 0, 0, time.UTC))
+	CheckTestBool(t, true, res[space.ID])
 }

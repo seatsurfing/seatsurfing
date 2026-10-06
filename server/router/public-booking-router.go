@@ -47,6 +47,12 @@ type GetPublicBookableSpacesResponse struct {
 	Spaces           []GetPublicBookableSpaceResponse `json:"spaces"`
 	MaxDaysInAdvance int                              `json:"maxDaysInAdvance"`
 	ShowMap          bool                             `json:"showMap"`
+	ShowAvailability bool                             `json:"showAvailability"`
+}
+
+type GetPublicSpaceAvailabilityResponse struct {
+	SpaceID   string `json:"spaceId"`
+	Available bool   `json:"available"`
 }
 
 type CreatePublicBookingRequest struct {
@@ -76,6 +82,7 @@ type PublicBookingDetailsResponse struct {
 func (router *PublicBookingRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{orgId}/spaces", router.getSpaces).Methods("GET")
 	s.HandleFunc("/{orgId}/location/{locationId}/map", router.getMap).Methods("GET")
+	s.HandleFunc("/{orgId}/availability", router.getAvailability).Methods("GET")
 	s.HandleFunc("/{orgId}/request", router.request).Methods("POST")
 	s.HandleFunc("/confirm/{id}", router.confirm).Methods("POST")
 	s.HandleFunc("/details/{externalId}", router.details).Methods("GET")
@@ -185,11 +192,50 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 		res = append(res, item)
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
+	showAvailability, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingShowAvailability.Name)
 	SendJSON(w, GetPublicBookableSpacesResponse{
 		Spaces:           res,
 		MaxDaysInAdvance: maxDaysInAdvance,
 		ShowMap:          showMap,
+		ShowAvailability: showAvailability,
 	})
+}
+
+// getAvailability discloses whether each public-bookable space is free in the
+// requested time slot, but nothing about the bookings themselves. It is only
+// available if the org has enabled showing availabilities for public bookings.
+func (router *PublicBookingRouter) getAvailability(w http.ResponseWriter, r *http.Request) {
+	orgID := mux.Vars(r)["orgId"]
+	if !router.isPublicBookingEnabledForOrg(orgID) {
+		SendNotFound(w)
+		return
+	}
+	showAvailability, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingShowAvailability.Name)
+	if !showAvailability {
+		SendNotFound(w)
+		return
+	}
+	enter, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("enter"))
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	leave, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("leave"))
+	if err != nil || !leave.After(enter) || leave.Sub(enter) > 24*time.Hour {
+		SendBadRequest(w)
+		return
+	}
+	availability, err := service.GetSpaceService().GetPublicAvailability(orgID, enter, leave)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	res := []GetPublicSpaceAvailabilityResponse{}
+	for spaceID, available := range availability {
+		res = append(res, GetPublicSpaceAvailabilityResponse{SpaceID: spaceID, Available: available})
+	}
+	SendJSON(w, res)
 }
 
 // getMap serves a location's floor plan to the public booking page. It is

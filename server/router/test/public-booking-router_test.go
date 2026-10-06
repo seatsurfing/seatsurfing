@@ -742,3 +742,197 @@ func TestPublicBookingGetMapForeignOrgLocation(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
+
+func getTestPublicAvailability(t *testing.T, orgID, enter, leave string) map[string]bool {
+	req := NewHTTPRequest("GET", "/public-booking/"+orgID+"/availability?enter="+enter+"&leave="+leave, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetPublicSpaceAvailabilityResponse
+	if err := json.Unmarshal(res.Body.Bytes(), &resBody); err != nil {
+		t.Fatal(err)
+	}
+	availability := map[string]bool{}
+	for _, item := range resBody {
+		availability[item.SpaceID] = item.Available
+	}
+	return availability
+}
+
+func TestPublicBookingGetSpacesShowAvailabilityDisabledByDefault(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, false, resBody.ShowAvailability)
+
+	req = NewHTTPRequest("GET", "/public-booking/"+org.ID+"/availability?enter=2030-01-02T09:00:00Z&leave=2030-01-02T17:00:00Z", "", nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPublicBookingGetAvailabilityPublicBookingDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingEnabled.Name, "0")
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/availability?enter=2030-01-02T09:00:00Z&leave=2030-01-02T17:00:00Z", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestPublicBookingGetAvailability(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location, space1 := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space1)
+	space2 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space2)
+	space3 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space3)
+	nonPublicSpace := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(nonPublicSpace)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+
+	GetBookingRepository().Create(&Booking{
+		UserID:   user.ID,
+		SpaceID:  space1.ID,
+		Enter:    time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC),
+		Leave:    time.Date(2030, 1, 2, 12, 0, 0, 0, time.UTC),
+		Approved: true,
+	})
+	// Public bookings have no user and must be considered as well
+	GetBookingRepository().Create(&Booking{
+		SpaceID: space2.ID,
+		Enter:   time.Date(2030, 1, 2, 11, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 1, 2, 13, 0, 0, 0, time.UTC),
+	})
+
+	availability := getTestPublicAvailability(t, org.ID, "2030-01-02T10:00:00Z", "2030-01-02T17:00:00Z")
+	CheckTestInt(t, 3, len(availability))
+	CheckTestBool(t, false, availability[space1.ID])
+	CheckTestBool(t, false, availability[space2.ID])
+	CheckTestBool(t, true, availability[space3.ID])
+
+	availability = getTestPublicAvailability(t, org.ID, "2030-01-02T13:00:00Z", "2030-01-02T17:00:00Z")
+	CheckTestBool(t, true, availability[space1.ID])
+	CheckTestBool(t, true, availability[space2.ID])
+	CheckTestBool(t, true, availability[space3.ID])
+}
+
+func TestPublicBookingGetAvailabilityDoesNotDiscloseBookings(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+	GetBookingRepository().Create(&Booking{
+		UserID:  user.ID,
+		SpaceID: space.ID,
+		Enter:   time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC),
+		Subject: "Secret meeting",
+	})
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/availability?enter=2030-01-02T09:00:00Z&leave=2030-01-02T17:00:00Z", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	body := res.Body.String()
+	CheckTestBool(t, false, strings.Contains(body, user.Email))
+	CheckTestBool(t, false, strings.Contains(body, "Secret meeting"))
+	CheckTestBool(t, false, strings.Contains(body, user.ID))
+}
+
+func TestPublicBookingGetAvailabilityMaxConcurrentReached(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location, space1 := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space1)
+	space2 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space2)
+	location.MaxConcurrentBookings = 1
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+	GetBookingRepository().Create(&Booking{
+		UserID:  user.ID,
+		SpaceID: space1.ID,
+		Enter:   time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC),
+	})
+
+	availability := getTestPublicAvailability(t, org.ID, "2030-01-02T10:00:00Z", "2030-01-02T12:00:00Z")
+	CheckTestBool(t, false, availability[space1.ID])
+	CheckTestBool(t, false, availability[space2.ID])
+}
+
+func TestPublicBookingGetAvailabilityNonBookableWeekday(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	location.BookableDays = "1,2"
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+
+	// 2030-01-02 is a Wednesday
+	availability := getTestPublicAvailability(t, org.ID, "2030-01-02T10:00:00Z", "2030-01-02T12:00:00Z")
+	CheckTestBool(t, false, availability[space.ID])
+	// 2030-01-01 is a Tuesday
+	availability = getTestPublicAvailability(t, org.ID, "2030-01-01T10:00:00Z", "2030-01-01T12:00:00Z")
+	CheckTestBool(t, true, availability[space.ID])
+}
+
+func TestPublicBookingGetAvailabilityInvalidTimes(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+
+	queries := []string{
+		"",
+		"?enter=2030-01-02T10:00:00Z",
+		"?enter=invalid&leave=2030-01-02T12:00:00Z",
+		"?enter=2030-01-02T12:00:00Z&leave=2030-01-02T10:00:00Z",
+		"?enter=2030-01-02T10:00:00Z&leave=2030-01-02T10:00:00Z",
+		"?enter=2030-01-02T10:00:00Z&leave=2030-01-05T10:00:00Z",
+	}
+	for _, query := range queries {
+		req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/availability"+query, "", nil)
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+}
+
+func TestPublicBookingGetAvailabilityForeignOrgSpacesExcluded(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+
+	org2 := CreateTestOrg("test2.com")
+	_, space2 := CreateTestLocationAndSpace(org2)
+	enablePublicBookingForOrgAndSpace(org2, space2)
+
+	availability := getTestPublicAvailability(t, org.ID, "2030-01-02T10:00:00Z", "2030-01-02T12:00:00Z")
+	CheckTestInt(t, 1, len(availability))
+	CheckTestBool(t, true, availability[space.ID])
+	_, ok := availability[space2.ID]
+	CheckTestBool(t, false, ok)
+}

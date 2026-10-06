@@ -252,7 +252,8 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingHideStats.Name+"', '0'), "+
 		"($1, '"+SettingHideDisallowedLocations.Name+"', '0'), "+
 		"($1, '"+SettingPublicBookingEnabled.Name+"', '0'), "+
-		"($1, '"+SettingPublicBookingShowMap.Name+"', '0') "+
+		"($1, '"+SettingPublicBookingShowMap.Name+"', '0'), "+
+		"($1, '"+SettingPublicBookingShowAvailability.Name+"', '0') "+
 		"ON CONFLICT (organization_id, name) DO NOTHING",
 		organizationID)
 	return err

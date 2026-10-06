@@ -386,6 +386,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingKioskSecret.Name ||
 		name == SettingKioskModeEnabled.Name ||
 		name == SettingPublicBookingShowMap.Name ||
+		name == SettingPublicBookingShowAvailability.Name ||
 		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
@@ -423,6 +424,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingKioskModeEnabled.Name ||
 		name == SettingPublicBookingEnabled.Name ||
 		name == SettingPublicBookingShowMap.Name ||
+		name == SettingPublicBookingShowAvailability.Name ||
 		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
@@ -522,6 +524,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingPublicBookingShowMap.Name {
 		return SettingPublicBookingShowMap.Type
+	}
+	if name == SettingPublicBookingShowAvailability.Name {
+		return SettingPublicBookingShowAvailability.Type
 	}
 	return 0
 }
