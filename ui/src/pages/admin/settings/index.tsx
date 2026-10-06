@@ -1582,7 +1582,7 @@ class Settings extends React.Component<Props, State> {
               <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
                 {this.props.t("publicBookingUrl")}
               </Form.Label>
-              <Col sm="6">
+              <Col sm="4">
                 <InputGroup>
                   <Form.Control
                     id="input-publicBookingUrl"
