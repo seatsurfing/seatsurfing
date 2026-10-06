@@ -304,12 +304,26 @@ func (router *RecurringBookingRouter) getIcal(w http.ResponseWriter, r *http.Req
 		SendNotFound(w)
 		return
 	}
+	if e == nil {
+		SendNotFound(w)
+		return
+	}
+	space, err := GetSpaceRepository().GetOne(e.SpaceID)
+	if err != nil || space == nil {
+		SendNotFound(w)
+		return
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil || location == nil {
+		SendNotFound(w)
+		return
+	}
 	requestUser := GetRequestUser(r)
-	if !CanAccessOrg(requestUser, requestUser.OrganizationID) && e.UserID != GetRequestUserID(r) {
+	if !CanAccessOrg(requestUser, location.OrganizationID) && e.UserID != GetRequestUserID(r) {
 		SendForbidden(w)
 		return
 	}
-	if e.UserID != GetRequestUserID(r) && !HasPermission(requestUser, requestUser.OrganizationID, PermissionBookings, PermissionLevelRead) {
+	if e.UserID != GetRequestUserID(r) && !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelRead) {
 		SendForbidden(w)
 		return
 	}
