@@ -498,3 +498,47 @@ func TestCannotCreateRecurringBookingsInDisabledSpace(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
+
+func TestRecurringBookingsGetICalForeignOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	user1 := CreateTestUserInOrg(org)
+
+	org2 := CreateTestOrg("test2.com")
+	admin2 := CreateTestUserOrgAdmin(org2)
+	user2 := CreateTestUserInOrg(org)
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 2,
+		OrganizationID:        org.ID,
+		Enabled:               true}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
+	GetSpaceRepository().Create(s1)
+
+	payload := `{
+	"spaceId": "` + s1.ID + `",
+	"subject": "Test",
+	"enter": "2030-08-28T09:00:00+02:00",
+	"leave": "2030-08-28T15:00:00+02:00",
+	"end": "2030-08-30T00:00:00+02:00",
+	"cadence": 1,
+	"cycle": 1
+	}`
+	req := NewHTTPRequest("POST", "/recurring-booking/", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-ID")
+
+	req = NewHTTPRequest("GET", "/recurring-booking/"+id+"/ical", admin2.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	req = NewHTTPRequest("GET", "/recurring-booking/"+id+"/ical", user2.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
