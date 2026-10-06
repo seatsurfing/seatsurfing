@@ -157,6 +157,10 @@ func (router *LocationRouter) setAttribute(w http.ResponseWriter, r *http.Reques
 		SendNotFound(w)
 		return
 	}
+	if attribute.OrganizationID != e.OrganizationID {
+		SendNotFound(w)
+		return
+	}
 	if !attribute.LocationApplicable {
 		SendBadRequest(w)
 		return

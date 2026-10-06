@@ -783,3 +783,40 @@ func TestLocationsHideDisallowedSingle(t *testing.T) {
 		CheckTestResponseCode(t, http.StatusOK, res.Code)
 	}
 }
+
+func TestLocationsAddAttributeForeignOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+	org2 := CreateTestOrg("test2.com")
+
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	locID := res.Header().Get("X-Object-Id")
+
+	attr := &SpaceAttribute{
+		OrganizationID:     org2.ID,
+		Label:              "ForeignAttr",
+		Type:               3,
+		LocationApplicable: true,
+		SpaceApplicable:    false,
+	}
+	GetSpaceAttributeRepository().Create(attr)
+
+	payload = `{"value": "test-value"}`
+	req = NewHTTPRequest("POST", "/location/"+locID+"/attribute/"+attr.ID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+locID+"/attribute", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetSpaceAttributeValueResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	if len(resBody) != 0 {
+		t.Fatalf("Expected 0 attributes, got %d", len(resBody))
+	}
+}
