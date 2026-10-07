@@ -308,7 +308,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			log.Println(err)
 		}
-		log.Printf("Password reset failed: user not found in org %s\n", m.OrganizationID)
+		log.Printf("Password reset failed: user %s not found in org %s\n", MaskEmail(m.Email), m.OrganizationID)
 		SendUpdated(w)
 		return
 	}

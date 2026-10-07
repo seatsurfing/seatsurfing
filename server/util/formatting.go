@@ -96,3 +96,19 @@ func EscapeStringsInStruct(m interface{}) error {
 	}
 	return nil
 }
+
+// MaskEmail hides the local part of an e-mail address for use in log output,
+// e.g. "john.doe@example.com" becomes "j***@example.com".
+func MaskEmail(email string) string {
+	local, domain, found := strings.Cut(email, "@")
+	if !found {
+		domain = ""
+	} else {
+		domain = "@" + domain
+	}
+	runes := []rune(local)
+	if len(runes) == 0 {
+		return "***" + domain
+	}
+	return string(runes[0]) + "***" + domain
+}
