@@ -329,7 +329,10 @@ class PublicBooking extends React.Component<Props, State> {
 
   setTimes = (enter: Date, leave: Date) => {
     // Invalidate the previous interval's availability together with the times,
-    // so neither selection nor submission can rely on stale results.
+    // so neither selection nor submission can rely on stale results. The
+    // request ID is bumped synchronously so an in-flight request for the old
+    // interval that resolves before the state callback runs is discarded.
+    this.availabilityRequestId++;
     this.setState(
       {
         enter: enter,
