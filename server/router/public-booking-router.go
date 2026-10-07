@@ -469,27 +469,15 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 	}
 	defer releaseLock()
 
-	conflicts, err := GetBookingRepository().GetConflicts(space.ID, payload.Enter, payload.Leave, "")
+	available, err := service.GetSpaceService().IsPublicSlotAvailable(space, location, payload.Enter, payload.Leave)
 	if err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
-	if len(conflicts) > 0 {
+	if !available {
 		SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable", Enter: payload.Enter, Leave: payload.Leave})
 		return
-	}
-	if location.MaxConcurrentBookings > 0 {
-		concurrent, err := GetBookingRepository().GetConcurrent(location, payload.Enter, payload.Leave, "")
-		if err != nil {
-			log.Println(err)
-			SendInternalServerError(w)
-			return
-		}
-		if concurrent >= int(location.MaxConcurrentBookings) {
-			SendJSON(w, ConfirmPublicBookingResponse{Status: "unavailable", Enter: payload.Enter, Leave: payload.Leave})
-			return
-		}
 	}
 
 	publicBooking := &PublicBooking{

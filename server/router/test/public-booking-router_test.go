@@ -136,6 +136,53 @@ func TestPublicBookingConfirmUnavailableReturnsBookingTimes(t *testing.T) {
 	}
 }
 
+func confirmTestPublicBooking(t *testing.T, id string) string {
+	req := NewHTTPRequest("POST", "/public-booking/confirm/"+id, "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody ConfirmPublicBookingResponse
+	if err := json.Unmarshal(res.Body.Bytes(), &resBody); err != nil {
+		t.Fatal(err)
+	}
+	return resBody.Status
+}
+
+func TestPublicBookingConfirmUnavailableWhenMaxConcurrentReached(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	otherSpace := &Space{LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(otherSpace)
+	location.MaxConcurrentBookings = 1
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+	GetBookingRepository().Create(&Booking{
+		SpaceID: otherSpace.ID,
+		Enter:   time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 1, 2, 9, 1, 0, 0, time.UTC),
+	})
+
+	id := createTestPublicBookingAuthState(t, space, time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC))
+	CheckTestString(t, "unavailable", confirmTestPublicBooking(t, id))
+}
+
+func TestPublicBookingConfirmUnavailableWhenWeekdayNoLongerBookable(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	// 2030-01-02 is a Wednesday
+	id := createTestPublicBookingAuthState(t, space, time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC))
+	location.BookableDays = "1,2"
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "unavailable", confirmTestPublicBooking(t, id))
+}
+
 func TestPublicBookingConfirmInvalidID(t *testing.T) {
 	ClearTestDB()
 

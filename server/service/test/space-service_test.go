@@ -119,3 +119,70 @@ func TestSpaceServicePublicAvailability(t *testing.T) {
 	res, _ = GetSpaceService().GetPublicAvailability(org.ID, time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 18, 0, 0, 0, time.UTC))
 	CheckTestBool(t, true, res[space.ID])
 }
+
+func TestSpaceServicePublicAvailabilityShortBookingAtCapacity(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	location.MaxConcurrentBookings = 1
+	GetLocationRepository().Update(location)
+	space.PublicBookingEnabled = true
+	GetSpaceRepository().Update(space)
+	space2 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space2)
+	GetBookingRepository().Create(&Booking{
+		SpaceID: space.ID,
+		Enter:   time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC),
+		Leave:   time.Date(2030, 1, 2, 9, 1, 0, 0, time.UTC),
+	})
+
+	res, err := GetSpaceService().GetPublicAvailability(org.ID, time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 10, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, false, res[space.ID])
+	CheckTestBool(t, false, res[space2.ID])
+
+	res, _ = GetSpaceService().GetPublicAvailability(org.ID, time.Date(2030, 1, 2, 9, 1, 0, 0, time.UTC), time.Date(2030, 1, 2, 10, 0, 0, 0, time.UTC))
+	CheckTestBool(t, true, res[space.ID])
+	CheckTestBool(t, true, res[space2.ID])
+}
+
+func TestSpaceServiceIsPublicSlotAvailable(t *testing.T) {
+	_, _, location, space := setupServiceTest(t)
+	location.Timezone = "UTC"
+	GetLocationRepository().Update(location)
+	space2 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space2)
+	at := func(day, h, m int) time.Time {
+		return time.Date(2030, 1, day, h, m, 0, 0, time.UTC)
+	}
+	GetBookingRepository().Create(&Booking{SpaceID: space.ID, Enter: at(2, 9, 0), Leave: at(2, 9, 1)})
+
+	// Free slot
+	available, err := GetSpaceService().IsPublicSlotAvailable(space, location, at(2, 10, 0), at(2, 11, 0))
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, true, available)
+
+	// Conflicting booking on the same space
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space, location, at(2, 9, 0), at(2, 10, 0))
+	CheckTestBool(t, false, available)
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space2, location, at(2, 9, 0), at(2, 10, 0))
+	CheckTestBool(t, true, available)
+
+	// Concurrent booking limit reached by a short booking on another space
+	location.MaxConcurrentBookings = 1
+	GetLocationRepository().Update(location)
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space2, location, at(2, 9, 0), at(2, 10, 0))
+	CheckTestBool(t, false, available)
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space2, location, at(2, 9, 1), at(2, 10, 0))
+	CheckTestBool(t, true, available)
+
+	// Weekday not bookable (2030-01-02 is a Wednesday, 2030-01-01 a Tuesday)
+	location.BookableDays = "1,2"
+	GetLocationRepository().Update(location)
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space2, location, at(2, 10, 0), at(2, 11, 0))
+	CheckTestBool(t, false, available)
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space2, location, at(1, 10, 0), at(1, 11, 0))
+	CheckTestBool(t, true, available)
+}

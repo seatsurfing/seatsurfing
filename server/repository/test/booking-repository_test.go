@@ -532,6 +532,70 @@ func TestBookingRepositoryGetConcurrentHalfOpen(t *testing.T) {
 	CheckTestInt(t, 1, num)
 }
 
+func TestBookingRepositoryGetConcurrentShortOverlap(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location, space := CreateTestLocationAndSpace(org)
+	space2 := &Space{LocationID: location.ID, Name: "Test 2"}
+	if err := GetSpaceRepository().Create(space2); err != nil {
+		t.Fatal(err)
+	}
+	location.Timezone = "UTC"
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+
+	at := func(h, m, s int) time.Time {
+		return time.Date(2030, 9, 1, h, m, s, 0, time.UTC)
+	}
+	create := func(spaceID string, enter, leave time.Time) {
+		b := &Booking{UserID: user.ID, SpaceID: spaceID, Enter: enter, Leave: leave, RecurringID: NullUUID("")}
+		if err := GetBookingRepository().Create(b); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// A one-minute booking starting exactly at the query start is counted
+	create(space.ID, at(9, 0, 0), at(9, 1, 0))
+	num, err := GetBookingRepository().GetConcurrent(location, at(9, 0, 0), at(10, 0, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, num)
+
+	// A sub-minute booking between two sampling points is counted
+	create(space.ID, at(9, 30, 10), at(9, 30, 40))
+	num, err = GetBookingRepository().GetConcurrent(location, at(9, 15, 0), at(9, 45, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, num)
+
+	// Back-to-back bookings on different spaces don't overlap
+	create(space2.ID, at(9, 1, 0), at(9, 2, 0))
+	num, err = GetBookingRepository().GetConcurrent(location, at(9, 0, 0), at(10, 0, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, num)
+
+	// Short overlapping bookings on different spaces are counted as concurrent
+	create(space2.ID, at(9, 30, 20), at(9, 30, 30))
+	num, err = GetBookingRepository().GetConcurrent(location, at(9, 0, 0), at(10, 0, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 2, num)
+
+	// Nothing is counted after the last booking ended
+	num, err = GetBookingRepository().GetConcurrent(location, at(9, 31, 0), at(10, 0, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, num)
+}
+
 func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

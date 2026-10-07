@@ -176,6 +176,23 @@ func (s *SpaceService) GetPublicAvailability(organizationID string, enter, leave
 	return res, nil
 }
 
+// IsPublicSlotAvailable reports whether space in location can still be booked
+// publicly between enter and leave, which must already carry the location's
+// time zone. The slot is unavailable if the location is not bookable on that
+// weekday, the location's concurrent booking limit is reached, or the space
+// already has an overlapping booking.
+func (s *SpaceService) IsPublicSlotAvailable(space *Space, location *Location, enter, leave time.Time) (bool, error) {
+	available, err := s.isPublicLocationSlotAvailable(location, enter, leave)
+	if err != nil || !available {
+		return false, err
+	}
+	conflicts, err := GetBookingRepository().GetConflicts(space.ID, enter, leave, "")
+	if err != nil {
+		return false, err
+	}
+	return len(conflicts) == 0, nil
+}
+
 func (s *SpaceService) getPublicLocationAvailability(location *Location, enter, leave time.Time) (bool, map[string]bool, error) {
 	booked := map[string]bool{}
 	enter, err := GetLocationRepository().AttachTimezoneInformation(enter, location)
@@ -186,17 +203,9 @@ func (s *SpaceService) getPublicLocationAvailability(location *Location, enter, 
 	if err != nil {
 		return false, booked, err
 	}
-	if !GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {
-		return false, booked, nil
-	}
-	if location.MaxConcurrentBookings > 0 {
-		concurrent, err := GetBookingRepository().GetConcurrent(location, enter, leave, "")
-		if err != nil {
-			return false, booked, err
-		}
-		if concurrent >= int(location.MaxConcurrentBookings) {
-			return false, booked, nil
-		}
+	available, err := s.isPublicLocationSlotAvailable(location, enter, leave)
+	if err != nil || !available {
+		return false, booked, err
 	}
 	spaceIDs, err := GetBookingRepository().GetBookedSpaceIDs(location.OrganizationID, location.ID, enter, leave)
 	if err != nil {
@@ -206,6 +215,24 @@ func (s *SpaceService) getPublicLocationAvailability(location *Location, enter, 
 		booked[id] = true
 	}
 	return true, booked, nil
+}
+
+// isPublicLocationSlotAvailable checks the location-wide conditions of a
+// public booking slot: bookable weekday and concurrent booking limit.
+func (s *SpaceService) isPublicLocationSlotAvailable(location *Location, enter, leave time.Time) (bool, error) {
+	if !GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {
+		return false, nil
+	}
+	if location.MaxConcurrentBookings > 0 {
+		concurrent, err := GetBookingRepository().GetConcurrent(location, enter, leave, "")
+		if err != nil {
+			return false, err
+		}
+		if concurrent >= int(location.MaxConcurrentBookings) {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // IsApprovalRequired reports whether any of approvers belongs to space e.
