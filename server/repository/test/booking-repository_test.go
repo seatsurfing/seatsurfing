@@ -596,6 +596,45 @@ func TestBookingRepositoryGetConcurrentShortOverlap(t *testing.T) {
 	CheckTestInt(t, 0, num)
 }
 
+func TestBookingRepositoryGetConcurrentFractionalSeconds(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	location, space := CreateTestLocationAndSpace(org)
+	location.Timezone = "UTC"
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+
+	at := func(h, m, s, ms int) time.Time {
+		return time.Date(2030, 9, 1, h, m, s, ms*int(time.Millisecond), time.UTC)
+	}
+	existing := &Booking{
+		UserID:      user.ID,
+		SpaceID:     space.ID,
+		Enter:       at(9, 0, 0, 0),
+		Leave:       at(10, 0, 0, 900),
+		RecurringID: NullUUID(""),
+	}
+	if err := GetBookingRepository().Create(existing); err != nil {
+		t.Fatal(err)
+	}
+
+	// The booking still overlaps a query starting 400ms before it ends
+	num, err := GetBookingRepository().GetConcurrent(location, at(10, 0, 0, 500), at(11, 0, 0, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, num)
+
+	// A query starting exactly when the booking ends doesn't overlap
+	num, err = GetBookingRepository().GetConcurrent(location, at(10, 0, 0, 900), at(11, 0, 0, 0), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, num)
+}
+
 func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

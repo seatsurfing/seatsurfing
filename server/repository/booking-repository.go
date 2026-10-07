@@ -13,7 +13,6 @@ import (
 	"github.com/lib/pq"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type BookingStore struct {
@@ -846,6 +845,12 @@ func (r *BookingStore) GetBookedSpaceIDs(organizationID, locationID string, ente
 	return result, rows.Err()
 }
 
+// reattachTimezone interprets the wall clock time of t (including fractional
+// seconds) in the given location.
+func reattachTimezone(t time.Time, loc *time.Location) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+}
+
 // GetConcurrent returns the maximum number of bookings in the location which
 // are active at the same time within [enter, leave). Bookings are treated as
 // half-open intervals [Enter, Leave), so back-to-back bookings don't overlap.
@@ -874,8 +879,8 @@ func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave 
 		if err := rows.Scan(&bookingEnter, &bookingLeave); err != nil {
 			return 0, err
 		}
-		bookingEnter, _ = time.ParseInLocation(JsDateTimeFormat, bookingEnter.Format(JsDateTimeFormat), targetTz)
-		bookingLeave, _ = time.ParseInLocation(JsDateTimeFormat, bookingLeave.Format(JsDateTimeFormat), targetTz)
+		bookingEnter = reattachTimezone(bookingEnter, targetTz)
+		bookingLeave = reattachTimezone(bookingLeave, targetTz)
 		// Clip the booking to the requested interval
 		if bookingEnter.Before(enter) {
 			bookingEnter = enter
