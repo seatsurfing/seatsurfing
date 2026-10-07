@@ -543,6 +543,7 @@ Feature specs follow this structure:
 
 ## Pull Requests
 
+- Do not add Claude/AI attribution (e.g. "Generated with Claude Code", `Co-Authored-By: Claude`, or session links) to pull request descriptions or commit messages.
 - After opening a pull request, subscribe to its activity (CI status, reviews, comments) and stay attached to it until it is merged or closed: address review feedback and fix failing checks rather than leaving the PR to go stale.
 
 ---
