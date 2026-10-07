@@ -34,3 +34,21 @@ func TestEscapeStringsInStruct(t *testing.T) {
 		t.Errorf("expected %+v, got %+v", expected, input)
 	}
 }
+
+func TestMaskEmail(t *testing.T) {
+	if got := MaskEmail("john.doe@example.com"); got != "j***@example.com" {
+		t.Errorf("unexpected mask: %s", got)
+	}
+	if got := MaskEmail("ü@example.com"); got != "ü***@example.com" {
+		t.Errorf("unexpected mask: %s", got)
+	}
+	if got := MaskEmail("@example.com"); got != "***@example.com" {
+		t.Errorf("unexpected mask: %s", got)
+	}
+	if got := MaskEmail("nodomain"); got != "n***" {
+		t.Errorf("unexpected mask: %s", got)
+	}
+	if got := MaskEmail(""); got != "***" {
+		t.Errorf("unexpected mask: %s", got)
+	}
+}

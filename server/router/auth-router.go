@@ -308,7 +308,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			log.Println(err)
 		}
-		log.Printf("Password reset failed: user %s not found in org %s\n", m.Email, m.OrganizationID)
+		log.Printf("Password reset failed: user %s not found in org %s\n", MaskEmail(m.Email), m.OrganizationID)
 		SendUpdated(w)
 		return
 	}
@@ -323,7 +323,7 @@ func (router *AuthRouter) initPasswordReset(w http.ResponseWriter, r *http.Reque
 	}
 	existingStates, _ := GetAuthStateRepository().GetActiveByPayloadAndType(user.ID, AuthResetPasswordRequest)
 	if len(existingStates) >= 2 {
-		log.Printf("Max. password reset requests exceeded for user %s\n", user.Email)
+		log.Printf("Max. password reset requests exceeded for user %s\n", user.ID)
 		SendUpdated(w) // for security reasons, we send success message to not disclose existing user accounts
 		return
 	}
@@ -860,7 +860,7 @@ func (router *AuthRouter) verify(w http.ResponseWriter, r *http.Request) {
 
 		// Check if user is trying to log in with a different auth provider than bound to
 		if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
-			log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.Email, provider.ID, authProviderIDStr)
+			log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.ID, provider.ID, authProviderIDStr)
 			recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is bound to auth provider " + authProviderIDStr})
 			SendForbidden(w)
 			return
@@ -1026,7 +1026,7 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user is trying to log in with a different auth provider than bound to
 	if authProviderIDStr != "" && authProviderIDStr != nullUUID && authProviderIDStr != provider.ID {
-		log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.Email, provider.ID, authProviderIDStr)
+		log.Printf("User %s tried to login with provider %s but is bound to provider %s\n", user.ID, provider.ID, authProviderIDStr)
 		recordAuthEvent(r, &AuthEvent{User: user, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorIdpProviderMismatch, ErrorDetail: "user is bound to auth provider " + authProviderIDStr})
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(payload.LoginType, provider, "login"))
 		return
