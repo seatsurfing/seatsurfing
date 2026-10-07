@@ -164,7 +164,10 @@ func TestPublicBookingConfirmUnavailableWhenMaxConcurrentReached(t *testing.T) {
 		Leave:   time.Date(2030, 1, 2, 9, 1, 0, 0, time.UTC),
 	})
 
-	id := createTestPublicBookingAuthState(t, space, time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC))
+	// The request handler stores enter/leave in the location's time zone
+	enter, _ := GetLocationRepository().AttachTimezoneInformation(time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), location)
+	leave, _ := GetLocationRepository().AttachTimezoneInformation(time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC), location)
+	id := createTestPublicBookingAuthState(t, space, enter, leave)
 	CheckTestString(t, "unavailable", confirmTestPublicBooking(t, id))
 }
 
