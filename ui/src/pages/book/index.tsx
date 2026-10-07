@@ -282,7 +282,10 @@ class PublicBooking extends React.Component<Props, State> {
     if (!space || !this.isDateBookable(space, this.state.enter)) {
       return false;
     }
-    return this.state.availability?.[space.spaceId] !== false;
+    return (
+      this.state.availability === null ||
+      this.state.availability[space.spaceId] === true
+    );
   };
 
   isSpaceSelectable = (space: PublicBookableSpace | undefined): boolean => {
