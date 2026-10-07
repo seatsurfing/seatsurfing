@@ -640,6 +640,8 @@
   "permissionHint_roles_read": "Rollen einsehen und sehen, welche Benutzer sie haben.",
   "permissionHint_users_admin": "Zusätzlich Benutzer anlegen, bearbeiten und löschen.",
   "permissionHint_users_read": "Benutzer und ihre Details einsehen.",
+  "permissionHint_approvals_admin": "Ausstehende Buchungen für alle Plätze der Organisation genehmigen oder ablehnen.",
+  "permissionHint_approvals_write": "Ausstehende Buchungen für Plätze genehmigen oder ablehnen, deren Genehmiger-Gruppen den Benutzer enthalten, sowie für Plätze ohne Genehmiger-Gruppen.",
   "errorAuthProviderHasUsers": "Der Auth Provider kann nicht gelöscht werden, da ihm noch Benutzer zugeordnet sind.",
   "authProviderRequiredHint": "Die Anmeldung per Passwort ist deaktiviert. Bitte lege zuerst in den Einstellungen einen Identity Provider an."
 }

@@ -472,6 +472,8 @@
   "permission_service_accounts": "Service accounts and API tokens",
   "permission_space_attributes": "Attributes",
   "permission_users": "Users",
+  "permissionHint_approvals_admin": "Approve or decline pending bookings for all spaces of the organization.",
+  "permissionHint_approvals_write": "Approve or decline pending bookings for spaces whose approver groups include the user, as well as for spaces without approver groups.",
   "permissionHint_bookings_admin": "Additionally create, change and delete bookings on behalf of other users.",
   "permissionHint_bookings_read": "View the bookings of all users and see who booked which space.",
   "permissionHint_groups_admin": "Additionally create, rename and delete groups.",
