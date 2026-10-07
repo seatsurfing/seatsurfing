@@ -54,6 +54,7 @@ interface State {
   showMap: boolean;
   showAvailability: boolean;
   availability: { [spaceId: string]: boolean } | null;
+  availabilityPending: boolean;
   mapLocationId: string;
   mapData: PublicLocationMap | null;
   mapLoading: boolean;
@@ -98,6 +99,7 @@ class PublicBooking extends React.Component<Props, State> {
       showMap: false,
       showAvailability: false,
       availability: null,
+      availabilityPending: false,
       mapLocationId: "",
       mapData: null,
       mapLoading: false,
@@ -191,6 +193,12 @@ class PublicBooking extends React.Component<Props, State> {
           leave: leave,
           showMap: showMap,
           showAvailability: showAvailability,
+          availability: null,
+          availabilityPending: this.needsAvailability(
+            showAvailability,
+            enter,
+            leave,
+          ),
         },
         this.onTimesChanged,
       );
@@ -277,6 +285,18 @@ class PublicBooking extends React.Component<Props, State> {
     return this.state.availability?.[space.spaceId] !== false;
   };
 
+  isSpaceSelectable = (space: PublicBookableSpace | undefined): boolean => {
+    return !this.state.availabilityPending && this.isSpaceAvailable(space);
+  };
+
+  needsAvailability = (
+    showAvailability: boolean,
+    enter: Date,
+    leave: Date,
+  ): boolean => {
+    return showAvailability && leave > enter;
+  };
+
   findBookableDate = (
     isBookable: (date: Date) => boolean,
     start: Date,
@@ -301,11 +321,28 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   onSpaceChange = (spaceId: string) => {
+    if (this.state.availabilityPending) {
+      return;
+    }
     this.setState({ spaceId: spaceId });
   };
 
   setTimes = (enter: Date, leave: Date) => {
-    this.setState({ enter: enter, leave: leave }, this.onTimesChanged);
+    // Invalidate the previous interval's availability together with the times,
+    // so neither selection nor submission can rely on stale results.
+    this.setState(
+      {
+        enter: enter,
+        leave: leave,
+        availability: null,
+        availabilityPending: this.needsAvailability(
+          this.state.showAvailability,
+          enter,
+          leave,
+        ),
+      },
+      this.onTimesChanged,
+    );
   };
 
   onTimesChanged = () => {
@@ -325,7 +362,7 @@ class PublicBooking extends React.Component<Props, State> {
     }
     const requestId = ++this.availabilityRequestId;
     if (this.state.leave <= this.state.enter) {
-      this.setState({ availability: null });
+      this.setState({ availability: null, availabilityPending: false });
       return;
     }
     const enter = DateUtil.convertToFakeUTCDate(this.state.enter).toISOString();
@@ -351,12 +388,15 @@ class PublicBooking extends React.Component<Props, State> {
     if (requestId !== this.availabilityRequestId) {
       return;
     }
-    this.setState({ availability: availability }, this.resetUnavailableSpace);
+    this.setState(
+      { availability: availability, availabilityPending: false },
+      this.resetUnavailableSpace,
+    );
   };
 
   onSubmit = async (e: any) => {
     e.preventDefault();
-    if (!this.state.spaceId) {
+    if (!this.state.spaceId || this.state.availabilityPending) {
       return;
     }
     if (
@@ -392,6 +432,7 @@ class PublicBooking extends React.Component<Props, State> {
   renderMapSpace = (item: PublicBookableSpace) => {
     const selected = item.spaceId === this.state.spaceId;
     const available = this.isSpaceAvailable(item);
+    const selectable = this.isSpaceSelectable(item);
     const boxStyle: React.CSSProperties = {
       position: "absolute",
       left: item.x,
@@ -399,7 +440,7 @@ class PublicBooking extends React.Component<Props, State> {
       width: item.width,
       height: item.height,
       transform: `rotate(${item.rotation}deg)`,
-      cursor: available ? "pointer" : "not-allowed",
+      cursor: selectable ? "pointer" : "not-allowed",
       backgroundColor: selected ? "var(--bs-primary)" : undefined,
       borderRadius: item.shape === "circle" ? "50%" : undefined,
       clipPath:
@@ -434,10 +475,10 @@ class PublicBooking extends React.Component<Props, State> {
         tabIndex={0}
         aria-label={item.spaceName}
         aria-pressed={selected}
-        aria-disabled={!available}
-        onClick={() => available && this.onMapSpaceSelect(item.spaceId)}
+        aria-disabled={!selectable}
+        onClick={() => selectable && this.onMapSpaceSelect(item.spaceId)}
         onKeyDown={(e) => {
-          if (available && (e.key === "Enter" || e.key === " ")) {
+          if (selectable && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault();
             this.onMapSpaceSelect(item.spaceId);
           }
@@ -696,6 +737,7 @@ class PublicBooking extends React.Component<Props, State> {
                 value={this.state.spaceId}
                 onChange={(e: any) => this.onSpaceChange(e.target.value)}
                 required={true}
+                disabled={this.state.availabilityPending}
               >
                 <option value="" disabled={true}>
                   {this.props.t("pleaseSelect")}
@@ -745,7 +787,11 @@ class PublicBooking extends React.Component<Props, State> {
           <Button
             variant="primary"
             type="submit"
-            disabled={this.state.submitting || noSpaceAvailable}
+            disabled={
+              this.state.submitting ||
+              this.state.availabilityPending ||
+              noSpaceAvailable
+            }
           >
             {this.props.t("publicBookingSubmit")}
           </Button>
