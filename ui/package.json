@@ -9,7 +9,7 @@
     "chart.js": "4.5.1",
     "excellentexport": "3.9.16",
     "moment-timezone": "0.6.4",
-    "next": "16.3.6",
+    "next": "16.3.8",
     "next-export-i18n": "2.4.3",
     "react": "19.3.0",
     "react-big-calendar": "1.20.0",
@@ -42,11 +42,11 @@
     "@types/node": "26.6.3",
     "@types/react-big-calendar": "1.16.3",
     "eslint": "10.11.0",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.3.8",
     "jsdom": "30.1.1",
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "5.0.2"
+    "vitest": "5.0.3"
   }
 }
