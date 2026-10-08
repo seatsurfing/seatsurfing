@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.134.0](https://github.com/seatsurfing/seatsurfing/compare/v1.133.2...v1.134.0) (2026-10-08)
+
+
+### ✨ Features
+
+* **main:** add availability option for public bookings ([#2749](https://github.com/seatsurfing/seatsurfing/issues/2749)) ([afb4bcb](https://github.com/seatsurfing/seatsurfing/commit/afb4bcb3b30c32e87cdc47db9dce94f4e57cad31))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add hint for "Booking approvals" permission ([#2739](https://github.com/seatsurfing/seatsurfing/issues/2739)) ([9763520](https://github.com/seatsurfing/seatsurfing/commit/976352099508628477d7c4e0264eb1eef9aaba6a))
+* **admin-ui:** improve public URL input width ([#2748](https://github.com/seatsurfing/seatsurfing/issues/2748)) ([033204a](https://github.com/seatsurfing/seatsurfing/commit/033204a1150c4b3b5cd90683583d2eb2ce7507e7))
+* **deps:** bump next from 16.3.6 to 16.3.7 in /ui in the production-dependencies group across 1 directory ([#2750](https://github.com/seatsurfing/seatsurfing/issues/2750)) ([4b897a6](https://github.com/seatsurfing/seatsurfing/commit/4b897a682116fa5b623911c4601fa424c0d0a914))
+* **deps:** bump next from 16.3.7 to 16.3.8 in /ui in the production-dependencies group across 1 directory ([#2756](https://github.com/seatsurfing/seatsurfing/issues/2756)) ([dd23b63](https://github.com/seatsurfing/seatsurfing/commit/dd23b637f0453629d843889f6aa1e39f29f4ea98))
+* **deps:** bump sharp from 0.35.4 to 0.35.5 in /ui ([#2755](https://github.com/seatsurfing/seatsurfing/issues/2755)) ([b547f61](https://github.com/seatsurfing/seatsurfing/commit/b547f61d13fbedf03ee0ca0823e2b6db41110a49))
+* **deps:** bump source-map-js from 1.2.1 to 1.2.2 in /ui ([#2754](https://github.com/seatsurfing/seatsurfing/issues/2754)) ([d66ee85](https://github.com/seatsurfing/seatsurfing/commit/d66ee85417e8cc5f731ee089a74bebd78da3bcd7))
+
+
+### 🔧 Refactoring
+
+* **server:** improve logging ([#2758](https://github.com/seatsurfing/seatsurfing/issues/2758)) ([79e122a](https://github.com/seatsurfing/seatsurfing/commit/79e122a70477d052f3b4b384ce5fa504ea2571ef))
+
+
+### 📚 Documentation
+
+* **main:** add pull request description rule to AGENTS.md ([#2759](https://github.com/seatsurfing/seatsurfing/issues/2759)) ([5226e43](https://github.com/seatsurfing/seatsurfing/commit/5226e4352e68eb7f156a62e42eb944e65e0ef1e1))
+
 ## [1.133.2](https://github.com/seatsurfing/seatsurfing/compare/v1.133.1...v1.133.2) (2026-10-06)
 
 
