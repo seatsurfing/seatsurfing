@@ -597,6 +597,39 @@ func (s *BookingService) IsValidMinHoursBooking(enter, leave time.Time, organiza
 	return difference_in_hours >= int64(min_hours)
 }
 
+// GetPublicBookingDurationLimits returns the effective minimum and maximum
+// duration in hours for public bookings, combining the public booking limits
+// with the organization-wide limits. A limit of 0 means no restriction.
+func (s *BookingService) GetPublicBookingDurationLimits(orgID string) (int, int) {
+	minHours, _ := GetSettingsRepository().GetInt(orgID, SettingPublicBookingMinDurationHours.Name)
+	maxHours, _ := GetSettingsRepository().GetInt(orgID, SettingPublicBookingMaxDurationHours.Name)
+	orgMinHours, _ := GetSettingsRepository().GetInt(orgID, SettingMinBookingDurationHours.Name)
+	orgMaxHours, _ := GetSettingsRepository().GetInt(orgID, SettingMaxBookingDurationHours.Name)
+	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
+	if dailyBasisBooking && orgMaxHours%24 != 0 {
+		orgMaxHours += 24 - (orgMaxHours % 24)
+	}
+	minHours = max(minHours, orgMinHours)
+	if orgMaxHours > 0 && (maxHours == 0 || orgMaxHours < maxHours) {
+		maxHours = orgMaxHours
+	}
+	return minHours, maxHours
+}
+
+// IsValidPublicBookingDuration checks the effective minimum and maximum
+// duration for public bookings (see GetPublicBookingDurationLimits).
+func (s *BookingService) IsValidPublicBookingDuration(enter, leave time.Time, orgID string) bool {
+	minHours, maxHours := s.GetPublicBookingDurationLimits(orgID)
+	duration := leave.Sub(enter).Round(time.Minute)
+	if minHours > 0 && duration < time.Duration(minHours)*time.Hour {
+		return false
+	}
+	if maxHours > 0 && duration > time.Duration(maxHours)*time.Hour {
+		return false
+	}
+	return true
+}
+
 // IsValidBookingHoursBeforeDelete checks the organization's minimum time
 // between deleting a booking and its start.
 func (s *BookingService) IsValidBookingHoursBeforeDelete(e *BookingDetails, user *User, organizationID string) bool {

@@ -387,6 +387,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingKioskModeEnabled.Name ||
 		name == SettingPublicBookingShowMap.Name ||
 		name == SettingPublicBookingShowAvailability.Name ||
+		name == SettingPublicBookingMinDurationHours.Name ||
+		name == SettingPublicBookingMaxDurationHours.Name ||
 		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
@@ -425,6 +427,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingPublicBookingEnabled.Name ||
 		name == SettingPublicBookingShowMap.Name ||
 		name == SettingPublicBookingShowAvailability.Name ||
+		name == SettingPublicBookingMinDurationHours.Name ||
+		name == SettingPublicBookingMaxDurationHours.Name ||
 		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
@@ -528,6 +532,12 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingPublicBookingShowAvailability.Name {
 		return SettingPublicBookingShowAvailability.Type
 	}
+	if name == SettingPublicBookingMinDurationHours.Name {
+		return SettingPublicBookingMinDurationHours.Type
+	}
+	if name == SettingPublicBookingMaxDurationHours.Name {
+		return SettingPublicBookingMaxDurationHours.Type
+	}
 	return 0
 }
 
@@ -575,6 +585,12 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 	}
 	if name == SettingBookingRetentionDays.Name {
 		if !ValidateNumber(value, 30, 999) {
+			return false
+		}
+		return true
+	}
+	if name == SettingPublicBookingMinDurationHours.Name || name == SettingPublicBookingMaxDurationHours.Name {
+		if !ValidateNumber(value, 0, 24) {
 			return false
 		}
 		return true

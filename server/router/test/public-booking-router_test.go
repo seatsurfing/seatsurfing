@@ -986,3 +986,82 @@ func TestPublicBookingGetAvailabilityForeignOrgSpacesExcluded(t *testing.T) {
 	_, ok := availability[space2.ID]
 	CheckTestBool(t, false, ok)
 }
+
+func TestPublicBookingRequestDurationLimits(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space = enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "2")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "4")
+
+	tests := []struct {
+		leave string
+		code  int
+	}{
+		{"2030-09-02T09:00:00Z", http.StatusBadRequest},
+		{"2030-09-02T09:59:00Z", http.StatusBadRequest},
+		{"2030-09-02T10:00:00Z", http.StatusNoContent},
+		{"2030-09-02T11:00:00Z", http.StatusNoContent},
+		{"2030-09-02T12:00:00Z", http.StatusNoContent},
+		{"2030-09-02T12:01:00Z", http.StatusBadRequest},
+	}
+	for _, tc := range tests {
+		payload := `{"spaceId": "` + space.ID + `", "enter": "2030-09-02T08:00:00Z", "leave": "` + tc.leave + `", "name": "Jane Doe", "email": "jane.doe@test.com"}`
+		req := NewHTTPRequest("POST", "/public-booking/"+org.ID+"/request", "", bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, tc.code, res.Code)
+	}
+}
+
+func TestPublicBookingRequestDurationUnrestrictedByDefault(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space = enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	for _, leave := range []string{"2030-09-02T08:15:00Z", "2030-09-02T18:00:00Z"} {
+		payload := `{"spaceId": "` + space.ID + `", "enter": "2030-09-02T08:00:00Z", "leave": "` + leave + `", "name": "Jane Doe", "email": "jane.doe@test.com"}`
+		req := NewHTTPRequest("POST", "/public-booking/"+org.ID+"/request", "", bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	}
+}
+
+func TestPublicBookingGetSpacesReturnsDurationLimits(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "6")
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, resBody.MinDurationHours)
+	CheckTestInt(t, 6, resBody.MaxDurationHours)
+}
+
+func TestPublicBookingGetSpacesReturnsEffectiveDurationLimits(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "2")
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingDurationHours.Name, "5")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "8")
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, resBody.MinDurationHours)
+	CheckTestInt(t, 5, resBody.MaxDurationHours)
+}

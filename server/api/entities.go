@@ -324,6 +324,8 @@ var (
 	SettingFeaturePublicBooking           SettingName = SettingName{Name: "feature_public_booking", Type: SettingTypeBool}
 	SettingPublicBookingShowMap           SettingName = SettingName{Name: "public_booking_show_map", Type: SettingTypeBool}
 	SettingPublicBookingShowAvailability  SettingName = SettingName{Name: "public_booking_show_availability", Type: SettingTypeBool}
+	SettingPublicBookingMinDurationHours  SettingName = SettingName{Name: "public_booking_min_duration_hours", Type: SettingTypeInt}
+	SettingPublicBookingMaxDurationHours  SettingName = SettingName{Name: "public_booking_max_duration_hours", Type: SettingTypeInt}
 	SettingHideDisallowedLocations        SettingName = SettingName{Name: "hide_disallowed_locations", Type: SettingTypeBool}
 )
 

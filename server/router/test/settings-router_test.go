@@ -164,6 +164,8 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingFeaturePublicBooking.Name,
 		SettingPublicBookingShowMap.Name,
 		SettingPublicBookingShowAvailability.Name,
+		SettingPublicBookingMinDurationHours.Name,
+		SettingPublicBookingMaxDurationHours.Name,
 		SettingHideDisallowedLocations.Name,
 		SysSettingBookingUIIntegrations,
 	}
@@ -586,4 +588,45 @@ func TestBookingUIIntegrationsWidthClamping(t *testing.T) {
 		}
 		CheckTestInt(t, tc.width, item.Width)
 	}
+}
+
+func TestSettingsPublicBookingDurationHours(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	for _, name := range []string{SettingPublicBookingMinDurationHours.Name, SettingPublicBookingMaxDurationHours.Name} {
+		req := NewHTTPRequest("PUT", "/setting/"+name, loginResponse.UserID, bytes.NewBufferString(`{"value": "3"}`))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+		req = NewHTTPRequest("GET", "/setting/"+name, loginResponse.UserID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+		var resBody string
+		json.Unmarshal(res.Body.Bytes(), &resBody)
+		CheckTestString(t, "3", resBody)
+
+		for _, value := range []string{`{"value": "-1"}`, `{"value": "25"}`, `{"value": "abc"}`} {
+			req = NewHTTPRequest("PUT", "/setting/"+name, loginResponse.UserID, bytes.NewBufferString(value))
+			res = ExecuteTestRequest(req)
+			CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+		}
+	}
+}
+
+func TestSettingsPublicBookingDurationHoursForbiddenForUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	req := NewHTTPRequest("PUT", "/setting/"+SettingPublicBookingMinDurationHours.Name, loginResponse.UserID, bytes.NewBufferString(`{"value": "3"}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	req = NewHTTPRequest("GET", "/setting/"+SettingPublicBookingMinDurationHours.Name, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }

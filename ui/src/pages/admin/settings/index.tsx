@@ -94,6 +94,10 @@ interface State {
   publicBookingEnabledSaved: boolean;
   publicBookingShowMap: boolean;
   publicBookingShowAvailability: boolean;
+  publicBookingMinDurationEnabled: boolean;
+  publicBookingMinDurationHours: number;
+  publicBookingMaxDurationEnabled: boolean;
+  publicBookingMaxDurationHours: number;
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
@@ -163,6 +167,10 @@ class Settings extends React.Component<Props, State> {
       publicBookingEnabledSaved: false,
       publicBookingShowMap: false,
       publicBookingShowAvailability: false,
+      publicBookingMinDurationEnabled: false,
+      publicBookingMinDurationHours: 1,
+      publicBookingMaxDurationEnabled: false,
+      publicBookingMaxDurationHours: 8,
       hideReports: false,
       hideStats: false,
       installId: "",
@@ -286,6 +294,16 @@ class Settings extends React.Component<Props, State> {
           state.publicBookingShowMap = s.value === "1";
         if (s.name === Organization.PREF_PUBLIC_BOOKING_SHOW_AVAILABILITY)
           state.publicBookingShowAvailability = s.value === "1";
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_MIN_DURATION_HOURS) {
+          const value = window.parseInt(s.value) || 0;
+          state.publicBookingMinDurationEnabled = value > 0;
+          if (value > 0) state.publicBookingMinDurationHours = value;
+        }
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_MAX_DURATION_HOURS) {
+          const value = window.parseInt(s.value) || 0;
+          state.publicBookingMaxDurationEnabled = value > 0;
+          if (value > 0) state.publicBookingMaxDurationHours = value;
+        }
         if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
@@ -477,6 +495,18 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_PUBLIC_BOOKING_SHOW_AVAILABILITY,
         this.state.publicBookingShowAvailability ? "1" : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_PUBLIC_BOOKING_MIN_DURATION_HOURS,
+        this.state.publicBookingMinDurationEnabled
+          ? (this.state.publicBookingMinDurationHours || 0).toString()
+          : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_PUBLIC_BOOKING_MAX_DURATION_HOURS,
+        this.state.publicBookingMaxDurationEnabled
+          ? (this.state.publicBookingMaxDurationHours || 0).toString()
+          : "0",
       ),
       new OrgSettings(
         Organization.PREF_HIDE_REPORTS,
@@ -1612,6 +1642,118 @@ class Settings extends React.Component<Props, State> {
                   })
                 }
               />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-publicBookingMinDurationHours"
+            >
+              {this.props.t("minBookingDuration")}
+              <HintTooltip hint={this.props.t("publicBookingDurationHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  id="check-publicBookingMinDurationHours"
+                  checked={this.state.publicBookingMinDurationEnabled}
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMinDurationEnabled: e.target.checked,
+                    })
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled
+                  }
+                />
+                <Form.Control
+                  id="input-publicBookingMinDurationHours"
+                  type="number"
+                  value={
+                    Number.isNaN(this.state.publicBookingMinDurationHours)
+                      ? ""
+                      : this.state.publicBookingMinDurationHours
+                  }
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMinDurationHours: window.parseInt(
+                        e.target.value,
+                      ),
+                    })
+                  }
+                  required={this.state.publicBookingMinDurationEnabled}
+                  min="1"
+                  max={
+                    this.state.publicBookingMaxDurationEnabled
+                      ? this.state.publicBookingMaxDurationHours - 1
+                      : 24
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled ||
+                    !this.state.publicBookingMinDurationEnabled
+                  }
+                />
+                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-publicBookingMaxDurationHours"
+            >
+              {this.props.t("maxBookingDuration")}
+              <HintTooltip hint={this.props.t("publicBookingDurationHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  id="check-publicBookingMaxDurationHours"
+                  checked={this.state.publicBookingMaxDurationEnabled}
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMaxDurationEnabled: e.target.checked,
+                    })
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled
+                  }
+                />
+                <Form.Control
+                  id="input-publicBookingMaxDurationHours"
+                  type="number"
+                  value={
+                    Number.isNaN(this.state.publicBookingMaxDurationHours)
+                      ? ""
+                      : this.state.publicBookingMaxDurationHours
+                  }
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMaxDurationHours: window.parseInt(
+                        e.target.value,
+                      ),
+                    })
+                  }
+                  required={this.state.publicBookingMaxDurationEnabled}
+                  min={
+                    this.state.publicBookingMinDurationEnabled
+                      ? this.state.publicBookingMinDurationHours + 1
+                      : 1
+                  }
+                  max="24"
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled ||
+                    !this.state.publicBookingMaxDurationEnabled
+                  }
+                />
+                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+              </InputGroup>
             </Col>
           </Form.Group>
           {this.state.publicBookingEnabled && (

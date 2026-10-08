@@ -46,6 +46,8 @@ type GetPublicBookableSpaceResponse struct {
 type GetPublicBookableSpacesResponse struct {
 	Spaces           []GetPublicBookableSpaceResponse `json:"spaces"`
 	MaxDaysInAdvance int                              `json:"maxDaysInAdvance"`
+	MinDurationHours int                              `json:"minDurationHours"`
+	MaxDurationHours int                              `json:"maxDurationHours"`
 	ShowMap          bool                             `json:"showMap"`
 	ShowAvailability bool                             `json:"showAvailability"`
 }
@@ -193,9 +195,12 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
 	showAvailability, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingShowAvailability.Name)
+	minDurationHours, maxDurationHours := service.GetBookingService().GetPublicBookingDurationLimits(orgID)
 	SendJSON(w, GetPublicBookableSpacesResponse{
 		Spaces:           res,
 		MaxDaysInAdvance: maxDaysInAdvance,
+		MinDurationHours: minDurationHours,
+		MaxDurationHours: maxDurationHours,
 		ShowMap:          showMap,
 		ShowAvailability: showAvailability,
 	})
@@ -324,6 +329,9 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	if !bookings.IsValidMinHoursBooking(enter, leave, orgID, nil) {
+		return nil, nil, time.Time{}, time.Time{}, false
+	}
+	if !bookings.IsValidPublicBookingDuration(enter, leave, orgID) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	if !service.GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {

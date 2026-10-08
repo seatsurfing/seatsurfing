@@ -44,12 +44,15 @@ interface State {
   enter: Date;
   leave: Date;
   maxDaysInAdvance: number;
+  minDurationHours: number;
+  maxDurationHours: number;
   name: string;
   email: string;
   subject: string;
   submitting: boolean;
   submitted: boolean;
   error: boolean;
+  durationError: boolean;
   customLogoUrl: string;
   showMap: boolean;
   showAvailability: boolean;
@@ -89,12 +92,15 @@ class PublicBooking extends React.Component<Props, State> {
       enter: enter,
       leave: leave,
       maxDaysInAdvance: 0,
+      minDurationHours: 0,
+      maxDurationHours: 0,
       name: "",
       email: "",
       subject: "",
       submitting: false,
       submitted: false,
       error: false,
+      durationError: false,
       customLogoUrl: "",
       showMap: false,
       showAvailability: false,
@@ -189,6 +195,8 @@ class PublicBooking extends React.Component<Props, State> {
           loading: false,
           spaces: spaces,
           maxDaysInAdvance: maxDaysInAdvance,
+          minDurationHours: res.json.minDurationHours || 0,
+          maxDurationHours: res.json.maxDurationHours || 0,
           enter: enter,
           leave: leave,
           showMap: showMap,
@@ -400,6 +408,40 @@ class PublicBooking extends React.Component<Props, State> {
     );
   };
 
+  isDurationValid = (): boolean => {
+    const minutes = Math.round(
+      (this.state.leave.getTime() - this.state.enter.getTime()) / (60 * 1000),
+    );
+    if (
+      this.state.minDurationHours > 0 &&
+      minutes < this.state.minDurationHours * 60
+    ) {
+      return false;
+    }
+    if (
+      this.state.maxDurationHours > 0 &&
+      minutes > this.state.maxDurationHours * 60
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  getDurationHint = (): string => {
+    const min = this.state.minDurationHours;
+    const max = this.state.maxDurationHours;
+    if (min > 0 && max > 0) {
+      return this.props.t("publicBookingDurationMinMax", { min, max });
+    }
+    if (min > 0) {
+      return this.props.t("publicBookingDurationMin", { min });
+    }
+    if (max > 0) {
+      return this.props.t("publicBookingDurationMax", { max });
+    }
+    return "";
+  };
+
   onSubmit = async (e: any) => {
     e.preventDefault();
     if (!this.state.spaceId || this.state.availabilityPending) {
@@ -410,10 +452,14 @@ class PublicBooking extends React.Component<Props, State> {
       !DateUtil.isSameDay(this.state.enter, this.state.leave) ||
       !this.isSpaceAvailable(this.getSelectedSpace())
     ) {
-      this.setState({ error: true });
+      this.setState({ error: true, durationError: false });
       return;
     }
-    this.setState({ submitting: true, error: false });
+    if (!this.isDurationValid()) {
+      this.setState({ error: false, durationError: true });
+      return;
+    }
+    this.setState({ submitting: true, error: false, durationError: false });
     const payload = {
       spaceId: this.state.spaceId,
       enter: DateUtil.convertToFakeUTCDate(this.state.enter).toISOString(),
@@ -662,6 +708,9 @@ class PublicBooking extends React.Component<Props, State> {
               {this.props.t("publicBookingRequestError")}
             </Alert>
           )}
+          {this.state.durationError && (
+            <Alert variant="danger">{this.getDurationHint()}</Alert>
+          )}
           <Form.Group className="mb-3">
             <Form.Label>{this.props.t("name")}</Form.Label>
             <Form.Control
@@ -735,6 +784,11 @@ class PublicBooking extends React.Component<Props, State> {
               enableTime={true}
               minDate={new Date(this.state.enter.getTime() + 60 * 1000)}
             />
+            {this.getDurationHint() && (
+              <Form.Text className="text-muted">
+                {this.getDurationHint()}
+              </Form.Text>
+            )}
           </Form.Group>
           <Form.Group className="mb-3" controlId="select-space">
             <Form.Label>{this.props.t("space")}</Form.Label>
