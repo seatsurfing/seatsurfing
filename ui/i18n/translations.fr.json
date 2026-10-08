@@ -646,5 +646,9 @@
   "publicBookingNoSpaceAvailable": "No space is available for the selected time slot.",
   "publicBookingShowAvailability": "Show availability",
   "publicBookingShowAvailabilityHint": "Spaces which are already booked for the selected time slot are greyed out on the public booking page. No details about existing bookings are disclosed.",
-  "notAvailable": "not available"
+  "notAvailable": "not available",
+  "publicBookingDurationHint": "Applies to bookings requested via the public booking page. The value cannot exceed 24 hours. The organization-wide minimum and maximum booking durations still apply.",
+  "publicBookingDurationMax": "A booking may last at most {{max}} hours.",
+  "publicBookingDurationMin": "A booking must last at least {{min}} hours.",
+  "publicBookingDurationMinMax": "A booking must last between {{min}} and {{max}} hours."
 }
