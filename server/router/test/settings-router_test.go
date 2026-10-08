@@ -630,3 +630,49 @@ func TestSettingsPublicBookingDurationHoursForbiddenForUser(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
+
+func TestSettingsPublicBookingDurationHoursInvalidRange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	req := NewHTTPRequest("PUT", "/setting/"+SettingPublicBookingMaxDurationHours.Name, loginResponse.UserID, bytes.NewBufferString(`{"value": "2"}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("PUT", "/setting/"+SettingPublicBookingMinDurationHours.Name, loginResponse.UserID, bytes.NewBufferString(`{"value": "10"}`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("PUT", "/setting/"+SettingMinBookingDurationHours.Name, loginResponse.UserID, bytes.NewBufferString(`{"value": "3"}`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload := `[
+		{"name": "` + SettingMaxDaysInAdvance.Name + `", "value": "7"},
+		{"name": "` + SettingPublicBookingMinDurationHours.Name + `", "value": "10"},
+		{"name": "` + SettingPublicBookingMaxDurationHours.Name + `", "value": "12"},
+		{"name": "` + SettingMaxBookingDurationHours.Name + `", "value": "8"}
+	]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	minHours, _ := GetSettingsRepository().GetInt(org.ID, SettingPublicBookingMinDurationHours.Name)
+	CheckTestInt(t, 0, minHours)
+	maxHours, _ := GetSettingsRepository().GetInt(org.ID, SettingPublicBookingMaxDurationHours.Name)
+	CheckTestInt(t, 2, maxHours)
+	maxDays, _ := GetSettingsRepository().GetInt(org.ID, SettingMaxDaysInAdvance.Name)
+	if maxDays == 7 {
+		t.Fatal("expected no setting to be written")
+	}
+
+	payload = `[
+		{"name": "` + SettingPublicBookingMinDurationHours.Name + `", "value": "10"},
+		{"name": "` + SettingPublicBookingMaxDurationHours.Name + `", "value": "12"}
+	]`
+	req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}

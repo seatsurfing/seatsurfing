@@ -13,6 +13,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -190,6 +191,10 @@ func (router *SettingsRouter) setSetting(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !service.GetBookingService().IsValidPublicBookingDurationSettings(user.OrganizationID, map[string]string{vars["name"]: value.Value}) {
+		SendBadRequest(w)
+		return
+	}
 	err := router.doSetOne(user.OrganizationID, vars["name"], value.Value)
 	if err != nil {
 		log.Println(err)
@@ -274,6 +279,7 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	pending := map[string]string{}
 	for _, e := range list {
 		if !router.isValidSettingNameWrite(e.Name) {
 			SendNotFound(w)
@@ -287,6 +293,13 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 			SendBadRequest(w)
 			return
 		}
+		pending[e.Name] = e.Value
+	}
+	if !service.GetBookingService().IsValidPublicBookingDurationSettings(user.OrganizationID, pending) {
+		SendBadRequest(w)
+		return
+	}
+	for _, e := range list {
 		err := router.doSetOne(user.OrganizationID, e.Name, e.Value)
 		if err != nil {
 			log.Println(err)

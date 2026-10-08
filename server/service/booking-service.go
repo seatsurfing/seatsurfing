@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -601,19 +602,47 @@ func (s *BookingService) IsValidMinHoursBooking(enter, leave time.Time, organiza
 // duration in hours for public bookings, combining the public booking limits
 // with the organization-wide limits. A limit of 0 means no restriction.
 func (s *BookingService) GetPublicBookingDurationLimits(orgID string) (int, int) {
-	minHours, _ := GetSettingsRepository().GetInt(orgID, SettingPublicBookingMinDurationHours.Name)
-	maxHours, _ := GetSettingsRepository().GetInt(orgID, SettingPublicBookingMaxDurationHours.Name)
-	orgMinHours, _ := GetSettingsRepository().GetInt(orgID, SettingMinBookingDurationHours.Name)
-	orgMaxHours, _ := GetSettingsRepository().GetInt(orgID, SettingMaxBookingDurationHours.Name)
-	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
-	if dailyBasisBooking && orgMaxHours%24 != 0 {
+	minHours, maxHours, _ := s.getPublicBookingDurationLimits(orgID, nil)
+	return minHours, maxHours
+}
+
+// IsValidPublicBookingDurationSettings reports whether the effective public
+// booking duration limits are satisfiable once the pending setting values
+// (by name) are applied on top of the stored ones.
+func (s *BookingService) IsValidPublicBookingDurationSettings(orgID string, pending map[string]string) bool {
+	minHours, maxHours, publicLimited := s.getPublicBookingDurationLimits(orgID, pending)
+	if !publicLimited {
+		return true
+	}
+	return minHours == 0 || maxHours == 0 || minHours <= maxHours
+}
+
+func (s *BookingService) getPublicBookingDurationLimits(orgID string, pending map[string]string) (int, int, bool) {
+	getInt := func(name string) int {
+		if value, ok := pending[name]; ok {
+			i, _ := strconv.Atoi(value)
+			return i
+		}
+		i, _ := GetSettingsRepository().GetInt(orgID, name)
+		return i
+	}
+	minHours := getInt(SettingPublicBookingMinDurationHours.Name)
+	maxHours := getInt(SettingPublicBookingMaxDurationHours.Name)
+	publicLimited := minHours > 0 || maxHours > 0
+	orgMinHours := getInt(SettingMinBookingDurationHours.Name)
+	orgMaxHours := getInt(SettingMaxBookingDurationHours.Name)
+	dailyBasisBooking, ok := pending[SettingDailyBasisBooking.Name]
+	if !ok {
+		dailyBasisBooking, _ = GetSettingsRepository().Get(orgID, SettingDailyBasisBooking.Name)
+	}
+	if dailyBasisBooking == "1" && orgMaxHours%24 != 0 {
 		orgMaxHours += 24 - (orgMaxHours % 24)
 	}
 	minHours = max(minHours, orgMinHours)
 	if orgMaxHours > 0 && (maxHours == 0 || orgMaxHours < maxHours) {
 		maxHours = orgMaxHours
 	}
-	return minHours, maxHours
+	return minHours, maxHours, publicLimited
 }
 
 // IsValidPublicBookingDuration checks the effective minimum and maximum

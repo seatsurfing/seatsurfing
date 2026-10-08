@@ -1687,7 +1687,7 @@ class Settings extends React.Component<Props, State> {
                   min="1"
                   max={
                     this.state.publicBookingMaxDurationEnabled
-                      ? this.state.publicBookingMaxDurationHours - 1
+                      ? this.state.publicBookingMaxDurationHours
                       : 24
                   }
                   disabled={
@@ -1742,7 +1742,7 @@ class Settings extends React.Component<Props, State> {
                   required={this.state.publicBookingMaxDurationEnabled}
                   min={
                     this.state.publicBookingMinDurationEnabled
-                      ? this.state.publicBookingMinDurationHours + 1
+                      ? this.state.publicBookingMinDurationHours
                       : 1
                   }
                   max="24"

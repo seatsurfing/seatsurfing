@@ -296,3 +296,42 @@ func TestBookingServicePublicBookingDurationLimitsIncludeOrgLimits(t *testing.T)
 	enter, leave = serviceTestSlot(0, 8, 11)
 	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
 }
+
+func TestBookingServicePublicBookingDurationSettings(t *testing.T) {
+	org, _, _, _ := setupServiceTest(t)
+	svc := GetBookingService()
+	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "0")
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingDurationHours.Name, "12")
+
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, nil))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingPublicBookingMinDurationHours.Name: "4",
+		SettingPublicBookingMaxDurationHours.Name: "4",
+	}))
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingPublicBookingMinDurationHours.Name: "10",
+		SettingPublicBookingMaxDurationHours.Name: "2",
+	}))
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingPublicBookingMinDurationHours.Name: "14",
+	}))
+
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "6")
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingMinBookingDurationHours.Name: "8",
+	}))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingMinBookingDurationHours.Name:       "8",
+		SettingPublicBookingMaxDurationHours.Name: "0",
+	}))
+
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "0")
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingMinBookingDurationHours.Name: "20",
+	}))
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "16")
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, nil))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
+		SettingDailyBasisBooking.Name: "1",
+	}))
+}
