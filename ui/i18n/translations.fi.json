@@ -640,5 +640,9 @@
   "permissionHint_approvals_admin": "Approve or decline pending bookings for all spaces of the organization.",
   "permissionHint_approvals_write": "Approve or decline pending bookings for spaces whose approver groups include the user, as well as for spaces without approver groups.",
   "errorAuthProviderHasUsers": "The auth provider cannot be deleted because users are still assigned to it.",
-  "authProviderRequiredHint": "Password login is disabled. Please create an identity provider in the settings first."
+  "authProviderRequiredHint": "Password login is disabled. Please create an identity provider in the settings first.",
+  "publicBookingNoSpaceAvailable": "No space is available for the selected time slot.",
+  "publicBookingShowAvailability": "Show availability",
+  "publicBookingShowAvailabilityHint": "Spaces which are already booked for the selected time slot are greyed out on the public booking page. No details about existing bookings are disclosed.",
+  "notAvailable": "not available"
 }

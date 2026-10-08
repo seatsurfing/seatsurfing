@@ -163,6 +163,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingPublicBookingEnabled.Name,
 		SettingFeaturePublicBooking.Name,
 		SettingPublicBookingShowMap.Name,
+		SettingPublicBookingShowAvailability.Name,
 		SettingHideDisallowedLocations.Name,
 		SysSettingBookingUIIntegrations,
 	}

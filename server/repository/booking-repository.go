@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/lib/pq"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
-	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 type BookingStore struct {
@@ -821,58 +821,96 @@ func (r *BookingStore) GetConflicts(spaceID string, enter time.Time, leave time.
 	return result, nil
 }
 
-// GetConcurrent returns concurrent bookings for a specific location
-// within the specified enter and leave times.
-func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave time.Time, excludeBookingID string) (int, error) {
-	var getNumActive = func(bookings []*Booking, timestamp time.Time) int {
-		res := 0
-		for _, b := range bookings {
-			if b.Enter.Before(timestamp) && b.Leave.After(timestamp) && !b.Enter.Equal(timestamp) && !b.Leave.Equal(timestamp) {
-				res++
-			}
-		}
-		return res
+// GetBookedSpaceIDs returns the IDs of all spaces in the location which have
+// at least one booking overlapping [enter, leave), including public bookings
+// which have no user.
+func (r *BookingStore) GetBookedSpaceIDs(organizationID, locationID string, enter, leave time.Time) ([]string, error) {
+	var result []string
+	rows, err := GetDatabase().DB().Query("SELECT DISTINCT space_id "+
+		"FROM bookings "+
+		"WHERE organization_id = $1 AND location_id = $2 AND "+
+		"enter_time < $4 AND leave_time > $3",
+		organizationID, locationID, enter, leave)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
+	for rows.Next() {
+		var spaceID string
+		if err := rows.Scan(&spaceID); err != nil {
+			return nil, err
+		}
+		result = append(result, spaceID)
+	}
+	return result, rows.Err()
+}
 
-	var result []*Booking
+// reattachTimezone interprets the wall clock time of t (including fractional
+// seconds) in the given location.
+func reattachTimezone(t time.Time, loc *time.Location) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+}
+
+// GetConcurrent returns the maximum number of bookings in the location which
+// are active at the same time within [enter, leave). Bookings are treated as
+// half-open intervals [Enter, Leave), so back-to-back bookings don't overlap.
+func (r *BookingStore) GetConcurrent(location *Location, enter time.Time, leave time.Time, excludeBookingID string) (int, error) {
 	tz := GetLocationRepository().GetTimezone(location)
 	targetTz, err := time.LoadLocation(tz)
 	if err != nil {
 		return 0, err
 	}
-	rows, err := GetDatabase().DB().Query("SELECT id, COALESCE(user_id::text, ''), space_id, enter_time, leave_time, caldav_id, approved, subject, recurring_id "+
+	rows, err := GetDatabase().DB().Query("SELECT enter_time, leave_time "+
 		"FROM bookings "+
 		"WHERE id::text != $1 AND space_id IN (SELECT id FROM spaces WHERE location_id = $2) AND "+
-		"enter_time < $4 AND leave_time > $3 "+
-		"ORDER BY enter_time", excludeBookingID, location.ID, enter, leave)
-	if err == sql.ErrNoRows {
-		return 0, nil
-	}
+		"enter_time < $4 AND leave_time > $3", excludeBookingID, location.ID, enter, leave)
 	if err != nil {
 		return 0, err
 	}
 	defer rows.Close()
+
+	type event struct {
+		at    time.Time
+		delta int
+	}
+	var events []event
 	for rows.Next() {
-		e := &Booking{}
-		err = rows.Scan(&e.ID, &e.UserID, &e.SpaceID, &e.Enter, &e.Leave, &e.CalDavID, &e.Approved, &e.Subject, &e.RecurringID)
-		e.Enter, _ = time.ParseInLocation(JsDateTimeFormat, e.Enter.Format(JsDateTimeFormat), targetTz)
-		e.Leave, _ = time.ParseInLocation(JsDateTimeFormat, e.Leave.Format(JsDateTimeFormat), targetTz)
-		if err != nil {
+		var bookingEnter, bookingLeave time.Time
+		if err := rows.Scan(&bookingEnter, &bookingLeave); err != nil {
 			return 0, err
 		}
-		result = append(result, e)
-	}
-
-	max := 0
-	timestamp := enter
-	for timestamp.Before(leave) || timestamp.Equal(leave) {
-		numActive := getNumActive(result, timestamp)
-		if numActive > max {
-			max = numActive
+		bookingEnter = reattachTimezone(bookingEnter, targetTz)
+		bookingLeave = reattachTimezone(bookingLeave, targetTz)
+		// Clip the booking to the requested interval
+		if bookingEnter.Before(enter) {
+			bookingEnter = enter
 		}
-		timestamp = timestamp.Add(time.Minute * 1)
+		if bookingLeave.After(leave) {
+			bookingLeave = leave
+		}
+		if !bookingEnter.Before(bookingLeave) {
+			continue
+		}
+		events = append(events, event{at: bookingEnter, delta: 1}, event{at: bookingLeave, delta: -1})
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
 	}
 
+	// Process ends before starts at the same instant (half-open intervals)
+	sort.Slice(events, func(i, j int) bool {
+		if events[i].at.Equal(events[j].at) {
+			return events[i].delta < events[j].delta
+		}
+		return events[i].at.Before(events[j].at)
+	})
+	max, cur := 0, 0
+	for _, e := range events {
+		cur += e.delta
+		if cur > max {
+			max = cur
+		}
+	}
 	return max, nil
 }
 

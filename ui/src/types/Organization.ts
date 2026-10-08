@@ -49,6 +49,8 @@ export default class Organization extends Entity {
   static readonly PREF_HIDE_STATS = "hide_stats";
   static readonly PREF_PUBLIC_BOOKING_ENABLED = "public_booking_enabled";
   static readonly PREF_PUBLIC_BOOKING_SHOW_MAP = "public_booking_show_map";
+  static readonly PREF_PUBLIC_BOOKING_SHOW_AVAILABILITY =
+    "public_booking_show_availability";
   static readonly PREF_HIDE_DISALLOWED_LOCATIONS = "hide_disallowed_locations";
 
   name: string;
