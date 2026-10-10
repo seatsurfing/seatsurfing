@@ -298,40 +298,20 @@ func TestBookingServicePublicBookingDurationLimitsIncludeOrgLimits(t *testing.T)
 }
 
 func TestBookingServicePublicBookingDurationSettings(t *testing.T) {
-	org, _, _, _ := setupServiceTest(t)
 	svc := GetBookingService()
-	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "0")
-	GetSettingsRepository().Set(org.ID, SettingMaxBookingDurationHours.Name, "12")
 
-	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, nil))
-	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingPublicBookingMinDurationHours.Name: "4",
-		SettingPublicBookingMaxDurationHours.Name: "4",
-	}))
-	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingPublicBookingMinDurationHours.Name: "10",
-		SettingPublicBookingMaxDurationHours.Name: "2",
-	}))
-	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingPublicBookingMinDurationHours.Name: "14",
-	}))
-
-	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "6")
-	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingMinBookingDurationHours.Name: "8",
-	}))
-	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingMinBookingDurationHours.Name:       "8",
-		SettingPublicBookingMaxDurationHours.Name: "0",
-	}))
-
-	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "0")
-	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingMinBookingDurationHours.Name: "20",
-	}))
-	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "16")
-	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(org.ID, nil))
-	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(org.ID, map[string]string{
-		SettingDailyBasisBooking.Name: "1",
-	}))
+	// no public limits
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(0, 0, 0, 12, false))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(0, 0, 20, 12, false))
+	// public limits only
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(4, 4, 0, 12, false))
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(10, 2, 0, 12, false))
+	// public min exceeds org max
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(14, 0, 0, 12, false))
+	// org min exceeds public max
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(0, 6, 8, 12, false))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(0, 0, 8, 12, false))
+	// daily basis rounds org max up to full days
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(16, 0, 20, 12, false))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(16, 0, 20, 12, true))
 }
