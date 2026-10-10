@@ -1530,7 +1530,7 @@ class EditLocation extends React.Component<Props, State> {
                   }
                 />
               </Form.Label>
-              <Col sm="8">
+              <Col sm="8" className="d-flex align-items-center gap-3">
                 <Form.Check
                   type="checkbox"
                   id="space-public-booking-enabled"
@@ -1549,6 +1549,24 @@ class EditLocation extends React.Component<Props, State> {
                     this.setState({ spaces: spaces, changed: true });
                   }}
                 />
+                {this.getSelectedSpace()?.publicBookingEnabled &&
+                  this.getSelectedSpace()?.id && (
+                    <Form.Text as="span" className="text-muted mt-0">
+                      {(() => {
+                        const url = Navigation.publicBookingUrl(
+                          this.getSelectedSpace()!.id,
+                        );
+                        return (
+                          <>
+                            <a href={url} target="_blank" rel="noreferrer">
+                              {this.props.t("publicBookingUrl")}
+                            </a>{" "}
+                            <CopyToClipboardButton text={url} small={true} />
+                          </>
+                        );
+                      })()}
+                    </Form.Text>
+                  )}
               </Col>
             </Form.Group>
           </Form>
