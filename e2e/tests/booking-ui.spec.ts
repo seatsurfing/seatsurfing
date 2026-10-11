@@ -83,8 +83,9 @@ test("direct link with multiple spaces and enter=now", async ({ page }) => {
   await spaceSelect.selectOption({ label: "Desk 2" });
 
   // Enter/leave times can be adjusted in the dialog
-  await expect(dialog.getByText("Enter:")).toBeVisible();
-  await expect(dialog.getByText("Leave:")).toBeVisible();
+  await expect(dialog.getByTitle("Previous day")).toBeVisible();
+  await expect(dialog.getByTitle("Next day")).toBeVisible();
+  await expect(dialog.getByTitle("All day")).toBeVisible();
 
   await dialog.getByRole("button", { name: "Confirm booking" }).click();
   await expect(

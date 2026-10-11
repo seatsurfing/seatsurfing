@@ -2028,6 +2028,122 @@ class Search extends React.Component<Props, State> {
       </div>
     );
 
+    const dateSelection = (
+      <Form.Group className="d-flex margin-top-10">
+        <div className="me-2">
+          <WeekIcon
+            title={this.props.t("date")}
+            color={"var(--bs-secondary-color)"}
+            height="20px"
+            width="20px"
+          />
+        </div>
+
+        <IconTextButton
+          text="❮"
+          title={this.props.t("previousDay")}
+          disabled={
+            DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
+            !this.state.locationId
+          }
+          onClick={() => {
+            this.updateEnterAndLeaveDate(
+              DateUtil.prevDay(this.state.enter),
+              DateUtil.prevDay(this.state.leave),
+            );
+          }}
+        />
+
+        <div
+          className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
+        >
+          {dateEnterPicker}
+        </div>
+
+        {this.state.selectionMultiDay && (
+          <div className="ms-2 w-50">{dateLeavePicker}</div>
+        )}
+
+        <IconTextButton
+          text="❯"
+          title={this.props.t("nextDay")}
+          disabled={!this.state.locationId}
+          onClick={() => {
+            this.updateEnterAndLeaveDate(
+              DateUtil.nextDay(this.state.enter),
+              DateUtil.nextDay(this.state.leave),
+            );
+          }}
+        />
+
+        <IconButton
+          icon={CalendarIcon}
+          active={this.state.selectionMultiDay}
+          disabled={!this.state.locationId}
+          title={this.props.t("multiDay")}
+          onClick={() => {
+            if (this.state.selectionMultiDay) {
+              let newLeave = DateUtil.copyDate(
+                this.state.enter,
+                this.state.leave,
+              );
+              if (newLeave.getTime() < this.state.enter.getTime()) {
+                newLeave = DateUtil.setHoursToMax(newLeave);
+              }
+              this.updateEnterAndLeaveDate(null, newLeave);
+            }
+            this.setState(
+              {
+                selectionMultiDay: !this.state.selectionMultiDay,
+              },
+              () => this.updateUrlParams(),
+            );
+          }}
+        />
+      </Form.Group>
+    );
+    const timeSelection = !RuntimeConfig.INFOS.dailyBasisBooking && (
+      <Form.Group className="d-flex margin-top-10">
+        <div className="me-2">
+          <TimeIcon
+            title={this.props.t("time")}
+            color={"var(--bs-secondary-color)"}
+            height="20px"
+            width="20px"
+          />
+        </div>
+        <div className="ms-2 w-50">{timeEnterPicker}</div>
+        <div className="ms-2 w-50">{timeLeavePicker}</div>
+        <IconButton
+          icon={TimerIcon}
+          active={this.state.selectionAllDay}
+          disabled={!this.state.locationId}
+          title={this.props.t("allDay")}
+          onClick={() => {
+            if (!this.state.selectionAllDay) {
+              this.resetEnterTime = new Date(this.state.enter);
+              this.resetLeaveTime = new Date(this.state.leave);
+              this.updateEnterAndLeaveDate(
+                DateUtil.setHoursToMin(this.state.enter),
+                DateUtil.setHoursToMax(this.state.leave),
+              );
+            } else {
+              this.updateEnterAndLeaveDate(
+                this.resetEnterTime ?? null,
+                this.resetLeaveTime ?? null,
+              );
+            }
+            this.setState(
+              {
+                selectionAllDay: !this.state.selectionAllDay,
+              },
+              () => this.updateUrlParams(),
+            );
+          }}
+        />
+      </Form.Group>
+    );
+
     const activeIntegration = this.getActiveBookingUIIntegration();
     const integrationPanelWidth = activeIntegration
       ? activeIntegration.width || 200
@@ -2298,122 +2414,9 @@ class Search extends React.Component<Props, State> {
                 </div>
               </Form.Group>
 
-              {/* Date selection */}
-              <Form.Group className="d-flex margin-top-10">
-                <div className="me-2">
-                  <WeekIcon
-                    title={this.props.t("date")}
-                    color={"var(--bs-secondary-color)"}
-                    height="20px"
-                    width="20px"
-                  />
-                </div>
+              {dateSelection}
 
-                <IconTextButton
-                  text="❮"
-                  title={this.props.t("previousDay")}
-                  disabled={
-                    DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
-                    !this.state.locationId
-                  }
-                  onClick={() => {
-                    this.updateEnterAndLeaveDate(
-                      DateUtil.prevDay(this.state.enter),
-                      DateUtil.prevDay(this.state.leave),
-                    );
-                  }}
-                />
-
-                <div
-                  className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
-                >
-                  {dateEnterPicker}
-                </div>
-
-                {this.state.selectionMultiDay && (
-                  <div className="ms-2 w-50">{dateLeavePicker}</div>
-                )}
-
-                <IconTextButton
-                  text="❯"
-                  title={this.props.t("nextDay")}
-                  disabled={!this.state.locationId}
-                  onClick={() => {
-                    this.updateEnterAndLeaveDate(
-                      DateUtil.nextDay(this.state.enter),
-                      DateUtil.nextDay(this.state.leave),
-                    );
-                  }}
-                />
-
-                <IconButton
-                  icon={CalendarIcon}
-                  active={this.state.selectionMultiDay}
-                  disabled={!this.state.locationId}
-                  title={this.props.t("multiDay")}
-                  onClick={() => {
-                    if (this.state.selectionMultiDay) {
-                      let newLeave = DateUtil.copyDate(
-                        this.state.enter,
-                        this.state.leave,
-                      );
-                      if (newLeave.getTime() < this.state.enter.getTime()) {
-                        newLeave = DateUtil.setHoursToMax(newLeave);
-                      }
-                      this.updateEnterAndLeaveDate(null, newLeave);
-                    }
-                    this.setState(
-                      {
-                        selectionMultiDay: !this.state.selectionMultiDay,
-                      },
-                      () => this.updateUrlParams(),
-                    );
-                  }}
-                />
-              </Form.Group>
-
-              {/* Time selection */}
-              {!RuntimeConfig.INFOS.dailyBasisBooking && (
-                <Form.Group className="d-flex margin-top-10">
-                  <div className="me-2">
-                    <TimeIcon
-                      title={this.props.t("time")}
-                      color={"var(--bs-secondary-color)"}
-                      height="20px"
-                      width="20px"
-                    />
-                  </div>
-                  <div className="ms-2 w-50">{timeEnterPicker}</div>
-                  <div className="ms-2 w-50">{timeLeavePicker}</div>
-                  <IconButton
-                    icon={TimerIcon}
-                    active={this.state.selectionAllDay}
-                    disabled={!this.state.locationId}
-                    title={this.props.t("allDay")}
-                    onClick={() => {
-                      if (!this.state.selectionAllDay) {
-                        this.resetEnterTime = new Date(this.state.enter);
-                        this.resetLeaveTime = new Date(this.state.leave);
-                        this.updateEnterAndLeaveDate(
-                          DateUtil.setHoursToMin(this.state.enter),
-                          DateUtil.setHoursToMax(this.state.leave),
-                        );
-                      } else {
-                        this.updateEnterAndLeaveDate(
-                          this.resetEnterTime ?? null,
-                          this.resetLeaveTime ?? null,
-                        );
-                      }
-                      this.setState(
-                        {
-                          selectionAllDay: !this.state.selectionAllDay,
-                        },
-                        () => this.updateUrlParams(),
-                      );
-                    }}
-                  />
-                </Form.Group>
-              )}
+              {timeSelection}
 
               <Form.Group className="d-flex margin-top-10 minimized-hide">
                 <div className="me-2">
@@ -2652,36 +2655,12 @@ class Search extends React.Component<Props, State> {
             )}
             {directLink && (
               <>
-                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
-                  <Form.Label column sm="4">
-                    {this.props.t("enter")}:
-                  </Form.Label>
-                  <Col sm="8">
-                    <div className="d-flex gap-2">
-                      {dateEnterPicker}
-                      {timeEnterPicker}
-                    </div>
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
-                  <Form.Label column sm="4">
-                    {this.props.t("leave")}:
-                  </Form.Label>
-                  <Col sm="8">
-                    <div className="d-flex gap-2">
-                      {this.state.selectionMultiDay && dateLeavePicker}
-                      {timeLeavePicker}
-                    </div>
-                  </Col>
-                </Form.Group>
+                {dateSelection}
+                {timeSelection}
                 {selectedSpaceUnavailable && (
-                  <Row style={{ marginBottom: "5px" }}>
-                    <Col sm={{ span: 8, offset: 4 }}>
-                      <div className="invalid-search-config">
-                        {this.props.t("directLinkNoSpaceAvailable")}
-                      </div>
-                    </Col>
-                  </Row>
+                  <div className="invalid-search-config margin-top-10">
+                    {this.props.t("directLinkNoSpaceAvailable")}
+                  </div>
                 )}
               </>
             )}
