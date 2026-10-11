@@ -658,5 +658,6 @@
   "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"? The values captured for existing bookings will be deleted as well.",
   "editBookingAttribute": "Edit attribute",
   "optionalField": "optional",
-  "bookingAttributeTypeCheckbox": "Checkbox"
+  "bookingAttributeTypeCheckbox": "Checkbox",
+  "showBookingAttributes": "Show booking attributes"
 }

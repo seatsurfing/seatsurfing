@@ -661,5 +661,6 @@
   "confirmDeleteBookingAttribute": "Attribut \"{{label}}\" löschen? Die für bestehende Buchungen erfassten Werte werden ebenfalls gelöscht.",
   "bookingAttributeSaveError": "Das Attribut konnte nicht gespeichert werden.",
   "optionalField": "optional",
-  "bookingAttributeTypeCheckbox": "Checkbox"
+  "bookingAttributeTypeCheckbox": "Checkbox",
+  "showBookingAttributes": "Buchungsattribute anzeigen"
 }
