@@ -645,5 +645,6 @@
   "publicBookingShowAvailability": "Show availability",
   "publicBookingShowAvailabilityHint": "Spaces which are already booked for the selected time slot are greyed out on the public booking page. No details about existing bookings are disclosed.",
   "notAvailable": "not available",
-  "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot."
+  "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot.",
+  "publicBookingAllSpaces": "All spaces"
 }

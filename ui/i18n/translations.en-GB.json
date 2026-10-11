@@ -645,5 +645,6 @@
   "yes": "yes",
   "yesterday": "Yesterday",
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
-  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
+  "publicBookingAllSpaces": "All spaces"
 }
