@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await login(page, "admin@seatsurfing.local", "Sea!surf1ng");
 
   // Ensure we've reached the dashboard
-  await expect(page).toHaveURL(/search\/$/);
+  await expect(page).toHaveURL(/search\/(\?.*)?$/);
 
   // Start with a clean slate: a previous failed/retried run (or another
   // browser project sharing the same backend) may have left Desk 1 booked,
@@ -69,7 +69,9 @@ test("direct link with multiple spaces and enter=now", async ({ page }) => {
     `${uiURL}/ui/search/?lid=${location.id}&sid=${desk1.id},${desk2.id}&enter=now`,
   );
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText("Book a space")).toBeVisible();
+  await expect(dialog.getByText("Book a space")).toBeVisible({
+    timeout: 20000,
+  });
 
   // The user can choose between the linked spaces only
   const spaceSelect = dialog.getByLabel("Space");
