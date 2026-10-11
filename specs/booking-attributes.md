@@ -26,7 +26,7 @@ Organizations can define up to three custom booking attributes (label, type, req
 - Values are validated when the booking is requested (before the confirmation email is sent) and stored once the booker confirms the request.
 - Deleting an attribute deletes the values captured for existing bookings. Changing an attribute's label or type does not change the stored values.
 - Empty optional values are not stored. Checkbox values are stored as `1` (checked) or `0` (unchecked); a required checkbox must be checked.
-- Numbers must be positive (greater than zero).
+- Numbers must be positive integers (greater than zero, no decimals).
 
 ## Existing System Constraints
 
@@ -73,7 +73,7 @@ Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fo
 ### Public booking
 
 - `GET /public-booking/{orgId}/spaces` additionally returns `attributes: [{id, label, type, required}]`.
-- `POST /public-booking/{orgId}/request` accepts `attributes: {"<attributeId>": "<value>"}`. Missing required values, unknown attribute IDs or invalid values return 400 with `X-Error-Code: 1014`. Limits: single-line text 256 characters without line breaks, multi-line text 4096 characters, numbers must match `[0-9]+(\.[0-9]+)?` and be greater than zero, checkboxes accept `1`/`true` (checked) or `0`/`false`/empty (unchecked).
+- `POST /public-booking/{orgId}/request` accepts `attributes: {"<attributeId>": "<value>"}`. Missing required values, unknown attribute IDs or invalid values return 400 with `X-Error-Code: 1014`. Limits: single-line text 256 characters without line breaks, multi-line text 4096 characters, numbers must be positive integers matching `^0*[1-9][0-9]*$` (at most 32 characters, no sign, decimals or exponents), checkboxes accept `1`/`true` (checked) or `0`/`false`/empty (unchecked).
 
 ### Bookings
 
