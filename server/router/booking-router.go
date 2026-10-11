@@ -7,9 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"slices"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -200,41 +198,11 @@ func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.
 	SendJSON(w, res)
 }
 
-func (router *BookingRouter) validateBookingFilters(w http.ResponseWriter, r *http.Request) (*User, []string, string, bool) {
-	user := GetRequestUser(r)
-	if !HasPermission(user, user.OrganizationID, PermissionBookings, PermissionLevelRead) {
-		SendForbidden(w)
-		return nil, nil, "", false
+func (router *BookingRouter) getBookingFilter(r *http.Request) *service.BookingFilter {
+	return &service.BookingFilter{
+		UserEmails: r.URL.Query()["user"],
+		LocationID: r.URL.Query().Get("location"),
 	}
-
-	filterUserEmails := []string{}
-	for _, email := range r.URL.Query()["user"] {
-		email = strings.ToLower(email)
-		if email == "" || slices.Contains(filterUserEmails, email) {
-			continue
-		}
-		filterUser, _ := GetUserRepository().GetByEmail(user.OrganizationID, email)
-		if filterUser == nil {
-			SendBadRequest(w)
-			return nil, nil, "", false
-		}
-		filterUserEmails = append(filterUserEmails, email)
-	}
-
-	filterLocationId := r.URL.Query().Get("location")
-	if filterLocationId != "" {
-		if !ValidateGUID(filterLocationId) {
-			SendBadRequest(w)
-			return nil, nil, "", false
-		}
-		filterLocation, _ := GetLocationRepository().GetOne(filterLocationId)
-		if filterLocation == nil || filterLocation.OrganizationID != user.OrganizationID {
-			SendBadRequest(w)
-			return nil, nil, "", false
-		}
-	}
-
-	return user, filterUserEmails, filterLocationId, true
 }
 
 func (router *BookingRouter) sendBookingList(w http.ResponseWriter, list []*BookingDetails) {
@@ -246,11 +214,6 @@ func (router *BookingRouter) sendBookingList(w http.ResponseWriter, list []*Book
 }
 
 func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request) {
-	user, filterUserEmails, filterLocationId, ok := router.validateBookingFilters(w, r)
-	if !ok {
-		return
-	}
-
 	start, err := time.Parse(time.RFC3339Nano, r.URL.Query().Get("start"))
 	if err != nil {
 		SendBadRequest(w)
@@ -261,26 +224,18 @@ func (router *BookingRouter) getFiltered(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
-
-	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, filterUserEmails, filterLocationId)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
+	list, bErr := service.GetBookingService().GetFiltered(GetRequestUser(r), start, end, router.getBookingFilter(r))
+	if bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
 	router.sendBookingList(w, list)
 }
 
 func (router *BookingRouter) getCurrent(w http.ResponseWriter, r *http.Request) {
-	user, filterUserEmails, filterLocationId, ok := router.validateBookingFilters(w, r)
-	if !ok {
-		return
-	}
-
-	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, filterUserEmails, filterLocationId)
-	if err != nil {
-		log.Println(err)
-		SendInternalServerError(w)
+	list, bErr := service.GetBookingService().GetCurrent(GetRequestUser(r), router.getBookingFilter(r))
+	if bErr != nil {
+		sendBookingError(w, bErr)
 		return
 	}
 	router.sendBookingList(w, list)
