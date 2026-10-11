@@ -51,7 +51,7 @@ interface State {
   loading: boolean;
   start: Date;
   end: Date;
-  filterUser: string;
+  filterUsers: string[];
   filterOption: FilterOption;
   filterLocation: string;
   cancelBookingItem: Booking | null;
@@ -111,9 +111,10 @@ class Bookings extends React.Component<Props, State> {
       loading: true,
       start: getDateFromQuery("enter", -7), // default: 7 days in past
       end: getDateFromQuery("leave", +7), // default: 7 days in future
-      filterUser: (activeTab === "all" && this.canSearchUsers()
-        ? queryUser
-        : undefined) as string,
+      filterUsers:
+        activeTab === "all" && this.canSearchUsers()
+          ? ([] as string[]).concat(this.props.router.query["user"] ?? [])
+          : [],
       filterOption: FILTER_OPTIONS.includes(
         this.props.router.query["filter"] as FilterOption,
       )
@@ -142,7 +143,7 @@ class Bookings extends React.Component<Props, State> {
     enter: string | null,
     leave: string | null,
     filter: string | null,
-    filterUser: string | null,
+    filterUsers: string[],
     filterLocation: string | null,
   ) => {
     const currentPath = this.props.router.pathname;
@@ -150,7 +151,7 @@ class Bookings extends React.Component<Props, State> {
       ...(enter !== null && { enter }),
       ...(leave !== null && { leave }),
       ...(filter !== null && { filter }),
-      ...(filterUser && { user: filterUser }),
+      ...(filterUsers.length > 0 && { user: filterUsers }),
       ...(filterLocation && { location: filterLocation }),
     };
 
@@ -191,7 +192,7 @@ class Bookings extends React.Component<Props, State> {
             ? DateUtil.formatToDateTimeString(this.state.end)
             : null,
           this.state.filterOption,
-          this.state.filterUser,
+          this.state.filterUsers,
           this.state.filterLocation,
         ),
       );
@@ -231,10 +232,10 @@ class Bookings extends React.Component<Props, State> {
       ? Booking.listFiltered(
           range[0],
           range[1],
-          this.state.filterUser,
+          this.state.filterUsers,
           this.state.filterLocation,
         )
-      : Booking.listCurrent(this.state.filterUser, this.state.filterLocation));
+      : Booking.listCurrent(this.state.filterUsers, this.state.filterLocation));
     this.setState({ loading: false });
     if (this.state.activeTab !== "all") {
       return;
@@ -247,7 +248,7 @@ class Bookings extends React.Component<Props, State> {
         ? DateUtil.formatToDateTimeString(this.state.end)
         : null,
       this.state.filterOption,
-      this.state.filterUser,
+      this.state.filterUsers,
       this.state.filterLocation,
     );
   };
@@ -372,7 +373,7 @@ class Bookings extends React.Component<Props, State> {
 
   onSearchSelected = (selected: any) => {
     this.setState({
-      filterUser: selected[0]?.email,
+      filterUsers: selected.map((user: any) => user.email),
     });
   };
 
@@ -526,14 +527,18 @@ class Bookings extends React.Component<Props, State> {
           </Col>
         </Form.Group>
         <Form.Group as={Row} hidden={!this.canSearchUsers()}>
-          <Form.Label column sm="2">
+          <Form.Label column sm="2" htmlFor="filter-users">
             {this.props.t("user")}
           </Form.Label>
           <Col sm="4">
             <UserSearchTypeahead
               t={this.props.t}
-              defaultSelected={[{ email: this.state.filterUser ?? "" }]}
-              multiple={false}
+              id="filter-users-typeahead"
+              inputProps={{ id: "filter-users" }}
+              defaultSelected={this.state.filterUsers.map((email) => ({
+                email,
+              }))}
+              multiple={true}
               onChange={this.onSearchSelected}
             />
           </Col>

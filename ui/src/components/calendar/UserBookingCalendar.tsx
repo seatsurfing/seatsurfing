@@ -49,7 +49,7 @@ class UserBookingCalendar extends React.Component<Props, State> {
     const list = await Booking.listFiltered(
       DateUtil.convertFromFakeUTCDate(range.start),
       DateUtil.convertFromFakeUTCDate(range.end),
-      this.props.userEmail,
+      [this.props.userEmail],
       "",
     );
     if (requestId !== this.requestCounter) {

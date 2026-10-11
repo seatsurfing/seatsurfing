@@ -128,6 +128,27 @@ func TestUsersCountHumanScopedByOrg(t *testing.T) {
 	CheckTestInt(t, 1, res)
 }
 
+func TestUsersEmailsExistInOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+	foreignUser := CreateTestUserInOrg(org2)
+
+	ok, err := GetUserRepository().EmailsExistInOrg(org.ID, []string{user1.Email, user2.Email})
+	CheckTestIsNil(t, err)
+	CheckTestBool(t, true, ok)
+
+	ok, err = GetUserRepository().EmailsExistInOrg(org.ID, []string{user1.Email, foreignUser.Email})
+	CheckTestIsNil(t, err)
+	CheckTestBool(t, false, ok)
+
+	ok, err = GetUserRepository().EmailsExistInOrg(org.ID, []string{user1.Email, "unknown@test.com"})
+	CheckTestIsNil(t, err)
+	CheckTestBool(t, false, ok)
+}
+
 func TestUsersLastActivity(t *testing.T) {
 	ClearTestDB()
 
