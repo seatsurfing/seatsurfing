@@ -41,6 +41,8 @@ func RunDBSchemaUpdates() {
 		GetAuthProviderMappingRepository(),
 		GetUserRoleRepository(),
 		GetRoleRepository(),
+		GetBookingAttributeRepository(),
+		GetBookingAttributeValueRepository(),
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)

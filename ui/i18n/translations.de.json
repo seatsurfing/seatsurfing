@@ -647,5 +647,22 @@
   "permissionHint_approvals_admin": "Ausstehende Buchungen für alle Plätze der Organisation genehmigen oder ablehnen.",
   "permissionHint_approvals_write": "Ausstehende Buchungen für Plätze genehmigen oder ablehnen, deren Genehmiger-Gruppen den Benutzer enthalten, sowie für Plätze ohne Genehmiger-Gruppen.",
   "errorAuthProviderHasUsers": "Der Auth Provider kann nicht gelöscht werden, da ihm noch Benutzer zugeordnet sind.",
-  "authProviderRequiredHint": "Die Anmeldung per Passwort ist deaktiviert. Bitte lege zuerst in den Einstellungen einen Identity Provider an."
+  "authProviderRequiredHint": "Die Anmeldung per Passwort ist deaktiviert. Bitte lege zuerst in den Einstellungen einen Identity Provider an.",
+  "bookingAttributes": "Buchungsattribute",
+  "bookingAttributesHint": "Zusätzliche Felder, die bei der Anfrage einer öffentlichen Buchung ausgefüllt werden.",
+  "bookingAttributeLabel": "Bezeichnung",
+  "bookingAttributeTypeText": "Text (einzeilig)",
+  "bookingAttributeTypeTextMultiline": "Text (mehrzeilig)",
+  "bookingAttributeTypeNumber": "Zahl",
+  "bookingAttributeRequired": "Pflichtfeld",
+  "addBookingAttribute": "Attribut hinzufügen",
+  "editBookingAttribute": "Attribut bearbeiten",
+  "bookingAttributeLimitReached": "Es können maximal {{max}} Attribute definiert werden.",
+  "confirmDeleteBookingAttribute": "Attribut \"{{label}}\" löschen? Die für bestehende Buchungen erfassten Werte werden ebenfalls gelöscht.",
+  "bookingAttributeSaveError": "Das Attribut konnte nicht gespeichert werden.",
+  "optionalField": "optional",
+  "bookingAttributeTypeCheckbox": "Checkbox",
+  "showBookingAttributes": "Buchungsattribute anzeigen",
+  "moveUp": "Nach oben verschieben",
+  "moveDown": "Nach unten verschieben"
 }

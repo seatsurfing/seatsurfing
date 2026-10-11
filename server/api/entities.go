@@ -196,6 +196,8 @@ type PublicBookingRequestPayload struct {
 	Email    string    `json:"email"`
 	Subject  string    `json:"subject"`
 	Language string    `json:"language"`
+	// Attributes maps booking attribute IDs to their values.
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
 // ─── AuthProvider ─────────────────────────────────────────────────────────────

@@ -1,10 +1,11 @@
 import React from "react";
-import { Table, Button, Form } from "react-bootstrap";
+import { Table, Button, Form, Modal } from "react-bootstrap";
 import {
   Download as IconDownload,
   X as IconX,
   Check as IconOK,
   RefreshCw as IconRecurring,
+  Info as IconInfo,
 } from "react-feather";
 import FullLayout from "@/components/FullLayout";
 import { NextRouter } from "next/router";
@@ -31,6 +32,7 @@ interface State {
   approvalNotifications: boolean;
   loadingPreference: boolean;
   declineBooking: Booking | null;
+  attributesBooking: Booking | null;
 }
 
 interface Props {
@@ -50,6 +52,7 @@ class Approvals extends React.Component<Props, State> {
       approvalNotifications: false,
       loadingPreference: true,
       declineBooking: null,
+      attributesBooking: null,
     };
   }
 
@@ -121,6 +124,52 @@ class Approvals extends React.Component<Props, State> {
       });
   };
 
+  renderAttributesButton = (booking: Booking, btnStyle: CSS.Properties) => {
+    if (booking.attributes.length === 0) {
+      return <></>;
+    }
+    return (
+      <Button
+        variant="outline-secondary"
+        style={btnStyle}
+        aria-label={this.props.t("showBookingAttributes")}
+        title={this.props.t("showBookingAttributes")}
+        onClick={() => this.setState({ attributesBooking: booking })}
+      >
+        <IconInfo className="feather" />
+      </Button>
+    );
+  };
+
+  renderAttributesModal = () => {
+    const booking = this.state.attributesBooking;
+    const close = () => this.setState({ attributesBooking: null });
+    return (
+      <Modal show={booking !== null} onHide={close}>
+        <Modal.Header closeButton>
+          <Modal.Title>{this.props.t("bookingAttributes")}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {booking && (
+            <dl className="mb-0">
+              {booking.attributes.map((a) => (
+                <React.Fragment key={a.attributeId}>
+                  <dt>{a.label}</dt>
+                  <dd className="booking-attribute-value">{a.value}</dd>
+                </React.Fragment>
+              ))}
+            </dl>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={close}>
+            {this.props.t("close")}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
   renderItem = (booking: Booking) => {
     const btnStyle: CSS.Properties = {
       padding: "0.1rem 0.3rem",
@@ -148,6 +197,7 @@ class Approvals extends React.Component<Props, State> {
         ) : (
           <></>
         )}
+        <td>{this.renderAttributesButton(booking, btnStyle)}</td>
         <td>
           <Button
             variant="success"
@@ -186,8 +236,8 @@ class Approvals extends React.Component<Props, State> {
 
   exportTable = (e: any) => {
     const removeColumns = RuntimeConfig.INFOS.publicBookingEnabled
-      ? [0, 8, 9]
-      : [0, 7, 8];
+      ? [0, 8, 9, 10]
+      : [0, 7, 8, 9];
     return this.ExcellentExport.convert(
       { anchor: e.target, filename: "seatsurfing-approvals", format: "xlsx" },
       [
@@ -293,10 +343,12 @@ class Approvals extends React.Component<Props, State> {
               )}
               <th></th>
               <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>
         </Table>
+        {this.renderAttributesModal()}
         <ConfirmModal
           show={this.state.declineBooking !== null}
           message={

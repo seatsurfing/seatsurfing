@@ -5,6 +5,7 @@ import Ajax from "../util/Ajax";
 import User from "./User";
 import Formatting from "../util/Formatting";
 import DateUtil from "../util/DateUtil";
+import { BookingAttributeValue } from "./BookingAttribute";
 
 export default class Booking extends Entity {
   enter: Date;
@@ -16,6 +17,7 @@ export default class Booking extends Entity {
   subject: string;
   recurringId: string;
   public: boolean;
+  attributes: BookingAttributeValue[];
 
   constructor() {
     super();
@@ -28,6 +30,7 @@ export default class Booking extends Entity {
     this.subject = "";
     this.recurringId = "";
     this.public = false;
+    this.attributes = [];
   }
 
   serialize(): Object {
@@ -86,6 +89,9 @@ export default class Booking extends Entity {
     }
     if (input.public !== undefined) {
       this.public = input.public;
+    }
+    if (Array.isArray(input.attributes)) {
+      this.attributes = input.attributes;
     }
   }
 

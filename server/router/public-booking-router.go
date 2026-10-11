@@ -48,6 +48,7 @@ type GetPublicBookableSpacesResponse struct {
 	MaxDaysInAdvance int                              `json:"maxDaysInAdvance"`
 	ShowMap          bool                             `json:"showMap"`
 	ShowAvailability bool                             `json:"showAvailability"`
+	Attributes       []*GetBookingAttributeResponse   `json:"attributes"`
 }
 
 type GetPublicSpaceAvailabilityResponse struct {
@@ -63,6 +64,8 @@ type CreatePublicBookingRequest struct {
 	Email    string    `json:"email" validate:"required,email,max=256"`
 	Subject  string    `json:"subject" validate:"omitempty,max=256"`
 	Language string    `json:"language" validate:"omitempty,max=10"`
+	// Attributes maps booking attribute IDs to their values.
+	Attributes map[string]string `json:"attributes" validate:"omitempty,max=3"`
 }
 
 type ConfirmPublicBookingResponse struct {
@@ -193,11 +196,23 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 	}
 	maxDaysInAdvance, _ := GetSettingsRepository().GetInt(orgID, SettingMaxDaysInAdvance.Name)
 	showAvailability, _ := GetSettingsRepository().GetBool(orgID, SettingPublicBookingShowAvailability.Name)
+	attributes, err := service.GetBookingAttributeService().GetForPublicBooking(orgID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	attributesRes := []*GetBookingAttributeResponse{}
+	attributeRouter := &BookingAttributeRouter{}
+	for _, a := range attributes {
+		attributesRes = append(attributesRes, attributeRouter.copyToRestModel(a))
+	}
 	SendJSON(w, GetPublicBookableSpacesResponse{
 		Spaces:           res,
 		MaxDaysInAdvance: maxDaysInAdvance,
 		ShowMap:          showMap,
 		ShowAvailability: showAvailability,
+		Attributes:       attributesRes,
 	})
 }
 
@@ -375,6 +390,11 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 		SendBadRequestCode(w, ResponseCodeBookingSubjectRequired)
 		return
 	}
+	attributeValues, bErr := service.GetBookingAttributeService().ValidateValues(orgID, m.Attributes)
+	if bErr != nil {
+		sendBookingError(w, bErr)
+		return
+	}
 
 	if router.countPendingRequestsForEmail(m.Email) >= maxPendingPublicBookingRequestsPerEmail {
 		// Don't disclose rate limiting to the caller
@@ -383,13 +403,14 @@ func (router *PublicBookingRouter) request(w http.ResponseWriter, r *http.Reques
 	}
 
 	authState, err := router.createAuthState(PublicBookingRequestPayload{
-		SpaceID:  space.ID,
-		Enter:    enter,
-		Leave:    leave,
-		Name:     name,
-		Email:    m.Email,
-		Subject:  m.Subject,
-		Language: language,
+		SpaceID:    space.ID,
+		Enter:      enter,
+		Leave:      leave,
+		Name:       name,
+		Email:      m.Email,
+		Subject:    m.Subject,
+		Language:   language,
+		Attributes: attributeValues,
 	})
 	if err != nil {
 		log.Println(err)
@@ -500,6 +521,14 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 	}
 	if err := GetBookingRepository().Create(booking); err != nil {
 		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+	if err := service.GetBookingAttributeService().SetValues(booking.ID, payload.Attributes); err != nil {
+		log.Println(err)
+		if err := GetBookingRepository().Delete(&BookingDetails{Booking: *booking}); err != nil {
+			log.Println(err)
+		}
 		SendInternalServerError(w)
 		return
 	}
