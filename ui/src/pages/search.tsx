@@ -2028,16 +2028,20 @@ class Search extends React.Component<Props, State> {
       </div>
     );
 
-    const dateSelection = (
-      <Form.Group className="d-flex margin-top-10">
-        <div className="me-2">
-          <WeekIcon
-            title={this.props.t("date")}
-            color={"var(--bs-secondary-color)"}
-            height="20px"
-            width="20px"
-          />
-        </div>
+    // Shared by the search box and the booking dialog (inModal: no leading
+    // icon, aligned to the dialog's label/field grid by its caller).
+    const renderDateSelection = (inModal: boolean) => (
+      <Form.Group className={inModal ? "d-flex" : "d-flex margin-top-10"}>
+        {!inModal && (
+          <div className="me-2">
+            <WeekIcon
+              title={this.props.t("date")}
+              color={"var(--bs-secondary-color)"}
+              height="20px"
+              width="20px"
+            />
+          </div>
+        )}
 
         <IconTextButton
           text="❮"
@@ -2102,47 +2106,50 @@ class Search extends React.Component<Props, State> {
         />
       </Form.Group>
     );
-    const timeSelection = !RuntimeConfig.INFOS.dailyBasisBooking && (
-      <Form.Group className="d-flex margin-top-10">
-        <div className="me-2">
-          <TimeIcon
-            title={this.props.t("time")}
-            color={"var(--bs-secondary-color)"}
-            height="20px"
-            width="20px"
+    const renderTimeSelection = (inModal: boolean) =>
+      !RuntimeConfig.INFOS.dailyBasisBooking && (
+        <Form.Group className={inModal ? "d-flex" : "d-flex margin-top-10"}>
+          {!inModal && (
+            <div className="me-2">
+              <TimeIcon
+                title={this.props.t("time")}
+                color={"var(--bs-secondary-color)"}
+                height="20px"
+                width="20px"
+              />
+            </div>
+          )}
+          <div className="ms-2 w-50">{timeEnterPicker}</div>
+          <div className="ms-2 w-50">{timeLeavePicker}</div>
+          <IconButton
+            icon={TimerIcon}
+            active={this.state.selectionAllDay}
+            disabled={!this.state.locationId}
+            title={this.props.t("allDay")}
+            onClick={() => {
+              if (!this.state.selectionAllDay) {
+                this.resetEnterTime = new Date(this.state.enter);
+                this.resetLeaveTime = new Date(this.state.leave);
+                this.updateEnterAndLeaveDate(
+                  DateUtil.setHoursToMin(this.state.enter),
+                  DateUtil.setHoursToMax(this.state.leave),
+                );
+              } else {
+                this.updateEnterAndLeaveDate(
+                  this.resetEnterTime ?? null,
+                  this.resetLeaveTime ?? null,
+                );
+              }
+              this.setState(
+                {
+                  selectionAllDay: !this.state.selectionAllDay,
+                },
+                () => this.updateUrlParams(),
+              );
+            }}
           />
-        </div>
-        <div className="ms-2 w-50">{timeEnterPicker}</div>
-        <div className="ms-2 w-50">{timeLeavePicker}</div>
-        <IconButton
-          icon={TimerIcon}
-          active={this.state.selectionAllDay}
-          disabled={!this.state.locationId}
-          title={this.props.t("allDay")}
-          onClick={() => {
-            if (!this.state.selectionAllDay) {
-              this.resetEnterTime = new Date(this.state.enter);
-              this.resetLeaveTime = new Date(this.state.leave);
-              this.updateEnterAndLeaveDate(
-                DateUtil.setHoursToMin(this.state.enter),
-                DateUtil.setHoursToMax(this.state.leave),
-              );
-            } else {
-              this.updateEnterAndLeaveDate(
-                this.resetEnterTime ?? null,
-                this.resetLeaveTime ?? null,
-              );
-            }
-            this.setState(
-              {
-                selectionAllDay: !this.state.selectionAllDay,
-              },
-              () => this.updateUrlParams(),
-            );
-          }}
-        />
-      </Form.Group>
-    );
+        </Form.Group>
+      );
 
     const activeIntegration = this.getActiveBookingUIIntegration();
     const integrationPanelWidth = activeIntegration
@@ -2414,9 +2421,9 @@ class Search extends React.Component<Props, State> {
                 </div>
               </Form.Group>
 
-              {dateSelection}
+              {renderDateSelection(false)}
 
-              {timeSelection}
+              {renderTimeSelection(false)}
 
               <Form.Group className="d-flex margin-top-10 minimized-hide">
                 <div className="me-2">
@@ -2655,8 +2662,28 @@ class Search extends React.Component<Props, State> {
             )}
             {directLink && (
               <>
-                {dateSelection}
-                {timeSelection}
+                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                  <Form.Label column sm="4">
+                    {this.props.t("date")}:
+                  </Form.Label>
+                  <Col sm="8">
+                    <div className="direct-link-selection">
+                      {renderDateSelection(true)}
+                    </div>
+                  </Col>
+                </Form.Group>
+                {!RuntimeConfig.INFOS.dailyBasisBooking && (
+                  <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                    <Form.Label column sm="4">
+                      {this.props.t("time")}:
+                    </Form.Label>
+                    <Col sm="8">
+                      <div className="direct-link-selection">
+                        {renderTimeSelection(true)}
+                      </div>
+                    </Col>
+                  </Form.Group>
+                )}
                 {selectedSpaceUnavailable && (
                   <div className="invalid-search-config margin-top-10">
                     {this.props.t("directLinkNoSpaceAvailable")}
