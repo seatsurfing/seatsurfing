@@ -81,7 +81,7 @@ export default class Navigation {
     const origin = RuntimeConfig.INFOS.orgPrimaryDomain
       ? `${window.location.protocol}//${RuntimeConfig.INFOS.orgPrimaryDomain}${window.location.port ? `:${window.location.port}` : ""}`
       : window.location.origin;
-    const query = spaceId ? `?space=${encodeURIComponent(spaceId)}` : "";
-    return `${origin}/ui/book/${query}`;
+    const path = spaceId ? `${encodeURIComponent(spaceId)}/` : "";
+    return `${origin}/ui/book/${path}`;
   }
 }

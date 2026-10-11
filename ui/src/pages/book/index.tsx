@@ -163,8 +163,8 @@ class PublicBooking extends React.Component<Props, State> {
         () => true,
       );
       const spaces: PublicBookableSpace[] = res.json.spaces || [];
-      // A space passed via "?space=<id>" is preselected and cannot be changed.
-      const spaceParam = this.props.router.query["space"];
+      // A space passed via "/book/<id>/" is preselected and cannot be changed.
+      const spaceParam = this.props.router.query["spaceId"];
       const fixedSpace = spaces.find((s) => s.spaceId === spaceParam);
       if (spaceParam !== undefined && !fixedSpace) {
         this.props.router.replace("/404");
