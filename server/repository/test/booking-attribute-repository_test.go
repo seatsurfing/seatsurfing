@@ -95,6 +95,32 @@ func TestBookingAttributeRepositoryUpdateDeleteForeignOrg(t *testing.T) {
 	CheckTestString(t, "A", a1.Label)
 }
 
+func TestBookingAttributeRepositorySetPositions(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
+	a1 := createTestBookingAttribute(t, org.ID, "A", BookingAttributeTypeText, false)
+	a2 := createTestBookingAttribute(t, org.ID, "B", BookingAttributeTypeText, false)
+	a3 := createTestBookingAttribute(t, org.ID, "C", BookingAttributeTypeText, false)
+
+	if err := GetBookingAttributeRepository().SetPositions(org.ID, []string{a3.ID, a1.ID, a2.ID}); err != nil {
+		t.Fatal(err)
+	}
+	list, _ := GetBookingAttributeRepository().GetAll(org.ID)
+	CheckTestString(t, a3.ID, list[0].ID)
+	CheckTestString(t, a1.ID, list[1].ID)
+	CheckTestString(t, a2.ID, list[2].ID)
+
+	// Attributes of another organization are not touched
+	if err := GetBookingAttributeRepository().SetPositions(org2.ID, []string{a2.ID, a1.ID, a3.ID}); err != nil {
+		t.Fatal(err)
+	}
+	list, _ = GetBookingAttributeRepository().GetAll(org.ID)
+	CheckTestString(t, a3.ID, list[0].ID)
+	CheckTestString(t, a1.ID, list[1].ID)
+	CheckTestString(t, a2.ID, list[2].ID)
+}
+
 func TestBookingAttributeValueRepository(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

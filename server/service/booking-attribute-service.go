@@ -135,6 +135,41 @@ func (s *BookingAttributeService) Update(user *User, id string, in *BookingAttri
 	return nil
 }
 
+// Move swaps the attribute with its predecessor (up) or successor (down).
+// Moving the first attribute up or the last one down is a no-op.
+func (s *BookingAttributeService) Move(user *User, id string, up bool) *BookingError {
+	e, bErr := s.getManageable(user, id)
+	if bErr != nil {
+		return bErr
+	}
+	list, err := GetBookingAttributeRepository().GetAll(e.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		return &BookingError{Kind: BookingErrorInternal}
+	}
+	ids := make([]string, len(list))
+	index := -1
+	for i, a := range list {
+		ids[i] = a.ID
+		if a.ID == e.ID {
+			index = i
+		}
+	}
+	other := index + 1
+	if up {
+		other = index - 1
+	}
+	if index < 0 || other < 0 || other >= len(ids) {
+		return nil
+	}
+	ids[index], ids[other] = ids[other], ids[index]
+	if err := GetBookingAttributeRepository().SetPositions(e.OrganizationID, ids); err != nil {
+		log.Println(err)
+		return &BookingError{Kind: BookingErrorInternal}
+	}
+	return nil
+}
+
 func (s *BookingAttributeService) Delete(user *User, id string) *BookingError {
 	e, bErr := s.getManageable(user, id)
 	if bErr != nil {

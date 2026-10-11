@@ -17,7 +17,6 @@ Organizations can define up to three custom booking attributes (label, type, req
 - No attributes for regular (authenticated) bookings yet.
 - No editing of captured values after the booking was requested.
 - No attribute values in notification emails, the public booking details page, exports of the booking list or the plugin API.
-- No reordering of attributes (they are shown in creation order).
 
 ## Product Decisions
 
@@ -61,14 +60,15 @@ Both tables are created on startup; no schema version bump is needed. `booking_a
 
 ### Attribute management (`org_settings` admin)
 
-| Method   | Path                      | Response                |
-| -------- | ------------------------- | ----------------------- |
-| `GET`    | `/booking-attribute/`     | 200, list of attributes |
-| `POST`   | `/booking-attribute/`     | 201, `X-Object-ID`      |
-| `PUT`    | `/booking-attribute/{id}` | 204                     |
-| `DELETE` | `/booking-attribute/{id}` | 204                     |
+| Method   | Path                           | Response                |
+| -------- | ------------------------------ | ----------------------- |
+| `GET`    | `/booking-attribute/`          | 200, list of attributes |
+| `POST`   | `/booking-attribute/`          | 201, `X-Object-ID`      |
+| `PUT`    | `/booking-attribute/{id}`      | 204                     |
+| `PUT`    | `/booking-attribute/{id}/move` | 204                     |
+| `DELETE` | `/booking-attribute/{id}`      | 204                     |
 
-Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fourth attribute returns 400 with `X-Error-Code: 1015`. Attributes of another organization return 404.
+Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fourth attribute returns 400 with `X-Error-Code: 1015`. New attributes are appended at the end; `PUT /booking-attribute/{id}/move` with `{"direction": "up"}` or `{"direction": "down"}` swaps the attribute with its neighbour (no-op at the first/last position) and renumbers `position`. The list, the public booking form and the stored values are ordered by `position`. Attributes of another organization return 404.
 
 ### Public booking
 

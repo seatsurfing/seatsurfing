@@ -56,6 +56,12 @@ export default class BookingAttribute extends Entity {
     return this;
   }
 
+  async move(up: boolean): Promise<void> {
+    await Ajax.putData(this.getBackendUrl() + this.id + "/move", {
+      direction: up ? "up" : "down",
+    });
+  }
+
   async delete(): Promise<void> {
     await Ajax.delete(this.getBackendUrl() + this.id);
   }

@@ -4,6 +4,8 @@ import {
   Plus as IconPlus,
   Edit2 as IconEdit,
   Trash2 as IconDelete,
+  ArrowUp as IconUp,
+  ArrowDown as IconDown,
 } from "react-feather";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import BookingAttribute from "@/types/BookingAttribute";
@@ -95,6 +97,15 @@ class BookingAttributesEditor extends React.Component<Props, State> {
     }
   };
 
+  onMove = async (item: BookingAttribute, up: boolean) => {
+    try {
+      await item.move(up);
+    } catch {
+      // reload below shows the current state
+    }
+    this.loadItems();
+  };
+
   onDelete = async () => {
     const item = this.state.deleteItem;
     this.setState({ deleteItem: null });
@@ -109,7 +120,7 @@ class BookingAttributesEditor extends React.Component<Props, State> {
     this.loadItems();
   };
 
-  renderItem = (item: BookingAttribute) => {
+  renderItem = (item: BookingAttribute, index: number) => {
     return (
       <tr key={item.id}>
         <td>{item.label}</td>
@@ -118,6 +129,28 @@ class BookingAttributesEditor extends React.Component<Props, State> {
         </td>
         <td>{RendererUtils.state(item.required)}</td>
         <td className="text-end text-nowrap">
+          <Button
+            variant="link"
+            size="sm"
+            className="p-0 me-2"
+            aria-label={this.props.t("moveUp")}
+            disabled={this.props.disabled || index === 0}
+            onClick={() => this.onMove(item, true)}
+          >
+            <IconUp className="feather" />
+          </Button>
+          <Button
+            variant="link"
+            size="sm"
+            className="p-0 me-2"
+            aria-label={this.props.t("moveDown")}
+            disabled={
+              this.props.disabled || index === this.state.items.length - 1
+            }
+            onClick={() => this.onMove(item, false)}
+          >
+            <IconDown className="feather" />
+          </Button>
           <Button
             variant="link"
             size="sm"
@@ -243,7 +276,9 @@ class BookingAttributesEditor extends React.Component<Props, State> {
                 </tr>
               </thead>
               <tbody>
-                {this.state.items.map((item) => this.renderItem(item))}
+                {this.state.items.map((item, index) =>
+                  this.renderItem(item, index),
+                )}
               </tbody>
             </Table>
           )}

@@ -659,5 +659,7 @@
   "bookingAttributeSaveError": "The attribute could not be saved.",
   "optionalField": "optional",
   "bookingAttributeTypeCheckbox": "Checkbox",
-  "showBookingAttributes": "Show booking attributes"
+  "showBookingAttributes": "Show booking attributes",
+  "moveUp": "Move up",
+  "moveDown": "Move down"
 }

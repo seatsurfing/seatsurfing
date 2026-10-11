@@ -92,6 +92,9 @@ func TestBookingAttributeServiceForbidden(t *testing.T) {
 	if bErr := GetBookingAttributeService().Update(user, e.ID, &BookingAttributeInput{Label: "X", Type: BookingAttributeTypeText}); bErr == nil || bErr.Kind != BookingErrorForbidden {
 		t.Fatalf("expected forbidden, got %v", bErr)
 	}
+	if bErr := GetBookingAttributeService().Move(user, e.ID, true); bErr == nil || bErr.Kind != BookingErrorForbidden {
+		t.Fatalf("expected forbidden, got %v", bErr)
+	}
 	if bErr := GetBookingAttributeService().Delete(user, e.ID); bErr == nil || bErr.Kind != BookingErrorForbidden {
 		t.Fatalf("expected forbidden, got %v", bErr)
 	}
@@ -108,6 +111,9 @@ func TestBookingAttributeServiceForeignOrg(t *testing.T) {
 	if bErr := GetBookingAttributeService().Update(admin2, e.ID, &BookingAttributeInput{Label: "X", Type: BookingAttributeTypeText}); bErr == nil || bErr.Kind != BookingErrorNotFound {
 		t.Fatalf("expected not found, got %v", bErr)
 	}
+	if bErr := GetBookingAttributeService().Move(admin2, e.ID, false); bErr == nil || bErr.Kind != BookingErrorNotFound {
+		t.Fatalf("expected not found, got %v", bErr)
+	}
 	if bErr := GetBookingAttributeService().Delete(admin2, e.ID); bErr == nil || bErr.Kind != BookingErrorNotFound {
 		t.Fatalf("expected not found, got %v", bErr)
 	}
@@ -115,6 +121,61 @@ func TestBookingAttributeServiceForeignOrg(t *testing.T) {
 	CheckTestInt(t, 0, len(list))
 	list, _ = GetBookingAttributeService().List(admin)
 	CheckTestString(t, "Company", list[0].Label)
+}
+
+func checkTestBookingAttributeOrder(t *testing.T, admin *User, labels ...string) {
+	list, bErr := GetBookingAttributeService().List(admin)
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	CheckTestInt(t, len(labels), len(list))
+	for i, label := range labels {
+		CheckTestString(t, label, list[i].Label)
+	}
+}
+
+func TestBookingAttributeServiceMove(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	a := createTestServiceBookingAttribute(t, admin, "A", BookingAttributeTypeText, false)
+	createTestServiceBookingAttribute(t, admin, "B", BookingAttributeTypeText, false)
+	c := createTestServiceBookingAttribute(t, admin, "C", BookingAttributeTypeText, false)
+
+	if bErr := GetBookingAttributeService().Move(admin, c.ID, true); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	checkTestBookingAttributeOrder(t, admin, "A", "C", "B")
+
+	if bErr := GetBookingAttributeService().Move(admin, a.ID, false); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	checkTestBookingAttributeOrder(t, admin, "C", "A", "B")
+
+	// Moving beyond the first or last position is a no-op
+	if bErr := GetBookingAttributeService().Move(admin, c.ID, true); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	if bErr := GetBookingAttributeService().Move(admin, c.ID, true); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	checkTestBookingAttributeOrder(t, admin, "C", "A", "B")
+
+	// New attributes are appended after reordering
+	if bErr := GetBookingAttributeService().Delete(admin, a.ID); bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	createTestServiceBookingAttribute(t, admin, "D", BookingAttributeTypeText, false)
+	checkTestBookingAttributeOrder(t, admin, "C", "B", "D")
+}
+
+func TestBookingAttributeServiceMoveNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	if bErr := GetBookingAttributeService().Move(admin, "00000000-0000-0000-0000-000000000000", true); bErr == nil || bErr.Kind != BookingErrorNotFound {
+		t.Fatalf("expected not found, got %v", bErr)
+	}
 }
 
 func TestBookingAttributeServiceValidateValues(t *testing.T) {

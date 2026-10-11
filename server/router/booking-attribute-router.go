@@ -18,6 +18,10 @@ type CreateBookingAttributeRequest struct {
 	Required bool   `json:"required"`
 }
 
+type MoveBookingAttributeRequest struct {
+	Direction string `json:"direction" validate:"required,oneof=up down"`
+}
+
 type GetBookingAttributeResponse struct {
 	ID string `json:"id"`
 	CreateBookingAttributeRequest
@@ -31,6 +35,7 @@ type GetBookingAttributeValueResponse struct {
 }
 
 func (router *BookingAttributeRouter) SetupRoutes(s *mux.Router) {
+	s.HandleFunc("/{id}/move", router.move).Methods("PUT")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
 	s.HandleFunc("/", router.create).Methods("POST")
@@ -71,6 +76,19 @@ func (router *BookingAttributeRouter) update(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if bErr := service.GetBookingAttributeService().Update(GetRequestUser(r), mux.Vars(r)["id"], router.copyFromRestModel(&m)); bErr != nil {
+		sendBookingError(w, bErr)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *BookingAttributeRouter) move(w http.ResponseWriter, r *http.Request) {
+	var m MoveBookingAttributeRequest
+	if UnmarshalValidateBody(r, &m) != nil {
+		SendBadRequest(w)
+		return
+	}
+	if bErr := service.GetBookingAttributeService().Move(GetRequestUser(r), mux.Vars(r)["id"], m.Direction == "up"); bErr != nil {
 		sendBookingError(w, bErr)
 		return
 	}

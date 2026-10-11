@@ -662,5 +662,7 @@
   "bookingAttributeSaveError": "Das Attribut konnte nicht gespeichert werden.",
   "optionalField": "optional",
   "bookingAttributeTypeCheckbox": "Checkbox",
-  "showBookingAttributes": "Buchungsattribute anzeigen"
+  "showBookingAttributes": "Buchungsattribute anzeigen",
+  "moveUp": "Nach oben verschieben",
+  "moveDown": "Nach unten verschieben"
 }

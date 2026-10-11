@@ -120,6 +120,22 @@ func (r *BookingAttributeRepository) Update(e *BookingAttribute) error {
 	return err
 }
 
+// SetPositions renumbers the given attributes of the organization in the
+// order of the ID list.
+func (r *BookingAttributeRepository) SetPositions(organizationID string, ids []string) error {
+	tx, err := GetDatabase().DB().Begin()
+	if err != nil {
+		return err
+	}
+	for i, id := range ids {
+		if _, err := tx.Exec("UPDATE booking_attributes SET position = $1 WHERE id = $2 AND organization_id = $3", i+1, id, organizationID); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
 func (r *BookingAttributeRepository) Delete(e *BookingAttribute) error {
 	_, err := GetDatabase().DB().Exec("DELETE FROM booking_attributes WHERE id = $1 AND organization_id = $2", e.ID, e.OrganizationID)
 	return err

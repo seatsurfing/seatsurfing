@@ -63,6 +63,41 @@ func TestBookingAttributesCRUD(t *testing.T) {
 	CheckTestInt(t, 1, len(list))
 }
 
+func TestBookingAttributesMove(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+	id1 := createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Company", "type": 1}`)
+	id2 := createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Notes", "type": 2}`)
+
+	req := NewHTTPRequest("PUT", "/booking-attribute/"+id2+"/move", admin.ID, bytes.NewBufferString(`{"direction": "up"}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	list := getTestBookingAttributes(t, admin.ID)
+	CheckTestString(t, id2, list[0].ID)
+	CheckTestString(t, id1, list[1].ID)
+
+	req = NewHTTPRequest("PUT", "/booking-attribute/"+id2+"/move", admin.ID, bytes.NewBufferString(`{"direction": "down"}`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	list = getTestBookingAttributes(t, admin.ID)
+	CheckTestString(t, id1, list[0].ID)
+	CheckTestString(t, id2, list[1].ID)
+
+	for _, payload := range []string{`{}`, `{"direction": "left"}`} {
+		req = NewHTTPRequest("PUT", "/booking-attribute/"+id1+"/move", admin.ID, bytes.NewBufferString(payload))
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	req = NewHTTPRequest("PUT", "/booking-attribute/"+id2+"/move", user.ID, bytes.NewBufferString(`{"direction": "up"}`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	list = getTestBookingAttributes(t, admin.ID)
+	CheckTestString(t, id1, list[0].ID)
+}
+
 func TestBookingAttributesInvalidPayload(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -122,6 +157,9 @@ func TestBookingAttributesForeignOrg(t *testing.T) {
 
 	req := NewHTTPRequest("PUT", "/booking-attribute/"+id, admin2.ID, bytes.NewBufferString(`{"label": "X", "type": 1}`))
 	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	req = NewHTTPRequest("PUT", "/booking-attribute/"+id+"/move", admin2.ID, bytes.NewBufferString(`{"direction": "down"}`))
+	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 	req = NewHTTPRequest("DELETE", "/booking-attribute/"+id, admin2.ID, nil)
 	res = ExecuteTestRequest(req)
