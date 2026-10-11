@@ -246,6 +246,77 @@ func TestBookingServicePendingApprovalsRequireWritePermission(t *testing.T) {
 	CheckTestInt(t, 1, count)
 }
 
+func TestBookingServicePublicBookingDuration(t *testing.T) {
+	org, _, _, _ := setupServiceTest(t)
+	svc := GetBookingService()
+
+	enter, leave := serviceTestSlot(0, 8, 20)
+	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "2")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "4")
+	enter, leave = serviceTestSlot(0, 8, 9)
+	CheckTestBool(t, false, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+	enter, leave = serviceTestSlot(0, 8, 10)
+	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+	enter, leave = serviceTestSlot(0, 8, 12)
+	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave.Add(-time.Second), org.ID))
+	enter, leave = serviceTestSlot(0, 8, 13)
+	CheckTestBool(t, false, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "0")
+	enter, leave = serviceTestSlot(0, 8, 9)
+	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+}
+
+func TestBookingServicePublicBookingDurationLimitsIncludeOrgLimits(t *testing.T) {
+	org, _, _, _ := setupServiceTest(t)
+	svc := GetBookingService()
+	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "0")
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingDurationHours.Name, "12")
+
+	minHours, maxHours := svc.GetPublicBookingDurationLimits(org.ID)
+	CheckTestInt(t, 0, minHours)
+	CheckTestInt(t, 12, maxHours)
+
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMinDurationHours.Name, "2")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "16")
+	minHours, maxHours = svc.GetPublicBookingDurationLimits(org.ID)
+	CheckTestInt(t, 2, minHours)
+	CheckTestInt(t, 12, maxHours)
+
+	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "3")
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingMaxDurationHours.Name, "6")
+	minHours, maxHours = svc.GetPublicBookingDurationLimits(org.ID)
+	CheckTestInt(t, 3, minHours)
+	CheckTestInt(t, 6, maxHours)
+
+	enter, leave := serviceTestSlot(0, 8, 10)
+	CheckTestBool(t, false, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+	enter, leave = serviceTestSlot(0, 8, 11)
+	CheckTestBool(t, true, svc.IsValidPublicBookingDuration(enter, leave, org.ID))
+}
+
+func TestBookingServicePublicBookingDurationSettings(t *testing.T) {
+	svc := GetBookingService()
+
+	// no public limits
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(0, 0, 0, 12, false))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(0, 0, 20, 12, false))
+	// public limits only
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(4, 4, 0, 12, false))
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(10, 2, 0, 12, false))
+	// public min exceeds org max
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(14, 0, 0, 12, false))
+	// org min exceeds public max
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(0, 6, 8, 12, false))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(0, 0, 8, 12, false))
+	// daily basis rounds org max up to full days
+	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(16, 0, 20, 12, false))
+	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(16, 0, 20, 12, true))
+}
+
 func TestBookingServiceGetFiltered(t *testing.T) {
 	org, user, _, space := setupServiceTest(t)
 	admin := CreateTestUserOrgAdmin(org)
