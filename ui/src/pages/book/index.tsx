@@ -41,6 +41,7 @@ interface State {
   loading: boolean;
   spaces: PublicBookableSpace[];
   spaceId: string;
+  fixedSpaceId: string;
   enter: Date;
   leave: Date;
   maxDaysInAdvance: number;
@@ -89,6 +90,7 @@ class PublicBooking extends React.Component<Props, State> {
       loading: true,
       spaces: [],
       spaceId: "",
+      fixedSpaceId: "",
       enter: enter,
       leave: leave,
       maxDaysInAdvance: 0,
@@ -167,6 +169,13 @@ class PublicBooking extends React.Component<Props, State> {
         () => true,
       );
       const spaces: PublicBookableSpace[] = res.json.spaces || [];
+      // A space passed via "/book/<id>/" is preselected and cannot be changed.
+      const spaceParam = this.props.router.query["spaceId"];
+      const fixedSpace = spaces.find((s) => s.spaceId === spaceParam);
+      if (spaceParam !== undefined && !fixedSpace) {
+        this.props.router.replace("/404");
+        return;
+      }
       if (spaces.length === 0) {
         this.setState({ loading: false });
         return;
@@ -174,6 +183,7 @@ class PublicBooking extends React.Component<Props, State> {
       const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
       const showMap: boolean = res.json.showMap === true;
       const showAvailability: boolean = res.json.showAvailability === true;
+      const relevantSpaces = fixedSpace ? [fixedSpace] : spaces;
       const maxDate = new Date();
       maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
       maxDate.setHours(23, 59, 59, 999);
@@ -184,7 +194,7 @@ class PublicBooking extends React.Component<Props, State> {
         leave = DateUtil.copyDate(maxDate, leave);
       }
       const bookableDate = this.findBookableDate(
-        (date) => spaces.some((s) => this.isDateBookable(s, date)),
+        (date) => relevantSpaces.some((s) => this.isDateBookable(s, date)),
         enter,
         maxDaysInAdvance,
       );
@@ -194,6 +204,8 @@ class PublicBooking extends React.Component<Props, State> {
         {
           loading: false,
           spaces: spaces,
+          spaceId: fixedSpace?.spaceId || "",
+          fixedSpaceId: fixedSpace?.spaceId || "",
           maxDaysInAdvance: maxDaysInAdvance,
           minDurationHours: res.json.minDurationHours || 0,
           maxDurationHours: res.json.maxDurationHours || 0,
@@ -282,8 +294,17 @@ class PublicBooking extends React.Component<Props, State> {
     return space.bookableDays.includes(date.getDay());
   };
 
+  getRelevantSpaces = (): PublicBookableSpace[] => {
+    if (this.state.fixedSpaceId) {
+      return this.state.spaces.filter(
+        (s) => s.spaceId === this.state.fixedSpaceId,
+      );
+    }
+    return this.state.spaces;
+  };
+
   isDateBookableForAnySpace = (date: Date): boolean => {
-    return this.state.spaces.some((s) => this.isDateBookable(s, date));
+    return this.getRelevantSpaces().some((s) => this.isDateBookable(s, date));
   };
 
   isSpaceAvailable = (space: PublicBookableSpace | undefined): boolean => {
@@ -297,6 +318,9 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   isSpaceSelectable = (space: PublicBookableSpace | undefined): boolean => {
+    if (this.state.fixedSpaceId) {
+      return false;
+    }
     return !this.state.availabilityPending && this.isSpaceAvailable(space);
   };
 
@@ -332,7 +356,7 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   onSpaceChange = (spaceId: string) => {
-    if (this.state.availabilityPending) {
+    if (this.state.availabilityPending || this.state.fixedSpaceId) {
       return;
     }
     this.setState({ spaceId: spaceId });
@@ -365,7 +389,12 @@ class PublicBooking extends React.Component<Props, State> {
   };
 
   resetUnavailableSpace = () => {
-    if (this.state.spaceId && !this.isSpaceAvailable(this.getSelectedSpace())) {
+    // A fixed space stays selected; its unavailability is shown instead.
+    if (
+      this.state.spaceId &&
+      !this.state.fixedSpaceId &&
+      !this.isSpaceAvailable(this.getSelectedSpace())
+    ) {
       this.setState({ spaceId: "" });
     }
   };
@@ -626,12 +655,12 @@ class PublicBooking extends React.Component<Props, State> {
       >
         <Modal.Header
           className={
-            this.getLocations().length > 1
+            this.getLocations().length > 1 && !this.state.fixedSpaceId
               ? "public-booking-map-modal-header-tabs"
               : undefined
           }
         >
-          {this.getLocations().length > 1 ? (
+          {this.getLocations().length > 1 && !this.state.fixedSpaceId ? (
             <Nav
               variant="tabs"
               aria-label={this.props.t("area")}
@@ -650,11 +679,13 @@ class PublicBooking extends React.Component<Props, State> {
         </Modal.Header>
         <Modal.Body>{this.renderMap()}</Modal.Body>
         <Modal.Footer>
-          {this.state.mapData && !this.state.mapLoading && (
-            <span className="text-muted me-auto">
-              {this.props.t("publicBookingSelectOnMap")}
-            </span>
-          )}
+          {this.state.mapData &&
+            !this.state.mapLoading &&
+            !this.state.fixedSpaceId && (
+              <span className="text-muted me-auto">
+                {this.props.t("publicBookingSelectOnMap")}
+              </span>
+            )}
           <Button
             variant="secondary"
             onClick={() => this.setState({ mapModalOpen: false })}
@@ -695,7 +726,7 @@ class PublicBooking extends React.Component<Props, State> {
       );
     }
 
-    const noSpaceAvailable = !this.state.spaces.some((s) =>
+    const noSpaceAvailable = !this.getRelevantSpaces().some((s) =>
       this.isSpaceAvailable(s),
     );
     return (
@@ -797,12 +828,14 @@ class PublicBooking extends React.Component<Props, State> {
                 value={this.state.spaceId}
                 onChange={(e: any) => this.onSpaceChange(e.target.value)}
                 required={true}
-                disabled={this.state.availabilityPending}
+                disabled={
+                  this.state.availabilityPending || !!this.state.fixedSpaceId
+                }
               >
                 <option value="" disabled={true}>
                   {this.props.t("pleaseSelect")}
                 </option>
-                {this.state.spaces.map((s) => {
+                {this.getRelevantSpaces().map((s) => {
                   const available = this.isSpaceAvailable(s);
                   return (
                     <option
@@ -828,7 +861,9 @@ class PublicBooking extends React.Component<Props, State> {
             </InputGroup>
             {noSpaceAvailable && (
               <Form.Text className="text-danger">
-                {this.props.t("publicBookingNoSpaceAvailable")}
+                {this.state.fixedSpaceId
+                  ? this.props.t("publicBookingFixedSpaceNotAvailable")
+                  : this.props.t("publicBookingNoSpaceAvailable")}
               </Form.Text>
             )}
           </Form.Group>

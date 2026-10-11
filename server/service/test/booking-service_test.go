@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -314,4 +315,38 @@ func TestBookingServicePublicBookingDurationSettings(t *testing.T) {
 	// daily basis rounds org max up to full days
 	CheckTestBool(t, false, svc.IsValidPublicBookingDurationSettings(16, 0, 20, 12, false))
 	CheckTestBool(t, true, svc.IsValidPublicBookingDurationSettings(16, 0, 20, 12, true))
+}
+
+func TestBookingServiceGetFiltered(t *testing.T) {
+	org, user, _, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	user2 := CreateTestUserInOrg(org)
+	foreignUser := CreateTestUserInOrg(CreateTestOrg("test2.com"))
+	CreateTestBooking9To5(user, space, 1)
+	CreateTestBooking9To5(user2, space, 2)
+	CreateTestBooking9To5(admin, space, 3)
+	start := time.Now()
+	end := start.Add(7 * 24 * time.Hour)
+	s := GetBookingService()
+
+	list, bErr := s.GetFiltered(admin, start, end, &BookingFilter{UserEmails: []string{user.Email, strings.ToUpper(user2.Email), user.Email, ""}})
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	CheckTestInt(t, 2, len(list))
+
+	_, bErr = s.GetFiltered(admin, start, end, &BookingFilter{UserEmails: []string{user.Email, foreignUser.Email}})
+	if bErr == nil || bErr.Kind != BookingErrorInvalid {
+		t.Fatalf("expected invalid, got %v", bErr)
+	}
+
+	_, bErr = s.GetFiltered(admin, start, end, &BookingFilter{LocationID: "invalid"})
+	if bErr == nil || bErr.Kind != BookingErrorInvalid {
+		t.Fatalf("expected invalid, got %v", bErr)
+	}
+
+	_, bErr = s.GetCurrent(user, &BookingFilter{})
+	if bErr == nil || bErr.Kind != BookingErrorForbidden {
+		t.Fatalf("expected forbidden, got %v", bErr)
+	}
 }

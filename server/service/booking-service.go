@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -366,6 +367,77 @@ func (s *BookingService) GetPendingApprovalsCount(user *User) (int, *BookingErro
 		return 0, &BookingError{Kind: BookingErrorInternal}
 	}
 	return count, nil
+}
+
+// BookingFilter restricts an organization's booking list to the given
+// users (by email) and location; empty values don't filter.
+type BookingFilter struct {
+	UserEmails []string
+	LocationID string
+}
+
+// GetFiltered returns the bookings of the user's organization between start
+// and end matching filter.
+func (s *BookingService) GetFiltered(user *User, start, end time.Time, filter *BookingFilter) ([]*BookingDetails, *BookingError) {
+	emails, bErr := s.validateBookingFilter(user, filter)
+	if bErr != nil {
+		return nil, bErr
+	}
+	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, emails, filter.LocationID)
+	if err != nil {
+		log.Println(err)
+		return nil, &BookingError{Kind: BookingErrorInternal}
+	}
+	return list, nil
+}
+
+// GetCurrent returns the current bookings of the user's organization
+// matching filter.
+func (s *BookingService) GetCurrent(user *User, filter *BookingFilter) ([]*BookingDetails, *BookingError) {
+	emails, bErr := s.validateBookingFilter(user, filter)
+	if bErr != nil {
+		return nil, bErr
+	}
+	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, emails, filter.LocationID)
+	if err != nil {
+		log.Println(err)
+		return nil, &BookingError{Kind: BookingErrorInternal}
+	}
+	return list, nil
+}
+
+// validateBookingFilter returns the filter's distinct, lowercased emails.
+func (s *BookingService) validateBookingFilter(user *User, filter *BookingFilter) ([]string, *BookingError) {
+	if !HasPermission(user, user.OrganizationID, PermissionBookings, PermissionLevelRead) {
+		return nil, &BookingError{Kind: BookingErrorForbidden}
+	}
+	emails := []string{}
+	for _, email := range filter.UserEmails {
+		email = strings.ToLower(email)
+		if email != "" && !slices.Contains(emails, email) {
+			emails = append(emails, email)
+		}
+	}
+	if len(emails) > 0 {
+		ok, err := GetUserRepository().EmailsExistInOrg(user.OrganizationID, emails)
+		if err != nil {
+			log.Println(err)
+			return nil, &BookingError{Kind: BookingErrorInternal}
+		}
+		if !ok {
+			return nil, &BookingError{Kind: BookingErrorInvalid}
+		}
+	}
+	if filter.LocationID != "" {
+		if !ValidateGUID(filter.LocationID) {
+			return nil, &BookingError{Kind: BookingErrorInvalid}
+		}
+		location, _ := GetLocationRepository().GetOne(filter.LocationID)
+		if location == nil || location.OrganizationID != user.OrganizationID {
+			return nil, &BookingError{Kind: BookingErrorInvalid}
+		}
+	}
+	return emails, nil
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────

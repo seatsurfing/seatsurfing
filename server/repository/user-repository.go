@@ -216,6 +216,18 @@ func (r *UserStore) GetByEmail(organizationID string, email string) (*User, erro
 	return e, nil
 }
 
+func (r *UserStore) EmailsExistInOrg(organizationID string, emails []string) (bool, error) {
+	var count int
+	err := GetDatabase().DB().QueryRow("SELECT COUNT(DISTINCT LOWER(email)) "+
+		"FROM users "+
+		"WHERE LOWER(email) = ANY($1) AND organization_id = $2",
+		pq.Array(emails), organizationID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count == len(emails), nil
+}
+
 func (r *UserStore) GetUsersWithEmail(email string) ([]*User, error) {
 	var result []*User
 	rows, err := GetDatabase().DB().Query("SELECT id, organization_id, email, account_type, password, auth_provider_id, disabled, ban_expiry, firstname, lastname, last_activity_at_utc, totp_secret, password_pending, password_update_required, api_token "+

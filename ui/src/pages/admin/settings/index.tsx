@@ -98,6 +98,7 @@ interface State {
   publicBookingMinDurationHours: number;
   publicBookingMaxDurationEnabled: boolean;
   publicBookingMaxDurationHours: number;
+  publicBookingSpaceId: string;
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
@@ -105,6 +106,13 @@ interface State {
   verifyDomainName: string | null;
   deleteOrgConfirmStep: 0 | 1 | 2;
   alertMessage: string | null;
+}
+
+interface PublicBookableSpace {
+  spaceId: string;
+  spaceName: string;
+  locationId: string;
+  locationName: string;
 }
 
 interface Props {
@@ -115,6 +123,7 @@ interface Props {
 class Settings extends React.Component<Props, State> {
   org: Organization | null;
   authProviders: AuthProvider[];
+  publicBookingSpaces: PublicBookableSpace[] = [];
   timezones: string[];
   maxConcurrentBookingsPerUserLastValue: number;
 
@@ -171,6 +180,7 @@ class Settings extends React.Component<Props, State> {
       publicBookingMinDurationHours: 1,
       publicBookingMaxDurationEnabled: false,
       publicBookingMaxDurationHours: 8,
+      publicBookingSpaceId: "",
       hideReports: false,
       hideStats: false,
       installId: "",
@@ -198,13 +208,44 @@ class Settings extends React.Component<Props, State> {
     return User.getSelf().then((user) => {
       return Organization.get(user.organizationId).then((org) => {
         this.org = org;
-        return Domain.list(org.id).then((domains) => {
+        return Promise.all([
+          Domain.list(org.id),
+          this.loadPublicBookingSpaces(org.id),
+        ]).then(([domains]) => {
           this.setState({
             domains: domains,
           });
         });
       });
     });
+  };
+
+  loadPublicBookingSpaces = async (orgId: string): Promise<void> => {
+    try {
+      const res = await Ajax.get(
+        "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
+        () => true,
+      );
+      this.publicBookingSpaces = res.json.spaces || [];
+    } catch {
+      this.publicBookingSpaces = [];
+    }
+  };
+
+  getPublicBookingLocations = (): { id: string; name: string }[] => {
+    const locations: { id: string; name: string }[] = [];
+    this.publicBookingSpaces.forEach((s) => {
+      if (!locations.find((l) => l.id === s.locationId)) {
+        locations.push({ id: s.locationId, name: s.locationName });
+      }
+    });
+    return locations;
+  };
+
+  getPublicBookingUrl = (): string => {
+    return Navigation.publicBookingUrl(
+      this.state.publicBookingSpaceId || undefined,
+    );
   };
 
   checkUpdates = async (): Promise<void> => {
@@ -519,6 +560,9 @@ class Settings extends React.Component<Props, State> {
     ];
     try {
       await OrgSettings.setAll(payload);
+      if (this.org) {
+        await this.loadPublicBookingSpaces(this.org.id);
+      }
       this.setState({
         submitting: false,
         showSavedModal: true,
@@ -1756,6 +1800,38 @@ class Settings extends React.Component<Props, State> {
               </InputGroup>
             </Col>
           </Form.Group>
+          {this.state.publicBookingEnabled &&
+            (!this.state.publicBookingEnabledSaved ||
+              this.publicBookingSpaces.length > 0) && (
+              <Form.Group as={Row} className="mb-2">
+                <Form.Label column sm="2" htmlFor="select-publicBookingSpace">
+                  {this.props.t("space")}
+                </Form.Label>
+                <Col sm="4">
+                  <Form.Select
+                    id="select-publicBookingSpace"
+                    value={this.state.publicBookingSpaceId}
+                    disabled={!this.state.publicBookingEnabledSaved}
+                    onChange={(e: any) =>
+                      this.setState({ publicBookingSpaceId: e.target.value })
+                    }
+                  >
+                    <option value="">
+                      {this.props.t("publicBookingAllSpaces")}
+                    </option>
+                    {this.getPublicBookingLocations().flatMap((l) =>
+                      this.publicBookingSpaces
+                        .filter((s) => s.locationId === l.id)
+                        .map((s) => (
+                          <option key={s.spaceId} value={s.spaceId}>
+                            {l.name} / {s.spaceName}
+                          </option>
+                        )),
+                    )}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+            )}
           {this.state.publicBookingEnabled && (
             <Form.Group as={Row}>
               <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
@@ -1767,7 +1843,7 @@ class Settings extends React.Component<Props, State> {
                     id="input-publicBookingUrl"
                     type="text"
                     value={
-                      Navigation.publicBookingUrl() +
+                      this.getPublicBookingUrl() +
                       (this.state.publicBookingEnabledSaved
                         ? ""
                         : " (" + this.props.t("availableAfterSaving") + ")")
@@ -1778,13 +1854,13 @@ class Settings extends React.Component<Props, State> {
                     }
                   />
                   <CopyToClipboardButton
-                    text={Navigation.publicBookingUrl()}
+                    text={this.getPublicBookingUrl()}
                     disabled={!this.state.publicBookingEnabledSaved}
                   />
                   <Button
                     aria-label={this.props.t("publicBookingUrl")}
                     variant="outline-secondary"
-                    href={Navigation.publicBookingUrl()}
+                    href={this.getPublicBookingUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     disabled={!this.state.publicBookingEnabledSaved}

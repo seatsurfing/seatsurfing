@@ -395,7 +395,7 @@ func (r *BookingStore) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (
 	return e, nil
 }
 
-func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmail string, locationId string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmails []string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -409,9 +409,9 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 		"LEFT JOIN public_bookings ON public_bookings.id = bookings.public_id " +
 		"WHERE bookings.organization_id = $1 AND enter_time < $3 AND leave_time > $2"
 	args := []any{organizationID, startTime, endTime}
-	if userEmail != "" {
-		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
-		args = append(args, userEmail)
+	if len(userEmails) > 0 {
+		query += fmt.Sprintf(" AND LOWER(users.email) = ANY($%d)", len(args)+1)
+		args = append(args, pq.Array(userEmails))
 	}
 	if locationId != "" {
 		query += fmt.Sprintf(" AND locations.id = $%d", len(args)+1)
@@ -434,7 +434,7 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 	return result, nil
 }
 
-func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail string, locationId string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmails []string, locationId string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -451,9 +451,9 @@ func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmail strin
 		"AND enter_time <= (NOW() AT TIME ZONE effective_tz.tz) " +
 		"AND leave_time >= (NOW() AT TIME ZONE effective_tz.tz)"
 	args := []interface{}{organizationID}
-	if userEmail != "" {
-		query += fmt.Sprintf(" AND users.email = $%d", len(args)+1)
-		args = append(args, userEmail)
+	if len(userEmails) > 0 {
+		query += fmt.Sprintf(" AND LOWER(users.email) = ANY($%d)", len(args)+1)
+		args = append(args, pq.Array(userEmails))
 	}
 	if locationId != "" {
 		query += fmt.Sprintf(" AND locations.id = $%d", len(args)+1)
