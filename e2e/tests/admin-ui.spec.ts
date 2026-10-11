@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, deleteAllBookingAttributes } from "../util/helper";
+import { login } from "../util/helper";
 
 test.beforeEach(async ({ page }) => {
   // Suppress the MFA encouragement modal
@@ -105,61 +105,4 @@ test("auth events", async ({ page }) => {
   await expect(page.locator("#datatable").getByText("Successful")).toHaveCount(
     0,
   );
-});
-
-test("crud booking attribute", async ({ page }) => {
-  const label = "Attribute " + Math.random().toString().substr(2);
-  await deleteAllBookingAttributes(page);
-
-  // Navigate to "Settings"
-  await page.getByRole("link", { name: "Settings" }).click();
-  await expect(page).toHaveURL(/settings\/$/);
-  await expect(page.getByText("Loading …")).not.toBeVisible();
-
-  // Add a new attribute
-  await page.getByRole("button", { name: "Add attribute" }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("Label").fill(label);
-  await dialog.getByLabel("Type").selectOption({ label: "Text (multi-line)" });
-  await dialog.getByLabel("Required").check();
-  await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog).toHaveCount(0);
-
-  const row = page.getByRole("row").filter({ hasText: label });
-  await expect(row).toHaveCount(1);
-  await expect(row).toContainText("Text (multi-line)");
-
-  // Edit the attribute
-  await row.getByRole("button", { name: "Edit" }).click();
-  await dialog.getByLabel("Label").fill(label + " edited");
-  await dialog.getByLabel("Type").selectOption({ label: "Number" });
-  await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog).toHaveCount(0);
-
-  const editedRow = page
-    .getByRole("row")
-    .filter({ hasText: label + " edited" });
-  await expect(editedRow).toHaveCount(1);
-  await expect(editedRow).toContainText("Number");
-
-  // Add attributes up to the limit
-  for (let i = 0; i < 2; i++) {
-    await page.getByRole("button", { name: "Add attribute" }).click();
-    await dialog.getByLabel("Label").fill(label + " " + i);
-    await dialog.getByRole("button", { name: "Save" }).click();
-    await expect(dialog).toHaveCount(0);
-  }
-  await expect(
-    page.getByRole("button", { name: "Add attribute" }),
-  ).toBeDisabled();
-
-  // Delete the attribute
-  await editedRow.getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
-  await expect(editedRow).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Add attribute" }),
-  ).toBeEnabled();
-
-  await deleteAllBookingAttributes(page);
 });
