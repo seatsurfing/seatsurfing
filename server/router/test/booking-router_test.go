@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -2941,6 +2942,69 @@ func TestBookingsFilterBadRequest(t *testing.T) {
 	// Missing start/end params → 400
 	req := NewHTTPRequest("GET", "/booking/filter/", admin.ID, nil)
 	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestBookingsFilterMultipleUsers(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+	user3 := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	CreateTestBooking9To5(user1, space, 1)
+	CreateTestBooking9To5(user2, space, 2)
+	CreateTestBooking9To5(user3, space, 3)
+
+	start := time.Now().UTC().Format(time.RFC3339Nano)
+	end := time.Now().Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339Nano)
+	base := "/booking/filter/?start=" + url.QueryEscape(start) + "&end=" + url.QueryEscape(end)
+
+	req := NewHTTPRequest("GET", base+"&user="+url.QueryEscape(user1.Email)+"&user="+url.QueryEscape(strings.ToUpper(user2.Email)), admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 2, len(resBody))
+	for _, b := range resBody {
+		if b.UserID != user1.ID && b.UserID != user2.ID {
+			t.Fatalf("Unexpected booking for user %s", b.UserID)
+		}
+	}
+
+	req = NewHTTPRequest("GET", base+"&user="+url.QueryEscape(user1.Email)+"&user="+url.QueryEscape(user1.Email), admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody))
+
+	req = NewHTTPRequest("GET", base, admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 3, len(resBody))
+}
+
+func TestBookingsFilterMultipleUsersForeignOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("other.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user1 := CreateTestUserInOrg(org)
+	foreignUser := CreateTestUserInOrgDomain(org2, "other.com")
+
+	start := "2030-01-01T00:00:00.000000000Z"
+	end := "2030-12-31T23:59:59.000000000Z"
+	base := "/booking/filter/?start=" + url.QueryEscape(start) + "&end=" + url.QueryEscape(end)
+	req := NewHTTPRequest("GET", base+"&user="+url.QueryEscape(user1.Email)+"&user="+url.QueryEscape(foreignUser.Email), admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("GET", "/booking/current/?user="+url.QueryEscape(user1.Email)+"&user="+url.QueryEscape(foreignUser.Email), admin.ID, nil)
+	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 

@@ -36,6 +36,10 @@
   "publicBookingDetailsDelete": "Cancel booking",
   "publicBookingDetailsDeleteConfirm": "Are you sure you want to cancel this booking?",
   "publicBookingDetailsDeleted": "Your booking has been cancelled.",
+  "publicBookingDurationHint": "Applies to bookings requested via the public booking page. The value cannot exceed 24 hours. The organization-wide minimum and maximum booking durations still apply.",
+  "publicBookingDurationMax": "A booking may last at most {{max}} hours.",
+  "publicBookingDurationMin": "A booking must last at least {{min}} hours.",
+  "publicBookingDurationMinMax": "A booking must last between {{min}} and {{max}} hours.",
   "publicBookingDetailsInvalid": "This booking details link is invalid or has expired.",
   "publicBookingIntro": "Please select a time slot and a space to request a booking. You will receive a confirmation email.",
   "publicBookingNoSpaces": "There are currently no spaces available for public booking.",
@@ -51,6 +55,7 @@
   "publicBookingShowAvailabilityHint": "Spaces which are already booked for the selected time slot are greyed out on the public booking page. No details about existing bookings are disclosed.",
   "notAvailable": "not available",
   "publicBookingNoSpaceAvailable": "No space is available for the selected time slot.",
+  "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot.",
   "publicBookingSpaceEnabledHint": "Visitors without an account can request a booking for this space on the public booking page. Every request requires approval.",
   "publicBookingSpaceRequiresApproversHint": "Add at least one approver group above to allow public bookings for this space.",
   "publicBookingSubmit": "Request booking",
@@ -645,5 +650,6 @@
   "yes": "yes",
   "yesterday": "Yesterday",
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
-  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
+  "publicBookingAllSpaces": "All spaces"
 }

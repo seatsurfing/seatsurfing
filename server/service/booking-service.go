@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -368,6 +369,77 @@ func (s *BookingService) GetPendingApprovalsCount(user *User) (int, *BookingErro
 	return count, nil
 }
 
+// BookingFilter restricts an organization's booking list to the given
+// users (by email) and location; empty values don't filter.
+type BookingFilter struct {
+	UserEmails []string
+	LocationID string
+}
+
+// GetFiltered returns the bookings of the user's organization between start
+// and end matching filter.
+func (s *BookingService) GetFiltered(user *User, start, end time.Time, filter *BookingFilter) ([]*BookingDetails, *BookingError) {
+	emails, bErr := s.validateBookingFilter(user, filter)
+	if bErr != nil {
+		return nil, bErr
+	}
+	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, emails, filter.LocationID)
+	if err != nil {
+		log.Println(err)
+		return nil, &BookingError{Kind: BookingErrorInternal}
+	}
+	return list, nil
+}
+
+// GetCurrent returns the current bookings of the user's organization
+// matching filter.
+func (s *BookingService) GetCurrent(user *User, filter *BookingFilter) ([]*BookingDetails, *BookingError) {
+	emails, bErr := s.validateBookingFilter(user, filter)
+	if bErr != nil {
+		return nil, bErr
+	}
+	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, emails, filter.LocationID)
+	if err != nil {
+		log.Println(err)
+		return nil, &BookingError{Kind: BookingErrorInternal}
+	}
+	return list, nil
+}
+
+// validateBookingFilter returns the filter's distinct, lowercased emails.
+func (s *BookingService) validateBookingFilter(user *User, filter *BookingFilter) ([]string, *BookingError) {
+	if !HasPermission(user, user.OrganizationID, PermissionBookings, PermissionLevelRead) {
+		return nil, &BookingError{Kind: BookingErrorForbidden}
+	}
+	emails := []string{}
+	for _, email := range filter.UserEmails {
+		email = strings.ToLower(email)
+		if email != "" && !slices.Contains(emails, email) {
+			emails = append(emails, email)
+		}
+	}
+	if len(emails) > 0 {
+		ok, err := GetUserRepository().EmailsExistInOrg(user.OrganizationID, emails)
+		if err != nil {
+			log.Println(err)
+			return nil, &BookingError{Kind: BookingErrorInternal}
+		}
+		if !ok {
+			return nil, &BookingError{Kind: BookingErrorInvalid}
+		}
+	}
+	if filter.LocationID != "" {
+		if !ValidateGUID(filter.LocationID) {
+			return nil, &BookingError{Kind: BookingErrorInvalid}
+		}
+		location, _ := GetLocationRepository().GetOne(filter.LocationID)
+		if location == nil || location.OrganizationID != user.OrganizationID {
+			return nil, &BookingError{Kind: BookingErrorInvalid}
+		}
+	}
+	return emails, nil
+}
+
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 // CheckBooking validates a booking to be created (bookingID empty) or
@@ -595,6 +667,55 @@ func (s *BookingService) IsValidMinHoursBooking(enter, leave time.Time, organiza
 
 	difference_in_hours := int64(leaveTime.Sub(enterTime).Hours())
 	return difference_in_hours >= int64(min_hours)
+}
+
+// GetPublicBookingDurationLimits returns the effective minimum and maximum
+// duration in hours for public bookings, combining the public booking limits
+// with the organization-wide limits. A limit of 0 means no restriction.
+func (s *BookingService) GetPublicBookingDurationLimits(orgID string) (int, int) {
+	publicMinHours, _ := GetSettingsRepository().GetInt(orgID, SettingPublicBookingMinDurationHours.Name)
+	publicMaxHours, _ := GetSettingsRepository().GetInt(orgID, SettingPublicBookingMaxDurationHours.Name)
+	orgMinHours, _ := GetSettingsRepository().GetInt(orgID, SettingMinBookingDurationHours.Name)
+	orgMaxHours, _ := GetSettingsRepository().GetInt(orgID, SettingMaxBookingDurationHours.Name)
+	dailyBasisBooking, _ := GetSettingsRepository().GetBool(orgID, SettingDailyBasisBooking.Name)
+	return s.getPublicBookingDurationLimits(publicMinHours, publicMaxHours, orgMinHours, orgMaxHours, dailyBasisBooking)
+}
+
+// IsValidPublicBookingDurationSettings reports whether the given public
+// booking duration limits are satisfiable in combination with the given
+// organization-wide limits.
+func (s *BookingService) IsValidPublicBookingDurationSettings(publicMinHours, publicMaxHours, orgMinHours, orgMaxHours int, dailyBasisBooking bool) bool {
+	if publicMinHours <= 0 && publicMaxHours <= 0 {
+		return true
+	}
+	minHours, maxHours := s.getPublicBookingDurationLimits(publicMinHours, publicMaxHours, orgMinHours, orgMaxHours, dailyBasisBooking)
+	return minHours == 0 || maxHours == 0 || minHours <= maxHours
+}
+
+func (s *BookingService) getPublicBookingDurationLimits(publicMinHours, publicMaxHours, orgMinHours, orgMaxHours int, dailyBasisBooking bool) (int, int) {
+	if dailyBasisBooking && orgMaxHours%24 != 0 {
+		orgMaxHours += 24 - (orgMaxHours % 24)
+	}
+	minHours := max(publicMinHours, orgMinHours)
+	maxHours := publicMaxHours
+	if orgMaxHours > 0 && (maxHours == 0 || orgMaxHours < maxHours) {
+		maxHours = orgMaxHours
+	}
+	return minHours, maxHours
+}
+
+// IsValidPublicBookingDuration checks the effective minimum and maximum
+// duration for public bookings (see GetPublicBookingDurationLimits).
+func (s *BookingService) IsValidPublicBookingDuration(enter, leave time.Time, orgID string) bool {
+	minHours, maxHours := s.GetPublicBookingDurationLimits(orgID)
+	duration := leave.Sub(enter).Round(time.Minute)
+	if minHours > 0 && duration < time.Duration(minHours)*time.Hour {
+		return false
+	}
+	if maxHours > 0 && duration > time.Duration(maxHours)*time.Hour {
+		return false
+	}
+	return true
 }
 
 // IsValidBookingHoursBeforeDelete checks the organization's minimum time

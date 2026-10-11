@@ -77,10 +77,11 @@ export default class Navigation {
   // PUBLIC BOOKING
   // --------------
 
-  static publicBookingUrl(): string {
+  static publicBookingUrl(spaceId?: string): string {
     const origin = RuntimeConfig.INFOS.orgPrimaryDomain
       ? `${window.location.protocol}//${RuntimeConfig.INFOS.orgPrimaryDomain}${window.location.port ? `:${window.location.port}` : ""}`
       : window.location.origin;
-    return `${origin}/ui/book/`;
+    const path = spaceId ? `${encodeURIComponent(spaceId)}/` : "";
+    return `${origin}/ui/book/${path}`;
   }
 }
