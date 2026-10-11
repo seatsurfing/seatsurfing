@@ -252,4 +252,82 @@ describe("DateUtil", () => {
       }
     });
   });
+
+  describe("resolveLinkEnterAndLeave", () => {
+    const defaultEnter = new Date(2030, 5, 11, 9, 0, 0, 0);
+    const defaultLeave = new Date(2030, 5, 11, 17, 0, 0, 0);
+    const resolve = (
+      enterParam: string | undefined,
+      leaveParam: string | undefined = undefined,
+      dailyBasisBooking = false,
+      now = new Date(2030, 5, 7, 10, 23, 45, 500),
+    ) =>
+      DateUtil.resolveLinkEnterAndLeave(
+        enterParam,
+        leaveParam,
+        defaultEnter,
+        defaultLeave,
+        "17:00",
+        dailyBasisBooking,
+        now,
+      );
+
+    it("keeps the defaults without an enter parameter", () => {
+      const { enter, leave } = resolve(undefined);
+      expect(enter).toEqual(defaultEnter);
+      expect(leave).toEqual(defaultLeave);
+    });
+
+    it("keeps the defaults for an invalid enter parameter", () => {
+      const { enter, leave } = resolve("tomorrow");
+      expect(enter).toEqual(defaultEnter);
+      expect(leave).toEqual(defaultLeave);
+    });
+
+    it("uses a valid leave parameter without an enter parameter", () => {
+      const { enter, leave } = resolve(undefined, "2030-06-11T12:00");
+      expect(enter).toEqual(defaultEnter);
+      expect(leave).toEqual(new Date(2030, 5, 11, 12, 0));
+    });
+
+    it("sets enter to the current time for 'now' and leave to workday end", () => {
+      const { enter, leave } = resolve("now");
+      expect(enter).toEqual(new Date(2030, 5, 7, 10, 23, 0, 0));
+      expect(leave).toEqual(new Date(2030, 5, 7, 17, 0, 0, 0));
+    });
+
+    it("uses the default duration if 'now' is past the workday end", () => {
+      const { enter, leave } = resolve(
+        "now",
+        undefined,
+        false,
+        new Date(2030, 5, 7, 17, 30),
+      );
+      expect(enter).toEqual(new Date(2030, 5, 7, 17, 30));
+      expect(leave).toEqual(new Date(2030, 5, 7, 23, 59, 59, 999));
+    });
+
+    it("uses a datetime enter parameter and adjusts leave", () => {
+      const { enter, leave } = resolve("2030-06-20T13:30");
+      expect(enter).toEqual(new Date(2030, 5, 20, 13, 30));
+      expect(leave).toEqual(new Date(2030, 5, 20, 17, 0));
+    });
+
+    it("keeps a valid leave parameter after the enter parameter", () => {
+      const { enter, leave } = resolve("2030-06-20T13:30", "2030-06-20T15:00");
+      expect(enter).toEqual(new Date(2030, 5, 20, 13, 30));
+      expect(leave).toEqual(new Date(2030, 5, 20, 15, 0));
+    });
+
+    it("ignores a leave parameter that is not after enter", () => {
+      const { leave } = resolve("2030-06-20T13:30", "2030-06-20T08:00");
+      expect(leave).toEqual(new Date(2030, 5, 20, 17, 0));
+    });
+
+    it("books the whole day with daily basis booking", () => {
+      const { enter, leave } = resolve("now", undefined, true);
+      expect(enter).toEqual(new Date(2030, 5, 7, 0, 0, 0, 0));
+      expect(leave).toEqual(new Date(2030, 5, 7, 23, 59, 59, 999));
+    });
+  });
 });

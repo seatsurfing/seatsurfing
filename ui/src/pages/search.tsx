@@ -93,6 +93,9 @@ interface State {
   showBookingNames: boolean;
   selectedSpace: Space | null;
   showConfirm: boolean;
+  // IDs of the spaces offered in the confirm modal when opened via a direct
+  // link (empty otherwise). More than one ID lets the user pick a space.
+  directLinkSpaceIds: string[];
   showLocationDetails: boolean;
   showSearchModal: boolean;
   showSuccess: boolean;
@@ -195,6 +198,7 @@ class Search extends React.Component<Props, State> {
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
+      directLinkSpaceIds: [],
       confirmingBooking: false,
       showCancelBookingConfirm: false,
       showLocationDetails: false,
@@ -430,6 +434,14 @@ class Search extends React.Component<Props, State> {
           (this.props.router.query["lid"] as string) || "",
         );
         const sidParam = (this.props.router.query["sid"] as string) || "";
+        const spaceIds = Array.from(
+          new Set(
+            sidParam
+              .split(",")
+              .map((id) => id.trim())
+              .filter((id) => id),
+          ),
+        );
         this.setState({ locationId: defaultLocationId }, () => {
           if (!defaultLocationId) {
             this.setState({ loading: false }, () => this.updateUrlParams());
@@ -452,10 +464,7 @@ class Search extends React.Component<Props, State> {
                     this.updateUrlParams();
                   },
                 );
-                if (sidParam) {
-                  const space = this.data.find((item) => item.id == sidParam);
-                  if (space) this.onSpaceSelect(space);
-                }
+                this.openDirectLink(spaceIds);
               });
             });
         });
@@ -551,14 +560,6 @@ class Search extends React.Component<Props, State> {
     return "";
   };
 
-  getDateTimeFromQuery = (paramName: string): Date | undefined => {
-    const value = this.props.router.query[paramName];
-    if (typeof value === "string" && DateUtil.isValidDateTime(value)) {
-      return new Date(value);
-    }
-    return undefined;
-  };
-
   managedUrlParams = ["lid", "enter", "leave", "allDay", "multiDay"];
 
   updateUrlParams = () => {
@@ -609,8 +610,17 @@ class Search extends React.Component<Props, State> {
       this.props.router.query["allDay"] === "1" &&
       !RuntimeConfig.INFOS.dailyBasisBooking;
     const selectionMultiDay = this.props.router.query["multiDay"] === "1";
-    let queryEnter = this.getDateTimeFromQuery("enter") ?? enter;
-    let queryLeave = this.getDateTimeFromQuery("leave") ?? leave;
+    const enterParam = this.props.router.query["enter"];
+    const leaveParam = this.props.router.query["leave"];
+    let { enter: queryEnter, leave: queryLeave } =
+      DateUtil.resolveLinkEnterAndLeave(
+        typeof enterParam === "string" ? enterParam : undefined,
+        typeof leaveParam === "string" ? leaveParam : undefined,
+        enter,
+        leave,
+        this.state.prefWorkdayEnd,
+        RuntimeConfig.INFOS.dailyBasisBooking,
+      );
     if (selectionAllDay) {
       queryEnter = DateUtil.setHoursToMin(queryEnter);
       queryLeave = DateUtil.setHoursToMax(queryLeave);
@@ -780,7 +790,11 @@ class Search extends React.Component<Props, State> {
         this.loadSpaces(this.state.locationId),
       ];
       Promise.all(promises).then(() => {
-        this.setState({ loading: false });
+        this.setState({ loading: false }, () => {
+          if (this.state.showConfirm) {
+            this.refreshDirectLinkSelection();
+          }
+        });
       });
       this.updateUrlParams();
     };
@@ -812,7 +826,54 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  onSpaceSelect = (item: Space) => {
+  // Handles direct links (?sid=<id>[,<id>...]). A single bookable space opens
+  // the confirm modal directly. Several spaces open it with a space dropdown.
+  openDirectLink = (spaceIds: string[]) => {
+    const spaces = spaceIds
+      .map((id) => this.data.find((item) => item.id === id))
+      .filter((s): s is Space => !!s && s.allowed && s.enabled);
+    if (spaces.length === 0) {
+      return;
+    }
+    if (spaces.length === 1) {
+      this.onSpaceSelect(spaces[0], [spaces[0].id]);
+      return;
+    }
+    this.setState(
+      {
+        showConfirm: true,
+        selectedSpace: spaces.find((s) => s.available) ?? null,
+        directLinkSpaceIds: spaces.map((s) => s.id),
+        cancelSeries: false,
+      },
+      () => this.resetRecurrence(),
+    );
+  };
+
+  // Re-resolves the spaces offered by a direct link after the availability
+  // data was reloaded (e.g. because the user adjusted the times). Keeps the
+  // current choice if it is still available, else picks the first available.
+  refreshDirectLinkSelection = () => {
+    const spaces = this.state.directLinkSpaceIds
+      .map((id) => this.data.find((item) => item.id === id))
+      .filter((s): s is Space => !!s);
+    if (spaces.length === 0) {
+      return;
+    }
+    const current = spaces.find((s) => s.id === this.state.selectedSpace?.id);
+    let selected: Space | null = current ?? null;
+    if (spaces.length > 1 && !current?.available) {
+      selected = spaces.find((s) => s.available) ?? current ?? null;
+    }
+    this.setState({ selectedSpace: selected }, () => this.resetRecurrence());
+  };
+
+  onDirectLinkSpaceChange = (spaceId: string) => {
+    const space = this.data.find((item) => item.id === spaceId);
+    this.setState({ selectedSpace: space ?? null });
+  };
+
+  onSpaceSelect = (item: Space, directLinkSpaceIds: string[] = []) => {
     if (!item.allowed || !item.enabled) {
       return;
     }
@@ -821,6 +882,7 @@ class Search extends React.Component<Props, State> {
         {
           showConfirm: true,
           selectedSpace: item,
+          directLinkSpaceIds: directLinkSpaceIds,
           cancelSeries: false,
         },
         () => this.resetRecurrence(),
@@ -2490,27 +2552,38 @@ class Search extends React.Component<Props, State> {
         </Form>
       </Modal>
     );
+    const directLink = this.state.directLinkSpaceIds.length > 0;
+    const directLinkSpaces = this.state.directLinkSpaceIds
+      .map((id) => this.data.find((item) => item.id === id))
+      .filter((s): s is Space => !!s);
+    const directLinkChooseSpace = this.state.directLinkSpaceIds.length > 1;
+    const selectedSpaceUnavailable =
+      directLink && !this.state.selectedSpace?.available;
     const confirmModalRows = [];
-    confirmModalRows.push({
-      label: this.props.t("space"),
-      value: this.state.selectedSpace?.name,
-    });
+    if (!directLinkChooseSpace) {
+      confirmModalRows.push({
+        label: this.props.t("space"),
+        value: this.state.selectedSpace?.name,
+      });
+    }
     confirmModalRows.push({
       label: this.props.t("area"),
       value: this.getLocationName(),
     });
-    confirmModalRows.push({
-      label: this.props.t("enter"),
-      value: formatter.format(
-        DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
-      ),
-    });
-    confirmModalRows.push({
-      label: this.props.t("leave"),
-      value: formatter.format(
-        DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
-      ),
-    });
+    if (!directLink) {
+      confirmModalRows.push({
+        label: this.props.t("enter"),
+        value: formatter.format(
+          DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
+        ),
+      });
+      confirmModalRows.push({
+        label: this.props.t("leave"),
+        value: formatter.format(
+          DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
+        ),
+      });
+    }
     confirmModalRows.push({
       label: this.props.t("approval"),
       value: RendererUtils.capitalize(
@@ -2549,6 +2622,69 @@ class Search extends React.Component<Props, State> {
             <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
           </Modal.Header>
           <Modal.Body hidden={this.state.showRecurringOptions}>
+            {directLinkChooseSpace && (
+              <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                <Form.Label column sm="4" htmlFor="direct-link-space">
+                  {this.props.t("space")}:
+                </Form.Label>
+                <Col sm="8">
+                  <Form.Select
+                    id="direct-link-space"
+                    value={this.state.selectedSpace?.id ?? ""}
+                    onChange={(e: any) =>
+                      this.onDirectLinkSpaceChange(e.target.value)
+                    }
+                    disabled={this.state.confirmingBooking}
+                  >
+                    <option value="" disabled={true}>
+                      {this.props.t("pleaseSelect")}
+                    </option>
+                    {directLinkSpaces.map((s) => (
+                      <option key={s.id} value={s.id} disabled={!s.available}>
+                        {s.name}
+                        {!s.available &&
+                          " (" + this.props.t("notAvailable") + ")"}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+            )}
+            {directLink && (
+              <>
+                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                  <Form.Label column sm="4">
+                    {this.props.t("enter")}:
+                  </Form.Label>
+                  <Col sm="8">
+                    <div className="d-flex gap-2">
+                      {dateEnterPicker}
+                      {timeEnterPicker}
+                    </div>
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                  <Form.Label column sm="4">
+                    {this.props.t("leave")}:
+                  </Form.Label>
+                  <Col sm="8">
+                    <div className="d-flex gap-2">
+                      {this.state.selectionMultiDay && dateLeavePicker}
+                      {timeLeavePicker}
+                    </div>
+                  </Col>
+                </Form.Group>
+                {selectedSpaceUnavailable && (
+                  <Row style={{ marginBottom: "5px" }}>
+                    <Col sm={{ span: 8, offset: 4 }}>
+                      <div className="invalid-search-config">
+                        {this.props.t("directLinkNoSpaceAvailable")}
+                      </div>
+                    </Col>
+                  </Row>
+                )}
+              </>
+            )}
             {confirmModalRows.map((row, index) => {
               return (
                 <Row
@@ -2757,13 +2893,17 @@ class Search extends React.Component<Props, State> {
                 this.setState({ showConfirm: false });
                 this.openSpaceCalendar("showConfirm");
               }}
-              disabled={this.state.confirmingBooking}
+              disabled={
+                this.state.confirmingBooking || !this.state.selectedSpace
+              }
             />
             <Button
               type="submit"
               variant="primary"
               disabled={
                 this.state.confirmingBooking ||
+                this.state.loading ||
+                selectedSpaceUnavailable ||
                 (this.state.recurrence.active &&
                   this.state.recurrence.finalNumBookings === 0)
               }

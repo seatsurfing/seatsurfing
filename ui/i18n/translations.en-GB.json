@@ -203,6 +203,7 @@
   "dateFormat": "Date format",
   "days": "days",
   "default": "Default",
+  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times.",
   "defaultTimezone": "Default time zone",
   "delete": "Delete",
   "deleteOrg": "Delete organization",
