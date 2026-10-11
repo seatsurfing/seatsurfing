@@ -163,6 +163,13 @@ class PublicBooking extends React.Component<Props, State> {
         () => true,
       );
       const spaces: PublicBookableSpace[] = res.json.spaces || [];
+      // A space passed via "?space=<id>" is preselected and cannot be changed.
+      const spaceParam = this.props.router.query["space"];
+      const fixedSpace = spaces.find((s) => s.spaceId === spaceParam);
+      if (spaceParam !== undefined && !fixedSpace) {
+        this.props.router.replace("/404");
+        return;
+      }
       if (spaces.length === 0) {
         this.setState({ loading: false });
         return;
@@ -170,9 +177,6 @@ class PublicBooking extends React.Component<Props, State> {
       const maxDaysInAdvance: number = res.json.maxDaysInAdvance || 0;
       const showMap: boolean = res.json.showMap === true;
       const showAvailability: boolean = res.json.showAvailability === true;
-      // A space passed via "?space=<id>" is preselected and cannot be changed.
-      const spaceParam = this.props.router.query["space"];
-      const fixedSpace = spaces.find((s) => s.spaceId === spaceParam);
       const relevantSpaces = fixedSpace ? [fixedSpace] : spaces;
       const maxDate = new Date();
       maxDate.setDate(maxDate.getDate() + maxDaysInAdvance);
