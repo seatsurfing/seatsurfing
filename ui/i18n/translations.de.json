@@ -649,7 +649,7 @@
   "errorAuthProviderHasUsers": "Der Auth Provider kann nicht gelöscht werden, da ihm noch Benutzer zugeordnet sind.",
   "authProviderRequiredHint": "Die Anmeldung per Passwort ist deaktiviert. Bitte lege zuerst in den Einstellungen einen Identity Provider an.",
   "bookingAttributes": "Buchungsattribute",
-  "bookingAttributesHint": "Zusätzliche Felder, die bei der Anfrage einer öffentlichen Buchung ausgefüllt werden. Die Werte werden bei der Genehmigung und in den Buchungsdetails angezeigt.",
+  "bookingAttributesHint": "Zusätzliche Felder, die bei der Anfrage einer öffentlichen Buchung ausgefüllt werden.",
   "bookingAttributeLabel": "Bezeichnung",
   "bookingAttributeTypeText": "Text (einzeilig)",
   "bookingAttributeTypeTextMultiline": "Text (mehrzeilig)",

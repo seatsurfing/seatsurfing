@@ -646,7 +646,7 @@
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
   "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
   "bookingAttributes": "Booking attributes",
-  "bookingAttributesHint": "Additional fields which have to be filled in when requesting a public booking. The values are shown to approvers and in the booking details.",
+  "bookingAttributesHint": "Additional fields which have to be filled in when requesting a public booking.",
   "bookingAttributeLabel": "Label",
   "bookingAttributeTypeText": "Text (single line)",
   "bookingAttributeTypeTextMultiline": "Text (multi-line)",
