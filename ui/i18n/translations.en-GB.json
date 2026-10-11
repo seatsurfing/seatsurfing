@@ -51,6 +51,7 @@
   "publicBookingShowAvailabilityHint": "Spaces which are already booked for the selected time slot are greyed out on the public booking page. No details about existing bookings are disclosed.",
   "notAvailable": "not available",
   "publicBookingNoSpaceAvailable": "No space is available for the selected time slot.",
+  "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot.",
   "publicBookingSpaceEnabledHint": "Visitors without an account can request a booking for this space on the public booking page. Every request requires approval.",
   "publicBookingSpaceRequiresApproversHint": "Add at least one approver group above to allow public bookings for this space.",
   "publicBookingSubmit": "Request booking",
@@ -644,5 +645,6 @@
   "yes": "yes",
   "yesterday": "Yesterday",
   "yourDomainPlaceholder": "seatsurfing.your-domain.com",
-  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them"
+  "hideDisallowedLocations": "Hide areas from users who are not allowed to book them",
+  "publicBookingAllSpaces": "All spaces"
 }
