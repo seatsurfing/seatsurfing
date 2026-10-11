@@ -131,14 +131,14 @@ func TestBookingAttributeServiceValidateValues(t *testing.T) {
 	res, bErr := GetBookingAttributeService().ValidateValues(org.ID, map[string]string{
 		company.ID: " ACME ",
 		notes.ID:   "Line 1\r\nLine 2\n",
-		persons.ID: "2.5",
+		persons.ID: "12",
 	})
 	if bErr != nil {
 		t.Fatalf("unexpected error %v", bErr)
 	}
 	CheckTestString(t, "ACME", res[company.ID])
 	CheckTestString(t, "Line 1\nLine 2", res[notes.ID])
-	CheckTestString(t, "2.5", res[persons.ID])
+	CheckTestString(t, "12", res[persons.ID])
 
 	res, bErr = GetBookingAttributeService().ValidateValues(org.ID, map[string]string{
 		company.ID: "ACME",
@@ -166,6 +166,9 @@ func TestBookingAttributeServiceValidateValues(t *testing.T) {
 		{company.ID: "ACME", persons.ID: "0"},
 		{company.ID: "ACME", persons.ID: "0.0"},
 		{company.ID: "ACME", persons.ID: "+2"},
+		{company.ID: "ACME", persons.ID: "2.5"},
+		{company.ID: "ACME", persons.ID: "2.0"},
+		{company.ID: "ACME", persons.ID: "00"},
 	} {
 		_, bErr := GetBookingAttributeService().ValidateValues(org.ID, values)
 		if bErr == nil || bErr.Code != BookingCodeInvalidAttributes {

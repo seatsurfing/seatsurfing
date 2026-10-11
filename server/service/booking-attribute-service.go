@@ -3,7 +3,6 @@ package service
 import (
 	"log"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -41,7 +40,7 @@ const (
 	BookingCodeAttributeLimitReached = 1015
 )
 
-var bookingAttributeNumberPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)?$`)
+var bookingAttributeNumberPattern = regexp.MustCompile(`^0*[1-9][0-9]*$`)
 
 const (
 	BookingAttributeCheckboxChecked   = "1"
@@ -214,9 +213,6 @@ func normalizeBookingAttributeValue(t BookingAttributeType, value string) (strin
 			return "", false
 		}
 		if !bookingAttributeNumberPattern.MatchString(value) {
-			return "", false
-		}
-		if f, err := strconv.ParseFloat(value, 64); err != nil || f <= 0 {
 			return "", false
 		}
 	case BookingAttributeTypeCheckbox:
