@@ -18,7 +18,6 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Booking from "@/types/Booking";
-import BookingAttribute from "@/types/BookingAttribute";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 
@@ -156,9 +155,7 @@ class Approvals extends React.Component<Props, State> {
               {booking.attributes.map((a) => (
                 <React.Fragment key={a.attributeId}>
                   <dt>{a.label}</dt>
-                  <dd className="booking-attribute-value">
-                    {BookingAttribute.formatValue(a, this.props.t)}
-                  </dd>
+                  <dd className="booking-attribute-value">{a.value}</dd>
                 </React.Fragment>
               ))}
             </dl>

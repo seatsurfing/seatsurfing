@@ -79,16 +79,6 @@ export default class BookingAttribute extends Entity {
     });
   }
 
-  static formatValue(
-    v: BookingAttributeValue,
-    t: (key: string) => string,
-  ): string {
-    if (v.type === BookingAttribute.TYPE_CHECKBOX) {
-      return t(v.value === BookingAttribute.CHECKBOX_CHECKED ? "yes" : "no");
-    }
-    return v.value;
-  }
-
   static getTypeTranslationKey(type: number): string {
     if (type === BookingAttribute.TYPE_TEXT_MULTILINE) {
       return "bookingAttributeTypeTextMultiline";

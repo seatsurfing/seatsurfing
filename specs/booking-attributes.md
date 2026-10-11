@@ -84,7 +84,7 @@ Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fo
 - Settings → Public booking: table of attributes with add/edit/delete (modal), add button disabled once three attributes exist.
 - Public booking page: one input per attribute below the subject (text input, textarea, number input or checkbox), optional fields are marked as such.
 - Approvals: an info button in the last column before approve/decline, shown for bookings with attribute values, opens a modal listing them.
-- Booking details: read-only field per stored attribute value. Checkbox values are shown as yes/no here and in the approvals list.
+- Booking details: read-only field per stored attribute value. Here and in the approvals list, the stored raw value is always shown as text regardless of the attribute's current type, so values stay readable after a type change.
 
 ## Integration Points
 

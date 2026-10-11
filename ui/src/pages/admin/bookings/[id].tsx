@@ -1027,7 +1027,7 @@ class EditBooking extends React.Component<Props, State> {
                     id={"booking-attribute-" + a.attributeId}
                     type="text"
                     disabled
-                    value={BookingAttribute.formatValue(a, this.props.t)}
+                    value={a.value}
                   />
                 )}
               </Col>
