@@ -644,5 +644,18 @@
   "publicBookingNoSpaceAvailable": "No space is available for the selected time slot.",
   "publicBookingShowAvailability": "Show availability",
   "publicBookingShowAvailabilityHint": "Spaces which are already booked for the selected time slot are greyed out on the public booking page. No details about existing bookings are disclosed.",
-  "notAvailable": "not available"
+  "notAvailable": "not available",
+  "addBookingAttribute": "Add attribute",
+  "bookingAttributeLabel": "Label",
+  "bookingAttributeLimitReached": "A maximum of {{max}} attributes can be defined.",
+  "bookingAttributeRequired": "Required",
+  "bookingAttributeSaveError": "The attribute could not be saved.",
+  "bookingAttributeTypeNumber": "Number",
+  "bookingAttributeTypeText": "Text (single line)",
+  "bookingAttributeTypeTextMultiline": "Text (multi-line)",
+  "bookingAttributes": "Booking attributes",
+  "bookingAttributesHint": "Additional fields which have to be filled in when requesting a public booking. The values are shown to approvers and in the booking details.",
+  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"? The values captured for existing bookings will be deleted as well.",
+  "editBookingAttribute": "Edit attribute",
+  "optionalField": "optional"
 }

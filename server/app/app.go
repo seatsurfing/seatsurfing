@@ -594,6 +594,7 @@ func (a *App) InitializeRouter() {
 	routers["/search/"] = &SearchRouter{}
 	routers["/setting/"] = &SettingsRouter{}
 	routers["/space-attribute/"] = &SpaceAttributeRouter{}
+	routers["/booking-attribute/"] = &BookingAttributeRouter{}
 	routers["/uc/"] = &CheckUpdateRouter{}
 	routers["/healthcheck"] = &HealthcheckRouter{}
 	routers["/kiosk/"] = &KioskRouter{}

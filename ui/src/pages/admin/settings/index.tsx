@@ -50,6 +50,7 @@ import Navigation from "@/util/Navigation";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
 import HintTooltip from "@/components/HintTooltip";
+import BookingAttributesEditor from "@/components/BookingAttributesEditor";
 
 interface State {
   allowAnyUser: boolean;
@@ -1614,6 +1615,9 @@ class Settings extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
+          <BookingAttributesEditor
+            disabled={!RuntimeConfig.INFOS.featurePublicBooking}
+          />
           {this.state.publicBookingEnabled && (
             <Form.Group as={Row}>
               <Form.Label column sm="2" htmlFor="input-publicBookingUrl">

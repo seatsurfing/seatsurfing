@@ -31,3 +31,21 @@ export async function cancelAllBookings(page: Page): Promise<void> {
     await page.request.delete(uiURL + "/booking/" + booking.id, { headers });
   }
 }
+
+// Deletes all booking attributes of the organization via the API, as at most
+// three can exist.
+export async function deleteAllBookingAttributes(page: Page): Promise<void> {
+  const accessToken = await page.evaluate(() =>
+    window.localStorage.getItem("accessToken"),
+  );
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const res = await page.request.get(uiURL + "/booking-attribute/", {
+    headers,
+  });
+  const attributes = await res.json();
+  for (const attribute of attributes) {
+    await page.request.delete(uiURL + "/booking-attribute/" + attribute.id, {
+      headers,
+    });
+  }
+}

@@ -37,6 +37,8 @@ var DatabaseTables = [...]string{
 	"auth_attempts",
 	"auth_providers",
 	"auth_states",
+	"booking_attribute_values",
+	"booking_attributes",
 	"bookings",
 	"buddies",
 	"debug_time_issues",

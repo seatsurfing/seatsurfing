@@ -13,3 +13,7 @@ body {
 .container {
   display: flex;
 }
+
+.booking-attribute-value {
+  white-space: pre-line;
+}
