@@ -14,7 +14,7 @@ type BookingAttributeRouter struct {
 
 type CreateBookingAttributeRequest struct {
 	Label    string `json:"label" validate:"required,max=256"`
-	Type     int    `json:"type" validate:"oneof=1 2 3"`
+	Type     int    `json:"type" validate:"oneof=1 2 3 4"`
 	Required bool   `json:"required"`
 }
 

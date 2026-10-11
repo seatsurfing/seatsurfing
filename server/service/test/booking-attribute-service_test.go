@@ -54,7 +54,7 @@ func TestBookingAttributeServiceInvalidInput(t *testing.T) {
 		{Label: "   ", Type: BookingAttributeTypeText},
 		{Label: strings.Repeat("a", 257), Type: BookingAttributeTypeText},
 		{Label: "Foo", Type: 0},
-		{Label: "Foo", Type: 4},
+		{Label: "Foo", Type: 5},
 	} {
 		_, bErr := GetBookingAttributeService().Create(admin, in)
 		if bErr == nil || bErr.Kind != BookingErrorInvalid {
@@ -131,14 +131,14 @@ func TestBookingAttributeServiceValidateValues(t *testing.T) {
 	res, bErr := GetBookingAttributeService().ValidateValues(org.ID, map[string]string{
 		company.ID: " ACME ",
 		notes.ID:   "Line 1\r\nLine 2\n",
-		persons.ID: "-2.5",
+		persons.ID: "2.5",
 	})
 	if bErr != nil {
 		t.Fatalf("unexpected error %v", bErr)
 	}
 	CheckTestString(t, "ACME", res[company.ID])
 	CheckTestString(t, "Line 1\nLine 2", res[notes.ID])
-	CheckTestString(t, "-2.5", res[persons.ID])
+	CheckTestString(t, "2.5", res[persons.ID])
 
 	res, bErr = GetBookingAttributeService().ValidateValues(org.ID, map[string]string{
 		company.ID: "ACME",
@@ -162,6 +162,51 @@ func TestBookingAttributeServiceValidateValues(t *testing.T) {
 		{company.ID: "ACME", persons.ID: "0x10"},
 		{company.ID: "ACME", persons.ID: "Inf"},
 		{company.ID: "ACME", persons.ID: "1,5"},
+		{company.ID: "ACME", persons.ID: "-2"},
+		{company.ID: "ACME", persons.ID: "0"},
+		{company.ID: "ACME", persons.ID: "0.0"},
+		{company.ID: "ACME", persons.ID: "+2"},
+	} {
+		_, bErr := GetBookingAttributeService().ValidateValues(org.ID, values)
+		if bErr == nil || bErr.Code != BookingCodeInvalidAttributes {
+			t.Fatalf("expected invalid attributes error for %v, got %v", values, bErr)
+		}
+	}
+}
+
+func TestBookingAttributeServiceValidateValuesCheckbox(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	terms := createTestServiceBookingAttribute(t, admin, "Terms", BookingAttributeTypeCheckbox, true)
+	parking := createTestServiceBookingAttribute(t, admin, "Parking", BookingAttributeTypeCheckbox, false)
+
+	res, bErr := GetBookingAttributeService().ValidateValues(org.ID, map[string]string{
+		terms.ID: "1",
+	})
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	CheckTestString(t, BookingAttributeCheckboxChecked, res[terms.ID])
+	CheckTestString(t, BookingAttributeCheckboxUnchecked, res[parking.ID])
+
+	res, bErr = GetBookingAttributeService().ValidateValues(org.ID, map[string]string{
+		terms.ID:   "true",
+		parking.ID: "1",
+	})
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	CheckTestString(t, BookingAttributeCheckboxChecked, res[terms.ID])
+	CheckTestString(t, BookingAttributeCheckboxChecked, res[parking.ID])
+
+	for _, values := range []map[string]string{
+		nil,
+		{terms.ID: "0"},
+		{terms.ID: "false"},
+		{terms.ID: ""},
+		{terms.ID: "yes"},
+		{terms.ID: "1", parking.ID: "2"},
 	} {
 		_, bErr := GetBookingAttributeService().ValidateValues(org.ID, values)
 		if bErr == nil || bErr.Code != BookingCodeInvalidAttributes {

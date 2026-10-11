@@ -12,6 +12,8 @@ export default class BookingAttribute extends Entity {
   static readonly TYPE_TEXT = 1;
   static readonly TYPE_TEXT_MULTILINE = 2;
   static readonly TYPE_NUMBER = 3;
+  static readonly TYPE_CHECKBOX = 4;
+  static readonly CHECKBOX_CHECKED = "1";
   static readonly MAX_ATTRIBUTES = 3;
 
   label: string;
@@ -71,12 +73,25 @@ export default class BookingAttribute extends Entity {
     });
   }
 
+  static formatValue(
+    v: BookingAttributeValue,
+    t: (key: string) => string,
+  ): string {
+    if (v.type === BookingAttribute.TYPE_CHECKBOX) {
+      return t(v.value === BookingAttribute.CHECKBOX_CHECKED ? "yes" : "no");
+    }
+    return v.value;
+  }
+
   static getTypeTranslationKey(type: number): string {
     if (type === BookingAttribute.TYPE_TEXT_MULTILINE) {
       return "bookingAttributeTypeTextMultiline";
     }
     if (type === BookingAttribute.TYPE_NUMBER) {
       return "bookingAttributeTypeNumber";
+    }
+    if (type === BookingAttribute.TYPE_CHECKBOX) {
+      return "bookingAttributeTypeCheckbox";
     }
     return "bookingAttributeTypeText";
   }

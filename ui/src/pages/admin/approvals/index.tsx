@@ -17,6 +17,7 @@ import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import CloudFeatureHint from "@/components/CloudFeatureHint";
 import Booking from "@/types/Booking";
+import BookingAttribute from "@/types/BookingAttribute";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 
@@ -124,7 +125,8 @@ class Approvals extends React.Component<Props, State> {
   renderAttributes = (booking: Booking) => {
     return booking.attributes.map((a) => (
       <div key={a.attributeId} className="booking-attribute-value">
-        <strong>{a.label}:</strong> {a.value}
+        <strong>{a.label}:</strong>{" "}
+        {BookingAttribute.formatValue(a, this.props.t)}
       </div>
     ));
   };

@@ -14,6 +14,7 @@ const (
 	BookingAttributeTypeText          BookingAttributeType = 1
 	BookingAttributeTypeTextMultiline BookingAttributeType = 2
 	BookingAttributeTypeNumber        BookingAttributeType = 3
+	BookingAttributeTypeCheckbox      BookingAttributeType = 4
 )
 
 type BookingAttribute struct {

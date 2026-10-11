@@ -476,11 +476,33 @@ class PublicBooking extends React.Component<Props, State> {
           maxLength={4096}
         />
       );
+    } else if (a.type === BookingAttribute.TYPE_CHECKBOX) {
+      return (
+        <Form.Group
+          className="mb-3"
+          key={a.id}
+          controlId={"booking-attribute-" + a.id}
+        >
+          <Form.Check
+            type="checkbox"
+            label={a.label}
+            checked={value === BookingAttribute.CHECKBOX_CHECKED}
+            onChange={(e: any) =>
+              this.setAttributeValue(
+                a.id,
+                e.target.checked ? BookingAttribute.CHECKBOX_CHECKED : "",
+              )
+            }
+            required={a.required}
+          />
+        </Form.Group>
+      );
     } else if (a.type === BookingAttribute.TYPE_NUMBER) {
       control = (
         <Form.Control
           type="number"
           step="any"
+          min={0}
           value={value}
           onChange={onChange}
           required={a.required}

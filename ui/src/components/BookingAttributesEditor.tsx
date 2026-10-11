@@ -184,6 +184,7 @@ class BookingAttributesEditor extends React.Component<Props, State> {
                   BookingAttribute.TYPE_TEXT,
                   BookingAttribute.TYPE_TEXT_MULTILINE,
                   BookingAttribute.TYPE_NUMBER,
+                  BookingAttribute.TYPE_CHECKBOX,
                 ].map((type) => (
                   <option key={type} value={type}>
                     {this.props.t(BookingAttribute.getTypeTranslationKey(type))}

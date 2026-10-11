@@ -70,7 +70,7 @@ func TestBookingAttributesInvalidPayload(t *testing.T) {
 
 	for _, payload := range []string{
 		`{"label": "", "type": 1}`,
-		`{"label": "Company", "type": 4}`,
+		`{"label": "Company", "type": 5}`,
 		`{"label": "Company"}`,
 		`{"label": "  ", "type": 1}`,
 	} {
@@ -167,11 +167,15 @@ func TestPublicBookingRequestInvalidAttributes(t *testing.T) {
 	enablePublicBookingForOrgAndSpace(org, space)
 	company := createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Company", "type": 1, "required": true}`)
 	persons := createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Persons", "type": 3}`)
+	terms := createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Terms", "type": 4, "required": true}`)
 
 	for _, attributes := range []string{
 		`{}`,
-		`{"` + company + `": ""}`,
-		`{"` + company + `": "ACME", "` + persons + `": "many"}`,
+		`{"` + company + `": "", "` + terms + `": "1"}`,
+		`{"` + company + `": "ACME", "` + terms + `": "1", "` + persons + `": "many"}`,
+		`{"` + company + `": "ACME", "` + terms + `": "1", "` + persons + `": "-1"}`,
+		`{"` + company + `": "ACME", "` + terms + `": "0"}`,
+		`{"` + company + `": "ACME"}`,
 		`{"` + company + `": "ACME", "00000000-0000-0000-0000-000000000000": "x"}`,
 	} {
 		req := NewHTTPRequest("POST", "/public-booking/"+org.ID+"/request", "", bytes.NewBufferString(publicBookingRequestPayload(space.ID, attributes)))

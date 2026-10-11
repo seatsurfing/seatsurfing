@@ -3,6 +3,7 @@ package service
 import (
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -40,7 +41,12 @@ const (
 	BookingCodeAttributeLimitReached = 1015
 )
 
-var bookingAttributeNumberPattern = regexp.MustCompile(`^-?[0-9]+(\.[0-9]+)?$`)
+var bookingAttributeNumberPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)?$`)
+
+const (
+	BookingAttributeCheckboxChecked   = "1"
+	BookingAttributeCheckboxUnchecked = "0"
+)
 
 type BookingAttributeInput struct {
 	Label    string
@@ -57,7 +63,7 @@ func (s *BookingAttributeService) validateInput(in *BookingAttributeInput) (*Boo
 	if label == "" || utf8.RuneCountInString(label) > MaxBookingAttributeLabelLength {
 		return nil, &BookingError{Kind: BookingErrorInvalid}
 	}
-	if in.Type != BookingAttributeTypeText && in.Type != BookingAttributeTypeTextMultiline && in.Type != BookingAttributeTypeNumber {
+	if in.Type != BookingAttributeTypeText && in.Type != BookingAttributeTypeTextMultiline && in.Type != BookingAttributeTypeNumber && in.Type != BookingAttributeTypeCheckbox {
 		return nil, &BookingError{Kind: BookingErrorInvalid}
 	}
 	return &BookingAttributeInput{Label: label, Type: in.Type, Required: in.Required}, nil
@@ -149,7 +155,7 @@ func (s *BookingAttributeService) GetForPublicBooking(organizationID string) ([]
 
 // ValidateValues checks the submitted values (attribute ID to value) against
 // the organization's attributes and returns them normalized. Empty optional
-// values are dropped.
+// values are dropped, unchecked checkboxes are stored as "0".
 func (s *BookingAttributeService) ValidateValues(organizationID string, values map[string]string) (map[string]string, *BookingError) {
 	attributes, err := GetBookingAttributeRepository().GetAll(organizationID)
 	if err != nil {
@@ -172,10 +178,11 @@ func (s *BookingAttributeService) ValidateValues(organizationID string, values m
 		if !ok {
 			return nil, invalid
 		}
+		missing := value == "" || (a.Type == BookingAttributeTypeCheckbox && value == BookingAttributeCheckboxUnchecked)
+		if missing && a.Required {
+			return nil, invalid
+		}
 		if value == "" {
-			if a.Required {
-				return nil, invalid
-			}
 			continue
 		}
 		res[a.ID] = value
@@ -207,6 +214,18 @@ func normalizeBookingAttributeValue(t BookingAttributeType, value string) (strin
 			return "", false
 		}
 		if !bookingAttributeNumberPattern.MatchString(value) {
+			return "", false
+		}
+		if f, err := strconv.ParseFloat(value, 64); err != nil || f <= 0 {
+			return "", false
+		}
+	case BookingAttributeTypeCheckbox:
+		switch strings.TrimSpace(value) {
+		case BookingAttributeCheckboxChecked, "true":
+			value = BookingAttributeCheckboxChecked
+		case "", BookingAttributeCheckboxUnchecked, "false":
+			value = BookingAttributeCheckboxUnchecked
+		default:
 			return "", false
 		}
 	default:

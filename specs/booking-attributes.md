@@ -7,7 +7,7 @@ Organizations can define up to three custom booking attributes (label, type, req
 ## Goals
 
 - Let admins define up to three booking attributes per organization.
-- Support the types single-line text, multi-line text and number.
+- Support the types single-line text, multi-line text, number and checkbox.
 - Let admins mark each attribute as required or optional.
 - Capture the attribute values when a public booking is requested.
 - Show the values in the approvals list and in the admin booking details.
@@ -25,7 +25,8 @@ Organizations can define up to three custom booking attributes (label, type, req
 - Attributes are managed in the "Public booking" section of the organization settings and require `org_settings` admin permission.
 - Values are validated when the booking is requested (before the confirmation email is sent) and stored once the booker confirms the request.
 - Deleting an attribute deletes the values captured for existing bookings. Changing an attribute's label or type does not change the stored values.
-- Empty optional values are not stored.
+- Empty optional values are not stored. Checkbox values are stored as `1` (checked) or `0` (unchecked); a required checkbox must be checked.
+- Numbers must be positive (greater than zero).
 
 ## Existing System Constraints
 
@@ -40,7 +41,7 @@ CREATE TABLE IF NOT EXISTS booking_attributes (
   id uuid DEFAULT uuid_generate_v4(),
   organization_id uuid NOT NULL,
   label VARCHAR NOT NULL,
-  type INTEGER NOT NULL,             -- 1 = text, 2 = multi-line text, 3 = number
+  type INTEGER NOT NULL,             -- 1 = text, 2 = multi-line text, 3 = number, 4 = checkbox
   required boolean NOT NULL DEFAULT FALSE,
   position INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id));
@@ -72,7 +73,7 @@ Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fo
 ### Public booking
 
 - `GET /public-booking/{orgId}/spaces` additionally returns `attributes: [{id, label, type, required}]`.
-- `POST /public-booking/{orgId}/request` accepts `attributes: {"<attributeId>": "<value>"}`. Missing required values, unknown attribute IDs or invalid values return 400 with `X-Error-Code: 1014`. Limits: single-line text 256 characters without line breaks, multi-line text 4096 characters, numbers must match `-?[0-9]+(\.[0-9]+)?`.
+- `POST /public-booking/{orgId}/request` accepts `attributes: {"<attributeId>": "<value>"}`. Missing required values, unknown attribute IDs or invalid values return 400 with `X-Error-Code: 1014`. Limits: single-line text 256 characters without line breaks, multi-line text 4096 characters, numbers must match `[0-9]+(\.[0-9]+)?` and be greater than zero, checkboxes accept `1`/`true` (checked) or `0`/`false`/empty (unchecked).
 
 ### Bookings
 
@@ -81,9 +82,9 @@ Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fo
 ## UI Changes
 
 - Settings → Public booking: table of attributes with add/edit/delete (modal), add button disabled once three attributes exist.
-- Public booking page: one input per attribute below the subject (text input, textarea or number input), optional fields are marked as such.
+- Public booking page: one input per attribute below the subject (text input, textarea, number input or checkbox), optional fields are marked as such.
 - Approvals: new "Booking attributes" column (shown when public booking is enabled).
-- Booking details: read-only field per stored attribute value.
+- Booking details: read-only field per stored attribute value. Checkbox values are shown as yes/no here and in the approvals list.
 
 ## Integration Points
 
