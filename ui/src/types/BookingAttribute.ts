@@ -1,5 +1,6 @@
 import { Entity } from "./Entity";
 import Ajax from "../util/Ajax";
+import RendererUtils from "../util/RendererUtils";
 
 export interface BookingAttributeValue {
   attributeId: string;
@@ -77,6 +78,13 @@ export default class BookingAttribute extends Entity {
       e.deserialize(item);
       return e;
     });
+  }
+
+  static formatValue(v: BookingAttributeValue): string {
+    if (v.type === BookingAttribute.TYPE_CHECKBOX) {
+      return RendererUtils.state(v.value === BookingAttribute.CHECKBOX_CHECKED);
+    }
+    return v.value;
   }
 
   static getTypeTranslationKey(type: number): string {

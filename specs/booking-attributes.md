@@ -23,7 +23,7 @@ Organizations can define up to three custom booking attributes (label, type, req
 - The limit of three attributes is enforced by the server, per organization.
 - Attributes are managed in the "Public booking" section of the organization settings and require `org_settings` admin permission.
 - Values are validated when the booking is requested (before the confirmation email is sent) and stored once the booker confirms the request.
-- Deleting an attribute deletes the values captured for existing bookings. Changing an attribute's label or type does not change the stored values.
+- Deleting an attribute deletes the values captured for existing bookings. Changing an attribute's label or type does not change the stored values; each value keeps the attribute type it was captured with.
 - Empty optional values are not stored. Checkbox values are stored as `1` (checked) or `0` (unchecked); a required checkbox must be checked.
 - Numbers must be positive integers (greater than zero, no decimals).
 
@@ -48,11 +48,12 @@ CREATE TABLE IF NOT EXISTS booking_attributes (
 CREATE TABLE IF NOT EXISTS booking_attribute_values (
   booking_id uuid NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
   attribute_id uuid NOT NULL REFERENCES booking_attributes(id) ON DELETE CASCADE,
+  type INTEGER NOT NULL,             -- attribute type at the time the value was stored
   value VARCHAR NOT NULL DEFAULT '',
   PRIMARY KEY (booking_id, attribute_id));
 ```
 
-Both tables are created on startup; no schema version bump is needed. `booking_attributes` rows are removed when the organization is deleted, values cascade with their booking or attribute. A value is only stored if the attribute belongs to the booking's organization.
+Both tables are created on startup; no schema version bump is needed. `booking_attributes` rows are removed when the organization is deleted, values cascade with their booking or attribute. A value is only stored if the attribute belongs to the booking's organization. The attribute's type is copied into `booking_attribute_values.type` when the value is stored, so values can be rendered according to the type they were captured with.
 
 `PublicBookingRequestPayload` gets an `attributes` map (attribute ID → value).
 
@@ -77,14 +78,14 @@ Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fo
 
 ### Bookings
 
-`GET /booking/{id}` and `GET /booking/pendingapprovals/` return `attributes: [{attributeId, label, type, value}]` for public bookings with stored values; the field is omitted otherwise.
+`GET /booking/{id}` and `GET /booking/pendingapprovals/` return `attributes: [{attributeId, label, type, value}]` for public bookings with stored values (`label` is the attribute's current label, `type` the type stored with the value); the field is omitted otherwise.
 
 ## UI Changes
 
 - Settings → Public booking: table of attributes with add/edit/delete (modal), add button disabled once three attributes exist.
 - Public booking page: one input per attribute below the subject (text input, textarea, number input or checkbox), optional fields are marked as such.
 - Approvals: an info button in the last column before approve/decline, shown for bookings with attribute values, opens a modal listing them.
-- Booking details: read-only field per stored attribute value. Here and in the approvals list, the stored raw value is always shown as text regardless of the attribute's current type, so values stay readable after a type change.
+- Booking details: read-only field per stored attribute value. Here and in the approvals list, values are rendered according to their stored type (checkbox values as yes/no), even if the attribute's type was changed afterwards.
 
 ## Integration Points
 

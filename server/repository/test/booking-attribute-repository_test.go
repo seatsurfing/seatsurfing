@@ -166,6 +166,30 @@ func TestBookingAttributeValueRepository(t *testing.T) {
 	CheckTestInt(t, 0, len(list))
 }
 
+func TestBookingAttributeValueRepositoryKeepsTypeOnAttributeChange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	b := CreateTestBooking9To5(user, space, 1)
+	a := createTestBookingAttribute(t, org.ID, "Parking", BookingAttributeTypeCheckbox, false)
+
+	CheckTestIsNil(t, GetBookingAttributeValueRepository().Set(b.ID, a.ID, "1"))
+	a.Type = BookingAttributeTypeText
+	CheckTestIsNil(t, GetBookingAttributeRepository().Update(a))
+
+	list, _ := GetBookingAttributeValueRepository().GetAllForBooking(b.ID)
+	CheckTestInt(t, 1, len(list))
+	CheckTestInt(t, int(BookingAttributeTypeCheckbox), int(list[0].Type))
+	CheckTestString(t, "1", list[0].Value)
+
+	// Overwriting the value stores the attribute's new type
+	CheckTestIsNil(t, GetBookingAttributeValueRepository().Set(b.ID, a.ID, "Yes"))
+	list, _ = GetBookingAttributeValueRepository().GetAllForBooking(b.ID)
+	CheckTestInt(t, int(BookingAttributeTypeText), int(list[0].Type))
+	CheckTestString(t, "Yes", list[0].Value)
+}
+
 func TestBookingAttributeValueRepositoryForeignOrgAttribute(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
