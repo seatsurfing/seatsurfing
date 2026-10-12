@@ -74,6 +74,7 @@ var blockedOutboundNets = mustParseCIDRs(
 	"198.18.0.0/15",
 	"240.0.0.0/4",
 	"64:ff9b::/96",
+	"64:ff9b:1::/48",
 )
 
 func mustParseCIDRs(cidrs ...string) []*net.IPNet {
