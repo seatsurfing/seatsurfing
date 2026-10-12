@@ -167,6 +167,8 @@ class Search extends React.Component<Props, State> {
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
+  loadSpacesRequestId: number = 0;
+  loadSpacesInFlight: number = 0;
 
   // time set *before* allDay option was selected
   resetEnterTime: Date | undefined;
@@ -433,7 +435,11 @@ class Search extends React.Component<Props, State> {
         const defaultLocationId = this.getPreferredLocationId(
           (this.props.router.query["lid"] as string) || "",
         );
-        const sidParam = (this.props.router.query["sid"] as string) || "";
+        // A repeated parameter (?sid=A&sid=B) arrives as an array
+        const sidQuery = this.props.router.query["sid"];
+        const sidParam = Array.isArray(sidQuery)
+          ? sidQuery.join(",")
+          : sidQuery || "";
         const spaceIds = Array.from(
           new Set(
             sidParam
@@ -712,13 +718,24 @@ class Search extends React.Component<Props, State> {
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
       leave.setSeconds(leave.getSeconds() - 1);
     }
-    this.data = await Space.listAvailability(
-      locationId,
-      this.state.enter,
-      leave,
-      this.state.searchAttributesSpace,
-      true,
-    );
+    // Responses may complete out of order (e.g. rapid picker changes): only the
+    // most recent request may update the data.
+    const requestId = ++this.loadSpacesRequestId;
+    this.loadSpacesInFlight++;
+    try {
+      const data = await Space.listAvailability(
+        locationId,
+        this.state.enter,
+        leave,
+        this.state.searchAttributesSpace,
+        true,
+      );
+      if (requestId === this.loadSpacesRequestId) {
+        this.data = data;
+      }
+    } finally {
+      this.loadSpacesInFlight--;
+    }
   };
 
   renderLocations = () => {
@@ -790,6 +807,10 @@ class Search extends React.Component<Props, State> {
         this.loadSpaces(this.state.locationId),
       ];
       Promise.all(promises).then(() => {
+        if (this.loadSpacesInFlight > 0) {
+          // a newer request is still pending and will finish the update
+          return;
+        }
         this.setState({ loading: false }, () => {
           if (this.state.showConfirm) {
             this.refreshDirectLinkSelection();
