@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.135.0](https://github.com/seatsurfing/seatsurfing/compare/v1.134.0...v1.135.0) (2026-10-12)
+
+
+### ✨ Features
+
+* **admin-ui:** allow filter booking list by multiple users ([#2765](https://github.com/seatsurfing/seatsurfing/issues/2765)) ([24054de](https://github.com/seatsurfing/seatsurfing/commit/24054debf949af5e5c547855a46bcebf27963419))
+* **main:** add deeplink option to public booking page ([#2764](https://github.com/seatsurfing/seatsurfing/issues/2764)) ([e671d44](https://github.com/seatsurfing/seatsurfing/commit/e671d44fa7bebda4823077dfa718a1b1e5c2ec6c))
+* **main:** add duration limit for public bookings ([#2760](https://github.com/seatsurfing/seatsurfing/issues/2760)) ([57cd8d8](https://github.com/seatsurfing/seatsurfing/commit/57cd8d89f7809eead52a80b6d339caf9bae9e902))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump moment-timezone from 0.6.4 to 0.6.5 in /ui in the production-dependencies group across 1 directory ([#2761](https://github.com/seatsurfing/seatsurfing/issues/2761)) ([f1d54d5](https://github.com/seatsurfing/seatsurfing/commit/f1d54d59d1e225f3f1b24b51961cb1e908b26226))
+
 ## [1.134.0](https://github.com/seatsurfing/seatsurfing/compare/v1.133.2...v1.134.0) (2026-10-08)
 
 
