@@ -36,7 +36,7 @@ type CalDAVEvent struct {
 }
 
 func (c *CalDAVClient) Connect(url, username, password string) error {
-	httpClient := webdav.HTTPClientWithBasicAuth(http.DefaultClient, username, password)
+	httpClient := webdav.HTTPClientWithBasicAuth(GetOutboundHTTPClient(), username, password)
 	caldavClient, err := caldav.NewClient(httpClient, url)
 	if err != nil {
 		return err
