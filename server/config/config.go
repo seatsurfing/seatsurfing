@@ -86,7 +86,7 @@ type Config struct {
 	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
 	DisableInstallIDExposure            bool // Disable exposing the install ID via public API
 	DomainVerification                  bool // Require DNS TXT ownership verification before a custom domain becomes active (cloud). When off, domains added through the API are active immediately (self-hosted default).
-	BlockPrivateOutbound                bool // Refuse outgoing requests to user-configured URLs (e.g. OAuth endpoints) that resolve to loopback, private or link-local addresses (cloud).
+	BlockPrivateOutbound                bool // Refuse outgoing requests to user-configured URLs (OAuth endpoints, CalDAV servers) that resolve to loopback, private or link-local addresses (cloud).
 }
 
 var _configInstance *Config
