@@ -239,6 +239,7 @@ func TestSettingsCRUDMany(t *testing.T) {
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 	GetDatabase().DB().Exec("TRUNCATE settings")
+	SetGlobalInstallID()
 
 	payload := `[{"name": "allow_any_user", "value": "1"}, {"name": "max_bookings_per_user", "value": "5"}]`
 	req := NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
@@ -288,6 +289,7 @@ func TestSettingsMaxHoursBeforeDelete(t *testing.T) {
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 	GetDatabase().DB().Exec("TRUNCATE settings")
+	SetGlobalInstallID()
 
 	payload := `[{"name": "max_hours_before_delete", "value": "2"}]`
 	req := NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
@@ -312,6 +314,7 @@ func TestSettingsMinHoursBookingDuration(t *testing.T) {
 	user := CreateTestUserOrgAdmin(org)
 	loginResponse := LoginTestUser(user.ID)
 	GetDatabase().DB().Exec("TRUNCATE settings")
+	SetGlobalInstallID()
 
 	payload := `[{"name": "min_booking_duration_hours", "value": "2"}]`
 	req := NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))

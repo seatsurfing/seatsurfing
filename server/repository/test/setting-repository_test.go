@@ -1,8 +1,12 @@
 package test
 
 import (
+	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
+	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
@@ -44,4 +48,62 @@ func TestSettingsSchemaUpgradeRemovesConfluenceSettings(t *testing.T) {
 	res, err = GetSettingsRepository().GetOrgIDsByValue("unrelated_setting", "1")
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(res))
+}
+
+func TestSetGlobalInstallIDCreatesIDIfMissing(t *testing.T) {
+	ClearTestDB()
+	GetCache().Delete(GetSettingsRepository().GetNullUUID() + "_" + SettingInstallID.Name)
+
+	SetGlobalInstallID()
+
+	id, err := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	CheckTestBool(t, true, err == nil)
+	_, err = uuid.Parse(id)
+	CheckTestBool(t, true, err == nil)
+}
+
+func TestSetGlobalInstallIDKeepsExistingID(t *testing.T) {
+	ClearTestDB()
+	existing := "11111111-2222-3333-4444-555555555555"
+	GetSettingsRepository().SetGlobal(SettingInstallID.Name, existing)
+
+	SetGlobalInstallID()
+	SetGlobalInstallID()
+
+	id, err := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	CheckTestBool(t, true, err == nil)
+	CheckTestString(t, existing, id)
+}
+
+func TestSetGlobalInstallIDReplacesEmptyID(t *testing.T) {
+	ClearTestDB()
+	GetSettingsRepository().SetGlobal(SettingInstallID.Name, "")
+
+	SetGlobalInstallID()
+
+	id, err := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	CheckTestBool(t, true, err == nil)
+	_, err = uuid.Parse(id)
+	CheckTestBool(t, true, err == nil)
+}
+
+func TestSetGlobalInstallIDConcurrent(t *testing.T) {
+	ClearTestDB()
+	GetCache().Delete(GetSettingsRepository().GetNullUUID() + "_" + SettingInstallID.Name)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			SetGlobalInstallID()
+		}()
+	}
+	wg.Wait()
+
+	first, err := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	CheckTestBool(t, true, err == nil)
+	SetGlobalInstallID()
+	second, _ := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
+	CheckTestString(t, first, second)
 }
