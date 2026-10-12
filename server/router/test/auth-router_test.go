@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
@@ -1292,4 +1293,130 @@ func TestExtractUserInfoFieldsTrimsWhitespace(t *testing.T) {
 	CheckTestString(t, "user@example.com", info.Email)
 	CheckTestString(t, "Jane", info.Firstname)
 	CheckTestString(t, "Doe", info.Lastname)
+}
+
+func createTestOAuthCallback(t *testing.T, org *Organization, tokenURL, userInfoURL string) (*AuthProvider, string) {
+	clientSecret, _ := EncryptString("secret")
+	provider := &AuthProvider{
+		OrganizationID:     org.ID,
+		Name:               "test",
+		ProviderType:       int(OAuth2),
+		AuthURL:            tokenURL,
+		TokenURL:           tokenURL,
+		UserInfoURL:        userInfoURL,
+		UserInfoEmailField: "email",
+		ClientID:           "client",
+		ClientSecret:       clientSecret,
+		Scopes:             "openid",
+	}
+	if err := GetAuthProviderRepository().Create(provider); err != nil {
+		t.Fatal(err)
+	}
+	authState := &AuthState{
+		Key:           provider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthRequestState,
+		Payload:       "{}",
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		t.Fatal(err)
+	}
+	return provider, "/auth/" + provider.ID + "/callback?state=" + authState.ID + "&code=abc"
+}
+
+func newTestOAuthServer(userInfoStatus int, userInfoBody string) *httptest.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"access_token":"tok","token_type":"Bearer"}`))
+	})
+	mux.HandleFunc("/userinfo", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(userInfoStatus)
+		w.Write([]byte(userInfoBody))
+	})
+	return httptest.NewServer(mux)
+}
+
+func getLastTestAuthAttempt(t *testing.T, org *Organization) *AuthAttempt {
+	list, err := GetAuthAttemptRepository().GetFiltered(&AuthAttemptFilter{OrganizationID: org.ID, Start: time.Now().Add(-time.Hour), End: time.Now().Add(time.Hour)}, 1, 0)
+	if err != nil || len(list) != 1 {
+		t.Fatalf("expected one auth attempt, got %d (%v)", len(list), err)
+	}
+	return list[0]
+}
+
+func TestAuthCallbackUserinfoErrorDoesNotLeakBody(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusInternalServerError, "internal-secret-value")
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpUserinfoFailed, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "HTTP 500"))
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "internal-secret-value"))
+}
+
+func TestAuthCallbackUserinfoInvalidJSONDoesNotLeakBody(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, "internal-secret-value")
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpUserinfoFailed, attempt.ErrorCode)
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "internal-secret-value"))
+}
+
+func TestAuthCallbackAttributeMappingListsFieldNamesOnly(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, `{"mail":"internal-secret-value","sub":"123"}`)
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpAttributeMapping, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "userinfo fields: mail, sub"))
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "internal-secret-value"))
+}
+
+func TestAuthCallbackBlocksPrivateOutbound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, `{"email":"foo@test.com"}`)
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+	GetConfig().BlockPrivateOutbound = true
+	defer func() { GetConfig().BlockPrivateOutbound = false }()
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpCodeExchangeFailed, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, ErrBlockedOutboundAddress.Error()))
+	user, _ := GetUserRepository().GetByEmail(org.ID, "foo@test.com")
+	CheckTestBool(t, true, user == nil)
+}
+
+func TestAuthCallbackAllowsPrivateOutboundByDefault(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, `{"email":"foo@test.com"}`)
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/success/"))
+	user, _ := GetUserRepository().GetByEmail(org.ID, "foo@test.com")
+	CheckTestBool(t, true, user != nil)
 }

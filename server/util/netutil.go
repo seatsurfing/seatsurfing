@@ -3,8 +3,10 @@ package util
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"net"
 	"net/http"
+	"syscall"
 	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/config"
@@ -60,5 +62,79 @@ func GetHTTPClientInsecureSkipVerify() *http.Client {
 	return &http.Client{
 		Timeout:   time.Second * 10,
 		Transport: tr,
+	}
+}
+
+var ErrBlockedOutboundAddress = errors.New("destination address is not allowed")
+
+var blockedOutboundNets = mustParseCIDRs(
+	"0.0.0.0/8",
+	"100.64.0.0/10",
+	"192.0.0.0/24",
+	"198.18.0.0/15",
+	"240.0.0.0/4",
+	"64:ff9b::/96",
+)
+
+func mustParseCIDRs(cidrs ...string) []*net.IPNet {
+	res := make([]*net.IPNet, 0, len(cidrs))
+	for _, cidr := range cidrs {
+		_, n, err := net.ParseCIDR(cidr)
+		if err != nil {
+			panic(err)
+		}
+		res = append(res, n)
+	}
+	return res
+}
+
+func IsBlockedOutboundIP(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsPrivate() || ip.IsUnspecified() || ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() || ip.IsInterfaceLocalMulticast() || ip.IsMulticast() {
+		return true
+	}
+	for _, n := range blockedOutboundNets {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func blockedOutboundControl(network, address string, _ syscall.RawConn) error {
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		return err
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || IsBlockedOutboundIP(ip) {
+		return ErrBlockedOutboundAddress
+	}
+	return nil
+}
+
+// GetOutboundHTTPClient returns a client for requests to user-configured URLs.
+// With BLOCK_PRIVATE_OUTBOUND, the resolved address is checked at connect time,
+// which also covers redirects and DNS rebinding.
+func GetOutboundHTTPClient() *http.Client {
+	dialer := &net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	if GetConfig().BlockPrivateOutbound {
+		dialer.Control = blockedOutboundControl
+		tr.Proxy = nil
+	}
+	tr.DialContext = dialer.DialContext
+	return &http.Client{
+		Timeout:   15 * time.Second,
+		Transport: tr,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return errors.New("stopped after 5 redirects")
+			}
+			return nil
+		},
 	}
 }
