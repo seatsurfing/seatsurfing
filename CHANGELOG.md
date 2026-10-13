@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.136.0](https://github.com/seatsurfing/seatsurfing/compare/v1.135.0...v1.136.0) (2026-10-13)
+
+
+### ✨ Features
+
+* **booking-ui:** support space lists, enter=now and time adjustment in direct links ([#2766](https://github.com/seatsurfing/seatsurfing/issues/2766)) ([c606c2e](https://github.com/seatsurfing/seatsurfing/commit/c606c2ea0700f33efebbbb82aa0d6c2e340ee22f))
+
+
+### 🐛 Bug Fixes
+
+* **main:** add feature flag BLOCK_PRIVATE_OUTBOUND ([#2769](https://github.com/seatsurfing/seatsurfing/issues/2769)) ([0a3b1f0](https://github.com/seatsurfing/seatsurfing/commit/0a3b1f06b3f9db4754e800d897f262dea4a1cefb))
+* **main:** improve setting global instance ID ([#2771](https://github.com/seatsurfing/seatsurfing/issues/2771)) ([9da34ab](https://github.com/seatsurfing/seatsurfing/commit/9da34ab68b52b20901e243f0a809a38064ff7762))
+
 ## [1.135.0](https://github.com/seatsurfing/seatsurfing/compare/v1.134.0...v1.135.0) (2026-10-12)
 
 
