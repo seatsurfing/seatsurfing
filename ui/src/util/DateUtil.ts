@@ -257,6 +257,70 @@ export default class DateUtil {
     return this.setTimeFromMinutes(date, this.timeStringToMinutes(s));
   }
 
+  /**
+   * Resolves the enter and leave time of a booking link.
+   *
+   * - `enter` absent/invalid: the defaults apply (next useful enter time).
+   * - `enter=now`: enter is the current date and time (minute precision).
+   * - `enter=YYYY-MM-DDTHH:mm`: enter is that date and time.
+   *
+   * If enter is given explicitly and no valid `leave` after it is given, leave
+   * is adjusted to the end of the preferred workday on the enter day, or, if
+   * enter is already past that, to enter plus the default duration, capped at
+   * the end of the day. With daily basis booking, the whole day is booked.
+   */
+  static resolveLinkEnterAndLeave(
+    enterParam: string | undefined,
+    leaveParam: string | undefined,
+    defaultEnter: Date,
+    defaultLeave: Date,
+    prefWorkdayEnd: string,
+    dailyBasisBooking: boolean,
+    now: Date = new Date(),
+  ): { enter: Date; leave: Date } {
+    let enter = defaultEnter;
+    let leave = defaultLeave;
+    let explicitEnter = false;
+    if (enterParam === "now") {
+      enter = new Date(now);
+      enter.setSeconds(0, 0);
+      explicitEnter = true;
+    } else if (enterParam && this.isValidDateTime(enterParam)) {
+      enter = new Date(enterParam);
+      explicitEnter = true;
+    }
+    const queryLeave =
+      leaveParam && this.isValidDateTime(leaveParam)
+        ? new Date(leaveParam)
+        : undefined;
+    if (!explicitEnter) {
+      return { enter, leave: queryLeave ?? leave };
+    }
+    if (dailyBasisBooking) {
+      return {
+        enter: this.setHoursToMin(enter),
+        leave:
+          queryLeave && queryLeave > enter
+            ? queryLeave
+            : this.setHoursToMax(enter),
+      };
+    }
+    if (queryLeave && queryLeave > enter) {
+      return { enter, leave: queryLeave };
+    }
+    const workdayEnd = this.setTimeFromTimeString(enter, prefWorkdayEnd);
+    if (workdayEnd > enter) {
+      return { enter, leave: workdayEnd };
+    }
+    leave = new Date(
+      enter.getTime() + (defaultLeave.getTime() - defaultEnter.getTime()),
+    );
+    if (!this.isSameDay(enter, leave) || leave <= enter) {
+      leave = this.setHoursToMax(enter);
+    }
+    return { enter, leave };
+  }
+
   static copyDate(source: Date, target: Date): Date {
     const result = new Date(target);
     result.setFullYear(

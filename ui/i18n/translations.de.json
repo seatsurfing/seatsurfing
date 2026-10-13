@@ -653,5 +653,6 @@
   "errorAuthProviderHasUsers": "Der Auth Provider kann nicht gelöscht werden, da ihm noch Benutzer zugeordnet sind.",
   "authProviderRequiredHint": "Die Anmeldung per Passwort ist deaktiviert. Bitte lege zuerst in den Einstellungen einen Identity Provider an.",
   "publicBookingFixedSpaceNotAvailable": "Dieser Platz ist im gewählten Zeitraum nicht verfügbar.",
-  "publicBookingAllSpaces": "Alle Plätze"
+  "publicBookingAllSpaces": "Alle Plätze",
+  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times."
 }
