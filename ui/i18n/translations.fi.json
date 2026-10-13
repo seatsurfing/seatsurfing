@@ -474,7 +474,7 @@
   "security": "Turvallisuus",
   "securityWarning": "Turvallisuusvaroitus",
   "selectMove": "Valitse / Siirrä",
-  "selfEditRestrictedFields": "Some information about your own account cannot be changed: account type, email address, roles and authentication method.",
+  "selfEditRestrictedFields": "Joitakin oman käyttäjätilisi tietoja ei voi muuttaa: tilin tyyppiä, sähköpostiosoitetta, rooleja eikä tunnistautumistapaa.",
   "send": "Lähetä",
   "serverErrorBody": "Tapahtui odottamaton virhe. Yritä uudelleen myöhemmin.",
   "serverErrorTitle": "Palvelinvirhe",
