@@ -1,6 +1,7 @@
 package test
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -136,4 +137,41 @@ func TestIsDomainAccessibleUnreachable(t *testing.T) {
 	ok, err := IsDomainAccessible("127.0.0.1", "test-org-id")
 	CheckTestBool(t, false, ok)
 	CheckTestBool(t, false, err == nil)
+}
+
+// TestIsDomainAccessibleBlocksPrivateOutbound verifies that with BLOCK_PRIVATE_OUTBOUND
+// the accessibility check refuses to connect to loopback/private addresses.
+func TestIsDomainAccessibleBlocksPrivateOutbound(t *testing.T) {
+	const orgID = "test-org-id"
+	const domain = "127.0.0.1"
+
+	srv := httptest.NewServer(accessibilityHandler(domain, orgID, "OK"))
+	defer srv.Close()
+
+	port := srv.Listener.Addr().(*net.TCPAddr).Port
+	setAccessibilityConfig(t, "http", strconv.Itoa(port))
+	GetConfig().BlockPrivateOutbound = true
+	defer func() { GetConfig().BlockPrivateOutbound = false }()
+
+	ok, err := IsDomainAccessible(domain, orgID)
+	CheckTestBool(t, false, ok)
+	CheckTestBool(t, true, errors.Is(err, ErrBlockedOutboundAddress))
+}
+
+// TestIsDomainAccessibleAllowsPrivateWhenDisabled verifies that the check keeps working
+// against private addresses (self-hosted default) when BLOCK_PRIVATE_OUTBOUND is off.
+func TestIsDomainAccessibleAllowsPrivateWhenDisabled(t *testing.T) {
+	const orgID = "test-org-id"
+	const domain = "127.0.0.1"
+
+	srv := httptest.NewServer(accessibilityHandler(domain, orgID, "OK"))
+	defer srv.Close()
+
+	port := srv.Listener.Addr().(*net.TCPAddr).Port
+	setAccessibilityConfig(t, "http", strconv.Itoa(port))
+	GetConfig().BlockPrivateOutbound = false
+
+	ok, err := IsDomainAccessible(domain, orgID)
+	CheckTestBool(t, true, ok)
+	CheckTestBool(t, true, err == nil)
 }
