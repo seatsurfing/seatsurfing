@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.136.1](https://github.com/seatsurfing/seatsurfing/compare/v1.136.0...v1.136.1) (2026-10-14)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump next from 16.3.8 to 16.4.0 in /ui in the production-dependencies group across 1 directory ([#2774](https://github.com/seatsurfing/seatsurfing/issues/2774)) ([ca89ab2](https://github.com/seatsurfing/seatsurfing/commit/ca89ab24d5e9db1ebb5d48b68ee6d875ec58233c))
+* **main:** updated Finnish localization ([#2772](https://github.com/seatsurfing/seatsurfing/issues/2772)) ([02bcf28](https://github.com/seatsurfing/seatsurfing/commit/02bcf280c016bb62ce0b51dbb7052259273093d5))
+* **server:** apply BLOCK_PRIVATE_OUTBOUND to domain accessibility check ([#2777](https://github.com/seatsurfing/seatsurfing/issues/2777)) ([560040d](https://github.com/seatsurfing/seatsurfing/commit/560040d7676aab8384f93dfcab2b08d6930c2cf8))
+
 ## [1.136.0](https://github.com/seatsurfing/seatsurfing/compare/v1.135.0...v1.136.0) (2026-10-13)
 
 
