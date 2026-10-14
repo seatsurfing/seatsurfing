@@ -51,18 +51,35 @@ func GetHTTPClientWithCustomDNS(insecureSkipVerify bool) *http.Client {
 // DNS resolver is appropriate for DNS lookups (e.g. TXT records) but not for
 // HTTP requests that must be routed through the cluster network (e.g. domain
 // accessibility checks via an ingress controller).
+// The target host is derived from a customer-controlled domain, so with
+// BLOCK_PRIVATE_OUTBOUND the resolved address is checked at connect time,
+// which also covers redirects and DNS rebinding. Certificate verification is
+// skipped because the check only evaluates the returned JSON payload and
+// may run before a certificate has been issued for the domain.
 func GetHTTPClientInsecureSkipVerify() *http.Client {
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	if GetConfig().BlockPrivateOutbound {
+		dialer.Control = blockedOutboundControl
+	}
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
+		DialContext:     dialer.DialContext,
 	}
 	return &http.Client{
-		Timeout:   time.Second * 10,
-		Transport: tr,
+		Timeout:       time.Second * 10,
+		Transport:     tr,
+		CheckRedirect: limitRedirects,
 	}
+}
+
+func limitRedirects(req *http.Request, via []*http.Request) error {
+	if len(via) >= 5 {
+		return errors.New("stopped after 5 redirects")
+	}
+	return nil
 }
 
 var ErrBlockedOutboundAddress = errors.New("destination address is not allowed")
@@ -129,13 +146,8 @@ func GetOutboundHTTPClient() *http.Client {
 	}
 	tr.DialContext = dialer.DialContext
 	return &http.Client{
-		Timeout:   15 * time.Second,
-		Transport: tr,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 5 {
-				return errors.New("stopped after 5 redirects")
-			}
-			return nil
-		},
+		Timeout:       15 * time.Second,
+		Transport:     tr,
+		CheckRedirect: limitRedirects,
 	}
 }
