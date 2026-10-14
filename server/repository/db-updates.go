@@ -64,10 +64,15 @@ func RunDBSchemaUpdates() {
 }
 
 func SetGlobalInstallID() {
-	ID, err := GetSettingsRepository().GetGlobalString(SettingInstallID.Name)
-	if (err != nil) || (ID == "") {
-		GetSettingsRepository().SetGlobal(SettingInstallID.Name, uuid.New().String())
+	// An existing non-empty install ID is never overwritten.
+	settings := GetSettingsRepository()
+	if _, err := GetDatabase().DB().Exec("INSERT INTO settings (organization_id, name, value) "+
+		"VALUES ($1, $2, $3) "+
+		"ON CONFLICT (organization_id, name) DO UPDATE SET value = EXCLUDED.value WHERE settings.value = ''",
+		settings.GetNullUUID(), SettingInstallID.Name, uuid.New().String()); err != nil {
+		log.Println("Could not initialize install ID:", err)
 	}
+	GetCache().Delete(settings.GetNullUUID() + "_" + SettingInstallID.Name)
 }
 
 func InitDefaultOrgSettings() {

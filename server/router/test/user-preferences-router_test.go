@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
@@ -210,4 +213,42 @@ func TestPreferencesCalDavListCalendarsInvalidBody(t *testing.T) {
 	if res.Code != http.StatusBadRequest && res.Code != http.StatusInternalServerError && res.Code != http.StatusNotFound {
 		t.Fatalf("Expected 400, 404 or 500, got %d", res.Code)
 	}
+}
+
+func TestPreferencesCalDavListCalendarsBlocksPrivateOutbound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	var hits atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits.Add(1)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+	GetConfig().BlockPrivateOutbound = true
+	defer func() { GetConfig().BlockPrivateOutbound = false }()
+
+	payload := `{"url": "` + srv.URL + `/dav/", "username": "u", "password": "p"}`
+	req := NewHTTPRequest("POST", "/preference/caldav/listCalendars", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestInt(t, 0, int(hits.Load()))
+}
+
+func TestPreferencesCalDavListCalendarsAllowsPrivateOutboundByDefault(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	var hits atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits.Add(1)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	payload := `{"url": "` + srv.URL + `/dav/", "username": "u", "password": "p"}`
+	req := NewHTTPRequest("POST", "/preference/caldav/listCalendars", user.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	CheckTestBool(t, true, hits.Load() > 0)
 }

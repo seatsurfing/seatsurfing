@@ -650,5 +650,6 @@
   "publicBookingDurationMin": "Varauksen on kestettävä vähintään {{min}} tuntia.",
   "publicBookingDurationMinMax": "Varauksen keston on oltava vähintään {{min}} ja enintään {{max}} tuntia.",
   "publicBookingFixedSpaceNotAvailable": "Tämä tila ei ole vapaana valittuna ajankohtana.",
-  "publicBookingAllSpaces": "Kaikki tilat"
+  "publicBookingAllSpaces": "Kaikki tilat",
+  "directLinkNoSpaceAvailable": "Tila ei ole saatavilla valittuna ajankohtana. Ole hyvä ja vaihda ajankohtaa."
 }

@@ -305,3 +305,10 @@ form#filter-locations-form .row {
 .public-booking-map-modal-header-tabs .nav-link {
   white-space: nowrap;
 }
+
+/* Date/time controls inside the booking dialog: the shared buttons carry a
+   left margin meant for the search box icon; cancel it so the controls line
+   up with the other fields. */
+.direct-link-selection > .d-flex > :first-child {
+  margin-left: 0 !important;
+}
