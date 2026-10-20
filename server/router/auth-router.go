@@ -668,9 +668,22 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
+
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
 	user.PasswordUpdateRequired = false
 	GetUserRepository().Update(user)
+
+	// A second factor must be completed via a regular login.
+	if user.TotpSecret != "" || passkeyCount > 0 {
+		SendUpdated(w)
+		return
+	}
 
 	router.createAndSendJWT(w, r, user, AuthMethodPassword, "", "", "")
 }

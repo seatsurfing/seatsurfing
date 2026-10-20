@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Button, InputGroup } from "react-bootstrap";
+import { Form, Button, InputGroup, Modal } from "react-bootstrap";
 import { NextRouter } from "next/router";
 import Link from "next/link";
 import withReadyRouter from "@/components/withReadyRouter";
@@ -50,6 +50,7 @@ interface State {
   passkeyAvailable: boolean;
   requirePasswordUpdate: boolean;
   newPassword: string;
+  showPasswordChangedModal: boolean;
 }
 
 interface Props {
@@ -89,6 +90,7 @@ class Login extends React.Component<Props, State> {
       passkeyAvailable: Passkey.isSupported(),
       requirePasswordUpdate: false,
       newPassword: "",
+      showPasswordChangedModal: false,
     };
   }
 
@@ -243,7 +245,7 @@ class Login extends React.Component<Props, State> {
       });
   };
 
-  onNewPasswordSubmit = (e: any) => {
+  onNewPasswordSubmit = async (e: any) => {
     e.preventDefault();
     this.setState({
       inPasswordSubmit: true,
@@ -255,16 +257,24 @@ class Login extends React.Component<Props, State> {
       organizationId: this.org?.id,
       newPassword: this.state.newPassword,
     };
-    Ajax.postData("/auth/updatepw", payload, () => true)
-      .then((res) => {
-        this.onSuccessfulLogin(res.json);
-      })
-      .catch(() => {
+    try {
+      const res = await Ajax.postData("/auth/updatepw", payload, () => true);
+      // No session is issued if a second factor is configured
+      if (res.status === 204) {
         this.setState({
-          invalid: true,
+          invalid: false,
           inPasswordSubmit: false,
+          showPasswordChangedModal: true,
         });
+        return;
+      }
+      await this.onSuccessfulLogin(res.json);
+    } catch {
+      this.setState({
+        invalid: true,
+        inPasswordSubmit: false,
       });
+    }
   };
 
   cancelPasswordLogin = (e: any) => {
@@ -721,6 +731,31 @@ class Login extends React.Component<Props, State> {
             <Link href="/resetpw">{this.props.t("forgotPassword")}</Link>
           </p>
         </Form>
+        <Modal
+          show={this.state.showPasswordChangedModal}
+          onHide={() => {}}
+          backdrop="static"
+          keyboard={false}
+        >
+          <Modal.Body>
+            <p>{this.props.t("passwordChangedLoginAgain")}</p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="primary"
+              onClick={() =>
+                this.setState({
+                  showPasswordChangedModal: false,
+                  requirePasswordUpdate: false,
+                  password: "",
+                  newPassword: "",
+                })
+              }
+            >
+              {this.props.t("ok")}
+            </Button>
+          </Modal.Footer>
+        </Modal>
         <CopyrightFooter />
       </div>
     );
