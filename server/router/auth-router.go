@@ -664,6 +664,7 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
 		SendBadRequest(w)
 		return
 	}

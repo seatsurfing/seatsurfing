@@ -542,6 +542,34 @@ func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
+func TestAuthUpdatePasswordBan(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+
+	newPassword := "N3w!Passw0rd"
+	for i, wrongPassword := range []string{"Wr0ng!Pass1", "Wr0ng!Pass2", "Wr0ng!Pass3"} {
+		payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + wrongPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+		req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+		CheckTestBool(t, i == 2, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+	}
+
+	// Would be successful, but fails cause banned
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), TestPassword))
+}
+
 func TestAuthProviderBinding(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
