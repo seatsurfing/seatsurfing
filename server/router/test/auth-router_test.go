@@ -1457,3 +1457,78 @@ func TestAuthCallbackAllowsPrivateOutboundByDefault(t *testing.T) {
 	user, _ := GetUserRepository().GetByEmail(org.ID, "foo@test.com")
 	CheckTestBool(t, true, user != nil)
 }
+
+func createUserRequiringPasswordUpdate(org *Organization) *User {
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+	return user
+}
+
+func updatePasswordPayload(user *User, org *Organization, newPassword string) *bytes.Buffer {
+	return bytes.NewBufferString("{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }")
+}
+
+func TestAuthUpdatePasswordWithoutSecondFactorReturnsSession(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, "N3w!Passw0rd"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, len(resBody.AccessToken) > 32)
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 1, count)
+}
+
+func TestAuthUpdatePasswordWithTotpRequiresLogin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+	secret, _ := EncryptString("JBSWY3DPEHPK3PXP")
+	user.TotpSecret = NullString(secret)
+	GetUserRepository().Update(user)
+
+	newPassword := "N3w!Passw0rd"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, newPassword))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	CheckTestInt(t, 0, res.Body.Len())
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, false, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), newPassword))
+	CheckTestBool(t, true, user.TotpSecret != "")
+
+	// Login with the new password still asks for the TOTP code
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+	count, _ = GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+}
+
+func TestAuthUpdatePasswordWithPasskeyRequiresLogin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+	createRouterTestPasskey(user, "My Key")
+
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, "N3w!Passw0rd"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	CheckTestInt(t, 0, res.Body.Len())
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, false, user.PasswordUpdateRequired)
+}
