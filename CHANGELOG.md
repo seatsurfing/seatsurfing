@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.136.2](https://github.com/seatsurfing/seatsurfing/compare/v1.136.1...v1.136.2) (2026-10-20)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `389cad2` to `65be09d` ([#2788](https://github.com/seatsurfing/seatsurfing/issues/2788)) ([c36ec1a](https://github.com/seatsurfing/seatsurfing/commit/c36ec1a3ab667ec62791da569641dd037220ce5c))
+* **deps:** bump golang.org/x/crypto from 0.57.0 to 0.58.0 in /server in the minor-and-patch group ([#2780](https://github.com/seatsurfing/seatsurfing/issues/2780)) ([6e031d4](https://github.com/seatsurfing/seatsurfing/commit/6e031d404c14b42b7ae27e2be9b7302d18ba8c5e))
+* **main:** count failed login attempts when updating pw ([#2786](https://github.com/seatsurfing/seatsurfing/issues/2786)) ([3c354ad](https://github.com/seatsurfing/seatsurfing/commit/3c354adc1134925965108ddbe60f8b419e93eb06))
+* **main:** require login again after pw change if TOTP is configured ([#2787](https://github.com/seatsurfing/seatsurfing/issues/2787)) ([e1bf428](https://github.com/seatsurfing/seatsurfing/commit/e1bf428521a647c1dbf94c741514591f433911f2))
+* **main:** validate new password when updating password ([#2785](https://github.com/seatsurfing/seatsurfing/issues/2785)) ([2c7d542](https://github.com/seatsurfing/seatsurfing/commit/2c7d542abb2892c8515e8aefaadcd5d30739af4c))
+
 ## [1.136.1](https://github.com/seatsurfing/seatsurfing/compare/v1.136.0...v1.136.1) (2026-10-14)
 
 
