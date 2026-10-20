@@ -542,6 +542,43 @@ func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }
 
+func TestAuthUpdatePasswordWeakNewPassword(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"weakpassword\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), TestPassword))
+}
+
+func TestAuthUpdatePassword(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+
+	newPassword := "N3w!Passw0rd"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, false, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), newPassword))
+}
+
 func TestAuthProviderBinding(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

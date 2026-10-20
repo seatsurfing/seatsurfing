@@ -642,7 +642,7 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if !ValidatePassword(m.Password) {
+	if !ValidatePassword(m.NewPassword) {
 		SendBadRequest(w)
 		return
 	}
