@@ -13,6 +13,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -190,6 +191,10 @@ func (router *SettingsRouter) setSetting(w http.ResponseWriter, r *http.Request)
 		SendBadRequest(w)
 		return
 	}
+	if !router.isValidPublicBookingDurationSettings(user.OrganizationID, map[string]string{vars["name"]: value.Value}) {
+		SendBadRequest(w)
+		return
+	}
 	err := router.doSetOne(user.OrganizationID, vars["name"], value.Value)
 	if err != nil {
 		log.Println(err)
@@ -262,6 +267,30 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 	SendJSON(w, res)
 }
 
+// isValidPublicBookingDurationSettings applies the pending setting values (by
+// name) on top of the stored ones and validates the resulting public booking
+// duration limits.
+func (router *SettingsRouter) isValidPublicBookingDurationSettings(orgID string, pending map[string]string) bool {
+	getValue := func(name string) string {
+		if value, ok := pending[name]; ok {
+			return value
+		}
+		value, _ := GetSettingsRepository().Get(orgID, name)
+		return value
+	}
+	getInt := func(name string) int {
+		i, _ := strconv.Atoi(getValue(name))
+		return i
+	}
+	return service.GetBookingService().IsValidPublicBookingDurationSettings(
+		getInt(SettingPublicBookingMinDurationHours.Name),
+		getInt(SettingPublicBookingMaxDurationHours.Name),
+		getInt(SettingMinBookingDurationHours.Name),
+		getInt(SettingMaxBookingDurationHours.Name),
+		getValue(SettingDailyBasisBooking.Name) == "1",
+	)
+}
+
 func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 	user := GetRequestUser(r)
 	if !HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin) {
@@ -274,6 +303,7 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	pending := map[string]string{}
 	for _, e := range list {
 		if !router.isValidSettingNameWrite(e.Name) {
 			SendNotFound(w)
@@ -287,6 +317,13 @@ func (router *SettingsRouter) setAll(w http.ResponseWriter, r *http.Request) {
 			SendBadRequest(w)
 			return
 		}
+		pending[e.Name] = e.Value
+	}
+	if !router.isValidPublicBookingDurationSettings(user.OrganizationID, pending) {
+		SendBadRequest(w)
+		return
+	}
+	for _, e := range list {
 		err := router.doSetOne(user.OrganizationID, e.Name, e.Value)
 		if err != nil {
 			log.Println(err)
@@ -387,6 +424,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingKioskModeEnabled.Name ||
 		name == SettingPublicBookingShowMap.Name ||
 		name == SettingPublicBookingShowAvailability.Name ||
+		name == SettingPublicBookingMinDurationHours.Name ||
+		name == SettingPublicBookingMaxDurationHours.Name ||
 		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
@@ -425,6 +464,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingPublicBookingEnabled.Name ||
 		name == SettingPublicBookingShowMap.Name ||
 		name == SettingPublicBookingShowAvailability.Name ||
+		name == SettingPublicBookingMinDurationHours.Name ||
+		name == SettingPublicBookingMaxDurationHours.Name ||
 		name == SettingHideDisallowedLocations.Name {
 		return true
 	}
@@ -528,6 +569,12 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingPublicBookingShowAvailability.Name {
 		return SettingPublicBookingShowAvailability.Type
 	}
+	if name == SettingPublicBookingMinDurationHours.Name {
+		return SettingPublicBookingMinDurationHours.Type
+	}
+	if name == SettingPublicBookingMaxDurationHours.Name {
+		return SettingPublicBookingMaxDurationHours.Type
+	}
 	return 0
 }
 
@@ -575,6 +622,12 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 	}
 	if name == SettingBookingRetentionDays.Name {
 		if !ValidateNumber(value, 30, 999) {
+			return false
+		}
+		return true
+	}
+	if name == SettingPublicBookingMinDurationHours.Name || name == SettingPublicBookingMaxDurationHours.Name {
+		if !ValidateNumber(value, 0, 24) {
 			return false
 		}
 		return true

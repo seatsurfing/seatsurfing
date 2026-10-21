@@ -285,6 +285,26 @@ func TestPublicBookingAttributesFlow(t *testing.T) {
 	CheckTestInt(t, 2, len(booking.Attributes))
 	CheckTestString(t, company, booking.Attributes[0].AttributeID)
 
+	// Values captured at booking time survive renaming and deleting attributes
+	req = NewHTTPRequest("PUT", "/booking-attribute/"+company, admin.ID, bytes.NewBufferString(`{"label": "Organization", "type": 1, "required": true}`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	req = NewHTTPRequest("DELETE", "/booking-attribute/"+notes, admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	req = NewHTTPRequest("GET", "/booking/pendingapprovals/", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	approvals = nil
+	if err := json.Unmarshal(res.Body.Bytes(), &approvals); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(approvals))
+	CheckTestInt(t, 2, len(approvals[0].Attributes))
+	CheckTestString(t, "Company", approvals[0].Attributes[0].Label)
+	CheckTestString(t, "Notes", approvals[0].Attributes[1].Label)
+	CheckTestString(t, "Line 1\nLine 2", approvals[0].Attributes[1].Value)
+
 	// Drain the async approval request notification mail.
 	waitForSendMailMockContent(t, 2*time.Second)
 }

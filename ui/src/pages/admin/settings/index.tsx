@@ -95,6 +95,11 @@ interface State {
   publicBookingEnabledSaved: boolean;
   publicBookingShowMap: boolean;
   publicBookingShowAvailability: boolean;
+  publicBookingMinDurationEnabled: boolean;
+  publicBookingMinDurationHours: number;
+  publicBookingMaxDurationEnabled: boolean;
+  publicBookingMaxDurationHours: number;
+  publicBookingSpaceId: string;
   hideReports: boolean;
   hideStats: boolean;
   installId: string;
@@ -102,6 +107,13 @@ interface State {
   verifyDomainName: string | null;
   deleteOrgConfirmStep: 0 | 1 | 2;
   alertMessage: string | null;
+}
+
+interface PublicBookableSpace {
+  spaceId: string;
+  spaceName: string;
+  locationId: string;
+  locationName: string;
 }
 
 interface Props {
@@ -112,6 +124,7 @@ interface Props {
 class Settings extends React.Component<Props, State> {
   org: Organization | null;
   authProviders: AuthProvider[];
+  publicBookingSpaces: PublicBookableSpace[] = [];
   timezones: string[];
   maxConcurrentBookingsPerUserLastValue: number;
 
@@ -164,6 +177,11 @@ class Settings extends React.Component<Props, State> {
       publicBookingEnabledSaved: false,
       publicBookingShowMap: false,
       publicBookingShowAvailability: false,
+      publicBookingMinDurationEnabled: false,
+      publicBookingMinDurationHours: 1,
+      publicBookingMaxDurationEnabled: false,
+      publicBookingMaxDurationHours: 8,
+      publicBookingSpaceId: "",
       hideReports: false,
       hideStats: false,
       installId: "",
@@ -191,13 +209,44 @@ class Settings extends React.Component<Props, State> {
     return User.getSelf().then((user) => {
       return Organization.get(user.organizationId).then((org) => {
         this.org = org;
-        return Domain.list(org.id).then((domains) => {
+        return Promise.all([
+          Domain.list(org.id),
+          this.loadPublicBookingSpaces(org.id),
+        ]).then(([domains]) => {
           this.setState({
             domains: domains,
           });
         });
       });
     });
+  };
+
+  loadPublicBookingSpaces = async (orgId: string): Promise<void> => {
+    try {
+      const res = await Ajax.get(
+        "/public-booking/" + encodeURIComponent(orgId) + "/spaces",
+        () => true,
+      );
+      this.publicBookingSpaces = res.json.spaces || [];
+    } catch {
+      this.publicBookingSpaces = [];
+    }
+  };
+
+  getPublicBookingLocations = (): { id: string; name: string }[] => {
+    const locations: { id: string; name: string }[] = [];
+    this.publicBookingSpaces.forEach((s) => {
+      if (!locations.find((l) => l.id === s.locationId)) {
+        locations.push({ id: s.locationId, name: s.locationName });
+      }
+    });
+    return locations;
+  };
+
+  getPublicBookingUrl = (): string => {
+    return Navigation.publicBookingUrl(
+      this.state.publicBookingSpaceId || undefined,
+    );
   };
 
   checkUpdates = async (): Promise<void> => {
@@ -287,6 +336,16 @@ class Settings extends React.Component<Props, State> {
           state.publicBookingShowMap = s.value === "1";
         if (s.name === Organization.PREF_PUBLIC_BOOKING_SHOW_AVAILABILITY)
           state.publicBookingShowAvailability = s.value === "1";
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_MIN_DURATION_HOURS) {
+          const value = window.parseInt(s.value) || 0;
+          state.publicBookingMinDurationEnabled = value > 0;
+          if (value > 0) state.publicBookingMinDurationHours = value;
+        }
+        if (s.name === Organization.PREF_PUBLIC_BOOKING_MAX_DURATION_HOURS) {
+          const value = window.parseInt(s.value) || 0;
+          state.publicBookingMaxDurationEnabled = value > 0;
+          if (value > 0) state.publicBookingMaxDurationHours = value;
+        }
         if (s.name === Organization.PREF_KIOSK_ACCESS_SECRET)
           state.kioskSecret =
             s.value === "1" ? RendererUtils.SECRET_PLACEHOLDER : "";
@@ -480,6 +539,18 @@ class Settings extends React.Component<Props, State> {
         this.state.publicBookingShowAvailability ? "1" : "0",
       ),
       new OrgSettings(
+        Organization.PREF_PUBLIC_BOOKING_MIN_DURATION_HOURS,
+        this.state.publicBookingMinDurationEnabled
+          ? (this.state.publicBookingMinDurationHours || 0).toString()
+          : "0",
+      ),
+      new OrgSettings(
+        Organization.PREF_PUBLIC_BOOKING_MAX_DURATION_HOURS,
+        this.state.publicBookingMaxDurationEnabled
+          ? (this.state.publicBookingMaxDurationHours || 0).toString()
+          : "0",
+      ),
+      new OrgSettings(
         Organization.PREF_HIDE_REPORTS,
         this.state.hideReports ? "1" : "0",
       ),
@@ -490,6 +561,9 @@ class Settings extends React.Component<Props, State> {
     ];
     try {
       await OrgSettings.setAll(payload);
+      if (this.org) {
+        await this.loadPublicBookingSpaces(this.org.id);
+      }
       this.setState({
         submitting: false,
         showSavedModal: true,
@@ -1615,9 +1689,153 @@ class Settings extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-publicBookingMinDurationHours"
+            >
+              {this.props.t("minBookingDuration")}
+              <HintTooltip hint={this.props.t("publicBookingDurationHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  id="check-publicBookingMinDurationHours"
+                  checked={this.state.publicBookingMinDurationEnabled}
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMinDurationEnabled: e.target.checked,
+                    })
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled
+                  }
+                />
+                <Form.Control
+                  id="input-publicBookingMinDurationHours"
+                  type="number"
+                  value={
+                    Number.isNaN(this.state.publicBookingMinDurationHours)
+                      ? ""
+                      : this.state.publicBookingMinDurationHours
+                  }
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMinDurationHours: window.parseInt(
+                        e.target.value,
+                      ),
+                    })
+                  }
+                  required={this.state.publicBookingMinDurationEnabled}
+                  min="1"
+                  max={
+                    this.state.publicBookingMaxDurationEnabled
+                      ? this.state.publicBookingMaxDurationHours
+                      : 24
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled ||
+                    !this.state.publicBookingMinDurationEnabled
+                  }
+                />
+                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label
+              column
+              sm="2"
+              htmlFor="input-publicBookingMaxDurationHours"
+            >
+              {this.props.t("maxBookingDuration")}
+              <HintTooltip hint={this.props.t("publicBookingDurationHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  id="check-publicBookingMaxDurationHours"
+                  checked={this.state.publicBookingMaxDurationEnabled}
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMaxDurationEnabled: e.target.checked,
+                    })
+                  }
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled
+                  }
+                />
+                <Form.Control
+                  id="input-publicBookingMaxDurationHours"
+                  type="number"
+                  value={
+                    Number.isNaN(this.state.publicBookingMaxDurationHours)
+                      ? ""
+                      : this.state.publicBookingMaxDurationHours
+                  }
+                  onChange={(e: any) =>
+                    this.setState({
+                      publicBookingMaxDurationHours: window.parseInt(
+                        e.target.value,
+                      ),
+                    })
+                  }
+                  required={this.state.publicBookingMaxDurationEnabled}
+                  min={
+                    this.state.publicBookingMinDurationEnabled
+                      ? this.state.publicBookingMinDurationHours
+                      : 1
+                  }
+                  max="24"
+                  disabled={
+                    !RuntimeConfig.INFOS.featurePublicBooking ||
+                    !this.state.publicBookingEnabled ||
+                    !this.state.publicBookingMaxDurationEnabled
+                  }
+                />
+                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+              </InputGroup>
+            </Col>
+          </Form.Group>
           <BookingAttributesEditor
             disabled={!RuntimeConfig.INFOS.featurePublicBooking}
           />
+          {this.state.publicBookingEnabled &&
+            (!this.state.publicBookingEnabledSaved ||
+              this.publicBookingSpaces.length > 0) && (
+              <Form.Group as={Row} className="mb-2">
+                <Form.Label column sm="2" htmlFor="select-publicBookingSpace">
+                  {this.props.t("space")}
+                </Form.Label>
+                <Col sm="4">
+                  <Form.Select
+                    id="select-publicBookingSpace"
+                    value={this.state.publicBookingSpaceId}
+                    disabled={!this.state.publicBookingEnabledSaved}
+                    onChange={(e: any) =>
+                      this.setState({ publicBookingSpaceId: e.target.value })
+                    }
+                  >
+                    <option value="">
+                      {this.props.t("publicBookingAllSpaces")}
+                    </option>
+                    {this.getPublicBookingLocations().flatMap((l) =>
+                      this.publicBookingSpaces
+                        .filter((s) => s.locationId === l.id)
+                        .map((s) => (
+                          <option key={s.spaceId} value={s.spaceId}>
+                            {l.name} / {s.spaceName}
+                          </option>
+                        )),
+                    )}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+            )}
           {this.state.publicBookingEnabled && (
             <Form.Group as={Row}>
               <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
@@ -1629,7 +1847,7 @@ class Settings extends React.Component<Props, State> {
                     id="input-publicBookingUrl"
                     type="text"
                     value={
-                      Navigation.publicBookingUrl() +
+                      this.getPublicBookingUrl() +
                       (this.state.publicBookingEnabledSaved
                         ? ""
                         : " (" + this.props.t("availableAfterSaving") + ")")
@@ -1640,13 +1858,13 @@ class Settings extends React.Component<Props, State> {
                     }
                   />
                   <CopyToClipboardButton
-                    text={Navigation.publicBookingUrl()}
+                    text={this.getPublicBookingUrl()}
                     disabled={!this.state.publicBookingEnabledSaved}
                   />
                   <Button
                     aria-label={this.props.t("publicBookingUrl")}
                     variant="outline-secondary"
-                    href={Navigation.publicBookingUrl()}
+                    href={this.getPublicBookingUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     disabled={!this.state.publicBookingEnabledSaved}

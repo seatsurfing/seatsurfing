@@ -26,8 +26,6 @@ import RuntimeConfig from "@/components/RuntimeConfig";
 import AuthProvider, { AuthProviderMapping } from "@/types/AuthProvider";
 import Role from "@/types/Role";
 import Group from "@/types/Group";
-import Ajax from "@/util/Ajax";
-
 import ErrorText from "@/types/ErrorText";
 import AjaxError from "@/util/AjaxError";
 import RendererUtils from "@/util/RendererUtils";

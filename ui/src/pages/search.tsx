@@ -93,6 +93,9 @@ interface State {
   showBookingNames: boolean;
   selectedSpace: Space | null;
   showConfirm: boolean;
+  // IDs of the spaces offered in the confirm modal when opened via a direct
+  // link (empty otherwise). More than one ID lets the user pick a space.
+  directLinkSpaceIds: string[];
   showLocationDetails: boolean;
   showSearchModal: boolean;
   showSuccess: boolean;
@@ -164,6 +167,8 @@ class Search extends React.Component<Props, State> {
   buddies: Buddy[];
   availableAttributes: SpaceAttribute[];
   recurrenceMaxEndDate: Date;
+  loadSpacesRequestId: number = 0;
+  loadSpacesInFlight: number = 0;
 
   // time set *before* allDay option was selected
   resetEnterTime: Date | undefined;
@@ -195,6 +200,7 @@ class Search extends React.Component<Props, State> {
       showBookingNames: false,
       selectedSpace: null,
       showConfirm: false,
+      directLinkSpaceIds: [],
       confirmingBooking: false,
       showCancelBookingConfirm: false,
       showLocationDetails: false,
@@ -429,7 +435,19 @@ class Search extends React.Component<Props, State> {
         const defaultLocationId = this.getPreferredLocationId(
           (this.props.router.query["lid"] as string) || "",
         );
-        const sidParam = (this.props.router.query["sid"] as string) || "";
+        // A repeated parameter (?sid=A&sid=B) arrives as an array
+        const sidQuery = this.props.router.query["sid"];
+        const sidParam = Array.isArray(sidQuery)
+          ? sidQuery.join(",")
+          : sidQuery || "";
+        const spaceIds = Array.from(
+          new Set(
+            sidParam
+              .split(",")
+              .map((id) => id.trim())
+              .filter((id) => id),
+          ),
+        );
         this.setState({ locationId: defaultLocationId }, () => {
           if (!defaultLocationId) {
             this.setState({ loading: false }, () => this.updateUrlParams());
@@ -452,10 +470,7 @@ class Search extends React.Component<Props, State> {
                     this.updateUrlParams();
                   },
                 );
-                if (sidParam) {
-                  const space = this.data.find((item) => item.id == sidParam);
-                  if (space) this.onSpaceSelect(space);
-                }
+                this.openDirectLink(spaceIds);
               });
             });
         });
@@ -551,14 +566,6 @@ class Search extends React.Component<Props, State> {
     return "";
   };
 
-  getDateTimeFromQuery = (paramName: string): Date | undefined => {
-    const value = this.props.router.query[paramName];
-    if (typeof value === "string" && DateUtil.isValidDateTime(value)) {
-      return new Date(value);
-    }
-    return undefined;
-  };
-
   managedUrlParams = ["lid", "enter", "leave", "allDay", "multiDay"];
 
   updateUrlParams = () => {
@@ -609,8 +616,17 @@ class Search extends React.Component<Props, State> {
       this.props.router.query["allDay"] === "1" &&
       !RuntimeConfig.INFOS.dailyBasisBooking;
     const selectionMultiDay = this.props.router.query["multiDay"] === "1";
-    let queryEnter = this.getDateTimeFromQuery("enter") ?? enter;
-    let queryLeave = this.getDateTimeFromQuery("leave") ?? leave;
+    const enterParam = this.props.router.query["enter"];
+    const leaveParam = this.props.router.query["leave"];
+    let { enter: queryEnter, leave: queryLeave } =
+      DateUtil.resolveLinkEnterAndLeave(
+        typeof enterParam === "string" ? enterParam : undefined,
+        typeof leaveParam === "string" ? leaveParam : undefined,
+        enter,
+        leave,
+        this.state.prefWorkdayEnd,
+        RuntimeConfig.INFOS.dailyBasisBooking,
+      );
     if (selectionAllDay) {
       queryEnter = DateUtil.setHoursToMin(queryEnter);
       queryLeave = DateUtil.setHoursToMax(queryLeave);
@@ -702,13 +718,24 @@ class Search extends React.Component<Props, State> {
     if (!RuntimeConfig.INFOS.dailyBasisBooking) {
       leave.setSeconds(leave.getSeconds() - 1);
     }
-    this.data = await Space.listAvailability(
-      locationId,
-      this.state.enter,
-      leave,
-      this.state.searchAttributesSpace,
-      true,
-    );
+    // Responses may complete out of order (e.g. rapid picker changes): only the
+    // most recent request may update the data.
+    const requestId = ++this.loadSpacesRequestId;
+    this.loadSpacesInFlight++;
+    try {
+      const data = await Space.listAvailability(
+        locationId,
+        this.state.enter,
+        leave,
+        this.state.searchAttributesSpace,
+        true,
+      );
+      if (requestId === this.loadSpacesRequestId) {
+        this.data = data;
+      }
+    } finally {
+      this.loadSpacesInFlight--;
+    }
   };
 
   renderLocations = () => {
@@ -780,7 +807,15 @@ class Search extends React.Component<Props, State> {
         this.loadSpaces(this.state.locationId),
       ];
       Promise.all(promises).then(() => {
-        this.setState({ loading: false });
+        if (this.loadSpacesInFlight > 0) {
+          // a newer request is still pending and will finish the update
+          return;
+        }
+        this.setState({ loading: false }, () => {
+          if (this.state.showConfirm) {
+            this.refreshDirectLinkSelection();
+          }
+        });
       });
       this.updateUrlParams();
     };
@@ -812,7 +847,54 @@ class Search extends React.Component<Props, State> {
     );
   };
 
-  onSpaceSelect = (item: Space) => {
+  // Handles direct links (?sid=<id>[,<id>...]). A single bookable space opens
+  // the confirm modal directly. Several spaces open it with a space dropdown.
+  openDirectLink = (spaceIds: string[]) => {
+    const spaces = spaceIds
+      .map((id) => this.data.find((item) => item.id === id))
+      .filter((s): s is Space => !!s && s.allowed && s.enabled);
+    if (spaces.length === 0) {
+      return;
+    }
+    if (spaces.length === 1) {
+      this.onSpaceSelect(spaces[0], [spaces[0].id]);
+      return;
+    }
+    this.setState(
+      {
+        showConfirm: true,
+        selectedSpace: spaces.find((s) => s.available) ?? null,
+        directLinkSpaceIds: spaces.map((s) => s.id),
+        cancelSeries: false,
+      },
+      () => this.resetRecurrence(),
+    );
+  };
+
+  // Re-resolves the spaces offered by a direct link after the availability
+  // data was reloaded (e.g. because the user adjusted the times). Keeps the
+  // current choice if it is still available, else picks the first available.
+  refreshDirectLinkSelection = () => {
+    const spaces = this.state.directLinkSpaceIds
+      .map((id) => this.data.find((item) => item.id === id))
+      .filter((s): s is Space => !!s);
+    if (spaces.length === 0) {
+      return;
+    }
+    const current = spaces.find((s) => s.id === this.state.selectedSpace?.id);
+    let selected: Space | null = current ?? null;
+    if (spaces.length > 1 && !current?.available) {
+      selected = spaces.find((s) => s.available) ?? current ?? null;
+    }
+    this.setState({ selectedSpace: selected }, () => this.resetRecurrence());
+  };
+
+  onDirectLinkSpaceChange = (spaceId: string) => {
+    const space = this.data.find((item) => item.id === spaceId);
+    this.setState({ selectedSpace: space ?? null });
+  };
+
+  onSpaceSelect = (item: Space, directLinkSpaceIds: string[] = []) => {
     if (!item.allowed || !item.enabled) {
       return;
     }
@@ -821,6 +903,7 @@ class Search extends React.Component<Props, State> {
         {
           showConfirm: true,
           selectedSpace: item,
+          directLinkSpaceIds: directLinkSpaceIds,
           cancelSeries: false,
         },
         () => this.resetRecurrence(),
@@ -1966,6 +2049,129 @@ class Search extends React.Component<Props, State> {
       </div>
     );
 
+    // Shared by the search box and the booking dialog (inModal: no leading
+    // icon, aligned to the dialog's label/field grid by its caller).
+    const renderDateSelection = (inModal: boolean) => (
+      <Form.Group className={inModal ? "d-flex" : "d-flex margin-top-10"}>
+        {!inModal && (
+          <div className="me-2">
+            <WeekIcon
+              title={this.props.t("date")}
+              color={"var(--bs-secondary-color)"}
+              height="20px"
+              width="20px"
+            />
+          </div>
+        )}
+
+        <IconTextButton
+          text="❮"
+          title={this.props.t("previousDay")}
+          disabled={
+            DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
+            !this.state.locationId
+          }
+          onClick={() => {
+            this.updateEnterAndLeaveDate(
+              DateUtil.prevDay(this.state.enter),
+              DateUtil.prevDay(this.state.leave),
+            );
+          }}
+        />
+
+        <div
+          className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
+        >
+          {dateEnterPicker}
+        </div>
+
+        {this.state.selectionMultiDay && (
+          <div className="ms-2 w-50">{dateLeavePicker}</div>
+        )}
+
+        <IconTextButton
+          text="❯"
+          title={this.props.t("nextDay")}
+          disabled={!this.state.locationId}
+          onClick={() => {
+            this.updateEnterAndLeaveDate(
+              DateUtil.nextDay(this.state.enter),
+              DateUtil.nextDay(this.state.leave),
+            );
+          }}
+        />
+
+        <IconButton
+          icon={CalendarIcon}
+          active={this.state.selectionMultiDay}
+          disabled={!this.state.locationId}
+          title={this.props.t("multiDay")}
+          onClick={() => {
+            if (this.state.selectionMultiDay) {
+              let newLeave = DateUtil.copyDate(
+                this.state.enter,
+                this.state.leave,
+              );
+              if (newLeave.getTime() < this.state.enter.getTime()) {
+                newLeave = DateUtil.setHoursToMax(newLeave);
+              }
+              this.updateEnterAndLeaveDate(null, newLeave);
+            }
+            this.setState(
+              {
+                selectionMultiDay: !this.state.selectionMultiDay,
+              },
+              () => this.updateUrlParams(),
+            );
+          }}
+        />
+      </Form.Group>
+    );
+    const renderTimeSelection = (inModal: boolean) =>
+      !RuntimeConfig.INFOS.dailyBasisBooking && (
+        <Form.Group className={inModal ? "d-flex" : "d-flex margin-top-10"}>
+          {!inModal && (
+            <div className="me-2">
+              <TimeIcon
+                title={this.props.t("time")}
+                color={"var(--bs-secondary-color)"}
+                height="20px"
+                width="20px"
+              />
+            </div>
+          )}
+          <div className="ms-2 w-50">{timeEnterPicker}</div>
+          <div className="ms-2 w-50">{timeLeavePicker}</div>
+          <IconButton
+            icon={TimerIcon}
+            active={this.state.selectionAllDay}
+            disabled={!this.state.locationId}
+            title={this.props.t("allDay")}
+            onClick={() => {
+              if (!this.state.selectionAllDay) {
+                this.resetEnterTime = new Date(this.state.enter);
+                this.resetLeaveTime = new Date(this.state.leave);
+                this.updateEnterAndLeaveDate(
+                  DateUtil.setHoursToMin(this.state.enter),
+                  DateUtil.setHoursToMax(this.state.leave),
+                );
+              } else {
+                this.updateEnterAndLeaveDate(
+                  this.resetEnterTime ?? null,
+                  this.resetLeaveTime ?? null,
+                );
+              }
+              this.setState(
+                {
+                  selectionAllDay: !this.state.selectionAllDay,
+                },
+                () => this.updateUrlParams(),
+              );
+            }}
+          />
+        </Form.Group>
+      );
+
     const activeIntegration = this.getActiveBookingUIIntegration();
     const integrationPanelWidth = activeIntegration
       ? activeIntegration.width || 200
@@ -2236,122 +2442,9 @@ class Search extends React.Component<Props, State> {
                 </div>
               </Form.Group>
 
-              {/* Date selection */}
-              <Form.Group className="d-flex margin-top-10">
-                <div className="me-2">
-                  <WeekIcon
-                    title={this.props.t("date")}
-                    color={"var(--bs-secondary-color)"}
-                    height="20px"
-                    width="20px"
-                  />
-                </div>
+              {renderDateSelection(false)}
 
-                <IconTextButton
-                  text="❮"
-                  title={this.props.t("previousDay")}
-                  disabled={
-                    DateUtil.isSameDay(this.state.enter, earliestEnterDate) ||
-                    !this.state.locationId
-                  }
-                  onClick={() => {
-                    this.updateEnterAndLeaveDate(
-                      DateUtil.prevDay(this.state.enter),
-                      DateUtil.prevDay(this.state.leave),
-                    );
-                  }}
-                />
-
-                <div
-                  className={`ms-2 ${this.state.selectionMultiDay ? "w-50" : "w-100"}`}
-                >
-                  {dateEnterPicker}
-                </div>
-
-                {this.state.selectionMultiDay && (
-                  <div className="ms-2 w-50">{dateLeavePicker}</div>
-                )}
-
-                <IconTextButton
-                  text="❯"
-                  title={this.props.t("nextDay")}
-                  disabled={!this.state.locationId}
-                  onClick={() => {
-                    this.updateEnterAndLeaveDate(
-                      DateUtil.nextDay(this.state.enter),
-                      DateUtil.nextDay(this.state.leave),
-                    );
-                  }}
-                />
-
-                <IconButton
-                  icon={CalendarIcon}
-                  active={this.state.selectionMultiDay}
-                  disabled={!this.state.locationId}
-                  title={this.props.t("multiDay")}
-                  onClick={() => {
-                    if (this.state.selectionMultiDay) {
-                      let newLeave = DateUtil.copyDate(
-                        this.state.enter,
-                        this.state.leave,
-                      );
-                      if (newLeave.getTime() < this.state.enter.getTime()) {
-                        newLeave = DateUtil.setHoursToMax(newLeave);
-                      }
-                      this.updateEnterAndLeaveDate(null, newLeave);
-                    }
-                    this.setState(
-                      {
-                        selectionMultiDay: !this.state.selectionMultiDay,
-                      },
-                      () => this.updateUrlParams(),
-                    );
-                  }}
-                />
-              </Form.Group>
-
-              {/* Time selection */}
-              {!RuntimeConfig.INFOS.dailyBasisBooking && (
-                <Form.Group className="d-flex margin-top-10">
-                  <div className="me-2">
-                    <TimeIcon
-                      title={this.props.t("time")}
-                      color={"var(--bs-secondary-color)"}
-                      height="20px"
-                      width="20px"
-                    />
-                  </div>
-                  <div className="ms-2 w-50">{timeEnterPicker}</div>
-                  <div className="ms-2 w-50">{timeLeavePicker}</div>
-                  <IconButton
-                    icon={TimerIcon}
-                    active={this.state.selectionAllDay}
-                    disabled={!this.state.locationId}
-                    title={this.props.t("allDay")}
-                    onClick={() => {
-                      if (!this.state.selectionAllDay) {
-                        this.resetEnterTime = new Date(this.state.enter);
-                        this.resetLeaveTime = new Date(this.state.leave);
-                        this.updateEnterAndLeaveDate(
-                          DateUtil.setHoursToMin(this.state.enter),
-                          DateUtil.setHoursToMax(this.state.leave),
-                        );
-                      } else {
-                        this.updateEnterAndLeaveDate(
-                          this.resetEnterTime ?? null,
-                          this.resetLeaveTime ?? null,
-                        );
-                      }
-                      this.setState(
-                        {
-                          selectionAllDay: !this.state.selectionAllDay,
-                        },
-                        () => this.updateUrlParams(),
-                      );
-                    }}
-                  />
-                </Form.Group>
-              )}
+              {renderTimeSelection(false)}
 
               <Form.Group className="d-flex margin-top-10 minimized-hide">
                 <div className="me-2">
@@ -2490,27 +2583,38 @@ class Search extends React.Component<Props, State> {
         </Form>
       </Modal>
     );
+    const directLink = this.state.directLinkSpaceIds.length > 0;
+    const directLinkSpaces = this.state.directLinkSpaceIds
+      .map((id) => this.data.find((item) => item.id === id))
+      .filter((s): s is Space => !!s);
+    const directLinkChooseSpace = this.state.directLinkSpaceIds.length > 1;
+    const selectedSpaceUnavailable =
+      directLink && !this.state.selectedSpace?.available;
     const confirmModalRows = [];
-    confirmModalRows.push({
-      label: this.props.t("space"),
-      value: this.state.selectedSpace?.name,
-    });
+    if (!directLinkChooseSpace) {
+      confirmModalRows.push({
+        label: this.props.t("space"),
+        value: this.state.selectedSpace?.name,
+      });
+    }
     confirmModalRows.push({
       label: this.props.t("area"),
       value: this.getLocationName(),
     });
-    confirmModalRows.push({
-      label: this.props.t("enter"),
-      value: formatter.format(
-        DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
-      ),
-    });
-    confirmModalRows.push({
-      label: this.props.t("leave"),
-      value: formatter.format(
-        DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
-      ),
-    });
+    if (!directLink) {
+      confirmModalRows.push({
+        label: this.props.t("enter"),
+        value: formatter.format(
+          DateUtil.convertToFakeUTCDate(new Date(this.state.enter)),
+        ),
+      });
+      confirmModalRows.push({
+        label: this.props.t("leave"),
+        value: formatter.format(
+          DateUtil.convertToFakeUTCDate(new Date(this.state.leave)),
+        ),
+      });
+    }
     confirmModalRows.push({
       label: this.props.t("approval"),
       value: RendererUtils.capitalize(
@@ -2549,6 +2653,65 @@ class Search extends React.Component<Props, State> {
             <Modal.Title>{this.props.t("bookSeat")}</Modal.Title>
           </Modal.Header>
           <Modal.Body hidden={this.state.showRecurringOptions}>
+            {directLinkChooseSpace && (
+              <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                <Form.Label column sm="4" htmlFor="direct-link-space">
+                  {this.props.t("space")}:
+                </Form.Label>
+                <Col sm="8">
+                  <Form.Select
+                    id="direct-link-space"
+                    value={this.state.selectedSpace?.id ?? ""}
+                    onChange={(e: any) =>
+                      this.onDirectLinkSpaceChange(e.target.value)
+                    }
+                    disabled={this.state.confirmingBooking}
+                  >
+                    <option value="" disabled={true}>
+                      {this.props.t("pleaseSelect")}
+                    </option>
+                    {directLinkSpaces.map((s) => (
+                      <option key={s.id} value={s.id} disabled={!s.available}>
+                        {s.name}
+                        {!s.available &&
+                          " (" + this.props.t("notAvailable") + ")"}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+            )}
+            {directLink && (
+              <>
+                <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                  <Form.Label column sm="4">
+                    {this.props.t("date")}:
+                  </Form.Label>
+                  <Col sm="8">
+                    <div className="direct-link-selection">
+                      {renderDateSelection(true)}
+                    </div>
+                  </Col>
+                </Form.Group>
+                {!RuntimeConfig.INFOS.dailyBasisBooking && (
+                  <Form.Group as={Row} style={{ marginBottom: "5px" }}>
+                    <Form.Label column sm="4">
+                      {this.props.t("time")}:
+                    </Form.Label>
+                    <Col sm="8">
+                      <div className="direct-link-selection">
+                        {renderTimeSelection(true)}
+                      </div>
+                    </Col>
+                  </Form.Group>
+                )}
+                {selectedSpaceUnavailable && (
+                  <div className="invalid-search-config margin-top-10">
+                    {this.props.t("directLinkNoSpaceAvailable")}
+                  </div>
+                )}
+              </>
+            )}
             {confirmModalRows.map((row, index) => {
               return (
                 <Row
@@ -2757,13 +2920,17 @@ class Search extends React.Component<Props, State> {
                 this.setState({ showConfirm: false });
                 this.openSpaceCalendar("showConfirm");
               }}
-              disabled={this.state.confirmingBooking}
+              disabled={
+                this.state.confirmingBooking || !this.state.selectedSpace
+              }
             />
             <Button
               type="submit"
               variant="primary"
               disabled={
                 this.state.confirmingBooking ||
+                this.state.loading ||
+                selectedSpaceUnavailable ||
                 (this.state.recurrence.active &&
                   this.state.recurrence.finalNumBookings === 0)
               }

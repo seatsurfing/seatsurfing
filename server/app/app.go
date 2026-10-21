@@ -1050,10 +1050,12 @@ func (a *App) startPublicHttpServer() {
 
 func (a *App) Run() {
 	a.startPublicHttpServer()
+	installID, _ := GetSettingsRepository().GetGlobalString(api.SettingInstallID.Name)
+	log.Println("Seatsurfing started successfully (instance ID: " + installID + ")")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
-	log.Println("Shutting down...")
+	log.Println("Shutting down …")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	a.PublicHttpServer.Shutdown(ctx)

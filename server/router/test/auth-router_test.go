@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
@@ -539,6 +540,71 @@ func TestAuthPasswordLoginWithPasswordPending(t *testing.T) {
 	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestAuthUpdatePasswordBan(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+
+	newPassword := "N3w!Passw0rd"
+	for i, wrongPassword := range []string{"Wr0ng!Pass1", "Wr0ng!Pass2", "Wr0ng!Pass3"} {
+		payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + wrongPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+		req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+		CheckTestBool(t, i == 2, AuthAttemptRepositoryIsUserDisabled(t, user.ID))
+	}
+
+	// Would be successful, but fails cause banned
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), TestPassword))
+}
+
+func TestAuthUpdatePasswordWeakNewPassword(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"weakpassword\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, true, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), TestPassword))
+}
+
+func TestAuthUpdatePassword(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+
+	newPassword := "N3w!Passw0rd"
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, false, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), newPassword))
 }
 
 func TestAuthProviderBinding(t *testing.T) {
@@ -1292,4 +1358,205 @@ func TestExtractUserInfoFieldsTrimsWhitespace(t *testing.T) {
 	CheckTestString(t, "user@example.com", info.Email)
 	CheckTestString(t, "Jane", info.Firstname)
 	CheckTestString(t, "Doe", info.Lastname)
+}
+
+func createTestOAuthCallback(t *testing.T, org *Organization, tokenURL, userInfoURL string) (*AuthProvider, string) {
+	clientSecret, _ := EncryptString("secret")
+	provider := &AuthProvider{
+		OrganizationID:     org.ID,
+		Name:               "test",
+		ProviderType:       int(OAuth2),
+		AuthURL:            tokenURL,
+		TokenURL:           tokenURL,
+		UserInfoURL:        userInfoURL,
+		UserInfoEmailField: "email",
+		ClientID:           "client",
+		ClientSecret:       clientSecret,
+		Scopes:             "openid",
+	}
+	if err := GetAuthProviderRepository().Create(provider); err != nil {
+		t.Fatal(err)
+	}
+	authState := &AuthState{
+		Key:           provider.ID,
+		Expiry:        time.Now().Add(time.Minute * 5),
+		AuthStateType: AuthRequestState,
+		Payload:       "{}",
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		t.Fatal(err)
+	}
+	return provider, "/auth/" + provider.ID + "/callback?state=" + authState.ID + "&code=abc"
+}
+
+func newTestOAuthServer(userInfoStatus int, userInfoBody string) *httptest.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"access_token":"tok","token_type":"Bearer"}`))
+	})
+	mux.HandleFunc("/userinfo", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(userInfoStatus)
+		w.Write([]byte(userInfoBody))
+	})
+	return httptest.NewServer(mux)
+}
+
+func getLastTestAuthAttempt(t *testing.T, org *Organization) *AuthAttempt {
+	list, err := GetAuthAttemptRepository().GetFiltered(&AuthAttemptFilter{OrganizationID: org.ID, Start: time.Now().Add(-time.Hour), End: time.Now().Add(time.Hour)}, 1, 0)
+	if err != nil || len(list) != 1 {
+		t.Fatalf("expected one auth attempt, got %d (%v)", len(list), err)
+	}
+	return list[0]
+}
+
+func TestAuthCallbackUserinfoErrorDoesNotLeakBody(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusInternalServerError, "internal-secret-value")
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpUserinfoFailed, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "HTTP 500"))
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "internal-secret-value"))
+}
+
+func TestAuthCallbackUserinfoInvalidJSONDoesNotLeakBody(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, "internal-secret-value")
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpUserinfoFailed, attempt.ErrorCode)
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "internal-secret-value"))
+}
+
+func TestAuthCallbackAttributeMappingListsFieldNamesOnly(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, `{"mail":"internal-secret-value","sub":"123"}`)
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpAttributeMapping, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "userinfo fields: mail, sub"))
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "internal-secret-value"))
+}
+
+func TestAuthCallbackBlocksPrivateOutbound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, `{"email":"foo@test.com"}`)
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+	GetConfig().BlockPrivateOutbound = true
+	defer func() { GetConfig().BlockPrivateOutbound = false }()
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpCodeExchangeFailed, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, ErrBlockedOutboundAddress.Error()))
+	user, _ := GetUserRepository().GetByEmail(org.ID, "foo@test.com")
+	CheckTestBool(t, true, user == nil)
+}
+
+func TestAuthCallbackAllowsPrivateOutboundByDefault(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	srv := newTestOAuthServer(http.StatusOK, `{"email":"foo@test.com"}`)
+	defer srv.Close()
+	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
+
+	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/success/"))
+	user, _ := GetUserRepository().GetByEmail(org.ID, "foo@test.com")
+	CheckTestBool(t, true, user != nil)
+}
+
+func createUserRequiringPasswordUpdate(org *Organization) *User {
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.PasswordUpdateRequired = true
+	GetUserRepository().Update(user)
+	return user
+}
+
+func updatePasswordPayload(user *User, org *Organization, newPassword string) *bytes.Buffer {
+	return bytes.NewBufferString("{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"newPassword\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }")
+}
+
+func TestAuthUpdatePasswordWithoutSecondFactorReturnsSession(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, "N3w!Passw0rd"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, len(resBody.AccessToken) > 32)
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 1, count)
+}
+
+func TestAuthUpdatePasswordWithTotpRequiresLogin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+	secret, _ := EncryptString("JBSWY3DPEHPK3PXP")
+	user.TotpSecret = NullString(secret)
+	GetUserRepository().Update(user)
+
+	newPassword := "N3w!Passw0rd"
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, newPassword))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	CheckTestInt(t, 0, res.Body.Len())
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, false, user.PasswordUpdateRequired)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(user.HashedPassword), newPassword))
+	CheckTestBool(t, true, user.TotpSecret != "")
+
+	// Login with the new password still asks for the TOTP code
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + newPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req = NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+	count, _ = GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+}
+
+func TestAuthUpdatePasswordWithPasskeyRequiresLogin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+	createRouterTestPasskey(user, "My Key")
+
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, "N3w!Passw0rd"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	CheckTestInt(t, 0, res.Body.Len())
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+	user, _ = GetUserRepository().GetOne(user.ID)
+	CheckTestBool(t, false, user.PasswordUpdateRequired)
 }

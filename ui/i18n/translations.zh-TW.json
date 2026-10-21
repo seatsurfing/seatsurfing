@@ -661,5 +661,12 @@
   "bookingAttributeTypeCheckbox": "Checkbox",
   "showBookingAttributes": "Show booking attributes",
   "moveDown": "Move down",
-  "moveUp": "Move up"
+  "moveUp": "Move up",
+  "publicBookingDurationHint": "Applies to bookings requested via the public booking page. The value cannot exceed 24 hours. The organization-wide minimum and maximum booking durations still apply.",
+  "publicBookingDurationMax": "A booking may last at most {{max}} hours.",
+  "publicBookingDurationMin": "A booking must last at least {{min}} hours.",
+  "publicBookingDurationMinMax": "A booking must last between {{min}} and {{max}} hours.",
+  "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot.",
+  "publicBookingAllSpaces": "All spaces",
+  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times."
 }

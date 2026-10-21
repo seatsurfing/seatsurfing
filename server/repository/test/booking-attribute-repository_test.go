@@ -154,16 +154,40 @@ func TestBookingAttributeValueRepository(t *testing.T) {
 	CheckTestInt(t, 1, len(list))
 	CheckTestString(t, "Bar", list[0].Value)
 
-	// Deleting the attribute removes its values
+	// Deleting the attribute keeps the captured values
 	GetBookingAttributeRepository().Delete(a2)
 	list, _ = GetBookingAttributeValueRepository().GetAllForBooking(b1.ID)
-	CheckTestInt(t, 1, len(list))
+	CheckTestInt(t, 2, len(list))
+	CheckTestString(t, a2.ID, list[1].AttributeID)
+	CheckTestString(t, "Persons", list[1].Label)
+	CheckTestString(t, "4", list[1].Value)
 
 	// Deleting the booking removes its values
 	b1Details, _ := GetBookingRepository().GetOne(b1.ID)
 	GetBookingRepository().Delete(b1Details)
 	list, _ = GetBookingAttributeValueRepository().GetAllForBooking(b1.ID)
 	CheckTestInt(t, 0, len(list))
+}
+
+func TestBookingAttributeValueRepositoryKeepsLabelAndOrderOnAttributeChange(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	b := CreateTestBooking9To5(user, space, 1)
+	a1 := createTestBookingAttribute(t, org.ID, "Company", BookingAttributeTypeText, false)
+	a2 := createTestBookingAttribute(t, org.ID, "Persons", BookingAttributeTypeNumber, false)
+
+	CheckTestIsNil(t, GetBookingAttributeValueRepository().Set(b.ID, a1.ID, "ACME"))
+	CheckTestIsNil(t, GetBookingAttributeValueRepository().Set(b.ID, a2.ID, "4"))
+	a1.Label = "Organization"
+	CheckTestIsNil(t, GetBookingAttributeRepository().Update(a1))
+	CheckTestIsNil(t, GetBookingAttributeRepository().SetPositions(org.ID, []string{a2.ID, a1.ID}))
+
+	list, _ := GetBookingAttributeValueRepository().GetAllForBooking(b.ID)
+	CheckTestInt(t, 2, len(list))
+	CheckTestString(t, "Company", list[0].Label)
+	CheckTestString(t, "Persons", list[1].Label)
 }
 
 func TestBookingAttributeValueRepositoryKeepsTypeOnAttributeChange(t *testing.T) {

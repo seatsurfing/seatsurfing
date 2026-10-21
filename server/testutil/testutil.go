@@ -350,6 +350,7 @@ func ClearTestDB() {
 	for _, s := range DatabaseTables {
 		GetDatabase().DB().Exec("TRUNCATE " + s + " CASCADE")
 	}
+	SetGlobalInstallID()
 }
 
 func ExecuteTestRequest(req *http.Request) *httptest.ResponseRecorder {

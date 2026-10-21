@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.136.2](https://github.com/seatsurfing/seatsurfing/compare/v1.136.1...v1.136.2) (2026-10-20)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `389cad2` to `65be09d` ([#2788](https://github.com/seatsurfing/seatsurfing/issues/2788)) ([c36ec1a](https://github.com/seatsurfing/seatsurfing/commit/c36ec1a3ab667ec62791da569641dd037220ce5c))
+* **deps:** bump golang.org/x/crypto from 0.57.0 to 0.58.0 in /server in the minor-and-patch group ([#2780](https://github.com/seatsurfing/seatsurfing/issues/2780)) ([6e031d4](https://github.com/seatsurfing/seatsurfing/commit/6e031d404c14b42b7ae27e2be9b7302d18ba8c5e))
+* **main:** count failed login attempts when updating pw ([#2786](https://github.com/seatsurfing/seatsurfing/issues/2786)) ([3c354ad](https://github.com/seatsurfing/seatsurfing/commit/3c354adc1134925965108ddbe60f8b419e93eb06))
+* **main:** require login again after pw change if TOTP is configured ([#2787](https://github.com/seatsurfing/seatsurfing/issues/2787)) ([e1bf428](https://github.com/seatsurfing/seatsurfing/commit/e1bf428521a647c1dbf94c741514591f433911f2))
+* **main:** validate new password when updating password ([#2785](https://github.com/seatsurfing/seatsurfing/issues/2785)) ([2c7d542](https://github.com/seatsurfing/seatsurfing/commit/2c7d542abb2892c8515e8aefaadcd5d30739af4c))
+
+## [1.136.1](https://github.com/seatsurfing/seatsurfing/compare/v1.136.0...v1.136.1) (2026-10-14)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump next from 16.3.8 to 16.4.0 in /ui in the production-dependencies group across 1 directory ([#2774](https://github.com/seatsurfing/seatsurfing/issues/2774)) ([ca89ab2](https://github.com/seatsurfing/seatsurfing/commit/ca89ab24d5e9db1ebb5d48b68ee6d875ec58233c))
+* **main:** updated Finnish localization ([#2772](https://github.com/seatsurfing/seatsurfing/issues/2772)) ([02bcf28](https://github.com/seatsurfing/seatsurfing/commit/02bcf280c016bb62ce0b51dbb7052259273093d5))
+* **server:** apply BLOCK_PRIVATE_OUTBOUND to domain accessibility check ([#2777](https://github.com/seatsurfing/seatsurfing/issues/2777)) ([560040d](https://github.com/seatsurfing/seatsurfing/commit/560040d7676aab8384f93dfcab2b08d6930c2cf8))
+
+## [1.136.0](https://github.com/seatsurfing/seatsurfing/compare/v1.135.0...v1.136.0) (2026-10-13)
+
+
+### ✨ Features
+
+* **booking-ui:** support space lists, enter=now and time adjustment in direct links ([#2766](https://github.com/seatsurfing/seatsurfing/issues/2766)) ([c606c2e](https://github.com/seatsurfing/seatsurfing/commit/c606c2ea0700f33efebbbb82aa0d6c2e340ee22f))
+
+
+### 🐛 Bug Fixes
+
+* **main:** add feature flag BLOCK_PRIVATE_OUTBOUND ([#2769](https://github.com/seatsurfing/seatsurfing/issues/2769)) ([0a3b1f0](https://github.com/seatsurfing/seatsurfing/commit/0a3b1f06b3f9db4754e800d897f262dea4a1cefb))
+* **main:** improve setting global instance ID ([#2771](https://github.com/seatsurfing/seatsurfing/issues/2771)) ([9da34ab](https://github.com/seatsurfing/seatsurfing/commit/9da34ab68b52b20901e243f0a809a38064ff7762))
+
+## [1.135.0](https://github.com/seatsurfing/seatsurfing/compare/v1.134.0...v1.135.0) (2026-10-12)
+
+
+### ✨ Features
+
+* **admin-ui:** allow filter booking list by multiple users ([#2765](https://github.com/seatsurfing/seatsurfing/issues/2765)) ([24054de](https://github.com/seatsurfing/seatsurfing/commit/24054debf949af5e5c547855a46bcebf27963419))
+* **main:** add deeplink option to public booking page ([#2764](https://github.com/seatsurfing/seatsurfing/issues/2764)) ([e671d44](https://github.com/seatsurfing/seatsurfing/commit/e671d44fa7bebda4823077dfa718a1b1e5c2ec6c))
+* **main:** add duration limit for public bookings ([#2760](https://github.com/seatsurfing/seatsurfing/issues/2760)) ([57cd8d8](https://github.com/seatsurfing/seatsurfing/commit/57cd8d89f7809eead52a80b6d339caf9bae9e902))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump moment-timezone from 0.6.4 to 0.6.5 in /ui in the production-dependencies group across 1 directory ([#2761](https://github.com/seatsurfing/seatsurfing/issues/2761)) ([f1d54d5](https://github.com/seatsurfing/seatsurfing/commit/f1d54d59d1e225f3f1b24b51961cb1e908b26226))
+
 ## [1.134.0](https://github.com/seatsurfing/seatsurfing/compare/v1.133.2...v1.134.0) (2026-10-08)
 
 

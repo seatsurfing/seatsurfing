@@ -642,7 +642,7 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if !ValidatePassword(m.Password) {
+	if !ValidatePassword(m.NewPassword) {
 		SendBadRequest(w)
 		return
 	}
@@ -664,13 +664,27 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	}
 
 	if !GetUserRepository().CheckPassword(string(user.HashedPassword), m.Password) {
+		recordAuthEvent(r, &AuthEvent{User: user, Method: AuthMethodPassword, ErrorCode: AuthErrorWrongPassword, BanCheck: true})
 		SendBadRequest(w)
+		return
+	}
+
+	passkeyCount, err := GetPasskeyRepository().GetCountByUserID(user.ID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
 		return
 	}
 
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
 	user.PasswordUpdateRequired = false
 	GetUserRepository().Update(user)
+
+	// A second factor must be completed via a regular login.
+	if user.TotpSecret != "" || passkeyCount > 0 {
+		SendUpdated(w)
+		return
+	}
 
 	router.createAndSendJWT(w, r, user, AuthMethodPassword, "", "", "")
 }
@@ -1128,17 +1142,21 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpConfigInvalid, detail: err.Error()}
 	}
-	token, err := config.Exchange(context.Background(), code)
+	client := GetOutboundHTTPClient()
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+	token, err := config.Exchange(ctx, code)
 	if err != nil {
 		detail := "code exchange failed: " + err.Error()
 		var retrieveErr *oauth2.RetrieveError
 		if errors.As(err, &retrieveErr) {
-			detail = fmt.Sprintf("code exchange failed: token endpoint returned HTTP %d: %s", retrieveErr.Response.StatusCode, string(retrieveErr.Body))
+			detail = fmt.Sprintf("code exchange failed: token endpoint returned HTTP %d", retrieveErr.Response.StatusCode)
+			if retrieveErr.ErrorCode != "" {
+				detail += ": " + retrieveErr.ErrorCode
+			}
 		}
 		return nil, nil, &authError{code: AuthErrorIdpCodeExchangeFailed, detail: detail}
 	}
 	// Get user info from resource server
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", provider.UserInfoURL, nil)
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed creating http request: " + err.Error()}
@@ -1149,21 +1167,26 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed getting user info: " + err.Error()}
 	}
 	defer response.Body.Close()
-	contents, err := io.ReadAll(response.Body)
+	contents, err := io.ReadAll(io.LimitReader(response.Body, 1<<20))
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed reading response body: " + err.Error()}
 	}
 	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: fmt.Sprintf("userinfo endpoint returned HTTP %d: %s", response.StatusCode, string(contents))}
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: fmt.Sprintf("userinfo endpoint returned HTTP %d", response.StatusCode)}
 	}
 	// Extract email address from JSON response
 	var result map[string]interface{}
-	if err := json.Unmarshal([]byte(contents), &result); err != nil {
-		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: fmt.Sprintf("failed parsing userinfo response as JSON: %s: %s", err.Error(), string(contents))}
+	if err := json.Unmarshal(contents, &result); err != nil {
+		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed parsing userinfo response as JSON: " + err.Error()}
 	}
 	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField, provider.UserInfoGroupsField)
 	if err != nil {
-		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: err.Error() + ", userinfo response: " + string(contents)}
+		keys := make([]string, 0, len(result))
+		for k := range result {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: err.Error() + ", userinfo fields: " + strings.Join(keys, ", ")}
 	}
 	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	return info, payload, nil

@@ -314,16 +314,16 @@ func TestBookingRepositoryGetAllByOrgDateFiltering(t *testing.T) {
 	}
 	GetBookingRepository().Create(booking)
 
-	bookings_7_8, _ := GetBookingRepository().GetAllByOrg(org.ID, time7, time8, "", "")
+	bookings_7_8, _ := GetBookingRepository().GetAllByOrg(org.ID, time7, time8, nil, "")
 	CheckTestInt(t, 0, len(bookings_7_8))
 
-	bookings_11_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time11, time12, "", "")
+	bookings_11_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time11, time12, nil, "")
 	CheckTestInt(t, 0, len(bookings_11_12))
 
-	bookings_9_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time10, user.Email, location.ID)
+	bookings_9_10, _ := GetBookingRepository().GetAllByOrg(org.ID, time9, time10, []string{user.Email}, location.ID)
 	CheckTestInt(t, 1, len(bookings_9_10))
 
-	bookings_7_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time7, time12, "", "")
+	bookings_7_12, _ := GetBookingRepository().GetAllByOrg(org.ID, time7, time12, nil, "")
 	CheckTestInt(t, 1, len(bookings_7_12))
 }
 
@@ -360,7 +360,7 @@ func TestBookingRepositoryGetAllByOrgOverlapping(t *testing.T) {
 	create(time8, time9)
 	create(time12, time13)
 
-	list, err := GetBookingRepository().GetAllByOrg(org.ID, time9, time12, "", "")
+	list, err := GetBookingRepository().GetAllByOrg(org.ID, time9, time12, nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -375,7 +375,7 @@ func TestBookingRepositoryGetAllByOrgOverlapping(t *testing.T) {
 	CheckTestBool(t, true, ids[spansAll.ID])
 
 	otherOrg := CreateTestOrg("other.com")
-	list, err = GetBookingRepository().GetAllByOrg(otherOrg.ID, time9, time12, "", "")
+	list, err = GetBookingRepository().GetAllByOrg(otherOrg.ID, time9, time12, nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -658,7 +658,7 @@ func TestBookingRepositoryGetAllCurrentByOrg(t *testing.T) {
 	}
 	GetBookingRepository().Create(booking)
 
-	currentBookings, _ := GetBookingRepository().GetAllCurrentByOrg(org.ID, "", "")
+	currentBookings, _ := GetBookingRepository().GetAllCurrentByOrg(org.ID, nil, "")
 	CheckTestInt(t, 1, len(currentBookings))
 }
 
@@ -719,7 +719,7 @@ func TestPurgeOldBookings(t *testing.T) {
 
 	// check 3 bookings remain
 	now := time.Now()
-	bookings, err := GetBookingRepository().GetAllByOrg(org.ID, now.Add(time.Duration(-90)*24*time.Hour), now.Add(time.Duration(90)*24*time.Hour), "", "")
+	bookings, err := GetBookingRepository().GetAllByOrg(org.ID, now.Add(time.Duration(-90)*24*time.Hour), now.Add(time.Duration(90)*24*time.Hour), nil, "")
 	CheckTestIsNil(t, err)
 	CheckTestInt(t, 3, len(bookings))
 
@@ -876,7 +876,7 @@ func TestBookingRepositoryCurrentWithLocationTimezone(t *testing.T) {
 	futureBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(5 * time.Hour), Leave: time.Now().UTC().Add(7 * time.Hour)}
 	GetBookingRepository().Create(futureBooking)
 
-	currentBookings, err := GetBookingRepository().GetAllCurrentByOrg(org.ID, "", "")
+	currentBookings, err := GetBookingRepository().GetAllCurrentByOrg(org.ID, nil, "")
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(currentBookings))
 	CheckTestString(t, currentBooking.ID, currentBookings[0].ID)
@@ -1183,7 +1183,7 @@ func TestBookingRepositoryCurrentWithDefaultTimezone(t *testing.T) {
 	pastBooking := &Booking{UserID: user.ID, SpaceID: space.ID, Enter: time.Now().UTC().Add(-5 * time.Hour), Leave: time.Now().UTC().Add(-3 * time.Hour)}
 	GetBookingRepository().Create(pastBooking)
 
-	currentBookings, err := GetBookingRepository().GetAllCurrentByOrg(org.ID, "", "")
+	currentBookings, err := GetBookingRepository().GetAllCurrentByOrg(org.ID, nil, "")
 	CheckTestBool(t, true, err == nil)
 	CheckTestInt(t, 1, len(currentBookings))
 	CheckTestString(t, currentBooking.ID, currentBookings[0].ID)

@@ -162,7 +162,7 @@ export default class Booking extends Entity {
   static async listFiltered(
     start: Date,
     end: Date,
-    user: string,
+    users: string[],
     location: string,
   ): Promise<Booking[]> {
     const queryParams = new URLSearchParams();
@@ -171,7 +171,7 @@ export default class Booking extends Entity {
       DateUtil.convertToFakeUTCDate(start).toISOString(),
     );
     queryParams.set("end", DateUtil.convertToFakeUTCDate(end).toISOString());
-    if (user) queryParams.set("user", user);
+    users.forEach((user) => queryParams.append("user", user));
     if (location) queryParams.set("location", location);
     return Ajax.get(`/booking/filter/?${queryParams.toString()}`).then(
       (result) => {
@@ -186,9 +186,12 @@ export default class Booking extends Entity {
     );
   }
 
-  static async listCurrent(user: string, location: string): Promise<Booking[]> {
+  static async listCurrent(
+    users: string[],
+    location: string,
+  ): Promise<Booking[]> {
     const queryParams = new URLSearchParams();
-    if (user) queryParams.set("user", user);
+    users.forEach((user) => queryParams.append("user", user));
     if (location) queryParams.set("location", location);
     const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
