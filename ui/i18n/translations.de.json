@@ -662,7 +662,7 @@
   "addBookingAttribute": "Attribut hinzufügen",
   "editBookingAttribute": "Attribut bearbeiten",
   "bookingAttributeLimitReached": "Es können maximal {{max}} Attribute definiert werden.",
-  "confirmDeleteBookingAttribute": "Attribut \"{{label}}\" löschen? Die für bestehende Buchungen erfassten Werte werden ebenfalls gelöscht.",
+  "confirmDeleteBookingAttribute": "Attribut \"{{label}}\" löschen?",
   "bookingAttributeSaveError": "Das Attribut konnte nicht gespeichert werden.",
   "optionalField": "optional",
   "bookingAttributeTypeCheckbox": "Checkbox",

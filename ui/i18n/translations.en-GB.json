@@ -661,7 +661,7 @@
   "addBookingAttribute": "Add attribute",
   "editBookingAttribute": "Edit attribute",
   "bookingAttributeLimitReached": "A maximum of {{max}} attributes can be defined.",
-  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"? The values captured for existing bookings will be deleted as well.",
+  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"?",
   "bookingAttributeSaveError": "The attribute could not be saved.",
   "optionalField": "optional",
   "bookingAttributeTypeCheckbox": "Checkbox",

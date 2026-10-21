@@ -655,7 +655,7 @@
   "bookingAttributeTypeTextMultiline": "Text (multi-line)",
   "bookingAttributes": "Booking attributes",
   "bookingAttributesHint": "Additional fields which have to be filled in when requesting a public booking.",
-  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"? The values captured for existing bookings will be deleted as well.",
+  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"?",
   "editBookingAttribute": "Edit attribute",
   "optionalField": "optional",
   "bookingAttributeTypeCheckbox": "Checkbox",
