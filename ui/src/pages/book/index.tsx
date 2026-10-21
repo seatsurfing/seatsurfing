@@ -522,10 +522,7 @@ class PublicBooking extends React.Component<Props, State> {
   getAttributePayload = (): { [attributeId: string]: string } => {
     const res: { [attributeId: string]: string } = {};
     this.state.attributes.forEach((a) => {
-      let value = (this.state.attributeValues[a.id] || "").trim();
-      if (value !== "" && a.type === BookingAttribute.TYPE_NUMBER) {
-        value = String(Number(value));
-      }
+      const value = (this.state.attributeValues[a.id] || "").trim();
       if (value !== "") {
         res[a.id] = value;
       }
@@ -571,10 +568,10 @@ class PublicBooking extends React.Component<Props, State> {
     } else if (a.type === BookingAttribute.TYPE_NUMBER) {
       control = (
         <Form.Control
-          type="number"
-          min={1}
-          max={Number.MAX_SAFE_INTEGER}
-          step={1}
+          type="text"
+          inputMode="numeric"
+          pattern={BookingAttribute.NUMBER_PATTERN}
+          maxLength={BookingAttribute.NUMBER_MAX_LENGTH}
           value={value}
           onChange={onChange}
           required={a.required}
