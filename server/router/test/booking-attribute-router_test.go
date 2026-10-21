@@ -309,6 +309,50 @@ func TestPublicBookingAttributesFlow(t *testing.T) {
 	waitForSendMailMockContent(t, 2*time.Second)
 }
 
+func TestPublicBookingConfirmRejectsChangedAttributes(t *testing.T) {
+	for name, change := range map[string]func(t *testing.T, adminID, company string){
+		"type changed": func(t *testing.T, adminID, company string) {
+			req := NewHTTPRequest("PUT", "/booking-attribute/"+company, adminID, bytes.NewBufferString(`{"label": "Company", "type": 4, "required": false}`))
+			CheckTestResponseCode(t, http.StatusNoContent, ExecuteTestRequest(req).Code)
+		},
+		"deleted": func(t *testing.T, adminID, company string) {
+			req := NewHTTPRequest("DELETE", "/booking-attribute/"+company, adminID, nil)
+			CheckTestResponseCode(t, http.StatusNoContent, ExecuteTestRequest(req).Code)
+		},
+		"required added": func(t *testing.T, adminID, company string) {
+			createTestBookingAttributeViaAPI(t, adminID, `{"label": "Terms", "type": 4, "required": true}`)
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+			admin := CreateTestUserOrgAdmin(org)
+			_, space := CreateTestLocationAndSpace(org)
+			enablePublicBookingForOrgAndSpace(org, space)
+			company := createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Company", "type": 1, "required": true}`)
+
+			req := NewHTTPRequest("POST", "/public-booking/"+org.ID+"/request", "", bytes.NewBufferString(publicBookingRequestPayload(space.ID, `{"`+company+`": "ACME"}`)))
+			CheckTestResponseCode(t, http.StatusNoContent, ExecuteTestRequest(req).Code)
+			pending, err := GetAuthStateRepository().GetActiveByKeyAndType("jane.doe@test.com", AuthPublicBooking)
+			if err != nil {
+				t.Fatal(err)
+			}
+			CheckTestInt(t, 1, len(pending))
+
+			change(t, admin.ID, company)
+
+			req = NewHTTPRequest("POST", "/public-booking/confirm/"+pending[0].ID, "", nil)
+			CheckTestResponseCode(t, http.StatusNotFound, ExecuteTestRequest(req).Code)
+			var count int
+			if err := GetDatabase().DB().QueryRow("SELECT COUNT(*) FROM bookings").Scan(&count); err != nil {
+				t.Fatal(err)
+			}
+			CheckTestInt(t, 0, count)
+		})
+	}
+}
+
 func TestBookingWithoutAttributesOmitsAttributes(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

@@ -489,6 +489,12 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		SendNotFound(w)
 		return
 	}
+	// Attribute definitions may have changed since the request was validated
+	attributes, bookingErr := service.GetBookingAttributeService().ValidateValues(org.ID, payload.Attributes)
+	if bookingErr != nil {
+		SendNotFound(w)
+		return
+	}
 
 	releaseLock, err := AcquireBookingCreateLock("", location.ID)
 	if err != nil {
@@ -532,7 +538,7 @@ func (router *PublicBookingRouter) confirm(w http.ResponseWriter, r *http.Reques
 		SendInternalServerError(w)
 		return
 	}
-	if err := service.GetBookingAttributeService().SetValues(booking.ID, payload.Attributes); err != nil {
+	if err := service.GetBookingAttributeService().SetValues(booking.ID, attributes); err != nil {
 		log.Println(err)
 		if err := GetBookingRepository().Delete(&BookingDetails{Booking: *booking}); err != nil {
 			log.Println(err)
