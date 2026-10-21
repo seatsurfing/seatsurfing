@@ -15,7 +15,7 @@ export default class BookingAttribute extends Entity {
   static readonly TYPE_NUMBER = 3;
   static readonly TYPE_CHECKBOX = 4;
   static readonly CHECKBOX_CHECKED = "1";
-  static readonly MAX_ATTRIBUTES = 3;
+  static readonly MAX_ATTRIBUTES = 5;
   static readonly NUMBER_PATTERN = "0*[1-9][0-9]*";
   static readonly NUMBER_MAX_LENGTH = 32;
 

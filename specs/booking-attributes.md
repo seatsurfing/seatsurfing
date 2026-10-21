@@ -2,11 +2,11 @@
 
 ## Overview
 
-Organizations can define up to three custom booking attributes (label, type, required/optional). In this first step, the attributes are captured on the public booking page and stored with the resulting booking. Approvers see the values in the approvals list, and admins see them in the booking details.
+Organizations can define up to five custom booking attributes (label, type, required/optional). In this first step, the attributes are captured on the public booking page and stored with the resulting booking. Approvers see the values in the approvals list, and admins see them in the booking details.
 
 ## Goals
 
-- Let admins define up to three booking attributes per organization.
+- Let admins define up to five booking attributes per organization.
 - Support the types single-line text, multi-line text, number and checkbox.
 - Let admins mark each attribute as required or optional.
 - Capture the attribute values when a public booking is requested.
@@ -20,7 +20,7 @@ Organizations can define up to three custom booking attributes (label, type, req
 
 ## Product Decisions
 
-- The limit of three attributes is enforced by the server, per organization.
+- The limit of five attributes is enforced by the server, per organization.
 - Attributes are managed in the "Public booking" section of the organization settings and require `org_settings` admin permission.
 - Values are validated when the booking is requested (before the confirmation email is sent) and stored once the booker confirms the request.
 - Values are a snapshot taken when the booking is stored: deleting, renaming, retyping or reordering an attribute does not change the values captured for existing bookings. Each value keeps the label, type and position of its attribute at the time it was captured.
@@ -84,7 +84,7 @@ Request body: `{"label": "Company", "type": 1, "required": true}`. Creating a fo
 
 ## UI Changes
 
-- Settings → Public booking: table of attributes with add/edit/delete (modal), add button disabled once three attributes exist.
+- Settings → Public booking: table of attributes with add/edit/delete (modal), add button disabled once five attributes exist; a tooltip on the disabled button explains the limit.
 - Public booking page: one input per attribute below the subject (text input, textarea, number input or checkbox), optional fields are marked as such.
 - Approvals: an info button in the last column before approve/decline, shown for bookings with attribute values, opens a modal listing them.
 - Booking details: read-only field per stored attribute value. Here and in the approvals list, values are rendered according to their stored type (checkbox values as yes/no), even if the attribute's type was changed afterwards.

@@ -1,5 +1,14 @@
 import React from "react";
-import { Button, Col, Form, Modal, Row, Table } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  Modal,
+  OverlayTrigger,
+  Row,
+  Table,
+  Tooltip,
+} from "react-bootstrap";
 import {
   Plus as IconPlus,
   Edit2 as IconEdit,
@@ -258,6 +267,18 @@ class BookingAttributesEditor extends React.Component<Props, State> {
     }
     const limitReached =
       this.state.items.length >= BookingAttribute.MAX_ATTRIBUTES;
+    const addButton = (
+      <Button
+        variant="outline-secondary"
+        size="sm"
+        className="mt-1"
+        disabled={this.props.disabled || limitReached}
+        style={limitReached ? { pointerEvents: "none" } : undefined}
+        onClick={() => this.openEditModal(new BookingAttribute())}
+      >
+        <IconPlus className="feather" /> {this.props.t("addBookingAttribute")}
+      </Button>
+    );
     return (
       <Form.Group as={Row}>
         <Form.Label column sm="2">
@@ -282,22 +303,21 @@ class BookingAttributesEditor extends React.Component<Props, State> {
               </tbody>
             </Table>
           )}
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            className="mt-1"
-            disabled={this.props.disabled || limitReached}
-            onClick={() => this.openEditModal(new BookingAttribute())}
-          >
-            <IconPlus className="feather" />{" "}
-            {this.props.t("addBookingAttribute")}
-          </Button>
-          {limitReached && (
-            <Form.Text className="d-block">
-              {this.props.t("bookingAttributeLimitReached", {
-                max: BookingAttribute.MAX_ATTRIBUTES,
-              })}
-            </Form.Text>
+          {limitReached ? (
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip>
+                  {this.props.t("bookingAttributeLimitReached", {
+                    max: BookingAttribute.MAX_ATTRIBUTES,
+                  })}
+                </Tooltip>
+              }
+            >
+              <span className="d-inline-block">{addButton}</span>
+            </OverlayTrigger>
+          ) : (
+            addButton
           )}
         </Col>
         {this.renderEditModal()}

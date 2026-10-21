@@ -119,7 +119,7 @@ func TestBookingAttributesLimit(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	admin := CreateTestUserOrgAdmin(org)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		createTestBookingAttributeViaAPI(t, admin.ID, `{"label": "Attr", "type": 1}`)
 	}
 	req := NewHTTPRequest("POST", "/booking-attribute/", admin.ID, bytes.NewBufferString(`{"label": "Attr", "type": 1}`))

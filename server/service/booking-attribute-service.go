@@ -27,7 +27,7 @@ func GetBookingAttributeService() *BookingAttributeService {
 }
 
 const (
-	MaxBookingAttributes                   = 3
+	MaxBookingAttributes                   = 5
 	MaxBookingAttributeLabelLength         = 256
 	MaxBookingAttributeTextLength          = 256
 	MaxBookingAttributeMultilineTextLength = 4096
