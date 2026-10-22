@@ -1198,6 +1198,32 @@ func TestAuthCompleteUserInvitationExpiredState(t *testing.T) {
 	CheckTestBool(t, true, updated.PasswordPending)
 }
 
+func TestAuthCompleteUserInvitationDeletesExistingSessions(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.PasswordPending = true
+	GetUserRepository().Update(user)
+	GetSessionRepository().Create(&Session{UserID: user.ID, Device: "old", ExpiresAt: time.Now().Add(time.Hour)})
+
+	authState := &AuthState{
+		Expiry:        time.Now().Add(time.Hour),
+		AuthStateType: AuthInviteUser,
+		Payload:       user.ID,
+	}
+	if err := GetAuthStateRepository().Create(authState); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := `{"password": "` + TestPasswordNew + `"}`
+	req := NewHTTPRequest("POST", "/auth/setpw/"+authState.ID, "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 0, count)
+}
+
 func TestAuthOAuthLoginInvalidType(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -1514,6 +1540,23 @@ func TestAuthUpdatePasswordWithoutSecondFactorReturnsSession(t *testing.T) {
 	CheckTestInt(t, 1, count)
 }
 
+func TestAuthUpdatePasswordDeletesExistingSessions(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := createUserRequiringPasswordUpdate(org)
+	oldSession := &Session{UserID: user.ID, Device: "old", ExpiresAt: time.Now().Add(time.Hour)}
+	GetSessionRepository().Create(oldSession)
+
+	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, "N3w!Passw0rd"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	session, _ := GetSessionRepository().GetOne(oldSession.ID)
+	CheckTestBool(t, true, session == nil)
+	count, _ := GetSessionRepository().GetActiveSessionCount(user)
+	CheckTestInt(t, 1, count)
+}
+
 func TestAuthUpdatePasswordWithTotpRequiresLogin(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -1521,6 +1564,7 @@ func TestAuthUpdatePasswordWithTotpRequiresLogin(t *testing.T) {
 	secret, _ := EncryptString("JBSWY3DPEHPK3PXP")
 	user.TotpSecret = NullString(secret)
 	GetUserRepository().Update(user)
+	GetSessionRepository().Create(&Session{UserID: user.ID, Device: "old", ExpiresAt: time.Now().Add(time.Hour)})
 
 	newPassword := "N3w!Passw0rd"
 	req := NewHTTPRequest("POST", "/auth/updatepw", "", updatePasswordPayload(user, org, newPassword))

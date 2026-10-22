@@ -9,19 +9,19 @@
     "chart.js": "4.5.1",
     "excellentexport": "3.9.16",
     "moment-timezone": "0.6.5",
-    "next": "16.4.0",
+    "next": "16.4.1",
     "next-export-i18n": "2.4.3",
-    "react": "19.3.0",
+    "react": "19.3.1",
     "react-big-calendar": "1.20.0",
     "react-bootstrap": "2.10.10",
     "react-bootstrap-typeahead": "6.4.1",
-    "react-dom": "19.3.0",
+    "react-dom": "19.3.1",
     "react-feather": "2.0.10",
     "react-flatpickr": "4.0.11",
     "react-icons": "5.7.0",
     "react-markdown": "10.1.0",
     "react-moveable": "0.56.0",
-    "react-tooltip": "6.0.8",
+    "react-tooltip": "6.0.9",
     "react-zoom-pan-pinch": "4.2.0",
     "remark-gfm": "4.0.1"
   },
@@ -42,11 +42,11 @@
     "@types/node": "26.6.5",
     "@types/react-big-calendar": "1.16.3",
     "eslint": "10.12.0",
-    "eslint-config-next": "16.4.0",
-    "jsdom": "30.1.2",
+    "eslint-config-next": "16.4.1",
+    "jsdom": "30.1.3",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "5.0.4"
+    "vitest": "5.0.5"
   }
 }

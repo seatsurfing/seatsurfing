@@ -40,7 +40,7 @@ COPY healthcheck/ .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     xx-go build -ldflags="-w -s" -o healthcheck . && xx-verify healthcheck
 
-FROM gcr.io/distroless/base-debian13@sha256:65be09d063b5d4737995ca5a17bb7e12ed990412751ec8ec212c9d74db257639
+FROM gcr.io/distroless/base-debian13@sha256:44a80dc28b49f47396e72ab2dc644b3f849880335de09625762faed207bb891d
 LABEL org.opencontainers.image.source="https://github.com/seatsurfing/seatsurfing" \
       org.opencontainers.image.url="https://seatsurfing.io" \
       org.opencontainers.image.documentation="https://seatsurfing.io/docs/"
