@@ -476,6 +476,7 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 	user.AuthProviderID = NullUUID("")
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
+	GetSessionRepository().DeleteOfUser(user)
 	SendUpdated(w)
 }
 
@@ -679,6 +680,7 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
 	user.PasswordUpdateRequired = false
 	GetUserRepository().Update(user)
+	GetSessionRepository().DeleteOfUser(user)
 
 	// A second factor must be completed via a regular login.
 	if user.TotpSecret != "" || passkeyCount > 0 {
