@@ -385,7 +385,11 @@ func (router *AuthRouter) completePasswordReset(w http.ResponseWriter, r *http.R
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
-	GetSessionRepository().DeleteOfUser(user)
+	if err := GetSessionRepository().DeleteOfUser(user); err != nil {
+		log.Println("Error deleting sessions of user after password reset: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	SendUpdated(w)
 }
 
@@ -476,7 +480,11 @@ func (router *AuthRouter) completeUserInvitation(w http.ResponseWriter, r *http.
 	user.AuthProviderID = NullUUID("")
 	GetUserRepository().Update(user)
 	GetAuthStateRepository().Delete(authState)
-	GetSessionRepository().DeleteOfUser(user)
+	if err := GetSessionRepository().DeleteOfUser(user); err != nil {
+		log.Println("Error deleting sessions of user after completing invitation: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	SendUpdated(w)
 }
 
@@ -680,7 +688,11 @@ func (router *AuthRouter) updatePassword(w http.ResponseWriter, r *http.Request)
 	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.NewPassword))
 	user.PasswordUpdateRequired = false
 	GetUserRepository().Update(user)
-	GetSessionRepository().DeleteOfUser(user)
+	if err := GetSessionRepository().DeleteOfUser(user); err != nil {
+		log.Println("Error deleting sessions of user after password update: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 
 	// A second factor must be completed via a regular login.
 	if user.TotpSecret != "" || passkeyCount > 0 {
