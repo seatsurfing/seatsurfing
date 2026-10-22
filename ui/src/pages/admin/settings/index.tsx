@@ -1805,8 +1805,7 @@ class Settings extends React.Component<Props, State> {
             disabled={!RuntimeConfig.INFOS.featurePublicBooking}
           />
           {this.state.publicBookingEnabled &&
-            (!this.state.publicBookingEnabledSaved ||
-              this.publicBookingSpaces.length > 0) && (
+            !this.state.publicBookingEnabledSaved && (
               <Form.Group as={Row} className="mb-2">
                 <Form.Label column sm="2" htmlFor="select-publicBookingSpace">
                   {this.props.t("space")}
