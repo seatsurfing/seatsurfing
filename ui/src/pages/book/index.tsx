@@ -20,6 +20,8 @@ interface PublicBookableSpace {
   locationName: string;
   requireSubject: boolean;
   bookableDays: number[];
+  blockedFrom: string;
+  blockedUntil: string;
   x: number;
   y: number;
   width: number;
@@ -288,7 +290,13 @@ class PublicBooking extends React.Component<Props, State> {
     space: PublicBookableSpace | undefined,
     date: Date,
   ): boolean => {
-    if (!space || !space.bookableDays || space.bookableDays.length === 0) {
+    if (!space) {
+      return true;
+    }
+    if (DateUtil.isInPeriod(date, space.blockedFrom, space.blockedUntil)) {
+      return false;
+    }
+    if (!space.bookableDays || space.bookableDays.length === 0) {
       return true;
     }
     return space.bookableDays.includes(date.getDay());

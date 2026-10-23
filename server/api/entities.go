@@ -112,6 +112,8 @@ type Location struct {
 	Timezone              string
 	Enabled               bool
 	BookableDays          string
+	BlockedFrom           *time.Time
+	BlockedUntil          *time.Time
 }
 
 // ─── Space ───────────────────────────────────────────────────────────────────

@@ -40,6 +40,8 @@ type CreateLocationRequest struct {
 	MapType               string   `json:"mapType" validate:"omitempty,oneof=designed"`
 	AllowedBookerGroupIDs []string `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 	BookableDays          []int    `json:"bookableDays" validate:"dive,min=0,max=6"`
+	BlockedFrom           string   `json:"blockedFrom"`
+	BlockedUntil          string   `json:"blockedUntil"`
 }
 
 type GetLocationResponse struct {
@@ -315,10 +317,17 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	blockedFrom, blockedUntil, ok := parseBlockedPeriod(&m)
+	if !ok {
+		SendBadRequest(w)
+		return
+	}
 	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
 	eNew.OrganizationID = e.OrganizationID
+	eNew.BlockedFrom = blockedFrom
+	eNew.BlockedUntil = blockedUntil
 	// Clear stale floor plan data before flipping map_type so that a failure
 	// here does not leave the location in an inconsistent state (map_type
 	// already updated but stale map data still present).
@@ -390,6 +399,13 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	blockedFrom, blockedUntil, ok := parseBlockedPeriod(&m)
+	if !ok {
+		SendBadRequest(w)
+		return
+	}
+	e.BlockedFrom = blockedFrom
+	e.BlockedUntil = blockedUntil
 	if err := GetLocationRepository().Create(e); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -645,6 +661,39 @@ func weekdaysToString(days []int) string {
 	return strings.Join(parts, ",")
 }
 
+func parseBlockedPeriod(m *CreateLocationRequest) (*time.Time, *time.Time, bool) {
+	from, err := parseLocationDate(m.BlockedFrom)
+	if err != nil {
+		return nil, nil, false
+	}
+	until, err := parseLocationDate(m.BlockedUntil)
+	if err != nil {
+		return nil, nil, false
+	}
+	if !service.GetLocationService().IsValidBlockedPeriod(from, until) {
+		return nil, nil, false
+	}
+	return from, until, true
+}
+
+func parseLocationDate(s string) (*time.Time, error) {
+	if s == "" {
+		return nil, nil
+	}
+	t, err := time.Parse(time.DateOnly, s)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func formatLocationDate(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(time.DateOnly)
+}
+
 func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Location {
 	e := &Location{}
 	e.Name = m.Name
@@ -673,6 +722,8 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
 	m.BookableDays = service.WeekdaysFromString(e.BookableDays)
+	m.BlockedFrom = formatLocationDate(e.BlockedFrom)
+	m.BlockedUntil = formatLocationDate(e.BlockedUntil)
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}

@@ -475,6 +475,20 @@ export default class DateUtil {
   }
 
   /**
+   * @param date local date to check
+   * @param from first day of the period ("YYYY-MM-DD"); empty means open start
+   * @param until last day of the period ("YYYY-MM-DD"); empty means open end
+   * @returns true if date's calendar day lies within the period; false if neither bound is set
+   */
+  static isInPeriod(date: Date, from?: string, until?: string): boolean {
+    if (!from && !until) {
+      return false;
+    }
+    const day = DateUtil.formatToDateTimeString(date).split("T")[0];
+    return (!from || day >= from) && (!until || day <= until);
+  }
+
+  /**
    * Parses a string into a time string in format "HH:MM" (24h).
    * Hours may be 0-23, minutes 0-59.
    *

@@ -1439,6 +1439,24 @@ class Search extends React.Component<Props, State> {
       );
     }
 
+    // blocked period
+    if (location.blockedFrom || location.blockedUntil) {
+      const formatter = Formatting.getFormatterDate();
+      const blockedFrom = location.blockedFrom
+        ? formatter.format(new Date(location.blockedFrom))
+        : "";
+      const blockedUntil = location.blockedUntil
+        ? formatter.format(new Date(location.blockedUntil))
+        : "";
+      attributeRows.push(
+        createFormRow(
+          this.props.t("blockedPeriod"),
+          blockedFrom + " – " + blockedUntil,
+          "blockedPeriod",
+        ),
+      );
+    }
+
     return attributeRows;
   };
 

@@ -651,5 +651,10 @@
   "publicBookingDurationMinMax": "Varauksen keston on oltava vähintään {{min}} ja enintään {{max}} tuntia.",
   "publicBookingFixedSpaceNotAvailable": "Tämä tila ei ole vapaana valittuna ajankohtana.",
   "publicBookingAllSpaces": "Kaikki tilat",
-  "directLinkNoSpaceAvailable": "Tila ei ole saatavilla valittuna ajankohtana. Ole hyvä ja vaihda ajankohtaa."
+  "directLinkNoSpaceAvailable": "Tila ei ole saatavilla valittuna ajankohtana. Ole hyvä ja vaihda ajankohtaa.",
+  "blockedFrom": "Blocked from",
+  "blockedPeriod": "Blocked period",
+  "blockedPeriodHint": "No bookings are possible within this period (both days inclusive). If only one date is set, the period is open-ended.",
+  "blockedUntil": "Blocked until",
+  "errorLocationBlocked": "Bookings for this area are not possible within its blocked period."
 }

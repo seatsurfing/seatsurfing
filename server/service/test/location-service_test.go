@@ -2,6 +2,7 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -58,6 +59,73 @@ func TestLocationServiceWeekdays(t *testing.T) {
 	admin := CreateTestUserOrgAdmin(org)
 	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "1")
 	CheckTestBool(t, true, svc.IsLocationWeekdayBookable(location, admin, saturday, saturday.Add(8)))
+}
+
+func TestLocationServiceBlockedPeriod(t *testing.T) {
+	org, user, location, _ := setupServiceTest(t)
+	svc := GetLocationService()
+	day := func(d int) *time.Time {
+		v := time.Date(2030, 9, d, 0, 0, 0, 0, time.UTC)
+		return &v
+	}
+	slot := func(d int) (time.Time, time.Time) {
+		return serviceTestSlot(d-2, 8, 17)
+	}
+
+	enter, leave := slot(5)
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, user, enter, leave))
+
+	location.BlockedFrom = day(4)
+	location.BlockedUntil = day(6)
+	enter, leave = slot(3)
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, user, enter, leave))
+	enter, leave = slot(4)
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, user, enter, leave))
+	enter, leave = slot(6)
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, user, enter, leave))
+	enter, leave = slot(7)
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, user, enter, leave))
+
+	// Multi-day booking overlapping the start of the period
+	enter, _ = slot(2)
+	_, leave = slot(4)
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, user, enter, leave))
+	// Leave at midnight of the first blocked day does not touch it
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, user, enter, *day(4)))
+
+	// Open end
+	location.BlockedUntil = nil
+	enter, leave = slot(25)
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, user, enter, leave))
+	enter, leave = slot(3)
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, user, enter, leave))
+
+	// Open start
+	location.BlockedFrom = nil
+	location.BlockedUntil = day(6)
+	enter, leave = slot(2)
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, user, enter, leave))
+	enter, leave = slot(7)
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, user, enter, leave))
+
+	admin := CreateTestUserOrgAdmin(org)
+	enter, leave = slot(2)
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, admin, enter, leave))
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "1")
+	CheckTestBool(t, false, svc.IsLocationBlocked(location, admin, enter, leave))
+	CheckTestBool(t, true, svc.IsLocationBlocked(location, nil, enter, leave))
+}
+
+func TestLocationServiceIsValidBlockedPeriod(t *testing.T) {
+	svc := GetLocationService()
+	from := time.Date(2030, 9, 4, 0, 0, 0, 0, time.UTC)
+	until := time.Date(2030, 9, 6, 0, 0, 0, 0, time.UTC)
+	CheckTestBool(t, true, svc.IsValidBlockedPeriod(nil, nil))
+	CheckTestBool(t, true, svc.IsValidBlockedPeriod(&from, nil))
+	CheckTestBool(t, true, svc.IsValidBlockedPeriod(nil, &until))
+	CheckTestBool(t, true, svc.IsValidBlockedPeriod(&from, &until))
+	CheckTestBool(t, true, svc.IsValidBlockedPeriod(&from, &from))
+	CheckTestBool(t, false, svc.IsValidBlockedPeriod(&until, &from))
 }
 
 func TestValidateSearchAttributes(t *testing.T) {

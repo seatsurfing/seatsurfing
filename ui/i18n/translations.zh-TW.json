@@ -651,5 +651,10 @@
   "publicBookingDurationMinMax": "A booking must last between {{min}} and {{max}} hours.",
   "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot.",
   "publicBookingAllSpaces": "All spaces",
-  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times."
+  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times.",
+  "blockedFrom": "Blocked from",
+  "blockedPeriod": "Blocked period",
+  "blockedPeriodHint": "No bookings are possible within this period (both days inclusive). If only one date is set, the period is open-ended.",
+  "blockedUntil": "Blocked until",
+  "errorLocationBlocked": "Bookings for this area are not possible within its blocked period."
 }
