@@ -222,6 +222,10 @@ form#filter-locations-form .row {
   opacity: 0.5;
 }
 
+.booking-pending-background {
+  background-color: rgba(var(--bs-secondary-rgb), 0.15);
+}
+
 @media only screen and (min-width: 440px) {
   .search-config-outer {
     width: calc(100% - 20px);

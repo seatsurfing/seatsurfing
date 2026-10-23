@@ -1147,7 +1147,8 @@ class Search extends React.Component<Props, State> {
         </p>
         <div
           className={
-            "booking-name-row" + (booking.approved ? "" : " booking-pending")
+            "booking-name-row" +
+            (booking.approved ? "" : " booking-pending-background")
           }
         >
           {recurringIcon}
