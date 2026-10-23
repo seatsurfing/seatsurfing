@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.136.4](https://github.com/seatsurfing/seatsurfing/compare/v1.136.3...v1.136.4) (2026-10-23)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** add timezone information to room calendar ([#2800](https://github.com/seatsurfing/seatsurfing/issues/2800)) ([f118604](https://github.com/seatsurfing/seatsurfing/commit/f11860415f0c15ab3e1d7b0679c6b444304a8cc2))
+* **booking-ui:** show unapproved bookings transparent in list and on map ([#2801](https://github.com/seatsurfing/seatsurfing/issues/2801)) ([3398463](https://github.com/seatsurfing/seatsurfing/commit/3398463ce19af5d5a46102d4d25ed1bd486e11e7))
+* **deps:** bump next from 16.4.1 to 16.4.2 in /ui in the production-dependencies group across 1 directory ([#2803](https://github.com/seatsurfing/seatsurfing/issues/2803)) ([deb0594](https://github.com/seatsurfing/seatsurfing/commit/deb05941d24a14cf5c0f01f98a57e97d4658d2db))
+* **main:** improve Seatsurfing logo in auto mails ([#2802](https://github.com/seatsurfing/seatsurfing/issues/2802)) ([f56b555](https://github.com/seatsurfing/seatsurfing/commit/f56b555f2f460ff42d21c448adba048514089439))
+
 ## [1.136.3](https://github.com/seatsurfing/seatsurfing/compare/v1.136.2...v1.136.3) (2026-10-22)
 
 
