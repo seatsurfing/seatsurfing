@@ -3113,7 +3113,13 @@ class Search extends React.Component<Props, State> {
       );
 
     const spaceCalToolbar = (props: object) => (
-      <CustomToolbar toolbar={props as any} t={this.props.t} />
+      <CustomToolbar
+        toolbar={props as any}
+        t={this.props.t}
+        timezone={
+          this.getLocation()?.timezone || RuntimeConfig.INFOS.defaultTimezone
+        }
+      />
     );
 
     const spaceCalLocalizer = CalendarUtil.getLocalizer();
