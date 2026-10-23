@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.136.3](https://github.com/seatsurfing/seatsurfing/compare/v1.136.2...v1.136.3) (2026-10-22)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `65be09d` to `44a80dc` ([#2790](https://github.com/seatsurfing/seatsurfing/issues/2790)) ([2a29279](https://github.com/seatsurfing/seatsurfing/commit/2a292798f2fe1afdb42f934be6e4e99ea6772b7a))
+* **deps:** bump github.com/valkey-io/valkey-go from 1.0.78 to 1.0.79 in /server in the minor-and-patch group ([#2796](https://github.com/seatsurfing/seatsurfing/issues/2796)) ([d2cb057](https://github.com/seatsurfing/seatsurfing/commit/d2cb0570b0c03f9a7004170f41998ff2b86d19a7))
+* **deps:** bump react-tooltip from 6.0.8 to 6.0.9 in /ui in the production-dependencies group across 1 directory ([#2797](https://github.com/seatsurfing/seatsurfing/issues/2797)) ([269d957](https://github.com/seatsurfing/seatsurfing/commit/269d957d9f504a71e7d70a7df1998957b132a711))
+* **deps:** bump the production-dependencies group across 1 directory with 3 updates ([#2791](https://github.com/seatsurfing/seatsurfing/issues/2791)) ([2e2ed94](https://github.com/seatsurfing/seatsurfing/commit/2e2ed94c5deaf7bfa73816de10006dc5112c0e99))
+* **deps:** bump vite from 8.0.16 to 8.3.5 in /ui ([#2794](https://github.com/seatsurfing/seatsurfing/issues/2794)) ([e90b981](https://github.com/seatsurfing/seatsurfing/commit/e90b981bfe5a96fe17a4fef36b7b05d00b5fb940))
+* **main:** invalidate sessions after password reset ([#2795](https://github.com/seatsurfing/seatsurfing/issues/2795)) ([78dcf3d](https://github.com/seatsurfing/seatsurfing/commit/78dcf3d234c2667e989cadf866377602a6f71487))
+* **main:** update Spanish translation ([#2789](https://github.com/seatsurfing/seatsurfing/issues/2789)) ([de87b46](https://github.com/seatsurfing/seatsurfing/commit/de87b466cd7ccba858ec3ec4792cc7e049529c6c))
+
 ## [1.136.2](https://github.com/seatsurfing/seatsurfing/compare/v1.136.1...v1.136.2) (2026-10-20)
 
 
