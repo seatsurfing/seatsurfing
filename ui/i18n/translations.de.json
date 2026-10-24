@@ -671,5 +671,6 @@
   "moveDown": "Nach unten verschieben",
   "publicBookingFixedSpaceNotAvailable": "Dieser Platz ist im gewählten Zeitraum nicht verfügbar.",
   "publicBookingAllSpaces": "Alle Plätze",
-  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times."
+  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times.",
+  "featureNotEnabled": "Funktion nicht aktiviert."
 }

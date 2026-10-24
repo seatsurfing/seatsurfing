@@ -668,5 +668,6 @@
   "publicBookingDurationMinMax": "A booking must last between {{min}} and {{max}} hours.",
   "publicBookingFixedSpaceNotAvailable": "This space is not available for the selected time slot.",
   "publicBookingAllSpaces": "All spaces",
-  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times."
+  "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times.",
+  "featureNotEnabled": "Feature not enabled."
 }

@@ -668,5 +668,6 @@
   "showBookingAttributes": "Show booking attributes",
   "moveUp": "Move up",
   "moveDown": "Move down",
-  "publicBookingAllSpaces": "All spaces"
+  "publicBookingAllSpaces": "All spaces",
+  "featureNotEnabled": "Feature not enabled."
 }
