@@ -248,6 +248,8 @@ func locationToProto(l *Location) *commonpb.Location {
 		MaxConcurrentBookings: uint32(l.MaxConcurrentBookings),
 		Timezone:              l.Timezone,
 		Enabled:               l.Enabled,
+		BlockedFrom:           nullTimeToProto(l.BlockedFrom),
+		BlockedUntil:          nullTimeToProto(l.BlockedUntil),
 	}
 }
 
@@ -268,6 +270,8 @@ func locationFromProto(p *commonpb.Location) *Location {
 		MaxConcurrentBookings: uint(p.MaxConcurrentBookings),
 		Timezone:              p.Timezone,
 		Enabled:               p.Enabled,
+		BlockedFrom:           nullTimeFromProto(p.BlockedFrom),
+		BlockedUntil:          nullTimeFromProto(p.BlockedUntil),
 	}
 }
 

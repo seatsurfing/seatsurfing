@@ -217,6 +217,44 @@ describe("DateUtil", () => {
     });
   });
 
+  describe("isInPeriod", () => {
+    it("should not block without a period", () => {
+      expect(DateUtil.isInPeriod(new Date(2030, 8, 4), "", "")).toBe(false);
+    });
+
+    it("should block inclusive start and end days", () => {
+      const from = "2030-09-04";
+      const until = "2030-09-06";
+      expect(DateUtil.isInPeriod(new Date(2030, 8, 3), from, until)).toBe(
+        false,
+      );
+      expect(DateUtil.isInPeriod(new Date(2030, 8, 4, 0, 0), from, until)).toBe(
+        true,
+      );
+      expect(
+        DateUtil.isInPeriod(new Date(2030, 8, 6, 23, 59), from, until),
+      ).toBe(true);
+      expect(DateUtil.isInPeriod(new Date(2030, 8, 7), from, until)).toBe(
+        false,
+      );
+    });
+
+    it("should treat a missing bound as open", () => {
+      expect(DateUtil.isInPeriod(new Date(2099, 0, 1), "2030-09-04", "")).toBe(
+        true,
+      );
+      expect(DateUtil.isInPeriod(new Date(2030, 8, 3), "2030-09-04", "")).toBe(
+        false,
+      );
+      expect(DateUtil.isInPeriod(new Date(2020, 0, 1), "", "2030-09-06")).toBe(
+        true,
+      );
+      expect(DateUtil.isInPeriod(new Date(2030, 8, 7), "", "2030-09-06")).toBe(
+        false,
+      );
+    });
+  });
+
   describe("getNextPreferredEnterAndLeaveTime", () => {
     afterEach(() => {
       vi.useRealTimers();

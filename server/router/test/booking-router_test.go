@@ -228,6 +228,30 @@ func TestBookingsBookableDaysRestrictionLeaveAtMidnight(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
 
+func TestBookingsLocationBlocked(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	blockedFrom := time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC)
+	location.BlockedFrom = &blockedFrom
+	GetLocationRepository().Update(location)
+
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-03T08:30:00Z\", \"leave\": \"2030-09-03T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingBlocked), res.Header().Get("X-Error-Code"))
+
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+}
+
 func TestBookingsSubjectRequired(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

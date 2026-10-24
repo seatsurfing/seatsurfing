@@ -272,6 +272,37 @@ func (s *LocationService) IsLocationWeekdayBookable(location *Location, user *Us
 	return true
 }
 
+// IsLocationBlocked checks whether [enter, leave) touches a calendar day
+// within the location's blocked period. A missing start or end leaves that
+// side of the period open. Honors the org's no-admin-restrictions setting
+// like IsLocationWeekdayBookable.
+func (s *LocationService) IsLocationBlocked(location *Location, user *User, enter, leave time.Time) bool {
+	if location.BlockedFrom == nil && location.BlockedUntil == nil {
+		return false
+	}
+	if hasNoAdminRestrictions(user, location.OrganizationID) {
+		return false
+	}
+	firstDay := dateOnly(enter)
+	lastDay := dateOnly(leave.Add(-time.Nanosecond))
+	if location.BlockedUntil != nil && firstDay.After(dateOnly(*location.BlockedUntil)) {
+		return false
+	}
+	if location.BlockedFrom != nil && lastDay.Before(dateOnly(*location.BlockedFrom)) {
+		return false
+	}
+	return true
+}
+
+// IsValidBlockedPeriod reports whether from is not after until (if both set).
+func (s *LocationService) IsValidBlockedPeriod(from, until *time.Time) bool {
+	return from == nil || until == nil || !dateOnly(*from).After(dateOnly(*until))
+}
+
+func dateOnly(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+}
+
 // WeekdaysFromString parses a location's comma-separated bookable weekdays.
 func WeekdaysFromString(csv string) []int {
 	days := []int{}

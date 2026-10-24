@@ -18,7 +18,7 @@ interface Props {
   required?: boolean | undefined;
   disabled?: boolean | undefined;
   showWeekday?: boolean | undefined;
-  value: Date;
+  value: Date | null;
   minDate?: Date | undefined;
   maxDate?: Date | undefined;
   isDateDisabled?: (date: Date) => boolean;
@@ -78,7 +78,7 @@ class DateTimePicker extends React.Component<Props, State> {
         id={this.props.id}
         data-enable-time={this.props.enableTime}
         disabled={this.props.disabled}
-        value={this.props.value}
+        value={this.props.value ?? ""}
         required={this.props.required}
         onClose={([value]: Date[]) => {
           if (value != null && value instanceof Date)
