@@ -714,10 +714,6 @@ class Search extends React.Component<Props, State> {
 
   loadSpaces = async (locationId: string) => {
     this.setState({ loading: true });
-    const leave = new Date(this.state.leave);
-    if (!RuntimeConfig.INFOS.dailyBasisBooking) {
-      leave.setSeconds(leave.getSeconds() - 1);
-    }
     // Responses may complete out of order (e.g. rapid picker changes): only the
     // most recent request may update the data.
     const requestId = ++this.loadSpacesRequestId;
@@ -726,7 +722,7 @@ class Search extends React.Component<Props, State> {
       const data = await Space.listAvailability(
         locationId,
         this.state.enter,
-        leave,
+        this.state.leave,
         this.state.searchAttributesSpace,
         true,
       );
@@ -1216,9 +1212,6 @@ class Search extends React.Component<Props, State> {
       booking.subject = this.state.subject;
       booking.enter = new Date(this.state.enter);
       booking.leave = new Date(this.state.leave);
-      if (!RuntimeConfig.INFOS.dailyBasisBooking) {
-        booking.leave.setSeconds(booking.leave.getSeconds() - 1);
-      }
       booking.end = new Date(this.state.recurrence.end);
       booking.spaceId = this.state.selectedSpace.id;
       booking.cadence = this.state.recurrence.cadence;
@@ -1229,9 +1222,6 @@ class Search extends React.Component<Props, State> {
       booking.subject = this.state.subject;
       booking.enter = new Date(this.state.enter);
       booking.leave = new Date(this.state.leave);
-      if (!RuntimeConfig.INFOS.dailyBasisBooking) {
-        booking.leave.setSeconds(booking.leave.getSeconds() - 1);
-      }
       booking.space = this.state.selectedSpace;
     }
     try {
@@ -1756,13 +1746,9 @@ class Search extends React.Component<Props, State> {
       showSearchModal: false,
       loading: true,
     });
-    let leave = new Date(this.state.leave);
-    if (!RuntimeConfig.INFOS.dailyBasisBooking) {
-      leave.setSeconds(leave.getSeconds() - 1);
-    }
     SearchAttribute.search(
       this.state.enter,
-      leave,
+      this.state.leave,
       this.state.searchAttributesLocation,
     ).then((locations) => {
       this.locations = locations;
@@ -1837,9 +1823,6 @@ class Search extends React.Component<Props, State> {
     rb.enter = new Date(this.state.enter);
     rb.leave = new Date(this.state.leave);
     rb.end = new Date(this.state.recurrence.end);
-    if (!RuntimeConfig.INFOS.dailyBasisBooking) {
-      rb.leave.setSeconds(rb.leave.getSeconds() - 1);
-    }
     rb.cadence = this.state.recurrence.cadence;
     rb.cycle = this.state.recurrence.cycle;
     if (this.state.recurrence.cadence === RecurringBooking.CadenceWeekly) {
