@@ -679,3 +679,32 @@ func TestSettingsPublicBookingDurationHoursInvalidRange(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
+
+func TestSettingsMissingFeatureReturnsFalse(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	GetSettingsRepository().Delete(org.ID, SettingFeatureNoUserLimit.Name)
+
+	req := NewHTTPRequest("GET", "/setting/"+SettingFeatureNoUserLimit.Name, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody string
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "0", resBody)
+}
+
+func TestSettingsMissingNonFeatureNotFound(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	GetSettingsRepository().Delete(org.ID, SettingAllowAnyUser.Name)
+
+	req := NewHTTPRequest("GET", "/setting/"+SettingAllowAnyUser.Name, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
