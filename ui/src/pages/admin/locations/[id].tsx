@@ -25,6 +25,7 @@ import {
   Grid as IconGrid,
   Eye as IconEye,
   Type as IconFontSize,
+  Globe as IconGlobe,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -261,7 +262,13 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
         >
           {space.approvers && space.approvers.length > 0 && (
-            <SpaceApprovalIcon />
+            <div style={{ display: "flex", gap: "4px" }}>
+              <SpaceApprovalIcon />
+              {space.publicBookingEnabled &&
+                RuntimeConfig.INFOS.publicBookingEnabled && (
+                  <IconGlobe size={16} />
+                )}
+            </div>
           )}
           <input
             type="text"
