@@ -307,11 +307,13 @@ export default class RuntimeConfig {
           ? JSON.parse(s.value)
           : [];
       if (s.name === "feature_groups")
-        RuntimeConfig.INFOS.featureGroups = s.value ? JSON.parse(s.value) : [];
+        RuntimeConfig.INFOS.featureGroups = s.value
+          ? JSON.parse(s.value)
+          : false;
       if (s.name === "feature_auth_providers")
         RuntimeConfig.INFOS.featureAuthProviders = s.value
           ? JSON.parse(s.value)
-          : [];
+          : false;
       if (s.name === "feature_kiosk_mode")
         RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
       if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
@@ -321,11 +323,11 @@ export default class RuntimeConfig {
       if (s.name === Organization.PREF_PUBLIC_BOOKING_ENABLED)
         RuntimeConfig.INFOS.publicBookingEnabled = s.value === "1";
       if (s.name === "cloud_hosted")
-        RuntimeConfig.INFOS.cloudHosted = s.value ? JSON.parse(s.value) : [];
+        RuntimeConfig.INFOS.cloudHosted = s.value ? JSON.parse(s.value) : false;
       if (s.name === "subscription_active")
         RuntimeConfig.INFOS.subscriptionActive = s.value
           ? JSON.parse(s.value)
-          : [];
+          : false;
       if (s.name === "_sys_org_primary_domain")
         RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
       if (s.name === "_sys_disable_password_login")

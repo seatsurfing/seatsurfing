@@ -1,6 +1,7 @@
 package router
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -159,12 +160,26 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	value, err := GetSettingsRepository().Get(user.OrganizationID, vars["name"])
+	if errors.Is(err, sql.ErrNoRows) && router.isFeatureSetting(vars["name"]) {
+		SendJSON(w, "0")
+		return
+	}
 	if err != nil {
 		log.Println(err)
 		SendNotFound(w)
 		return
 	}
 	SendJSON(w, value)
+}
+
+func (router *SettingsRouter) isFeatureSetting(name string) bool {
+	return name == SettingFeatureNoUserLimit.Name ||
+		name == SettingFeatureCustomDomains.Name ||
+		name == SettingFeatureGroups.Name ||
+		name == SettingFeatureAuthProviders.Name ||
+		name == SettingFeatureRecurringBookings.Name ||
+		name == SettingFeatureKioskMode.Name ||
+		name == SettingFeaturePublicBooking.Name
 }
 
 func (router *SettingsRouter) setSetting(w http.ResponseWriter, r *http.Request) {

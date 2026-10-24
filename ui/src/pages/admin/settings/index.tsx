@@ -21,6 +21,7 @@ import {
   RefreshCw as IconRefresh,
   MoreVertical as IconMore,
   ExternalLink as IconExternalLink,
+  Edit2 as IconEdit,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -880,7 +881,17 @@ class Settings extends React.Component<Props, State> {
         </Table>
       );
     } else if (!RuntimeConfig.INFOS.featureAuthProviders) {
-      authProviderTable = <p>Feature not enabled.</p>;
+      authProviderTable = <p>{this.props.t("featureNotEnabled")}</p>;
+    }
+
+    let publicBookingHint: React.JSX.Element | null = null;
+    if (
+      RuntimeConfig.INFOS.cloudHosted &&
+      !RuntimeConfig.INFOS.subscriptionActive
+    ) {
+      publicBookingHint = <CloudFeatureHint />;
+    } else if (!RuntimeConfig.INFOS.featurePublicBooking) {
+      publicBookingHint = <p>{this.props.t("featureNotEnabled")}</p>;
     }
 
     let dangerZone = <></>;
@@ -951,17 +962,37 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("org")}
             </Form.Label>
             <Col sm="4">
-              <p className="form-control-plaintext">
-                {this.org?.name} (
-                {this.org?.language
-                  ? this.props.t("language-" + this.org.language)
-                  : "—"}
-                )
-                <br />
-                {this.org?.contactFirstname} {this.org?.contactLastname} (
-                {this.org?.contactEmail})
-              </p>
-              <Link href={`/admin/settings/org`}>{this.props.t("edit")}</Link>
+              <div className="d-flex align-items-start">
+                <p className="form-control-plaintext flex-grow-1">
+                  {this.org?.name} (
+                  {this.org?.language
+                    ? this.props.t("language-" + this.org.language)
+                    : "—"}
+                  )
+                  <br />
+                  {this.org?.contactFirstname} {this.org?.contactLastname} (
+                  {this.org?.contactEmail})
+                </p>
+                <Button
+                  as={Link as any}
+                  href="/admin/settings/org"
+                  variant="outline-secondary"
+                  size="sm"
+                  title={this.props.t("edit")}
+                  aria-label={this.props.t("edit")}
+                  style={{
+                    marginLeft: "5px",
+                    marginTop: "6px",
+                    padding: "4px 4px",
+                    lineHeight: 1,
+                  }}
+                >
+                  <IconEdit
+                    className="feather"
+                    style={{ width: "14px", height: "14px" }}
+                  />
+                </Button>
+              </div>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
@@ -1609,275 +1640,289 @@ class Settings extends React.Component<Props, State> {
               <PremiumFeatureIcon />
             </h4>
           </div>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-publicBookingEnabled"
-                label={
-                  <>
-                    {this.props.t("publicBookingAvailable")}
-                    <HintTooltip
-                      hint={this.props.t("publicBookingAvailableHint")}
-                    />
-                  </>
-                }
-                checked={
-                  this.state.publicBookingEnabled &&
-                  RuntimeConfig.INFOS.featurePublicBooking
-                }
-                disabled={!RuntimeConfig.INFOS.featurePublicBooking}
-                onChange={(e: any) =>
-                  this.setState({ publicBookingEnabled: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-publicBookingShowMap"
-                label={
-                  <>
-                    {this.props.t("publicBookingShowMap")}
-                    <HintTooltip
-                      hint={this.props.t("publicBookingShowMapHint")}
-                    />
-                  </>
-                }
-                checked={
-                  this.state.publicBookingShowMap &&
-                  RuntimeConfig.INFOS.featurePublicBooking
-                }
-                disabled={
-                  !RuntimeConfig.INFOS.featurePublicBooking ||
-                  !this.state.publicBookingEnabled
-                }
-                onChange={(e: any) =>
-                  this.setState({ publicBookingShowMap: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-publicBookingShowAvailability"
-                label={
-                  <>
-                    {this.props.t("publicBookingShowAvailability")}
-                    <HintTooltip
-                      hint={this.props.t("publicBookingShowAvailabilityHint")}
-                    />
-                  </>
-                }
-                checked={
-                  this.state.publicBookingShowAvailability &&
-                  RuntimeConfig.INFOS.featurePublicBooking
-                }
-                disabled={
-                  !RuntimeConfig.INFOS.featurePublicBooking ||
-                  !this.state.publicBookingEnabled
-                }
-                onChange={(e: any) =>
-                  this.setState({
-                    publicBookingShowAvailability: e.target.checked,
-                  })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="input-publicBookingMinDurationHours"
-            >
-              {this.props.t("minBookingDuration")}
-              <HintTooltip hint={this.props.t("publicBookingDurationHint")} />
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <InputGroup.Checkbox
-                  id="check-publicBookingMinDurationHours"
-                  checked={this.state.publicBookingMinDurationEnabled}
-                  onChange={(e: any) =>
-                    this.setState({
-                      publicBookingMinDurationEnabled: e.target.checked,
-                    })
-                  }
-                  disabled={
-                    !RuntimeConfig.INFOS.featurePublicBooking ||
-                    !this.state.publicBookingEnabled
-                  }
-                />
-                <Form.Control
-                  id="input-publicBookingMinDurationHours"
-                  type="number"
-                  value={
-                    Number.isNaN(this.state.publicBookingMinDurationHours)
-                      ? ""
-                      : this.state.publicBookingMinDurationHours
-                  }
-                  onChange={(e: any) =>
-                    this.setState({
-                      publicBookingMinDurationHours: window.parseInt(
-                        e.target.value,
-                      ),
-                    })
-                  }
-                  required={this.state.publicBookingMinDurationEnabled}
-                  min="1"
-                  max={
-                    this.state.publicBookingMaxDurationEnabled
-                      ? this.state.publicBookingMaxDurationHours
-                      : 24
-                  }
-                  disabled={
-                    !RuntimeConfig.INFOS.featurePublicBooking ||
-                    !this.state.publicBookingEnabled ||
-                    !this.state.publicBookingMinDurationEnabled
-                  }
-                />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label
-              column
-              sm="2"
-              htmlFor="input-publicBookingMaxDurationHours"
-            >
-              {this.props.t("maxBookingDuration")}
-              <HintTooltip hint={this.props.t("publicBookingDurationHint")} />
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <InputGroup.Checkbox
-                  id="check-publicBookingMaxDurationHours"
-                  checked={this.state.publicBookingMaxDurationEnabled}
-                  onChange={(e: any) =>
-                    this.setState({
-                      publicBookingMaxDurationEnabled: e.target.checked,
-                    })
-                  }
-                  disabled={
-                    !RuntimeConfig.INFOS.featurePublicBooking ||
-                    !this.state.publicBookingEnabled
-                  }
-                />
-                <Form.Control
-                  id="input-publicBookingMaxDurationHours"
-                  type="number"
-                  value={
-                    Number.isNaN(this.state.publicBookingMaxDurationHours)
-                      ? ""
-                      : this.state.publicBookingMaxDurationHours
-                  }
-                  onChange={(e: any) =>
-                    this.setState({
-                      publicBookingMaxDurationHours: window.parseInt(
-                        e.target.value,
-                      ),
-                    })
-                  }
-                  required={this.state.publicBookingMaxDurationEnabled}
-                  min={
-                    this.state.publicBookingMinDurationEnabled
-                      ? this.state.publicBookingMinDurationHours
-                      : 1
-                  }
-                  max="24"
-                  disabled={
-                    !RuntimeConfig.INFOS.featurePublicBooking ||
-                    !this.state.publicBookingEnabled ||
-                    !this.state.publicBookingMaxDurationEnabled
-                  }
-                />
-                <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Form.Group>
-          <BookingAttributesEditor
-            disabled={!RuntimeConfig.INFOS.featurePublicBooking}
-          />
-          {this.state.publicBookingEnabled && (
-            <Form.Group as={Row}>
-              <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
-                {this.props.t("publicBookingUrl")}
-              </Form.Label>
-              <Col sm="4">
-                <InputGroup>
-                  <Form.Select
-                    id="select-publicBookingSpace"
-                    aria-label={this.props.t("space")}
-                    className="flex-grow-0 w-25"
-                    value={this.state.publicBookingSpaceId}
+          {publicBookingHint ?? (
+            <>
+              <Form.Group as={Row}>
+                <Col sm="6">
+                  <Form.Check
+                    type="checkbox"
+                    id="check-publicBookingEnabled"
+                    label={
+                      <>
+                        {this.props.t("publicBookingAvailable")}
+                        <HintTooltip
+                          hint={this.props.t("publicBookingAvailableHint")}
+                        />
+                      </>
+                    }
+                    checked={
+                      this.state.publicBookingEnabled &&
+                      RuntimeConfig.INFOS.featurePublicBooking
+                    }
+                    disabled={!RuntimeConfig.INFOS.featurePublicBooking}
+                    onChange={(e: any) =>
+                      this.setState({ publicBookingEnabled: e.target.checked })
+                    }
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Col sm="6">
+                  <Form.Check
+                    type="checkbox"
+                    id="check-publicBookingShowMap"
+                    label={
+                      <>
+                        {this.props.t("publicBookingShowMap")}
+                        <HintTooltip
+                          hint={this.props.t("publicBookingShowMapHint")}
+                        />
+                      </>
+                    }
+                    checked={
+                      this.state.publicBookingShowMap &&
+                      RuntimeConfig.INFOS.featurePublicBooking
+                    }
                     disabled={
-                      !this.state.publicBookingEnabledSaved ||
-                      !RuntimeConfig.INFOS.featurePublicBooking
+                      !RuntimeConfig.INFOS.featurePublicBooking ||
+                      !this.state.publicBookingEnabled
                     }
                     onChange={(e: any) =>
-                      this.setState({ publicBookingSpaceId: e.target.value })
-                    }
-                  >
-                    <option value="">
-                      {this.props.t("publicBookingAllSpaces")}
-                    </option>
-                    {this.getPublicBookingLocations().flatMap((l) =>
-                      this.publicBookingSpaces
-                        .filter((s) => s.locationId === l.id)
-                        .map((s) => (
-                          <option key={s.spaceId} value={s.spaceId}>
-                            {l.name} / {s.spaceName}
-                          </option>
-                        )),
-                    )}
-                  </Form.Select>
-                  <Form.Control
-                    id="input-publicBookingUrl"
-                    type="text"
-                    value={
-                      this.getPublicBookingUrl() +
-                      (this.state.publicBookingEnabledSaved
-                        ? ""
-                        : " (" + this.props.t("availableAfterSaving") + ")")
-                    }
-                    readOnly={true}
-                    disabled={
-                      !this.state.publicBookingEnabledSaved ||
-                      !RuntimeConfig.INFOS.featurePublicBooking
-                    }
-                    className={
-                      this.state.publicBookingEnabledSaved ? "" : "fst-italic"
+                      this.setState({ publicBookingShowMap: e.target.checked })
                     }
                   />
-                  <CopyToClipboardButton
-                    text={this.getPublicBookingUrl()}
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Col sm="6">
+                  <Form.Check
+                    type="checkbox"
+                    id="check-publicBookingShowAvailability"
+                    label={
+                      <>
+                        {this.props.t("publicBookingShowAvailability")}
+                        <HintTooltip
+                          hint={this.props.t(
+                            "publicBookingShowAvailabilityHint",
+                          )}
+                        />
+                      </>
+                    }
+                    checked={
+                      this.state.publicBookingShowAvailability &&
+                      RuntimeConfig.INFOS.featurePublicBooking
+                    }
                     disabled={
-                      !this.state.publicBookingEnabledSaved ||
-                      !RuntimeConfig.INFOS.featurePublicBooking
+                      !RuntimeConfig.INFOS.featurePublicBooking ||
+                      !this.state.publicBookingEnabled
+                    }
+                    onChange={(e: any) =>
+                      this.setState({
+                        publicBookingShowAvailability: e.target.checked,
+                      })
                     }
                   />
-                  <Button
-                    aria-label={this.props.t("publicBookingUrl")}
-                    variant="outline-secondary"
-                    href={this.getPublicBookingUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    disabled={
-                      !this.state.publicBookingEnabledSaved ||
-                      !RuntimeConfig.INFOS.featurePublicBooking
-                    }
-                  >
-                    <IconExternalLink className="feather" />
-                  </Button>
-                </InputGroup>
-              </Col>
-            </Form.Group>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Form.Label
+                  column
+                  sm="2"
+                  htmlFor="input-publicBookingMinDurationHours"
+                >
+                  {this.props.t("minBookingDuration")}
+                  <HintTooltip
+                    hint={this.props.t("publicBookingDurationHint")}
+                  />
+                </Form.Label>
+                <Col sm="4">
+                  <InputGroup>
+                    <InputGroup.Checkbox
+                      id="check-publicBookingMinDurationHours"
+                      checked={this.state.publicBookingMinDurationEnabled}
+                      onChange={(e: any) =>
+                        this.setState({
+                          publicBookingMinDurationEnabled: e.target.checked,
+                        })
+                      }
+                      disabled={
+                        !RuntimeConfig.INFOS.featurePublicBooking ||
+                        !this.state.publicBookingEnabled
+                      }
+                    />
+                    <Form.Control
+                      id="input-publicBookingMinDurationHours"
+                      type="number"
+                      value={
+                        Number.isNaN(this.state.publicBookingMinDurationHours)
+                          ? ""
+                          : this.state.publicBookingMinDurationHours
+                      }
+                      onChange={(e: any) =>
+                        this.setState({
+                          publicBookingMinDurationHours: window.parseInt(
+                            e.target.value,
+                          ),
+                        })
+                      }
+                      required={this.state.publicBookingMinDurationEnabled}
+                      min="1"
+                      max={
+                        this.state.publicBookingMaxDurationEnabled
+                          ? this.state.publicBookingMaxDurationHours
+                          : 24
+                      }
+                      disabled={
+                        !RuntimeConfig.INFOS.featurePublicBooking ||
+                        !this.state.publicBookingEnabled ||
+                        !this.state.publicBookingMinDurationEnabled
+                      }
+                    />
+                    <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                  </InputGroup>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Form.Label
+                  column
+                  sm="2"
+                  htmlFor="input-publicBookingMaxDurationHours"
+                >
+                  {this.props.t("maxBookingDuration")}
+                  <HintTooltip
+                    hint={this.props.t("publicBookingDurationHint")}
+                  />
+                </Form.Label>
+                <Col sm="4">
+                  <InputGroup>
+                    <InputGroup.Checkbox
+                      id="check-publicBookingMaxDurationHours"
+                      checked={this.state.publicBookingMaxDurationEnabled}
+                      onChange={(e: any) =>
+                        this.setState({
+                          publicBookingMaxDurationEnabled: e.target.checked,
+                        })
+                      }
+                      disabled={
+                        !RuntimeConfig.INFOS.featurePublicBooking ||
+                        !this.state.publicBookingEnabled
+                      }
+                    />
+                    <Form.Control
+                      id="input-publicBookingMaxDurationHours"
+                      type="number"
+                      value={
+                        Number.isNaN(this.state.publicBookingMaxDurationHours)
+                          ? ""
+                          : this.state.publicBookingMaxDurationHours
+                      }
+                      onChange={(e: any) =>
+                        this.setState({
+                          publicBookingMaxDurationHours: window.parseInt(
+                            e.target.value,
+                          ),
+                        })
+                      }
+                      required={this.state.publicBookingMaxDurationEnabled}
+                      min={
+                        this.state.publicBookingMinDurationEnabled
+                          ? this.state.publicBookingMinDurationHours
+                          : 1
+                      }
+                      max="24"
+                      disabled={
+                        !RuntimeConfig.INFOS.featurePublicBooking ||
+                        !this.state.publicBookingEnabled ||
+                        !this.state.publicBookingMaxDurationEnabled
+                      }
+                    />
+                    <InputGroup.Text>{this.props.t("hours")}</InputGroup.Text>
+                  </InputGroup>
+                </Col>
+              </Form.Group>
+              <BookingAttributesEditor
+                disabled={!RuntimeConfig.INFOS.featurePublicBooking}
+              />
+              {this.state.publicBookingEnabled && (
+                <Form.Group as={Row}>
+                  <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
+                    {this.props.t("publicBookingUrl")}
+                  </Form.Label>
+                  <Col sm="4">
+                    <InputGroup>
+                      <Form.Select
+                        id="select-publicBookingSpace"
+                        aria-label={this.props.t("space")}
+                        className="flex-grow-0 w-25"
+                        value={this.state.publicBookingSpaceId}
+                        disabled={
+                          !this.state.publicBookingEnabledSaved ||
+                          !RuntimeConfig.INFOS.featurePublicBooking
+                        }
+                        onChange={(e: any) =>
+                          this.setState({
+                            publicBookingSpaceId: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">
+                          {this.props.t("publicBookingAllSpaces")}
+                        </option>
+                        {this.getPublicBookingLocations().flatMap((l) =>
+                          this.publicBookingSpaces
+                            .filter((s) => s.locationId === l.id)
+                            .map((s) => (
+                              <option key={s.spaceId} value={s.spaceId}>
+                                {l.name} / {s.spaceName}
+                              </option>
+                            )),
+                        )}
+                      </Form.Select>
+                      <Form.Control
+                        id="input-publicBookingUrl"
+                        type="text"
+                        value={
+                          this.getPublicBookingUrl() +
+                          (this.state.publicBookingEnabledSaved
+                            ? ""
+                            : " (" + this.props.t("availableAfterSaving") + ")")
+                        }
+                        readOnly={true}
+                        disabled={
+                          !this.state.publicBookingEnabledSaved ||
+                          !RuntimeConfig.INFOS.featurePublicBooking
+                        }
+                        className={
+                          this.state.publicBookingEnabledSaved
+                            ? ""
+                            : "fst-italic"
+                        }
+                      />
+                      <CopyToClipboardButton
+                        text={this.getPublicBookingUrl()}
+                        disabled={
+                          !this.state.publicBookingEnabledSaved ||
+                          !RuntimeConfig.INFOS.featurePublicBooking
+                        }
+                      />
+                      <Button
+                        aria-label={this.props.t("publicBookingUrl")}
+                        variant="outline-secondary"
+                        href={this.getPublicBookingUrl()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        disabled={
+                          !this.state.publicBookingEnabledSaved ||
+                          !RuntimeConfig.INFOS.featurePublicBooking
+                        }
+                      >
+                        <IconExternalLink className="feather" />
+                      </Button>
+                    </InputGroup>
+                  </Col>
+                </Form.Group>
+              )}
+            </>
           )}
 
           {/* AUTH PROVIDERS */}

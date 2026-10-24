@@ -670,5 +670,6 @@
   "bookingAttributeTypeCheckbox": "Checkbox",
   "showBookingAttributes": "Show booking attributes",
   "moveDown": "Move down",
-  "moveUp": "Move up"
+  "moveUp": "Move up",
+  "featureNotEnabled": "Feature not enabled."
 }
