@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.137.1](https://github.com/seatsurfing/seatsurfing/compare/v1.137.0...v1.137.1) (2026-10-24)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add Cloud feature hint for public bookings ([5df74d8](https://github.com/seatsurfing/seatsurfing/commit/5df74d85f505779189bd5d3e2e6f3788e788b632))
+* **admin-ui:** disable public booking URL fields if feature is disabled ([#2811](https://github.com/seatsurfing/seatsurfing/issues/2811)) ([994d266](https://github.com/seatsurfing/seatsurfing/commit/994d2667b3449beeba0e051766fec3b1303a502f))
+* **admin-ui:** fix emoji in German Cloud hint text ([#2812](https://github.com/seatsurfing/seatsurfing/issues/2812)) ([9143ef3](https://github.com/seatsurfing/seatsurfing/commit/9143ef3e28f243799b7e3d2b2ca40b5351e54aa0))
+* **admin-ui:** mark public spaces on location map ([#2808](https://github.com/seatsurfing/seatsurfing/issues/2808)) ([c848c04](https://github.com/seatsurfing/seatsurfing/commit/c848c0498339c467123043f5cb9cad0c806ed354))
+* **admin-ui:** use button to edit org details ([#2815](https://github.com/seatsurfing/seatsurfing/issues/2815)) ([9da470c](https://github.com/seatsurfing/seatsurfing/commit/9da470c477f722bff06ff7da0c8800182038c4de))
+* **booking-ui:** update pending approval status in booking modal ([#2807](https://github.com/seatsurfing/seatsurfing/issues/2807)) ([98ab444](https://github.com/seatsurfing/seatsurfing/commit/98ab444abce88df0cc27e78b7051035c88d1d5ca))
+* **main:** fix boolean defaults in RuntimeConfig ([#2813](https://github.com/seatsurfing/seatsurfing/issues/2813)) ([c8479d7](https://github.com/seatsurfing/seatsurfing/commit/c8479d7032b5c093d0b540f11556a306ec83a928))
+* **main:** return false for missing feature flags ([#2810](https://github.com/seatsurfing/seatsurfing/issues/2810)) ([dd62853](https://github.com/seatsurfing/seatsurfing/commit/dd62853e1239e531c6c19d813c43df13d823a2f6))
+
 ## [1.137.0](https://github.com/seatsurfing/seatsurfing/compare/v1.136.4...v1.137.0) (2026-10-24)
 
 
