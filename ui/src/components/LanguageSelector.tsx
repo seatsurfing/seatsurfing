@@ -9,6 +9,7 @@ interface State {}
 
 interface Props {
   inNavbar?: boolean;
+  iconOnly?: boolean;
   compactBreakpoint?: Breakpoint;
   drop?: "up" | "down" | "start" | "end";
   align?: "start" | "end";
@@ -32,26 +33,30 @@ class LanguageSelector extends React.Component<Props, State> {
       </svg>
     );
 
+    const label =
+      RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
+      RuntimeConfig.getLanguage();
+
     const labelClass = this.props.compactBreakpoint
       ? this.props.inNavbar
         ? `d-${this.props.compactBreakpoint}-none`
         : `d-none d-${this.props.compactBreakpoint}-inline`
       : undefined;
 
-    const title = this.props.compactBreakpoint ? (
+    const title = this.props.iconOnly ? (
       <>
         {icon}
-        <span className={labelClass}>
-          {" "}
-          {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
-            RuntimeConfig.getLanguage()}
-        </span>
+        <span className="visually-hidden">{label}</span>
+      </>
+    ) : this.props.compactBreakpoint ? (
+      <>
+        {icon}
+        <span className={labelClass}> {label}</span>
       </>
     ) : (
       <>
         {icon}
-        {RuntimeConfig.getAvailableLanguages()[RuntimeConfig.getLanguage()] ??
-          RuntimeConfig.getLanguage()}
+        {label}
       </>
     );
 

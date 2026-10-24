@@ -234,3 +234,32 @@ h2 {
 [data-bs-theme="dark"] .rbt-input-hint {
   color: var(--bs-secondary-color) !important;
 }
+
+/* react-bootstrap-typeahead hardcodes light-mode colors for tokens and
+   the multi-select input, so re-theme them off the Bootstrap CSS vars. */
+[data-bs-theme="dark"] .rbt-token {
+  background-color: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary-text-emphasis);
+}
+
+[data-bs-theme="dark"] .rbt-token-active {
+  background-color: var(--bs-primary);
+  color: #fff;
+}
+
+[data-bs-theme="dark"] .rbt-token-disabled {
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .rbt-input-multi.focus {
+  color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .rbt-input-multi.disabled {
+  background-color: var(--bs-secondary-bg);
+}
+
+[data-bs-theme="dark"] .rbt-input-multi input::placeholder {
+  color: var(--bs-secondary-color);
+}
