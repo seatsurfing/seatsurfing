@@ -1804,15 +1804,17 @@ class Settings extends React.Component<Props, State> {
           <BookingAttributesEditor
             disabled={!RuntimeConfig.INFOS.featurePublicBooking}
           />
-          {this.state.publicBookingEnabled &&
-            !this.state.publicBookingEnabledSaved && (
-              <Form.Group as={Row} className="mb-2">
-                <Form.Label column sm="2" htmlFor="select-publicBookingSpace">
-                  {this.props.t("space")}
-                </Form.Label>
-                <Col sm="4">
+          {this.state.publicBookingEnabled && (
+            <Form.Group as={Row}>
+              <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
+                {this.props.t("publicBookingUrl")}
+              </Form.Label>
+              <Col sm="4">
+                <InputGroup>
                   <Form.Select
                     id="select-publicBookingSpace"
+                    aria-label={this.props.t("space")}
+                    className="flex-grow-0 w-25"
                     value={this.state.publicBookingSpaceId}
                     disabled={!this.state.publicBookingEnabledSaved}
                     onChange={(e: any) =>
@@ -1832,16 +1834,6 @@ class Settings extends React.Component<Props, State> {
                         )),
                     )}
                   </Form.Select>
-                </Col>
-              </Form.Group>
-            )}
-          {this.state.publicBookingEnabled && (
-            <Form.Group as={Row}>
-              <Form.Label column sm="2" htmlFor="input-publicBookingUrl">
-                {this.props.t("publicBookingUrl")}
-              </Form.Label>
-              <Col sm="4">
-                <InputGroup>
                   <Form.Control
                     id="input-publicBookingUrl"
                     type="text"
@@ -1851,7 +1843,8 @@ class Settings extends React.Component<Props, State> {
                         ? ""
                         : " (" + this.props.t("availableAfterSaving") + ")")
                     }
-                    disabled={true}
+                    readOnly={true}
+                    disabled={!this.state.publicBookingEnabledSaved}
                     className={
                       this.state.publicBookingEnabledSaved ? "" : "fst-italic"
                     }
