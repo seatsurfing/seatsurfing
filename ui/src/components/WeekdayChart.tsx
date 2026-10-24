@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   Chart,
   BarController,
@@ -7,6 +7,7 @@ import {
   LinearScale,
   Tooltip,
 } from "chart.js";
+import Theme from "@/util/Theme";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -23,9 +24,19 @@ const WeekdayChart: React.FC<WeekdayChartProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
+  const [theme, setTheme] = useState(Theme.getEffective());
+
+  useEffect(() => {
+    const onThemeChange = () => setTheme(Theme.getEffective());
+    window.addEventListener(Theme.CHANGE_EVENT, onThemeChange);
+    return () => window.removeEventListener(Theme.CHANGE_EVENT, onThemeChange);
+  }, []);
 
   useEffect(() => {
     if (!canvasRef.current) return;
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue("--bs-secondary-color");
+    const gridColor = styles.getPropertyValue("--bs-border-color-translucent");
     if (chartRef.current) {
       chartRef.current.destroy();
     }
@@ -50,9 +61,14 @@ const WeekdayChart: React.FC<WeekdayChartProps> = ({
           tooltip: { enabled: false },
         },
         scales: {
+          x: {
+            ticks: { color: textColor },
+            grid: { color: gridColor },
+          },
           y: {
             beginAtZero: true,
-            ticks: { stepSize: 1 },
+            ticks: { stepSize: 1, color: textColor },
+            grid: { color: gridColor },
           },
         },
       },
@@ -60,7 +76,7 @@ const WeekdayChart: React.FC<WeekdayChartProps> = ({
     return () => {
       chartRef.current?.destroy();
     };
-  }, [data, labels]);
+  }, [data, labels, theme]);
 
   return (
     <div style={{ height: `${height}px` }}>

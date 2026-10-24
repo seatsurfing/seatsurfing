@@ -5,6 +5,8 @@ import Link from "next/link";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import withReadyRouter from "./withReadyRouter";
 import RuntimeConfig from "./RuntimeConfig";
+import ThemeSelector from "./ThemeSelector";
+import LanguageSelector from "./LanguageSelector";
 
 interface State {
   search: string;
@@ -76,6 +78,7 @@ class AdminNavBar extends React.Component<Props, State> {
         <Form onSubmit={this.submitSearchForm} className="w-100">
           <Form.Control
             type="text"
+            data-bs-theme="light"
             className="form-control form-control-dark w-100"
             placeholder={this.props.t("search")}
             aria-label="Suchen"
@@ -85,7 +88,9 @@ class AdminNavBar extends React.Component<Props, State> {
             maxLength={64}
           />
         </Form>
-        <ul className="navbar-nav px-3">
+        <ul className="navbar-nav flex-row align-items-center gap-3 px-3">
+          <ThemeSelector inNavbar={true} iconOnly={true} align="end" />
+          <LanguageSelector inNavbar={true} iconOnly={true} align="end" />
           <li className="nav-item text-nowrap">
             <Button variant="link" className="nav-link" onClick={this.logout}>
               {" "}

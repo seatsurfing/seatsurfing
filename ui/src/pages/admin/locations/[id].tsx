@@ -1791,6 +1791,13 @@ class EditLocation extends React.Component<Props, State> {
         height:
           (this.mapData ? this.mapData.height * this.state.mapScale : 0) + "px",
         position: "relative" as "relative",
+      };
+      // Separate layer so the dark theme can invert the image without
+      // inverting the spaces drawn on top of it
+      const floorPlanImageStyle: React.CSSProperties = {
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
         backgroundSize: "contain",
         backgroundImage: this.mapData
           ? "url(data:image/" +
@@ -1975,6 +1982,7 @@ class EditLocation extends React.Component<Props, State> {
                   this.setState({ selectedSpace: null });
               }}
             >
+              <div className="floor-plan-bg" style={floorPlanImageStyle}></div>
               {this.state.gridEnabled && (
                 <div
                   className="floorplan-grid-overlay"

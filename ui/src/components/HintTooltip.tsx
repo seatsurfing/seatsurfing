@@ -13,7 +13,11 @@ const HintTooltip: React.FC<Props> = ({ hint }) => (
   >
     <IconHelp
       size={16}
-      style={{ marginLeft: "6px", cursor: "pointer", color: "#6c757d" }}
+      style={{
+        marginLeft: "6px",
+        cursor: "pointer",
+        color: "var(--bs-secondary-color)",
+      }}
     />
   </OverlayTrigger>
 );

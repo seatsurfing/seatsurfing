@@ -15,6 +15,7 @@ interface State {
 
 interface Props {
   inNavbar?: boolean;
+  iconOnly?: boolean;
   compactBreakpoint?: Breakpoint;
   drop?: "up" | "down" | "start" | "end";
   align?: "start" | "end";
@@ -67,7 +68,12 @@ class ThemeSelector extends React.Component<Props, State> {
         : `d-none d-${this.props.compactBreakpoint}-inline`
       : undefined;
 
-    const title = this.props.compactBreakpoint ? (
+    const title = this.props.iconOnly ? (
+      <>
+        {this.getIcon(this.state.mode)}
+        <span className="visually-hidden">{currentOption?.label}</span>
+      </>
+    ) : this.props.compactBreakpoint ? (
       <>
         {this.getIcon(this.state.mode)}
         <span className={labelClass}> {currentOption?.label}</span>
