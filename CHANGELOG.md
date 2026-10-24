@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.137.0](https://github.com/seatsurfing/seatsurfing/compare/v1.136.4...v1.137.0) (2026-10-24)
+
+
+### ✨ Features
+
+* **main:** add (public) booking attributes ([#2767](https://github.com/seatsurfing/seatsurfing/issues/2767)) ([91d6e4c](https://github.com/seatsurfing/seatsurfing/commit/91d6e4c1e3ce985e117a8d86835765704173c74e))
+
 ## [1.136.4](https://github.com/seatsurfing/seatsurfing/compare/v1.136.3...v1.136.4) (2026-10-23)
 
 

@@ -39,6 +39,7 @@ import {
   Loader as IconLoad,
   Calendar as IconCalendar,
   RefreshCw as IconRefresh,
+  Clock as IconPending,
 } from "react-feather";
 import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -1145,12 +1146,7 @@ class Search extends React.Component<Props, State> {
             )}
           </strong>
         </p>
-        <div
-          className={
-            "booking-name-row" +
-            (booking.approved ? "" : " booking-pending-background")
-          }
-        >
+        <div className="booking-name-row">
           {recurringIcon}
           <span hidden={!booking.subject}>
             {this.props.t("subject")}: {booking.subject}
@@ -1176,6 +1172,13 @@ class Search extends React.Component<Props, State> {
           <br />
           {this.props.t("leave")}:{" "}
           {Formatting.getFormatterShort().format(new Date(booking.leave))}
+          {booking.approved === false && (
+            <>
+              <br />
+              <IconPending className="feather" />
+              &nbsp;{this.props.t("approval")}: {this.props.t("pending")}
+            </>
+          )}
         </div>
         {RuntimeConfig.INFOS.showNames &&
           !RuntimeConfig.INFOS.disableBuddies &&
