@@ -47,7 +47,7 @@ const (
 	BookingCodeInPast                    = 1011
 	BookingCodeInvalidSubject            = 1012
 	BookingCodeInvalidWeekday            = 1013
-	BookingCodeBlocked                   = 1014
+	BookingCodeBlocked                   = 1016
 )
 
 // BookingErrorKind classifies why a booking operation failed.

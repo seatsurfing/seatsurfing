@@ -321,6 +321,9 @@ func (r *OrganizationStore) Delete(e *Organization) error {
 	if err := GetLocationRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}
+	if err := GetBookingAttributeRepository().DeleteAll(e.ID); err != nil {
+		return err
+	}
 	if err := GetSettingsRepository().DeleteAll(e.ID); err != nil {
 		return err
 	}

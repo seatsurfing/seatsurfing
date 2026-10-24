@@ -104,7 +104,7 @@ func (r *LocationStore) RunSchemaUpgrade(curVersion, targetVersion int) {
 			panic(err)
 		}
 	}
-	if curVersion < 63 {
+	if curVersion < 64 {
 		if _, err := GetDatabase().DB().Exec("ALTER TABLE locations " +
 			"ADD COLUMN IF NOT EXISTS blocked_from DATE NULL, " +
 			"ADD COLUMN IF NOT EXISTS blocked_until DATE NULL"); err != nil {

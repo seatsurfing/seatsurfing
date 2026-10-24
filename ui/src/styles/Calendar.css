@@ -49,3 +49,40 @@
 [data-bs-theme="dark"] .rbc-day-slot .rbc-time-slot {
   border-top: 1px solid var(--bs-border-color-translucent);
 }
+
+.custom-toolbar {
+  position: relative;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.custom-toolbar .toolbar-label {
+  display: flex;
+  float: right;
+  height: 100%;
+  align-items: center;
+}
+
+.custom-toolbar .toolbar-timezone {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  align-items: center;
+  gap: 0.25em;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.custom-toolbar .toolbar-timezone .feather {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: 0;
+}
+
+@media (min-width: 750px) {
+  .custom-toolbar .toolbar-timezone {
+    display: flex;
+  }
+}

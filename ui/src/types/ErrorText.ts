@@ -12,7 +12,7 @@ export const enum ResponseCode {
   BookingMaxHoursBeforeDelete = 1008,
   BookingInPast = 1011,
   BookingInvalidWeekday = 1013,
-  BookingBlocked = 1014,
+  BookingBlocked = 1016,
 
   PresenceReportDateRangeTooLong = 2001,
 

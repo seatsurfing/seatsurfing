@@ -982,6 +982,9 @@ class Search extends React.Component<Props, State> {
       : this.state.prefBookedColor;
   };
 
+  isApprovalPending = (bookings: Booking[]) =>
+    bookings.length > 0 && bookings.every((b) => !b.approved);
+
   renderItem = (item: Space) => {
     const bookings = Booking.createFromRawArray(item.rawBookings);
     const boxStyle: React.CSSProperties = {
@@ -1020,7 +1023,8 @@ class Search extends React.Component<Props, State> {
       "space space-box" +
       (RendererUtils.isSpaceVertical(item.width, item.height, item.rotation)
         ? " space-box-vertical"
-        : "");
+        : "") +
+      (this.isApprovalPending(bookings) ? " booking-pending" : "");
     const showBookerNames =
       this.state.showBookerNamesOnMap && RuntimeConfig.INFOS.showNames;
     const bookedEntry = item.rawBookings[0];
@@ -1109,7 +1113,13 @@ class Search extends React.Component<Props, State> {
               </div>
             ))}
         </div>
-        <span className="badge badge-pill" style={{ backgroundColor: bgColor }}>
+        <span
+          className={
+            "badge badge-pill" +
+            (this.isApprovalPending(bookings) ? " booking-pending" : "")
+          }
+          style={{ backgroundColor: bgColor }}
+        >
           {bookerCount}
         </span>
       </ListGroup.Item>
@@ -1135,7 +1145,12 @@ class Search extends React.Component<Props, State> {
             )}
           </strong>
         </p>
-        <div className="booking-name-row">
+        <div
+          className={
+            "booking-name-row" +
+            (booking.approved ? "" : " booking-pending-background")
+          }
+        >
           {recurringIcon}
           <span hidden={!booking.subject}>
             {this.props.t("subject")}: {booking.subject}
@@ -3131,7 +3146,13 @@ class Search extends React.Component<Props, State> {
       );
 
     const spaceCalToolbar = (props: object) => (
-      <CustomToolbar toolbar={props as any} t={this.props.t} />
+      <CustomToolbar
+        toolbar={props as any}
+        t={this.props.t}
+        timezone={
+          this.getLocation()?.timezone || RuntimeConfig.INFOS.defaultTimezone
+        }
+      />
     );
 
     const spaceCalLocalizer = CalendarUtil.getLocalizer();

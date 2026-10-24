@@ -656,5 +656,22 @@
   "blockedPeriod": "Blocked period",
   "blockedPeriodHint": "No bookings are possible within this period (both days inclusive). If only one date is set, the period is open-ended.",
   "blockedUntil": "Blocked until",
-  "errorLocationBlocked": "Bookings for this area are not possible within its blocked period."
+  "errorLocationBlocked": "Bookings for this area are not possible within its blocked period.",
+  "addBookingAttribute": "Add attribute",
+  "bookingAttributeLabel": "Label",
+  "bookingAttributeLimitReached": "A maximum of {{max}} attributes can be defined.",
+  "bookingAttributeRequired": "Required",
+  "bookingAttributeSaveError": "The attribute could not be saved.",
+  "bookingAttributeTypeNumber": "Number",
+  "bookingAttributeTypeText": "Text (single line)",
+  "bookingAttributeTypeTextMultiline": "Text (multi-line)",
+  "bookingAttributes": "Booking attributes",
+  "bookingAttributesHint": "Additional fields which have to be filled in when requesting a public booking.",
+  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"?",
+  "editBookingAttribute": "Edit attribute",
+  "optionalField": "optional",
+  "bookingAttributeTypeCheckbox": "Checkbox",
+  "showBookingAttributes": "Show booking attributes",
+  "moveDown": "Move down",
+  "moveUp": "Move up"
 }

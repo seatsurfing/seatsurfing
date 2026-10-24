@@ -54,6 +54,8 @@ var (
 	ResponseCodeBookingInvalidSubject            = service.BookingCodeInvalidSubject
 	ResponseCodeBookingInvalidWeekday            = service.BookingCodeInvalidWeekday
 	ResponseCodeBookingBlocked                   = service.BookingCodeBlocked
+	ResponseCodeBookingInvalidAttributes         = service.BookingCodeInvalidAttributes
+	ResponseCodeBookingAttributeLimitReached     = service.BookingCodeAttributeLimitReached
 
 	ResponseCodePresenceReportDateRangeTooLong = 2001
 

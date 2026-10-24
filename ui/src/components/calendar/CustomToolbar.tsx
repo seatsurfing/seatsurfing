@@ -6,6 +6,7 @@ import {
   ArrowRight as IconArrowRight,
   SkipForward as IconSkipForward,
   SkipBack as IconSkipBack,
+  Globe as IconGlobe,
 } from "react-feather";
 import Formatting from "@/util/Formatting";
 import moment from "moment-timezone";
@@ -16,9 +17,10 @@ interface Props {
   toolbar: ToolbarProps<object, object>;
   t: TranslationFunc;
   events?: CalendarEvent[];
+  timezone?: string;
 }
 
-const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
+const CustomToolbar: React.FC<Props> = ({ toolbar, t, events, timezone }) => {
   const isDayView = toolbar.view === "day";
   const isMonthView = toolbar.view === "month";
   const periodUnit = isMonthView ? "month" : "week";
@@ -64,10 +66,17 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
   };
 
   return (
-    <div
-      className="custom-toolbar"
-      style={{ marginBottom: "5px", textAlign: "left" }}
-    >
+    <div className="custom-toolbar">
+      {timezone && (
+        <div
+          className="toolbar-timezone text-muted"
+          title={t("timezone")}
+          data-testid="calendar-timezone"
+        >
+          <IconGlobe className="feather" />
+          {timezone}
+        </div>
+      )}
       <button
         type="button"
         className="btn btn-sm btn-outline-secondary"
@@ -131,15 +140,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events }) => {
           </button>
         </div>
       )}{" "}
-      <span
-        className="toolbar-label"
-        style={{
-          display: "flex",
-          float: "right",
-          height: "100%",
-          alignItems: "center",
-        }}
-      >
+      <span className="toolbar-label">
         {isDayView
           ? formatter.format(toolbar.date)
           : isMonthView

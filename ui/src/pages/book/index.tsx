@@ -12,6 +12,7 @@ import DateTimePicker from "@/components/DateTimePicker";
 import Validation from "@/util/Validation";
 import RendererUtils from "@/util/RendererUtils";
 import CopyrightFooter from "@/components/CopyrightFooter";
+import BookingAttribute from "@/types/BookingAttribute";
 
 interface PublicBookableSpace {
   spaceId: string;
@@ -52,6 +53,8 @@ interface State {
   name: string;
   email: string;
   subject: string;
+  attributes: BookingAttribute[];
+  attributeValues: { [attributeId: string]: string };
   submitting: boolean;
   submitted: boolean;
   error: boolean;
@@ -101,6 +104,8 @@ class PublicBooking extends React.Component<Props, State> {
       name: "",
       email: "",
       subject: "",
+      attributes: [],
+      attributeValues: {},
       submitting: false,
       submitted: false,
       error: false,
@@ -206,6 +211,9 @@ class PublicBooking extends React.Component<Props, State> {
         {
           loading: false,
           spaces: spaces,
+          attributes: BookingAttribute.createFromRawArray(
+            res.json.attributes || [],
+          ),
           spaceId: fixedSpace?.spaceId || "",
           fixedSpaceId: fixedSpace?.spaceId || "",
           maxDaysInAdvance: maxDaysInAdvance,
@@ -505,6 +513,7 @@ class PublicBooking extends React.Component<Props, State> {
       email: this.state.email,
       subject: this.state.subject,
       language: this.props.lang,
+      attributes: this.getAttributePayload(),
     };
     try {
       await Ajax.postData(
@@ -516,6 +525,95 @@ class PublicBooking extends React.Component<Props, State> {
     } catch {
       this.setState({ submitting: false, error: true });
     }
+  };
+
+  getAttributePayload = (): { [attributeId: string]: string } => {
+    const res: { [attributeId: string]: string } = {};
+    this.state.attributes.forEach((a) => {
+      const value = (this.state.attributeValues[a.id] || "").trim();
+      if (value !== "") {
+        res[a.id] = value;
+      }
+    });
+    return res;
+  };
+
+  setAttributeValue = (attributeId: string, value: string) => {
+    this.setState({
+      attributeValues: { ...this.state.attributeValues, [attributeId]: value },
+    });
+  };
+
+  renderAttribute = (a: BookingAttribute) => {
+    const value = this.state.attributeValues[a.id] || "";
+    const onChange = (e: any) => this.setAttributeValue(a.id, e.target.value);
+    let control;
+    if (a.type === BookingAttribute.TYPE_TEXT_MULTILINE) {
+      control = (
+        <Form.Control
+          as="textarea"
+          rows={3}
+          value={value}
+          onChange={onChange}
+          required={a.required}
+          maxLength={4096}
+        />
+      );
+    } else if (a.type === BookingAttribute.TYPE_CHECKBOX) {
+      control = (
+        <Form.Check
+          type="checkbox"
+          checked={value === BookingAttribute.CHECKBOX_CHECKED}
+          onChange={(e: any) =>
+            this.setAttributeValue(
+              a.id,
+              e.target.checked ? BookingAttribute.CHECKBOX_CHECKED : "",
+            )
+          }
+          required={a.required}
+        />
+      );
+    } else if (a.type === BookingAttribute.TYPE_NUMBER) {
+      control = (
+        <Form.Control
+          type="text"
+          inputMode="numeric"
+          pattern={BookingAttribute.NUMBER_PATTERN}
+          maxLength={BookingAttribute.NUMBER_MAX_LENGTH}
+          value={value}
+          onChange={onChange}
+          required={a.required}
+        />
+      );
+    } else {
+      control = (
+        <Form.Control
+          type="text"
+          value={value}
+          onChange={onChange}
+          required={a.required}
+          maxLength={256}
+        />
+      );
+    }
+    return (
+      <Form.Group
+        className="mb-3"
+        key={a.id}
+        controlId={"booking-attribute-" + a.id}
+      >
+        <Form.Label>
+          {a.label}
+          {!a.required && (
+            <span className="text-muted">
+              {" "}
+              ({this.props.t("optionalField")})
+            </span>
+          )}
+        </Form.Label>
+        {control}
+      </Form.Group>
+    );
   };
 
   renderMapSpace = (item: PublicBookableSpace) => {
@@ -887,6 +985,7 @@ class PublicBooking extends React.Component<Props, State> {
               maxLength={256}
             />
           </Form.Group>
+          {this.state.attributes.map((a) => this.renderAttribute(a))}
           <Button
             variant="primary"
             type="submit"

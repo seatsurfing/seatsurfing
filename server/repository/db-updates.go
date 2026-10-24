@@ -10,7 +10,7 @@ import (
 )
 
 func RunDBSchemaUpdates() {
-	targetVersion := 63
+	targetVersion := 64
 	curVersion, err := GetSettingsRepository().GetGlobalInt(SettingDatabaseVersion.Name)
 	log.Printf("Initializing database with schema version %d (current: %d) …\n", targetVersion, curVersion)
 	if err != nil {
@@ -41,6 +41,8 @@ func RunDBSchemaUpdates() {
 		GetAuthProviderMappingRepository(),
 		GetUserRoleRepository(),
 		GetRoleRepository(),
+		GetBookingAttributeRepository(),
+		GetBookingAttributeValueRepository(),
 	}
 	for _, repository := range repositories {
 		repository.RunSchemaUpgrade(curVersion, targetVersion)

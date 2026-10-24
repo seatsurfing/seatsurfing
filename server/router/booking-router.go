@@ -50,15 +50,16 @@ type PreCreateBookingRequest struct {
 }
 
 type GetBookingResponse struct {
-	ID            string           `json:"id"`
-	UserID        string           `json:"userId"`
-	UserEmail     string           `json:"userEmail"`
-	UserFirstname string           `json:"userFirstname"`
-	UserLastname  string           `json:"userLastname"`
-	Public        bool             `json:"public"`
-	Approved      bool             `json:"approved"`
-	Space         GetSpaceResponse `json:"space"`
-	RecurringID   string           `json:"recurringId"`
+	ID            string                              `json:"id"`
+	UserID        string                              `json:"userId"`
+	UserEmail     string                              `json:"userEmail"`
+	UserFirstname string                              `json:"userFirstname"`
+	UserLastname  string                              `json:"userLastname"`
+	Public        bool                                `json:"public"`
+	Approved      bool                                `json:"approved"`
+	Space         GetSpaceResponse                    `json:"space"`
+	RecurringID   string                              `json:"recurringId"`
+	Attributes    []*GetBookingAttributeValueResponse `json:"attributes,omitempty"`
 	CreateBookingRequest
 }
 
@@ -195,7 +196,40 @@ func (router *BookingRouter) getPendingApprovals(w http.ResponseWriter, r *http.
 		m := router.copyToRestModel(e)
 		res = append(res, m)
 	}
+	if err := router.attachAttributes(res); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	SendJSON(w, res)
+}
+
+// attachAttributes loads the booking attribute values of public bookings.
+func (router *BookingRouter) attachAttributes(list []*GetBookingResponse) error {
+	ids := []string{}
+	for _, m := range list {
+		if m.Public {
+			ids = append(ids, m.ID)
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	values, err := service.GetBookingAttributeService().GetValuesForBookings(ids)
+	if err != nil {
+		return err
+	}
+	for _, m := range list {
+		for _, v := range values[m.ID] {
+			m.Attributes = append(m.Attributes, &GetBookingAttributeValueResponse{
+				AttributeID: v.AttributeID,
+				Label:       v.Label,
+				Type:        int(v.Type),
+				Value:       v.Value,
+			})
+		}
+	}
+	return nil
 }
 
 func (router *BookingRouter) getBookingFilter(r *http.Request) *service.BookingFilter {
@@ -321,6 +355,11 @@ func (router *BookingRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := router.copyToRestModel(e)
+	if err := router.attachAttributes([]*GetBookingResponse{res}); err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	SendJSON(w, res)
 }
 
