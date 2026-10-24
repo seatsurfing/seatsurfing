@@ -1816,7 +1816,10 @@ class Settings extends React.Component<Props, State> {
                     aria-label={this.props.t("space")}
                     className="flex-grow-0 w-25"
                     value={this.state.publicBookingSpaceId}
-                    disabled={!this.state.publicBookingEnabledSaved}
+                    disabled={
+                      !this.state.publicBookingEnabledSaved ||
+                      !RuntimeConfig.INFOS.featurePublicBooking
+                    }
                     onChange={(e: any) =>
                       this.setState({ publicBookingSpaceId: e.target.value })
                     }
@@ -1844,14 +1847,20 @@ class Settings extends React.Component<Props, State> {
                         : " (" + this.props.t("availableAfterSaving") + ")")
                     }
                     readOnly={true}
-                    disabled={!this.state.publicBookingEnabledSaved}
+                    disabled={
+                      !this.state.publicBookingEnabledSaved ||
+                      !RuntimeConfig.INFOS.featurePublicBooking
+                    }
                     className={
                       this.state.publicBookingEnabledSaved ? "" : "fst-italic"
                     }
                   />
                   <CopyToClipboardButton
                     text={this.getPublicBookingUrl()}
-                    disabled={!this.state.publicBookingEnabledSaved}
+                    disabled={
+                      !this.state.publicBookingEnabledSaved ||
+                      !RuntimeConfig.INFOS.featurePublicBooking
+                    }
                   />
                   <Button
                     aria-label={this.props.t("publicBookingUrl")}
@@ -1859,7 +1868,10 @@ class Settings extends React.Component<Props, State> {
                     href={this.getPublicBookingUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    disabled={!this.state.publicBookingEnabledSaved}
+                    disabled={
+                      !this.state.publicBookingEnabledSaved ||
+                      !RuntimeConfig.INFOS.featurePublicBooking
+                    }
                   >
                     <IconExternalLink className="feather" />
                   </Button>
