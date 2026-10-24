@@ -21,6 +21,7 @@ import {
   RefreshCw as IconRefresh,
   MoreVertical as IconMore,
   ExternalLink as IconExternalLink,
+  Edit2 as IconEdit,
 } from "react-feather";
 import { NextRouter } from "next/router";
 import FullLayout from "@/components/FullLayout";
@@ -961,17 +962,37 @@ class Settings extends React.Component<Props, State> {
               {this.props.t("org")}
             </Form.Label>
             <Col sm="4">
-              <p className="form-control-plaintext">
-                {this.org?.name} (
-                {this.org?.language
-                  ? this.props.t("language-" + this.org.language)
-                  : "—"}
-                )
-                <br />
-                {this.org?.contactFirstname} {this.org?.contactLastname} (
-                {this.org?.contactEmail})
-              </p>
-              <Link href={`/admin/settings/org`}>{this.props.t("edit")}</Link>
+              <div className="d-flex align-items-start">
+                <p className="form-control-plaintext flex-grow-1">
+                  {this.org?.name} (
+                  {this.org?.language
+                    ? this.props.t("language-" + this.org.language)
+                    : "—"}
+                  )
+                  <br />
+                  {this.org?.contactFirstname} {this.org?.contactLastname} (
+                  {this.org?.contactEmail})
+                </p>
+                <Button
+                  as={Link as any}
+                  href="/admin/settings/org"
+                  variant="outline-secondary"
+                  size="sm"
+                  title={this.props.t("edit")}
+                  aria-label={this.props.t("edit")}
+                  style={{
+                    marginLeft: "5px",
+                    marginTop: "6px",
+                    padding: "4px 4px",
+                    lineHeight: 1,
+                  }}
+                >
+                  <IconEdit
+                    className="feather"
+                    style={{ width: "14px", height: "14px" }}
+                  />
+                </Button>
+              </div>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
