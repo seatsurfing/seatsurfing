@@ -652,20 +652,7 @@ func (s *BookingService) IsValidMinHoursBooking(enter, leave time.Time, organiza
 		return true
 	}
 
-	enterTime := enter
-	leaveTime := leave
-
-	// if daily based bookings is *NOT* enabled, we have to add 1s to the leave time
-	dailyBasisBooking, err := GetSettingsRepository().GetBool(organizationID, SettingDailyBasisBooking.Name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if !dailyBasisBooking {
-		leaveTime = leaveTime.Add(time.Second)
-	}
-
-	difference_in_hours := int64(leaveTime.Sub(enterTime).Hours())
+	difference_in_hours := int64(leave.Sub(enter).Hours())
 	return difference_in_hours >= int64(min_hours)
 }
 

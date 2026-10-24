@@ -350,3 +350,13 @@ func TestBookingServiceGetFiltered(t *testing.T) {
 		t.Fatalf("expected forbidden, got %v", bErr)
 	}
 }
+
+func TestBookingServiceMinHoursExactBoundary(t *testing.T) {
+	org, user, _, _ := setupServiceTest(t)
+	svc := GetBookingService()
+	GetSettingsRepository().Set(org.ID, SettingMinBookingDurationHours.Name, "2")
+
+	enter, leave := serviceTestSlot(0, 9, 11)
+	CheckTestBool(t, true, svc.IsValidMinHoursBooking(enter, leave, org.ID, user))
+	CheckTestBool(t, false, svc.IsValidMinHoursBooking(enter, leave.Add(-time.Second), org.ID, user))
+}
