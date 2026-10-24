@@ -19,6 +19,7 @@ import Space from "@/types/Space";
 import User from "@/types/User";
 import Location from "@/types/Location";
 import Booking from "@/types/Booking";
+import BookingAttribute from "@/types/BookingAttribute";
 import UserPreference from "@/types/UserPreference";
 import Formatting from "@/util/Formatting";
 import FullLayout from "@/components/FullLayout";
@@ -1002,6 +1003,36 @@ class EditBooking extends React.Component<Props, State> {
               />
             </Col>
           </Form.Group>
+
+          {this.entity.attributes.map((a) => (
+            <Form.Group as={Row} key={a.attributeId}>
+              <Form.Label
+                column
+                sm="2"
+                htmlFor={"booking-attribute-" + a.attributeId}
+              >
+                {a.label}
+              </Form.Label>
+              <Col sm="4">
+                {a.type === BookingAttribute.TYPE_TEXT_MULTILINE ? (
+                  <Form.Control
+                    id={"booking-attribute-" + a.attributeId}
+                    as="textarea"
+                    rows={3}
+                    disabled
+                    value={a.value}
+                  />
+                ) : (
+                  <Form.Control
+                    id={"booking-attribute-" + a.attributeId}
+                    type="text"
+                    disabled
+                    value={BookingAttribute.formatValue(a)}
+                  />
+                )}
+              </Col>
+            </Form.Group>
+          ))}
         </Form>
         <ConfirmModal
           show={this.state.showDeleteConfirm}

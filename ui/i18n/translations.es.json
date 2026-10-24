@@ -653,5 +653,22 @@
   "publicBookingDurationMinMax": "Una reserva debe durar entre {{min}} y {{max}} horas.",
   "publicBookingFixedSpaceNotAvailable": "Este espacio no está disponible en la franja horaria seleccionada.",
   "publicBookingAllSpaces": "Todos los espacios",
-  "directLinkNoSpaceAvailable": "El espacio no está disponible en el horario seleccionado. Ajusta los horarios."
+  "directLinkNoSpaceAvailable": "El espacio no está disponible en el horario seleccionado. Ajusta los horarios.",
+  "addBookingAttribute": "Add attribute",
+  "bookingAttributeLabel": "Label",
+  "bookingAttributeLimitReached": "A maximum of {{max}} attributes can be defined.",
+  "bookingAttributeRequired": "Required",
+  "bookingAttributeSaveError": "The attribute could not be saved.",
+  "bookingAttributeTypeNumber": "Number",
+  "bookingAttributeTypeText": "Text (single line)",
+  "bookingAttributeTypeTextMultiline": "Text (multi-line)",
+  "bookingAttributes": "Booking attributes",
+  "bookingAttributesHint": "Additional fields which have to be filled in when requesting a public booking.",
+  "confirmDeleteBookingAttribute": "Delete attribute \"{{label}}\"?",
+  "editBookingAttribute": "Edit attribute",
+  "optionalField": "optional",
+  "bookingAttributeTypeCheckbox": "Checkbox",
+  "showBookingAttributes": "Show booking attributes",
+  "moveDown": "Move down",
+  "moveUp": "Move up"
 }
