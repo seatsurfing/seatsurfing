@@ -135,11 +135,12 @@
   border-top-color: transparent;
   border-bottom-color: #f64747;
 }
-[data-bs-theme="dark"] span.flatpickr-day.today:not(.selected):hover {
+[data-bs-theme="dark"]
+  span.flatpickr-day.today:not(.selected):not(.flatpickr-disabled):hover {
   border: 1px solid #f64747;
 }
-[data-bs-theme="dark"] .flatpickr-day.today:hover,
-[data-bs-theme="dark"] .flatpickr-day.today:focus {
+[data-bs-theme="dark"] .flatpickr-day.today:not(.flatpickr-disabled):hover,
+[data-bs-theme="dark"] .flatpickr-day.today:not(.flatpickr-disabled):focus {
   border-color: #f64747;
   background: #f64747;
   color: #fff;
