@@ -21,7 +21,6 @@ import dynamic from "next/dynamic";
 import RuntimeConfig from "./RuntimeConfig";
 import { TranslationFunc, withTranslation } from "./withTranslation";
 import PremiumFeatureIcon from "./PremiumFeatureIcon";
-import LanguageSelector from "./LanguageSelector";
 import Ajax from "@/util/Ajax";
 import Booking from "@/types/Booking";
 import AjaxError from "@/util/AjaxError";
@@ -282,7 +281,7 @@ class SideBar extends React.Component<Props, State> {
     return (
       <Nav
         id="sidebarMenu"
-        className="col-1 col-md-3 col-lg-2 d-md-block bg-light sidebar"
+        className="col-1 col-md-3 col-lg-2 d-md-block bg-body-tertiary sidebar"
         activeKey={this.getActiveKey()}
       >
         <div className="sidebar-sticky pt-3">
@@ -445,9 +444,6 @@ class SideBar extends React.Component<Props, State> {
               </Nav.Link>
             </li>
           </ul>
-          <div className="sidebar-footer d-none d-md-block">
-            <LanguageSelector inNavbar={true} drop="up" />
-          </div>
         </div>
       </Nav>
     );

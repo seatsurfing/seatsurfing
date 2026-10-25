@@ -49,23 +49,8 @@ export default class Theme {
     return mode as "light" | "dark";
   }
 
-  static isAdminRoute(path?: string): boolean {
-    if (typeof window === "undefined" && !path) {
-      return false;
-    }
-    const pathname = (path ?? window.location.pathname).split("?")[0];
-    return /\/admin(\/|$)/.test(pathname);
-  }
-
-  static apply(path?: string): void {
+  static apply(): void {
     if (typeof document === "undefined") {
-      return;
-    }
-    if (Theme.isAdminRoute(path)) {
-      // Dark mode only applies to the booking UI; the admin UI always
-      // stays on the default (light) theme.
-      document.documentElement.removeAttribute("data-bs-theme");
-      window.dispatchEvent(new CustomEvent(Theme.CHANGE_EVENT));
       return;
     }
     const effective = Theme.getEffective();

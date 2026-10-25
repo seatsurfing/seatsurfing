@@ -480,7 +480,10 @@ class Dashboard extends React.Component<Props, State> {
                       >
                         <Info
                           size={16}
-                          style={{ cursor: "pointer", color: "#6c757d" }}
+                          style={{
+                            cursor: "pointer",
+                            color: "var(--bs-secondary-color)",
+                          }}
                         />
                       </OverlayTrigger>
                     </Card.Title>

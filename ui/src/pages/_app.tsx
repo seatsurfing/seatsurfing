@@ -32,7 +32,8 @@ import BadRequestModal from "@/components/BadRequestModal";
 import ConflictModal from "@/components/ConflictModal";
 import User from "@/types/User";
 import Router from "next/router";
-import Theme from "@/util/Theme";
+// Registers the listener that follows OS color scheme changes
+import "@/util/Theme";
 import FrameProtection from "@/util/FrameProtection";
 import FrameBlocked from "@/components/FrameBlocked";
 
@@ -112,8 +113,6 @@ class App extends React.Component<Props, State> {
     }, 10);
 
     Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
-    Router.events.on("routeChangeStart", this.onThemeRouteChange);
-    Router.events.on("routeChangeComplete", this.onThemeRouteChange);
   }
 
   componentWillUnmount() {
@@ -124,13 +123,7 @@ class App extends React.Component<Props, State> {
     Ajax.onBadRequest = null;
     Ajax.onConflict = null;
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
-    Router.events.off("routeChangeStart", this.onThemeRouteChange);
-    Router.events.off("routeChangeComplete", this.onThemeRouteChange);
   }
-
-  onThemeRouteChange = (url: string) => {
-    Theme.apply(url);
-  };
 
   onRouteChangeComplete = () => {
     if (
