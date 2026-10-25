@@ -106,3 +106,16 @@ test("auth events", async ({ page }) => {
     0,
   );
 });
+
+test("filter bookings for next 7 days", async ({ page }) => {
+  // Navigate to "Bookings"
+  await page.getByRole("link", { name: "Bookings", exact: true }).click();
+  await expect(page).toHaveURL(/admin\/bookings\/$/);
+
+  // Select period "Next 7 days" and search
+  await page.getByLabel("Period").selectOption({ label: "Next 7 days" });
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/filter=next_7_days/);
+  await expect(page.getByText("Loading …")).not.toBeVisible();
+  await expect(page.getByLabel("Period")).toHaveValue("next_7_days");
+});

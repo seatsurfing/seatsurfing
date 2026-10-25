@@ -37,6 +37,7 @@ const FILTER_OPTIONS = [
   "today",
   "this_week",
   "next_week",
+  "next_7_days",
   "enter_leave",
 ] as const;
 type FilterOption = (typeof FILTER_OPTIONS)[number];
@@ -221,6 +222,11 @@ class Bookings extends React.Component<Props, State> {
         return [DateUtil.getThisWeekMonday(), DateUtil.getThisWeekSunday()];
       case "next_week":
         return [DateUtil.getNextWeekMonday(), DateUtil.getNextWeekSunday()];
+      case "next_7_days": {
+        const end = new Date();
+        end.setDate(end.getDate() + 6);
+        return [DateUtil.getTodayStart(), DateUtil.setHoursToMax(end)];
+      }
       default:
         return null;
     }
@@ -483,6 +489,7 @@ class Bookings extends React.Component<Props, State> {
               <option value="today">{this.props.t("today")}</option>
               <option value="this_week">{this.props.t("thisWeek")}</option>
               <option value="next_week">{this.props.t("nextWeek")}</option>
+              <option value="next_7_days">{this.props.t("next7Days")}</option>
               <option value="enter_leave">
                 {this.props.t("filterBookingEnterLeave")}
               </option>
