@@ -676,5 +676,6 @@
   "showBookingAttributes": "Show booking attributes",
   "moveDown": "Move down",
   "moveUp": "Move up",
-  "featureNotEnabled": "Feature not enabled."
+  "featureNotEnabled": "Feature not enabled.",
+  "next7Days": "Next 7 days"
 }
