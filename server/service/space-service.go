@@ -98,7 +98,8 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 	}
 	locations := GetLocationService()
 	isAllowedToBookLocation := locations.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
-	isValidWeekday := locations.IsLocationWeekdayBookable(location, user, enter, leave)
+	isValidWeekday := locations.IsLocationWeekdayBookable(location, user, enter, leave) &&
+		!locations.IsLocationBlocked(location, user, enter, leave)
 	res := []*UserSpaceAvailability{}
 	for _, e := range list {
 		if spaceID != "" && e.ID != spaceID {
@@ -218,9 +219,13 @@ func (s *SpaceService) getPublicLocationAvailability(location *Location, enter, 
 }
 
 // isPublicLocationSlotAvailable checks the location-wide conditions of a
-// public booking slot: bookable weekday and concurrent booking limit.
+// public booking slot: bookable weekday, blocked period and concurrent
+// booking limit.
 func (s *SpaceService) isPublicLocationSlotAvailable(location *Location, enter, leave time.Time) (bool, error) {
 	if !GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {
+		return false, nil
+	}
+	if GetLocationService().IsLocationBlocked(location, nil, enter, leave) {
 		return false, nil
 	}
 	if location.MaxConcurrentBookings > 0 {

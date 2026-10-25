@@ -632,6 +632,27 @@ func TestPublicBookingGetSpacesReturnsBookableDays(t *testing.T) {
 	CheckTestInt(t, 5, resBody.Spaces[0].BookableDays[2])
 }
 
+func TestPublicBookingGetSpacesReturnsBlockedPeriod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	blockedFrom := time.Date(2030, 1, 2, 0, 0, 0, 0, time.UTC)
+	location.BlockedFrom = &blockedFrom
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Spaces))
+	CheckTestString(t, "2030-01-02", resBody.Spaces[0].BlockedFrom)
+	CheckTestString(t, "", resBody.Spaces[0].BlockedUntil)
+}
+
 func TestPublicBookingGetSpacesReturnsEmptyBookableDaysWhenUnrestricted(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -945,6 +966,39 @@ func TestPublicBookingGetAvailabilityNonBookableWeekday(t *testing.T) {
 	// 2030-01-01 is a Tuesday
 	availability = getTestPublicAvailability(t, org.ID, "2030-01-01T10:00:00Z", "2030-01-01T12:00:00Z")
 	CheckTestBool(t, true, availability[space.ID])
+}
+
+func TestPublicBookingGetAvailabilityBlockedPeriod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+	blockedUntil := time.Date(2030, 1, 2, 0, 0, 0, 0, time.UTC)
+	location.BlockedUntil = &blockedUntil
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+	GetSettingsRepository().Set(org.ID, SettingPublicBookingShowAvailability.Name, "1")
+
+	availability := getTestPublicAvailability(t, org.ID, "2030-01-02T10:00:00Z", "2030-01-02T12:00:00Z")
+	CheckTestBool(t, false, availability[space.ID])
+	availability = getTestPublicAvailability(t, org.ID, "2030-01-03T10:00:00Z", "2030-01-03T12:00:00Z")
+	CheckTestBool(t, true, availability[space.ID])
+}
+
+func TestPublicBookingConfirmUnavailableWhenLocationBlocked(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	location, space := CreateTestLocationAndSpace(org)
+	enablePublicBookingForOrgAndSpace(org, space)
+
+	id := createTestPublicBookingAuthState(t, space, time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC))
+	blockedFrom := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
+	location.BlockedFrom = &blockedFrom
+	if err := GetLocationRepository().Update(location); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "unavailable", confirmTestPublicBooking(t, id))
 }
 
 func TestPublicBookingGetAvailabilityInvalidTimes(t *testing.T) {

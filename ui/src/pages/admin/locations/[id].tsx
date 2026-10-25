@@ -53,6 +53,8 @@ import FloorPlanDesigner from "@/components/FloorPlanDesigner";
 import WeekdaySelection from "@/components/WeekdaySelection";
 import ConfirmModal from "@/components/ConfirmModal";
 import HintTooltip from "@/components/HintTooltip";
+import DateTimePicker from "@/components/DateTimePicker";
+import Formatting from "@/util/Formatting";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (
   <svg
@@ -420,6 +422,10 @@ interface State {
   timezone: string;
   enabled: boolean;
   bookableDays: number[];
+  blockedFromEnabled: boolean;
+  blockedFrom: Date;
+  blockedUntilEnabled: boolean;
+  blockedUntil: Date;
   mapScale: number;
   mapScaleOnLoad: number;
   fileLabel: string;
@@ -473,6 +479,10 @@ class EditLocation extends React.Component<Props, State> {
       timezone: "",
       enabled: true,
       bookableDays: [0, 1, 2, 3, 4, 5, 6],
+      blockedFromEnabled: false,
+      blockedFrom: new Date(),
+      blockedUntilEnabled: false,
+      blockedUntil: new Date(),
       mapScale: 1.0,
       mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
@@ -514,6 +524,18 @@ class EditLocation extends React.Component<Props, State> {
     return Ajax.get("/setting/timezones").then((res) => {
       this.timezones = res.json;
     });
+  };
+
+  parseDate = (s: string): Date => {
+    if (!s) {
+      return new Date();
+    }
+    const [year, month, day] = s.split("-").map((p) => parseInt(p));
+    return new Date(year, month - 1, day);
+  };
+
+  isBeforeDay = (a: Date, b: Date): boolean => {
+    return Formatting.getISO8601(a) < Formatting.getISO8601(b);
   };
 
   loadData = async (locationId?: string): Promise<void> => {
@@ -563,6 +585,14 @@ class EditLocation extends React.Component<Props, State> {
                         location.bookableDays.length > 0
                           ? location.bookableDays
                           : [0, 1, 2, 3, 4, 5, 6],
+                      blockedFromEnabled: location.blockedFrom !== "",
+                      blockedFrom: this.parseDate(
+                        location.blockedFrom || location.blockedUntil,
+                      ),
+                      blockedUntilEnabled: location.blockedUntil !== "",
+                      blockedUntil: this.parseDate(
+                        location.blockedUntil || location.blockedFrom,
+                      ),
                       mapScale: location.mapScale,
                       mapScaleOnLoad: location.mapScale,
                       mapType:
@@ -713,6 +743,12 @@ class EditLocation extends React.Component<Props, State> {
     this.entity.enabled = this.state.enabled;
     this.entity.bookableDays =
       this.state.bookableDays.length === 7 ? [] : this.state.bookableDays;
+    this.entity.blockedFrom = this.state.blockedFromEnabled
+      ? Formatting.getISO8601(this.state.blockedFrom)
+      : "";
+    this.entity.blockedUntil = this.state.blockedUntilEnabled
+      ? Formatting.getISO8601(this.state.blockedUntil)
+      : "";
     this.entity.mapScale = this.state.mapScale;
     this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
@@ -2210,6 +2246,77 @@ class EditLocation extends React.Component<Props, State> {
                 }
                 preventEmpty={true}
               />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="location-blocked-from">
+              {this.props.t("blockedPeriod")}
+              <HintTooltip hint={this.props.t("blockedPeriodHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <InputGroup>
+                <InputGroup.Checkbox
+                  type="checkbox"
+                  id="check-location-blocked-from"
+                  aria-label={this.props.t("blockedFrom")}
+                  checked={this.state.blockedFromEnabled}
+                  onChange={(e: any) =>
+                    this.setState({ blockedFromEnabled: e.target.checked })
+                  }
+                />
+                <DateTimePicker
+                  id="location-blocked-from"
+                  value={
+                    this.state.blockedFromEnabled
+                      ? this.state.blockedFrom
+                      : null
+                  }
+                  onChange={(value: Date) =>
+                    this.setState({
+                      blockedFrom: value,
+                      blockedUntil: this.isBeforeDay(
+                        this.state.blockedUntil,
+                        value,
+                      )
+                        ? value
+                        : this.state.blockedUntil,
+                    })
+                  }
+                  enableTime={false}
+                  disabled={!this.state.blockedFromEnabled}
+                />
+                <InputGroup.Text>–</InputGroup.Text>
+                <InputGroup.Checkbox
+                  type="checkbox"
+                  id="check-location-blocked-until"
+                  aria-label={this.props.t("blockedUntil")}
+                  checked={this.state.blockedUntilEnabled}
+                  onChange={(e: any) =>
+                    this.setState({ blockedUntilEnabled: e.target.checked })
+                  }
+                />
+                <DateTimePicker
+                  id="location-blocked-until"
+                  value={
+                    this.state.blockedUntilEnabled
+                      ? this.state.blockedUntil
+                      : null
+                  }
+                  onChange={(value: Date) =>
+                    this.setState({
+                      blockedUntil: value,
+                      blockedFrom: this.isBeforeDay(
+                        value,
+                        this.state.blockedFrom,
+                      )
+                        ? value
+                        : this.state.blockedFrom,
+                    })
+                  }
+                  enableTime={false}
+                  disabled={!this.state.blockedUntilEnabled}
+                />
+              </InputGroup>
             </Col>
           </Form.Group>
           <Form.Group as={Row}>

@@ -197,6 +197,74 @@ func TestLocationsUpload(t *testing.T) {
 	CheckTestUint(t, 0, uint(bytes.Compare(data, data2)))
 }
 
+func TestLocationsBlockedPeriod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"name": "Location 1", "blockedFrom": "2030-09-04", "blockedUntil": "2030-09-06"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "2030-09-04", resBody.BlockedFrom)
+	CheckTestString(t, "2030-09-06", resBody.BlockedUntil)
+
+	// Only start date
+	payload = `{"name": "Location 1", "blockedFrom": "2030-09-04"}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	var resBody2 *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody2)
+	CheckTestString(t, "2030-09-04", resBody2.BlockedFrom)
+	CheckTestString(t, "", resBody2.BlockedUntil)
+
+	// Clear
+	payload = `{"name": "Location 1"}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	location, _ := GetLocationRepository().GetOne(id)
+	CheckTestBool(t, true, location.BlockedFrom == nil)
+	CheckTestBool(t, true, location.BlockedUntil == nil)
+}
+
+func TestLocationsBlockedPeriodInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payloads := []string{
+		`{"name": "Location 1", "blockedFrom": "2030-09-06", "blockedUntil": "2030-09-04"}`,
+		`{"name": "Location 1", "blockedFrom": "04.09.2030"}`,
+		`{"name": "Location 1", "blockedUntil": "2030-09-04T00:00:00Z"}`,
+	}
+	for _, payload := range payloads {
+		req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(`{"name": "Location 1"}`))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payloads[0]))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
 func TestLocationsInvalidTimezone(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

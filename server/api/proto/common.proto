@@ -83,6 +83,8 @@ message Location {
   uint32 max_concurrent_bookings = 10;
   string timezone = 11;
   bool enabled = 12;
+  google.protobuf.Timestamp blocked_from = 13;
+  google.protobuf.Timestamp blocked_until = 14;
 }
 
 message Space {

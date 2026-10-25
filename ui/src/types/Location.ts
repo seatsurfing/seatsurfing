@@ -16,6 +16,10 @@ export default class Location extends Entity {
   allowedBookerGroupIds: string[];
   /** weekdays (0=Sunday..6=Saturday) the location can be booked on; empty array means unrestricted */
   bookableDays: number[];
+  /** first day ("YYYY-MM-DD") of the period the location cannot be booked in; empty means open start */
+  blockedFrom: string;
+  /** last day ("YYYY-MM-DD") of the period the location cannot be booked in; empty means open end */
+  blockedUntil: string;
 
   constructor() {
     super();
@@ -31,6 +35,8 @@ export default class Location extends Entity {
     this.mapType = "";
     this.allowedBookerGroupIds = [];
     this.bookableDays = [];
+    this.blockedFrom = "";
+    this.blockedUntil = "";
   }
 
   serialize(): Object {
@@ -44,6 +50,8 @@ export default class Location extends Entity {
       mapType: this.mapType,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
       bookableDays: this.bookableDays,
+      blockedFrom: this.blockedFrom,
+      blockedUntil: this.blockedUntil,
     });
   }
 
@@ -63,6 +71,8 @@ export default class Location extends Entity {
       this.allowedBookerGroupIds = input.allowedBookerGroupIds;
     }
     this.bookableDays = input.bookableDays || [];
+    this.blockedFrom = input.blockedFrom || "";
+    this.blockedUntil = input.blockedUntil || "";
   }
 
   getBackendUrl(): string {

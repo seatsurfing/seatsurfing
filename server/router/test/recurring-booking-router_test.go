@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -176,6 +177,146 @@ func TestRecurringBookingsBookableDaysRestriction(t *testing.T) {
 	CheckTestBool(t, false, resBody[1].Success) // 01 - Sunday
 	CheckTestInt(t, ResponseCodeBookingInvalidWeekday, resBody[1].ErrorCode)
 	CheckTestBool(t, true, resBody[2].Success) // 02 - Monday
+}
+
+func TestRecurringBookingsBlockedPeriod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	user1 := CreateTestUserInOrg(org)
+
+	blockedFrom := time.Date(2030, 8, 30, 0, 0, 0, 0, time.UTC)
+	blockedUntil := time.Date(2030, 8, 31, 0, 0, 0, 0, time.UTC)
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 2,
+		OrganizationID:        org.ID,
+		Enabled:               true,
+		BlockedFrom:           &blockedFrom,
+		BlockedUntil:          &blockedUntil,
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
+	GetSpaceRepository().Create(s1)
+
+	// Daily cadence from 08-28 to 09-02; 08-30 and 08-31 are blocked
+	payload := `{
+	"spaceId": "` + s1.ID + `",
+	"subject": "Test",
+	"enter": "2030-08-28T09:00:00+02:00",
+	"leave": "2030-08-28T15:00:00+02:00",
+	"end": "2030-09-03T00:00:00+02:00",
+	"cadence": 1,
+	"cycle": 1
+	}`
+
+	// Precheck
+	req := NewHTTPRequest("POST", "/recurring-booking/precheck", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []CreateRecurringBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 6, len(resBody))
+	CheckTestBool(t, true, resBody[0].Success)  // 28
+	CheckTestBool(t, true, resBody[1].Success)  // 29
+	CheckTestBool(t, false, resBody[2].Success) // 30
+	CheckTestInt(t, ResponseCodeBookingBlocked, resBody[2].ErrorCode)
+	CheckTestBool(t, false, resBody[3].Success) // 31
+	CheckTestInt(t, ResponseCodeBookingBlocked, resBody[3].ErrorCode)
+	CheckTestBool(t, true, resBody[4].Success) // 01
+	CheckTestBool(t, true, resBody[5].Success) // 02
+
+	// Create: blocked occurrences must not be persisted
+	req = NewHTTPRequest("POST", "/recurring-booking/", user1.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 6, len(resBody))
+	for idx, b := range resBody {
+		blocked := idx == 2 || idx == 3
+		CheckTestBool(t, !blocked, b.Success)
+		booking, _ := GetBookingRepository().GetOne(b.ID)
+		CheckTestBool(t, !blocked, booking != nil)
+		if blocked {
+			CheckTestInt(t, ResponseCodeBookingBlocked, b.ErrorCode)
+		}
+	}
+}
+
+func TestRecurringBookingsBlockedPeriodSetAfterCreation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureRecurringBookings.Name, "1")
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, strconv.Itoa(365*10))
+	GetSettingsRepository().Set(org.ID, SettingMaxBookingsPerUser.Name, "1000")
+	user1 := CreateTestUserInOrg(org)
+	user2 := CreateTestUserInOrg(org)
+
+	l := &Location{
+		Name:                  "Test",
+		MaxConcurrentBookings: 2,
+		OrganizationID:        org.ID,
+		Enabled:               true,
+	}
+	GetLocationRepository().Create(l)
+	s1 := &Space{Name: "Test 1", LocationID: l.ID, Enabled: true}
+	GetSpaceRepository().Create(s1)
+
+	payload := `{
+	"spaceId": "` + s1.ID + `",
+	"subject": "Test",
+	"enter": "2030-08-28T09:00:00+02:00",
+	"leave": "2030-08-28T15:00:00+02:00",
+	"end": "2030-09-03T00:00:00+02:00",
+	"cadence": 1,
+	"cycle": 1
+	}`
+	req := NewHTTPRequest("POST", "/recurring-booking/", user1.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	var created []CreateRecurringBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &created)
+	CheckTestInt(t, 6, len(created))
+	for _, b := range created {
+		CheckTestBool(t, true, b.Success)
+	}
+	first, _ := GetBookingRepository().GetOne(created[0].ID)
+	recurringID := string(first.RecurringID)
+
+	// Block 08-30 and 08-31 after the series already exists
+	blockedFrom := time.Date(2030, 8, 30, 0, 0, 0, 0, time.UTC)
+	blockedUntil := time.Date(2030, 8, 31, 0, 0, 0, 0, time.UTC)
+	l.BlockedFrom = &blockedFrom
+	l.BlockedUntil = &blockedUntil
+	CheckTestIsNil(t, GetLocationRepository().Update(l))
+
+	// Already existing occurrences are kept untouched
+	for _, b := range created {
+		booking, err := GetBookingRepository().GetOne(b.ID)
+		CheckTestBool(t, true, err == nil && booking != nil)
+	}
+
+	// The series definition is still readable and deletable
+	req = NewHTTPRequest("GET", "/recurring-booking/"+recurringID, user1.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+
+	// A new series over the same days is checked against the blocked period
+	req = NewHTTPRequest("POST", "/recurring-booking/precheck", user2.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var pre []CreateRecurringBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &pre)
+	CheckTestInt(t, 6, len(pre))
+	CheckTestInt(t, ResponseCodeBookingBlocked, pre[2].ErrorCode)
+	CheckTestInt(t, ResponseCodeBookingBlocked, pre[3].ErrorCode)
+
+	req = NewHTTPRequest("DELETE", "/recurring-booking/"+recurringID, user1.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
 
 func TestRecurringBookingsCreateDelete(t *testing.T) {

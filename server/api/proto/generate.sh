@@ -4,7 +4,7 @@
 # Requires: protoc, protoc-gen-go, protoc-gen-go-grpc on PATH, matching the
 # google.golang.org/protobuf and google.golang.org/grpc versions in go.mod.
 #
-#   go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+#   go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
 #   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 #
 # Generated *.pb.go files are committed to the repo - this script only needs

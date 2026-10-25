@@ -34,6 +34,8 @@ type GetPublicBookableSpaceResponse struct {
 	LocationName   string `json:"locationName"`
 	RequireSubject bool   `json:"requireSubject"`
 	BookableDays   []int  `json:"bookableDays"`
+	BlockedFrom    string `json:"blockedFrom"`
+	BlockedUntil   string `json:"blockedUntil"`
 	X              uint   `json:"x"`
 	Y              uint   `json:"y"`
 	Width          uint   `json:"width"`
@@ -184,6 +186,8 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 			LocationName:   location.Name,
 			RequireSubject: space.RequireSubject,
 			BookableDays:   service.WeekdaysFromString(location.BookableDays),
+			BlockedFrom:    formatLocationDate(location.BlockedFrom),
+			BlockedUntil:   formatLocationDate(location.BlockedUntil),
 		}
 		if showMap {
 			item.X = space.X
@@ -350,6 +354,9 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	if !service.GetLocationService().IsLocationWeekdayBookable(location, nil, enter, leave) {
+		return nil, nil, time.Time{}, time.Time{}, false
+	}
+	if service.GetLocationService().IsLocationBlocked(location, nil, enter, leave) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	return space, location, enter, leave, true

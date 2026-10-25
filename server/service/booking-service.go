@@ -47,6 +47,7 @@ const (
 	BookingCodeInPast                    = 1011
 	BookingCodeInvalidSubject            = 1012
 	BookingCodeInvalidWeekday            = 1013
+	BookingCodeBlocked                   = 1016
 )
 
 // BookingErrorKind classifies why a booking operation failed.
@@ -457,6 +458,9 @@ func (s *BookingService) CheckBooking(in *BookingInput, location *Location, requ
 	}
 	if !GetLocationService().IsLocationWeekdayBookable(location, requestUser, in.Enter, in.Leave) {
 		return false, BookingCodeInvalidWeekday
+	}
+	if GetLocationService().IsLocationBlocked(location, requestUser, in.Enter, in.Leave) {
+		return false, BookingCodeBlocked
 	}
 	return true, 0
 }
