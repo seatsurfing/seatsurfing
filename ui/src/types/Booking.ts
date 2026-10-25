@@ -104,59 +104,41 @@ export default class Booking extends Entity {
   }
 
   async save(): Promise<Booking> {
-    return Ajax.saveEntity(this, this.getBackendUrl()).then(() => this);
+    await Ajax.saveEntity(this, this.getBackendUrl());
+    return this;
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    await Ajax.delete(this.getBackendUrl() + this.id);
   }
 
   async approve(approved: boolean): Promise<void> {
     const payload = {
       approved,
     };
-    return Ajax.postData(
-      this.getBackendUrl() + this.id + "/approve",
-      payload,
-    ).then(() => undefined);
+    await Ajax.postData(this.getBackendUrl() + this.id + "/approve", payload);
   }
 
   static async get(id: string): Promise<Booking> {
-    return Ajax.get("/booking/" + id).then((result) => {
-      const e: Booking = new Booking();
-      e.deserialize(result.json);
-      return e;
-    });
+    const result = await Ajax.get("/booking/" + id);
+    const e: Booking = new Booking();
+    e.deserialize(result.json);
+    return e;
   }
 
   static async list(): Promise<Booking[]> {
-    return Ajax.get("/booking/").then((result) => {
-      const list: Booking[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Booking = new Booking();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
-    });
+    const result = await Ajax.get("/booking/");
+    return Booking.createFromRawArray(result.json);
   }
 
   static async listPendingApprovals(): Promise<Booking[]> {
-    return Ajax.get("/booking/pendingapprovals/").then((result) => {
-      const list: Booking[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Booking = new Booking();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
-    });
+    const result = await Ajax.get("/booking/pendingapprovals/");
+    return Booking.createFromRawArray(result.json);
   }
 
   static async getPendingApprovalsCount(): Promise<number> {
-    return Ajax.get("/booking/pendingapprovals/count").then((result) => {
-      return result.json.count as number;
-    });
+    const result = await Ajax.get("/booking/pendingapprovals/count");
+    return result.json.count as number;
   }
 
   static async listFiltered(
@@ -164,6 +146,7 @@ export default class Booking extends Entity {
     end: Date,
     users: string[],
     location: string,
+    subject: string = "",
   ): Promise<Booking[]> {
     const queryParams = new URLSearchParams();
     queryParams.set(
@@ -173,37 +156,24 @@ export default class Booking extends Entity {
     queryParams.set("end", DateUtil.convertToFakeUTCDate(end).toISOString());
     users.forEach((user) => queryParams.append("user", user));
     if (location) queryParams.set("location", location);
-    return Ajax.get(`/booking/filter/?${queryParams.toString()}`).then(
-      (result) => {
-        const list: Booking[] = [];
-        (result.json as []).forEach((item) => {
-          const e: Booking = new Booking();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
-    );
+    if (subject) queryParams.set("subject", subject);
+    const result = await Ajax.get(`/booking/filter/?${queryParams.toString()}`);
+    return Booking.createFromRawArray(result.json);
   }
 
   static async listCurrent(
     users: string[],
     location: string,
+    subject: string = "",
   ): Promise<Booking[]> {
     const queryParams = new URLSearchParams();
     users.forEach((user) => queryParams.append("user", user));
     if (location) queryParams.set("location", location);
+    if (subject) queryParams.set("subject", subject);
     const params = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
-    return Ajax.get(`/booking/current/${params}`).then((result) => {
-      const list: Booking[] = [];
-      (result.json as []).forEach((item) => {
-        const e: Booking = new Booking();
-        e.deserialize(item);
-        list.push(e);
-      });
-      return list;
-    });
+    const result = await Ajax.get(`/booking/current/${params}`);
+    return Booking.createFromRawArray(result.json);
   }
 
   static createFromRawArray(arr: any[]): Booking[] {
