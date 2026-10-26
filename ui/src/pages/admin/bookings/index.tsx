@@ -55,6 +55,7 @@ interface State {
   filterUsers: string[];
   filterOption: FilterOption;
   filterLocation: string;
+  filterSubject: string;
   cancelBookingItem: Booking | null;
   alertMessage: string | null;
 }
@@ -122,6 +123,7 @@ class Bookings extends React.Component<Props, State> {
         ? (this.props.router.query["filter"] as FilterOption)
         : "current",
       filterLocation: this.props.router.query["location"] as string,
+      filterSubject: (this.props.router.query["subject"] as string) ?? "",
       cancelBookingItem: null,
       alertMessage: null,
     };
@@ -146,6 +148,7 @@ class Bookings extends React.Component<Props, State> {
     filter: string | null,
     filterUsers: string[],
     filterLocation: string | null,
+    filterSubject: string,
   ) => {
     const currentPath = this.props.router.pathname;
     const currentQuery = {
@@ -154,6 +157,7 @@ class Bookings extends React.Component<Props, State> {
       ...(filter !== null && { filter }),
       ...(filterUsers.length > 0 && { user: filterUsers }),
       ...(filterLocation && { location: filterLocation }),
+      ...(filterSubject && { subject: filterSubject }),
     };
 
     this.props.router.replace(
@@ -195,6 +199,7 @@ class Bookings extends React.Component<Props, State> {
           this.state.filterOption,
           this.state.filterUsers,
           this.state.filterLocation,
+          this.state.filterSubject,
         ),
       );
     }
@@ -234,14 +239,20 @@ class Bookings extends React.Component<Props, State> {
 
   loadItems = async () => {
     const range = this.getFilterRange();
+    const subject = this.state.filterSubject.trim();
     this.data = await (range
       ? Booking.listFiltered(
           range[0],
           range[1],
           this.state.filterUsers,
           this.state.filterLocation,
+          subject,
         )
-      : Booking.listCurrent(this.state.filterUsers, this.state.filterLocation));
+      : Booking.listCurrent(
+          this.state.filterUsers,
+          this.state.filterLocation,
+          subject,
+        ));
     this.setState({ loading: false });
     if (this.state.activeTab !== "all") {
       return;
@@ -256,6 +267,7 @@ class Bookings extends React.Component<Props, State> {
       this.state.filterOption,
       this.state.filterUsers,
       this.state.filterLocation,
+      subject,
     );
   };
 
@@ -547,6 +559,21 @@ class Bookings extends React.Component<Props, State> {
               }))}
               multiple={true}
               onChange={this.onSearchSelected}
+            />
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row}>
+          <Form.Label column sm="2" htmlFor="filter-subject">
+            {this.props.t("subject")}
+          </Form.Label>
+          <Col sm="4">
+            <Form.Control
+              id="filter-subject"
+              type="text"
+              value={this.state.filterSubject}
+              onChange={(e: any) =>
+                this.setState({ filterSubject: e.target.value })
+              }
             />
           </Col>
         </Form.Group>

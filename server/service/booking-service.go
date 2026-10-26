@@ -371,10 +371,12 @@ func (s *BookingService) GetPendingApprovalsCount(user *User) (int, *BookingErro
 }
 
 // BookingFilter restricts an organization's booking list to the given
-// users (by email) and location; empty values don't filter.
+// users (by email), location and subject (case-insensitive substring);
+// empty values don't filter.
 type BookingFilter struct {
 	UserEmails []string
 	LocationID string
+	Subject    string
 }
 
 // GetFiltered returns the bookings of the user's organization between start
@@ -384,7 +386,7 @@ func (s *BookingService) GetFiltered(user *User, start, end time.Time, filter *B
 	if bErr != nil {
 		return nil, bErr
 	}
-	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, emails, filter.LocationID)
+	list, err := GetBookingRepository().GetAllByOrg(user.OrganizationID, start, end, emails, filter.LocationID, filter.Subject)
 	if err != nil {
 		log.Println(err)
 		return nil, &BookingError{Kind: BookingErrorInternal}
@@ -399,7 +401,7 @@ func (s *BookingService) GetCurrent(user *User, filter *BookingFilter) ([]*Booki
 	if bErr != nil {
 		return nil, bErr
 	}
-	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, emails, filter.LocationID)
+	list, err := GetBookingRepository().GetAllCurrentByOrg(user.OrganizationID, emails, filter.LocationID, filter.Subject)
 	if err != nil {
 		log.Println(err)
 		return nil, &BookingError{Kind: BookingErrorInternal}
