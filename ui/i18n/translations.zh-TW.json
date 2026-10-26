@@ -675,5 +675,7 @@
   "blockedUntil": "Blocked until",
   "errorLocationBlocked": "Bookings for this area are not possible within its blocked period.",
   "featureNotEnabled": "Feature not enabled.",
-  "next7Days": "Next 7 days"
+  "next7Days": "Next 7 days",
+  "announcement": "Announcement",
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported."
 }

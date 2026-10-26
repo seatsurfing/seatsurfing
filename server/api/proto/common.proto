@@ -85,6 +85,7 @@ message Location {
   bool enabled = 12;
   google.protobuf.Timestamp blocked_from = 13;
   google.protobuf.Timestamp blocked_until = 14;
+  string announcement = 15;
 }
 
 message Space {

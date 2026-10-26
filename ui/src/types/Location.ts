@@ -20,6 +20,8 @@ export default class Location extends Entity {
   blockedFrom: string;
   /** last day ("YYYY-MM-DD") of the period the location cannot be booked in; empty means open end */
   blockedUntil: string;
+  /** Markdown text shown as a banner in the booking UI; empty means no announcement */
+  announcement: string;
 
   constructor() {
     super();
@@ -37,6 +39,7 @@ export default class Location extends Entity {
     this.bookableDays = [];
     this.blockedFrom = "";
     this.blockedUntil = "";
+    this.announcement = "";
   }
 
   serialize(): Object {
@@ -52,6 +55,7 @@ export default class Location extends Entity {
       bookableDays: this.bookableDays,
       blockedFrom: this.blockedFrom,
       blockedUntil: this.blockedUntil,
+      announcement: this.announcement,
     });
   }
 
@@ -73,6 +77,7 @@ export default class Location extends Entity {
     this.bookableDays = input.bookableDays || [];
     this.blockedFrom = input.blockedFrom || "";
     this.blockedUntil = input.blockedUntil || "";
+    this.announcement = input.announcement || "";
   }
 
   getBackendUrl(): string {

@@ -417,6 +417,7 @@ interface State {
   goBack: boolean;
   name: string;
   description: string;
+  announcement: string;
   limitConcurrentBookings: boolean;
   maxConcurrentBookings: number;
   timezone: string;
@@ -474,6 +475,7 @@ class EditLocation extends React.Component<Props, State> {
       goBack: false,
       name: "",
       description: "",
+      announcement: "",
       limitConcurrentBookings: false,
       maxConcurrentBookings: 0,
       timezone: "",
@@ -576,6 +578,7 @@ class EditLocation extends React.Component<Props, State> {
                     this.setState({
                       name: location.name,
                       description: location.description,
+                      announcement: location.announcement,
                       limitConcurrentBookings:
                         location.maxConcurrentBookings > 0,
                       maxConcurrentBookings: location.maxConcurrentBookings,
@@ -736,6 +739,7 @@ class EditLocation extends React.Component<Props, State> {
     this.setState({ submitting: true, errorSaving: false });
     this.entity.name = this.state.name;
     this.entity.description = this.state.description;
+    this.entity.announcement = this.state.announcement;
     this.entity.maxConcurrentBookings = this.state.limitConcurrentBookings
       ? this.state.maxConcurrentBookings
       : 0;
@@ -2166,6 +2170,25 @@ class EditLocation extends React.Component<Props, State> {
                 maxLength={512}
                 onChange={(e: any) =>
                   this.setState({ description: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="location-announcement">
+              {this.props.t("announcement")}
+              <HintTooltip hint={this.props.t("announcementHint")} />
+            </Form.Label>
+            <Col sm="4">
+              <Form.Control
+                id="location-announcement"
+                as="textarea"
+                rows={3}
+                placeholder={this.props.t("announcement")}
+                value={this.state.announcement}
+                maxLength={512}
+                onChange={(e: any) =>
+                  this.setState({ announcement: e.target.value })
                 }
               />
             </Col>

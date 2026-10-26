@@ -22,6 +22,8 @@
   "allowBookingNonExistUsers": "Allow bookings for non-existing users (create on booking, admins only)",
   "allowRecurringBookings": "Allow recurring bookings",
   "analysis": "Analysis",
+  "announcement": "Announcement",
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
   "public": "Public",
   "publicBooking": "Public booking",
   "publicBookingAvailable": "Allow public bookings",

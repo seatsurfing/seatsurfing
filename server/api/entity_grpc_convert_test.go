@@ -108,6 +108,7 @@ func TestLocationRoundTrip(t *testing.T) {
 		MapMimeType: "image/png", MapType: "svg",
 		Description: "desc", MaxConcurrentBookings: 5,
 		Timezone: "Europe/Berlin", Enabled: true,
+		Announcement: "**closed** today",
 	}
 	got := locationFromProto(locationToProto(l))
 	if *got != *l {

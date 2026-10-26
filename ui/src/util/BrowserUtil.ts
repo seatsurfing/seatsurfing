@@ -4,6 +4,8 @@ export default class BrowserUtil {
   static LOCAL_STORAGE_KEY_SEARCH_VIEW = "searchListView";
   static LOCAL_STORAGE_KEY_MY_BOOKINGS_VIEW = "myBookingsListView";
   static LOCAL_STORAGE_KEY_SEARCH_BOOKER_NAMES = "searchBookerNames";
+  static LOCAL_STORAGE_KEY_DISMISSED_ANNOUNCEMENT_PREFIX =
+    "dismissedAnnouncement-";
 
   static tryLocalStorageSetItem(key: string, value: string): boolean {
     if (typeof window === "undefined" || window.localStorage === undefined)

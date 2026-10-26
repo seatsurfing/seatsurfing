@@ -151,6 +151,8 @@ interface State {
   spaceCalendarReturnTo: "showBookingNames" | "showConfirm";
   windowWidth: number;
   alertMessage: string | null;
+  // announcement text per location ID the user has closed in this session
+  dismissedAnnouncements: Record<string, string>;
   activeIntegrationId: string | null;
 }
 
@@ -210,6 +212,7 @@ class Search extends React.Component<Props, State> {
       showError: false,
       errorText: "",
       alertMessage: null,
+      dismissedAnnouncements: {},
       loading: true,
       listView: (() =>
         BrowserUtil.tryLocalStorageGetItem(
@@ -1351,6 +1354,58 @@ class Search extends React.Component<Props, State> {
 
   getLocation = (): Location | undefined => {
     return this.locations.find((e) => e.id === this.state.locationId);
+  };
+
+  isAnnouncementDismissed = (location: Location): boolean => {
+    if (
+      this.state.dismissedAnnouncements[location.id] === location.announcement
+    ) {
+      return true;
+    }
+    return (
+      BrowserUtil.tryLocalStorageGetItem(
+        BrowserUtil.LOCAL_STORAGE_KEY_DISMISSED_ANNOUNCEMENT_PREFIX +
+          location.id,
+        null,
+      ) === location.announcement
+    );
+  };
+
+  dismissAnnouncement = (location: Location) => {
+    // Remember the dismissed text, so the banner shows up again once the
+    // announcement is changed.
+    BrowserUtil.tryLocalStorageSetItem(
+      BrowserUtil.LOCAL_STORAGE_KEY_DISMISSED_ANNOUNCEMENT_PREFIX + location.id,
+      location.announcement,
+    );
+    this.setState({
+      dismissedAnnouncements: {
+        ...this.state.dismissedAnnouncements,
+        [location.id]: location.announcement,
+      },
+    });
+  };
+
+  renderAnnouncement = (): React.JSX.Element => {
+    const location = this.getLocation();
+    if (
+      !location ||
+      !location.announcement.trim() ||
+      this.isAnnouncementDismissed(location)
+    ) {
+      return <></>;
+    }
+    return (
+      <Alert
+        variant="info"
+        className="location-announcement-banner"
+        dismissible={true}
+        closeLabel={this.props.t("close")}
+        onClose={() => this.dismissAnnouncement(location)}
+      >
+        <MarkdownRenderer>{location.announcement}</MarkdownRenderer>
+      </Alert>
+    );
   };
 
   getLocationName = (): string => {
@@ -3335,6 +3390,7 @@ class Search extends React.Component<Props, State> {
         {successModal}
         {errorModal}
         {listOrMap}
+        {this.renderAnnouncement()}
         {bookingUIIntegrationPanel}
         <Loading visible={this.state.loading} />
         {configContainer}
