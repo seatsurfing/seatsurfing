@@ -194,6 +194,17 @@ describe("DateUtil", () => {
       expect(result.toISOString()).toBe("2026-04-25T00:00:00.000Z");
     });
 
+    it("should return the exact leave time for leave 2026-04-24T17:00:00.000Z without dailyBasisBooking", () => {
+      RuntimeConfig.INFOS = {
+        ...RuntimeConfig.INFOS,
+        dailyBasisBooking: false,
+      };
+      const leave = new Date("2026-04-24T17:00:00.000Z");
+      const result = DateUtil.getNextFreeEnterTime(leave);
+      expect(result.toISOString()).toBe("2026-04-24T17:00:00.000Z");
+      expect(result).not.toBe(leave);
+    });
+
     it("should skip to the next bookable weekday if the following day is not bookable", () => {
       // 2026-04-24 is a Friday, 2026-04-25/26 are Sat/Sun, 2026-04-27 is the next Monday
       RuntimeConfig.INFOS = { ...RuntimeConfig.INFOS, dailyBasisBooking: true };
