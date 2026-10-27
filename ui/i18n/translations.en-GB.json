@@ -222,7 +222,6 @@
   "designFloorPlan": "Design floor plan",
   "details": "Details",
   "device": "Device",
-  "disableBuddies": "Disable buddies",
   "disableTotp": "Disable two-factor authentication",
   "disableTotpConfirm": "Are you sure you want to disable two-factor authentication? This will make your account less secure.",
   "disabled": "Disabled",
@@ -564,7 +563,6 @@
   "shapeRect": "Rectangle",
   "shapeTrapezoid": "Trapezoid",
   "showGrid": "Show grid",
-  "showNames": "Show bookers' names (mind the privacy!)",
   "signInWithPasskey": "Sign in with a passkey",
   "signin": "Sign in",
   "signinAsAt": "Sign in as {{user}} at {{org}}:",
@@ -675,5 +673,10 @@
   "moveUp": "Move up",
   "moveDown": "Move down",
   "publicBookingAllSpaces": "All spaces",
-  "featureNotEnabled": "Feature not enabled."
+  "featureNotEnabled": "Feature not enabled.",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }
