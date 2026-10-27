@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.138.1](https://github.com/seatsurfing/seatsurfing/compare/v1.138.0...v1.138.1) (2026-10-26)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add booking filter option next 7 days ([#2820](https://github.com/seatsurfing/seatsurfing/issues/2820)) ([d0642e7](https://github.com/seatsurfing/seatsurfing/commit/d0642e76f9ea85a05a379a8d66f499d58246702d))
+* **admin-ui:** add subject filter for booking list ([#2822](https://github.com/seatsurfing/seatsurfing/issues/2822)) ([977a45d](https://github.com/seatsurfing/seatsurfing/commit/977a45d5cfed702bb9dd779d23118407e7ba47d7))
+* **deps:** bump distroless/base-debian13 from `44a80dc` to `f5e9519` ([#2827](https://github.com/seatsurfing/seatsurfing/issues/2827)) ([3964e74](https://github.com/seatsurfing/seatsurfing/commit/3964e74a4c2468bb5d9af9698d3fb20aee65dd59))
+* **main:** add dark mode support for date time picker ([#2819](https://github.com/seatsurfing/seatsurfing/issues/2819)) ([4a777a3](https://github.com/seatsurfing/seatsurfing/commit/4a777a3b2fd72e20f967dc2053f67d7d42f5250b))
+
 ## [1.138.0](https://github.com/seatsurfing/seatsurfing/compare/v1.137.0...v1.138.0) (2026-10-25)
 
 
