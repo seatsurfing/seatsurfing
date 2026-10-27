@@ -708,3 +708,97 @@ func TestSettingsMissingNonFeatureNotFound(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
+
+func TestSettingsOrgAnnouncementReadAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	org2 := CreateTestOrg("test2.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	GetSettingsRepository().Set(org.ID, SettingOrgAnnouncementText.Name, "**Hello** world")
+	GetSettingsRepository().Set(org2.ID, SettingOrgAnnouncementText.Name, "Other org")
+
+	req := NewHTTPRequest("GET", "/setting/"+SettingOrgAnnouncementText.Name, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var value string
+	json.Unmarshal(res.Body.Bytes(), &value)
+	CheckTestString(t, "**Hello** world", value)
+
+	CheckTestString(t, "**Hello** world", getTestSettingFromList(t, loginResponse.UserID, SettingOrgAnnouncementText.Name))
+}
+
+func TestSettingsOrgAnnouncementForbiddenForUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	GetSettingsRepository().Set(org.ID, SettingOrgAnnouncementText.Name, "Admins only")
+
+	req := NewHTTPRequest("GET", "/setting/"+SettingOrgAnnouncementText.Name, loginResponse.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+	CheckTestString(t, "<missing>", getTestSettingFromList(t, loginResponse.UserID, SettingOrgAnnouncementText.Name))
+}
+
+func TestSettingsOrgAnnouncementCustomPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	bookingAdmin := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionBookings: PermissionLevelAdmin})
+	bookingReader := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionBookings: PermissionLevelRead})
+	orgAdmin := CreateTestUserOrgAdmin(org)
+
+	GetSettingsRepository().Set(org.ID, SettingOrgAnnouncementText.Name, "For booking admins")
+	GetSettingsRepository().Set(org.ID, SettingOrgAnnouncementPermission.Name, string(PermissionBookings))
+
+	CheckTestString(t, "For booking admins", getTestSettingFromList(t, LoginTestUser(bookingAdmin.ID).UserID, SettingOrgAnnouncementText.Name))
+	CheckTestString(t, "<missing>", getTestSettingFromList(t, LoginTestUser(bookingReader.ID).UserID, SettingOrgAnnouncementText.Name))
+
+	req := NewHTTPRequest("GET", "/setting/"+SettingOrgAnnouncementText.Name, LoginTestUser(bookingReader.ID).UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	// org admins hold every permission at admin level
+	CheckTestString(t, "For booking admins", getTestSettingFromList(t, LoginTestUser(orgAdmin.ID).UserID, SettingOrgAnnouncementText.Name))
+	CheckTestString(t, string(PermissionBookings), getTestSettingFromList(t, LoginTestUser(orgAdmin.ID).UserID, SettingOrgAnnouncementPermission.Name))
+}
+
+func TestSettingsOrgAnnouncementNotWritable(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	for _, name := range []string{SettingOrgAnnouncementText.Name, SettingOrgAnnouncementPermission.Name} {
+		GetSettingsRepository().Set(org.ID, name, "Original")
+
+		payload := `{"value": "Changed"}`
+		req := NewHTTPRequest("PUT", "/setting/"+name, loginResponse.UserID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+		payload = `[{"name": "` + name + `", "value": "Changed"}]`
+		req = NewHTTPRequest("PUT", "/setting/", loginResponse.UserID, bytes.NewBufferString(payload))
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+		value, _ := GetSettingsRepository().Get(org.ID, name)
+		CheckTestString(t, "Original", value)
+	}
+}
+
+func getTestSettingFromList(t *testing.T, userID, name string) string {
+	req := NewHTTPRequest("GET", "/setting/", userID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []GetSettingsResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	for _, cur := range resBody {
+		if cur.Name == name {
+			return cur.Value
+		}
+	}
+	return "<missing>"
+}

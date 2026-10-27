@@ -9,3 +9,7 @@
 .dashboard-card-clickable:hover {
   background-color: var(--bs-tertiary-bg);
 }
+
+.org-announcement > :last-child {
+  margin-bottom: 0;
+}
