@@ -26,6 +26,7 @@ import {
   Eye as IconEye,
   Type as IconFontSize,
   Globe as IconGlobe,
+  Book as IconBook,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -1833,9 +1834,22 @@ class EditLocation extends React.Component<Props, State> {
       this.renderRow(item, rowNumber),
     );
     if (this.entity.id) {
+      const buttonBookings = RuntimeConfig.hasPermission(
+        Permission.Bookings,
+        PermissionLevel.Read,
+      ) ? (
+        <Link
+          href={`/admin/bookings/?filter=current&location=${encodeURIComponent(this.entity.id)}`}
+          className="btn btn-sm btn-outline-secondary"
+        >
+          <IconBook className="feather" /> {this.props.t("bookings")}
+        </Link>
+      ) : (
+        <></>
+      );
       buttons = (
         <>
-          {backButton} {buttonDelete} {buttonSave}
+          {backButton} {buttonBookings} {buttonDelete} {buttonSave}
         </>
       );
       const floorPlanStyle = {
