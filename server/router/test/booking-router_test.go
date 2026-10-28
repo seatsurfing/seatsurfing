@@ -3012,6 +3012,41 @@ func TestBookingsFilterMultipleUsers(t *testing.T) {
 	CheckTestInt(t, 3, len(resBody))
 }
 
+func TestBookingsFilterSubject(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	b1 := CreateTestBooking9To5(user, space, 1)
+	b1.Subject = "Team Meeting"
+	GetBookingRepository().Update(b1)
+	CreateTestBooking9To5(user, space, 2)
+
+	start := time.Now().UTC().Format(time.RFC3339Nano)
+	end := time.Now().Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339Nano)
+	base := "/booking/filter/?start=" + url.QueryEscape(start) + "&end=" + url.QueryEscape(end)
+
+	req := NewHTTPRequest("GET", base+"&subject="+url.QueryEscape("team meet"), admin.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody []*GetBookingResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody))
+	CheckTestString(t, b1.ID, resBody[0].ID)
+
+	req = NewHTTPRequest("GET", base+"&subject=unknown", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 0, len(resBody))
+
+	req = NewHTTPRequest("GET", "/booking/current/?subject=meeting", user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
 func TestBookingsFilterMultipleUsersForeignOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

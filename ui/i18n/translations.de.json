@@ -203,7 +203,6 @@
   "designFloorPlan": "Grundriss entwerfen",
   "details": "Details",
   "device": "Gerät",
-  "disableBuddies": "Buddies deaktivieren",
   "disableTotp": "Zwei-Faktor-Authentifizierung deaktivieren",
   "disableTotpConfirm": "Bist du sicher, dass du die Zwei-Faktor-Authentifizierung deaktivieren möchtest? Dies macht dein Konto weniger sicher.",
   "disabled": "Deaktiviert",
@@ -520,7 +519,6 @@
   "shapeRect": "Rechteck",
   "shapeTrapezoid": "Trapez",
   "showGrid": "Raster anzeigen",
-  "showNames": "Namen der Buchenden anzeigen (Datenschutz beachten!)",
   "signInWithPasskey": "Mit einem Passkey anmelden",
   "signin": "Anmelden",
   "signinAsAt": "Als {{user}} an {{org}} anmelden:",
@@ -680,5 +678,10 @@
   "publicBookingFixedSpaceNotAvailable": "Dieser Platz ist im gewählten Zeitraum nicht verfügbar.",
   "publicBookingAllSpaces": "Alle Plätze",
   "directLinkNoSpaceAvailable": "The space is not available at the selected time. Please adjust the times.",
-  "featureNotEnabled": "Funktion nicht aktiviert."
+  "featureNotEnabled": "Funktion nicht aktiviert.",
+  "bookerNames": "Namen der Buchenden",
+  "bookerNamesHide": "Namen ausblenden",
+  "bookerNamesShowWithBuddies": "Namen einblenden (Buddies aktiviert)",
+  "bookerNamesShowWithoutBuddies": "Namen einblenden (Buddies deaktiviert)",
+  "bookerNamesPrivacyHint": "Datenschutz beachten!"
 }

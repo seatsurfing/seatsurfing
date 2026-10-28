@@ -174,7 +174,6 @@
   "designFloorPlan": "Design floor plan",
   "details": "Details",
   "device": "裝置",
-  "disableBuddies": "禁用好友",
   "disableTotp": "禁用雙重認證",
   "disableTotpConfirm": "您確定要停用雙重認證嗎？這將使您的帳戶安全性降低。",
   "disabled": "殘障人士",
@@ -489,7 +488,6 @@
   "shapeRect": "Rectangle",
   "shapeTrapezoid": "梯形",
   "showGrid": "Show grid",
-  "showNames": "顯示預訂者的姓名（注意隱私！）",
   "signInWithPasskey": "使用密碼登入",
   "signin": "登入",
   "signinAsAt": "以 {{user}} 身分登入 {{org}}：",
@@ -677,5 +675,10 @@
   "featureNotEnabled": "Feature not enabled.",
   "next7Days": "Next 7 days",
   "announcement": "Announcement",
-  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported."
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }

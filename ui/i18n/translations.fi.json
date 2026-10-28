@@ -174,7 +174,6 @@
   "designFloorPlan": "Suunnittele pohjapiirros",
   "details": "Details",
   "device": "Laite",
-  "disableBuddies": "Poista kollegat käytöstä",
   "disableTotp": "Poista kaksivaiheinen tunnistautuminen käytöstä",
   "disableTotpConfirm": "Haluatko varmasti poistaa kaksivaiheisen tunnistautumisen käytöstä? Tämä heikentää tilisi turvallisuutta.",
   "disabled": "Ei käytössä",
@@ -489,7 +488,6 @@
   "shapeRect": "Suorakulmio",
   "shapeTrapezoid": "Puolisuunnikas",
   "showGrid": "Näytä ruudukko",
-  "showNames": "Näytä varaajien nimet (huomioi tietosuoja!)",
   "signInWithPasskey": "Kirjaudu passkeylla",
   "signin": "Kirjaudu sisään",
   "signinAsAt": "Kirjaudu käyttäjänä {{user}} organisaatiossa {{org}}:",
@@ -677,5 +675,10 @@
   "featureNotEnabled": "Feature not enabled.",
   "next7Days": "Next 7 days",
   "announcement": "Announcement",
-  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported."
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }

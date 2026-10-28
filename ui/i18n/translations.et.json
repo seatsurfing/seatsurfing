@@ -176,7 +176,6 @@
   "designFloorPlan": "Design floor plan",
   "details": "Details",
   "device": "Seade",
-  "disableBuddies": "Keela sõbrad",
   "disableTotp": "Keela kaheastmeline autentimine",
   "disableTotpConfirm": "Kas oled kindel, et soovid kaheastmelise autentimise keelata? See muudab sinu konto vähem turvaliseks.",
   "disabled": "Keelatud",
@@ -491,7 +490,6 @@
   "shapeRect": "Rectangle",
   "shapeTrapezoid": "Trapets",
   "showGrid": "Show grid",
-  "showNames": "Kuva broneerijate nimed (arvesta privaatsusega!)",
   "signInWithPasskey": "Logi sisse pääsuvõtmega",
   "signin": "Logi sisse",
   "signinAsAt": "Logi sisse kasutajana {{user}} organisatsioonis {{org}}:",
@@ -679,5 +677,10 @@
   "featureNotEnabled": "Feature not enabled.",
   "next7Days": "Next 7 days",
   "announcement": "Announcement",
-  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported."
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }

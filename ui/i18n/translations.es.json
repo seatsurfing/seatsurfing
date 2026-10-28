@@ -176,7 +176,6 @@
   "designFloorPlan": "Diseñar plano",
   "details": "Detalles",
   "device": "Dispositivo",
-  "disableBuddies": "Desactivar compañeros",
   "disableTotp": "Deshabilitar la autenticación de dos factores",
   "disableTotpConfirm": "¿Seguro que quieres deshabilitar la autenticación de dos factores? Esto hará que tu cuenta sea menos segura.",
   "disabled": "Deshabilitado",
@@ -491,7 +490,6 @@
   "shapeRect": "Rectángulo",
   "shapeTrapezoid": "Trapecio",
   "showGrid": "Mostrar cuadrícula",
-  "showNames": "Mostrar nombres de los reservantes (¡cuidado con la privacidad!)",
   "signInWithPasskey": "Iniciar sesión con una clave de acceso",
   "signin": "Iniciar sesión",
   "signinAsAt": "Iniciar sesión como {{user}} en {{org}}:",
@@ -679,5 +677,10 @@
   "featureNotEnabled": "Feature not enabled.",
   "next7Days": "Next 7 days",
   "announcement": "Announcement",
-  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported."
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }

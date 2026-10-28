@@ -395,7 +395,7 @@ func (r *BookingStore) GetFirstUpcomingOrCurrentBookingByUserID(userID string) (
 	return e, nil
 }
 
-func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmails []string, locationId string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime time.Time, userEmails []string, locationId string, subject string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -417,6 +417,10 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 		query += fmt.Sprintf(" AND locations.id = $%d", len(args)+1)
 		args = append(args, locationId)
 	}
+	if subject != "" {
+		query += fmt.Sprintf(" AND STRPOS(LOWER(bookings.subject), LOWER($%d)) > 0", len(args)+1)
+		args = append(args, subject)
+	}
 	query += " ORDER BY enter_time"
 	rows, err := GetDatabase().DB().Query(query, args...)
 	if err != nil {
@@ -434,7 +438,7 @@ func (r *BookingStore) GetAllByOrg(organizationID string, startTime, endTime tim
 	return result, nil
 }
 
-func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmails []string, locationId string) ([]*BookingDetails, error) {
+func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmails []string, locationId string, subject string) ([]*BookingDetails, error) {
 	var result []*BookingDetails
 	query := "SELECT bookings.id, COALESCE(bookings.user_id::text, ''), bookings.space_id, bookings.enter_time, bookings.leave_time, bookings.caldav_id, bookings.approved, bookings.subject, bookings.recurring_id, bookings.created_at_utc, bookings.reminder_sent_at_utc, " +
 		"spaces.id, spaces.location_id, spaces.name, " +
@@ -458,6 +462,10 @@ func (r *BookingStore) GetAllCurrentByOrg(organizationID string, userEmails []st
 	if locationId != "" {
 		query += fmt.Sprintf(" AND locations.id = $%d", len(args)+1)
 		args = append(args, locationId)
+	}
+	if subject != "" {
+		query += fmt.Sprintf(" AND STRPOS(LOWER(bookings.subject), LOWER($%d)) > 0", len(args)+1)
+		args = append(args, subject)
 	}
 	query += " ORDER BY enter_time"
 

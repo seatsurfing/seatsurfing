@@ -176,7 +176,6 @@
   "designFloorPlan": "Design floor plan",
   "details": "Details",
   "device": "Device",
-  "disableBuddies": "Disabilita amici",
   "disableTotp": "Disable two-factor authentication",
   "disableTotpConfirm": "Are you sure you want to disable two-factor authentication? This will make your account less secure.",
   "disabled": "Disabled",
@@ -491,7 +490,6 @@
   "shapeRect": "Rectangle",
   "shapeTrapezoid": "Trapezio",
   "showGrid": "Show grid",
-  "showNames": "Msotra nomi degli utenti che prenotano (attenzione alla privacy !)",
   "signInWithPasskey": "Sign in with a passkey",
   "signin": "Accesso",
   "signinAsAt": "Accesso eseguito come {{user}} / {{org}}:",
@@ -679,5 +677,10 @@
   "featureNotEnabled": "Feature not enabled.",
   "next7Days": "Next 7 days",
   "announcement": "Announcement",
-  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported."
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }

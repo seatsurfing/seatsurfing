@@ -332,6 +332,8 @@ var (
 	SettingPublicBookingMinDurationHours  SettingName = SettingName{Name: "public_booking_min_duration_hours", Type: SettingTypeInt}
 	SettingPublicBookingMaxDurationHours  SettingName = SettingName{Name: "public_booking_max_duration_hours", Type: SettingTypeInt}
 	SettingHideDisallowedLocations        SettingName = SettingName{Name: "hide_disallowed_locations", Type: SettingTypeBool}
+	SettingOrgAnnouncementText            SettingName = SettingName{Name: "org_announcement_text", Type: SettingTypeString}
+	SettingOrgAnnouncementPermission      SettingName = SettingName{Name: "org_announcement_permission", Type: SettingTypeString}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────

@@ -4,6 +4,8 @@
 }
 .rbc-time-header .rbc-header {
   border-bottom: none;
+  /* reserve space for today's top border so the header height stays constant */
+  border-top: 2px solid transparent;
 }
 
 /* mark today with blue border */

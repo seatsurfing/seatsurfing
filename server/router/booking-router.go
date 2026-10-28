@@ -236,6 +236,7 @@ func (router *BookingRouter) getBookingFilter(r *http.Request) *service.BookingF
 	return &service.BookingFilter{
 		UserEmails: r.URL.Query()["user"],
 		LocationID: r.URL.Query().Get("location"),
+		Subject:    r.URL.Query().Get("subject"),
 	}
 }
 

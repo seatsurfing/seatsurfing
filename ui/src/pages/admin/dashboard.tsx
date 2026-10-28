@@ -30,6 +30,7 @@ import Formatting from "@/util/Formatting";
 import Navigation from "@/util/Navigation";
 import UpdateChecker from "@/util/UpdateChecker";
 import SelfHostedHint from "@/components/SelfHostedHint";
+import OrgAnnouncement from "@/components/OrgAnnouncement";
 
 interface State {
   loading: boolean;
@@ -549,6 +550,7 @@ class Dashboard extends React.Component<Props, State> {
 
     return (
       <FullLayout headline="Dashboard">
+        <OrgAnnouncement text={RuntimeConfig.INFOS.orgAnnouncement} />
         {cloudUpgradeHint}
         {updateHint}
         <SelfHostedHint />
