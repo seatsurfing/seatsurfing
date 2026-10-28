@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.138.2](https://github.com/seatsurfing/seatsurfing/compare/v1.138.1...v1.138.2) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add booking link on location detail page ([#2825](https://github.com/seatsurfing/seatsurfing/issues/2825)) ([d6ae6d1](https://github.com/seatsurfing/seatsurfing/commit/d6ae6d1c3162e4d6ecfb274f2e135f9fc2c4f516))
+* **admin-ui:** add org announcement ([#2830](https://github.com/seatsurfing/seatsurfing/issues/2830)) ([fc8c8f0](https://github.com/seatsurfing/seatsurfing/commit/fc8c8f0a1891af15f554451676e652d62ab4c8ee))
+* **admin-ui:** define min space size ([#2824](https://github.com/seatsurfing/seatsurfing/issues/2824)) ([2002a3d](https://github.com/seatsurfing/seatsurfing/commit/2002a3d54462f02f89d832a0b0deb11f85debd73))
+* **admin-ui:** improve booker names and buddy option settings ([#2828](https://github.com/seatsurfing/seatsurfing/issues/2828)) ([5853372](https://github.com/seatsurfing/seatsurfing/commit/5853372bb141fa4fc3d1e69e30c934d7a80df2a5))
+* **main:** fix calender height for current/non-current date ([#2823](https://github.com/seatsurfing/seatsurfing/issues/2823)) ([083857b](https://github.com/seatsurfing/seatsurfing/commit/083857b109912a5a1b20091fa8c9d1113da9495a))
+* **main:** improve parsing of runtime settings ([#2829](https://github.com/seatsurfing/seatsurfing/issues/2829)) ([b25a0a0](https://github.com/seatsurfing/seatsurfing/commit/b25a0a0a2ad0eed7c4aa71df3870155ede34063d))
+
 ## [1.138.1](https://github.com/seatsurfing/seatsurfing/compare/v1.138.0...v1.138.1) (2026-10-26)
 
 
