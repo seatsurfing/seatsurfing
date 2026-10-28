@@ -171,6 +171,15 @@ export default class RuntimeConfig {
     return item.title;
   };
 
+  static parseArray = (value: string): any[] => {
+    try {
+      const v = value ? JSON.parse(value) : undefined;
+      return Array.isArray(v) ? v : [];
+    } catch {
+      return [];
+    }
+  };
+
   static EMBEDDED: boolean = false;
   static INFOS: RuntimeUserInfos;
 
@@ -297,25 +306,19 @@ export default class RuntimeConfig {
       if (s.name === Organization.PREF_ALLOW_RECURRING_BOOKINGS)
         RuntimeConfig.INFOS.allowRecurringBookings = s.value === "1";
       if (s.name === "_sys_admin_menu_items")
-        RuntimeConfig.INFOS.pluginMenuItems = s.value
-          ? JSON.parse(s.value)
-          : [];
+        RuntimeConfig.INFOS.pluginMenuItems = RuntimeConfig.parseArray(s.value);
       if (s.name === "_sys_admin_welcome_screens")
-        RuntimeConfig.INFOS.pluginWelcomeScreens = s.value
-          ? JSON.parse(s.value)
-          : [];
+        RuntimeConfig.INFOS.pluginWelcomeScreens = RuntimeConfig.parseArray(
+          s.value,
+        );
       if (s.name === "_sys_booking_ui_integrations")
-        RuntimeConfig.INFOS.bookingUIIntegrations = s.value
-          ? JSON.parse(s.value)
-          : [];
+        RuntimeConfig.INFOS.bookingUIIntegrations = RuntimeConfig.parseArray(
+          s.value,
+        );
       if (s.name === "feature_groups")
-        RuntimeConfig.INFOS.featureGroups = s.value
-          ? JSON.parse(s.value)
-          : false;
+        RuntimeConfig.INFOS.featureGroups = s.value === "1";
       if (s.name === "feature_auth_providers")
-        RuntimeConfig.INFOS.featureAuthProviders = s.value
-          ? JSON.parse(s.value)
-          : false;
+        RuntimeConfig.INFOS.featureAuthProviders = s.value === "1";
       if (s.name === "feature_kiosk_mode")
         RuntimeConfig.INFOS.featureKioskMode = s.value === "1";
       if (s.name === Organization.PREF_KIOSK_MODE_ENABLED)
@@ -325,11 +328,9 @@ export default class RuntimeConfig {
       if (s.name === Organization.PREF_PUBLIC_BOOKING_ENABLED)
         RuntimeConfig.INFOS.publicBookingEnabled = s.value === "1";
       if (s.name === "cloud_hosted")
-        RuntimeConfig.INFOS.cloudHosted = s.value ? JSON.parse(s.value) : false;
+        RuntimeConfig.INFOS.cloudHosted = s.value === "1";
       if (s.name === "subscription_active")
-        RuntimeConfig.INFOS.subscriptionActive = s.value
-          ? JSON.parse(s.value)
-          : false;
+        RuntimeConfig.INFOS.subscriptionActive = s.value === "1";
       if (s.name === "_sys_org_primary_domain")
         RuntimeConfig.INFOS.orgPrimaryDomain = s.value;
       if (s.name === "_sys_disable_password_login")
