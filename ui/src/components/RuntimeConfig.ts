@@ -62,6 +62,7 @@ interface RuntimeUserInfos {
   hasPasskeys: boolean;
   isPrimaryDomain: boolean;
   targetUtilizationHoursPerWeek: number;
+  orgAnnouncement: string;
 }
 
 export default class RuntimeConfig {
@@ -225,6 +226,7 @@ export default class RuntimeConfig {
       hasPasskeys: false,
       isPrimaryDomain: false,
       targetUtilizationHoursPerWeek: 0,
+      orgAnnouncement: "",
     };
   };
 
@@ -345,6 +347,8 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.hideReports = s.value === "1";
       if (s.name === Organization.PREF_HIDE_STATS)
         RuntimeConfig.INFOS.hideStats = s.value === "1";
+      if (s.name === Organization.PREF_ORG_ANNOUNCEMENT_TEXT)
+        RuntimeConfig.INFOS.orgAnnouncement = s.value;
       if (s.name === Organization.PREF_TARGET_UTILIZATION_HOURS_PER_WEEK)
         RuntimeConfig.INFOS.targetUtilizationHoursPerWeek = window.parseInt(
           s.value,

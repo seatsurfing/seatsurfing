@@ -100,6 +100,10 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	user := GetRequestUser(r)
 	vars := mux.Vars(r)
 	orgAdmin := HasPermission(user, user.OrganizationID, PermissionOrgSettings, PermissionLevelAdmin)
+	if vars["name"] == SettingOrgAnnouncementText.Name {
+		router.getOrgAnnouncementText(w, user)
+		return
+	}
 	if !((orgAdmin && router.isValidSettingNameReadAdmin(vars["name"])) || (router.isValidSettingNameReadPublic(vars["name"]))) {
 		SendForbidden(w)
 		return
@@ -172,6 +176,15 @@ func (router *SettingsRouter) getSetting(w http.ResponseWriter, r *http.Request)
 	SendJSON(w, value)
 }
 
+func (router *SettingsRouter) getOrgAnnouncementText(w http.ResponseWriter, user *User) {
+	if !service.GetOrgAnnouncementService().CanView(user) {
+		SendForbidden(w)
+		return
+	}
+	value, _ := GetSettingsRepository().Get(user.OrganizationID, SettingOrgAnnouncementText.Name)
+	SendJSON(w, value)
+}
+
 func (router *SettingsRouter) isFeatureSetting(name string) bool {
 	return name == SettingFeatureNoUserLimit.Name ||
 		name == SettingFeatureCustomDomains.Name ||
@@ -237,8 +250,10 @@ func (router *SettingsRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := []*GetSettingsResponse{}
+	canViewAnnouncement := service.GetOrgAnnouncementService().CanView(user)
 	for _, e := range list {
-		if (orgAdmin && router.isValidSettingNameReadAdmin(e.Name)) || (router.isValidSettingNameReadPublic(e.Name)) {
+		if (orgAdmin && router.isValidSettingNameReadAdmin(e.Name)) || (router.isValidSettingNameReadPublic(e.Name)) ||
+			(e.Name == SettingOrgAnnouncementText.Name && canViewAnnouncement) {
 			m := router.copyToRestModel(e)
 			res = append(res, m)
 		}
@@ -441,7 +456,8 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingPublicBookingShowAvailability.Name ||
 		name == SettingPublicBookingMinDurationHours.Name ||
 		name == SettingPublicBookingMaxDurationHours.Name ||
-		name == SettingHideDisallowedLocations.Name {
+		name == SettingHideDisallowedLocations.Name ||
+		name == SettingOrgAnnouncementPermission.Name {
 		return true
 	}
 	return false
