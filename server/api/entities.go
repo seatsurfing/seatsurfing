@@ -114,6 +114,7 @@ type Location struct {
 	BookableDays          string
 	BlockedFrom           *time.Time
 	BlockedUntil          *time.Time
+	Announcement          string
 }
 
 // ─── Space ───────────────────────────────────────────────────────────────────

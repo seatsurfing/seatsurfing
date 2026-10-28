@@ -22,6 +22,8 @@
   "allowBookingNonExistUsers": "Allow bookings for non-existing users (create on booking, admins only)",
   "allowRecurringBookings": "Allow recurring bookings",
   "analysis": "Analysis",
+  "announcement": "Announcement",
+  "announcementHint": "Shown as a banner to users in the booking UI. Markdown syntax is supported.",
   "frameBlockedBody": "For security reasons, this page cannot be displayed inside another application. Please open it in a new browser window or reload the app to sign in again.",
   "frameBlockedTitle": "This page cannot be displayed here.",
   "openInNewWindow": "Open in new window",

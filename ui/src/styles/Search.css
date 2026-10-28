@@ -173,6 +173,33 @@
   color: #dc3545;
 }
 
+/* Fixed below the navbar, centered and narrow enough to keep the map's zoom
+   controls (left) and mini map (right) uncovered. */
+.location-announcement-banner {
+  position: fixed;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, calc(100% - 480px));
+  max-height: 30vh;
+  overflow-y: auto;
+  margin: 0;
+  z-index: 101;
+  box-shadow: 0 0 3px #555;
+}
+
+.location-announcement-banner p:last-child,
+.location-announcement-banner ul:last-child,
+.location-announcement-banner ol:last-child {
+  margin-bottom: 0;
+}
+
+@media only screen and (max-width: 767.98px) {
+  .location-announcement-banner {
+    width: calc(100% - 120px);
+  }
+}
+
 .search-hint-banner {
   opacity: 0.95;
   background-color: var(--bs-body-bg);

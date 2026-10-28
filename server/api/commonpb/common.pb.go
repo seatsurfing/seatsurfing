@@ -482,6 +482,7 @@ type Location struct {
 	Enabled               bool                   `protobuf:"varint,12,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	BlockedFrom           *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=blocked_from,json=blockedFrom,proto3" json:"blocked_from,omitempty"`
 	BlockedUntil          *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=blocked_until,json=blockedUntil,proto3" json:"blocked_until,omitempty"`
+	Announcement          string                 `protobuf:"bytes,15,opt,name=announcement,proto3" json:"announcement,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -612,6 +613,13 @@ func (x *Location) GetBlockedUntil() *timestamppb.Timestamp {
 		return x.BlockedUntil
 	}
 	return nil
+}
+
+func (x *Location) GetAnnouncement() string {
+	if x != nil {
+		return x.Announcement
+	}
+	return ""
 }
 
 type Space struct {
@@ -1310,7 +1318,7 @@ const file_common_proto_rawDesc = "" +
 	"\x05Group\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
 	"\x0forganization_id\x18\x02 \x01(\tR\x0eorganizationId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"\xff\x03\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"\xa3\x04\n" +
 	"\bLocation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
 	"\x0forganization_id\x18\x02 \x01(\tR\x0eorganizationId\x12\x12\n" +
@@ -1327,7 +1335,8 @@ const file_common_proto_rawDesc = "" +
 	"\btimezone\x18\v \x01(\tR\btimezone\x12\x18\n" +
 	"\aenabled\x18\f \x01(\bR\aenabled\x12=\n" +
 	"\fblocked_from\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\vblockedFrom\x12?\n" +
-	"\rblocked_until\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\fblockedUntil\"\xcd\x02\n" +
+	"\rblocked_until\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\fblockedUntil\x12\"\n" +
+	"\fannouncement\x18\x0f \x01(\tR\fannouncement\"\xcd\x02\n" +
 	"\x05Space\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vlocation_id\x18\x02 \x01(\tR\n" +

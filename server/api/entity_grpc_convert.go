@@ -250,6 +250,7 @@ func locationToProto(l *Location) *commonpb.Location {
 		Enabled:               l.Enabled,
 		BlockedFrom:           nullTimeToProto(l.BlockedFrom),
 		BlockedUntil:          nullTimeToProto(l.BlockedUntil),
+		Announcement:          l.Announcement,
 	}
 }
 
@@ -272,6 +273,7 @@ func locationFromProto(p *commonpb.Location) *Location {
 		Enabled:               p.Enabled,
 		BlockedFrom:           nullTimeFromProto(p.BlockedFrom),
 		BlockedUntil:          nullTimeFromProto(p.BlockedUntil),
+		Announcement:          p.Announcement,
 	}
 }
 

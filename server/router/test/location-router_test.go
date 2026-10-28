@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -261,6 +262,72 @@ func TestLocationsBlockedPeriodInvalid(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
 	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payloads[0]))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestLocationsAnnouncement(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"name": "Location 1", "announcement": "**Heads up:** the kitchen is closed."}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Regular users can read the announcement
+	regularUser := CreateTestUserInOrg(org)
+	req = NewHTTPRequest("GET", "/location/", regularUser.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resList []*GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resList)
+	CheckTestInt(t, 1, len(resList))
+	CheckTestString(t, "**Heads up:** the kitchen is closed.", resList[0].Announcement)
+
+	// Update
+	payload = `{"name": "Location 1", "announcement": "Updated"}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "Updated", resBody.Announcement)
+
+	// Clear
+	payload = `{"name": "Location 1"}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	location, _ := GetLocationRepository().GetOne(id)
+	CheckTestString(t, "", location.Announcement)
+}
+
+func TestLocationsAnnouncementTooLong(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"name": "Location 1", "announcement": "` + strings.Repeat("a", 513) + `"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	payload = `{"name": "Location 1", "announcement": "` + strings.Repeat("a", 512) + `"}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	payload = `{"name": "Location 1", "announcement": "` + strings.Repeat("a", 513) + `"}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 }

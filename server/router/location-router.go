@@ -42,6 +42,7 @@ type CreateLocationRequest struct {
 	BookableDays          []int    `json:"bookableDays" validate:"dive,min=0,max=6"`
 	BlockedFrom           string   `json:"blockedFrom"`
 	BlockedUntil          string   `json:"blockedUntil"`
+	Announcement          string   `json:"announcement" validate:"max=512"`
 }
 
 type GetLocationResponse struct {
@@ -704,6 +705,7 @@ func (router *LocationRouter) copyFromRestModel(m *CreateLocationRequest) *Locat
 	e.MapScale = m.MapScale
 	e.MapType = m.MapType
 	e.BookableDays = weekdaysToString(m.BookableDays)
+	e.Announcement = m.Announcement
 	return e
 }
 
@@ -724,6 +726,7 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.BookableDays = service.WeekdaysFromString(e.BookableDays)
 	m.BlockedFrom = formatLocationDate(e.BlockedFrom)
 	m.BlockedUntil = formatLocationDate(e.BlockedUntil)
+	m.Announcement = e.Announcement
 
 	if allowedBookers != nil {
 		m.AllowedBookerGroupIDs = []string{}

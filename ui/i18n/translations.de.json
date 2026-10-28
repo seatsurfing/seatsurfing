@@ -23,6 +23,8 @@
   "allowBookingNonExistUsers": "Buchungen für nicht existierende Benutzer zulassen (Erstellen beim Buchen, Admins Only)",
   "allowRecurringBookings": "Wiederkehrende Buchungen erlauben",
   "analysis": "Auswertung",
+  "announcement": "Ankündigung",
+  "announcementHint": "Wird Nutzern in der Buchungsansicht als Banner angezeigt. Markdown-Syntax wird unterstützt.",
   "frameBlockedBody": "Aus Sicherheitsgründen kann diese Seite nicht innerhalb einer anderen Anwendung angezeigt werden. Bitte öffnen Sie sie in einem neuen Browserfenster oder laden Sie die App neu, um sich erneut anzumelden.",
   "frameBlockedTitle": "Diese Seite kann hier nicht angezeigt werden.",
   "openInNewWindow": "In neuem Fenster öffnen",
