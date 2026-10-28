@@ -1050,33 +1050,6 @@ class Settings extends React.Component<Props, State> {
             <Col sm="6">
               <Form.Check
                 type="checkbox"
-                id="check-showNames"
-                label={this.props.t("showNames")}
-                checked={this.state.showNames}
-                onChange={(e: any) =>
-                  this.setState({ showNames: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-disableBuddies"
-                label={this.props.t("disableBuddies")}
-                disabled={!this.state.showNames}
-                checked={this.state.disableBuddies}
-                onChange={(e: any) =>
-                  this.setState({ disableBuddies: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
                 id="check-newUserDefaultMailNotification"
                 label={this.props.t("newUserDefaultMailNotification")}
                 checked={this.state.newUserDefaultMailNotification}
@@ -1168,6 +1141,42 @@ class Settings extends React.Component<Props, State> {
           <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h4>{this.props.t("bookings")}</h4>
           </div>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="select-bookerNames">
+              {this.props.t("bookerNames")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                id="select-bookerNames"
+                value={
+                  !this.state.showNames
+                    ? "hide"
+                    : this.state.disableBuddies
+                      ? "showWithoutBuddies"
+                      : "showWithBuddies"
+                }
+                onChange={(e: any) =>
+                  this.setState({
+                    showNames: e.target.value !== "hide",
+                    disableBuddies:
+                      e.target.value === "hide"
+                        ? this.state.disableBuddies
+                        : e.target.value === "showWithoutBuddies",
+                  })
+                }
+              >
+                <option value="hide">{this.props.t("bookerNamesHide")}</option>
+                <optgroup label={this.props.t("bookerNamesPrivacyHint")}>
+                  <option value="showWithBuddies">
+                    {this.props.t("bookerNamesShowWithBuddies")}
+                  </option>
+                  <option value="showWithoutBuddies">
+                    {this.props.t("bookerNamesShowWithoutBuddies")}
+                  </option>
+                </optgroup>
+              </Form.Select>
+            </Col>
+          </Form.Group>
           <Form.Group as={Row}>
             <Form.Label column sm="2" htmlFor="input-maxBookingsPerUser">
               {this.props.t("maxBookingsPerUser")}

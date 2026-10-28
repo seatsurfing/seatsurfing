@@ -176,7 +176,6 @@
   "designFloorPlan": "Design floor plan",
   "details": "Details",
   "device": "Device",
-  "disableBuddies": "Buddies uitschakelen",
   "disableTotp": "Disable two-factor authentication",
   "disableTotpConfirm": "Are you sure you want to disable two-factor authentication? This will make your account less secure.",
   "disabled": "Disabled",
@@ -491,7 +490,6 @@
   "shapeRect": "Rectangle",
   "shapeTrapezoid": "Trapezium",
   "showGrid": "Show grid",
-  "showNames": "Toon de namen van boekers (let op de privacy!)",
   "signInWithPasskey": "Sign in with a passkey",
   "signin": "Aanmelden",
   "signinAsAt": "Aanmelden als {{user}} bij {{org}}:",
@@ -677,5 +675,10 @@
   "blockedUntil": "Blocked until",
   "errorLocationBlocked": "Bookings for this area are not possible within its blocked period.",
   "featureNotEnabled": "Feature not enabled.",
-  "next7Days": "Next 7 days"
+  "next7Days": "Next 7 days",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }

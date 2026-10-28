@@ -176,7 +176,6 @@
   "designFloorPlan": "Design floor plan",
   "details": "Details",
   "device": "Device",
-  "disableBuddies": "Disable buddies",
   "disableTotp": "Disable two-factor authentication",
   "disableTotpConfirm": "Are you sure you want to disable two-factor authentication? This will make your account less secure.",
   "disabled": "Disabled",
@@ -491,7 +490,6 @@
   "shapeRect": "Rectangle",
   "shapeTrapezoid": "Trapèze",
   "showGrid": "Show grid",
-  "showNames": "Afficher les noms des clients (attention à la vie privée!)",
   "signInWithPasskey": "Sign in with a passkey",
   "signin": "Connexion",
   "signinAsAt": "Connectez-vous en tant que {{user}} à {{org}} :",
@@ -677,5 +675,10 @@
   "blockedUntil": "Blocked until",
   "errorLocationBlocked": "Bookings for this area are not possible within its blocked period.",
   "featureNotEnabled": "Feature not enabled.",
-  "next7Days": "Next 7 days"
+  "next7Days": "Next 7 days",
+  "bookerNames": "Booker names",
+  "bookerNamesHide": "Hide names",
+  "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
+  "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
+  "bookerNamesPrivacyHint": "Mind the privacy!"
 }
