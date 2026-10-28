@@ -124,6 +124,7 @@ interface SpaceRectProps {
 }
 
 const GRID_SIZE = 50;
+const MIN_SPACE_SIZE = 25;
 
 const SpaceRect: React.FC<SpaceRectProps> = ({
   space,
@@ -317,6 +318,9 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
             }
             onSelect(index);
           }}
+          onResizeStart={({ setMin }) => {
+            setMin([MIN_SPACE_SIZE, MIN_SPACE_SIZE]);
+          }}
           onResize={({ target, width, height, drag }) => {
             target.style.width = `${width}px`;
             target.style.height = `${height}px`;
@@ -325,8 +329,14 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
           }}
           onResizeEnd={({ lastEvent }) => {
             if (lastEvent) {
-              const newWidth = Math.round(lastEvent.width);
-              const newHeight = Math.round(lastEvent.height);
+              const newWidth = Math.max(
+                MIN_SPACE_SIZE,
+                Math.round(lastEvent.width),
+              );
+              const newHeight = Math.max(
+                MIN_SPACE_SIZE,
+                Math.round(lastEvent.height),
+              );
               const newLeft = Math.round(lastEvent.drag.left);
               const newTop = Math.round(lastEvent.drag.top);
               const rad = (space.rotation * Math.PI) / 180;
