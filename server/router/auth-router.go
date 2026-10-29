@@ -27,6 +27,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -250,13 +251,16 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 		SendBadRequest(w)
 		return
 	}
-	refreshToken, err := GetRefreshTokenRepository().GetOne(m.RefreshToken)
-	if err != nil || refreshToken == nil {
-		SendNotFound(w)
-		return
-	}
-	if refreshToken.Expiry.Before(time.Now()) {
-		SendBadRequest(w)
+	refreshToken, err := service.GetRefreshTokenService().Consume(m.RefreshToken)
+	if err != nil {
+		if errors.Is(err, service.ErrRefreshTokenInvalid) ||
+			errors.Is(err, service.ErrRefreshTokenReplayed) ||
+			errors.Is(err, service.ErrRefreshTokenReused) {
+			SendNotFound(w)
+		} else {
+			log.Println("Error consuming refresh token: " + err.Error())
+			SendInternalServerError(w)
+		}
 		return
 	}
 	user, err := GetUserRepository().GetOne(refreshToken.UserID)
@@ -282,13 +286,15 @@ func (router *AuthRouter) refreshAccessToken(w http.ResponseWriter, r *http.Requ
 	}
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
-	newRefreshToken := router.createRefreshToken(claims)
+	newRefreshToken, err := router.createRefreshToken(claims)
+	if err != nil {
+		log.Println("Error creating refresh token: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
-	}
-	if err := GetRefreshTokenRepository().Delete(refreshToken); err != nil {
-		log.Println("Error deleting old refresh token: " + err.Error())
 	}
 	SendJSON(w, res)
 }
@@ -1361,17 +1367,12 @@ func (router *AuthRouter) CreateAccessToken(claims *Claims, options ...CreateAcc
 	return jwtString
 }
 
-func (router *AuthRouter) createRefreshToken(claims *Claims) string {
-	var expiry time.Time
-	expiry = time.Now().Add(60 * 24 * 28 * time.Minute)
-	refreshToken := &RefreshToken{
-		UserID:    claims.UserID,
-		SessionID: claims.SessionID,
-		Expiry:    expiry,
-		Created:   time.Now(),
+func (router *AuthRouter) createRefreshToken(claims *Claims) (string, error) {
+	refreshToken, err := service.GetRefreshTokenService().Issue(claims.UserID, claims.SessionID)
+	if err != nil {
+		return "", err
 	}
-	GetRefreshTokenRepository().Create(refreshToken)
-	return refreshToken.ID
+	return refreshToken.ID, nil
 }
 
 func (router *AuthRouter) getPreflightResponseForOrg(org *Organization) *AuthPreflightResponse {
@@ -1440,7 +1441,12 @@ func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Reques
 	}
 	claims := router.CreateClaims(user, session)
 	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
+	refreshToken, err := router.createRefreshToken(claims)
+	if err != nil {
+		log.Println("Error: Failed to create refresh token during " + authMethod + ": " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	res := &JWTResponse{
 		AccessToken:    accessToken,
 		RefreshToken:   refreshToken,

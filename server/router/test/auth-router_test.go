@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -126,6 +127,101 @@ func TestAuthRefresh(t *testing.T) {
 	var resBody2 *GetUserResponse
 	json.Unmarshal(res.Body.Bytes(), &resBody2)
 	CheckTestString(t, user.Email, resBody2.Email)
+}
+
+func loginForRefreshTest(t *testing.T) (*User, *JWTResponse) {
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	GetUserRepository().Update(user)
+	payload := "{ \"email\": \"" + user.Email + "\", \"password\": \"" + TestPassword + "\", \"organizationId\": \"" + org.ID + "\" }"
+	req := NewHTTPRequest("POST", "/auth/login", "", bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var login *JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &login)
+	return user, login
+}
+
+func refreshForTest(refreshToken string) *httptest.ResponseRecorder {
+	payload := "{ \"refreshToken\": \"" + refreshToken + "\" }"
+	req := NewHTTPRequest("POST", "/auth/refresh", "", bytes.NewBufferString(payload))
+	return ExecuteTestRequest(req)
+}
+
+func TestAuthRefreshTokenReplayRejected(t *testing.T) {
+	ClearTestDB()
+	_, login := loginForRefreshTest(t)
+
+	res := refreshForTest(login.RefreshToken)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var refreshed *JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &refreshed)
+
+	// Replaying the rotated token fails, but the fresh session keeps working
+	res = refreshForTest(login.RefreshToken)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	req := NewHTTPRequestWithAccessToken("GET", "/user/me", refreshed.AccessToken, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	res = refreshForTest(refreshed.RefreshToken)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+}
+
+func TestAuthRefreshConcurrentYieldsSingleSession(t *testing.T) {
+	ClearTestDB()
+	_, login := loginForRefreshTest(t)
+
+	const workers = 10
+	codes := make(chan int, workers)
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			codes <- refreshForTest(login.RefreshToken).Code
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(codes)
+	ok := 0
+	for code := range codes {
+		if code == http.StatusOK {
+			ok++
+		} else {
+			CheckTestInt(t, http.StatusNotFound, code)
+		}
+	}
+	CheckTestInt(t, 1, ok)
+}
+
+func TestAuthRefreshTokenReuseRevokesSession(t *testing.T) {
+	ClearTestDB()
+	_, login := loginForRefreshTest(t)
+
+	// Legitimate client rotates the token
+	res := refreshForTest(login.RefreshToken)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var refreshed *JWTResponse
+	json.Unmarshal(res.Body.Bytes(), &refreshed)
+
+	// Thief replays the old token after the grace period
+	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET used_at = $2 WHERE id = $1",
+		login.RefreshToken, time.Now().Add(-time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	res = refreshForTest(login.RefreshToken)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	// Everything of that session is dead: the newest refresh and access tokens
+	res = refreshForTest(refreshed.RefreshToken)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	req := NewHTTPRequestWithAccessToken("GET", "/user/me", refreshed.AccessToken, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
 }
 
 func TestAuthRefreshNonExistent(t *testing.T) {
