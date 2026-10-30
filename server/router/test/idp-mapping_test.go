@@ -158,6 +158,65 @@ func TestIdPReconciliationRevokesOnlyItsOwnGrants(t *testing.T) {
 	}
 }
 
+// Clearing a provider's mappings is how an operator withdraws the access it
+// granted, so the next login must revoke it, leaving manual grants alone.
+func TestIdPReconciliationRevokesWhenMappingsCleared(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+	provider := createTestAuthProvider(org, "groups")
+
+	manualRole := CreateTestRole(org, "Manual", map[Permission]PermissionLevel{PermissionAuditLog: PermissionLevelRead})
+	idpRole := CreateTestRole(org, "FromIdp", map[Permission]PermissionLevel{PermissionGroups: PermissionLevelRead})
+	AssignTestRole(user, manualRole)
+	idpGroup := &Group{OrganizationID: org.ID, Name: "Idp Group"}
+	if err := GetGroupRepository().Create(idpGroup); err != nil {
+		t.Fatal(err)
+	}
+	addMapping(provider, "/eng", AuthProviderMappingTargetRole, idpRole.ID)
+	addMapping(provider, "/eng", AuthProviderMappingTargetGroup, idpGroup.ID)
+
+	ReconcileUserFromIdP(user, provider, []string{"/eng"})
+	roleIDs, _ := GetUserRoleRepository().GetRoleIDsForUser(user.ID)
+	CheckTestInt(t, 2, len(roleIDs))
+	groups, _ := GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	CheckTestInt(t, 1, len(groups))
+
+	if err := GetAuthProviderMappingRepository().DeleteAllForProvider(provider.ID); err != nil {
+		t.Fatal(err)
+	}
+	ReconcileUserFromIdP(user, provider, []string{"/eng"})
+
+	roleIDs, _ = GetUserRoleRepository().GetRoleIDsForUser(user.ID)
+	CheckTestInt(t, 1, len(roleIDs))
+	CheckTestString(t, manualRole.ID, roleIDs[0])
+	groups, _ = GetGroupRepository().GetAllWhereUserIsMember(user.ID)
+	CheckTestInt(t, 0, len(groups))
+}
+
+// Clearing the mappings must not strip an organization of its last
+// administrator either.
+func TestIdPReconciliationClearedMappingsKeepLastAdmin(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	provider := createTestAuthProvider(org, "groups")
+	adminRole, err := GetRoleRepository().GetByName(org.ID, RoleNameOrgAdmin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := CreateTestUserInOrg(org)
+	addMapping(provider, "/admins", AuthProviderMappingTargetRole, adminRole.ID)
+	ReconcileUserFromIdP(admin, provider, []string{"/admins"})
+
+	if err := GetAuthProviderMappingRepository().DeleteAllForProvider(provider.ID); err != nil {
+		t.Fatal(err)
+	}
+	ReconcileUserFromIdP(admin, provider, []string{"/admins"})
+	roleIDs, _ := GetUserRoleRepository().GetRoleIDsForUser(admin.ID)
+	CheckTestInt(t, 1, len(roleIDs))
+}
+
 // An organization must not lose its last administrator because somebody edited
 // a group in the identity provider.
 func TestIdPReconciliationWillNotStripLastAdmin(t *testing.T) {
