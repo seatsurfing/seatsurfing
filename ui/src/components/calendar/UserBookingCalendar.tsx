@@ -80,6 +80,7 @@ class UserBookingCalendar extends React.Component<Props, State> {
         showMultiDayTimes={true}
         getNow={CalendarUtil.getNow}
         localizer={CalendarUtil.getLocalizer()}
+        formats={CalendarUtil.getFormats()}
         culture={Formatting.Language}
         events={this.state.events}
         startAccessor={CalendarUtil.startAccessor}
