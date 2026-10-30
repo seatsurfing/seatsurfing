@@ -220,10 +220,9 @@ func ReconcileUserFromIdP(user *User, provider *AuthProvider, groups []string) {
 		log.Println(err)
 		return
 	}
-	if len(mappings) == 0 {
-		return
-	}
-
+	// A provider without mappings still has to run the replacement below, with
+	// nothing granted: that is how clearing the mappings revokes what they
+	// granted earlier.
 	reported := make(map[string]bool, len(groups))
 	for _, g := range groups {
 		reported[g] = true
