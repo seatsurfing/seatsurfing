@@ -210,7 +210,7 @@ func TestAuthRefreshTokenReuseRevokesSession(t *testing.T) {
 
 	// Thief replays the old token after the grace period
 	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET used_at = $2 WHERE id = $1",
-		login.RefreshToken, time.Now().Add(-time.Hour)); err != nil {
+		login.RefreshToken, time.Now().UTC().Add(-time.Hour)); err != nil {
 		t.Fatal(err)
 	}
 	res = refreshForTest(login.RefreshToken)
@@ -222,6 +222,14 @@ func TestAuthRefreshTokenReuseRevokesSession(t *testing.T) {
 	req := NewHTTPRequestWithAccessToken("GET", "/user/me", refreshed.AccessToken, nil)
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestAuthRefreshMalformedToken(t *testing.T) {
+	ClearTestDB()
+	for _, token := range []string{"not-a-uuid", "123", "' OR 1=1 --"} {
+		res := refreshForTest(token)
+		CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+	}
 }
 
 func TestAuthRefreshNonExistent(t *testing.T) {

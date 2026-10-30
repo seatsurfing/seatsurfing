@@ -19,7 +19,7 @@ func createTestRefreshToken(t *testing.T, expiry time.Time) *RefreshToken {
 	if err := GetSessionRepository().Create(session); err != nil {
 		t.Fatal(err)
 	}
-	token := &RefreshToken{UserID: user.ID, SessionID: session.ID, Created: time.Now(), Expiry: expiry}
+	token := &RefreshToken{UserID: user.ID, SessionID: session.ID, Created: time.Now().UTC(), Expiry: expiry}
 	if err := GetRefreshTokenRepository().Create(token); err != nil {
 		t.Fatal(err)
 	}
@@ -28,9 +28,9 @@ func createTestRefreshToken(t *testing.T, expiry time.Time) *RefreshToken {
 
 func TestRefreshTokenRepositoryConsume(t *testing.T) {
 	ClearTestDB()
-	token := createTestRefreshToken(t, time.Now().Add(time.Hour))
+	token := createTestRefreshToken(t, time.Now().UTC().Add(time.Hour))
 
-	consumed, err := GetRefreshTokenRepository().Consume(token.ID, time.Now())
+	consumed, err := GetRefreshTokenRepository().Consume(token.ID, time.Now().UTC())
 	CheckTestIsNil(t, err)
 	CheckTestString(t, token.ID, consumed.ID)
 	CheckTestString(t, token.UserID, consumed.UserID)
@@ -38,7 +38,7 @@ func TestRefreshTokenRepositoryConsume(t *testing.T) {
 	CheckTestBool(t, true, consumed.UsedAt != nil)
 
 	// A used token cannot be consumed again, but stays readable
-	_, err = GetRefreshTokenRepository().Consume(token.ID, time.Now())
+	_, err = GetRefreshTokenRepository().Consume(token.ID, time.Now().UTC())
 	CheckTestBool(t, true, errors.Is(err, sql.ErrNoRows))
 	stored, err := GetRefreshTokenRepository().GetOne(token.ID)
 	CheckTestIsNil(t, err)
@@ -52,21 +52,21 @@ func TestRefreshTokenRepositoryConsume(t *testing.T) {
 
 func TestRefreshTokenRepositoryConsumeExpired(t *testing.T) {
 	ClearTestDB()
-	token := createTestRefreshToken(t, time.Now().Add(-time.Minute))
+	token := createTestRefreshToken(t, time.Now().UTC().Add(-time.Minute))
 
-	_, err := GetRefreshTokenRepository().Consume(token.ID, time.Now())
+	_, err := GetRefreshTokenRepository().Consume(token.ID, time.Now().UTC())
 	CheckTestBool(t, true, errors.Is(err, sql.ErrNoRows))
 }
 
 func TestRefreshTokenRepositoryConsumeUnknown(t *testing.T) {
 	ClearTestDB()
-	_, err := GetRefreshTokenRepository().Consume("00000000-0000-0000-0000-000000000000", time.Now())
+	_, err := GetRefreshTokenRepository().Consume("00000000-0000-0000-0000-000000000000", time.Now().UTC())
 	CheckTestBool(t, true, errors.Is(err, sql.ErrNoRows))
 }
 
 func TestRefreshTokenRepositoryConsumeConcurrent(t *testing.T) {
 	ClearTestDB()
-	token := createTestRefreshToken(t, time.Now().Add(time.Hour))
+	token := createTestRefreshToken(t, time.Now().UTC().Add(time.Hour))
 
 	const workers = 20
 	var successes atomic.Int32
@@ -77,7 +77,7 @@ func TestRefreshTokenRepositoryConsumeConcurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start
-			if _, err := GetRefreshTokenRepository().Consume(token.ID, time.Now()); err == nil {
+			if _, err := GetRefreshTokenRepository().Consume(token.ID, time.Now().UTC()); err == nil {
 				successes.Add(1)
 			}
 		}()

@@ -45,7 +45,7 @@ func TestRefreshTokenServiceConsumeInvalid(t *testing.T) {
 	CheckTestBool(t, true, errors.Is(err, service.ErrRefreshTokenInvalid))
 
 	token, _ := createTestRefreshTokenWithSession(t, "test.com")
-	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET expiry = $2 WHERE id = $1", token.ID, time.Now().Add(-time.Minute)); err != nil {
+	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET expiry = $2 WHERE id = $1", token.ID, time.Now().UTC().Add(-time.Minute)); err != nil {
 		t.Fatal(err)
 	}
 	_, err = service.GetRefreshTokenService().Consume(token.ID)
@@ -76,7 +76,7 @@ func TestRefreshTokenServiceReuseRevokesSession(t *testing.T) {
 	CheckTestIsNil(t, err)
 	// Pretend the rotation happened long ago
 	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET used_at = $2 WHERE id = $1",
-		token.ID, time.Now().Add(-service.RefreshTokenReuseGracePeriod-time.Minute)); err != nil {
+		token.ID, time.Now().UTC().Add(-service.RefreshTokenReuseGracePeriod-time.Minute)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -98,7 +98,7 @@ func TestRefreshTokenServiceReuseDoesNotAffectOtherSessions(t *testing.T) {
 	_, err := service.GetRefreshTokenService().Consume(token.ID)
 	CheckTestIsNil(t, err)
 	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET used_at = $2 WHERE id = $1",
-		token.ID, time.Now().Add(-time.Hour)); err != nil {
+		token.ID, time.Now().UTC().Add(-time.Hour)); err != nil {
 		t.Fatal(err)
 	}
 	_, err = service.GetRefreshTokenService().Consume(token.ID)
@@ -106,4 +106,48 @@ func TestRefreshTokenServiceReuseDoesNotAffectOtherSessions(t *testing.T) {
 
 	_, err = GetSessionRepository().GetOne(otherSession.ID)
 	CheckTestIsNil(t, err)
+}
+
+func TestRefreshTokenServiceConsumeMalformedID(t *testing.T) {
+	ClearTestDB()
+	for _, id := range []string{"", "not-a-uuid", "123", "' OR 1=1 --"} {
+		_, err := service.GetRefreshTokenService().Consume(id)
+		CheckTestBool(t, true, errors.Is(err, service.ErrRefreshTokenInvalid))
+	}
+}
+
+func TestRefreshTokenServiceExpiredUsedTokenDoesNotRevokeSession(t *testing.T) {
+	ClearTestDB()
+	token, session := createTestRefreshTokenWithSession(t, "test.com")
+	_, err := service.GetRefreshTokenService().Consume(token.ID)
+	CheckTestIsNil(t, err)
+	// Rotated long ago and meanwhile expired, but not yet removed by the cleanup timer
+	if _, err := GetDatabase().DB().Exec("UPDATE refresh_tokens SET used_at = $2, expiry = $3 WHERE id = $1",
+		token.ID, time.Now().UTC().Add(-time.Hour), time.Now().UTC().Add(-time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = service.GetRefreshTokenService().Consume(token.ID)
+	CheckTestBool(t, true, errors.Is(err, service.ErrRefreshTokenInvalid))
+	_, err = GetSessionRepository().GetOne(session.ID)
+	CheckTestIsNil(t, err)
+}
+
+func TestRefreshTokenServiceGracePeriodIndependentOfServerTimezone(t *testing.T) {
+	ClearTestDB()
+	original := time.Local
+	defer func() { time.Local = original }()
+	for _, offset := range []int{-4 * 3600, 2 * 3600} {
+		time.Local = time.FixedZone("test", offset)
+		token, session := createTestRefreshTokenWithSession(t, "tz"+time.Local.String()+".com")
+
+		_, err := service.GetRefreshTokenService().Consume(token.ID)
+		CheckTestIsNil(t, err)
+		// An immediate replay is within the grace period, whatever the local zone
+		_, err = service.GetRefreshTokenService().Consume(token.ID)
+		CheckTestBool(t, true, errors.Is(err, service.ErrRefreshTokenReplayed))
+		_, err = GetSessionRepository().GetOne(session.ID)
+		CheckTestIsNil(t, err)
+		ClearTestDB()
+	}
 }

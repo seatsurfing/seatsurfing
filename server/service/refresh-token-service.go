@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 
@@ -45,7 +47,9 @@ func GetRefreshTokenService() *RefreshTokenService {
 
 // Issue creates a new refresh token for the given user and session.
 func (s *RefreshTokenService) Issue(userID, sessionID string) (*RefreshToken, error) {
-	now := time.Now()
+	// Timestamps are stored in timezone-less columns and read back as UTC, so
+	// always write UTC to keep elapsed-time comparisons correct.
+	now := time.Now().UTC()
 	e := &RefreshToken{
 		UserID:    userID,
 		SessionID: sessionID,
@@ -64,7 +68,12 @@ func (s *RefreshTokenService) Issue(userID, sessionID string) (*RefreshToken, er
 // period and, afterwards, revokes the token's session and fails with
 // ErrRefreshTokenReused.
 func (s *RefreshTokenService) Consume(id string) (*RefreshToken, error) {
-	now := time.Now()
+	parsed, err := uuid.Parse(id)
+	if err != nil {
+		return nil, ErrRefreshTokenInvalid
+	}
+	id = parsed.String()
+	now := time.Now().UTC()
 	token, err := GetRefreshTokenRepository().Consume(id, now)
 	if err == nil {
 		return token, nil
@@ -74,7 +83,7 @@ func (s *RefreshTokenService) Consume(id string) (*RefreshToken, error) {
 	}
 	// Not consumable: unknown, expired or already used.
 	existing, err := GetRefreshTokenRepository().GetOne(id)
-	if err != nil || existing == nil || existing.UsedAt == nil {
+	if err != nil || existing == nil || existing.UsedAt == nil || !existing.Expiry.After(now) {
 		return nil, ErrRefreshTokenInvalid
 	}
 	if now.Sub(*existing.UsedAt) <= RefreshTokenReuseGracePeriod {
