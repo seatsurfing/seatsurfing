@@ -85,7 +85,7 @@ func TestKioskWrongSecret(t *testing.T) {
 
 	// Configure a kiosk secret via the settings endpoint
 	adminUser := CreateTestUserOrgAdmin(org)
-	payload := `{"value": "correct-secret"}`
+	payload := `{"value": "correct-secret-0123456789abcdefg"}`
 	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -106,12 +106,12 @@ func TestKioskAvailable(t *testing.T) {
 	enableKioskForOrg(org.ID)
 
 	adminUser := CreateTestUserOrgAdmin(org)
-	payload := `{"value": "myKioskSecret"}`
+	payload := `{"value": "myKioskSecret0123456789abcdefghi"}`
 	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 
-	req = newKioskRequest(space.ID, "myKioskSecret")
+	req = newKioskRequest(space.ID, "myKioskSecret0123456789abcdefghi")
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
@@ -134,7 +134,7 @@ func TestKioskOccupied(t *testing.T) {
 	enableKioskForOrg(org.ID)
 
 	adminUser := CreateTestUserOrgAdmin(org)
-	payload := `{"value": "myKioskSecret"}`
+	payload := `{"value": "myKioskSecret0123456789abcdefghi"}`
 	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -152,7 +152,7 @@ func TestKioskOccupied(t *testing.T) {
 	}
 	GetBookingRepository().Create(booking)
 
-	req = newKioskRequest(space.ID, "myKioskSecret")
+	req = newKioskRequest(space.ID, "myKioskSecret0123456789abcdefghi")
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
@@ -177,7 +177,7 @@ func TestKioskNextBooking(t *testing.T) {
 	enableKioskForOrg(org.ID)
 
 	adminUser := CreateTestUserOrgAdmin(org)
-	payload := `{"value": "myKioskSecret"}`
+	payload := `{"value": "myKioskSecret0123456789abcdefghi"}`
 	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -195,7 +195,7 @@ func TestKioskNextBooking(t *testing.T) {
 	}
 	GetBookingRepository().Create(booking)
 
-	req = newKioskRequest(space.ID, "myKioskSecret")
+	req = newKioskRequest(space.ID, "myKioskSecret0123456789abcdefghi")
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
@@ -222,7 +222,7 @@ func TestKioskPublicBookingOwner(t *testing.T) {
 	GetSettingsRepository().Set(org.ID, SettingShowNames.Name, "1")
 
 	adminUser := CreateTestUserOrgAdmin(org)
-	payload := `{"value": "myKioskSecret"}`
+	payload := `{"value": "myKioskSecret0123456789abcdefghi"}`
 	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -247,7 +247,7 @@ func TestKioskPublicBookingOwner(t *testing.T) {
 		Approved: true,
 	}))
 
-	req = newKioskRequest(space.ID, "myKioskSecret")
+	req = newKioskRequest(space.ID, "myKioskSecret0123456789abcdefghi")
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 
@@ -267,7 +267,7 @@ func TestKioskSecretMaskedInSettings(t *testing.T) {
 	adminUser := CreateTestUserOrgAdmin(org)
 
 	// Set the secret
-	payload := `{"value": "supersecret"}`
+	payload := `{"value": "supersecret0123456789abcdefghijk"}`
 	req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
@@ -279,4 +279,39 @@ func TestKioskSecretMaskedInSettings(t *testing.T) {
 	var value string
 	json.Unmarshal(res.Body.Bytes(), &value)
 	CheckTestString(t, "1", value)
+}
+
+func TestKioskSecretLength(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	adminUser := CreateTestUserOrgAdmin(org)
+
+	for _, secret := range []string{"short", "0123456789abcdef0123456789abcde", "0123456789abcdef0123456789abcdef0"} {
+		payload := `{"value": "` + secret + `"}`
+		req := NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	}
+
+	payload := `[{"name": "kiosk_access_secret", "value": "short"}]`
+	req := NewHTTPRequest("PUT", "/setting/", adminUser.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("GET", "/setting/kiosk_access_secret", adminUser.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var value string
+	json.Unmarshal(res.Body.Bytes(), &value)
+	CheckTestString(t, "", value)
+
+	payload = `{"value": "0123456789abcdef0123456789abcdef"}`
+	req = NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	payload = `{"value": ""}`
+	req = NewHTTPRequest("PUT", "/setting/kiosk_access_secret", adminUser.ID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
