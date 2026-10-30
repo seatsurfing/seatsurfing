@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.139.0](https://github.com/seatsurfing/seatsurfing/compare/v1.138.2...v1.139.0) (2026-10-30)
+
+
+### ✨ Features
+
+* **main:** add announcement option for locations ([#2826](https://github.com/seatsurfing/seatsurfing/issues/2826)) ([9fb3c22](https://github.com/seatsurfing/seatsurfing/commit/9fb3c22d76af15a0090d558a7a52cf6cbdb7cf94))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump chart.js from 4.5.1 to 4.6.1 in /ui in the production-dependencies group across 1 directory ([#2834](https://github.com/seatsurfing/seatsurfing/issues/2834)) ([1b17ac1](https://github.com/seatsurfing/seatsurfing/commit/1b17ac15d8c13770eb47ceec391b8e550116a447))
+* **server:** revoke IdP-granted roles and groups when a provider has no mappings ([#2836](https://github.com/seatsurfing/seatsurfing/issues/2836)) ([89f3cad](https://github.com/seatsurfing/seatsurfing/commit/89f3cad06bcc955e5dae4b854db32a537f20b16a))
+* **server:** rotate refresh tokens atomically and detect token reuse ([#2835](https://github.com/seatsurfing/seatsurfing/issues/2835)) ([694fd3f](https://github.com/seatsurfing/seatsurfing/commit/694fd3ff00456409c85a67a3312b0fc7d0b94365))
+
 ## [1.138.2](https://github.com/seatsurfing/seatsurfing/compare/v1.138.1...v1.138.2) (2026-10-28)
 
 
