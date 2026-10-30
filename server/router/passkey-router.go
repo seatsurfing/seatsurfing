@@ -673,7 +673,12 @@ func (router *AuthRouter) finishPasskeyLogin(w http.ResponseWriter, r *http.Requ
 	}
 	claims := router.CreateClaims(matchedUser, session)
 	accessToken := router.CreateAccessToken(claims)
-	refreshToken := router.createRefreshToken(claims)
+	refreshToken, err := router.createRefreshToken(claims)
+	if err != nil {
+		log.Println("Error: Failed to create refresh token during passkey login: " + err.Error())
+		SendInternalServerError(w)
+		return
+	}
 	res := &JWTResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
