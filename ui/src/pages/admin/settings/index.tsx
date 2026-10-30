@@ -56,6 +56,7 @@ import BookingAttributesEditor from "@/components/BookingAttributesEditor";
 interface State {
   allowAnyUser: boolean;
   defaultTimezone: string;
+  default24HourTime: boolean;
   customLogoUrl: string;
   maxBookingsPerUser: number;
   maxConcurrentBookingsPerUser: number;
@@ -138,6 +139,7 @@ class Settings extends React.Component<Props, State> {
     this.state = {
       allowAnyUser: true,
       defaultTimezone: "",
+      default24HourTime: true,
       customLogoUrl: "",
       maxBookingsPerUser: 0,
       maxConcurrentBookingsPerUser: 0,
@@ -277,6 +279,8 @@ class Settings extends React.Component<Props, State> {
           state.allowAnyUser = s.value === "1";
         if (s.name === Organization.PREF_DEFAULT_TIMEZONE)
           state.defaultTimezone = s.value;
+        if (s.name === Organization.PREF_DEFAULT_24_HOUR_TIME)
+          state.default24HourTime = s.value === "1";
         if (s.name === Organization.PREF_CUSTOM_LOGO_URL)
           state.customLogoUrl = s.value;
         if (s.name === Organization.PREF_MAX_BOOKINGS_PER_USER)
@@ -421,6 +425,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_DEFAULT_TIMEZONE,
         this.state.defaultTimezone,
+      ),
+      new OrgSettings(
+        Organization.PREF_DEFAULT_24_HOUR_TIME,
+        this.state.default24HourTime ? "1" : "0",
       ),
       new OrgSettings(
         Organization.PREF_CUSTOM_LOGO_URL,
@@ -1047,6 +1055,42 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="input-newDomain">
+              {this.props.t("domains")}
+              <PremiumFeatureIcon />
+            </Form.Label>
+            <Col sm="4">
+              <Table borderless size="sm" className="domain-table mb-2">
+                <tbody>{domains}</tbody>
+              </Table>
+              <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
+                <Form.Control
+                  id="input-newDomain"
+                  type="text"
+                  value={this.state.newDomain}
+                  onChange={(e: any) =>
+                    this.setState({ newDomain: e.target.value })
+                  }
+                  placeholder={this.props.t("yourDomainPlaceholder")}
+                  onKeyDown={this.handleNewDomainKeyDown}
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={this.addDomain}
+                  disabled={!this.isValidDomain()}
+                >
+                  {this.props.t("addDomain")}
+                </Button>
+              </InputGroup>
+            </Col>
+          </Form.Group>
+
+          {/* USERS */}
+
+          <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h4>{this.props.t("users")}</h4>
+          </div>
+          <Form.Group as={Row}>
             <Col sm="6">
               <Form.Check
                 type="checkbox"
@@ -1106,33 +1150,20 @@ class Settings extends React.Component<Props, State> {
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label column sm="2" htmlFor="input-newDomain">
-              {this.props.t("domains")}
-              <PremiumFeatureIcon />
+            <Form.Label column sm="2" htmlFor="input-defaultTimeFormat">
+              {this.props.t("defaultTimeFormat")}
             </Form.Label>
             <Col sm="4">
-              <Table borderless size="sm" className="domain-table mb-2">
-                <tbody>{domains}</tbody>
-              </Table>
-              <InputGroup size="sm" hidden={!this.state.featureCustomDomains}>
-                <Form.Control
-                  id="input-newDomain"
-                  type="text"
-                  value={this.state.newDomain}
-                  onChange={(e: any) =>
-                    this.setState({ newDomain: e.target.value })
-                  }
-                  placeholder={this.props.t("yourDomainPlaceholder")}
-                  onKeyDown={this.handleNewDomainKeyDown}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={this.addDomain}
-                  disabled={!this.isValidDomain()}
-                >
-                  {this.props.t("addDomain")}
-                </Button>
-              </InputGroup>
+              <Form.Select
+                id="input-defaultTimeFormat"
+                value={this.state.default24HourTime ? "1" : "0"}
+                onChange={(e: any) =>
+                  this.setState({ default24HourTime: e.target.value === "1" })
+                }
+              >
+                <option value="1">{this.props.t("timeFormat24h")}</option>
+                <option value="0">{this.props.t("timeFormat12h")}</option>
+              </Form.Select>
             </Col>
           </Form.Group>
 

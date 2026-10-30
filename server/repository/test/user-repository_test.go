@@ -248,3 +248,22 @@ func TestSetUserPreferenceMailNotification(t *testing.T) {
 	mailNotification, _ = GetUserPreferencesRepository().GetBool(user.ID, PreferenceMailNotifications.Name)
 	CheckTestBool(t, false, mailNotification)
 }
+
+func TestSetUserPreference24HourTime(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+
+	use24HourTime, _ := GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	CheckTestBool(t, true, use24HourTime)
+
+	GetSettingsRepository().Set(org.ID, SettingDefault24HourTime.Name, "0")
+	user = CreateTestUserInOrg(org)
+	use24HourTime, _ = GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	CheckTestBool(t, false, use24HourTime)
+
+	GetSettingsRepository().Delete(org.ID, SettingDefault24HourTime.Name)
+	user = CreateTestUserInOrg(org)
+	use24HourTime, _ = GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	CheckTestBool(t, true, use24HourTime)
+}

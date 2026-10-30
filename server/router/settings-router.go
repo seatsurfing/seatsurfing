@@ -449,6 +449,7 @@ func (router *SettingsRouter) isValidSettingNameReadAdmin(name string) bool {
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingEnforceTOTP.Name ||
 		name == SettingNewUserDefaultMailNotification.Name ||
+		name == SettingDefault24HourTime.Name ||
 		name == SettingTargetUtilizationHoursPerWeek.Name ||
 		name == SettingKioskSecret.Name ||
 		name == SettingKioskModeEnabled.Name ||
@@ -481,6 +482,7 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingMaxBookingDurationHours.Name ||
 		name == SettingDisableBuddies.Name ||
 		name == SettingDefaultTimezone.Name ||
+		name == SettingDefault24HourTime.Name ||
 		name == SettingBookingRetentionDays.Name ||
 		name == SettingBookingRetentionEnabled.Name ||
 		name == SettingAllowRecurringBookings.Name ||
@@ -533,6 +535,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	}
 	if name == SettingDefaultTimezone.Name {
 		return SettingDefaultTimezone.Type
+	}
+	if name == SettingDefault24HourTime.Name {
+		return SettingDefault24HourTime.Type
 	}
 	if name == SettingMaxHoursBeforeDelete.Name {
 		return SettingMaxHoursBeforeDelete.Type
