@@ -632,6 +632,9 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 	if value == "" {
 		return true
 	}
+	if name == SettingKioskSecret.Name {
+		return len(value) == 32
+	}
 	if name == SettingCustomLogoUrl.Name {
 		if !ValidateURL(value) {
 			return false
