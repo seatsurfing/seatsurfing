@@ -185,6 +185,9 @@ func (r *UserStore) Create(e *User) error {
 		GetUserPreferencesRepository().Set(e.ID, PreferenceMailNotifications.Name, "1")
 		GetUserPreferencesRepository().Set(e.ID, PreferenceMailReminder.Name, "1")
 	}
+	if use24HourTime, err := GetSettingsRepository().GetBool(e.OrganizationID, SettingDefault24HourTime.Name); err == nil && !use24HourTime {
+		GetUserPreferencesRepository().Set(e.ID, Preference24HourTime.Name, "0")
+	}
 
 	for _, plg := range GetPlugins() {
 		plg.OnUserCreated(e.ID)

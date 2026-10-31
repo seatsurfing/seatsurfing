@@ -311,6 +311,7 @@ var (
 	SettingAllowBookingsNonExistingUsers  SettingName = SettingName{Name: "allow_booking_nonexist_users", Type: SettingTypeBool}
 	SettingDisableBuddies                 SettingName = SettingName{Name: "disable_buddies", Type: SettingTypeBool}
 	SettingDefaultTimezone                SettingName = SettingName{Name: "default_timezone", Type: SettingTypeString}
+	SettingDefault24HourTime              SettingName = SettingName{Name: "default_24_hour_time", Type: SettingTypeBool}
 	SettingAllowRecurringBookings         SettingName = SettingName{Name: "allow_recurring_bookings", Type: SettingTypeBool}
 	SettingNewUserDefaultMailNotification SettingName = SettingName{Name: "new_user_default_mail_notification", Type: SettingTypeBool}
 	SettingSubjectDefault                 SettingName = SettingName{Name: "subject_default", Type: SettingTypeInt}

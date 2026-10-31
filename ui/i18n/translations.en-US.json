@@ -682,5 +682,8 @@
   "bookerNamesHide": "Hide names",
   "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
   "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
-  "bookerNamesPrivacyHint": "Mind the privacy!"
+  "bookerNamesPrivacyHint": "Mind the privacy!",
+  "defaultTimeFormat": "Default time format",
+  "timeFormat12h": "12-hour",
+  "timeFormat24h": "24-hour"
 }

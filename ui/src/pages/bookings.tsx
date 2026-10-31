@@ -231,6 +231,7 @@ class Bookings extends React.Component<Props, State> {
         toolbar={props as any}
         t={this.props.t}
         events={calendarEvents}
+        minDate={DateUtil.getTodayStart()}
       />
     );
 
@@ -322,8 +323,9 @@ class Bookings extends React.Component<Props, State> {
                 if (navigateDate >= today) {
                   this.setState({ calendarDate: newDate });
                 } else if (
-                  view === "month" &&
-                  moment(newDate).endOf("month").toDate() >= today
+                  moment(newDate)
+                    .endOf(view === "month" ? "month" : "week")
+                    .toDate() >= today
                 ) {
                   this.setState({ calendarDate: new Date() });
                 }
