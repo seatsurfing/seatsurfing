@@ -153,6 +153,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingBookingRetentionDays.Name,
 		SettingAllowRecurringBookings.Name,
 		SettingNewUserDefaultMailNotification.Name,
+		SettingDefault24HourTime.Name,
 		SettingSubjectDefault.Name,
 		SettingEnforceTOTP.Name,
 		SettingTargetUtilizationHoursPerWeek.Name,
@@ -384,6 +385,37 @@ func TestSettingsInvalidTimezone(t *testing.T) {
 	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultTimezone.Name, loginResponse.UserID, bytes.NewBufferString(payload))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestSettingsDefault24HourTime(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"value": "0"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefault24HourTime.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	value, _ := GetSettingsRepository().Get(org.ID, SettingDefault24HourTime.Name)
+	CheckTestString(t, "0", value)
+
+	payload = `{"value": "12h"}`
+	req = NewHTTPRequest("PUT", "/setting/"+SettingDefault24HourTime.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestSettingsDefault24HourTimeForbiddenForUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"value": "0"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefault24HourTime.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
 
 func TestSettingsInstallIDExposure(t *testing.T) {
