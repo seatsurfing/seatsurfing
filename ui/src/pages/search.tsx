@@ -44,6 +44,7 @@ import {
 import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
+  createCustomMonthEvent,
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
@@ -3277,6 +3278,7 @@ class Search extends React.Component<Props, State> {
                 components={{
                   toolbar: spaceCalToolbar,
                   event: createCustomEvent(),
+                  month: { event: createCustomMonthEvent() },
                 }}
                 step={180}
                 timeslots={1}
