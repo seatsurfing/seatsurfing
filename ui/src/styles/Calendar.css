@@ -89,10 +89,6 @@
   }
 }
 
-.rbc-month-view .rbc-event {
-  position: relative;
-}
-
 .calendar-month-event {
   font-size: 12px;
   overflow: hidden;
