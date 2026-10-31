@@ -1590,8 +1590,8 @@ func TestAuthCallbackBlocksPrivateOutbound(t *testing.T) {
 	srv := newTestOAuthServer(http.StatusOK, `{"email":"foo@test.com"}`)
 	defer srv.Close()
 	_, url := createTestOAuthCallback(t, org, srv.URL+"/token", srv.URL+"/userinfo")
-	GetConfig().BlockPrivateOutbound = true
-	defer func() { GetConfig().BlockPrivateOutbound = false }()
+	GetConfig().AllowPrivateOutbound = false
+	defer func() { GetConfig().AllowPrivateOutbound = true }()
 
 	res := ExecuteTestRequest(NewHTTPRequest("GET", url, "", nil))
 	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
@@ -1602,7 +1602,7 @@ func TestAuthCallbackBlocksPrivateOutbound(t *testing.T) {
 	CheckTestBool(t, true, user == nil)
 }
 
-func TestAuthCallbackAllowsPrivateOutboundByDefault(t *testing.T) {
+func TestAuthCallbackAllowsPrivateOutboundWhenEnabled(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	srv := newTestOAuthServer(http.StatusOK, `{"email":"foo@test.com"}`)
