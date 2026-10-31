@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.140.0](https://github.com/seatsurfing/seatsurfing/compare/v1.139.0...v1.140.0) (2026-10-31)
+
+
+### ✨ Features
+
+* **main:** add 24h format calendar view ([#2839](https://github.com/seatsurfing/seatsurfing/issues/2839)) ([4e61c9b](https://github.com/seatsurfing/seatsurfing/commit/4e61c9b5ad6ede668ae110560909f4cfd15b7f5f))
+* **main:** add org setting "default time format" ([#2838](https://github.com/seatsurfing/seatsurfing/issues/2838)) ([5c5d795](https://github.com/seatsurfing/seatsurfing/commit/5c5d7953fda03368e1896b0ef64b3d5545b9273d))
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** disable back button in calendar view if back navigation is not possible ([#2844](https://github.com/seatsurfing/seatsurfing/issues/2844)) ([afbe375](https://github.com/seatsurfing/seatsurfing/commit/afbe375fee844d0559a3d999c5cb5d2f6894f4f9))
+* **booking-ui:** fix recurring icon position in calendar month view ([#2845](https://github.com/seatsurfing/seatsurfing/issues/2845)) ([141754b](https://github.com/seatsurfing/seatsurfing/commit/141754bb132ad485f01b918303db90cac4b411df))
+* **deps:** bump next from 16.4.2 to 16.4.3 in /ui in the production-dependencies group across 1 directory ([#2840](https://github.com/seatsurfing/seatsurfing/issues/2840)) ([ca93ab8](https://github.com/seatsurfing/seatsurfing/commit/ca93ab8e9f043b39c6a2d73908b43e369088d89e))
+* **main:** ensure 32 characters for kiosk mode secret ([#2837](https://github.com/seatsurfing/seatsurfing/issues/2837)) ([67ed3a6](https://github.com/seatsurfing/seatsurfing/commit/67ed3a633889f72f4c35d468a4cee995506394e4))
+* **main:** fix event height in calendar month view on small viewports ([#2846](https://github.com/seatsurfing/seatsurfing/issues/2846)) ([fe1de60](https://github.com/seatsurfing/seatsurfing/commit/fe1de60cf890b9bcd6ea38010019b635a09bc278))
+
 ## [1.139.0](https://github.com/seatsurfing/seatsurfing/compare/v1.138.2...v1.139.0) (2026-10-30)
 
 
