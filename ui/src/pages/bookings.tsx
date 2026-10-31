@@ -301,6 +301,7 @@ class Bookings extends React.Component<Props, State> {
               showMultiDayTimes={true}
               getNow={CalendarUtil.getNow}
               localizer={calendarLocalizer}
+              formats={CalendarUtil.getFormats()}
               events={calendarEvents}
               startAccessor={CalendarUtil.startAccessor}
               endAccessor={CalendarUtil.endAccessor}

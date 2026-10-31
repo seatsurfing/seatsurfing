@@ -1,4 +1,4 @@
-import { momentLocalizer, View } from "react-big-calendar";
+import { DateRange, Formats, momentLocalizer, View } from "react-big-calendar";
 import moment from "moment-timezone";
 import RuntimeConfig from "@/components/RuntimeConfig";
 import Formatting from "@/util/Formatting";
@@ -20,6 +20,25 @@ export default class CalendarUtil {
   static getLocalizer() {
     CalendarUtil.setupMoment();
     return momentLocalizer(moment);
+  }
+
+  static getFormats(): Formats {
+    const time = RuntimeConfig.INFOS.use24HourTime ? "HH:mm" : "h:mm A";
+    const range = ({ start, end }: DateRange, culture?: string, local?: any) =>
+      local.format(start, time, culture) +
+      " – " +
+      local.format(end, time, culture);
+    return {
+      timeGutterFormat: time,
+      agendaTimeFormat: time,
+      selectRangeFormat: range,
+      eventTimeRangeFormat: range,
+      agendaTimeRangeFormat: range,
+      eventTimeRangeStartFormat: ({ start }, culture, local: any) =>
+        local.format(start, time, culture) + " – ",
+      eventTimeRangeEndFormat: ({ end }, culture, local: any) =>
+        " – " + local.format(end, time, culture),
+    };
   }
 
   static getWeekRange(date: Date): { start: Date; end: Date } {

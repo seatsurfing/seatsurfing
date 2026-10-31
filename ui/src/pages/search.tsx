@@ -3247,6 +3247,7 @@ class Search extends React.Component<Props, State> {
                 showMultiDayTimes={true}
                 getNow={CalendarUtil.getNow}
                 localizer={spaceCalLocalizer}
+                formats={CalendarUtil.getFormats()}
                 events={spaceCalendarEvents}
                 startAccessor={CalendarUtil.startAccessor}
                 endAccessor={CalendarUtil.endAccessor}

@@ -17,4 +17,32 @@ describe("CalendarUtil", () => {
       expect(range.end.toISOString()).toBe("2030-09-08T23:59:59.999Z");
     });
   });
+
+  describe("getFormats", () => {
+    const local = CalendarUtil.getLocalizer();
+    const start = new Date(Date.UTC(2030, 8, 4, 9, 0, 0));
+    const end = new Date(Date.UTC(2030, 8, 4, 17, 30, 0));
+
+    it("uses 24-hour time when configured", () => {
+      RuntimeConfig.INFOS.use24HourTime = true;
+      const formats = CalendarUtil.getFormats();
+      expect(local.format(end, formats.timeGutterFormat as string)).toBe(
+        "17:30",
+      );
+      expect(
+        (formats.eventTimeRangeFormat as any)({ start, end }, undefined, local),
+      ).toBe("09:00 – 17:30");
+    });
+
+    it("uses 12-hour time when configured", () => {
+      RuntimeConfig.INFOS.use24HourTime = false;
+      const formats = CalendarUtil.getFormats();
+      expect(local.format(end, formats.timeGutterFormat as string)).toBe(
+        "5:30 PM",
+      );
+      expect(
+        (formats.eventTimeRangeFormat as any)({ start, end }, undefined, local),
+      ).toBe("9:00 AM – 5:30 PM");
+    });
+  });
 });
