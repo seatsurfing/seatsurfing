@@ -72,4 +72,21 @@ const createCustomEvent =
     );
   };
 
+export const createCustomMonthEvent =
+  () =>
+  ({ event }: { event: CalendarEvent }) => (
+    <div
+      className={"calendar-month-event" + (event.recurring ? " recurring" : "")}
+      title={event.title}
+    >
+      {event.recurring && (
+        <IconRecurring
+          className="feather recurring-booking-icon"
+          style={{ width: "12px", height: "12px", top: "4px", right: "4px" }}
+        />
+      )}
+      {event.title}
+    </div>
+  );
+
 export default createCustomEvent;

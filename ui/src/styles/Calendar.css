@@ -89,6 +89,17 @@
   }
 }
 
+.calendar-month-event {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-month-event.recurring {
+  padding-right: 14px;
+}
+
 .rbc-month-view .rbc-event {
   position: relative;
 }

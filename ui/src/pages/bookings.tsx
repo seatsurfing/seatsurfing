@@ -25,6 +25,7 @@ import AlertModal from "@/components/AlertModal";
 import { Calendar, View } from "react-big-calendar";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
+  createCustomMonthEvent,
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
@@ -340,6 +341,7 @@ class Bookings extends React.Component<Props, State> {
               components={{
                 toolbar,
                 event: createCustomEvent(),
+                month: { event: createCustomMonthEvent() },
               }}
               scrollToTime={DateUtil.convertToFakeUTCDate(
                 DateUtil.getTodayTimeFromTimeString(this.workdayStart),

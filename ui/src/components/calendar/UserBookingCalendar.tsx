@@ -5,6 +5,7 @@ import Loading from "@/components/Loading";
 import { TranslationFunc } from "@/components/withTranslation";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import createCustomEvent, {
+  createCustomMonthEvent,
   bookingToCalendarEvent,
   CalendarEvent,
 } from "@/components/calendar/CustomEvent";
@@ -101,6 +102,7 @@ class UserBookingCalendar extends React.Component<Props, State> {
             <CustomToolbar toolbar={props as any} t={this.props.t} />
           ),
           event: createCustomEvent(),
+          month: { event: createCustomMonthEvent() },
         }}
       />
     );
