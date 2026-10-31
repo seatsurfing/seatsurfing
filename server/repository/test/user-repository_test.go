@@ -254,16 +254,19 @@ func TestSetUserPreference24HourTime(t *testing.T) {
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)
 
-	use24HourTime, _ := GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	use24HourTime, err := GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	CheckTestIsNil(t, err)
 	CheckTestBool(t, true, use24HourTime)
 
 	GetSettingsRepository().Set(org.ID, SettingDefault24HourTime.Name, "0")
 	user = CreateTestUserInOrg(org)
-	use24HourTime, _ = GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	use24HourTime, err = GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	CheckTestIsNil(t, err)
 	CheckTestBool(t, false, use24HourTime)
 
 	GetSettingsRepository().Delete(org.ID, SettingDefault24HourTime.Name)
 	user = CreateTestUserInOrg(org)
-	use24HourTime, _ = GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	use24HourTime, err = GetUserPreferencesRepository().GetBool(user.ID, Preference24HourTime.Name)
+	CheckTestIsNil(t, err)
 	CheckTestBool(t, true, use24HourTime)
 }
