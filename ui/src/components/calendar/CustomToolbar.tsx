@@ -18,14 +18,22 @@ interface Props {
   t: TranslationFunc;
   events?: CalendarEvent[];
   timezone?: string;
+  minDate?: Date;
 }
 
-const CustomToolbar: React.FC<Props> = ({ toolbar, t, events, timezone }) => {
+const CustomToolbar: React.FC<Props> = ({
+  toolbar,
+  t,
+  events,
+  timezone,
+  minDate,
+}) => {
   const isDayView = toolbar.view === "day";
   const isMonthView = toolbar.view === "month";
   const periodUnit = isMonthView ? "month" : "week";
   const periodStart = moment(toolbar.date).clone().startOf(periodUnit);
   const periodEnd = moment(toolbar.date).clone().endOf(periodUnit);
+  const canNavigateBack = !minDate || periodStart.isAfter(minDate);
   const formatter = Formatting.getFormatterDate();
   const availableViews = Array.isArray(toolbar.views)
     ? toolbar.views
@@ -87,6 +95,7 @@ const CustomToolbar: React.FC<Props> = ({ toolbar, t, events, timezone }) => {
       <button
         type="button"
         className="btn btn-sm btn-outline-secondary"
+        disabled={!canNavigateBack}
         onClick={() => toolbar.onNavigate("PREV")}
         aria-label={t("previous")}
       >
