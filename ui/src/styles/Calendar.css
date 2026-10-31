@@ -88,3 +88,7 @@
     display: flex;
   }
 }
+
+.rbc-month-view .rbc-event {
+  position: relative;
+}
