@@ -225,8 +225,8 @@ func TestPreferencesCalDavListCalendarsBlocksPrivateOutbound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer srv.Close()
-	GetConfig().BlockPrivateOutbound = true
-	defer func() { GetConfig().BlockPrivateOutbound = false }()
+	GetConfig().AllowPrivateOutbound = false
+	defer func() { GetConfig().AllowPrivateOutbound = true }()
 
 	payload := `{"url": "` + srv.URL + `/dav/", "username": "u", "password": "p"}`
 	req := NewHTTPRequest("POST", "/preference/caldav/listCalendars", user.ID, bytes.NewBufferString(payload))
@@ -235,7 +235,7 @@ func TestPreferencesCalDavListCalendarsBlocksPrivateOutbound(t *testing.T) {
 	CheckTestInt(t, 0, int(hits.Load()))
 }
 
-func TestPreferencesCalDavListCalendarsAllowsPrivateOutboundByDefault(t *testing.T) {
+func TestPreferencesCalDavListCalendarsAllowsPrivateOutboundWhenEnabled(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
 	user := CreateTestUserInOrg(org)

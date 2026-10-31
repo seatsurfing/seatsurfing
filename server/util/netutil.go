@@ -52,7 +52,7 @@ func GetHTTPClientWithCustomDNS(insecureSkipVerify bool) *http.Client {
 // HTTP requests that must be routed through the cluster network (e.g. domain
 // accessibility checks via an ingress controller).
 // The target host is derived from a customer-controlled domain, so with
-// BLOCK_PRIVATE_OUTBOUND the resolved address is checked at connect time,
+// ALLOW_PRIVATE_OUTBOUND unset the resolved address is checked at connect time,
 // which also covers redirects and DNS rebinding. Certificate verification is
 // skipped because the check only evaluates the returned JSON payload and
 // may run before a certificate has been issued for the domain.
@@ -61,7 +61,7 @@ func GetHTTPClientInsecureSkipVerify() *http.Client {
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
 	}
-	if GetConfig().BlockPrivateOutbound {
+	if !GetConfig().AllowPrivateOutbound {
 		dialer.Control = blockedOutboundControl
 	}
 	tr := &http.Transport{
@@ -132,7 +132,7 @@ func blockedOutboundControl(network, address string, _ syscall.RawConn) error {
 }
 
 // GetOutboundHTTPClient returns a client for requests to user-configured URLs.
-// With BLOCK_PRIVATE_OUTBOUND, the resolved address is checked at connect time,
+// Unless ALLOW_PRIVATE_OUTBOUND is set, the resolved address is checked at connect time,
 // which also covers redirects and DNS rebinding.
 func GetOutboundHTTPClient() *http.Client {
 	dialer := &net.Dialer{
@@ -140,7 +140,7 @@ func GetOutboundHTTPClient() *http.Client {
 		KeepAlive: 30 * time.Second,
 	}
 	tr := http.DefaultTransport.(*http.Transport).Clone()
-	if GetConfig().BlockPrivateOutbound {
+	if !GetConfig().AllowPrivateOutbound {
 		dialer.Control = blockedOutboundControl
 		tr.Proxy = nil
 	}

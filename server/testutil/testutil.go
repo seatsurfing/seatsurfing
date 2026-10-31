@@ -430,7 +430,7 @@ func TestRunner(m *testing.M) {
 		os.Setenv("POSTGRES_URL", "postgres://postgres:root@localhost/seatsurfing_test?sslmode=disable")
 	}
 	os.Setenv("MOCK_SENDMAIL", "1")
-	os.Setenv("ALLOW_ORG_DELETE", "1")
+	os.Setenv("FEATURE_FLAGS", "ALLOW_ORG_DELETE,ALLOW_PRIVATE_OUTBOUND")
 	os.Setenv("LOGIN_PROTECTION_MAX_FAILS", "3")
 	GetConfig().ReadConfig()
 	db := GetDatabase()
