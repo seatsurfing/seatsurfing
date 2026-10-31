@@ -24,6 +24,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -1996,4 +1997,40 @@ func TestAuthOAuthPKCELegacyState(t *testing.T) {
 	res := ExecuteTestRequest(NewHTTPRequest("GET", "/auth/"+provider.ID+"/callback?state="+state.ID+"&code=abc", "", nil))
 	CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/success/"))
 	CheckTestInt(t, 1, int(idp.tokenRequests.Load()))
+}
+
+func signTestIDTokenForRouter(t *testing.T, claims jwt.MapClaims) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	raw, err := token.SignedString([]byte("test-secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
+func TestADFSStyleLoginUsesIDTokenClaims(t *testing.T) {
+	// AD FS returns only "sub" from userinfo; email and names are in the ID token.
+	now := time.Now()
+	userinfo := map[string]interface{}{"sub": "pairwise-id"}
+	raw := signTestIDTokenForRouter(t, jwt.MapClaims{
+		"sub":         "pairwise-id",
+		"aud":         "client-1",
+		"exp":         now.Add(time.Hour).Unix(),
+		"upn":         "jane.doe@corp.example",
+		"given_name":  "Jane",
+		"family_name": "Doe",
+	})
+	if err := service.FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "upn", "given_name", "family_name", ""); err != nil {
+		t.Fatal(err)
+	}
+	info, err := ExtractUserInfoFields(userinfo, "upn", "given_name", "family_name", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "jane.doe@corp.example", info.Email)
+	CheckTestString(t, "Jane", info.Firstname)
+	CheckTestString(t, "Doe", info.Lastname)
+	if _, ok := userinfo["aud"]; ok {
+		t.Fatal("technical ID token claims must not be merged")
+	}
 }
