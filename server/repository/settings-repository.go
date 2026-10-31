@@ -241,6 +241,7 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingMaxDaysInAdvance.Name+"', '14'), "+
 		"($1, '"+SettingMaxBookingDurationHours.Name+"', '12'), "+
 		"($1, '"+SettingDefaultTimezone.Name+"', 'Europe/Berlin'), "+
+		"($1, '"+SettingDefault24HourTime.Name+"', '1'), "+
 		"($1, '"+SettingAllowRecurringBookings.Name+"', '1'), "+
 		"($1, '"+SettingNewUserDefaultMailNotification.Name+"', '1'), "+
 		"($1, '"+SettingBookingRetentionEnabled.Name+"', '0'), "+
