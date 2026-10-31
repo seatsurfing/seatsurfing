@@ -1199,6 +1199,17 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if err := json.Unmarshal(contents, &result); err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed parsing userinfo response as JSON: " + err.Error()}
 	}
+	// Some OIDC providers (e.g. AD FS) return only "sub" from the userinfo
+	// endpoint and put profile claims into the ID token. Fill the configured
+	// fields that are missing from the userinfo response with ID token claims.
+	// Fields already present in the userinfo response are left untouched.
+	if rawIDToken, ok := token.Extra("id_token").(string); ok && rawIDToken != "" {
+		err := service.FillMissingUserInfoFromIDToken(result, rawIDToken, config.ClientID, time.Now(),
+			provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField, provider.UserInfoGroupsField)
+		if err != nil {
+			log.Printf("Ignoring ID token of auth provider %s: %v\n", provider.ID, err)
+		}
+	}
 	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField, provider.UserInfoGroupsField)
 	if err != nil {
 		keys := make([]string, 0, len(result))
