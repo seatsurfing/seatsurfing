@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.140.0](https://github.com/seatsurfing/seatsurfing/compare/v1.139.0...v1.140.0) (2026-10-31)
+
+
+### ✨ Features
+
+* **main:** add 24h format calendar view ([#2839](https://github.com/seatsurfing/seatsurfing/issues/2839)) ([4e61c9b](https://github.com/seatsurfing/seatsurfing/commit/4e61c9b5ad6ede668ae110560909f4cfd15b7f5f))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump next from 16.4.2 to 16.4.3 in /ui in the production-dependencies group across 1 directory ([#2840](https://github.com/seatsurfing/seatsurfing/issues/2840)) ([ca93ab8](https://github.com/seatsurfing/seatsurfing/commit/ca93ab8e9f043b39c6a2d73908b43e369088d89e))
+* **main:** ensure 32 characters for kiosk mode secret ([#2837](https://github.com/seatsurfing/seatsurfing/issues/2837)) ([67ed3a6](https://github.com/seatsurfing/seatsurfing/commit/67ed3a633889f72f4c35d468a4cee995506394e4))
+
 ## [1.139.0](https://github.com/seatsurfing/seatsurfing/compare/v1.138.2...v1.139.0) (2026-10-30)
 
 
