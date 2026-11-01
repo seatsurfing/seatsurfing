@@ -218,7 +218,7 @@ class Search extends React.Component<Props, State> {
       listView: (() =>
         BrowserUtil.tryLocalStorageGetItem(
           BrowserUtil.LOCAL_STORAGE_KEY_SEARCH_VIEW,
-          "0",
+          RuntimeConfig.INFOS.defaultBookingView === "list" ? "1" : "0",
         ) === "1")(),
       showBookerNamesOnMap: (() =>
         BrowserUtil.tryLocalStorageGetItem(

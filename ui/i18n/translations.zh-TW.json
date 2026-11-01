@@ -683,5 +683,7 @@
   "bookerNamesPrivacyHint": "Mind the privacy!",
   "defaultTimeFormat": "Default time format",
   "timeFormat12h": "12-hour",
-  "timeFormat24h": "24-hour"
+  "timeFormat24h": "24-hour",
+  "defaultBookingView": "Default booking view",
+  "list": "List"
 }
