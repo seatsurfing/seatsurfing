@@ -431,7 +431,8 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingHideStats.Name ||
 		name == SettingAllowRecurringBookings.Name ||
 		name == SettingPublicBookingEnabled.Name ||
-		name == SettingFeaturePublicBooking.Name {
+		name == SettingFeaturePublicBooking.Name ||
+		name == SettingDefaultBookingView.Name {
 		return true
 	}
 	return false
@@ -499,7 +500,8 @@ func (router *SettingsRouter) isValidSettingNameWrite(name string) bool {
 		name == SettingPublicBookingShowAvailability.Name ||
 		name == SettingPublicBookingMinDurationHours.Name ||
 		name == SettingPublicBookingMaxDurationHours.Name ||
-		name == SettingHideDisallowedLocations.Name {
+		name == SettingHideDisallowedLocations.Name ||
+		name == SettingDefaultBookingView.Name {
 		return true
 	}
 	return false
@@ -611,6 +613,9 @@ func (router *SettingsRouter) getSettingType(name string) SettingType {
 	if name == SettingPublicBookingMaxDurationHours.Name {
 		return SettingPublicBookingMaxDurationHours.Type
 	}
+	if name == SettingDefaultBookingView.Name {
+		return SettingDefaultBookingView.Type
+	}
 	return 0
 }
 
@@ -687,6 +692,11 @@ func (router *SettingsRouter) isValidSettingValue(name string, value string) boo
 			intVal != SettingSubjectDefaultRequired {
 			return false
 		}
+	}
+	if name == SettingDefaultBookingView.Name &&
+		value != SettingDefaultBookingViewMap &&
+		value != SettingDefaultBookingViewList {
+		return false
 	}
 	if name == SettingEnforceTOTP.Name {
 		intVal, _ := strconv.Atoi(value)

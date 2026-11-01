@@ -252,6 +252,7 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingHideReports.Name+"', '0'), "+
 		"($1, '"+SettingHideStats.Name+"', '0'), "+
 		"($1, '"+SettingHideDisallowedLocations.Name+"', '0'), "+
+		"($1, '"+SettingDefaultBookingView.Name+"', '"+SettingDefaultBookingViewMap+"'), "+
 		"($1, '"+SettingPublicBookingEnabled.Name+"', '0'), "+
 		"($1, '"+SettingPublicBookingShowMap.Name+"', '0'), "+
 		"($1, '"+SettingPublicBookingShowAvailability.Name+"', '0'), "+
