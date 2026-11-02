@@ -53,7 +53,7 @@ func (s *LocationService) ParseLocationMap(data []byte) (*LocationMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	if width <= 0 || height <= 0 || width > MaxLocationMapDimension || height > MaxLocationMapDimension {
+	if width < 1 || height < 1 || width > MaxLocationMapDimension || height > MaxLocationMapDimension {
 		return nil, errors.New("invalid location map dimensions")
 	}
 	return &LocationMap{
