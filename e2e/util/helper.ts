@@ -1,4 +1,4 @@
-import { Locator, Page, expect } from "@playwright/test";
+import { Page, expect } from "@playwright/test";
 
 const uiURL = process.env.UI_URL ? process.env.UI_URL : "http://localhost:8080";
 
@@ -30,13 +30,4 @@ export async function cancelAllBookings(page: Page): Promise<void> {
   for (const booking of bookings) {
     await page.request.delete(uiURL + "/booking/" + booking.id, { headers });
   }
-}
-
-// Asserts that an image is visible and was actually loaded (e.g. not blocked
-// by the Content Security Policy).
-export async function expectImageLoaded(img: Locator): Promise<void> {
-  await expect(img).toBeVisible();
-  await expect
-    .poll(() => img.evaluate((e: HTMLImageElement) => e.naturalWidth))
-    .toBeGreaterThan(0);
 }
