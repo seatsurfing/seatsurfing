@@ -1,17 +1,27 @@
 package service
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
+	"image"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/rustyoz/svg"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 // LocationService holds the location business logic shared by the REST API
@@ -26,6 +36,72 @@ func GetLocationService() *LocationService {
 		locationService = &LocationService{}
 	})
 	return locationService
+}
+
+const (
+	MaxLocationMapSize      = 5 * 1024 * 1024
+	MaxLocationMapDimension = 10000
+)
+
+// ParseLocationMap validates an uploaded floor plan (PNG, JPEG, GIF or SVG)
+// and returns it with its format and pixel dimensions.
+func (s *LocationService) ParseLocationMap(data []byte) (*LocationMap, error) {
+	if len(data) > MaxLocationMapSize {
+		return nil, errors.New("location map too large")
+	}
+	width, height, format, err := s.decodeLocationMapConfig(data)
+	if err != nil {
+		return nil, err
+	}
+	if width <= 0 || height <= 0 || width > MaxLocationMapDimension || height > MaxLocationMapDimension {
+		return nil, errors.New("invalid location map dimensions")
+	}
+	return &LocationMap{
+		Width:    uint(width),
+		Height:   uint(height),
+		MimeType: format,
+		Scale:    1.0,
+		Data:     data,
+	}, nil
+}
+
+func (s *LocationService) decodeLocationMapConfig(data []byte) (float64, float64, string, error) {
+	img, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err == nil {
+		if !slices.Contains([]string{"png", "jpeg", "gif"}, format) {
+			return 0, 0, "", errors.New("unsupported image format: " + format)
+		}
+		return float64(img.Width), float64(img.Height), format, nil
+	}
+	if !s.hasSvgRootElement(data) {
+		return 0, 0, "", errors.New("root element is not svg")
+	}
+	parsedSvg, err := svg.ParseSvg(string(data), "", 1.0)
+	if err != nil {
+		return 0, 0, "", err
+	}
+	width, err := CSSDimensionsToPixels(parsedSvg.Width)
+	if err != nil {
+		return 0, 0, "", err
+	}
+	height, err := CSSDimensionsToPixels(parsedSvg.Height)
+	if err != nil {
+		return 0, 0, "", err
+	}
+	return width, height, "svg+xml", nil
+}
+
+func (s *LocationService) hasSvgRootElement(data []byte) bool {
+	decoder := xml.NewDecoder(bytes.NewReader(data))
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return false
+		}
+		if el, ok := token.(xml.StartElement); ok {
+			return el.Name.Local == "svg"
+		}
+	}
 }
 
 // UserLocation is a location as seen by a specific user.
