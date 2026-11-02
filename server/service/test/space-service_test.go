@@ -186,3 +186,79 @@ func TestSpaceServiceIsPublicSlotAvailable(t *testing.T) {
 	available, _ = GetSpaceService().IsPublicSlotAvailable(space2, location, at(1, 10, 0), at(1, 11, 0))
 	CheckTestBool(t, true, available)
 }
+
+func TestSpaceServiceImageCRUD(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	svc := GetSpaceService()
+
+	_, err := svc.GetImage(user, location, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+
+	CheckTestIsNil(t, svc.SetImage(admin, location, space, CreateTestPNG(40, 30)))
+	e, err := svc.GetImage(user, location, space, false)
+	CheckTestIsNil(t, err)
+	CheckTestString(t, "image/png", e.MimeType)
+	CheckTestUint(t, 40, e.Width)
+	CheckTestUint(t, 30, e.Height)
+
+	enter, leave := serviceTestSlot(0, 8, 17)
+	location, _ = GetLocationRepository().GetOne(location.ID)
+	enter, _ = GetLocationRepository().AttachTimezoneInformation(enter, location)
+	leave, _ = GetLocationRepository().AttachTimezoneInformation(leave, location)
+	list, err := svc.GetAvailabilityForUser(user, location, space.ID, enter, leave, nil)
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, 1, len(list))
+	CheckTestBool(t, true, list[0].HasImage)
+
+	CheckTestIsNil(t, svc.DeleteImage(admin, location, space))
+	_, err = svc.GetImage(user, location, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+}
+
+func TestSpaceServiceImageRequiresAreaAdmin(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	svc := GetSpaceService()
+
+	CheckTestBool(t, true, svc.SetImage(user, location, space, CreateTestPNG(1, 1)) == ErrSpaceImageForbidden)
+	CheckTestIsNil(t, svc.SetImage(admin, location, space, CreateTestPNG(1, 1)))
+	CheckTestBool(t, true, svc.DeleteImage(user, location, space) == ErrSpaceImageForbidden)
+	_, err := svc.GetImage(user, location, space, false)
+	CheckTestIsNil(t, err)
+}
+
+func TestSpaceServiceImageForeignOrg(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	org2 := CreateTestOrg("test2.com")
+	admin2 := CreateTestUserOrgAdmin(org2)
+	location2, _ := CreateTestLocationAndSpace(org2)
+	svc := GetSpaceService()
+	CheckTestIsNil(t, svc.SetImage(admin, location, space, CreateTestPNG(1, 1)))
+
+	CheckTestBool(t, true, svc.SetImage(admin2, location, space, CreateTestPNG(1, 1)) == ErrSpaceImageForbidden)
+	CheckTestBool(t, true, svc.DeleteImage(admin2, location, space) == ErrSpaceImageForbidden)
+	_, err := svc.GetImage(admin2, location, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageForbidden)
+
+	// A space cannot be addressed through a location it does not belong to.
+	CheckTestBool(t, true, svc.SetImage(admin2, location2, space, CreateTestPNG(1, 1)) == ErrSpaceImageNotFound)
+	_, err = svc.GetImage(admin2, location2, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+}
+
+func TestSpaceServiceImageValidation(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	svc := GetSpaceService()
+
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, []byte("not an image")) == ErrSpaceImageInvalidFormat)
+	svg := []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>`)
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, svg) == ErrSpaceImageInvalidFormat)
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, CreateTestPNG(SpaceImageMaxDimension+1, 1)) == ErrSpaceImageInvalidFormat)
+	tooLarge := make([]byte, SpaceImageMaxBytes+1)
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, tooLarge) == ErrSpaceImageTooLarge)
+	_, err := svc.GetImage(admin, location, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+}

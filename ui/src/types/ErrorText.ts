@@ -32,6 +32,9 @@ export const enum ResponseCode {
   RoleIsSystemRole = 7003,
   RoleCannotRemoveOwnAccess = 7004,
   RoleNameAlreadyExists = 7005,
+
+  SpaceImageTooLarge = 8001,
+  SpaceImageInvalidFormat = 8002,
 }
 
 export default class ErrorText {
@@ -80,6 +83,9 @@ export default class ErrorText {
         t("errorRoleCannotRemoveOwnAccess"),
       [ResponseCode.RoleNameAlreadyExists]: () =>
         t("errorRoleNameAlreadyExists"),
+      [ResponseCode.SpaceImageTooLarge]: () => t("errorSpaceImageTooLarge"),
+      [ResponseCode.SpaceImageInvalidFormat]: () =>
+        t("errorSpaceImageInvalidFormat"),
     };
 
     return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");
