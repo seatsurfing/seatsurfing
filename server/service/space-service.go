@@ -299,6 +299,7 @@ const (
 const (
 	SpaceImageMaxBytes     = 5 * 1024 * 1024
 	SpaceImageMaxDimension = 10000
+	SpaceImageMaxPixels    = 25_000_000
 )
 
 var (
@@ -347,6 +348,12 @@ func (s *SpaceService) SetImage(user *User, location *Location, space *Space, da
 		return ErrSpaceImageInvalidFormat
 	}
 	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > SpaceImageMaxDimension || cfg.Height > SpaceImageMaxDimension {
+		return ErrSpaceImageInvalidFormat
+	}
+	if cfg.Width*cfg.Height > SpaceImageMaxPixels {
+		return ErrSpaceImageInvalidFormat
+	}
+	if _, _, err := image.Decode(bytes.NewReader(data)); err != nil {
 		return ErrSpaceImageInvalidFormat
 	}
 	return GetSpaceImageRepository().Set(&SpaceImage{

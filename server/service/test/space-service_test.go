@@ -1,6 +1,11 @@
 package test
 
 import (
+	"bytes"
+	"encoding/binary"
+	"hash/crc32"
+	"image"
+	"image/jpeg"
 	"testing"
 	"time"
 
@@ -261,4 +266,48 @@ func TestSpaceServiceImageValidation(t *testing.T) {
 	CheckTestBool(t, true, svc.SetImage(admin, location, space, tooLarge) == ErrSpaceImageTooLarge)
 	_, err := svc.GetImage(admin, location, space, false)
 	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+}
+
+func TestSpaceServiceImageRejectsTooManyPixels(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	svc := GetSpaceService()
+
+	data := setTestPNGSize(CreateTestPNG(1, 1), SpaceImageMaxDimension, SpaceImageMaxDimension)
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+	CheckTestIsNil(t, err)
+	CheckTestInt(t, SpaceImageMaxDimension, cfg.Width)
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, data) == ErrSpaceImageInvalidFormat)
+	_, err = svc.GetImage(admin, location, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+}
+
+func TestSpaceServiceImageRejectsTruncated(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	svc := GetSpaceService()
+	CheckTestIsNil(t, svc.SetImage(admin, location, space, CreateTestPNG(40, 30)))
+
+	var jpg bytes.Buffer
+	jpeg.Encode(&jpg, image.NewRGBA(image.Rect(0, 0, 64, 64)), nil)
+	for _, data := range [][]byte{CreateTestPNG(40, 30), jpg.Bytes()} {
+		truncated := data[:len(data)-20]
+		_, _, err := image.DecodeConfig(bytes.NewReader(truncated))
+		CheckTestIsNil(t, err)
+		CheckTestBool(t, true, svc.SetImage(admin, location, space, truncated) == ErrSpaceImageInvalidFormat)
+	}
+
+	e, err := svc.GetImage(admin, location, space, false)
+	CheckTestIsNil(t, err)
+	CheckTestUint(t, 40, e.Width)
+	CheckTestUint(t, 30, e.Height)
+}
+
+func setTestPNGSize(data []byte, width, height uint32) []byte {
+	res := bytes.Clone(data)
+	// IHDR chunk type at 12, width at 16, height at 20, CRC at 29
+	binary.BigEndian.PutUint32(res[16:], width)
+	binary.BigEndian.PutUint32(res[20:], height)
+	binary.BigEndian.PutUint32(res[29:], crc32.ChecksumIEEE(res[12:29]))
+	return res
 }
