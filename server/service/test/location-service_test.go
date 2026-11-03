@@ -1,6 +1,9 @@
 package test
 
 import (
+	"bytes"
+	"image"
+	"image/png"
 	"testing"
 	"time"
 
@@ -170,4 +173,47 @@ func TestLocationServiceHideDisallowedSetting(t *testing.T) {
 		t.Fatal(err)
 	}
 	CheckTestBool(t, true, visible)
+}
+
+func encodeTestPNG(t *testing.T, width, height int) []byte {
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, image.NewGray(image.Rect(0, 0, width, height))); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+func checkLocationMapInvalid(t *testing.T, data []byte) {
+	if _, err := GetLocationService().ParseLocationMap(data); err == nil {
+		t.Fatalf("expected error for %q", data[:min(len(data), 40)])
+	}
+}
+
+func TestLocationServiceParseLocationMap(t *testing.T) {
+	svc := GetLocationService()
+
+	m, err := svc.ParseLocationMap(encodeTestPNG(t, 200, 100))
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "png", m.MimeType)
+	CheckTestUint(t, 200, m.Width)
+	CheckTestUint(t, 100, m.Height)
+
+	m, err = svc.ParseLocationMap([]byte(`<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="300" height="150px"></svg>`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "svg+xml", m.MimeType)
+	CheckTestUint(t, 300, m.Width)
+	CheckTestUint(t, 150, m.Height)
+}
+
+func TestLocationServiceParseLocationMapInvalid(t *testing.T) {
+	checkLocationMapInvalid(t, make([]byte, MaxLocationMapSize+1))
+	checkLocationMapInvalid(t, []byte("no image"))
+	checkLocationMapInvalid(t, []byte(`<html width="300" height="150"></html>`))
+	checkLocationMapInvalid(t, []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="150"></svg>`))
+	checkLocationMapInvalid(t, []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="0" height="150"></svg>`))
+	checkLocationMapInvalid(t, encodeTestPNG(t, MaxLocationMapDimension+1, 1))
 }

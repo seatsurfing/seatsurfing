@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import CalendarUtil from "./CalendarUtil";
 import RuntimeConfig from "@/components/RuntimeConfig";
+import Formatting from "@/util/Formatting";
 
 describe("CalendarUtil", () => {
   describe("getWeekRange", () => {
@@ -32,6 +33,17 @@ describe("CalendarUtil", () => {
       expect(
         (formats.eventTimeRangeFormat as any)({ start, end }, undefined, local),
       ).toBe("09:00 – 17:30");
+    });
+
+    it("formats weekdays in the configured language", () => {
+      Formatting.Language = "de";
+      const formats = CalendarUtil.getFormats();
+      expect((formats.weekdayFormat as any)(start)).toBe("Mi");
+      expect((formats.dayFormat as any)(start)).toBe("04 Mi");
+      Formatting.Language = "en-GB";
+      expect((CalendarUtil.getFormats().weekdayFormat as any)(start)).toBe(
+        "Wed",
+      );
     });
 
     it("uses 12-hour time when configured", () => {
