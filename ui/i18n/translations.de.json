@@ -688,5 +688,6 @@
   "bookerNamesHide": "Namen ausblenden",
   "bookerNamesShowWithBuddies": "Namen einblenden (Buddies aktiviert)",
   "bookerNamesShowWithoutBuddies": "Namen einblenden (Buddies deaktiviert)",
-  "bookerNamesPrivacyHint": "Datenschutz beachten!"
+  "bookerNamesPrivacyHint": "Datenschutz beachten!",
+  "disallowed": "nicht erlaubt"
 }
