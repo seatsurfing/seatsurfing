@@ -446,7 +446,7 @@ export default class DateUtil {
   /**
    * calculates the "next free enter time" for a booking based on a leave date which is
    *  - next day if "dailyBasisBooking" is active, or
-   *  - +1 minute otherwise
+   *  - the leave date itself otherwise (leave is exclusive, so the space is free from that exact time)
    * If bookableDays is given (weekdays the location can be booked on, 0=Sunday..6=Saturday),
    * the result is advanced to 00:00 of the next weekday the location is actually bookable on.
    *
@@ -461,7 +461,7 @@ export default class DateUtil {
       next.setUTCDate(next.getUTCDate() + 1);
       next.setUTCHours(0, 0, 0, 0);
     } else {
-      next = new Date(leave.getTime() + DateUtil.MS_PER_MINUTE);
+      next = new Date(leave);
     }
 
     if (bookableDays && bookableDays.length > 0) {
