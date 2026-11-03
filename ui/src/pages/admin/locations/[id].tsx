@@ -27,6 +27,7 @@ import {
   Type as IconFontSize,
   Globe as IconGlobe,
   Book as IconBook,
+  Image as IconImage,
 } from "react-feather";
 import Moveable from "react-moveable";
 import { NextRouter } from "next/router";
@@ -56,6 +57,9 @@ import ConfirmModal from "@/components/ConfirmModal";
 import HintTooltip from "@/components/HintTooltip";
 import DateTimePicker from "@/components/DateTimePicker";
 import Formatting from "@/util/Formatting";
+import SpaceImageEditor from "@/components/SpaceImageEditor";
+import AjaxError from "@/util/AjaxError";
+import ErrorText from "@/types/ErrorText";
 
 const IconTrapezoid = ({ className }: { className?: string }) => (
   <svg
@@ -90,6 +94,9 @@ interface SpaceState {
   enabled: boolean;
   kioskEnabled: boolean;
   publicBookingEnabled: boolean;
+  hasImage: boolean;
+  pendingImage: File | null;
+  removeImage: boolean;
   shape: string;
   fontSize: string;
   changed: boolean;
@@ -116,6 +123,7 @@ interface SpaceRectProps {
   onRotateEnd: (i: number, rotation: number, x: number, y: number) => void;
   onNameChange: (i: number, name: string) => void;
   unnamedLabel: string;
+  imageLabel: string;
   newSpaceName: (baseName: string) => string;
   mapWidth: number;
   mapHeight: number;
@@ -138,6 +146,7 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   onRotateEnd,
   onNameChange,
   unnamedLabel,
+  imageLabel,
   newSpaceName,
   mapWidth,
   mapHeight,
@@ -211,6 +220,8 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   if (space.shape === "circle") className += " space-dragger-circle";
   if (space.shape === "trapezoid") className += " space-dragger-trapezoid";
   if (isSelected) className += " space-dragger-selected";
+  const hasImage =
+    !!space.pendingImage || (space.hasImage && !space.removeImage);
 
   return (
     <>
@@ -265,13 +276,22 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
             height: "100%",
           }}
         >
-          {space.approvers && space.approvers.length > 0 && (
+          {((space.approvers && space.approvers.length > 0) || hasImage) && (
             <div style={{ display: "flex", gap: "4px" }}>
-              <SpaceApprovalIcon />
-              {space.publicBookingEnabled &&
-                RuntimeConfig.INFOS.publicBookingEnabled && (
-                  <IconGlobe size={16} />
-                )}
+              {space.approvers && space.approvers.length > 0 && (
+                <>
+                  <SpaceApprovalIcon />
+                  {space.publicBookingEnabled &&
+                    RuntimeConfig.INFOS.publicBookingEnabled && (
+                      <IconGlobe size={16} />
+                    )}
+                </>
+              )}
+              {hasImage && (
+                <span title={imageLabel} style={{ display: "flex" }}>
+                  <IconImage size={16} role="img" aria-label={imageLabel} />
+                </span>
+              )}
             </div>
           )}
           <input
@@ -425,6 +445,7 @@ interface State {
   submitting: boolean;
   saved: boolean;
   errorSaving: boolean;
+  errorSavingText: string;
   goBack: boolean;
   name: string;
   description: string;
@@ -483,6 +504,7 @@ class EditLocation extends React.Component<Props, State> {
       submitting: false,
       saved: false,
       errorSaving: false,
+      errorSavingText: "",
       goBack: false,
       name: "",
       description: "",
@@ -708,40 +730,63 @@ class EditLocation extends React.Component<Props, State> {
       }
     }
 
-    if (!(
+    if (
       creates.length > 0 ||
       updates.length > 0 ||
       this.state.deleteIds.length > 0
-    )) {
-      return;
-    }
-
-    const bulkUpdateResponse = await Space.bulkUpdate(
-      this.entity.id,
-      creates,
-      updates,
-      this.state.deleteIds,
-    );
-    let iUpdates = 0;
-    for (let item of this.state.spaces) {
-      if (item.changed) {
-        if (!item.id) {
-          if (iUpdates < bulkUpdateResponse.creates.length) {
-            item.id = bulkUpdateResponse.creates[iUpdates].id;
+    ) {
+      const bulkUpdateResponse = await Space.bulkUpdate(
+        this.entity.id,
+        creates,
+        updates,
+        this.state.deleteIds,
+      );
+      let iUpdates = 0;
+      for (let item of this.state.spaces) {
+        if (item.changed) {
+          if (!item.id) {
+            if (iUpdates < bulkUpdateResponse.creates.length) {
+              item.id = bulkUpdateResponse.creates[iUpdates].id;
+            }
+            iUpdates++;
           }
-          iUpdates++;
+          item.changed = false;
         }
-        item.changed = false;
       }
+      this.setState({ deleteIds: [] });
     }
-    this.setState({ deleteIds: [] });
+    await this.saveSpaceImages();
+  };
+
+  saveSpaceImages = async () => {
+    for (let item of this.state.spaces) {
+      if (!item.id || (!item.pendingImage && !item.removeImage)) {
+        continue;
+      }
+      const space = new Space();
+      space.id = item.id;
+      space.locationId = this.entity.id;
+      if (item.pendingImage) {
+        await space.setImage(item.pendingImage);
+        item.hasImage = true;
+      } else if (item.hasImage) {
+        await space.deleteImage();
+        item.hasImage = false;
+      }
+      item.pendingImage = null;
+      item.removeImage = false;
+    }
   };
 
   onSubmit = (e: any) => {
-    const onError = () => {
+    const onError = (err?: unknown) => {
       this.setState({
         saved: false,
         errorSaving: true,
+        errorSavingText:
+          err instanceof AjaxError && err.appErrorCode
+            ? ErrorText.getTextForAppCode(err.appErrorCode, this.props.t)
+            : "",
         submitting: false,
       });
     };
@@ -838,7 +883,7 @@ class EditLocation extends React.Component<Props, State> {
                   });
                 }
               })
-              .catch(() => onError());
+              .catch((err) => onError(err));
           })
           .catch(() => onError());
       })
@@ -909,6 +954,9 @@ class EditLocation extends React.Component<Props, State> {
       enabled: e ? e.enabled : true,
       kioskEnabled: e ? e.kioskEnabled : false,
       publicBookingEnabled: e ? e.publicBookingEnabled : false,
+      hasImage: e ? e.hasImage : false,
+      pendingImage: null,
+      removeImage: false,
       shape: e ? e.shape || "rect" : "rect",
       fontSize: e ? e.fontSize || "normal" : "normal",
       changed: true,
@@ -1076,6 +1124,12 @@ class EditLocation extends React.Component<Props, State> {
     }
   };
 
+  setSpaceImage = (i: number, file: File | null) => {
+    const spaces = this.state.spaces;
+    spaces[i] = { ...spaces[i], pendingImage: file, removeImage: !file };
+    this.setState({ spaces: spaces, changed: true });
+  };
+
   copySpace = () => {
     if (this.state.selectedSpace != null) {
       const spaces = this.state.spaces;
@@ -1083,6 +1137,9 @@ class EditLocation extends React.Component<Props, State> {
       const newSpace: SpaceState = Object.assign({}, space);
       newSpace.name = this.newSpaceName(newSpace.name);
       newSpace.id = "";
+      newSpace.hasImage = false;
+      newSpace.pendingImage = null;
+      newSpace.removeImage = false;
       newSpace.x += 20;
       newSpace.y += 20;
       newSpace.changed = true;
@@ -1128,6 +1185,7 @@ class EditLocation extends React.Component<Props, State> {
         onRotateEnd={this.setSpaceRotation}
         onNameChange={this.setSpaceName}
         unnamedLabel={this.props.t("unnamed")}
+        imageLabel={this.props.t("spaceImage")}
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
@@ -1609,6 +1667,29 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm="4" htmlFor="space-image">
+                {this.props.t("spaceImage")}
+              </Form.Label>
+              <Col sm="8">
+                {this.getSelectedSpace() && (
+                  <SpaceImageEditor
+                    key={this.state.selectedSpace}
+                    locationId={this.entity.id}
+                    spaceId={this.getSelectedSpace()!.id}
+                    hasImage={this.getSelectedSpace()!.hasImage}
+                    pendingImage={this.getSelectedSpace()!.pendingImage}
+                    removeImage={this.getSelectedSpace()!.removeImage}
+                    onSelect={(file: File) =>
+                      this.setSpaceImage(this.state.selectedSpace!, file)
+                    }
+                    onRemove={() =>
+                      this.setSpaceImage(this.state.selectedSpace!, null)
+                    }
+                  />
+                )}
+              </Col>
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -1818,7 +1899,11 @@ class EditLocation extends React.Component<Props, State> {
       hint = <Alert variant="success">{this.props.t("entryUpdated")}</Alert>;
     }
     if (this.state.errorSaving) {
-      hint = <Alert variant="danger">{this.props.t("errorTryAgain")}</Alert>;
+      hint = (
+        <Alert variant="danger">
+          {this.state.errorSavingText || this.props.t("errorTryAgain")}
+        </Alert>
+      );
     }
 
     let buttonDelete = (
