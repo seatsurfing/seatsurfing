@@ -591,6 +591,37 @@ func TestLocationsPostMapForbidden(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
+func TestLocationsPostMapInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+
+	payload := `{"name": "Location 1"}`
+	req := NewHTTPRequest("POST", "/location/", admin.ID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	req = NewHTTPRequest("POST", "/location/"+id+"/map", admin.ID, bytes.NewBuffer(make([]byte, 5*1024*1024+1)))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("POST", "/location/"+id+"/map", admin.ID, bytes.NewBufferString(`<svg xmlns="http://www.w3.org/2000/svg" width="20000" height="100"></svg>`))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("POST", "/location/"+id+"/map", admin.ID, bytes.NewBufferString("fake-image-data"))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+id, admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "", resBody.MapMimeType)
+}
+
 func TestLocationFloorPlanDesignCRUD(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

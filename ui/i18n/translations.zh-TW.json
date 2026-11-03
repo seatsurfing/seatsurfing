@@ -683,5 +683,7 @@
   "bookerNamesPrivacyHint": "Mind the privacy!",
   "defaultTimeFormat": "Default time format",
   "timeFormat12h": "12-hour",
-  "timeFormat24h": "24-hour"
+  "timeFormat24h": "24-hour",
+  "errorMapFileTooLarge": "The file must not be larger than 5 MB.",
+  "mapFileHint": "PNG, JPEG, GIF or SVG, max. 5 MB"
 }
