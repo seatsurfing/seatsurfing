@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.140.1](https://github.com/seatsurfing/seatsurfing/compare/v1.140.0...v1.140.1) (2026-11-03)
+
+
+### 🐛 Bug Fixes
+
+* **booking-ui:** add booking UI integration items before admin item in navigation ([#2851](https://github.com/seatsurfing/seatsurfing/issues/2851)) ([7741de9](https://github.com/seatsurfing/seatsurfing/commit/7741de9311e46ce2b703b8ebddc1ffefb665dd31))
+* **booking-ui:** add missing translation for "disallowed" key ([#2858](https://github.com/seatsurfing/seatsurfing/issues/2858)) ([f9ecafd](https://github.com/seatsurfing/seatsurfing/commit/f9ecafddfc88f8a9ff33ac784bc86593c8ab0d06))
+* **deps:** bump distroless/base-debian13 from `f5e9519` to `075a33d` ([#2855](https://github.com/seatsurfing/seatsurfing/issues/2855)) ([0c9aad1](https://github.com/seatsurfing/seatsurfing/commit/0c9aad1944115b9d9cfab021a008d29e448c7ea7))
+* **deps:** bump google.golang.org/grpc from 1.84.0 to 1.85.0 in /server in the minor-and-patch group ([#2860](https://github.com/seatsurfing/seatsurfing/issues/2860)) ([2996a85](https://github.com/seatsurfing/seatsurfing/commit/2996a856fc491b2f7bb7e0c1c046dc09103cf444))
+* **main:** add missing weekday translations ([#2859](https://github.com/seatsurfing/seatsurfing/issues/2859)) ([7fe7c5f](https://github.com/seatsurfing/seatsurfing/commit/7fe7c5fa9582b44c0dbf04322a16de941fccc157))
+* **main:** add more validation rules to floorplan upload ([#2854](https://github.com/seatsurfing/seatsurfing/issues/2854)) ([3f00937](https://github.com/seatsurfing/seatsurfing/commit/3f0093707090b34427cb6df3e420073afbbdc133))
+
 ## [1.140.0](https://github.com/seatsurfing/seatsurfing/compare/v1.139.0...v1.140.0) (2026-10-31)
 
 

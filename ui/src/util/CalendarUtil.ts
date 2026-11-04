@@ -28,7 +28,23 @@ export default class CalendarUtil {
       local.format(start, time, culture) +
       " – " +
       local.format(end, time, culture);
+    const intl = (options: Intl.DateTimeFormatOptions) => {
+      const formatter = new Intl.DateTimeFormat(Formatting.Language, {
+        timeZone: "UTC",
+        ...options,
+      });
+      return (date: Date) => formatter.format(date);
+    };
+    const weekday = intl({ weekday: "short" });
+    const day = intl({ day: "2-digit" });
     return {
+      weekdayFormat: weekday,
+      dayFormat: (date: Date) => day(date) + " " + weekday(date),
+      dayHeaderFormat: intl({
+        weekday: "long",
+        month: "short",
+        day: "2-digit",
+      }),
       timeGutterFormat: time,
       agendaTimeFormat: time,
       selectRangeFormat: range,

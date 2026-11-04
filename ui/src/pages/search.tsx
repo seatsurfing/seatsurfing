@@ -2001,11 +2001,10 @@ class Search extends React.Component<Props, State> {
   };
 
   renderWeekdayButtons = () => {
-    const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
     const weekStartDay = RuntimeConfig.INFOS.weekStartDay;
     return [0, 1, 2, 3, 4, 5, 6].map((offset) => {
       const index = (weekStartDay + offset) % 7;
-      const day = weekdays[index];
+      const day = this.props.t("workday-short-" + index);
       const isActive = this.state.recurrence.weekdays.includes(index);
       return (
         <Button
