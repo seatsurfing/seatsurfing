@@ -46,6 +46,18 @@ describe("CalendarUtil", () => {
       );
     });
 
+    it("formats the month header in the configured language", () => {
+      const date = new Date(Date.UTC(2030, 2, 1));
+      Formatting.Language = "de";
+      expect((CalendarUtil.getFormats().monthHeaderFormat as any)(date)).toBe(
+        "März 2030",
+      );
+      Formatting.Language = "en-GB";
+      expect((CalendarUtil.getFormats().monthHeaderFormat as any)(date)).toBe(
+        "March 2030",
+      );
+    });
+
     it("uses 12-hour time when configured", () => {
       RuntimeConfig.INFOS.use24HourTime = false;
       const formats = CalendarUtil.getFormats();
