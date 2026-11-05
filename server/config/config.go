@@ -79,7 +79,7 @@ type Config struct {
 	CORSOrigins                         []string
 	RateLimit                           int
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
-	RefreshTokenLifetime
+	RefreshTokenLifetime                time.Duration
 	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
 	MaxPasskeysPerUser                  int  // Maximum number of passkeys a single user may register
