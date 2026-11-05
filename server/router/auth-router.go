@@ -30,6 +30,8 @@ import (
 	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+const config = getConfig()
+const AccesstokenLifetime = config.AccesstokenLifetime
 
 // How long a consumed auth state stays valid to tolerate duplicate verification requests
 const authStateVerifyGraceWindow = 30 * time.Second
@@ -1353,7 +1355,7 @@ func (router *AuthRouter) CreateAccessToken(claims *Claims, options ...CreateAcc
 		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
 	}
 	if !slices.Contains(options, WithoutExpiry) {
-		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(15 * time.Minute))
+		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(AccesstokenLifetime))
 	}
 	if !slices.Contains(options, WithoutNotBefore) {
 		claims.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now())
