@@ -14,7 +14,7 @@ import (
 
 // RefreshTokenLifetime is how long an issued refresh token stays valid. Default is 28 days.
 const config = GetConfig()
-const RefreshTokenLifetime = config.RefreshTokenLifeTime
+const RefreshTokenLifetime = config.RefreshTokenLifetime
 
 // RefreshTokenReuseGracePeriod is the time after rotation during which a
 // replay of the same refresh token is merely rejected. This absorbs benign
