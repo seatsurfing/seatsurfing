@@ -79,9 +79,9 @@ type Config struct {
 	CORSOrigins                         []string
 	RateLimit                           int
 	RateLimitPeriod                     string // e.g., "1-M" for 1 minute
-	AccesstokenLifetime					time.Duration
+	AccesstokenLifetime                 time.Duration
 	RefreshTokenLifetime                time.Duration
-	MaxSessionsPerUser                  int    // Maximum number of concurrent sessions per user
+	MaxSessionsPerUser                  int // Maximum number of concurrent sessions per user
 	WebAuthnRPDisplayName               string
 	MaxPasskeysPerUser                  int  // Maximum number of passkeys a single user may register
 	DisableVersionCheck                 bool // Disable polling seatsurfing.io for latest version information
@@ -222,17 +222,18 @@ func (c *Config) ReadConfig() {
 		log.Println("⚠️  Warning: Invalid RATE_LIMIT_PERIOD set. Must be in format '<number>-<S|M|H|D>'. Defaulting to '1-M'.")
 		c.RateLimitPeriod = "1-M"
 	}
-	AccesstokenLifetimeMinutes := c.getEnvInt("ACCESS_TOKEN_LIFETIME_MINUTES", 15)
-	if AccestokenLifetimeminutes < 1 {
+	var AccesstokenLifetimeminutes int
+	AccesstokenLifetimeminutes = c.getEnvInt("ACCESS_TOKEN_LIFETIME_MINUTES", 15)
+	if AccesstokenLifetimeminutes < 1 {
 		log.Println("⚠️  Warning: ACCESS_TOKEN_LIFETIME_MINUTES is less than one. Defaulting to 15 Minutes")
 		c.AccesstokenLifetime = 15 * time.Minute
-	}	
-	c.AccesstokenLifetime = AccesstokenLifetimeMinutes * time.Minute
-	RefreshTokenLifeTimeMinutes := c.getEnvInt("REFRESH_TOKEN_LIFETIME_MINUTES", 40320)
-	if RefreshTokenLifeTimeMinutes <= 15 {
-		log.Println("⚠️  Warning: REFRESH_TOKEN_LIFETIME_MINUTES is under or equal to 15. Accestokens will not be refreshed")
 	}
-	c.RefreshTokenLifetime = RefreshtokenLifeTimeMinutes * time.Minute
+	c.AccesstokenLifetime = time.Duration(AccesstokenLifetimeminutes) * time.Minute
+	RefreshtokenLifeTimeMinutes := c.getEnvInt("REFRESH_TOKEN_LIFETIME_MINUTES", 40320)
+	if RefreshtokenLifeTimeMinutes <= AccesstokenLifetimeminutes {
+		log.Println("⚠️  Warning: REFRESH_TOKEN_LIFETIME_MINUTES is under or equal to ACCESS_TOKEN_LIFETIME_MINUTES. Accestokens will not be refreshed")
+	}
+	c.RefreshTokenLifetime = time.Duration(RefreshtokenLifeTimeMinutes) * time.Minute
 	c.MaxSessionsPerUser = c.getEnvInt("MAX_SESSIONS_PER_USER", 10)
 	if c.MaxSessionsPerUser < 1 {
 		log.Println("⚠️  Warning: MAX_SESSIONS_PER_USER must be at least 1. Defaulting to 10.")
