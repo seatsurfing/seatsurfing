@@ -77,6 +77,7 @@ func TestSettingsReadPublic(t *testing.T) {
 		SettingHideStats.Name,
 		SettingPublicBookingEnabled.Name,
 		SettingFeaturePublicBooking.Name,
+		SettingDefaultBookingView.Name,
 		SysSettingBookingUIIntegrations,
 	}
 	forbiddenSettings := []string{
@@ -168,6 +169,7 @@ func TestSettingsReadAdmin(t *testing.T) {
 		SettingPublicBookingMinDurationHours.Name,
 		SettingPublicBookingMaxDurationHours.Name,
 		SettingHideDisallowedLocations.Name,
+		SettingDefaultBookingView.Name,
 		SysSettingBookingUIIntegrations,
 	}
 	forbiddenSettings := []string{
@@ -414,6 +416,42 @@ func TestSettingsDefault24HourTimeForbiddenForUser(t *testing.T) {
 
 	payload := `{"value": "0"}`
 	req := NewHTTPRequest("PUT", "/setting/"+SettingDefault24HourTime.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestSettingsDefaultBookingView(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	value, _ := GetSettingsRepository().Get(org.ID, SettingDefaultBookingView.Name)
+	CheckTestString(t, SettingDefaultBookingViewMap, value)
+
+	payload := `{"value": "list"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultBookingView.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	value, _ = GetSettingsRepository().Get(org.ID, SettingDefaultBookingView.Name)
+	CheckTestString(t, SettingDefaultBookingViewList, value)
+
+	payload = `{"value": "calendar"}`
+	req = NewHTTPRequest("PUT", "/setting/"+SettingDefaultBookingView.Name, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	value, _ = GetSettingsRepository().Get(org.ID, SettingDefaultBookingView.Name)
+	CheckTestString(t, SettingDefaultBookingViewList, value)
+}
+
+func TestSettingsDefaultBookingViewForbiddenForUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+
+	payload := `{"value": "list"}`
+	req := NewHTTPRequest("PUT", "/setting/"+SettingDefaultBookingView.Name, loginResponse.UserID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }

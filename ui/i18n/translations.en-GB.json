@@ -686,5 +686,7 @@
   "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
   "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
   "bookerNamesPrivacyHint": "Mind the privacy!",
+  "defaultBookingView": "Default booking view",
+  "list": "List",
   "disallowed": "disallowed"
 }

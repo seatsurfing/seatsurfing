@@ -287,6 +287,11 @@ const (
 	SettingEnforceTOTPAdminsOnly = 2
 )
 
+const (
+	SettingDefaultBookingViewMap  = "map"
+	SettingDefaultBookingViewList = "list"
+)
+
 var (
 	SettingInstallID                      SettingName = SettingName{Name: "install_id", Type: SettingTypeString}
 	SettingDatabaseVersion                SettingName = SettingName{Name: "db_version", Type: SettingTypeInt}
@@ -335,6 +340,7 @@ var (
 	SettingHideDisallowedLocations        SettingName = SettingName{Name: "hide_disallowed_locations", Type: SettingTypeBool}
 	SettingOrgAnnouncementText            SettingName = SettingName{Name: "org_announcement_text", Type: SettingTypeString}
 	SettingOrgAnnouncementPermission      SettingName = SettingName{Name: "org_announcement_permission", Type: SettingTypeString}
+	SettingDefaultBookingView             SettingName = SettingName{Name: "default_booking_view", Type: SettingTypeString}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────
