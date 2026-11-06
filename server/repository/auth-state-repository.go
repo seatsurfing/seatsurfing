@@ -110,6 +110,20 @@ func (r *AuthStateStore) ClaimActive(id string, authStateType AuthStateType) (*A
 	return e, nil
 }
 
+func (r *AuthStateStore) ClaimActiveForKey(id string, authStateType AuthStateType, key string) (*AuthState, error) {
+	e := &AuthState{}
+	var storedKey NullString
+	err := GetDatabase().DB().QueryRow("DELETE FROM auth_states "+
+		"WHERE id = $1 AND auth_state_type = $2 AND key = $3 AND expiry > $4 "+
+		"RETURNING id, expiry, auth_state_type, payload, key",
+		id, authStateType, key, time.Now()).Scan(&e.ID, &e.Expiry, &e.AuthStateType, &e.Payload, &storedKey)
+	if err != nil {
+		return nil, err
+	}
+	e.Key = string(storedKey)
+	return e, nil
+}
+
 // MarkForDeletion keeps the auth state valid for a short grace window instead
 // of deleting it immediately, so duplicate verification requests for the same
 // state (e.g. a double-mounted client) still succeed. The periodic cleanup

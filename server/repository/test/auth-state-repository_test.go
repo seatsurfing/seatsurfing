@@ -116,3 +116,30 @@ func TestAuthStateRepositoryClaimActiveConcurrent(t *testing.T) {
 
 	CheckTestInt(t, 1, int(successCount))
 }
+
+func TestAuthStateRepositoryClaimActiveForKeyConcurrent(t *testing.T) {
+	ClearTestDB()
+	state := &AuthState{
+		Expiry:        time.Now().Add(5 * time.Minute),
+		AuthStateType: AuthRequestState,
+		Payload:       `{"type":"ui"}`,
+		Key:           "provider",
+	}
+	if err := GetAuthStateRepository().Create(state); err != nil {
+		t.Fatal(err)
+	}
+	var successes atomic.Int32
+	var wg sync.WaitGroup
+	for range 20 {
+		wg.Go(func() {
+			claimed, err := GetAuthStateRepository().ClaimActiveForKey(state.ID, AuthRequestState, state.Key)
+			if err == nil {
+				successes.Add(1)
+				CheckTestString(t, state.Payload, claimed.Payload)
+				CheckTestString(t, state.Key, claimed.Key)
+			}
+		})
+	}
+	wg.Wait()
+	CheckTestInt(t, 1, int(successes.Load()))
+}

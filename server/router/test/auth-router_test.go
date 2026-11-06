@@ -2,18 +2,23 @@ package test
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
+	"golang.org/x/oauth2"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/config"
@@ -1707,4 +1712,237 @@ func TestAuthUpdatePasswordWithPasskeyRequiresLogin(t *testing.T) {
 	CheckTestInt(t, 0, count)
 	user, _ = GetUserRepository().GetOne(user.ID)
 	CheckTestBool(t, false, user.PasswordUpdateRequired)
+}
+
+type pkceTestServer struct {
+	server        *httptest.Server
+	challenge     atomic.Value
+	tokenRequests atomic.Int32
+}
+
+func newPKCETestServer(t *testing.T) *pkceTestServer {
+	t.Helper()
+	idp := &pkceTestServer{}
+	idp.challenge.Store("")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+		idp.tokenRequests.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		clientID, secret, _ := r.BasicAuth()
+		verifier := r.FormValue("code_verifier")
+		digest := sha256.Sum256([]byte(verifier))
+		challenge := idp.challenge.Load().(string)
+		validPKCE := verifier == "" && challenge == ""
+		if challenge != "" {
+			validPKCE = verifier != "" && base64.RawURLEncoding.EncodeToString(digest[:]) == challenge
+		}
+		if !validPKCE || clientID != "client" || secret != "secret" || r.FormValue("grant_type") != "authorization_code" || r.FormValue("code") != "abc" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error":"invalid_grant"}`))
+			return
+		}
+		w.Write([]byte(`{"access_token":"tok","token_type":"Bearer"}`))
+	})
+	mux.HandleFunc("/userinfo", func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer tok" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"email":"foo@test.com"}`))
+	})
+	idp.server = httptest.NewServer(mux)
+	t.Cleanup(idp.server.Close)
+	return idp
+}
+
+func createPKCETestProvider(t *testing.T, org *Organization, idp *pkceTestServer) *AuthProvider {
+	t.Helper()
+	secret, err := EncryptString("secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider := &AuthProvider{
+		OrganizationID:     org.ID,
+		Name:               "PKCE provider",
+		ProviderType:       int(OAuth2),
+		AuthStyle:          int(oauth2.AuthStyleInHeader),
+		AuthURL:            idp.server.URL + "/auth",
+		TokenURL:           idp.server.URL + "/token",
+		UserInfoURL:        idp.server.URL + "/userinfo",
+		UserInfoEmailField: "email",
+		ClientID:           "client",
+		ClientSecret:       secret,
+		Scopes:             "openid,email,profile",
+	}
+	if err := GetAuthProviderRepository().Create(provider); err != nil {
+		t.Fatal(err)
+	}
+	return provider
+}
+
+func startPKCETestLogin(t *testing.T, provider *AuthProvider, loginType string) url.Values {
+	t.Helper()
+	res := ExecuteTestRequest(NewHTTPRequest("GET", "/auth/"+provider.ID+"/login/"+loginType+"/?redir=%2Fbookings", "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	location, err := url.Parse(res.Header().Get("Location"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return location.Query()
+}
+
+func TestAuthOAuthPKCE(t *testing.T) {
+	for _, loginType := range []string{"ui", "web", "app"} {
+		t.Run(loginType, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			idp := newPKCETestServer(t)
+			provider := createPKCETestProvider(t, org, idp)
+			params := startPKCETestLogin(t, provider, loginType)
+			CheckTestString(t, "S256", params.Get("code_challenge_method"))
+			CheckTestBool(t, true, regexp.MustCompile(`^[A-Za-z0-9_-]{43}$`).MatchString(params.Get("code_challenge")))
+			CheckTestString(t, "", params.Get("code_verifier"))
+			CheckTestString(t, "", params.Get("client_secret"))
+			CheckTestString(t, "code", params.Get("response_type"))
+
+			state, err := GetAuthStateRepository().GetOne(params.Get("state"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var payload AuthStateLoginPayload
+			if err := json.Unmarshal([]byte(state.Payload), &payload); err != nil {
+				t.Fatal(err)
+			}
+			verifier, err := DecryptString(payload.PKCEVerifier)
+			if err != nil {
+				t.Fatal(err)
+			}
+			CheckTestBool(t, true, regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`).MatchString(verifier))
+			CheckTestBool(t, false, strings.Contains(state.Payload, verifier))
+			digest := sha256.Sum256([]byte(verifier))
+			CheckTestString(t, base64.RawURLEncoding.EncodeToString(digest[:]), params.Get("code_challenge"))
+			CheckTestString(t, loginType, payload.LoginType)
+			CheckTestString(t, "/bookings", payload.Redirect)
+
+			second := startPKCETestLogin(t, provider, loginType)
+			CheckTestBool(t, false, second.Get("state") == params.Get("state"))
+			CheckTestBool(t, false, second.Get("code_challenge") == params.Get("code_challenge"))
+
+			idp.challenge.Store(params.Get("code_challenge"))
+			callback := "/auth/" + provider.ID + "/callback?state=" + state.ID + "&code=abc"
+			res := ExecuteTestRequest(NewHTTPRequest("GET", callback, "", nil))
+			CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+			location, err := url.Parse(res.Header().Get("Location"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			CheckTestBool(t, true, strings.Contains(location.Path, "/ui/login/success/"))
+			CheckTestString(t, "/bookings", location.Query().Get("redir"))
+			CheckTestInt(t, 1, int(idp.tokenRequests.Load()))
+			user, err := GetUserRepository().GetByEmail(org.ID, "foo@test.com")
+			if err != nil || user == nil {
+				t.Fatal("expected an authenticated user")
+			}
+			_, err = GetAuthStateRepository().GetOne(state.ID)
+			CheckTestBool(t, true, err != nil)
+			responseID := strings.TrimPrefix(location.Path, "/ui/login/success/")
+			responseState, err := GetAuthStateRepository().GetOne(strings.Trim(responseID, "/"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			CheckTestBool(t, false, strings.Contains(responseState.Payload, "pkceVerifier"))
+			CheckTestBool(t, false, strings.Contains(res.Header().Get("Location"), verifier))
+
+			res = ExecuteTestRequest(NewHTTPRequest("GET", callback, "", nil))
+			CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/failed/"))
+			CheckTestInt(t, 1, int(idp.tokenRequests.Load()))
+		})
+	}
+}
+
+func TestAuthOAuthPKCEInvalidState(t *testing.T) {
+	for _, testCase := range []string{"expired", "wrong-provider", "wrong-type", "invalid-json", "null-payload", "invalid-verifier", "empty-verifier"} {
+		t.Run(testCase, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			idp := newPKCETestServer(t)
+			provider := createPKCETestProvider(t, org, idp)
+			state := &AuthState{Key: provider.ID, Expiry: time.Now().Add(5 * time.Minute), AuthStateType: AuthRequestState, Payload: "{}"}
+			preserved := false
+			switch testCase {
+			case "expired":
+				state.Expiry = time.Now().Add(-time.Minute)
+				preserved = true
+			case "wrong-provider":
+				otherOrg := CreateTestOrg("other.test")
+				otherProvider := createPKCETestProvider(t, otherOrg, idp)
+				state.Key = otherProvider.ID
+				preserved = true
+			case "wrong-type":
+				state.AuthStateType = AuthResponseCache
+				preserved = true
+			case "invalid-json":
+				state.Payload = "{"
+			case "null-payload":
+				state.Payload = "null"
+			case "invalid-verifier":
+				state.Payload = `{"pkceVerifier":"invalid-ciphertext"}`
+			case "empty-verifier":
+				encrypted, err := EncryptString("")
+				if err != nil {
+					t.Fatal(err)
+				}
+				payload, _ := json.Marshal(&AuthStateLoginPayload{PKCEVerifier: encrypted})
+				state.Payload = string(payload)
+			}
+			if err := GetAuthStateRepository().Create(state); err != nil {
+				t.Fatal(err)
+			}
+			res := ExecuteTestRequest(NewHTTPRequest("GET", "/auth/"+provider.ID+"/callback?state="+state.ID+"&code=abc", "", nil))
+			CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+			CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/failed/"))
+			CheckTestInt(t, 0, int(idp.tokenRequests.Load()))
+			CheckTestString(t, AuthErrorIdpStateInvalid, getLastTestAuthAttempt(t, org).ErrorCode)
+			_, err := GetAuthStateRepository().GetOne(state.ID)
+			CheckTestBool(t, preserved, err == nil)
+		})
+	}
+}
+
+func TestAuthOAuthPKCEMismatchedVerifier(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	idp := newPKCETestServer(t)
+	provider := createPKCETestProvider(t, org, idp)
+	params := startPKCETestLogin(t, provider, "ui")
+	idp.challenge.Store(params.Get("code_challenge"))
+	encrypted, err := EncryptString(oauth2.GenerateVerifier())
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload, _ := json.Marshal(&AuthStateLoginPayload{LoginType: "ui", PKCEVerifier: encrypted})
+	if _, err := GetDatabase().DB().Exec("UPDATE auth_states SET payload = $1 WHERE id = $2", string(payload), params.Get("state")); err != nil {
+		t.Fatal(err)
+	}
+	res := ExecuteTestRequest(NewHTTPRequest("GET", "/auth/"+provider.ID+"/callback?state="+params.Get("state")+"&code=abc", "", nil))
+	CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/failed/"))
+	CheckTestInt(t, 1, int(idp.tokenRequests.Load()))
+	CheckTestString(t, AuthErrorIdpCodeExchangeFailed, getLastTestAuthAttempt(t, org).ErrorCode)
+	_, err = GetAuthStateRepository().GetOne(params.Get("state"))
+	CheckTestBool(t, true, err != nil)
+}
+
+func TestAuthOAuthPKCELegacyState(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	idp := newPKCETestServer(t)
+	provider := createPKCETestProvider(t, org, idp)
+	state := &AuthState{Key: provider.ID, Expiry: time.Now().Add(5 * time.Minute), AuthStateType: AuthRequestState, Payload: `{"type":"ui"}`}
+	if err := GetAuthStateRepository().Create(state); err != nil {
+		t.Fatal(err)
+	}
+	res := ExecuteTestRequest(NewHTTPRequest("GET", "/auth/"+provider.ID+"/callback?state="+state.ID+"&code=abc", "", nil))
+	CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/success/"))
+	CheckTestInt(t, 1, int(idp.tokenRequests.Load()))
 }
