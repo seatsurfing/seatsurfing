@@ -42,8 +42,8 @@ func TestNetutilOutboundHTTPClientBlocksPrivate(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
-	GetConfig().BlockPrivateOutbound = true
-	defer func() { GetConfig().BlockPrivateOutbound = false }()
+	GetConfig().AllowPrivateOutbound = false
+	defer func() { GetConfig().AllowPrivateOutbound = true }()
 
 	_, err := GetOutboundHTTPClient().Get(srv.URL)
 	CheckTestBool(t, true, errors.Is(err, ErrBlockedOutboundAddress))
@@ -54,7 +54,7 @@ func TestNetutilOutboundHTTPClientAllowsPrivateWhenDisabled(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
-	GetConfig().BlockPrivateOutbound = false
+	GetConfig().AllowPrivateOutbound = true
 
 	res, err := GetOutboundHTTPClient().Get(srv.URL)
 	CheckTestBool(t, true, err == nil)
@@ -67,8 +67,8 @@ func TestNetutilInsecureSkipVerifyClientBlocksPrivate(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
-	GetConfig().BlockPrivateOutbound = true
-	defer func() { GetConfig().BlockPrivateOutbound = false }()
+	GetConfig().AllowPrivateOutbound = false
+	defer func() { GetConfig().AllowPrivateOutbound = true }()
 
 	_, err := GetHTTPClientInsecureSkipVerify().Get(srv.URL)
 	CheckTestBool(t, true, errors.Is(err, ErrBlockedOutboundAddress))
@@ -79,7 +79,7 @@ func TestNetutilInsecureSkipVerifyClientAllowsPrivateWhenDisabled(t *testing.T) 
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
-	GetConfig().BlockPrivateOutbound = false
+	GetConfig().AllowPrivateOutbound = true
 
 	res, err := GetHTTPClientInsecureSkipVerify().Get(srv.URL)
 	CheckTestBool(t, true, err == nil)
@@ -93,7 +93,7 @@ func TestNetutilClientsLimitRedirects(t *testing.T) {
 		http.Redirect(w, r, srv.URL, http.StatusFound)
 	}))
 	defer srv.Close()
-	GetConfig().BlockPrivateOutbound = false
+	GetConfig().AllowPrivateOutbound = true
 
 	for _, client := range []*http.Client{GetHTTPClientInsecureSkipVerify(), GetOutboundHTTPClient()} {
 		_, err := client.Get(srv.URL)
@@ -102,7 +102,7 @@ func TestNetutilClientsLimitRedirects(t *testing.T) {
 }
 
 // TestNetutilNoUnguardedHTTPClients makes sure new outbound HTTP calls do not bypass
-// the BLOCK_PRIVATE_OUTBOUND protection by using a bare http client. Requests to
+// the private outbound protection by using a bare http client. Requests to
 // user-controlled destinations must use GetOutboundHTTPClient() or
 // GetHTTPClientInsecureSkipVerify(). Add a file to the allowlist only if its
 // destination is fixed or comes from server configuration.
