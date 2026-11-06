@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.140.2](https://github.com/seatsurfing/seatsurfing/compare/v1.140.1...v1.140.2) (2026-11-06)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump moment-timezone from 0.6.5 to 0.6.6 in /ui in the production-dependencies group across 1 directory ([#2864](https://github.com/seatsurfing/seatsurfing/issues/2864)) ([9704628](https://github.com/seatsurfing/seatsurfing/commit/970462843922d930bd7c26ecf21c0499c0f1c432))
+
 ## [1.140.1](https://github.com/seatsurfing/seatsurfing/compare/v1.140.0...v1.140.1) (2026-11-03)
 
 
