@@ -970,10 +970,18 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "config"))
 		return
 	}
+	verifier := oauth2.GenerateVerifier()
+	encryptedVerifier, err := EncryptString(verifier)
+	if err != nil {
+		recordAuthEvent(r, &AuthEvent{OrganizationID: provider.OrganizationID, AuthProviderID: provider.ID, Method: AuthMethodOAuth, ErrorCode: AuthErrorInternal, ErrorDetail: "failed to encrypt PKCE verifier: " + err.Error()})
+		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "authState"))
+		return
+	}
 	payload := &AuthStateLoginPayload{
-		LoginType: loginType,
-		UserID:    "",
-		Redirect:  redir,
+		LoginType:    loginType,
+		UserID:       "",
+		Redirect:     redir,
+		PKCEVerifier: encryptedVerifier,
 	}
 	authState := &AuthState{
 		Key:           provider.ID,
@@ -986,7 +994,7 @@ func (router *AuthRouter) login(w http.ResponseWriter, r *http.Request) {
 		SendTemporaryRedirect(w, router.getRedirectFailedUrl(loginType, provider, "authState"))
 		return
 	}
-	url := config.AuthCodeURL(authState.ID)
+	url := config.AuthCodeURL(authState.ID, oauth2.S256ChallengeOption(verifier))
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
@@ -1149,14 +1157,23 @@ func authErrorCode(err error, fallback string) string {
 
 func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code string) (*IdPUserInfo, *AuthStateLoginPayload, error) {
 	// Verify state string
-	authState, err := GetAuthStateRepository().GetOneActive(state)
+	authState, err := GetAuthStateRepository().ClaimActiveForKey(state, AuthRequestState, provider.ID)
 	if err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: fmt.Sprintf("state not found for id %s", strings.Replace(strings.Replace(state, "\r", "", -1), "\n", "", -1))}
 	}
-	if authState.Key != provider.ID {
-		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: "auth providers don't match"}
+	var payload *AuthStateLoginPayload
+	if err := json.Unmarshal([]byte(authState.Payload), &payload); err != nil || payload == nil {
+		return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: "invalid auth state payload"}
 	}
-	defer GetAuthStateRepository().Delete(authState)
+	var options []oauth2.AuthCodeOption
+	// Allow logins started before PKCE support was deployed to finish.
+	if payload.PKCEVerifier != "" {
+		verifier, err := DecryptString(payload.PKCEVerifier)
+		if err != nil || verifier == "" {
+			return nil, nil, &authError{code: AuthErrorIdpStateInvalid, detail: "failed to decrypt PKCE verifier"}
+		}
+		options = append(options, oauth2.VerifierOption(verifier))
+	}
 	// Exchange authorization code for an access token
 	config, err := router.getConfig(provider)
 	if err != nil {
@@ -1164,7 +1181,7 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	}
 	client := GetOutboundHTTPClient()
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
-	token, err := config.Exchange(ctx, code)
+	token, err := config.Exchange(ctx, code, options...)
 	if err != nil {
 		detail := "code exchange failed: " + err.Error()
 		var retrieveErr *oauth2.RetrieveError
@@ -1208,7 +1225,6 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 		slices.Sort(keys)
 		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: err.Error() + ", userinfo fields: " + strings.Join(keys, ", ")}
 	}
-	payload := unmarshalAuthStateLoginPayload(authState.Payload)
 	return info, payload, nil
 }
 
