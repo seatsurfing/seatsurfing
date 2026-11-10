@@ -13,7 +13,7 @@ const SpaceImageButton: React.FC<Props> = ({ onClick, disabled }) => {
   return (
     <Button variant="secondary" onClick={onClick} disabled={disabled}>
       <IconImage className="feather" style={{ marginRight: "5px" }} />
-      {t("spaceImage")}
+      {t("image")}
     </Button>
   );
 };

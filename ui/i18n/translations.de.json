@@ -689,8 +689,8 @@
   "bookerNamesShowWithBuddies": "Namen einblenden (Buddies aktiviert)",
   "bookerNamesShowWithoutBuddies": "Namen einblenden (Buddies deaktiviert)",
   "bookerNamesPrivacyHint": "Datenschutz beachten!",
-  "errorSpaceImageInvalidFormat": "Bitte lade ein Bild im Format PNG oder JPEG hoch.",
-  "errorSpaceImageTooLarge": "Das Bild ist zu groß (max. 5 MB).",
-  "spaceImage": "Foto",
+  "imageInvalidFormat": "Bitte lade ein Bild im Format PNG oder JPEG hoch.",
+  "imageTooLarge": "Das Bild ist zu groß (max. 5 MB).",
+  "image": "Foto",
   "disallowed": "nicht erlaubt"
 }

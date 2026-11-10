@@ -1190,7 +1190,7 @@ class EditLocation extends React.Component<Props, State> {
         onRotateEnd={this.setSpaceRotation}
         onNameChange={this.setSpaceName}
         unnamedLabel={this.props.t("unnamed")}
-        imageLabel={this.props.t("spaceImage")}
+        imageLabel={this.props.t("image")}
         newSpaceName={this.newSpaceName}
         mapWidth={this.mapData ? this.mapData.width * this.state.mapScale : 0}
         mapHeight={this.mapData ? this.mapData.height * this.state.mapScale : 0}
@@ -1677,7 +1677,7 @@ class EditLocation extends React.Component<Props, State> {
               hidden={!RuntimeConfig.INFOS.featureSpaceImages}
             >
               <Form.Label column sm="4" htmlFor="space-image">
-                {this.props.t("spaceImage")}
+                {this.props.t("image")}
               </Form.Label>
               <Col sm="8">
                 {this.getSelectedSpace() && (

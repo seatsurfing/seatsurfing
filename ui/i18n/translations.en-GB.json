@@ -686,8 +686,8 @@
   "bookerNamesShowWithBuddies": "Show names (buddies enabled)",
   "bookerNamesShowWithoutBuddies": "Show names (buddies disabled)",
   "bookerNamesPrivacyHint": "Mind the privacy!",
-  "errorSpaceImageInvalidFormat": "Please upload a PNG or JPEG image.",
-  "errorSpaceImageTooLarge": "The image is too large (max. 5 MB).",
-  "spaceImage": "Photo",
+  "imageInvalidFormat": "Please upload a PNG or JPEG image.",
+  "imageTooLarge": "The image is too large (max. 5 MB).",
+  "image": "Photo",
   "disallowed": "disallowed"
 }

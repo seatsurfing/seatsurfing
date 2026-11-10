@@ -1,19 +1,14 @@
 package service
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
-	"image"
-	"slices"
 	"sync"
 	"time"
 
-	_ "image/jpeg"
-	_ "image/png"
-
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 // SpaceService holds the space business logic shared by the REST API
@@ -302,6 +297,13 @@ const (
 	SpaceImageMaxPixels    = 25_000_000
 )
 
+var spaceImageLimits = ImageLimits{
+	MaxBytes:     SpaceImageMaxBytes,
+	MaxDimension: SpaceImageMaxDimension,
+	MaxPixels:    SpaceImageMaxPixels,
+	Formats:      []string{"png", "jpeg"},
+}
+
 var (
 	ErrSpaceImageForbidden     = errors.New("not allowed to access space image")
 	ErrSpaceImageNotFound      = errors.New("space image not found")
@@ -349,27 +351,18 @@ func (s *SpaceService) SetImage(user *User, location *Location, space *Space, da
 	if !s.isImageFeatureEnabled(location.OrganizationID) {
 		return ErrSpaceImageNotEnabled
 	}
-	if len(data) > SpaceImageMaxBytes {
+	info, err := ValidateImage(data, spaceImageLimits)
+	if errors.Is(err, ErrImageTooLarge) {
 		return ErrSpaceImageTooLarge
 	}
-	cfg, format, err := image.DecodeConfig(bytes.NewReader(data))
-	if err != nil || !slices.Contains([]string{"png", "jpeg"}, format) {
-		return ErrSpaceImageInvalidFormat
-	}
-	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > SpaceImageMaxDimension || cfg.Height > SpaceImageMaxDimension {
-		return ErrSpaceImageInvalidFormat
-	}
-	if cfg.Width*cfg.Height > SpaceImageMaxPixels {
-		return ErrSpaceImageInvalidFormat
-	}
-	if _, _, err := image.Decode(bytes.NewReader(data)); err != nil {
+	if err != nil {
 		return ErrSpaceImageInvalidFormat
 	}
 	return GetSpaceImageRepository().Set(&SpaceImage{
 		SpaceID:  space.ID,
-		MimeType: "image/" + format,
-		Width:    uint(cfg.Width),
-		Height:   uint(cfg.Height),
+		MimeType: "image/" + info.Format,
+		Width:    info.Width,
+		Height:   info.Height,
 		Data:     data,
 	})
 }

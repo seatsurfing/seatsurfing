@@ -83,9 +83,8 @@ export default class ErrorText {
         t("errorRoleCannotRemoveOwnAccess"),
       [ResponseCode.RoleNameAlreadyExists]: () =>
         t("errorRoleNameAlreadyExists"),
-      [ResponseCode.SpaceImageTooLarge]: () => t("errorSpaceImageTooLarge"),
-      [ResponseCode.SpaceImageInvalidFormat]: () =>
-        t("errorSpaceImageInvalidFormat"),
+      [ResponseCode.SpaceImageTooLarge]: () => t("imageTooLarge"),
+      [ResponseCode.SpaceImageInvalidFormat]: () => t("imageInvalidFormat"),
     };
 
     return errorMap[code as ResponseCode]?.() ?? t("errorUnknown");

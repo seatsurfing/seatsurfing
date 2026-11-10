@@ -94,11 +94,11 @@ class SpaceImageEditor extends React.Component<Props, State> {
       return;
     }
     if (!SPACE_IMAGE_MIME_TYPES.includes(file.type)) {
-      this.setState({ error: this.props.t("errorSpaceImageInvalidFormat") });
+      this.setState({ error: this.props.t("imageInvalidFormat") });
       return;
     }
     if (file.size > SPACE_IMAGE_MAX_BYTES) {
-      this.setState({ error: this.props.t("errorSpaceImageTooLarge") });
+      this.setState({ error: this.props.t("imageTooLarge") });
       return;
     }
     this.setState({ error: "" });
@@ -128,7 +128,7 @@ class SpaceImageEditor extends React.Component<Props, State> {
           <div className="space-image-editor-preview">
             <img
               src={previewUrl}
-              alt={this.props.t("spaceImage")}
+              alt={this.props.t("image")}
               className="space-image"
             />
           </div>
