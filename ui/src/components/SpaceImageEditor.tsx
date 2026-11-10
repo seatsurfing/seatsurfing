@@ -87,17 +87,26 @@ class SpaceImageEditor extends React.Component<Props, State> {
     }
   };
 
+  fileInput = React.createRef<HTMLInputElement>();
+
+  clearFileInput = () => {
+    if (this.fileInput.current) {
+      this.fileInput.current.value = "";
+    }
+  };
+
   onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.item(0);
-    e.target.value = "";
     if (!file) {
       return;
     }
     if (!SPACE_IMAGE_MIME_TYPES.includes(file.type)) {
+      this.clearFileInput();
       this.setState({ error: this.props.t("imageInvalidFormat") });
       return;
     }
     if (file.size > SPACE_IMAGE_MAX_BYTES) {
+      this.clearFileInput();
       this.setState({ error: this.props.t("imageTooLarge") });
       return;
     }
@@ -139,11 +148,13 @@ class SpaceImageEditor extends React.Component<Props, State> {
             type="file"
             accept={SPACE_IMAGE_MIME_TYPES.join(",")}
             onChange={this.onFileSelected}
+            ref={this.fileInput}
           />
           {previewUrl && (
             <Button
               variant="outline-danger"
               onClick={() => {
+                this.clearFileInput();
                 this.setState({ error: "" });
                 this.props.onRemove();
               }}
