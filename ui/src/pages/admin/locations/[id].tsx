@@ -221,7 +221,8 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   if (space.shape === "trapezoid") className += " space-dragger-trapezoid";
   if (isSelected) className += " space-dragger-selected";
   const hasImage =
-    !!space.pendingImage || (space.hasImage && !space.removeImage);
+    RuntimeConfig.INFOS.featureSpaceImages &&
+    (!!space.pendingImage || (space.hasImage && !space.removeImage));
 
   return (
     <>
@@ -440,6 +441,8 @@ const SpaceRect: React.FC<SpaceRectProps> = ({
   );
 };
 
+const MAX_MAP_FILE_SIZE = 5 * 1024 * 1024;
+
 interface State {
   loading: boolean;
   submitting: boolean;
@@ -463,6 +466,7 @@ interface State {
   mapScaleOnLoad: number;
   fileLabel: string;
   files: FileList | null;
+  fileTooLarge: boolean;
   mapType: "upload" | "designed";
   designData: string;
   spaces: SpaceState[];
@@ -522,6 +526,7 @@ class EditLocation extends React.Component<Props, State> {
       mapScaleOnLoad: 1.0,
       fileLabel: this.props.t("mapFileTypes"),
       files: null,
+      fileTooLarge: false,
       mapType: "upload",
       designData: "",
       spaces: [],
@@ -1667,7 +1672,10 @@ class EditLocation extends React.Component<Props, State> {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row}>
+            <Form.Group
+              as={Row}
+              hidden={!RuntimeConfig.INFOS.featureSpaceImages}
+            >
               <Form.Label column sm="4" htmlFor="space-image">
                 {this.props.t("spaceImage")}
               </Form.Label>
@@ -2468,7 +2476,12 @@ class EditLocation extends React.Component<Props, State> {
                 type="radio"
                 id="map-type-upload"
                 name="mapType"
-                label={this.props.t("uploadFile")}
+                label={
+                  <>
+                    {this.props.t("uploadFile")}
+                    <HintTooltip hint={this.props.t("mapFileHint")} />
+                  </>
+                }
                 checked={this.state.mapType === "upload"}
                 onChange={() => this.setState({ mapType: "upload" })}
               />
@@ -2492,15 +2505,35 @@ class EditLocation extends React.Component<Props, State> {
                   id="location-floorplan"
                   type="file"
                   accept="image/png, image/jpeg, image/gif, image/svg+xml"
-                  onChange={(e: any) =>
+                  onChange={(e: any) => {
+                    const file = e.target.files?.item(0);
+                    if (!file) {
+                      return;
+                    }
+                    if (file.size > MAX_MAP_FILE_SIZE) {
+                      e.target.value = "";
+                      this.setState({
+                        files: null,
+                        fileLabel: "",
+                        fileTooLarge: true,
+                      });
+                      return;
+                    }
                     this.setState({
                       files: e.target.files,
-                      fileLabel: e.target.files.item(0).name,
+                      fileLabel: file.name,
+                      fileTooLarge: false,
                       mapScale: 1.0,
-                    })
-                  }
+                    });
+                  }}
+                  isInvalid={this.state.fileTooLarge}
                   required={!this.entity.id && this.state.mapType === "upload"}
                 />
+              )}
+              {this.state.mapType === "upload" && (
+                <Form.Control.Feedback type="invalid">
+                  {this.props.t("errorMapFileTooLarge")}
+                </Form.Control.Feedback>
               )}
               {this.state.mapType === "designed" && (
                 <>

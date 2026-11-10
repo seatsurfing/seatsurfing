@@ -1153,6 +1153,7 @@ func TestSpacesAvailabilityTouching(t *testing.T) {
 func TestSpacesImage(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	user := CreateTestUserInOrg(org)
 	location, space := CreateTestLocationAndSpace(org)
@@ -1216,9 +1217,22 @@ func TestSpacesImage(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
 }
 
+func TestSpacesImageFeatureDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	location, space := CreateTestLocationAndSpace(org)
+	url := "/location/" + location.ID + "/space/" + space.ID + "/image"
+
+	req := NewHTTPRequest("POST", url, admin.ID, bytes.NewBuffer(CreateTestPNG(1, 1)))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusPaymentRequired, res.Code)
+}
+
 func TestSpacesImageInvalid(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	location, space := CreateTestLocationAndSpace(org)
 	url := "/location/" + location.ID + "/space/" + space.ID + "/image"
@@ -1237,6 +1251,7 @@ func TestSpacesImageInvalid(t *testing.T) {
 func TestSpacesImageForeignOrg(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	location, space := CreateTestLocationAndSpace(org)
 	org2 := CreateTestOrg("test2.com")

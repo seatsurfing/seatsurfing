@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"image"
+	"slices"
 	"sync"
 	"time"
 
-	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 
@@ -306,8 +306,14 @@ var (
 	ErrSpaceImageForbidden     = errors.New("not allowed to access space image")
 	ErrSpaceImageNotFound      = errors.New("space image not found")
 	ErrSpaceImageTooLarge      = errors.New("space image too large")
-	ErrSpaceImageInvalidFormat = errors.New("space image must be a PNG, JPEG or GIF")
+	ErrSpaceImageInvalidFormat = errors.New("space image must be a PNG or JPEG")
+	ErrSpaceImageNotEnabled    = errors.New("space images feature not enabled")
 )
+
+func (s *SpaceService) isImageFeatureEnabled(organizationID string) bool {
+	enabled, _ := GetSettingsRepository().GetBool(organizationID, SettingFeatureSpaceImages.Name)
+	return enabled
+}
 
 // GetImage returns the image of space, which must belong to location.
 func (s *SpaceService) GetImage(user *User, location *Location, space *Space, bookingContext bool) (*SpaceImage, error) {
@@ -321,7 +327,7 @@ func (s *SpaceService) GetImage(user *User, location *Location, space *Space, bo
 	if err != nil {
 		return nil, err
 	}
-	if !visible {
+	if !visible || !s.isImageFeatureEnabled(location.OrganizationID) {
 		return nil, ErrSpaceImageNotFound
 	}
 	e, err := GetSpaceImageRepository().Get(space.ID, location.OrganizationID)
@@ -331,7 +337,7 @@ func (s *SpaceService) GetImage(user *User, location *Location, space *Space, bo
 	return e, err
 }
 
-// SetImage validates data as a PNG, JPEG or GIF image and stores it as the
+// SetImage validates data as a PNG or JPEG image and stores it as the
 // image of space, replacing any existing one.
 func (s *SpaceService) SetImage(user *User, location *Location, space *Space, data []byte) error {
 	if space.LocationID != location.ID {
@@ -340,11 +346,14 @@ func (s *SpaceService) SetImage(user *User, location *Location, space *Space, da
 	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
 		return ErrSpaceImageForbidden
 	}
+	if !s.isImageFeatureEnabled(location.OrganizationID) {
+		return ErrSpaceImageNotEnabled
+	}
 	if len(data) > SpaceImageMaxBytes {
 		return ErrSpaceImageTooLarge
 	}
 	cfg, format, err := image.DecodeConfig(bytes.NewReader(data))
-	if err != nil {
+	if err != nil || !slices.Contains([]string{"png", "jpeg"}, format) {
 		return ErrSpaceImageInvalidFormat
 	}
 	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > SpaceImageMaxDimension || cfg.Height > SpaceImageMaxDimension {
@@ -357,12 +366,11 @@ func (s *SpaceService) SetImage(user *User, location *Location, space *Space, da
 		return ErrSpaceImageInvalidFormat
 	}
 	return GetSpaceImageRepository().Set(&SpaceImage{
-		SpaceID:        space.ID,
-		OrganizationID: location.OrganizationID,
-		MimeType:       "image/" + format,
-		Width:          uint(cfg.Width),
-		Height:         uint(cfg.Height),
-		Data:           data,
+		SpaceID:  space.ID,
+		MimeType: "image/" + format,
+		Width:    uint(cfg.Width),
+		Height:   uint(cfg.Height),
+		Data:     data,
 	})
 }
 

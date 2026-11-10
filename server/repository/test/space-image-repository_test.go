@@ -19,7 +19,7 @@ func TestSpaceImageCRUD(t *testing.T) {
 	CheckTestBool(t, true, err == sql.ErrNoRows)
 
 	data := CreateTestPNG(4, 3)
-	err = repo.Set(&SpaceImage{SpaceID: space.ID, OrganizationID: org.ID, MimeType: "image/png", Width: 4, Height: 3, Data: data})
+	err = repo.Set(&SpaceImage{SpaceID: space.ID, MimeType: "image/png", Width: 4, Height: 3, Data: data})
 	CheckTestIsNil(t, err)
 	e, err := repo.Get(space.ID, org.ID)
 	CheckTestIsNil(t, err)
@@ -29,7 +29,7 @@ func TestSpaceImageCRUD(t *testing.T) {
 	CheckTestInt(t, len(data), len(e.Data))
 
 	// Upsert replaces the existing image
-	err = repo.Set(&SpaceImage{SpaceID: space.ID, OrganizationID: org.ID, MimeType: "image/jpeg", Width: 10, Height: 20, Data: []byte{1, 2, 3}})
+	err = repo.Set(&SpaceImage{SpaceID: space.ID, MimeType: "image/jpeg", Width: 10, Height: 20, Data: []byte{1, 2, 3}})
 	CheckTestIsNil(t, err)
 	e, _ = repo.Get(space.ID, org.ID)
 	CheckTestString(t, "image/jpeg", e.MimeType)
@@ -51,7 +51,7 @@ func TestSpaceImageOrgIsolation(t *testing.T) {
 	org2 := CreateTestOrg("test2.com")
 	_, space := CreateTestLocationAndSpace(org)
 	repo := GetSpaceImageRepository()
-	repo.Set(&SpaceImage{SpaceID: space.ID, OrganizationID: org.ID, MimeType: "image/png", Width: 1, Height: 1, Data: CreateTestPNG(1, 1)})
+	repo.Set(&SpaceImage{SpaceID: space.ID, MimeType: "image/png", Width: 1, Height: 1, Data: CreateTestPNG(1, 1)})
 
 	_, err := repo.Get(space.ID, org2.ID)
 	CheckTestBool(t, true, err == sql.ErrNoRows)
@@ -67,7 +67,7 @@ func TestSpaceImageDeletedWithSpace(t *testing.T) {
 	org := CreateTestOrg("test.com")
 	_, space := CreateTestLocationAndSpace(org)
 	repo := GetSpaceImageRepository()
-	repo.Set(&SpaceImage{SpaceID: space.ID, OrganizationID: org.ID, MimeType: "image/png", Width: 1, Height: 1, Data: CreateTestPNG(1, 1)})
+	repo.Set(&SpaceImage{SpaceID: space.ID, MimeType: "image/png", Width: 1, Height: 1, Data: CreateTestPNG(1, 1)})
 
 	CheckTestIsNil(t, GetSpaceRepository().Delete(space))
 	_, err := repo.Get(space.ID, org.ID)

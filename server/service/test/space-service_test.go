@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"hash/crc32"
 	"image"
+	"image/color"
+	"image/gif"
 	"image/jpeg"
 	"testing"
 	"time"
@@ -194,6 +196,7 @@ func TestSpaceServiceIsPublicSlotAvailable(t *testing.T) {
 
 func TestSpaceServiceImageCRUD(t *testing.T) {
 	org, user, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	svc := GetSpaceService()
 
@@ -223,6 +226,7 @@ func TestSpaceServiceImageCRUD(t *testing.T) {
 
 func TestSpaceServiceImageRequiresAreaAdmin(t *testing.T) {
 	org, user, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	svc := GetSpaceService()
 
@@ -235,6 +239,7 @@ func TestSpaceServiceImageRequiresAreaAdmin(t *testing.T) {
 
 func TestSpaceServiceImageForeignOrg(t *testing.T) {
 	org, _, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	org2 := CreateTestOrg("test2.com")
 	admin2 := CreateTestUserOrgAdmin(org2)
@@ -253,14 +258,33 @@ func TestSpaceServiceImageForeignOrg(t *testing.T) {
 	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
 }
 
+func TestSpaceServiceImageFeatureDisabled(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	admin := CreateTestUserOrgAdmin(org)
+	svc := GetSpaceService()
+
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, CreateTestPNG(1, 1)) == ErrSpaceImageNotEnabled)
+
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
+	CheckTestIsNil(t, svc.SetImage(admin, location, space, CreateTestPNG(1, 1)))
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "0")
+	_, err := svc.GetImage(user, location, space, false)
+	CheckTestBool(t, true, err == ErrSpaceImageNotFound)
+	CheckTestIsNil(t, svc.DeleteImage(admin, location, space))
+}
+
 func TestSpaceServiceImageValidation(t *testing.T) {
 	org, _, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	svc := GetSpaceService()
 
 	CheckTestBool(t, true, svc.SetImage(admin, location, space, []byte("not an image")) == ErrSpaceImageInvalidFormat)
 	svg := []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>`)
 	CheckTestBool(t, true, svc.SetImage(admin, location, space, svg) == ErrSpaceImageInvalidFormat)
+	var gifData bytes.Buffer
+	CheckTestIsNil(t, gif.Encode(&gifData, image.NewPaletted(image.Rect(0, 0, 10, 10), color.Palette{color.Black}), nil))
+	CheckTestBool(t, true, svc.SetImage(admin, location, space, gifData.Bytes()) == ErrSpaceImageInvalidFormat)
 	CheckTestBool(t, true, svc.SetImage(admin, location, space, CreateTestPNG(SpaceImageMaxDimension+1, 1)) == ErrSpaceImageInvalidFormat)
 	tooLarge := make([]byte, SpaceImageMaxBytes+1)
 	CheckTestBool(t, true, svc.SetImage(admin, location, space, tooLarge) == ErrSpaceImageTooLarge)
@@ -270,6 +294,7 @@ func TestSpaceServiceImageValidation(t *testing.T) {
 
 func TestSpaceServiceImageRejectsTooManyPixels(t *testing.T) {
 	org, _, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	svc := GetSpaceService()
 
@@ -284,6 +309,7 @@ func TestSpaceServiceImageRejectsTooManyPixels(t *testing.T) {
 
 func TestSpaceServiceImageRejectsTruncated(t *testing.T) {
 	org, _, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
 	admin := CreateTestUserOrgAdmin(org)
 	svc := GetSpaceService()
 	CheckTestIsNil(t, svc.SetImage(admin, location, space, CreateTestPNG(40, 30)))

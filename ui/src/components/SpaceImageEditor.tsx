@@ -5,7 +5,7 @@ import { TranslationFunc, withTranslation } from "./withTranslation";
 import Space from "@/types/Space";
 
 export const SPACE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-export const SPACE_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/gif"];
+export const SPACE_IMAGE_MIME_TYPES = ["image/png", "image/jpeg"];
 
 interface Props {
   t: TranslationFunc;

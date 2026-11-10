@@ -1,11 +1,9 @@
 package router
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"image"
 	"io"
 	"log"
 	"net/http"
@@ -15,11 +13,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/rustyoz/svg"
-
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -585,46 +578,17 @@ func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	data, err := io.ReadAll(r.Body)
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, service.MaxLocationMapSize))
 	if err != nil {
 		log.Println(err)
 		SendBadRequest(w)
 		return
 	}
-	// Check if image is PNG, GIF of JPEG
-	img, format, err := image.DecodeConfig(bytes.NewReader(data))
+	locationMap, err := service.GetLocationService().ParseLocationMap(data)
 	if err != nil {
-		// On error, check is image is SVG
-		parsedSvg, err := svg.ParseSvg(string(data), "", 1.0)
-		if err != nil {
-			log.Println(err)
-			SendBadRequest(w)
-			return
-		}
-		heightPx, err := CSSDimensionsToPixels(parsedSvg.Height)
-		if err != nil {
-			log.Println(err)
-			SendBadRequest(w)
-			return
-		}
-		widthPx, err := CSSDimensionsToPixels(parsedSvg.Width)
-		if err != nil {
-			log.Println(err)
-			SendBadRequest(w)
-			return
-		}
-		img = image.Config{
-			Width:  int(widthPx),
-			Height: int(heightPx),
-		}
-		format = "svg+xml"
-	}
-	locationMap := &LocationMap{
-		Width:    uint(img.Width),
-		Height:   uint(img.Height),
-		MimeType: format,
-		Scale:    1.0,
-		Data:     data,
+		log.Println(err)
+		SendBadRequest(w)
+		return
 	}
 	if err := GetLocationRepository().SetMap(e, locationMap); err != nil {
 		log.Println(err)

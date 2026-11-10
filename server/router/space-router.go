@@ -986,6 +986,8 @@ func sendSpaceImageError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, service.ErrSpaceImageForbidden):
 		SendForbidden(w)
+	case errors.Is(err, service.ErrSpaceImageNotEnabled):
+		SendPaymentRequired(w)
 	case errors.Is(err, service.ErrSpaceImageNotFound):
 		SendNotFound(w)
 	case errors.Is(err, service.ErrSpaceImageTooLarge):

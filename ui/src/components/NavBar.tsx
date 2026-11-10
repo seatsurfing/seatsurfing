@@ -176,8 +176,8 @@ class NavBar extends React.Component<Props, State> {
               </>
             )}
           </Nav.Link>
-          {adminButton}
           {bookingUIIntegrationItems}
+          {adminButton}
         </Nav>
         <Nav className="ms-auto">
           <Nav.Link as="span" className="icon-link d-none d-xl-flex pe-none">

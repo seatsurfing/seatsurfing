@@ -279,6 +279,7 @@
   "errorSlotConflict": "Es gibt bereits eine Buchung im gewählten Zeitraum.",
   "errorSubscriptionLimit": "Du hast die maximale Anzahl von Benutzern erreicht.",
   "errorTooManyConcurrent": "Kapazitätsgrenze des gewählten Bereichs ist erreicht.",
+  "errorMapFileTooLarge": "Die Datei darf nicht größer als 5 MB sein.",
   "errorTryAgain": "Etwas ist schief gegangen. Bitte probiere es später erneut.",
   "errorUnknown": "Unbekannter Fehler, bitte versuche es später erneut.",
   "errorUserCannotChangeOwnRoles": "Du kannst die Rollen deines eigenen Benutzers nicht ändern.",
@@ -360,6 +361,7 @@
   "manageProfile": "Profil verwalten",
   "map": "Karte",
   "mapFileTypes": "PNG, JPEG oder GIF",
+  "mapFileHint": "PNG, JPEG, GIF oder SVG, max. 5 MB",
   "markdownSupported": "Markdown-Syntax wird unterstützt",
   "maxBookingDuration": "Max. Buchungsdauer",
   "maxBookingsPerUser": "Buchungen je Nutzer",
@@ -687,7 +689,8 @@
   "bookerNamesShowWithBuddies": "Namen einblenden (Buddies aktiviert)",
   "bookerNamesShowWithoutBuddies": "Namen einblenden (Buddies deaktiviert)",
   "bookerNamesPrivacyHint": "Datenschutz beachten!",
-  "errorSpaceImageInvalidFormat": "Bitte lade ein Bild im Format PNG, JPEG oder GIF hoch.",
+  "errorSpaceImageInvalidFormat": "Bitte lade ein Bild im Format PNG oder JPEG hoch.",
   "errorSpaceImageTooLarge": "Das Bild ist zu groß (max. 5 MB).",
-  "spaceImage": "Foto"
+  "spaceImage": "Foto",
+  "disallowed": "nicht erlaubt"
 }
