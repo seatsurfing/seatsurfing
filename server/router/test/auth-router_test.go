@@ -1715,12 +1715,13 @@ func TestAuthUpdatePasswordWithPasskeyRequiresLogin(t *testing.T) {
 }
 
 type pkceTestServer struct {
-	server        *httptest.Server
-	challenge     atomic.Value
-	tokenRequests atomic.Int32
+	server            *httptest.Server
+	challenge         atomic.Value
+	tokenRequests     atomic.Int32
+	validPKCERequests atomic.Int32
 }
 
-func newPKCETestServer(t *testing.T) *pkceTestServer {
+func newPKCETestServer(t *testing.T, authStyle oauth2.AuthStyle) *pkceTestServer {
 	t.Helper()
 	idp := &pkceTestServer{}
 	idp.challenge.Store("")
@@ -1729,16 +1730,28 @@ func newPKCETestServer(t *testing.T) *pkceTestServer {
 		idp.tokenRequests.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		clientID, secret, _ := r.BasicAuth()
+		validClient := clientID == "client" && secret == "secret" && r.PostFormValue("client_id") == "" && r.PostFormValue("client_secret") == ""
+		if authStyle == oauth2.AuthStyleInParams {
+			validClient = r.Header.Get("Authorization") == "" && r.PostFormValue("client_id") == "client" && r.PostFormValue("client_secret") == "secret"
+		}
 		verifier := r.FormValue("code_verifier")
 		digest := sha256.Sum256([]byte(verifier))
 		challenge := idp.challenge.Load().(string)
 		validPKCE := verifier == "" && challenge == ""
 		if challenge != "" {
 			validPKCE = verifier != "" && base64.RawURLEncoding.EncodeToString(digest[:]) == challenge
+			if validPKCE {
+				idp.validPKCERequests.Add(1)
+			}
 		}
-		if !validPKCE || clientID != "client" || secret != "secret" || r.FormValue("grant_type") != "authorization_code" || r.FormValue("code") != "abc" {
+		if !validPKCE || r.FormValue("grant_type") != "authorization_code" || r.FormValue("code") != "abc" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{"error":"invalid_grant"}`))
+			return
+		}
+		if !validClient {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error":"invalid_client"}`))
 			return
 		}
 		w.Write([]byte(`{"access_token":"tok","token_type":"Bearer"}`))
@@ -1797,7 +1810,7 @@ func TestAuthOAuthPKCE(t *testing.T) {
 		t.Run(loginType, func(t *testing.T) {
 			ClearTestDB()
 			org := CreateTestOrg("test.com")
-			idp := newPKCETestServer(t)
+			idp := newPKCETestServer(t, oauth2.AuthStyleInHeader)
 			provider := createPKCETestProvider(t, org, idp)
 			params := startPKCETestLogin(t, provider, loginType)
 			CheckTestString(t, "S256", params.Get("code_challenge_method"))
@@ -1861,12 +1874,50 @@ func TestAuthOAuthPKCE(t *testing.T) {
 	}
 }
 
+func TestAuthOAuthPKCEAuthStyles(t *testing.T) {
+	for _, testCase := range []struct {
+		name          string
+		clientStyle   oauth2.AuthStyle
+		serverStyle   oauth2.AuthStyle
+		tokenRequests int
+	}{
+		{"header", oauth2.AuthStyleInHeader, oauth2.AuthStyleInHeader, 1},
+		{"params", oauth2.AuthStyleInParams, oauth2.AuthStyleInParams, 1},
+		{"auto-header", oauth2.AuthStyleAutoDetect, oauth2.AuthStyleInHeader, 1},
+		{"auto-params", oauth2.AuthStyleAutoDetect, oauth2.AuthStyleInParams, 2},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			idp := newPKCETestServer(t, testCase.serverStyle)
+			provider := createPKCETestProvider(t, org, idp)
+			provider.AuthStyle = int(testCase.clientStyle)
+			if err := GetAuthProviderRepository().Update(provider); err != nil {
+				t.Fatal(err)
+			}
+			params := startPKCETestLogin(t, provider, "ui")
+			CheckTestString(t, "S256", params.Get("code_challenge_method"))
+			CheckStringNotEmpty(t, params.Get("code_challenge"))
+			idp.challenge.Store(params.Get("code_challenge"))
+
+			callback := "/auth/" + provider.ID + "/callback?state=" + params.Get("state") + "&code=abc"
+			res := ExecuteTestRequest(NewHTTPRequest("GET", callback, "", nil))
+			CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+			CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/success/"))
+			CheckTestInt(t, testCase.tokenRequests, int(idp.tokenRequests.Load()))
+			// Automatic detection must preserve PKCE on both the rejected
+			// header-auth request and the retry with form credentials.
+			CheckTestInt(t, testCase.tokenRequests, int(idp.validPKCERequests.Load()))
+		})
+	}
+}
+
 func TestAuthOAuthPKCEInvalidState(t *testing.T) {
 	for _, testCase := range []string{"expired", "wrong-provider", "wrong-type", "invalid-json", "null-payload", "invalid-verifier", "empty-verifier"} {
 		t.Run(testCase, func(t *testing.T) {
 			ClearTestDB()
 			org := CreateTestOrg("test.com")
-			idp := newPKCETestServer(t)
+			idp := newPKCETestServer(t, oauth2.AuthStyleInHeader)
 			provider := createPKCETestProvider(t, org, idp)
 			state := &AuthState{Key: provider.ID, Expiry: time.Now().Add(5 * time.Minute), AuthStateType: AuthRequestState, Payload: "{}"}
 			preserved := false
@@ -1913,7 +1964,7 @@ func TestAuthOAuthPKCEInvalidState(t *testing.T) {
 func TestAuthOAuthPKCEMismatchedVerifier(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	idp := newPKCETestServer(t)
+	idp := newPKCETestServer(t, oauth2.AuthStyleInHeader)
 	provider := createPKCETestProvider(t, org, idp)
 	params := startPKCETestLogin(t, provider, "ui")
 	idp.challenge.Store(params.Get("code_challenge"))
@@ -1936,7 +1987,7 @@ func TestAuthOAuthPKCEMismatchedVerifier(t *testing.T) {
 func TestAuthOAuthPKCELegacyState(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
-	idp := newPKCETestServer(t)
+	idp := newPKCETestServer(t, oauth2.AuthStyleInHeader)
 	provider := createPKCETestProvider(t, org, idp)
 	state := &AuthState{Key: provider.ID, Expiry: time.Now().Add(5 * time.Minute), AuthStateType: AuthRequestState, Payload: `{"type":"ui"}`}
 	if err := GetAuthStateRepository().Create(state); err != nil {
