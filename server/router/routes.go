@@ -74,6 +74,9 @@ var (
 	ResponseCodeRoleIsSystemRole              = 7003
 	ResponseCodeRoleCannotRemoveOwnAccess     = 7004
 	ResponseCodeRoleNameAlreadyExists         = 7005
+
+	ResponseCodeSpaceImageTooLarge      = service.SpaceCodeImageTooLarge
+	ResponseCodeSpaceImageInvalidFormat = service.SpaceCodeImageInvalidFormat
 )
 
 func sendErrorCode(w http.ResponseWriter, statusCode int, code int) {

@@ -189,6 +189,7 @@ func (router *SettingsRouter) isFeatureSetting(name string) bool {
 	return name == SettingFeatureNoUserLimit.Name ||
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
+		name == SettingFeatureSpaceImages.Name ||
 		name == SettingFeatureAuthProviders.Name ||
 		name == SettingFeatureRecurringBookings.Name ||
 		name == SettingFeatureKioskMode.Name ||
@@ -418,6 +419,7 @@ func (router *SettingsRouter) isValidSettingNameReadPublic(name string) bool {
 		name == SettingFeatureNoUserLimit.Name ||
 		name == SettingFeatureCustomDomains.Name ||
 		name == SettingFeatureGroups.Name ||
+		name == SettingFeatureSpaceImages.Name ||
 		name == SettingFeatureAuthProviders.Name ||
 		name == SettingFeatureKioskMode.Name ||
 		name == SettingSubjectDefault.Name ||

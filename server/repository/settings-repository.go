@@ -220,6 +220,7 @@ func (r *SettingsStore) InitDefaultSettingsForOrg(organizationID string) error {
 		"($1, '"+SettingFeatureNoUserLimit.Name+"', '0'), "+
 		"($1, '"+SettingFeatureCustomDomains.Name+"', '0'), "+
 		"($1, '"+SettingFeatureGroups.Name+"', '0'), "+
+		"($1, '"+SettingFeatureSpaceImages.Name+"', '0'), "+
 		"($1, '"+SettingFeatureKioskMode.Name+"', '0'), "+
 		"($1, '"+SettingKioskModeEnabled.Name+"', '0'), "+
 		"($1, '"+SettingFeaturePublicBooking.Name+"', '0'), "+

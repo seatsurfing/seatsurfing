@@ -684,6 +684,9 @@
   "defaultTimeFormat": "Default time format",
   "timeFormat12h": "12-hour",
   "timeFormat24h": "24-hour",
+  "imageInvalidFormat": "Please upload a PNG or JPEG image.",
+  "imageTooLarge": "The image is too large (max. 5 MB).",
+  "image": "Photo",
   "disallowed": "disallowed",
   "errorMapFileTooLarge": "The file must not be larger than 5 MB.",
   "mapFileHint": "PNG, JPEG, GIF or SVG, max. 5 MB"

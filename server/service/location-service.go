@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"image"
 	"slices"
 	"strconv"
 	"strings"
@@ -14,10 +13,6 @@ import (
 	"time"
 
 	"github.com/rustyoz/svg"
-
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
@@ -43,52 +38,58 @@ const (
 	MaxLocationMapDimension = 10000
 )
 
+var locationMapLimits = ImageLimits{
+	MaxBytes:     MaxLocationMapSize,
+	MaxDimension: MaxLocationMapDimension,
+	Formats:      []string{"png", "jpeg", "gif"},
+}
+
+var (
+	ErrLocationMapTooLarge = errors.New("location map too large")
+	ErrLocationMapInvalid  = errors.New("invalid location map")
+)
+
 // ParseLocationMap validates an uploaded floor plan (PNG, JPEG, GIF or SVG)
 // and returns it with its format and pixel dimensions.
 func (s *LocationService) ParseLocationMap(data []byte) (*LocationMap, error) {
-	if len(data) > MaxLocationMapSize {
-		return nil, errors.New("location map too large")
+	info, err := DecodeImageConfig(data, locationMapLimits)
+	if errors.Is(err, ErrImageTooLarge) {
+		return nil, ErrLocationMapTooLarge
 	}
-	width, height, format, err := s.decodeLocationMapConfig(data)
 	if err != nil {
-		return nil, err
-	}
-	if width < 1 || height < 1 || width > MaxLocationMapDimension || height > MaxLocationMapDimension {
-		return nil, errors.New("invalid location map dimensions")
+		if !s.hasSvgRootElement(data) {
+			return nil, ErrLocationMapInvalid
+		}
+		if info, err = s.decodeSvgConfig(data); err != nil {
+			return nil, ErrLocationMapInvalid
+		}
 	}
 	return &LocationMap{
-		Width:    uint(width),
-		Height:   uint(height),
-		MimeType: format,
+		Width:    info.Width,
+		Height:   info.Height,
+		MimeType: info.Format,
 		Scale:    1.0,
 		Data:     data,
 	}, nil
 }
 
-func (s *LocationService) decodeLocationMapConfig(data []byte) (float64, float64, string, error) {
-	img, format, err := image.DecodeConfig(bytes.NewReader(data))
-	if err == nil {
-		if !slices.Contains([]string{"png", "jpeg", "gif"}, format) {
-			return 0, 0, "", errors.New("unsupported image format: " + format)
-		}
-		return float64(img.Width), float64(img.Height), format, nil
-	}
-	if !s.hasSvgRootElement(data) {
-		return 0, 0, "", errors.New("root element is not svg")
-	}
+func (s *LocationService) decodeSvgConfig(data []byte) (*ImageInfo, error) {
 	parsedSvg, err := svg.ParseSvg(string(data), "", 1.0)
 	if err != nil {
-		return 0, 0, "", err
+		return nil, err
 	}
 	width, err := CSSDimensionsToPixels(parsedSvg.Width)
 	if err != nil {
-		return 0, 0, "", err
+		return nil, err
 	}
 	height, err := CSSDimensionsToPixels(parsedSvg.Height)
 	if err != nil {
-		return 0, 0, "", err
+		return nil, err
 	}
-	return width, height, "svg+xml", nil
+	if width < 1 || height < 1 || width > MaxLocationMapDimension || height > MaxLocationMapDimension {
+		return nil, errors.New("invalid svg dimensions")
+	}
+	return &ImageInfo{Width: uint(width), Height: uint(height), Format: "svg+xml"}, nil
 }
 
 func (s *LocationService) hasSvgRootElement(data []byte) bool {

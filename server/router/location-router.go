@@ -578,7 +578,7 @@ func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
-	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, service.MaxLocationMapSize))
+	data, err := io.ReadAll(io.LimitReader(r.Body, service.MaxLocationMapSize+1))
 	if err != nil {
 		log.Println(err)
 		SendBadRequest(w)
