@@ -1680,22 +1680,23 @@ class EditLocation extends React.Component<Props, State> {
                 {this.props.t("image")}
               </Form.Label>
               <Col sm="8">
-                {this.getSelectedSpace() && (
-                  <SpaceImageEditor
-                    key={this.state.selectedSpace}
-                    locationId={this.entity.id}
-                    spaceId={this.getSelectedSpace()!.id}
-                    hasImage={this.getSelectedSpace()!.hasImage}
-                    pendingImage={this.getSelectedSpace()!.pendingImage}
-                    removeImage={this.getSelectedSpace()!.removeImage}
-                    onSelect={(file: File) =>
-                      this.setSpaceImage(this.state.selectedSpace!, file)
-                    }
-                    onRemove={() =>
-                      this.setSpaceImage(this.state.selectedSpace!, null)
-                    }
-                  />
-                )}
+                {RuntimeConfig.INFOS.featureSpaceImages &&
+                  this.getSelectedSpace() && (
+                    <SpaceImageEditor
+                      key={this.state.selectedSpace}
+                      locationId={this.entity.id}
+                      spaceId={this.getSelectedSpace()!.id}
+                      hasImage={this.getSelectedSpace()!.hasImage}
+                      pendingImage={this.getSelectedSpace()!.pendingImage}
+                      removeImage={this.getSelectedSpace()!.removeImage}
+                      onSelect={(file: File) =>
+                        this.setSpaceImage(this.state.selectedSpace!, file)
+                      }
+                      onRemove={() =>
+                        this.setSpaceImage(this.state.selectedSpace!, null)
+                      }
+                    />
+                  )}
               </Col>
             </Form.Group>
           </Form>
