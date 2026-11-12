@@ -249,7 +249,7 @@ All configuration is via environment variables, read once at startup in `config/
 - `getEnvInt(key string, defaultValue int) int`
 - `getEnvBool(key string, defaultValue bool) bool`
 
-New opt-in behaviors are added as **feature flags**, not one-off boolean env vars. Add the name to `validFeatureFlags` in `config/config.go`, gate the derived `Config` field with `slices.Contains(c.FeatureFlags, "YOUR_FLAG")`, and read it from the single `FEATURE_FLAGS` env var (comma-separated, e.g. `FEATURE_FLAGS=ALLOW_ORG_DELETE,DOMAIN_VERIFICATION`). Unknown flags log a warning and are ignored rather than failing startup. If replacing an existing single-purpose env var, keep it working with a deprecation warning (see `ALLOW_ORG_DELETE` handling) instead of a breaking change.
+New opt-in behaviors are added as **feature flags**, not one-off boolean env vars. Add the name to `validFeatureFlags` in `config/config.go`, gate the derived `Config` field with `slices.Contains(c.FeatureFlags, "YOUR_FLAG")`, and read it from the single `FEATURE_FLAGS` env var (comma-separated, e.g. `FEATURE_FLAGS=ALLOW_ORG_DELETE,DOMAIN_VERIFICATION`). Unknown flags log a warning and are ignored rather than failing startup. If replacing an existing single-purpose env var, keep it working with a deprecation warning instead of a breaking change. Security-relevant protections are on by default; the flag opts _out_ of them (e.g. `ALLOW_PRIVATE_OUTBOUND`), never in.
 
 ### Encryption & Security
 
