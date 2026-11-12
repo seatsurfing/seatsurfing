@@ -429,7 +429,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.CalDavID = e.CalDavID
 	eNew.UserID = e.UserID
 	eNew.PublicID = e.PublicID
-	eNew.Approved = e.Approved
+	eNew.Approved = service.GetBookingService().ApprovedAfterUpdate(location.OrganizationID, &e.Booking, space, eNew.Enter, eNew.Leave)
 	if m.UserEmail != "" {
 		if !HasPermission(requestUser, location.OrganizationID, PermissionBookings, PermissionLevelAdmin) {
 			SendForbidden(w)
@@ -483,7 +483,7 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	go router.onBookingUpdated(eNew)
+	go router.onBookingUpdated(eNew, e.Approved)
 	SendUpdated(w)
 }
 
@@ -982,7 +982,18 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	}
 }
 
-func (router *BookingRouter) onBookingUpdated(e *Booking) {
+func (router *BookingRouter) onBookingUpdated(e *Booking, wasApproved bool) {
+	if !e.Approved {
+		if wasApproved {
+			router.onBookingDeleted(e, false)
+		}
+		router.sendApprovalRequestNotifications(e)
+		return
+	}
+	if !wasApproved {
+		router.onBookingCreated(e)
+		return
+	}
 	router.updateCalDavEvent(e)
 	for _, plg := range GetPlugins() {
 		plg.OnBookingUpdated(e.ID)

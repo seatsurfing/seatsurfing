@@ -3614,3 +3614,87 @@ func TestBookingsPendingApprovalsByLevel(t *testing.T) {
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
 }
+
+func setupBookingUpdateApprovalTest(t *testing.T) (*User, *Space, *Space) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	location, freeSpace := CreateTestLocationAndSpace(org)
+	approvalSpace := &Space{Name: "Approval", LocationID: location.ID, Enabled: true}
+	if err := GetSpaceRepository().Create(approvalSpace); err != nil {
+		t.Fatal(err)
+	}
+	group := CreateTestGroup(org, CreateTestUserInOrg(org))
+	if err := GetSpaceRepository().AddApprovers(approvalSpace, []string{group.ID}); err != nil {
+		t.Fatal(err)
+	}
+	return user, freeSpace, approvalSpace
+}
+
+func createAndUpdateTestBooking(t *testing.T, user *User, spaceID, newSpaceID, newDay string) string {
+	payload := `{"spaceId": "` + spaceID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	res := ExecuteTestRequest(NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	payload = `{"spaceId": "` + newSpaceID + `", "enter": "2030-09-` + newDay + `T08:30:00Z", "leave": "2030-09-` + newDay + `T17:00:00Z"}`
+	res = ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+id, user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	return id
+}
+
+func TestBookingsUpdateIntoApprovalSpaceResetsApproval(t *testing.T) {
+	user, freeSpace, approvalSpace := setupBookingUpdateApprovalTest(t)
+	id := createAndUpdateTestBooking(t, user, freeSpace.ID, approvalSpace.ID, "01")
+	e, _ := GetBookingRepository().GetOne(id)
+	CheckTestBool(t, false, e.Approved)
+}
+
+func TestBookingsUpdateTimeInApprovalSpaceResetsApproval(t *testing.T) {
+	user, _, approvalSpace := setupBookingUpdateApprovalTest(t)
+	payload := `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	res := ExecuteTestRequest(NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	e, _ := GetBookingRepository().GetOne(id)
+	e.Approved = true
+	GetBookingRepository().Update(&e.Booking)
+
+	payload = `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-02T08:30:00Z", "leave": "2030-09-02T17:00:00Z"}`
+	res = ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+id, user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	e, _ = GetBookingRepository().GetOne(id)
+	CheckTestBool(t, false, e.Approved)
+}
+
+func TestBookingsUpdateUnchangedKeepsApproval(t *testing.T) {
+	user, _, approvalSpace := setupBookingUpdateApprovalTest(t)
+	payload := `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	res := ExecuteTestRequest(NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	e, _ := GetBookingRepository().GetOne(id)
+	e.Approved = true
+	GetBookingRepository().Update(&e.Booking)
+
+	payload = `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "subject": "Changed"}`
+	res = ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+id, user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	e, _ = GetBookingRepository().GetOne(id)
+	CheckTestBool(t, true, e.Approved)
+}
+
+func TestBookingsUpdateOutOfApprovalSpaceApproves(t *testing.T) {
+	user, freeSpace, approvalSpace := setupBookingUpdateApprovalTest(t)
+	id := createAndUpdateTestBooking(t, user, approvalSpace.ID, freeSpace.ID, "01")
+	e, _ := GetBookingRepository().GetOne(id)
+	CheckTestBool(t, true, e.Approved)
+}
+
+func TestBookingsUpdateWithinFreeSpaceStaysApproved(t *testing.T) {
+	user, freeSpace, _ := setupBookingUpdateApprovalTest(t)
+	id := createAndUpdateTestBooking(t, user, freeSpace.ID, freeSpace.ID, "02")
+	e, _ := GetBookingRepository().GetOne(id)
+	CheckTestBool(t, true, e.Approved)
+}

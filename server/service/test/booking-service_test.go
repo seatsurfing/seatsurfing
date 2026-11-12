@@ -350,3 +350,27 @@ func TestBookingServiceGetFiltered(t *testing.T) {
 		t.Fatalf("expected forbidden, got %v", bErr)
 	}
 }
+
+func TestBookingServiceApprovedAfterUpdate(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	approvalSpace := &Space{Name: "Approval", LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(approvalSpace)
+	group := CreateTestGroup(org, user)
+	GetSpaceRepository().AddApprovers(approvalSpace, []string{group.ID})
+	enter, leave := serviceTestSlot(0, 8, 17)
+	enter2, leave2 := serviceTestSlot(1, 8, 17)
+	svc := GetBookingService()
+
+	approved := &Booking{SpaceID: space.ID, Enter: enter, Leave: leave, Approved: true}
+	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, approved, space, enter2, leave2))
+	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, approved, approvalSpace, enter, leave))
+
+	approvedInApproval := &Booking{SpaceID: approvalSpace.ID, Enter: enter, Leave: leave, Approved: true}
+	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, approvedInApproval, approvalSpace, enter, leave))
+	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, approvedInApproval, approvalSpace, enter2, leave2))
+
+	pending := &Booking{SpaceID: approvalSpace.ID, Enter: enter, Leave: leave, Approved: false}
+	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, pending, approvalSpace, enter, leave))
+	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, pending, space, enter, leave))
+}

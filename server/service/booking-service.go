@@ -267,6 +267,15 @@ func (s *BookingService) CommitCreate(requestUser *User, p *PreparedBooking) *Bo
 	return nil
 }
 
+// ApprovedAfterUpdate returns the approval state of booking old after moving
+// it to space, enter and leave: kept if unchanged, otherwise re-evaluated.
+func (s *BookingService) ApprovedAfterUpdate(orgID string, old *Booking, space *Space, enter, leave time.Time) bool {
+	if old.SpaceID == space.ID && SameWallClock(old.Enter, enter) && SameWallClock(old.Leave, leave) {
+		return old.Approved
+	}
+	return !GetSpaceService().RequiresApproval(orgID, space)
+}
+
 // GetUpcomingBookingsForUser returns the user's own bookings that have not
 // ended yet, judged by the wall-clock time at each booking's location.
 func (s *BookingService) GetUpcomingBookingsForUser(user *User) ([]*BookingDetails, error) {
