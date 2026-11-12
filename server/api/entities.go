@@ -266,6 +266,8 @@ type AuthStateLoginPayload struct {
 	UserID    string `json:"userId"`
 	LoginType string `json:"type"`
 	Redirect  string `json:"redirect,omitempty"`
+	// PKCEVerifier is encrypted at rest and only used for the code exchange.
+	PKCEVerifier string `json:"pkceVerifier,omitempty"`
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────
