@@ -1356,6 +1356,9 @@ func (router *AuthRouter) CreateAccessToken(claims *Claims, options ...CreateAcc
 		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
 	}
 	if !slices.Contains(options, WithoutExpiry) {
+		if AccesstokenLifetime <= 0 {
+			AccesstokenLifetime = time.Minute * 15 // default to 15 minutes if not set
+		}
 		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(AccesstokenLifetime))
 	}
 	if !slices.Contains(options, WithoutNotBefore) {
