@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.141.0](https://github.com/seatsurfing/seatsurfing/compare/v1.140.1...v1.141.0) (2026-11-11)
+
+
+### ✨ Features
+
+* **main:** add org setting "default booking view" ([#2850](https://github.com/seatsurfing/seatsurfing/issues/2850)) ([6143dd6](https://github.com/seatsurfing/seatsurfing/commit/6143dd6e09e371ea9f751f31e4d86f10bec2d869))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `075a33d` to `ca90dc2` ([#2869](https://github.com/seatsurfing/seatsurfing/issues/2869)) ([a8eb28d](https://github.com/seatsurfing/seatsurfing/commit/a8eb28d22dcce6940c39e62ff5e5e6ff2c4bfbcf))
+* **deps:** bump moment-timezone from 0.6.5 to 0.6.6 in /ui in the production-dependencies group across 1 directory ([#2864](https://github.com/seatsurfing/seatsurfing/issues/2864)) ([9704628](https://github.com/seatsurfing/seatsurfing/commit/970462843922d930bd7c26ecf21c0499c0f1c432))
+* **deps:** bump next from 16.4.3 to 16.4.4 in /ui in the production-dependencies group across 1 directory ([#2870](https://github.com/seatsurfing/seatsurfing/issues/2870)) ([517e50a](https://github.com/seatsurfing/seatsurfing/commit/517e50af7bf594d00eb86fd3370e605489a0685d))
+* **deps:** bump next from 16.4.4 to 16.4.5 in /ui in the production-dependencies group across 1 directory ([#2873](https://github.com/seatsurfing/seatsurfing/issues/2873)) ([5e6960d](https://github.com/seatsurfing/seatsurfing/commit/5e6960de25d32370bf0d9ca7673f74b16073fd8d))
+* **deps:** bump react-bootstrap-typeahead from 6.4.1 to 6.4.2 in /ui in the production-dependencies group across 1 directory ([#2875](https://github.com/seatsurfing/seatsurfing/issues/2875)) ([7a00f9f](https://github.com/seatsurfing/seatsurfing/commit/7a00f9f79f2e4e684808340051e69b6522414260))
+* **main:** fix "roles" translation in DE and add month name translation in calendar view ([#2862](https://github.com/seatsurfing/seatsurfing/issues/2862)) ([53937fc](https://github.com/seatsurfing/seatsurfing/commit/53937fca89b1570e78d619ab76d4186cf181dacc))
+
 ## [1.140.1](https://github.com/seatsurfing/seatsurfing/compare/v1.140.0...v1.140.1) (2026-11-03)
 
 
