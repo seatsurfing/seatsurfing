@@ -7,6 +7,17 @@ export default class BrowserUtil {
   static LOCAL_STORAGE_KEY_DISMISSED_ANNOUNCEMENT_PREFIX =
     "dismissedAnnouncement-";
 
+  static trySessionStorageSetItem(key: string, value: string): boolean {
+    if (typeof window === "undefined" || window.sessionStorage === undefined)
+      return false;
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch {
+      return false;
+    }
+    return true;
+  }
+
   static tryLocalStorageSetItem(key: string, value: string): boolean {
     if (typeof window === "undefined" || window.localStorage === undefined)
       return false;
@@ -16,6 +27,15 @@ export default class BrowserUtil {
       return false;
     }
     return true;
+  }
+
+  static trySessionStorageGetItem(key: string, defaultValue: any): any {
+    if (typeof window === "undefined" || window.sessionStorage === undefined)
+      return defaultValue;
+    try {
+      return window.sessionStorage.getItem(key) ?? defaultValue;
+    } catch {}
+    return defaultValue;
   }
 
   static tryLocalStorageGetItem(key: string, defaultValue: any): any {
