@@ -141,6 +141,11 @@ export default class Ajax {
       return new Promise<void>(function (resolve, reject) {
         // Once it's our turn, check if we really need to refresh the token
         const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
+        if (!credentials.accessToken) {
+          release();
+          resolve();
+          return;
+        }
         if (
           !force &&
           new Date().getTime() < credentials.accessTokenExpiry.getTime()
