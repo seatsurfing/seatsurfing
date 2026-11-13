@@ -54,7 +54,7 @@ func GetRefreshTokenService() *RefreshTokenService {
 func (s *RefreshTokenService) Issue(userID, sessionID string) (*RefreshToken, error) {
 	// If the ExpiryTime of the Refreshtoken is shorter or equal then one of the Accesstoken (expires within 15 Minutes) no Refreshtoken will be issued.
 	// As this is expected behaviour the also wont be any errors. The Admin is warned while reading in the config.
-	if RefreshTokenLifetime <= 15*time.Minute {
+	if RefreshTokenLifetime <= config.AccesstokenLifetime {
 		return nil, ErrRefreshTokenLifetimeTooShort
 	}
 	// Timestamps are stored in timezone-less columns and read back as UTC, so
