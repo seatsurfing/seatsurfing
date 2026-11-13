@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
+	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 )
 
-// RefreshTokenLifetime is how long an issued refresh token stays valid.
-const RefreshTokenLifetime = 28 * 24 * time.Hour
+// RefreshTokenLifetime is how long an issued refresh token stays valid. Default is 28 days.
+var config = GetConfig()
+
+var RefreshTokenLifetime = config.RefreshTokenLifetime
 
 // RefreshTokenReuseGracePeriod is the time after rotation during which a
 // replay of the same refresh token is merely rejected. This absorbs benign
@@ -30,6 +32,9 @@ var (
 	// ErrRefreshTokenReused is returned if a rotated token is presented again
 	// after the grace period. The session has been revoked.
 	ErrRefreshTokenReused = errors.New("refresh token reuse detected")
+	//after checking, for the lifetime of the refresh token to be issued against the lifetime of the accestoken, the lifetime of the refresh token to be issued is not sufficent
+	//The session is left untouched
+	ErrRefreshTokenLifetimeTooShort = errors.New("refresh token lifetime shorter than access token lifetime. refresh token wont be issued")
 )
 
 // RefreshTokenService holds the refresh token rotation logic.
@@ -47,6 +52,11 @@ func GetRefreshTokenService() *RefreshTokenService {
 
 // Issue creates a new refresh token for the given user and session.
 func (s *RefreshTokenService) Issue(userID, sessionID string) (*RefreshToken, error) {
+	// If the ExpiryTime of the Refreshtoken is shorter or equal then one of the Accesstoken (expires within 15 Minutes) no Refreshtoken will be issued.
+	// As this is expected behaviour the also wont be any errors. The Admin is warned while reading in the config.
+	if RefreshTokenLifetime <= config.AccesstokenLifetime {
+		return nil, ErrRefreshTokenLifetimeTooShort
+	}
 	// Timestamps are stored in timezone-less columns and read back as UTC, so
 	// always write UTC to keep elapsed-time comparisons correct.
 	now := time.Now().UTC()

@@ -25,11 +25,14 @@ import (
 	"golang.org/x/oauth2"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
+	"github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
+
+var AccesstokenLifetime = config.GetConfig().AccesstokenLifetime
 
 // How long a consumed auth state stays valid to tolerate duplicate verification requests
 const authStateVerifyGraceWindow = 30 * time.Second
@@ -1353,7 +1356,10 @@ func (router *AuthRouter) CreateAccessToken(claims *Claims, options ...CreateAcc
 		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
 	}
 	if !slices.Contains(options, WithoutExpiry) {
-		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(15 * time.Minute))
+		if AccesstokenLifetime <= 0 {
+			AccesstokenLifetime = time.Minute * 15 // default to 15 minutes if not set
+		}
+		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(AccesstokenLifetime))
 	}
 	if !slices.Contains(options, WithoutNotBefore) {
 		claims.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now())
@@ -1443,9 +1449,14 @@ func (router *AuthRouter) createAndSendJWT(w http.ResponseWriter, r *http.Reques
 	accessToken := router.CreateAccessToken(claims)
 	refreshToken, err := router.createRefreshToken(claims)
 	if err != nil {
-		log.Println("Error: Failed to create refresh token during " + authMethod + ": " + err.Error())
-		SendInternalServerError(w)
-		return
+		//Allow for non-critical failure of refresh token creation, when refreshtoken lifetime wont exceed the access token lifetime as this is not essential for the login flow to succeed. Log the error and continue.
+		if err == service.ErrRefreshTokenLifetimeTooShort {
+			log.Println("Warning: Failed to create refresh token during " + authMethod + ": " + err.Error())
+		} else {
+			log.Println("Error: Failed to create refresh token during " + authMethod + ": " + err.Error())
+			SendInternalServerError(w)
+			return
+		}
 	}
 	res := &JWTResponse{
 		AccessToken:    accessToken,

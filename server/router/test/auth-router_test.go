@@ -19,6 +19,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/config"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
@@ -466,6 +467,35 @@ func TestTokenNoIssuer(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+token)
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusUnauthorized, res.Code)
+}
+
+func TestTokenLifetimeNotPositive(t *testing.T) {
+	ClearTestDB()
+	config := GetConfig()
+	originalAccessTokenLifetime := config.AccesstokenLifetime
+	originalConfigRefreshTokenLifetime := config.RefreshTokenLifetime
+	originalServiceRefreshTokenLifetime := service.RefreshTokenLifetime
+	defer func() {
+		config.AccesstokenLifetime = originalAccessTokenLifetime
+		config.RefreshTokenLifetime = originalConfigRefreshTokenLifetime
+		service.RefreshTokenLifetime = originalServiceRefreshTokenLifetime
+	}()
+
+	config.AccesstokenLifetime = -1 * time.Minute
+	config.RefreshTokenLifetime = 10 * time.Minute
+	service.RefreshTokenLifetime = config.RefreshTokenLifetime
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	router := &AuthRouter{}
+	session := router.CreateSession(nil, user)
+	claims := router.CreateClaims(user, session)
+	token := router.CreateAccessToken(claims)
+
+	req, _ := http.NewRequest("GET", "/user/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res := ExecuteTestRequest(req)
+	//Status OK Expected as The token is still valid even if the lifetime is negative, as it is defaulting to 15 Minutes in the code.
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
 }
 
 func TestTokenExpired(t *testing.T) {
