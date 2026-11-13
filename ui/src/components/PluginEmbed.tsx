@@ -148,7 +148,7 @@ export default class PluginEmbed extends React.Component<Props, State> {
       Ajax.onUnauthorized?.();
       return;
     }
-    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
     if (!credentials.accessToken) {
       Ajax.onUnauthorized?.();
       return;
@@ -192,7 +192,7 @@ export default class PluginEmbed extends React.Component<Props, State> {
     if (!el) {
       return;
     }
-    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
     (el as any).accessToken = credentials.accessToken;
     (el as any).backendUrl = Ajax.getBackendUrl();
     el.addEventListener("plugin-navigate", this.handleNavigate);
