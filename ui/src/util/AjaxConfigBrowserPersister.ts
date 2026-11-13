@@ -5,6 +5,7 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
   persistRefreshTokenInLocalStorage(refreshToken: string): void {
     try {
       window.localStorage.setItem("refreshToken", refreshToken);
+      window.sessionStorage.removeItem("refreshToken");
     } catch (e) {
       console.error("Failed to persist refresh token in localStorage:", e);
     }
@@ -23,28 +24,28 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
     return c;
   }
 
-  updateCredentialsLocalStorage(c: AjaxCredentials): void {
+  updateCredentialsSessionStorage(c: AjaxCredentials): void {
     try {
-      window.localStorage.setItem("accessToken", c.accessToken);
-      window.localStorage.setItem(
+      window.sessionStorage.setItem("accessToken", c.accessToken);
+      window.sessionStorage.setItem(
         "accessTokenExpiry",
         c.accessTokenExpiry.getTime().toString(),
       );
-      window.localStorage.setItem("logoutUrl", c.logoutUrl);
-      window.localStorage.setItem("profilePageUrl", c.profilePageUrl);
+      window.sessionStorage.setItem("logoutUrl", c.logoutUrl);
+      window.sessionStorage.setItem("profilePageUrl", c.profilePageUrl);
     } catch (e) {
-      console.error("Failed to update credentials in localStorage:", e);
+      console.error("Failed to update credentials in sessionStorage:", e);
     }
   }
 
-  readCredentialsFromLocalStorage(): AjaxCredentials {
+  readCredentialsFromSessionStorage(): AjaxCredentials {
     let c: AjaxCredentials = new AjaxCredentials();
     try {
-      const accessToken = window.localStorage.getItem("accessToken");
+      const accessToken = window.sessionStorage.getItem("accessToken");
       const accessTokenExpiry =
-        window.localStorage.getItem("accessTokenExpiry");
-      const logoutUrl = window.localStorage.getItem("logoutUrl");
-      const profilePageUrl = window.localStorage.getItem("profilePageUrl");
+        window.sessionStorage.getItem("accessTokenExpiry");
+      const logoutUrl = window.sessionStorage.getItem("logoutUrl");
+      const profilePageUrl = window.sessionStorage.getItem("profilePageUrl");
       if (accessToken && accessTokenExpiry) {
         c = {
           accessToken: accessToken,
@@ -54,20 +55,20 @@ export default class AjaxConfigBrowserPersister implements AjaxConfigPersister {
         };
       }
     } catch (e) {
-      console.error("Failed to read credentials from localStorage:", e);
+      console.error("Failed to read credentials from sessionStorage:", e);
     }
     return c;
   }
 
   deleteCredentialsFromStorage(): void {
     try {
-      window.localStorage.removeItem("accessToken");
-      window.localStorage.removeItem("accessTokenExpiry");
-      window.localStorage.removeItem("logoutUrl");
-      window.localStorage.removeItem("profilePageUrl");
+      window.sessionStorage.removeItem("accessToken");
+      window.sessionStorage.removeItem("accessTokenExpiry");
+      window.sessionStorage.removeItem("logoutUrl");
+      window.sessionStorage.removeItem("profilePageUrl");
       window.localStorage.removeItem("refreshToken");
     } catch (e) {
-      console.error("Failed to delete credentials from localStorage:", e);
+      console.error("Failed to delete credentials from Storage:", e);
     }
   }
 }
