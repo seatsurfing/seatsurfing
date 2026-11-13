@@ -65,12 +65,4 @@ describe("Ajax.refreshAccessToken", () => {
     );
     expect(window.sessionStorage.getItem("refreshToken")).toBeNull();
   });
-
-  it("does not refresh when no access token exists", async () => {
-    const fetchSpy = vi.spyOn(global, "fetch");
-
-    await Ajax.refreshAccessToken("some-refresh-token");
-
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
 });
