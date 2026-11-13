@@ -494,7 +494,7 @@
   "roleServiceAccountRO": "Service account (read-only)",
   "roleServiceAccountRW": "Service account (read/write)",
   "roleUser": "Benutzer",
-  "roles": "Roles",
+  "roles": "Rollen",
   "save": "Speichern",
   "saveAreaToGetLink": "Speichern, um den Link zu erhalten",
   "scale": "Skalierung",
@@ -689,5 +689,7 @@
   "bookerNamesShowWithBuddies": "Namen einblenden (Buddies aktiviert)",
   "bookerNamesShowWithoutBuddies": "Namen einblenden (Buddies deaktiviert)",
   "bookerNamesPrivacyHint": "Datenschutz beachten!",
+  "defaultBookingView": "Standard-Buchungsansicht",
+  "list": "Liste",
   "disallowed": "nicht erlaubt"
 }

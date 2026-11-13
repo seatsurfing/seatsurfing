@@ -63,6 +63,7 @@ interface RuntimeUserInfos {
   isPrimaryDomain: boolean;
   targetUtilizationHoursPerWeek: number;
   orgAnnouncement: string;
+  defaultBookingView: string;
 }
 
 export default class RuntimeConfig {
@@ -236,6 +237,7 @@ export default class RuntimeConfig {
       isPrimaryDomain: false,
       targetUtilizationHoursPerWeek: 0,
       orgAnnouncement: "",
+      defaultBookingView: "map",
     };
   };
 
@@ -337,6 +339,8 @@ export default class RuntimeConfig {
         RuntimeConfig.INFOS.disablePasswordLogin = s.value === "1";
       if (s.name === Organization.PREF_SUBJECT_DEFAULT)
         RuntimeConfig.INFOS.subjectDefault = window.parseInt(s.value);
+      if (s.name === Organization.PREF_DEFAULT_BOOKING_VIEW)
+        RuntimeConfig.INFOS.defaultBookingView = s.value;
       if (s.name === Organization.PREF_ENFORCE_TOTP) {
         const enforceTotpSetting = window.parseInt(s.value);
         RuntimeConfig.INFOS.enforceTOTP =
