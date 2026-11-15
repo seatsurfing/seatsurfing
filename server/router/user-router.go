@@ -18,6 +18,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -173,6 +174,9 @@ func (router *UserRouter) adminResetPasskeys(w http.ResponseWriter, r *http.Requ
 		SendForbidden(w)
 		return
 	}
+	if !router.checkCanManageUser(w, user, e) {
+		return
+	}
 	if err := GetPasskeyRepository().DeleteAllByUserID(e.ID); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -195,6 +199,9 @@ func (router *UserRouter) adminResetTotp(w http.ResponseWriter, r *http.Request)
 	}
 	if e.OrganizationID != user.OrganizationID {
 		SendForbidden(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	e.TotpSecret = NullString("")
@@ -412,6 +419,9 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 	if e.AccountType.IsServiceAccount() && user.ID != e.ID &&
 		!HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
@@ -647,6 +657,10 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !router.checkCanManageUser(w, user, e) {
+		return
+	}
+
 	// Some information cannot be changed on your own account.
 	if user.ID == e.ID {
 		m.AccountType = int(e.AccountType)
@@ -762,6 +776,9 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if e.AccountType.IsServiceAccount() && !HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	// Refuse before deleting rather than repairing afterwards: this is the
@@ -983,6 +1000,9 @@ func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Reques
 		SendBadRequest(w)
 		return
 	}
+	if !router.checkCanManageUser(w, user, e) {
+		return
+	}
 	rawBytes := make([]byte, 32)
 	if _, err := rand.Read(rawBytes); err != nil {
 		log.Println(err)
@@ -1021,6 +1041,9 @@ func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request)
 	}
 	if !e.AccountType.IsServiceAccount() {
 		SendBadRequest(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	if err := GetUserRepository().SetApiToken(e.ID, NullString("")); err != nil {
@@ -1063,6 +1086,9 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	e := router.loadUserInOwnOrg(w, r, user)
 	if e == nil {
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	var m SetUserRolesRequest
@@ -1125,7 +1151,7 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 			SendBadRequest(w)
 			return
 		}
-		if !CanGrantPermissions(user, user.OrganizationID, role.Permissions) {
+		if !service.CanGrantPermissions(user, user.OrganizationID, role.Permissions) {
 			SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 			return
 		}
@@ -1135,7 +1161,7 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		if !CanGrantPermissions(user, user.OrganizationID, full.Permissions) {
+		if !service.CanGrantPermissions(user, user.OrganizationID, full.Permissions) {
 			SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 			return
 		}
@@ -1184,6 +1210,17 @@ func (router *UserRouter) getPermissions(w http.ResponseWriter, r *http.Request)
 
 // loadUserInOwnOrg resolves the user named in the path, refusing anything
 // outside the caller's organization.
+// checkCanManageUser guards operations on another user's account: it writes
+// 400 and reports false when target holds access beyond the request user's
+// (see service.CanManageUser).
+func (router *UserRouter) checkCanManageUser(w http.ResponseWriter, user *User, target *User) bool {
+	if !service.CanManageUser(user, target) {
+		SendBadRequest(w)
+		return false
+	}
+	return true
+}
+
 func (router *UserRouter) loadUserInOwnOrg(w http.ResponseWriter, r *http.Request, requestUser *User) *User {
 	vars := mux.Vars(r)
 	e, err := GetUserRepository().GetOne(vars["id"])

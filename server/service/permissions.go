@@ -53,6 +53,41 @@ func CanAccessOrg(user *User, organizationID string) bool {
 	return user != nil && user.OrganizationID == organizationID
 }
 
+// CanGrantPermissions reports whether a user may hand out the given permission
+// set: nobody may grant a level above their own. This generalizes the rule
+// that already applied to the old role ladder, where a user could not raise
+// anyone above their own rank.
+func CanGrantPermissions(user *User, organizationID string, perms map[Permission]PermissionLevel) bool {
+	own := GetEffectivePermissions(user, organizationID)
+	for p, level := range perms {
+		if level <= PermissionLevelNone {
+			continue
+		}
+		if own[p] < level {
+			return false
+		}
+	}
+	return true
+}
+
+// CanManageUser reports whether actor may modify or delete target's account:
+// target must be in actor's organization and must not hold any permission at
+// a level above actor's own. Otherwise a delegated user administrator could
+// take over a more privileged account (e.g. by resetting its password or
+// second factor) and so gain access they could never be granted directly.
+//
+// Changes to one's own account are not judged here; the self-service rules
+// of the individual operations apply to those.
+func CanManageUser(actor *User, target *User) bool {
+	if actor == nil || target == nil || !CanAccessOrg(actor, target.OrganizationID) {
+		return false
+	}
+	if actor.ID == target.ID {
+		return true
+	}
+	return CanGrantPermissions(actor, target.OrganizationID, GetEffectivePermissions(target, target.OrganizationID))
+}
+
 // hasNoAdminRestrictions reports whether the organization lifts booking
 // restrictions for booking admins and user is one.
 func hasNoAdminRestrictions(user *User, organizationID string) bool {

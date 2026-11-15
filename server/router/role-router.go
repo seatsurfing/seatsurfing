@@ -8,6 +8,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	"github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -130,7 +131,7 @@ func (router *RoleRouter) create(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if !CanGrantPermissions(user, user.OrganizationID, perms) {
+	if !service.CanGrantPermissions(user, user.OrganizationID, perms) {
 		SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 		return
 	}
@@ -178,7 +179,7 @@ func (router *RoleRouter) update(w http.ResponseWriter, r *http.Request) {
 	// The caller must be able to grant both what the role is gaining and what
 	// it already carries, so that a limited administrator can not take over a
 	// more powerful role by editing its name.
-	if !CanGrantPermissions(user, user.OrganizationID, perms) || !CanGrantPermissions(user, user.OrganizationID, e.Permissions) {
+	if !service.CanGrantPermissions(user, user.OrganizationID, perms) || !service.CanGrantPermissions(user, user.OrganizationID, e.Permissions) {
 		SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 		return
 	}
@@ -215,7 +216,7 @@ func (router *RoleRouter) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := GetRequestUser(r)
-	if !CanGrantPermissions(user, user.OrganizationID, e.Permissions) {
+	if !service.CanGrantPermissions(user, user.OrganizationID, e.Permissions) {
 		SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 		return
 	}

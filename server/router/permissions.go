@@ -140,23 +140,6 @@ func CheckOrgRetainsAdmin(w http.ResponseWriter, organizationID string, excludeU
 	return true
 }
 
-// CanGrantPermissions reports whether a user may hand out the given permission
-// set: nobody may grant a level above their own. This generalizes the rule
-// that already applied to the old role ladder, where a user could not raise
-// anyone above their own rank.
-func CanGrantPermissions(user *User, organizationID string, perms map[Permission]PermissionLevel) bool {
-	own := GetEffectivePermissions(user, organizationID)
-	for p, level := range perms {
-		if level <= PermissionLevelNone {
-			continue
-		}
-		if own[p] < level {
-			return false
-		}
-	}
-	return true
-}
-
 // ResultingPermissions computes the access a user would end up with if their
 // manual role assignments were replaced by the given roles. Assignments from
 // other sources, such as an identity provider, are left in place and so are

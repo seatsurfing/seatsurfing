@@ -304,9 +304,7 @@ func TestLockoutDeletingLastAdminRefused(t *testing.T) {
 
 	// Only one left. Deleting yourself is already refused, so promote another
 	// user and have them try to delete the last remaining administrator.
-	other := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
-		PermissionUsers: PermissionLevelAdmin,
-	})
+	other := CreateTestUserWithPermissions(org, allTestPermissions())
 	otherLogin := LoginTestUser(other.ID)
 	req = NewHTTPRequest("DELETE", "/user/"+admin1.ID, otherLogin.UserID, nil)
 	res = ExecuteTestRequest(req)
