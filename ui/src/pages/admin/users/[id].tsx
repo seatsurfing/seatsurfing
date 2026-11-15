@@ -401,6 +401,8 @@ class EditUser extends React.Component<Props, State> {
       hint = <Alert variant="danger">{this.state.errorText}</Alert>;
     }
 
+    // Accounts holding access beyond the caller's own can only be viewed.
+    const readOnly = !!this.entity.id && !this.entity.canManage;
     const buttonDelete = (
       <Button
         className="btn-sm"
@@ -434,7 +436,13 @@ class EditUser extends React.Component<Props, State> {
       ) : (
         <></>
       );
-    if (this.entity.id) {
+    if (this.entity.id && readOnly) {
+      buttons = (
+        <>
+          {backButton} {buttonCalendar}
+        </>
+      );
+    } else if (this.entity.id) {
       buttons = (
         <>
           {backButton} {buttonCalendar} {buttonDelete} {buttonSave}
@@ -517,453 +525,468 @@ class EditUser extends React.Component<Props, State> {
               {this.props.t("selfEditRestrictedFields")}
             </Alert>
           )}
-          <Form.Group as={Row}>
-            <Form.Label htmlFor="accountType" column sm="2">
-              {this.props.t("accountType")}
-            </Form.Label>
-            <Col sm="4">{accountTypeSelect}</Col>
-          </Form.Group>
-          {RuntimeConfig.hasPermission(
-            Permission.Roles,
-            PermissionLevel.Read,
-          ) && (
-            <Form.Group as={Row}>
-              <Form.Label column sm="2">
-                {this.props.t("roles")}
-              </Form.Label>
-              <Col sm="4">
-                {this.roles.length === 0 && (
-                  <Form.Text className="text-muted">
-                    {this.props.t("noRolesDefined")}
-                  </Form.Text>
-                )}
-                {this.roles.map((role) => (
-                  <Form.Check
-                    key={role.id}
-                    type="checkbox"
-                    id={"role-" + role.id}
-                    label={
-                      <>
-                        {role.name}
-                        {role.system && (
-                          <span className="text-muted">
-                            {" "}
-                            ({this.props.t("systemRole")})
-                          </span>
-                        )}
-                      </>
-                    }
-                    checked={this.state.roleIds.includes(role.id)}
-                    disabled={
-                      isOwnUser ||
-                      !RuntimeConfig.hasPermission(
-                        Permission.Roles,
-                        PermissionLevel.Admin,
-                      )
-                    }
-                    onChange={(e: any) =>
-                      this.toggleRole(role.id, e.target.checked)
-                    }
-                  />
-                ))}
-              </Col>
-            </Form.Group>
+          {readOnly && (
+            <Alert variant="warning">
+              {this.props.t("userHigherPrivilegesReadOnly")}
+            </Alert>
           )}
-          {!this.isServiceAccount(this.state.accountType) && (
+          <fieldset disabled={readOnly}>
             <Form.Group as={Row}>
-              <Form.Label htmlFor="email" column sm="2">
-                {this.props.t("emailAddress")}
+              <Form.Label htmlFor="accountType" column sm="2">
+                {this.props.t("accountType")}
+              </Form.Label>
+              <Col sm="4">{accountTypeSelect}</Col>
+            </Form.Group>
+            {RuntimeConfig.hasPermission(
+              Permission.Roles,
+              PermissionLevel.Read,
+            ) && (
+              <Form.Group as={Row}>
+                <Form.Label column sm="2">
+                  {this.props.t("roles")}
+                </Form.Label>
+                <Col sm="4">
+                  {this.roles.length === 0 && (
+                    <Form.Text className="text-muted">
+                      {this.props.t("noRolesDefined")}
+                    </Form.Text>
+                  )}
+                  {this.roles.map((role) => (
+                    <Form.Check
+                      key={role.id}
+                      type="checkbox"
+                      id={"role-" + role.id}
+                      label={
+                        <>
+                          {role.name}
+                          {role.system && (
+                            <span className="text-muted">
+                              {" "}
+                              ({this.props.t("systemRole")})
+                            </span>
+                          )}
+                        </>
+                      }
+                      checked={this.state.roleIds.includes(role.id)}
+                      disabled={
+                        isOwnUser ||
+                        !RuntimeConfig.hasPermission(
+                          Permission.Roles,
+                          PermissionLevel.Admin,
+                        )
+                      }
+                      onChange={(e: any) =>
+                        this.toggleRole(role.id, e.target.checked)
+                      }
+                    />
+                  ))}
+                </Col>
+              </Form.Group>
+            )}
+            {!this.isServiceAccount(this.state.accountType) && (
+              <Form.Group as={Row}>
+                <Form.Label htmlFor="email" column sm="2">
+                  {this.props.t("emailAddress")}
+                </Form.Label>
+                <Col sm="4">
+                  <Form.Control
+                    id="email"
+                    type="email"
+                    placeholder="some@domain.com"
+                    value={this.state.email}
+                    onChange={(e: any) =>
+                      this.setState({ email: e.target.value })
+                    }
+                    required={true}
+                    pattern={Validation.EMAIL_PATTERN}
+                    readOnly={isOwnUser}
+                  />
+                </Col>
+              </Form.Group>
+            )}
+            <Form.Group as={Row}>
+              <Form.Label htmlFor="firstname" column sm="2">
+                {this.props.t("firstname")}
               </Form.Label>
               <Col sm="4">
                 <Form.Control
-                  id="email"
-                  type="email"
-                  placeholder="some@domain.com"
-                  value={this.state.email}
+                  id="firstname"
+                  type="text"
+                  placeholder=""
+                  value={this.state.firstname}
                   onChange={(e: any) =>
-                    this.setState({ email: e.target.value })
+                    this.setState({ firstname: e.target.value })
                   }
                   required={true}
-                  pattern={Validation.EMAIL_PATTERN}
-                  readOnly={isOwnUser}
+                  minLength={2}
+                  maxLength={64}
+                  pattern={Validation.HUMAN_NAME_PATTERN}
+                  title={this.props.t("nameRequirements")}
                 />
               </Col>
             </Form.Group>
-          )}
-          <Form.Group as={Row}>
-            <Form.Label htmlFor="firstname" column sm="2">
-              {this.props.t("firstname")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="firstname"
-                type="text"
-                placeholder=""
-                value={this.state.firstname}
-                onChange={(e: any) =>
-                  this.setState({ firstname: e.target.value })
-                }
-                required={true}
-                minLength={2}
-                maxLength={64}
-                pattern={Validation.HUMAN_NAME_PATTERN}
-                title={this.props.t("nameRequirements")}
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label htmlFor="lastname" column sm="2">
-              {this.props.t("lastname")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="lastname"
-                type="text"
-                placeholder=""
-                value={this.state.lastname}
-                onChange={(e: any) =>
-                  this.setState({ lastname: e.target.value })
-                }
-                required={true}
-                minLength={2}
-                maxLength={64}
-                pattern={Validation.HUMAN_NAME_PATTERN}
-                title={this.props.t("nameRequirements")}
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label htmlFor="username" column sm="2">
-              {this.props.t("username")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="username"
-                  type="text"
-                  readOnly={!this.isServiceAccount(this.state.accountType)}
-                  value={this.state.email}
-                  onChange={
-                    this.isServiceAccount(this.state.accountType)
-                      ? (e: any) => this.setState({ email: e.target.value })
-                      : undefined
-                  }
-                  required={this.isServiceAccount(this.state.accountType)}
-                />
-                <CopyToClipboardButton text={this.state.email} />
-              </InputGroup>
-            </Col>
-          </Form.Group>
-
-          {/* Auth method — read-only when editing your own account */}
-          <Form.Group
-            as={Row}
-            hidden={this.isServiceAccount(this.state.accountType) || !isOwnUser}
-          >
-            <Form.Label htmlFor="authMethod" column sm="2">
-              {this.props.t("authMethod")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="authMethod"
-                plaintext={true}
-                readOnly={true}
-                value={authMethodName}
-              />
-            </Col>
-          </Form.Group>
-
-          {/* Auth method selection for non-service accounts */}
-          <Form.Group
-            as={Row}
-            hidden={isOwnUser || this.isServiceAccount(this.state.accountType)}
-          >
-            <Form.Label
-              htmlFor={
-                RuntimeConfig.INFOS.disablePasswordLogin
-                  ? "auth-method-provider"
-                  : "auth-method-password"
-              }
-              column
-              sm="2"
-            >
-              {this.props.t("authMethod")}
-            </Form.Label>
-            <Col sm="4">
-              {RuntimeConfig.INFOS.disablePasswordLogin &&
-                this.authProviders.length === 0 && (
-                  <Alert variant="warning">
-                    {this.props.t("authProviderRequiredHint")}
-                  </Alert>
-                )}
-              {!RuntimeConfig.INFOS.disablePasswordLogin && (
-                <Form.Check
-                  type="radio"
-                  id="auth-method-password"
-                  name="authMethod"
-                  label={this.props.t("authMethodPassword")}
-                  checked={this.state.authMethod === User.AuthMethodPassword}
-                  onChange={() =>
-                    this.setState({ authMethod: User.AuthMethodPassword })
-                  }
-                />
-              )}
-              {this.authProviders.length > 0 && (
-                <Form.Check
-                  type="radio"
-                  id="auth-method-provider"
-                  name="authMethod"
-                  label={this.props.t("authMethodProvider")}
-                  checked={this.state.authMethod === User.AuthMethodProvider}
-                  onChange={() =>
-                    this.setState({ authMethod: User.AuthMethodProvider })
-                  }
-                />
-              )}
-              {!RuntimeConfig.INFOS.disablePasswordLogin && (
-                <Form.Check
-                  type="radio"
-                  id="auth-method-invitation"
-                  name="authMethod"
-                  label={this.props.t("authMethodInvitation")}
-                  checked={this.state.authMethod === User.AuthMethodInvitation}
-                  onChange={() =>
-                    this.setState({ authMethod: User.AuthMethodInvitation })
-                  }
-                />
-              )}
-            </Col>
-          </Form.Group>
-
-          {/* Auth provider selection */}
-          <Form.Group
-            as={Row}
-            hidden={
-              isOwnUser ||
-              this.isServiceAccount(this.state.accountType) ||
-              this.state.authMethod !== User.AuthMethodProvider
-            }
-          >
-            <Form.Label htmlFor="authProvider" column sm="2">
-              {this.props.t("chooseAuthProvider")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Select
-                id="authProvider"
-                value={this.state.authProviderId}
-                onChange={(e: any) =>
-                  this.setState({ authProviderId: e.target.value })
-                }
-                required={this.state.authMethod === User.AuthMethodProvider}
-              >
-                <option value="">{this.props.t("pleaseSelect")}</option>
-                {this.authProviders.map((provider) => (
-                  <option key={provider.id} value={provider.id}>
-                    {provider.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Col>
-          </Form.Group>
-
-          {/* Password change checkbox for existing users */}
-          <Form.Group
-            as={Row}
-            hidden={
-              this.isServiceAccount(this.state.accountType) ||
-              !this.entity.id ||
-              this.state.authMethod !== User.AuthMethodPassword ||
-              RuntimeConfig.INFOS.disablePasswordLogin
-            }
-          >
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-changePassword"
-                label={this.props.t("passwordChange")}
-                checked={this.state.changePassword}
-                onChange={(e: any) =>
-                  this.setState({ changePassword: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-
-          {/* Resend invitation checkbox for existing users with invitation auth method */}
-          <Form.Group
-            as={Row}
-            hidden={
-              isOwnUser ||
-              this.isServiceAccount(this.state.accountType) ||
-              !this.entity.id ||
-              this.state.authMethod !== User.AuthMethodInvitation ||
-              RuntimeConfig.INFOS.disablePasswordLogin
-            }
-          >
-            <Col sm="6">
-              <Form.Check
-                type="checkbox"
-                id="check-resendInvitation"
-                label={this.props.t("resendInvitation")}
-                checked={this.state.resendInvitation}
-                onChange={(e: any) =>
-                  this.setState({ resendInvitation: e.target.checked })
-                }
-              />
-            </Col>
-          </Form.Group>
-
-          {/* Password field */}
-          <Form.Group as={Row} hidden={passwordFieldHidden}>
-            <Form.Label htmlFor="password" column sm="2">
-              {this.props.t("password")}
-            </Form.Label>
-            <Col sm="4">
-              <InputGroup>
-                <Form.Control
-                  id="password"
-                  type={
-                    this.isServiceAccount(this.state.accountType)
-                      ? "text"
-                      : "password"
-                  }
-                  value={this.state.password}
-                  onChange={(e: any) =>
-                    this.setState({ password: e.target.value })
-                  }
-                  required={
-                    !!(
-                      this.isServiceAccount(this.state.accountType) ||
-                      (!this.entity.id &&
-                        this.state.authMethod === User.AuthMethodPassword) ||
-                      (this.entity.id &&
-                        this.state.changePassword &&
-                        this.state.authMethod === User.AuthMethodPassword)
-                    )
-                  }
-                  disabled={
-                    passwordFieldHidden || // disable field to not trigger validation
-                    (!this.isServiceAccount(this.state.accountType) &&
-                      this.entity.id &&
-                      !this.state.changePassword) ||
-                    this.isServiceAccount(this.state.accountType)
-                  }
-                  minLength={
-                    this.isServiceAccount(this.state.accountType)
-                      ? Validation.PASSWORD_MIN_LENGTH_SA
-                      : Validation.PASSWORD_MIN_LENGTH
-                  }
-                  pattern={Validation.PASSWORD_PATTERN}
-                  title={this.props.t("passwordRequirements")}
-                />
-                <Button
-                  onClick={() => this.generatePassword()}
-                  hidden={!this.isServiceAccount(this.state.accountType)}
-                  variant="outline-secondary"
-                >
-                  <IconRefresh className="feather" />
-                </Button>
-                <CopyToClipboardButton
-                  text={this.state.password}
-                  hidden={!this.isServiceAccount(this.state.accountType)}
-                />
-              </InputGroup>
-            </Col>
-          </Form.Group>
-
-          {/* Last activity — only shown for existing users */}
-          <Form.Group as={Row} hidden={!this.entity.id}>
-            <Form.Label htmlFor="lastActivity" column sm="2">
-              {this.props.t("lastActivity")}
-            </Form.Label>
-            <Col sm="4">
-              <Form.Control
-                id="lastActivity"
-                plaintext={true}
-                readOnly={true}
-                value={
-                  this.state.lastActivity
-                    ? Formatting.getFormatterShort(true).format(
-                        this.state.lastActivity,
-                      )
-                    : "-"
-                }
-              />
-            </Col>
-          </Form.Group>
-
-          {/* Second factor reset — only shown for existing non-service-account users */}
-          <Form.Group
-            as={Row}
-            hidden={
-              !this.entity.id ||
-              this.isServiceAccount(this.state.accountType) ||
-              (!this.state.hasPasskeys && !this.state.totpEnabled)
-            }
-          >
-            <Form.Label column sm="2">
-              {this.props.t("secondFactor")}
-            </Form.Label>
-            <Col sm="4" className="d-flex gap-2 align-items-center">
-              {this.state.hasPasskeys && (
-                <Button
-                  className="btn-sm"
-                  variant="outline-danger"
-                  onClick={this.resetPasskeys}
-                >
-                  <IconReset className="feather" />{" "}
-                  {this.props.t("resetPasskeys")}
-                </Button>
-              )}
-              {this.state.totpEnabled && (
-                <Button
-                  className="btn-sm"
-                  variant="outline-danger"
-                  onClick={this.resetTotp}
-                >
-                  <IconReset className="feather" /> {this.props.t("resetTotp")}
-                </Button>
-              )}
-            </Col>
-          </Form.Group>
-
-          {/* API Token section — only shown for existing service accounts */}
-          {this.entity.id && this.isServiceAccount(this.state.accountType) && (
             <Form.Group as={Row}>
+              <Form.Label htmlFor="lastname" column sm="2">
+                {this.props.t("lastname")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Control
+                  id="lastname"
+                  type="text"
+                  placeholder=""
+                  value={this.state.lastname}
+                  onChange={(e: any) =>
+                    this.setState({ lastname: e.target.value })
+                  }
+                  required={true}
+                  minLength={2}
+                  maxLength={64}
+                  pattern={Validation.HUMAN_NAME_PATTERN}
+                  title={this.props.t("nameRequirements")}
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label htmlFor="username" column sm="2">
+                {this.props.t("username")}
+              </Form.Label>
+              <Col sm="4">
+                <InputGroup>
+                  <Form.Control
+                    id="username"
+                    type="text"
+                    readOnly={!this.isServiceAccount(this.state.accountType)}
+                    value={this.state.email}
+                    onChange={
+                      this.isServiceAccount(this.state.accountType)
+                        ? (e: any) => this.setState({ email: e.target.value })
+                        : undefined
+                    }
+                    required={this.isServiceAccount(this.state.accountType)}
+                  />
+                  <CopyToClipboardButton text={this.state.email} />
+                </InputGroup>
+              </Col>
+            </Form.Group>
+
+            {/* Auth method — read-only when editing your own account */}
+            <Form.Group
+              as={Row}
+              hidden={
+                this.isServiceAccount(this.state.accountType) || !isOwnUser
+              }
+            >
+              <Form.Label htmlFor="authMethod" column sm="2">
+                {this.props.t("authMethod")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Control
+                  id="authMethod"
+                  plaintext={true}
+                  readOnly={true}
+                  value={authMethodName}
+                />
+              </Col>
+            </Form.Group>
+
+            {/* Auth method selection for non-service accounts */}
+            <Form.Group
+              as={Row}
+              hidden={
+                isOwnUser || this.isServiceAccount(this.state.accountType)
+              }
+            >
+              <Form.Label
+                htmlFor={
+                  RuntimeConfig.INFOS.disablePasswordLogin
+                    ? "auth-method-provider"
+                    : "auth-method-password"
+                }
+                column
+                sm="2"
+              >
+                {this.props.t("authMethod")}
+              </Form.Label>
+              <Col sm="4">
+                {RuntimeConfig.INFOS.disablePasswordLogin &&
+                  this.authProviders.length === 0 && (
+                    <Alert variant="warning">
+                      {this.props.t("authProviderRequiredHint")}
+                    </Alert>
+                  )}
+                {!RuntimeConfig.INFOS.disablePasswordLogin && (
+                  <Form.Check
+                    type="radio"
+                    id="auth-method-password"
+                    name="authMethod"
+                    label={this.props.t("authMethodPassword")}
+                    checked={this.state.authMethod === User.AuthMethodPassword}
+                    onChange={() =>
+                      this.setState({ authMethod: User.AuthMethodPassword })
+                    }
+                  />
+                )}
+                {this.authProviders.length > 0 && (
+                  <Form.Check
+                    type="radio"
+                    id="auth-method-provider"
+                    name="authMethod"
+                    label={this.props.t("authMethodProvider")}
+                    checked={this.state.authMethod === User.AuthMethodProvider}
+                    onChange={() =>
+                      this.setState({ authMethod: User.AuthMethodProvider })
+                    }
+                  />
+                )}
+                {!RuntimeConfig.INFOS.disablePasswordLogin && (
+                  <Form.Check
+                    type="radio"
+                    id="auth-method-invitation"
+                    name="authMethod"
+                    label={this.props.t("authMethodInvitation")}
+                    checked={
+                      this.state.authMethod === User.AuthMethodInvitation
+                    }
+                    onChange={() =>
+                      this.setState({ authMethod: User.AuthMethodInvitation })
+                    }
+                  />
+                )}
+              </Col>
+            </Form.Group>
+
+            {/* Auth provider selection */}
+            <Form.Group
+              as={Row}
+              hidden={
+                isOwnUser ||
+                this.isServiceAccount(this.state.accountType) ||
+                this.state.authMethod !== User.AuthMethodProvider
+              }
+            >
+              <Form.Label htmlFor="authProvider" column sm="2">
+                {this.props.t("chooseAuthProvider")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Select
+                  id="authProvider"
+                  value={this.state.authProviderId}
+                  onChange={(e: any) =>
+                    this.setState({ authProviderId: e.target.value })
+                  }
+                  required={this.state.authMethod === User.AuthMethodProvider}
+                >
+                  <option value="">{this.props.t("pleaseSelect")}</option>
+                  {this.authProviders.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+            </Form.Group>
+
+            {/* Password change checkbox for existing users */}
+            <Form.Group
+              as={Row}
+              hidden={
+                this.isServiceAccount(this.state.accountType) ||
+                !this.entity.id ||
+                this.state.authMethod !== User.AuthMethodPassword ||
+                RuntimeConfig.INFOS.disablePasswordLogin
+              }
+            >
+              <Col sm="6">
+                <Form.Check
+                  type="checkbox"
+                  id="check-changePassword"
+                  label={this.props.t("passwordChange")}
+                  checked={this.state.changePassword}
+                  onChange={(e: any) =>
+                    this.setState({ changePassword: e.target.checked })
+                  }
+                />
+              </Col>
+            </Form.Group>
+
+            {/* Resend invitation checkbox for existing users with invitation auth method */}
+            <Form.Group
+              as={Row}
+              hidden={
+                isOwnUser ||
+                this.isServiceAccount(this.state.accountType) ||
+                !this.entity.id ||
+                this.state.authMethod !== User.AuthMethodInvitation ||
+                RuntimeConfig.INFOS.disablePasswordLogin
+              }
+            >
+              <Col sm="6">
+                <Form.Check
+                  type="checkbox"
+                  id="check-resendInvitation"
+                  label={this.props.t("resendInvitation")}
+                  checked={this.state.resendInvitation}
+                  onChange={(e: any) =>
+                    this.setState({ resendInvitation: e.target.checked })
+                  }
+                />
+              </Col>
+            </Form.Group>
+
+            {/* Password field */}
+            <Form.Group as={Row} hidden={passwordFieldHidden}>
+              <Form.Label htmlFor="password" column sm="2">
+                {this.props.t("password")}
+              </Form.Label>
+              <Col sm="4">
+                <InputGroup>
+                  <Form.Control
+                    id="password"
+                    type={
+                      this.isServiceAccount(this.state.accountType)
+                        ? "text"
+                        : "password"
+                    }
+                    value={this.state.password}
+                    onChange={(e: any) =>
+                      this.setState({ password: e.target.value })
+                    }
+                    required={
+                      !!(
+                        this.isServiceAccount(this.state.accountType) ||
+                        (!this.entity.id &&
+                          this.state.authMethod === User.AuthMethodPassword) ||
+                        (this.entity.id &&
+                          this.state.changePassword &&
+                          this.state.authMethod === User.AuthMethodPassword)
+                      )
+                    }
+                    disabled={
+                      passwordFieldHidden || // disable field to not trigger validation
+                      (!this.isServiceAccount(this.state.accountType) &&
+                        this.entity.id &&
+                        !this.state.changePassword) ||
+                      this.isServiceAccount(this.state.accountType)
+                    }
+                    minLength={
+                      this.isServiceAccount(this.state.accountType)
+                        ? Validation.PASSWORD_MIN_LENGTH_SA
+                        : Validation.PASSWORD_MIN_LENGTH
+                    }
+                    pattern={Validation.PASSWORD_PATTERN}
+                    title={this.props.t("passwordRequirements")}
+                  />
+                  <Button
+                    onClick={() => this.generatePassword()}
+                    hidden={!this.isServiceAccount(this.state.accountType)}
+                    variant="outline-secondary"
+                  >
+                    <IconRefresh className="feather" />
+                  </Button>
+                  <CopyToClipboardButton
+                    text={this.state.password}
+                    hidden={!this.isServiceAccount(this.state.accountType)}
+                  />
+                </InputGroup>
+              </Col>
+            </Form.Group>
+
+            {/* Last activity — only shown for existing users */}
+            <Form.Group as={Row} hidden={!this.entity.id}>
+              <Form.Label htmlFor="lastActivity" column sm="2">
+                {this.props.t("lastActivity")}
+              </Form.Label>
+              <Col sm="4">
+                <Form.Control
+                  id="lastActivity"
+                  plaintext={true}
+                  readOnly={true}
+                  value={
+                    this.state.lastActivity
+                      ? Formatting.getFormatterShort(true).format(
+                          this.state.lastActivity,
+                        )
+                      : "-"
+                  }
+                />
+              </Col>
+            </Form.Group>
+
+            {/* Second factor reset — only shown for existing non-service-account users */}
+            <Form.Group
+              as={Row}
+              hidden={
+                !this.entity.id ||
+                this.isServiceAccount(this.state.accountType) ||
+                (!this.state.hasPasskeys && !this.state.totpEnabled)
+              }
+            >
               <Form.Label column sm="2">
-                {this.props.t("apiToken")}
+                {this.props.t("secondFactor")}
               </Form.Label>
               <Col sm="4" className="d-flex gap-2 align-items-center">
-                <span
-                  className={
-                    this.state.apiTokenConfigured
-                      ? "text-success"
-                      : "text-secondary"
-                  }
-                >
-                  {this.state.apiTokenConfigured
-                    ? this.props.t("apiTokenConfigured")
-                    : this.props.t("apiTokenNotConfigured")}
-                </span>
-                <Button
-                  className="btn-sm"
-                  variant="outline-secondary"
-                  onClick={this.generateApiToken}
-                >
-                  {this.props.t("generateApiToken")}
-                </Button>
-                {this.state.apiTokenConfigured && (
+                {this.state.hasPasskeys && (
                   <Button
                     className="btn-sm"
                     variant="outline-danger"
-                    onClick={this.revokeApiToken}
+                    onClick={this.resetPasskeys}
                   >
-                    {this.props.t("revokeApiToken")}
+                    <IconReset className="feather" />{" "}
+                    {this.props.t("resetPasskeys")}
+                  </Button>
+                )}
+                {this.state.totpEnabled && (
+                  <Button
+                    className="btn-sm"
+                    variant="outline-danger"
+                    onClick={this.resetTotp}
+                  >
+                    <IconReset className="feather" />{" "}
+                    {this.props.t("resetTotp")}
                   </Button>
                 )}
               </Col>
             </Form.Group>
-          )}
+
+            {/* API Token section — only shown for existing service accounts */}
+            {this.entity.id &&
+              this.isServiceAccount(this.state.accountType) && (
+                <Form.Group as={Row}>
+                  <Form.Label column sm="2">
+                    {this.props.t("apiToken")}
+                  </Form.Label>
+                  <Col sm="4" className="d-flex gap-2 align-items-center">
+                    <span
+                      className={
+                        this.state.apiTokenConfigured
+                          ? "text-success"
+                          : "text-secondary"
+                      }
+                    >
+                      {this.state.apiTokenConfigured
+                        ? this.props.t("apiTokenConfigured")
+                        : this.props.t("apiTokenNotConfigured")}
+                    </span>
+                    <Button
+                      className="btn-sm"
+                      variant="outline-secondary"
+                      onClick={this.generateApiToken}
+                    >
+                      {this.props.t("generateApiToken")}
+                    </Button>
+                    {this.state.apiTokenConfigured && (
+                      <Button
+                        className="btn-sm"
+                        variant="outline-danger"
+                        onClick={this.revokeApiToken}
+                      >
+                        {this.props.t("revokeApiToken")}
+                      </Button>
+                    )}
+                  </Col>
+                </Form.Group>
+              )}
+          </fieldset>
         </Form>
 
         <Modal

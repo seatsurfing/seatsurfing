@@ -688,5 +688,6 @@
   "bookerNamesPrivacyHint": "Mind the privacy!",
   "defaultBookingView": "Default booking view",
   "list": "List",
-  "disallowed": "disallowed"
+  "disallowed": "disallowed",
+  "userHigherPrivilegesReadOnly": "This user holds permissions beyond your own and can therefore not be edited."
 }

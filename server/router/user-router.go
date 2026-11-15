@@ -95,6 +95,15 @@ type GetUserSelfResponse struct {
 	GetUserResponse
 }
 
+// GetUserDetailResponse is the representation of a single user as seen by an
+// administrator. CanManage tells the client whether the caller may modify the
+// account at all (see service.CanManageUser), so it can present the user as
+// read-only instead of failing on save.
+type GetUserDetailResponse struct {
+	CanManage bool `json:"canManage"`
+	GetUserResponse
+}
+
 type GetUserInfoSmall struct {
 	UserID    string `json:"userId"`
 	Email     string `json:"email"`
@@ -571,7 +580,10 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, true, passkeyCount > 0, roleIDs)
+	res := &GetUserDetailResponse{
+		CanManage:       service.CanManageUser(user, e),
+		GetUserResponse: *router.copyToRestModel(e, true, passkeyCount > 0, roleIDs),
+	}
 	SendJSON(w, res)
 }
 
@@ -1208,8 +1220,6 @@ func (router *UserRouter) getPermissions(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-// loadUserInOwnOrg resolves the user named in the path, refusing anything
-// outside the caller's organization.
 // checkCanManageUser guards operations on another user's account: it writes
 // 400 and reports false when target holds access beyond the request user's
 // (see service.CanManageUser).
@@ -1221,6 +1231,8 @@ func (router *UserRouter) checkCanManageUser(w http.ResponseWriter, user *User, 
 	return true
 }
 
+// loadUserInOwnOrg resolves the user named in the path, refusing anything
+// outside the caller's organization.
 func (router *UserRouter) loadUserInOwnOrg(w http.ResponseWriter, r *http.Request, requestUser *User) *User {
 	vars := mux.Vars(r)
 	e, err := GetUserRepository().GetOne(vars["id"])

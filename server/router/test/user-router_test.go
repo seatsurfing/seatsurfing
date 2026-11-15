@@ -1524,3 +1524,29 @@ func TestUserApiTokenRequiresHigherOrEqualPrivileges(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
 }
+
+func TestUserGetOneReportsCanManage(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	delegated := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(delegated.ID)
+	higher := CreateTestUserOrgAdmin(org)
+	lower := CreateTestUserInOrg(org)
+
+	getCanManage := func(id string) bool {
+		req := NewHTTPRequest("GET", "/user/"+id, login.UserID, nil)
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+		var resBody map[string]interface{}
+		json.Unmarshal(res.Body.Bytes(), &resBody)
+		v, ok := resBody["canManage"].(bool)
+		if !ok {
+			t.Fatal("canManage missing in response")
+		}
+		return v
+	}
+
+	CheckTestBool(t, false, getCanManage(higher.ID))
+	CheckTestBool(t, true, getCanManage(lower.ID))
+	CheckTestBool(t, true, getCanManage(delegated.ID))
+}
