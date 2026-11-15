@@ -483,8 +483,8 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	wasApproved := e.Approved
-	service.GetBookingService().EnqueueLifecycleEffect(eNew.ID, func() { router.onBookingUpdated(eNew, wasApproved) })
+	eOld := e.Booking
+	service.GetBookingService().EnqueueLifecycleEffect(eNew.ID, func() { router.onBookingUpdated(&eOld, eNew) })
 	SendUpdated(w)
 }
 
@@ -987,28 +987,31 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 	}
 }
 
-func (router *BookingRouter) onBookingUpdated(e *Booking, wasApproved bool) {
-	if !e.Approved {
-		if wasApproved {
-			// e was loaded before earlier queued effects ran, which may have
-			// created the CalDAV event in the meantime.
-			if current, err := GetBookingRepository().GetOne(e.ID); err == nil {
-				e.CalDavID = current.CalDavID
+// onBookingUpdated runs the side effects of an update. eOld is the booking as
+// it was before the update; it may belong to a different user than eNew.
+func (router *BookingRouter) onBookingUpdated(eOld *Booking, eNew *Booking) {
+	if !eNew.Approved {
+		if eOld.Approved {
+			// eOld was loaded before earlier queued effects ran, which may have
+			// created the CalDAV event in the meantime. The event lives in the
+			// calendar of the previous booking user, so clean up via eOld.
+			if current, err := GetBookingRepository().GetOne(eOld.ID); err == nil {
+				eOld.CalDavID = current.CalDavID
 			}
-			router.onBookingDeleted(e, false)
+			router.onBookingDeleted(eOld, false)
 		}
-		router.sendApprovalRequestNotifications(e)
+		router.sendApprovalRequestNotifications(eNew)
 		return
 	}
-	if !wasApproved {
-		router.onBookingCreated(e)
+	if !eOld.Approved {
+		router.onBookingCreated(eNew)
 		return
 	}
-	router.updateCalDavEvent(e)
+	router.updateCalDavEvent(eNew)
 	for _, plg := range GetPlugins() {
-		plg.OnBookingUpdated(e.ID)
+		plg.OnBookingUpdated(eNew.ID)
 	}
-	router.sendMailNotification(e, BookingMailNotificationUpdated)
+	router.sendMailNotification(eNew, BookingMailNotificationUpdated)
 }
 
 func (router *BookingRouter) onBookingDeclinedOrApproved(e *Booking) {
