@@ -560,6 +560,13 @@ func (r *BookingStore) Update(e *Booking) error {
 	return err
 }
 
+// UpdateCalDavID sets only the CalDAV event ID, so a delayed side effect
+// cannot overwrite changes persisted after its booking snapshot was taken.
+func (r *BookingStore) UpdateCalDavID(id string, calDavID string) error {
+	_, err := GetDatabase().DB().Exec("UPDATE bookings SET caldav_id = $1 WHERE id = $2", calDavID, id)
+	return err
+}
+
 func (r *BookingStore) UpdateLastInfoMailSentAt(id string, t *time.Time) error {
 	_, err := GetDatabase().DB().Exec("UPDATE bookings SET last_info_mail_sent_at_utc = $1 WHERE id = $2", t, id)
 	return err

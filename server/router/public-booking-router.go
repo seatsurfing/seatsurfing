@@ -139,13 +139,13 @@ func (router *PublicBookingRouter) deleteBooking(w http.ResponseWriter, r *http.
 		SendNotFound(w)
 		return
 	}
-	bookingRouter := &BookingRouter{}
-	go bookingRouter.onBookingDeleted(&booking.Booking, true)
 	if err := GetBookingRepository().Delete(booking); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
 		return
 	}
+	bookingRouter := &BookingRouter{}
+	service.GetBookingService().EnqueueLifecycleEffect(booking.ID, func() { bookingRouter.onBookingDeleted(&booking.Booking, true) })
 	SendUpdated(w)
 }
 

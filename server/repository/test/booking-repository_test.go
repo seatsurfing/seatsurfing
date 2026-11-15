@@ -1510,3 +1510,38 @@ func TestBookingRepositoryGetBookingsRequiringApprovalInOrg(t *testing.T) {
 	}
 	CheckTestInt(t, 2, count)
 }
+
+func TestBookingRepositoryUpdateCalDavID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	b := CreateTestBooking9To5(user, space, 1)
+
+	// Persist a later change, then write the CalDAV ID from a stale snapshot
+	stale := *b
+	b.Approved = false
+	b.Subject = "Changed"
+	GetBookingRepository().Update(b)
+	CheckTestIsNil(t, GetBookingRepository().UpdateCalDavID(stale.ID, "caldav-1"))
+
+	res, err := GetBookingRepository().GetOne(b.ID)
+	CheckTestIsNil(t, err)
+	CheckTestString(t, "caldav-1", res.CalDavID)
+	CheckTestString(t, "Changed", res.Subject)
+	CheckTestBool(t, false, res.Approved)
+}
+
+func TestBookingRepositoryUpdateCalDavIDDeletedBooking(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	b := CreateTestBooking9To5(user, space, 1)
+	details, _ := GetBookingRepository().GetOne(b.ID)
+	GetBookingRepository().Delete(details)
+
+	CheckTestIsNil(t, GetBookingRepository().UpdateCalDavID(b.ID, "caldav-1"))
+	_, err := GetBookingRepository().GetOne(b.ID)
+	CheckTestBool(t, true, err != nil)
+}

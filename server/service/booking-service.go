@@ -20,6 +20,9 @@ type BookingService struct {
 	hooksMu   sync.RWMutex
 	onCreated func(e *Booking)
 	onDeleted func(e *Booking)
+	// lifecycleQueue serializes the side effects (CalDAV, plugin hooks, mails) of
+	// each booking, so they run in the order of the persisted transitions.
+	lifecycleQueue KeyedQueue
 }
 
 var bookingService *BookingService
@@ -91,6 +94,15 @@ type PreparedBooking struct {
 	Location *Location
 }
 
+// EnqueueLifecycleEffect schedules f to run asynchronously after all side
+// effects previously enqueued for the booking have finished. Call it right
+// after persisting a booking transition, so effects run in the same order as
+// the transitions (e.g. removing the CalDAV event of a booking whose approval
+// was reset completes before a later approval recreates it).
+func (s *BookingService) EnqueueLifecycleEffect(bookingID string, f func()) {
+	s.lifecycleQueue.Enqueue(bookingID, f)
+}
+
 // SetOnCreated registers the function called (asynchronously) after a
 // booking was created, e.g. to send notifications. The router registers it.
 func (s *BookingService) SetOnCreated(f func(e *Booking)) {
@@ -113,7 +125,7 @@ func (s *BookingService) notifyCreated(e *Booking) {
 	f := s.onCreated
 	s.hooksMu.RUnlock()
 	if f != nil {
-		go f(e)
+		s.EnqueueLifecycleEffect(e.ID, func() { f(e) })
 	}
 }
 
@@ -122,7 +134,7 @@ func (s *BookingService) notifyDeleted(e *Booking) {
 	f := s.onDeleted
 	s.hooksMu.RUnlock()
 	if f != nil {
-		go f(e)
+		s.EnqueueLifecycleEffect(e.ID, func() { f(e) })
 	}
 }
 

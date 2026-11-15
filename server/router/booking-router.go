@@ -157,7 +157,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 			SendInternalServerError(w)
 			return
 		}
-		go router.onBookingDeclinedOrApproved(&e.Booking)
+		service.GetBookingService().EnqueueLifecycleEffect(e.ID, func() { router.onBookingDeclinedOrApproved(&e.Booking) })
 		SendUpdated(w)
 		return
 	}
@@ -167,7 +167,7 @@ func (router *BookingRouter) approveBooking(w http.ResponseWriter, r *http.Reque
 		SendInternalServerError(w)
 		return
 	}
-	go router.onBookingDeclinedOrApproved(&e.Booking)
+	service.GetBookingService().EnqueueLifecycleEffect(e.ID, func() { router.onBookingDeclinedOrApproved(&e.Booking) })
 	SendUpdated(w)
 }
 
@@ -483,7 +483,8 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	go router.onBookingUpdated(eNew, e.Approved)
+	wasApproved := e.Approved
+	service.GetBookingService().EnqueueLifecycleEffect(eNew.ID, func() { router.onBookingUpdated(eNew, wasApproved) })
 	SendUpdated(w)
 }
 
@@ -828,7 +829,9 @@ func (router *BookingRouter) createCalDavEvent(e *Booking) {
 		return
 	}
 	e.CalDavID = caldavEvent.ID
-	GetBookingRepository().Update(e)
+	if err := GetBookingRepository().UpdateCalDavID(e.ID, e.CalDavID); err != nil {
+		log.Println(err)
+	}
 }
 
 func (router *BookingRouter) updateCalDavEvent(e *Booking) {
@@ -844,7 +847,9 @@ func (router *BookingRouter) updateCalDavEvent(e *Booking) {
 		return
 	}
 	e.CalDavID = caldavEvent.ID
-	GetBookingRepository().Update(e)
+	if err := GetBookingRepository().UpdateCalDavID(e.ID, e.CalDavID); err != nil {
+		log.Println(err)
+	}
 }
 
 func (router *BookingRouter) sendMailNotification(e *Booking, notification BookingMailNotification) {
@@ -985,6 +990,11 @@ func (router *BookingRouter) sendMailNotification(e *Booking, notification Booki
 func (router *BookingRouter) onBookingUpdated(e *Booking, wasApproved bool) {
 	if !e.Approved {
 		if wasApproved {
+			// e was loaded before earlier queued effects ran, which may have
+			// created the CalDAV event in the meantime.
+			if current, err := GetBookingRepository().GetOne(e.ID); err == nil {
+				e.CalDavID = current.CalDavID
+			}
 			router.onBookingDeleted(e, false)
 		}
 		router.sendApprovalRequestNotifications(e)

@@ -374,3 +374,31 @@ func TestBookingServiceApprovedAfterUpdate(t *testing.T) {
 	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, pending, approvalSpace, enter, leave))
 	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, pending, space, enter, leave))
 }
+
+func TestBookingServiceLifecycleEffectsRunInOrder(t *testing.T) {
+	_, user, _, space := setupServiceTest(t)
+	release := make(chan struct{})
+	events := make(chan string, 2)
+	svc := GetBookingService()
+	svc.SetOnCreated(func(e *Booking) {
+		<-release
+		events <- "created"
+	})
+	defer svc.SetOnCreated(nil)
+
+	enter, leave := serviceTestSlot(0, 8, 17)
+	e, bErr := svc.CreateBooking(user, &BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave})
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	svc.EnqueueLifecycleEffect(e.ID, func() { events <- "later" })
+
+	select {
+	case v := <-events:
+		t.Fatalf("expected later effect to wait for created hook, got %s", v)
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(release)
+	CheckTestString(t, "created", <-events)
+	CheckTestString(t, "later", <-events)
+}
