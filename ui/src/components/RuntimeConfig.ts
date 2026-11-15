@@ -41,6 +41,7 @@ interface RuntimeUserInfos {
   pluginWelcomeScreens: any[];
   bookingUIIntegrations: any[];
   featureGroups: boolean;
+  featureSpaceImages: boolean;
   featureAuthProviders: boolean;
   featureKioskMode: boolean;
   kioskModeEnabled: boolean;
@@ -215,6 +216,7 @@ export default class RuntimeConfig {
       pluginWelcomeScreens: [],
       bookingUIIntegrations: [],
       featureGroups: false,
+      featureSpaceImages: false,
       featureAuthProviders: false,
       featureKioskMode: false,
       kioskModeEnabled: false,
@@ -319,6 +321,8 @@ export default class RuntimeConfig {
         );
       if (s.name === "feature_groups")
         RuntimeConfig.INFOS.featureGroups = s.value === "1";
+      if (s.name === "feature_space_images")
+        RuntimeConfig.INFOS.featureSpaceImages = s.value === "1";
       if (s.name === "feature_auth_providers")
         RuntimeConfig.INFOS.featureAuthProviders = s.value === "1";
       if (s.name === "feature_kiosk_mode")

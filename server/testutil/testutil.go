@@ -1,9 +1,12 @@
 package testutil
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"image"
+	"image/png"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -63,6 +66,7 @@ var DatabaseTables = [...]string{
 	"spaces_approvers",
 	"spaces_attributes",
 	"spaces_attributes_values",
+	"space_images",
 	"user_roles",
 	"users",
 	"users_groups",
@@ -334,6 +338,12 @@ func CreateTestBooking9To5(user *User, space *Space, offsetDay int) *Booking {
 	GetBookingRepository().Create(booking)
 
 	return booking
+}
+
+func CreateTestPNG(width, height int) []byte {
+	var buf bytes.Buffer
+	png.Encode(&buf, image.NewRGBA(image.Rect(0, 0, width, height)))
+	return buf.Bytes()
 }
 
 func DropTestDB() {

@@ -1,8 +1,10 @@
 package router
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -67,7 +69,15 @@ type GetSpaceResponse struct {
 	Available  bool                 `json:"available"`
 	LocationID string               `json:"locationId"`
 	Location   *GetLocationResponse `json:"location,omitempty"`
+	HasImage   bool                 `json:"hasImage"`
 	CreateSpaceRequest
+}
+
+type GetSpaceImageResponse struct {
+	Width    uint   `json:"width"`
+	Height   uint   `json:"height"`
+	MimeType string `json:"mimeType"`
+	Data     string `json:"data"`
 }
 
 type GetSpaceAvailabilityBookingsResponse struct {
@@ -110,6 +120,9 @@ func (router *SpaceRouter) SetupRoutes(s *mux.Router) {
 	s.HandleFunc("/{id}/allowedbooker/remove", router.removeAllowedBookers).Methods("POST")
 	s.HandleFunc("/{id}/allowedbooker", router.getAllowedBookers).Methods("GET")
 	s.HandleFunc("/{id}/allowedbooker", router.addAllowedBookers).Methods("PUT")
+	s.HandleFunc("/{id}/image", router.getImage).Methods("GET")
+	s.HandleFunc("/{id}/image", router.setImage).Methods("POST")
+	s.HandleFunc("/{id}/image", router.deleteImage).Methods("DELETE")
 	s.HandleFunc("/{id}", router.getOne).Methods("GET")
 	s.HandleFunc("/{id}", router.update).Methods("PUT")
 	s.HandleFunc("/{id}", router.delete).Methods("DELETE")
@@ -156,7 +169,14 @@ func (router *SpaceRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	spacesWithImage, err := GetSpaceImageRepository().GetSpaceIDsWithImage([]string{e.ID}, location.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := router.copyToRestModel(e, attributes, approvers, allowedBookers)
+	res.HasImage = spacesWithImage[e.ID]
 	SendJSON(w, res)
 }
 
@@ -248,6 +268,7 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 		m.Available = e.Available
 		m.IsAllowed = e.Allowed
 		m.IsApprovalRequired = e.ApprovalRequired
+		m.HasImage = e.HasImage
 		router.appendAttributesToRestModel(&m.GetSpaceResponse, e.Attributes)
 		m.Bookings = []*GetSpaceAvailabilityBookingsResponse{}
 		for _, booking := range e.Bookings {
@@ -428,9 +449,16 @@ func (router *SpaceRouter) getAll(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
+	spacesWithImage, err := GetSpaceImageRepository().GetSpaceIDsWithImage(spaceIds, location.OrganizationID)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return
+	}
 	res := []*GetSpaceResponse{}
 	for _, e := range list {
 		m := router.copyToRestModel(e, attributes, approvers, allowedBookers)
+		m.HasImage = spacesWithImage[e.ID]
 		res = append(res, m)
 	}
 	SendJSON(w, res)
@@ -934,6 +962,90 @@ func (router *SpaceRouter) getAllowedBookers(w http.ResponseWriter, r *http.Requ
 		res = append(res, m)
 	}
 	SendJSON(w, res)
+}
+
+// getSpaceAndLocation loads the space and its location from the route. It
+// writes a 404 and returns false if either does not exist or the space does
+// not belong to the location.
+func (router *SpaceRouter) getSpaceAndLocation(w http.ResponseWriter, r *http.Request) (*Space, *Location, bool) {
+	vars := mux.Vars(r)
+	space, err := GetSpaceRepository().GetOne(vars["id"])
+	if err != nil || space.LocationID != vars["locationId"] {
+		SendNotFound(w)
+		return nil, nil, false
+	}
+	location, err := GetLocationRepository().GetOne(space.LocationID)
+	if err != nil {
+		SendNotFound(w)
+		return nil, nil, false
+	}
+	return space, location, true
+}
+
+func sendSpaceImageError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, service.ErrSpaceImageForbidden):
+		SendForbidden(w)
+	case errors.Is(err, service.ErrSpaceImageNotEnabled):
+		SendPaymentRequired(w)
+	case errors.Is(err, service.ErrSpaceImageNotFound):
+		SendNotFound(w)
+	case errors.Is(err, service.ErrSpaceImageTooLarge):
+		SendBadRequestCode(w, ResponseCodeSpaceImageTooLarge)
+	case errors.Is(err, service.ErrSpaceImageInvalidFormat):
+		SendBadRequestCode(w, ResponseCodeSpaceImageInvalidFormat)
+	default:
+		log.Println(err)
+		SendInternalServerError(w)
+	}
+}
+
+func (router *SpaceRouter) getImage(w http.ResponseWriter, r *http.Request) {
+	space, location, ok := router.getSpaceAndLocation(w, r)
+	if !ok {
+		return
+	}
+	e, err := service.GetSpaceService().GetImage(GetRequestUser(r), location, space, IsBookingContextRequest(r))
+	if err != nil {
+		sendSpaceImageError(w, err)
+		return
+	}
+	SendJSON(w, &GetSpaceImageResponse{
+		Width:    e.Width,
+		Height:   e.Height,
+		MimeType: e.MimeType,
+		Data:     base64.StdEncoding.EncodeToString(e.Data),
+	})
+}
+
+func (router *SpaceRouter) setImage(w http.ResponseWriter, r *http.Request) {
+	space, location, ok := router.getSpaceAndLocation(w, r)
+	if !ok {
+		return
+	}
+	// Read one byte past the limit so the service can tell an oversized upload apart.
+	data, err := io.ReadAll(io.LimitReader(r.Body, service.SpaceImageMaxBytes+1))
+	if err != nil {
+		SendBadRequest(w)
+		return
+	}
+	if err := service.GetSpaceService().SetImage(GetRequestUser(r), location, space, data); err != nil {
+		sendSpaceImageError(w, err)
+		return
+	}
+	SendUpdated(w)
+}
+
+func (router *SpaceRouter) deleteImage(w http.ResponseWriter, r *http.Request) {
+	space, location, ok := router.getSpaceAndLocation(w, r)
+	if !ok {
+		return
+	}
+	if err := service.GetSpaceService().DeleteImage(GetRequestUser(r), location, space); err != nil {
+		sendSpaceImageError(w, err)
+		return
+	}
+	SendUpdated(w)
 }
 
 func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {

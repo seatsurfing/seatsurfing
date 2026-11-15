@@ -14,6 +14,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
 
@@ -196,6 +197,30 @@ func TestLocationsUpload(t *testing.T) {
 	}
 	CheckTestUint(t, uint(len(data)), uint(len(data2)))
 	CheckTestUint(t, 0, uint(bytes.Compare(data, data2)))
+}
+
+func TestLocationsUploadInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	location := &Location{Name: "Location 1", OrganizationID: org.ID}
+	GetLocationRepository().Create(location)
+
+	req := NewHTTPRequest("POST", "/location/"+location.ID+"/map", loginResponse.UserID, bytes.NewBuffer(make([]byte, service.MaxLocationMapSize+1)))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("POST", "/location/"+location.ID+"/map", loginResponse.UserID, bytes.NewBufferString("no image"))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestString(t, "", resBody.MapMimeType)
 }
 
 func TestLocationsBlockedPeriod(t *testing.T) {
@@ -602,7 +627,7 @@ func TestLocationsPostMapInvalid(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 	id := res.Header().Get("X-Object-Id")
 
-	req = NewHTTPRequest("POST", "/location/"+id+"/map", admin.ID, bytes.NewBuffer(make([]byte, 5*1024*1024+1)))
+	req = NewHTTPRequest("POST", "/location/"+id+"/map", admin.ID, bytes.NewBuffer(make([]byte, service.MaxLocationMapSize+1)))
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
 

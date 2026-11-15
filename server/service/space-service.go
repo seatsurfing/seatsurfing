@@ -1,11 +1,14 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"sync"
 	"time"
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
 // SpaceService holds the space business logic shared by the REST API
@@ -31,6 +34,7 @@ type UserSpaceAvailability struct {
 	// on the location's bookable weekdays.
 	Allowed          bool
 	ApprovalRequired bool
+	HasImage         bool
 	Attributes       []*SpaceAttributeValue
 	// Bookings overlapping the time slot. The booker is only included for
 	// the user's own bookings, or if the user may see other bookers' names.
@@ -96,6 +100,10 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 	if groupsEnabled, _ := GetSettingsRepository().GetBool(location.OrganizationID, SettingFeatureGroups.Name); !groupsEnabled {
 		approvers = nil
 	}
+	spacesWithImage, err := GetSpaceImageRepository().GetSpaceIDsWithImage(spaceIds, location.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
 	locations := GetLocationService()
 	isAllowedToBookLocation := locations.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	isValidWeekday := locations.IsLocationWeekdayBookable(location, user, enter, leave) &&
@@ -113,6 +121,7 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 			Available:        e.Available,
 			Allowed:          isAllowedToBookLocation && s.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups) && isValidWeekday,
 			ApprovalRequired: s.IsApprovalRequired(&e.Space, approvers),
+			HasImage:         spacesWithImage[e.ID],
 			Attributes:       []*SpaceAttributeValue{},
 			Bookings:         []*UserSpaceAvailabilityBooking{},
 		}
@@ -275,4 +284,95 @@ func (s *SpaceService) IsUserAllowedToBookSpace(e *Space, allowedBookers []*Spac
 		}
 	}
 	return !restricted
+}
+
+const (
+	SpaceCodeImageTooLarge      = 8001
+	SpaceCodeImageInvalidFormat = 8002
+)
+
+const (
+	SpaceImageMaxBytes     = 5 * 1024 * 1024
+	SpaceImageMaxDimension = 10000
+	SpaceImageMaxPixels    = 25_000_000
+)
+
+var spaceImageLimits = ImageLimits{
+	MaxBytes:     SpaceImageMaxBytes,
+	MaxDimension: SpaceImageMaxDimension,
+	MaxPixels:    SpaceImageMaxPixels,
+	Formats:      []string{"png", "jpeg"},
+}
+
+var (
+	ErrSpaceImageForbidden     = errors.New("not allowed to access space image")
+	ErrSpaceImageNotFound      = errors.New("space image not found")
+	ErrSpaceImageTooLarge      = errors.New("space image too large")
+	ErrSpaceImageInvalidFormat = errors.New("space image must be a PNG or JPEG")
+	ErrSpaceImageNotEnabled    = errors.New("space images feature not enabled")
+)
+
+func (s *SpaceService) isImageFeatureEnabled(organizationID string) bool {
+	enabled, _ := GetSettingsRepository().GetBool(organizationID, SettingFeatureSpaceImages.Name)
+	return enabled
+}
+
+// GetImage returns the image of space, which must belong to location.
+func (s *SpaceService) GetImage(user *User, location *Location, space *Space, bookingContext bool) (*SpaceImage, error) {
+	if space.LocationID != location.ID {
+		return nil, ErrSpaceImageNotFound
+	}
+	if !CanAccessOrg(user, location.OrganizationID) {
+		return nil, ErrSpaceImageForbidden
+	}
+	visible, err := GetLocationService().IsLocationVisibleForUser(user, location, bookingContext)
+	if err != nil {
+		return nil, err
+	}
+	if !visible || !s.isImageFeatureEnabled(location.OrganizationID) {
+		return nil, ErrSpaceImageNotFound
+	}
+	e, err := GetSpaceImageRepository().Get(space.ID, location.OrganizationID)
+	if err == sql.ErrNoRows {
+		return nil, ErrSpaceImageNotFound
+	}
+	return e, err
+}
+
+// SetImage validates data as a PNG or JPEG image and stores it as the
+// image of space, replacing any existing one.
+func (s *SpaceService) SetImage(user *User, location *Location, space *Space, data []byte) error {
+	if space.LocationID != location.ID {
+		return ErrSpaceImageNotFound
+	}
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
+		return ErrSpaceImageForbidden
+	}
+	if !s.isImageFeatureEnabled(location.OrganizationID) {
+		return ErrSpaceImageNotEnabled
+	}
+	info, err := ValidateImage(data, spaceImageLimits)
+	if errors.Is(err, ErrImageTooLarge) {
+		return ErrSpaceImageTooLarge
+	}
+	if err != nil {
+		return ErrSpaceImageInvalidFormat
+	}
+	return GetSpaceImageRepository().Set(&SpaceImage{
+		SpaceID:  space.ID,
+		MimeType: "image/" + info.Format,
+		Width:    info.Width,
+		Height:   info.Height,
+		Data:     data,
+	})
+}
+
+func (s *SpaceService) DeleteImage(user *User, location *Location, space *Space) error {
+	if space.LocationID != location.ID {
+		return ErrSpaceImageNotFound
+	}
+	if !HasPermission(user, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
+		return ErrSpaceImageForbidden
+	}
+	return GetSpaceImageRepository().Delete(space.ID, location.OrganizationID)
 }

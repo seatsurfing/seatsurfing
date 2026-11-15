@@ -1,0 +1,31 @@
+.space-image {
+  display: block;
+  max-width: 100%;
+  max-height: 300px;
+  margin-top: 8px;
+  border-radius: var(--bs-border-radius);
+  object-fit: contain;
+}
+
+.space-image-editor-preview {
+  margin-bottom: 8px;
+}
+
+.space-image-editor-preview .space-image {
+  max-height: 160px;
+  margin-top: 0;
+}
+
+.space-image-viewer {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.space-image-modal .space-image-viewer {
+  margin: 0;
+}
+
+.space-image-modal .space-image {
+  max-height: 75vh;
+  margin: 0 auto;
+}

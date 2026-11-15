@@ -85,6 +85,8 @@ import SpaceApprovalIcon from "@/components/SpaceApprovalIcon";
 import ConfirmModal from "@/components/ConfirmModal";
 import AlertModal from "@/components/AlertModal";
 import PluginEmbed from "@/components/PluginEmbed";
+import SpaceImageViewer from "@/components/SpaceImageViewer";
+import SpaceImageButton from "@/components/button/SpaceImageButton";
 
 interface State {
   earliestEnterDate: Date;
@@ -93,6 +95,8 @@ interface State {
   locationId: string;
   bookingCount: number;
   showBookingNames: boolean;
+  showSpaceImage: boolean;
+  spaceImageReturnTo: "showBookingNames" | "showConfirm";
   selectedSpace: Space | null;
   showConfirm: boolean;
   // IDs of the spaces offered in the confirm modal when opened via a direct
@@ -202,6 +206,8 @@ class Search extends React.Component<Props, State> {
       locationId: "",
       bookingCount: 0,
       showBookingNames: false,
+      showSpaceImage: false,
+      spaceImageReturnTo: "showConfirm",
       selectedSpace: null,
       showConfirm: false,
       directLinkSpaceIds: [],
@@ -328,6 +334,7 @@ class Search extends React.Component<Props, State> {
       this.state.showSearchModal ||
       this.state.showLocationDetails ||
       this.state.showSpaceCalendar ||
+      this.state.showSpaceImage ||
       this.state.showBookingNames ||
       this.state.showRecurringOptions
     ) {
@@ -892,6 +899,21 @@ class Search extends React.Component<Props, State> {
       selected = spaces.find((s) => s.available) ?? current ?? null;
     }
     this.setState({ selectedSpace: selected }, () => this.resetRecurrence());
+  };
+
+  openSpaceImage = (returnTo: "showBookingNames" | "showConfirm") => {
+    this.setState({
+      [returnTo]: false,
+      showSpaceImage: true,
+      spaceImageReturnTo: returnTo,
+    } as any);
+  };
+
+  closeSpaceImage = () => {
+    this.setState({
+      showSpaceImage: false,
+      [this.state.spaceImageReturnTo]: true,
+    } as any);
   };
 
   onDirectLinkSpaceChange = (spaceId: string) => {
@@ -3012,9 +3034,18 @@ class Search extends React.Component<Props, State> {
                 this.openSpaceCalendar("showConfirm");
               }}
               disabled={
-                this.state.confirmingBooking || !this.state.selectedSpace
+                this.state.confirmingBooking ||
+                this.state.loading ||
+                !this.state.selectedSpace
               }
             />
+            {RuntimeConfig.INFOS.featureSpaceImages &&
+              this.state.selectedSpace?.hasImage && (
+                <SpaceImageButton
+                  onClick={() => this.openSpaceImage("showConfirm")}
+                  disabled={this.state.confirmingBooking || this.state.loading}
+                />
+              )}
             <Button
               type="submit"
               variant="primary"
@@ -3153,6 +3184,29 @@ class Search extends React.Component<Props, State> {
         />
       );
     }
+    const spaceImageModal = (
+      <Modal
+        show={this.state.showSpaceImage}
+        onHide={this.closeSpaceImage}
+        size="lg"
+        centered={true}
+        className="space-image-modal"
+      >
+        <Modal.Header closeButton={true}>
+          <Modal.Title>{this.state.selectedSpace?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {this.state.selectedSpace && (
+            <SpaceImageViewer space={this.state.selectedSpace} />
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={this.closeSpaceImage}>
+            {this.props.t("back")}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
     let isRecurring = false;
     const bookingNamesModal = (
       <Modal
@@ -3193,6 +3247,12 @@ class Search extends React.Component<Props, State> {
               this.openSpaceCalendar();
             }}
           />
+          {RuntimeConfig.INFOS.featureSpaceImages &&
+            this.state.selectedSpace?.hasImage && (
+              <SpaceImageButton
+                onClick={() => this.openSpaceImage("showBookingNames")}
+              />
+            )}
           {gotoBooking}
         </Modal.Footer>
       </Modal>
@@ -3387,6 +3447,7 @@ class Search extends React.Component<Props, State> {
         {searchModal}
         {confirmModal}
         {bookingNamesModal}
+        {spaceImageModal}
         {cancelBookingConfirmModal}
         {spaceCalendarModal}
         {successModal}

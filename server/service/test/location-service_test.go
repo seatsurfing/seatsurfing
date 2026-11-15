@@ -210,7 +210,11 @@ func TestLocationServiceParseLocationMap(t *testing.T) {
 }
 
 func TestLocationServiceParseLocationMapInvalid(t *testing.T) {
-	checkLocationMapInvalid(t, make([]byte, MaxLocationMapSize+1))
+	_, err := GetLocationService().ParseLocationMap(make([]byte, MaxLocationMapSize+1))
+	CheckTestBool(t, true, err == ErrLocationMapTooLarge)
+	_, err = GetLocationService().ParseLocationMap([]byte("no image"))
+	CheckTestBool(t, true, err == ErrLocationMapInvalid)
+	checkLocationMapInvalid(t, []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="10001" height="150"></svg>`))
 	checkLocationMapInvalid(t, []byte("no image"))
 	checkLocationMapInvalid(t, []byte(`<html width="300" height="150"></html>`))
 	checkLocationMapInvalid(t, []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="150"></svg>`))

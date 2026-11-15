@@ -29,6 +29,7 @@ export default class Space extends Entity {
   rawBookings: any[];
   allowed: boolean;
   approvalRequired: boolean;
+  hasImage: boolean;
 
   constructor() {
     super();
@@ -53,6 +54,7 @@ export default class Space extends Entity {
     this.rawBookings = [];
     this.allowed = true;
     this.approvalRequired = false;
+    this.hasImage = false;
   }
 
   normalizePosition(): {
@@ -160,6 +162,7 @@ export default class Space extends Entity {
     if (input.available) {
       this.available = input.available;
     }
+    this.hasImage = input.hasImage ?? false;
     if (input.location) {
       this.location.deserialize(input.location);
     }
@@ -248,6 +251,31 @@ export default class Space extends Entity {
     );
   }
 
+  getImageUrl(bookingContext: boolean = false): string {
+    return (
+      `${this.getBackendUrl()}${encodeURIComponent(this.id)}/image` +
+      Location.bookingContextQuery(bookingContext)
+    );
+  }
+
+  async getImage(bookingContext: boolean = false): Promise<SpaceImage> {
+    const result = await Ajax.get(this.getImageUrl(bookingContext));
+    return {
+      width: result.json.width,
+      height: result.json.height,
+      mimeType: result.json.mimeType,
+      data: result.json.data,
+    };
+  }
+
+  async setImage(file: File): Promise<void> {
+    await Ajax.postData(this.getImageUrl(), file);
+  }
+
+  async deleteImage(): Promise<void> {
+    await Ajax.delete(this.getImageUrl());
+  }
+
   static async get(locationId: string, id: string): Promise<Space> {
     const result = await Ajax.get(
       `/location/${encodeURIComponent(locationId)}/space/${encodeURIComponent(id)}`,
@@ -326,7 +354,14 @@ export default class Space extends Entity {
       payload,
     );
     const e = new BulkUpdateResponse();
-    e.deserialize(result);
+    e.deserialize(result.json);
     return e;
   }
+}
+
+export interface SpaceImage {
+  width: number;
+  height: number;
+  mimeType: string;
+  data: string;
 }

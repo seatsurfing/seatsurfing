@@ -2,9 +2,11 @@ package test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
 	. "github.com/seatsurfing/seatsurfing/server/router"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/testutil"
 )
 
@@ -1145,4 +1148,139 @@ func TestSpacesAvailabilityTouching(t *testing.T) {
 	CheckTestBool(t, true, resBody[0].Available)
 	CheckTestBool(t, true, resBody[1].Available)
 	CheckTestBool(t, true, resBody[2].Available)
+}
+
+func TestSpacesImage(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
+	admin := CreateTestUserOrgAdmin(org)
+	user := CreateTestUserInOrg(org)
+	location, space := CreateTestLocationAndSpace(org)
+	url := "/location/" + location.ID + "/space/" + space.ID + "/image"
+	data := CreateTestPNG(40, 30)
+
+	req := NewHTTPRequest("GET", url, user.ID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+
+	req = NewHTTPRequest("POST", url, user.ID, bytes.NewBuffer(data))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	req = NewHTTPRequest("POST", url, admin.ID, bytes.NewBuffer(data))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", url, user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var image *GetSpaceImageResponse
+	json.Unmarshal(res.Body.Bytes(), &image)
+	CheckTestString(t, "image/png", image.MimeType)
+	CheckTestUint(t, 40, image.Width)
+	CheckTestUint(t, 30, image.Height)
+	decoded, _ := base64.StdEncoding.DecodeString(image.Data)
+	CheckTestBool(t, true, bytes.Equal(data, decoded))
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/"+space.ID, user.ID, nil)
+	res = ExecuteTestRequest(req)
+	var single *GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &single)
+	CheckTestBool(t, true, single.HasImage)
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/", user.ID, nil)
+	res = ExecuteTestRequest(req)
+	var list []*GetSpaceResponse
+	json.Unmarshal(res.Body.Bytes(), &list)
+	CheckTestInt(t, 1, len(list))
+	CheckTestBool(t, true, list[0].HasImage)
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/availability", user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var availability []*GetSpaceAvailabilityResponse
+	json.Unmarshal(res.Body.Bytes(), &availability)
+	CheckTestInt(t, 1, len(availability))
+	CheckTestBool(t, true, availability[0].HasImage)
+
+	req = NewHTTPRequest("DELETE", url, user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+
+	req = NewHTTPRequest("DELETE", url, admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", url, user.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNotFound, res.Code)
+}
+
+func TestSpacesImageFeatureDisabled(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	location, space := CreateTestLocationAndSpace(org)
+	url := "/location/" + location.ID + "/space/" + space.ID + "/image"
+
+	req := NewHTTPRequest("POST", url, admin.ID, bytes.NewBuffer(CreateTestPNG(1, 1)))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusPaymentRequired, res.Code)
+}
+
+func TestSpacesImageInvalid(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
+	admin := CreateTestUserOrgAdmin(org)
+	location, space := CreateTestLocationAndSpace(org)
+	url := "/location/" + location.ID + "/space/" + space.ID + "/image"
+
+	req := NewHTTPRequest("POST", url, admin.ID, bytes.NewBufferString("no image"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeSpaceImageInvalidFormat), res.Header().Get("X-Error-Code"))
+
+	req = NewHTTPRequest("POST", url, admin.ID, bytes.NewBuffer(make([]byte, service.SpaceImageMaxBytes+10)))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeSpaceImageTooLarge), res.Header().Get("X-Error-Code"))
+}
+
+func TestSpacesImageForeignOrg(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	GetSettingsRepository().Set(org.ID, SettingFeatureSpaceImages.Name, "1")
+	admin := CreateTestUserOrgAdmin(org)
+	location, space := CreateTestLocationAndSpace(org)
+	org2 := CreateTestOrg("test2.com")
+	admin2 := CreateTestUserOrgAdmin(org2)
+	location2, _ := CreateTestLocationAndSpace(org2)
+	data := CreateTestPNG(1, 1)
+
+	req := NewHTTPRequest("POST", "/location/"+location.ID+"/space/"+space.ID+"/image", admin.ID, bytes.NewBuffer(data))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	for _, url := range []string{
+		"/location/" + location.ID + "/space/" + space.ID + "/image",
+		"/location/" + location2.ID + "/space/" + space.ID + "/image",
+	} {
+		req = NewHTTPRequest("GET", url, admin2.ID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestBool(t, true, res.Code == http.StatusForbidden || res.Code == http.StatusNotFound)
+
+		req = NewHTTPRequest("POST", url, admin2.ID, bytes.NewBuffer(data))
+		res = ExecuteTestRequest(req)
+		CheckTestBool(t, true, res.Code == http.StatusForbidden || res.Code == http.StatusNotFound)
+
+		req = NewHTTPRequest("DELETE", url, admin2.ID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestBool(t, true, res.Code == http.StatusForbidden || res.Code == http.StatusNotFound)
+	}
+
+	req = NewHTTPRequest("GET", "/location/"+location.ID+"/space/"+space.ID+"/image", admin.ID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
 }

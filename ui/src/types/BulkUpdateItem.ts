@@ -7,8 +7,9 @@ export default class BulkUpdateItem {
     this.success = false;
   }
 
-  deserialize(input: any): void {
+  deserialize(input: any): BulkUpdateItem {
     this.id = input.id;
     this.success = input.success;
+    return this;
   }
 }
