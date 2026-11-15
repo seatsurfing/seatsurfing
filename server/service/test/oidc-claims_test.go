@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -19,147 +20,208 @@ func signTestIDToken(t *testing.T, claims jwt.MapClaims) string {
 	return raw
 }
 
-func TestClaimsFromIDTokenHappyPath(t *testing.T) {
+func validTestIDTokenClaims(now time.Time) jwt.MapClaims {
+	return jwt.MapClaims{
+		"sub":         "subject-1",
+		"aud":         "client-1",
+		"exp":         now.Add(time.Hour).Unix(),
+		"email":       "user@example.com",
+		"given_name":  "Jane",
+		"family_name": "Doe",
+		"groups":      []string{"staff"},
+	}
+}
+
+func checkTestIDTokenError(t *testing.T, err error, contains string) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("expected an error containing %q", contains)
+	}
+	if !strings.Contains(err.Error(), contains) {
+		t.Fatalf("expected an error containing %q, got %q", contains, err.Error())
+	}
+}
+
+func TestOIDCClaimsFillsMissingFields(t *testing.T) {
 	now := time.Now()
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"aud":   "client-1",
-		"exp":   now.Add(time.Hour).Unix(),
-		"email": "user@example.com",
-	})
-	claims, err := ClaimsFromIDToken(raw, "client-1", now)
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	raw := signTestIDToken(t, validTestIDTokenClaims(now))
+	filled, err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email", "given_name", "family_name", "groups")
 	if err != nil {
 		t.Fatal(err)
 	}
-	CheckTestString(t, "user@example.com", claims["email"].(string))
+	CheckTestString(t, "email,given_name,family_name,groups", strings.Join(filled, ","))
+	CheckTestString(t, "user@example.com", userinfo["email"].(string))
+	CheckTestString(t, "Jane", userinfo["given_name"].(string))
+	CheckTestString(t, "Doe", userinfo["family_name"].(string))
+	CheckTestInt(t, 1, len(userinfo["groups"].([]interface{})))
 }
 
-func TestClaimsFromIDTokenAudienceArray(t *testing.T) {
+func TestOIDCClaimsAudienceArray(t *testing.T) {
 	now := time.Now()
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"aud": []string{"other", "client-1"},
-		"exp": now.Add(time.Hour).Unix(),
-	})
-	if _, err := ClaimsFromIDToken(raw, "client-1", now); err != nil {
+	claims := validTestIDTokenClaims(now)
+	claims["aud"] = []string{"other", "client-1"}
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	if _, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email"); err != nil {
 		t.Fatal(err)
 	}
+	CheckTestString(t, "user@example.com", userinfo["email"].(string))
 }
 
-func TestClaimsFromIDTokenWrongAudience(t *testing.T) {
+func TestOIDCClaimsWrongAudience(t *testing.T) {
 	now := time.Now()
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"aud": "other-client",
-		"exp": now.Add(time.Hour).Unix(),
-	})
-	if _, err := ClaimsFromIDToken(raw, "client-1", now); err == nil {
-		t.Fatal("expected error for wrong audience")
-	}
+	claims := validTestIDTokenClaims(now)
+	claims["aud"] = "other-client"
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	_, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email")
+	checkTestIDTokenError(t, err, "audience")
+	CheckTestBool(t, false, userinfo["email"] != nil)
 }
 
-func TestClaimsFromIDTokenExpired(t *testing.T) {
+func TestOIDCClaimsExpiryLeeway(t *testing.T) {
 	now := time.Now()
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"aud": "client-1",
-		"exp": now.Add(-time.Minute).Unix(),
-	})
-	if _, err := ClaimsFromIDToken(raw, "client-1", now); err == nil {
-		t.Fatal("expected error for expired token")
+	claims := validTestIDTokenClaims(now)
+	claims["exp"] = now.Add(-30 * time.Second).Unix()
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	if _, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email"); err != nil {
+		t.Fatalf("expected small clock skew to be tolerated: %v", err)
 	}
+	CheckTestString(t, "user@example.com", userinfo["email"].(string))
 }
 
-func TestClaimsFromIDTokenMissingExpiry(t *testing.T) {
-	raw := signTestIDToken(t, jwt.MapClaims{"aud": "client-1"})
-	if _, err := ClaimsFromIDToken(raw, "client-1", time.Now()); err == nil {
-		t.Fatal("expected error for missing expiry")
-	}
-}
-
-func TestClaimsFromIDTokenMalformed(t *testing.T) {
-	if _, err := ClaimsFromIDToken("not-a-jwt", "client-1", time.Now()); err == nil {
-		t.Fatal("expected error for malformed token")
-	}
-}
-
-func TestMergeMissingClaimsKeepsUserinfoValues(t *testing.T) {
-	target := map[string]interface{}{
-		"sub":   "abc",
-		"email": "userinfo@example.com",
-	}
-	MergeMissingClaims(target, map[string]interface{}{
-		"email":       "idtoken@example.com",
-		"given_name":  "Jane",
-		"family_name": "Doe",
-	}, "email", "given_name", "family_name")
-	CheckTestString(t, "userinfo@example.com", target["email"].(string))
-	CheckTestString(t, "Jane", target["given_name"].(string))
-	CheckTestString(t, "Doe", target["family_name"].(string))
-	CheckTestString(t, "abc", target["sub"].(string))
-}
-
-func TestMergeMissingClaimsOnlyCopiesGivenFields(t *testing.T) {
-	target := map[string]interface{}{"sub": "abc"}
-	MergeMissingClaims(target, map[string]interface{}{
-		"aud":        "client-1",
-		"exp":        int64(123),
-		"nonce":      "n",
-		"given_name": "Jane",
-	}, "given_name", "", "missing_field")
-	CheckTestInt(t, 2, len(target))
-	CheckTestString(t, "Jane", target["given_name"].(string))
-	if _, ok := target["missing_field"]; ok {
-		t.Fatal("field missing in claims must not be added")
-	}
-}
-
-func TestFillMissingUserInfoFromIDTokenSubjectMismatch(t *testing.T) {
+func TestOIDCClaimsExpired(t *testing.T) {
 	now := time.Now()
-	userinfo := map[string]interface{}{"sub": "user-a"}
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"sub":   "user-b",
-		"aud":   "client-1",
-		"exp":   now.Add(time.Hour).Unix(),
-		"email": "b@example.com",
-	})
-	if err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email"); err == nil {
-		t.Fatal("expected error for subject mismatch")
-	}
-	CheckTestInt(t, 1, len(userinfo))
+	claims := validTestIDTokenClaims(now)
+	claims["exp"] = now.Add(-2 * time.Minute).Unix()
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	_, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email")
+	checkTestIDTokenError(t, err, "expired")
+	CheckTestBool(t, false, userinfo["email"] != nil)
 }
 
-func TestFillMissingUserInfoFromIDTokenMissingSubject(t *testing.T) {
+func TestOIDCClaimsMissingExpiry(t *testing.T) {
 	now := time.Now()
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"aud":   "client-1",
-		"exp":   now.Add(time.Hour).Unix(),
-		"email": "a@example.com",
-	})
-	userinfo := map[string]interface{}{"sub": "user-a"}
-	if err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email"); err == nil {
-		t.Fatal("expected error for ID token without subject")
-	}
-	userinfo = map[string]interface{}{}
-	rawWithSub := signTestIDToken(t, jwt.MapClaims{
-		"sub":   "user-a",
-		"aud":   "client-1",
-		"exp":   now.Add(time.Hour).Unix(),
-		"email": "a@example.com",
-	})
-	if err := FillMissingUserInfoFromIDToken(userinfo, rawWithSub, "client-1", now, "email"); err == nil {
-		t.Fatal("expected error for userinfo without subject")
-	}
-	CheckTestInt(t, 0, len(userinfo))
+	claims := validTestIDTokenClaims(now)
+	delete(claims, "exp")
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	_, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email")
+	checkTestIDTokenError(t, err, "expiry")
 }
 
-func TestFillMissingUserInfoFromIDTokenInvalidToken(t *testing.T) {
+func TestOIDCClaimsMalformedToken(t *testing.T) {
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	_, err := FillMissingUserInfoFromIDToken(userinfo, "not-a-jwt", "client-1", time.Now(), "email")
+	checkTestIDTokenError(t, err, "failed parsing ID token")
+}
+
+func TestOIDCClaimsNoIDToken(t *testing.T) {
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	_, err := FillMissingUserInfoFromIDToken(userinfo, "", "client-1", time.Now(), "email")
+	checkTestIDTokenError(t, err, "openid")
+}
+
+func TestOIDCClaimsKeepsUserinfoValues(t *testing.T) {
 	now := time.Now()
-	userinfo := map[string]interface{}{"sub": "user-a"}
-	raw := signTestIDToken(t, jwt.MapClaims{
-		"sub":   "user-a",
-		"aud":   "other-client",
-		"exp":   now.Add(time.Hour).Unix(),
-		"email": "a@example.com",
-	})
-	if err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email"); err == nil {
-		t.Fatal("expected error for wrong audience")
+	userinfo := map[string]interface{}{"sub": "subject-1", "email": "userinfo@example.com"}
+	raw := signTestIDToken(t, validTestIDTokenClaims(now))
+	filled, err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email", "given_name")
+	if err != nil {
+		t.Fatal(err)
 	}
-	CheckTestInt(t, 1, len(userinfo))
+	CheckTestString(t, "given_name", strings.Join(filled, ","))
+	CheckTestString(t, "userinfo@example.com", userinfo["email"].(string))
+	CheckTestString(t, "Jane", userinfo["given_name"].(string))
+}
+
+func TestOIDCClaimsEmptyUserinfoValuesAreMissing(t *testing.T) {
+	now := time.Now()
+	userinfo := map[string]interface{}{
+		"sub":         "subject-1",
+		"email":       "",
+		"given_name":  "   ",
+		"family_name": nil,
+		"groups":      []interface{}{},
+	}
+	raw := signTestIDToken(t, validTestIDTokenClaims(now))
+	filled, err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email", "given_name", "family_name", "groups")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "email,given_name,family_name,groups", strings.Join(filled, ","))
+	CheckTestString(t, "user@example.com", userinfo["email"].(string))
+	CheckTestString(t, "Jane", userinfo["given_name"].(string))
+	CheckTestString(t, "Doe", userinfo["family_name"].(string))
+	CheckTestInt(t, 1, len(userinfo["groups"].([]interface{})))
+}
+
+func TestOIDCClaimsEmptyIDTokenValuesAreNotCopied(t *testing.T) {
+	now := time.Now()
+	claims := validTestIDTokenClaims(now)
+	claims["given_name"] = " "
+	claims["groups"] = []string{}
+	delete(claims, "family_name")
+	userinfo := map[string]interface{}{"sub": "subject-1", "given_name": ""}
+	filled, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email", "given_name", "family_name", "groups")
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "email", strings.Join(filled, ","))
+	CheckTestString(t, "", userinfo["given_name"].(string))
+	_, hasFamilyName := userinfo["family_name"]
+	CheckTestBool(t, false, hasFamilyName)
+	_, hasGroups := userinfo["groups"]
+	CheckTestBool(t, false, hasGroups)
+}
+
+func TestOIDCClaimsOnlyCopiesGivenFields(t *testing.T) {
+	now := time.Now()
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	raw := signTestIDToken(t, validTestIDTokenClaims(now))
+	if _, err := FillMissingUserInfoFromIDToken(userinfo, raw, "client-1", now, "email", ""); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 2, len(userinfo))
+	for _, claim := range []string{"aud", "exp", "given_name", ""} {
+		if _, ok := userinfo[claim]; ok {
+			t.Fatalf("claim %q must not be merged", claim)
+		}
+	}
+}
+
+func TestOIDCClaimsNothingMissingSkipsIDToken(t *testing.T) {
+	userinfo := map[string]interface{}{"sub": "subject-1", "email": "userinfo@example.com"}
+	filled, err := FillMissingUserInfoFromIDToken(userinfo, "not-a-jwt", "client-1", time.Now(), "email", "")
+	if err != nil {
+		t.Fatalf("expected the ID token to be ignored if no field is missing: %v", err)
+	}
+	CheckTestInt(t, 0, len(filled))
+}
+
+func TestOIDCClaimsSubjectMismatch(t *testing.T) {
+	now := time.Now()
+	claims := validTestIDTokenClaims(now)
+	claims["sub"] = "subject-2"
+	userinfo := map[string]interface{}{"sub": "subject-1"}
+	_, err := FillMissingUserInfoFromIDToken(userinfo, signTestIDToken(t, claims), "client-1", now, "email")
+	checkTestIDTokenError(t, err, "subject")
+	CheckTestBool(t, false, userinfo["email"] != nil)
+}
+
+func TestOIDCClaimsMissingSubject(t *testing.T) {
+	now := time.Now()
+	withoutSub := validTestIDTokenClaims(now)
+	delete(withoutSub, "sub")
+	for name, testCase := range map[string]struct {
+		userinfo map[string]interface{}
+		claims   jwt.MapClaims
+	}{
+		"userinfo": {map[string]interface{}{}, validTestIDTokenClaims(now)},
+		"id-token": {map[string]interface{}{"sub": "subject-1"}, withoutSub},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := FillMissingUserInfoFromIDToken(testCase.userinfo, signTestIDToken(t, testCase.claims), "client-1", now, "email")
+			checkTestIDTokenError(t, err, "no subject")
+			CheckTestBool(t, false, testCase.userinfo["email"] != nil)
+		})
+	}
 }
