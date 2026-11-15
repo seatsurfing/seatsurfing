@@ -56,3 +56,15 @@ func TestCanManageUserForeignOrg(t *testing.T) {
 	CheckTestBool(t, false, CanManageUser(nil, user2))
 	CheckTestBool(t, false, CanManageUser(admin1, nil))
 }
+
+func TestCanManageUserTargetPermissionLookupFails(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	orgAdmin := CreateTestUserOrgAdmin(org)
+
+	// A target whose permissions can't be loaded (here: an ID Postgres rejects
+	// as a UUID, so the user_roles query errors) must not be treated as
+	// unprivileged - not even by the organization administrator.
+	target := &User{ID: "not-a-uuid", OrganizationID: org.ID}
+	CheckTestBool(t, false, CanManageUser(orgAdmin, target))
+}

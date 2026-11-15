@@ -85,7 +85,16 @@ func CanManageUser(actor *User, target *User) bool {
 	if actor.ID == target.ID {
 		return true
 	}
-	return CanGrantPermissions(actor, target.OrganizationID, GetEffectivePermissions(target, target.OrganizationID))
+	// Load the target's permissions directly rather than via
+	// GetEffectivePermissions: that one fails closed by returning an empty
+	// set, which here would make the target look unprivileged and so fail
+	// open. If the target's privileges can't be determined, deny.
+	targetPerms, err := GetUserRoleRepository().GetEffectivePermissions(target.ID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	return CanGrantPermissions(actor, target.OrganizationID, targetPerms)
 }
 
 // hasNoAdminRestrictions reports whether the organization lifts booking
