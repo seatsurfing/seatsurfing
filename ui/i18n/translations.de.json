@@ -691,5 +691,6 @@
   "bookerNamesPrivacyHint": "Datenschutz beachten!",
   "defaultBookingView": "Standard-Buchungsansicht",
   "list": "Liste",
-  "disallowed": "nicht erlaubt"
+  "disallowed": "nicht erlaubt",
+  "userHigherPrivilegesReadOnly": "Dieser Benutzer verfügt über Berechtigungen, die über deine eigenen hinausgehen, und kann daher nicht bearbeitet werden."
 }

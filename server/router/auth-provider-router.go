@@ -8,6 +8,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -381,7 +382,7 @@ func (router *AuthProviderRouter) setMappings(w http.ResponseWriter, r *http.Req
 				SendBadRequest(w)
 				return
 			}
-			if !CanGrantPermissions(user, e.OrganizationID, role.Permissions) {
+			if !service.CanGrantPermissions(user, e.OrganizationID, role.Permissions) {
 				SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 				return
 			}

@@ -18,6 +18,7 @@ import (
 
 	. "github.com/seatsurfing/seatsurfing/server/api"
 	. "github.com/seatsurfing/seatsurfing/server/repository"
+	"github.com/seatsurfing/seatsurfing/server/service"
 	. "github.com/seatsurfing/seatsurfing/server/util"
 )
 
@@ -91,6 +92,15 @@ type GetUserSelfResponse struct {
 	// name. It is returned only for the authenticated user themselves, since
 	// resolving it for every entry of a user list would cost a query each.
 	Permissions map[string]int `json:"permissions"`
+	GetUserResponse
+}
+
+// GetUserDetailResponse is the representation of a single user as seen by an
+// administrator. CanManage tells the client whether the caller may modify the
+// account at all (see service.CanManageUser), so it can present the user as
+// read-only instead of failing on save.
+type GetUserDetailResponse struct {
+	CanManage bool `json:"canManage"`
 	GetUserResponse
 }
 
@@ -173,6 +183,9 @@ func (router *UserRouter) adminResetPasskeys(w http.ResponseWriter, r *http.Requ
 		SendForbidden(w)
 		return
 	}
+	if !router.checkCanManageUser(w, user, e) {
+		return
+	}
 	if err := GetPasskeyRepository().DeleteAllByUserID(e.ID); err != nil {
 		log.Println(err)
 		SendInternalServerError(w)
@@ -195,6 +208,9 @@ func (router *UserRouter) adminResetTotp(w http.ResponseWriter, r *http.Request)
 	}
 	if e.OrganizationID != user.OrganizationID {
 		SendForbidden(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	e.TotpSecret = NullString("")
@@ -414,6 +430,9 @@ func (router *UserRouter) setPassword(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if !router.checkCanManageUser(w, user, e) {
+		return
+	}
 	e.HashedPassword = NullString(GetUserRepository().GetHashedPassword(m.Password))
 	e.PasswordUpdateRequired = user.ID != e.ID
 	if err := GetUserRepository().Update(e); err != nil {
@@ -561,7 +580,10 @@ func (router *UserRouter) getOne(w http.ResponseWriter, r *http.Request) {
 		SendInternalServerError(w)
 		return
 	}
-	res := router.copyToRestModel(e, true, passkeyCount > 0, roleIDs)
+	res := &GetUserDetailResponse{
+		CanManage:       service.CanManageUser(user, e),
+		GetUserResponse: *router.copyToRestModel(e, true, passkeyCount > 0, roleIDs),
+	}
 	SendJSON(w, res)
 }
 
@@ -644,6 +666,10 @@ func (router *UserRouter) update(w http.ResponseWriter, r *http.Request) {
 	if (e.AccountType.IsServiceAccount() || isServiceAccountType(m.AccountType)) &&
 		!HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
+		return
+	}
+
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 
@@ -762,6 +788,9 @@ func (router *UserRouter) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if e.AccountType.IsServiceAccount() && !HasPermission(user, e.OrganizationID, PermissionServiceAccounts, PermissionLevelAdmin) {
 		SendForbidden(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	// Refuse before deleting rather than repairing afterwards: this is the
@@ -983,6 +1012,9 @@ func (router *UserRouter) generateApiToken(w http.ResponseWriter, r *http.Reques
 		SendBadRequest(w)
 		return
 	}
+	if !router.checkCanManageUser(w, user, e) {
+		return
+	}
 	rawBytes := make([]byte, 32)
 	if _, err := rand.Read(rawBytes); err != nil {
 		log.Println(err)
@@ -1021,6 +1053,9 @@ func (router *UserRouter) revokeApiToken(w http.ResponseWriter, r *http.Request)
 	}
 	if !e.AccountType.IsServiceAccount() {
 		SendBadRequest(w)
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	if err := GetUserRepository().SetApiToken(e.ID, NullString("")); err != nil {
@@ -1063,6 +1098,9 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	e := router.loadUserInOwnOrg(w, r, user)
 	if e == nil {
+		return
+	}
+	if !router.checkCanManageUser(w, user, e) {
 		return
 	}
 	var m SetUserRolesRequest
@@ -1125,7 +1163,7 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 			SendBadRequest(w)
 			return
 		}
-		if !CanGrantPermissions(user, user.OrganizationID, role.Permissions) {
+		if !service.CanGrantPermissions(user, user.OrganizationID, role.Permissions) {
 			SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 			return
 		}
@@ -1135,7 +1173,7 @@ func (router *UserRouter) setRoles(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		if !CanGrantPermissions(user, user.OrganizationID, full.Permissions) {
+		if !service.CanGrantPermissions(user, user.OrganizationID, full.Permissions) {
 			SendBadRequestCode(w, ResponseCodeRoleEscalationNotAllowed)
 			return
 		}
@@ -1180,6 +1218,17 @@ func (router *UserRouter) getPermissions(w http.ResponseWriter, r *http.Request)
 	SendJSON(w, &GetUserPermissionsResponse{
 		Permissions: PermissionsToRestModel(GetEffectivePermissions(e, e.OrganizationID)),
 	})
+}
+
+// checkCanManageUser guards operations on another user's account: it writes
+// 400 and reports false when target holds access beyond the request user's
+// (see service.CanManageUser).
+func (router *UserRouter) checkCanManageUser(w http.ResponseWriter, user *User, target *User) bool {
+	if !service.CanManageUser(user, target) {
+		SendBadRequest(w)
+		return false
+	}
+	return true
 }
 
 // loadUserInOwnOrg resolves the user named in the path, refusing anything

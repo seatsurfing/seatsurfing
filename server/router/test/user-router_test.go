@@ -430,10 +430,9 @@ func TestUserDeleteServiceAccountRequiresServiceAccountsPermission(t *testing.T)
 		t.Fatal("service account must still exist")
 	}
 
-	admin2 := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{
-		PermissionUsers:           PermissionLevelAdmin,
-		PermissionServiceAccounts: PermissionLevelAdmin,
-	})
+	// The built-in API access role grants every permission, so deleting the
+	// account takes a caller holding no less.
+	admin2 := CreateTestUserWithPermissions(org, allTestPermissions())
 	login2 := LoginTestUser(admin2.ID)
 	req = NewHTTPRequest("DELETE", "/user/"+sa.ID, login2.UserID, nil)
 	res = ExecuteTestRequest(req)
@@ -1351,4 +1350,203 @@ func TestUserListIncludesRoleIDs(t *testing.T) {
 		}
 	}
 	CheckTestInt(t, 3, found)
+}
+
+// allTestPermissions grants every registered permission at its highest level,
+// i.e. the same access as the organization administrator, but through a
+// custom role.
+func allTestPermissions() map[Permission]PermissionLevel {
+	perms := make(map[Permission]PermissionLevel)
+	for _, d := range GetPermissionDefinitions() {
+		perms[d.Key] = d.MaxLevel()
+	}
+	return perms
+}
+
+// createTestTargetWithSecrets gives a user a password and a TOTP secret so a
+// test can tell whether an administrative reset touched them.
+func createTestTargetWithSecrets(t *testing.T, user *User) *User {
+	user.HashedPassword = NullString(GetUserRepository().GetHashedPassword(TestPassword))
+	user.TotpSecret = NullString("SOMEFAKETOTPSECRET")
+	if err := GetUserRepository().Update(user); err != nil {
+		t.Fatal(err)
+	}
+	return user
+}
+
+func TestUserDelegatedAdminCannotManageHigherPrivilegedUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	delegated := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(delegated.ID)
+	CreateTestUserOrgAdmin(org) // keeps the org administered regardless of the target
+	target := createTestTargetWithSecrets(t, CreateTestUserOrgAdmin(org))
+
+	// Password reset
+	req := NewHTTPRequest("PUT", "/user/"+target.ID+"/password", login.UserID, bytes.NewBufferString("{\"password\": \""+TestPasswordNew+"\"}"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// TOTP reset
+	req = NewHTTPRequest("DELETE", "/user/"+target.ID+"/totp", login.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Passkey reset
+	req = NewHTTPRequest("DELETE", "/user/"+target.ID+"/passkeys", login.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Update (e.g. redirecting the account to an address the caller controls)
+	newEmail := uuid.New().String() + "@test.com"
+	payload := "{\"email\": \"" + newEmail + "\", \"firstname\": \"Eve\", \"lastname\": \"Doe\", \"password\": \"" + TestPasswordNew + "\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+	req = NewHTTPRequest("PUT", "/user/"+target.ID, login.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Delete
+	req = NewHTTPRequest("DELETE", "/user/"+target.ID, login.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// Nothing was changed.
+	after, err := GetUserRepository().GetOne(target.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, target.Email, after.Email)
+	CheckTestBool(t, true, GetUserRepository().CheckPassword(string(after.HashedPassword), TestPassword))
+	CheckTestBool(t, false, after.PasswordUpdateRequired)
+	CheckTestString(t, "SOMEFAKETOTPSECRET", string(after.TotpSecret))
+}
+
+func TestUserDelegatedAdminCannotManageUserWithOtherPermission(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	delegated := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(delegated.ID)
+	// Not above the caller in users, but holding a permission the caller lacks.
+	target := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionBookings: PermissionLevelRead})
+
+	req := NewHTTPRequest("PUT", "/user/"+target.ID+"/password", login.UserID, bytes.NewBufferString("{\"password\": \""+TestPasswordNew+"\"}"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+}
+
+func TestUserDelegatedAdminCanManageLowerOrEqualUser(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	CreateTestUserOrgAdmin(org) // keeps the org from losing its last admin on delete
+	perms := map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin}
+	delegated := CreateTestUserWithPermissions(org, perms)
+	login := LoginTestUser(delegated.ID)
+
+	for _, target := range []*User{
+		createTestTargetWithSecrets(t, CreateTestUserInOrg(org)),
+		createTestTargetWithSecrets(t, CreateTestUserWithPermissions(org, perms)),
+	} {
+		req := NewHTTPRequest("PUT", "/user/"+target.ID+"/password", login.UserID, bytes.NewBufferString("{\"password\": \""+TestPasswordNew+"\"}"))
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+		req = NewHTTPRequest("DELETE", "/user/"+target.ID+"/totp", login.UserID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+		req = NewHTTPRequest("DELETE", "/user/"+target.ID+"/passkeys", login.UserID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+		payload := "{\"email\": \"" + target.Email + "\", \"firstname\": \"Jane\", \"lastname\": \"Doe\", \"accountType\": " + strconv.Itoa(int(AccountTypePerson)) + "}"
+		req = NewHTTPRequest("PUT", "/user/"+target.ID, login.UserID, bytes.NewBufferString(payload))
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+		after, err := GetUserRepository().GetOne(target.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		CheckTestBool(t, true, GetUserRepository().CheckPassword(string(after.HashedPassword), TestPasswordNew))
+		CheckTestString(t, "", string(after.TotpSecret))
+
+		req = NewHTTPRequest("DELETE", "/user/"+target.ID, login.UserID, nil)
+		res = ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	}
+}
+
+func TestUserReadOnlyAdminCannotResetPassword(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	reader := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelRead})
+	login := LoginTestUser(reader.ID)
+	target := CreateTestUserInOrg(org)
+
+	req := NewHTTPRequest("PUT", "/user/"+target.ID+"/password", login.UserID, bytes.NewBufferString("{\"password\": \""+TestPasswordNew+"\"}"))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func TestUserApiTokenRequiresHigherOrEqualPrivileges(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	perms := map[Permission]PermissionLevel{
+		PermissionUsers:           PermissionLevelAdmin,
+		PermissionServiceAccounts: PermissionLevelAdmin,
+	}
+	caller := CreateTestUserWithPermissions(org, perms)
+	login := LoginTestUser(caller.ID)
+
+	newServiceAccount := func(perms map[Permission]PermissionLevel) *User {
+		sa := CreateTestUserWithPermissions(org, perms)
+		sa.AccountType = AccountTypeServiceAccountRW
+		if err := GetUserRepository().Update(sa); err != nil {
+			t.Fatal(err)
+		}
+		return sa
+	}
+
+	// A service account holding access beyond the caller's.
+	higher := newServiceAccount(map[Permission]PermissionLevel{PermissionRoles: PermissionLevelAdmin})
+	req := NewHTTPRequest("POST", "/user/"+higher.ID+"/api-token", login.UserID, nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	req = NewHTTPRequest("DELETE", "/user/"+higher.ID+"/api-token", login.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// A service account within the caller's own access.
+	lower := newServiceAccount(map[Permission]PermissionLevel{PermissionUsers: PermissionLevelRead})
+	req = NewHTTPRequest("POST", "/user/"+lower.ID+"/api-token", login.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	req = NewHTTPRequest("DELETE", "/user/"+lower.ID+"/api-token", login.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestUserGetOneReportsCanManage(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	delegated := CreateTestUserWithPermissions(org, map[Permission]PermissionLevel{PermissionUsers: PermissionLevelAdmin})
+	login := LoginTestUser(delegated.ID)
+	higher := CreateTestUserOrgAdmin(org)
+	lower := CreateTestUserInOrg(org)
+
+	getCanManage := func(id string) bool {
+		req := NewHTTPRequest("GET", "/user/"+id, login.UserID, nil)
+		res := ExecuteTestRequest(req)
+		CheckTestResponseCode(t, http.StatusOK, res.Code)
+		var resBody map[string]interface{}
+		json.Unmarshal(res.Body.Bytes(), &resBody)
+		v, ok := resBody["canManage"].(bool)
+		if !ok {
+			t.Fatal("canManage missing in response")
+		}
+		return v
+	}
+
+	CheckTestBool(t, false, getCanManage(higher.ID))
+	CheckTestBool(t, true, getCanManage(lower.ID))
+	CheckTestBool(t, true, getCanManage(delegated.ID))
 }

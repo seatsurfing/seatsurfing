@@ -32,6 +32,12 @@ export default class User extends Entity {
   totpEnabled: boolean;
   hasPasskeys: boolean;
   lastActivity: Date | null;
+  /**
+   * Whether the requesting user may modify this account. Only reported when
+   * loading a single user; false if the account holds access beyond the
+   * requester's own.
+   */
+  canManage: boolean;
 
   constructor() {
     super();
@@ -52,6 +58,7 @@ export default class User extends Entity {
     this.totpEnabled = false;
     this.hasPasskeys = false;
     this.lastActivity = null;
+    this.canManage = true;
   }
 
   serialize(): Object {
@@ -92,6 +99,7 @@ export default class User extends Entity {
     this.lastActivity = input.lastActivity
       ? new Date(input.lastActivity)
       : null;
+    this.canManage = input.canManage ?? true;
   }
 
   getBackendUrl(): string {
