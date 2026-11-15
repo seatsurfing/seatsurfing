@@ -1532,6 +1532,28 @@ func TestBookingRepositoryUpdateCalDavID(t *testing.T) {
 	CheckTestBool(t, false, res.Approved)
 }
 
+func TestBookingRepositoryUpdateKeepsCalDavID(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	_, space := CreateTestLocationAndSpace(org)
+	b := CreateTestBooking9To5(user, space, 1)
+
+	// Take a snapshot, then let a side effect save the CalDAV ID afterwards
+	stale, err := GetBookingRepository().GetOne(b.ID)
+	CheckTestIsNil(t, err)
+	CheckTestIsNil(t, GetBookingRepository().UpdateCalDavID(b.ID, "caldav-1"))
+
+	// An ordinary update from the stale snapshot must not erase the ID
+	stale.Subject = "Changed"
+	CheckTestIsNil(t, GetBookingRepository().Update(&stale.Booking))
+
+	res, err := GetBookingRepository().GetOne(b.ID)
+	CheckTestIsNil(t, err)
+	CheckTestString(t, "caldav-1", res.CalDavID)
+	CheckTestString(t, "Changed", res.Subject)
+}
+
 func TestBookingRepositoryUpdateCalDavIDDeletedBooking(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
