@@ -266,6 +266,8 @@ type AuthStateLoginPayload struct {
 	UserID    string `json:"userId"`
 	LoginType string `json:"type"`
 	Redirect  string `json:"redirect,omitempty"`
+	// PKCEVerifier is encrypted at rest and only used for the code exchange.
+	PKCEVerifier string `json:"pkceVerifier,omitempty"`
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────
@@ -285,6 +287,11 @@ const (
 	SettingEnforceTOTPDisabled   = 0
 	SettingEnforceTOTPAllUsers   = 1
 	SettingEnforceTOTPAdminsOnly = 2
+)
+
+const (
+	SettingDefaultBookingViewMap  = "map"
+	SettingDefaultBookingViewList = "list"
 )
 
 var (
@@ -336,6 +343,7 @@ var (
 	SettingHideDisallowedLocations        SettingName = SettingName{Name: "hide_disallowed_locations", Type: SettingTypeBool}
 	SettingOrgAnnouncementText            SettingName = SettingName{Name: "org_announcement_text", Type: SettingTypeString}
 	SettingOrgAnnouncementPermission      SettingName = SettingName{Name: "org_announcement_permission", Type: SettingTypeString}
+	SettingDefaultBookingView             SettingName = SettingName{Name: "default_booking_view", Type: SettingTypeString}
 )
 
 // ─── AccountType ─────────────────────────────────────────────────────────────

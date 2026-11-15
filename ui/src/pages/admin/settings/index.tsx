@@ -64,6 +64,7 @@ interface State {
   bookingRetentionEnabled: boolean;
   bookingRetentionDays: number;
   subjectDefault: number;
+  defaultBookingView: string;
   enableMaxHoursBeforeDelete: boolean;
   maxHoursBeforeDelete: number;
   maxHoursPartiallyBooked: number;
@@ -150,6 +151,7 @@ class Settings extends React.Component<Props, State> {
       bookingRetentionEnabled: false,
       bookingRetentionDays: 0,
       subjectDefault: 0,
+      defaultBookingView: "map",
       enableMaxHoursBeforeDelete: false,
       maxHoursBeforeDelete: 0,
       maxHoursPartiallyBooked: 0,
@@ -307,6 +309,8 @@ class Settings extends React.Component<Props, State> {
           state.targetUtilizationHoursPerWeek = window.parseInt(s.value);
         if (s.name === Organization.PREF_SUBJECT_DEFAULT)
           state.subjectDefault = window.parseInt(s.value);
+        if (s.name === Organization.PREF_DEFAULT_BOOKING_VIEW)
+          state.defaultBookingView = s.value;
         if (s.name === Organization.PREF_NO_ADMIN_RESTRICTIONS)
           state.noAdminRestrictions = s.value === "1";
         if (s.name === Organization.PREF_SHOW_NAMES)
@@ -530,6 +534,10 @@ class Settings extends React.Component<Props, State> {
       new OrgSettings(
         Organization.PREF_SUBJECT_DEFAULT,
         this.state.subjectDefault.toString(),
+      ),
+      new OrgSettings(
+        Organization.PREF_DEFAULT_BOOKING_VIEW,
+        this.state.defaultBookingView,
       ),
       new OrgSettings(
         Organization.PREF_KIOSK_MODE_ENABLED,
@@ -1205,6 +1213,23 @@ class Settings extends React.Component<Props, State> {
                     {this.props.t("bookerNamesShowWithoutBuddies")}
                   </option>
                 </optgroup>
+              </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label column sm="2" htmlFor="select-defaultBookingView">
+              {this.props.t("defaultBookingView")}
+            </Form.Label>
+            <Col sm="4">
+              <Form.Select
+                id="select-defaultBookingView"
+                value={this.state.defaultBookingView}
+                onChange={(e: any) =>
+                  this.setState({ defaultBookingView: e.target.value })
+                }
+              >
+                <option value="map">{this.props.t("map")}</option>
+                <option value="list">{this.props.t("list")}</option>
               </Form.Select>
             </Col>
           </Form.Group>

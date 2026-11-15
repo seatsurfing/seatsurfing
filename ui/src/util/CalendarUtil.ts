@@ -45,6 +45,7 @@ export default class CalendarUtil {
         month: "short",
         day: "2-digit",
       }),
+      monthHeaderFormat: intl({ month: "long", year: "numeric" }),
       timeGutterFormat: time,
       agendaTimeFormat: time,
       selectRangeFormat: range,

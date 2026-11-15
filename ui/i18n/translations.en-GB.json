@@ -689,5 +689,7 @@
   "imageInvalidFormat": "Please upload a PNG or JPEG image.",
   "imageTooLarge": "The image is too large (max. 5 MB).",
   "image": "Photo",
+  "defaultBookingView": "Default booking view",
+  "list": "List",
   "disallowed": "disallowed"
 }

@@ -58,6 +58,7 @@ export default class Organization extends Entity {
     "public_booking_max_duration_hours";
   static readonly PREF_HIDE_DISALLOWED_LOCATIONS = "hide_disallowed_locations";
   static readonly PREF_ORG_ANNOUNCEMENT_TEXT = "org_announcement_text";
+  static readonly PREF_DEFAULT_BOOKING_VIEW = "default_booking_view";
 
   name: string;
   contactFirstname: string;
