@@ -539,24 +539,33 @@ func (r *BookingStore) GetAllByRecurringID(recurringID string) ([]*BookingDetail
 	return result, nil
 }
 
+// Update persists a booking's editable fields. It deliberately leaves
+// caldav_id untouched: that column is written only by UpdateCalDavID, so a
+// stale snapshot cannot erase an ID saved by an asynchronous side effect.
 func (r *BookingStore) Update(e *Booking) error {
 	_, err := GetDatabase().DB().Exec("UPDATE bookings SET "+
 		"user_id = $1, "+
 		"space_id = $2, "+
 		"enter_time = $3, "+
 		"leave_time = $4, "+
-		"caldav_id = $5, "+
-		"approved = $6, "+
-		"subject = $7, "+
-		"recurring_id = $8, "+
-		"public_id = $9, "+
+		"approved = $5, "+
+		"subject = $6, "+
+		"recurring_id = $7, "+
+		"public_id = $8, "+
 		"reminder_sent_at_utc = NULL, "+
 		// A booking may move to a space in another location, so refresh the
 		// denormalized columns from the (possibly new) space.
 		"location_id = (SELECT spaces.location_id FROM spaces WHERE spaces.id = $2), "+
 		"organization_id = (SELECT locations.organization_id FROM spaces INNER JOIN locations ON locations.id = spaces.location_id WHERE spaces.id = $2) "+
-		"WHERE id = $10",
-		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.CalDavID, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), e.ID)
+		"WHERE id = $9",
+		NullUUID(e.UserID), e.SpaceID, e.Enter, e.Leave, e.Approved, e.Subject, CheckNullUUID(e.RecurringID), CheckNullUUID(e.PublicID), e.ID)
+	return err
+}
+
+// UpdateCalDavID sets only the CalDAV event ID, so a delayed side effect
+// cannot overwrite changes persisted after its booking snapshot was taken.
+func (r *BookingStore) UpdateCalDavID(id string, calDavID string) error {
+	_, err := GetDatabase().DB().Exec("UPDATE bookings SET caldav_id = $1 WHERE id = $2", calDavID, id)
 	return err
 }
 

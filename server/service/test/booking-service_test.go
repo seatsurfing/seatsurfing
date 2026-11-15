@@ -350,3 +350,55 @@ func TestBookingServiceGetFiltered(t *testing.T) {
 		t.Fatalf("expected forbidden, got %v", bErr)
 	}
 }
+
+func TestBookingServiceApprovedAfterUpdate(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	approvalSpace := &Space{Name: "Approval", LocationID: location.ID, Enabled: true}
+	GetSpaceRepository().Create(approvalSpace)
+	group := CreateTestGroup(org, user)
+	GetSpaceRepository().AddApprovers(approvalSpace, []string{group.ID})
+	enter, leave := serviceTestSlot(0, 8, 17)
+	enter2, leave2 := serviceTestSlot(1, 8, 17)
+	svc := GetBookingService()
+
+	approved := &Booking{SpaceID: space.ID, Enter: enter, Leave: leave, Approved: true}
+	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, approved, space, enter2, leave2))
+	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, approved, approvalSpace, enter, leave))
+
+	approvedInApproval := &Booking{SpaceID: approvalSpace.ID, Enter: enter, Leave: leave, Approved: true}
+	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, approvedInApproval, approvalSpace, enter, leave))
+	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, approvedInApproval, approvalSpace, enter2, leave2))
+
+	pending := &Booking{SpaceID: approvalSpace.ID, Enter: enter, Leave: leave, Approved: false}
+	CheckTestBool(t, false, svc.ApprovedAfterUpdate(org.ID, pending, approvalSpace, enter, leave))
+	CheckTestBool(t, true, svc.ApprovedAfterUpdate(org.ID, pending, space, enter, leave))
+}
+
+func TestBookingServiceLifecycleEffectsRunInOrder(t *testing.T) {
+	_, user, _, space := setupServiceTest(t)
+	release := make(chan struct{})
+	events := make(chan string, 2)
+	svc := GetBookingService()
+	svc.SetOnCreated(func(e *Booking) {
+		<-release
+		events <- "created"
+	})
+	defer svc.SetOnCreated(nil)
+
+	enter, leave := serviceTestSlot(0, 8, 17)
+	e, bErr := svc.CreateBooking(user, &BookingInput{SpaceID: space.ID, Enter: enter, Leave: leave})
+	if bErr != nil {
+		t.Fatalf("unexpected error %v", bErr)
+	}
+	svc.EnqueueLifecycleEffect(e.ID, func() { events <- "later" })
+
+	select {
+	case v := <-events:
+		t.Fatalf("expected later effect to wait for created hook, got %s", v)
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(release)
+	CheckTestString(t, "created", <-events)
+	CheckTestString(t, "later", <-events)
+}

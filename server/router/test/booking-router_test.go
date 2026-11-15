@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"runtime/debug"
 	"slices"
@@ -3613,4 +3614,183 @@ func TestBookingsPendingApprovalsByLevel(t *testing.T) {
 	req := NewHTTPRequest("POST", "/booking/"+booking2.ID+"/approve", groupApprover.ID, bytes.NewBufferString(payload))
 	res := ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusForbidden, res.Code)
+}
+
+func setupBookingUpdateApprovalTest(t *testing.T) (*User, *Space, *Space) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+	GetSettingsRepository().Set(org.ID, SettingFeatureGroups.Name, "1")
+	location, freeSpace := CreateTestLocationAndSpace(org)
+	approvalSpace := &Space{Name: "Approval", LocationID: location.ID, Enabled: true}
+	if err := GetSpaceRepository().Create(approvalSpace); err != nil {
+		t.Fatal(err)
+	}
+	group := CreateTestGroup(org, CreateTestUserInOrg(org))
+	if err := GetSpaceRepository().AddApprovers(approvalSpace, []string{group.ID}); err != nil {
+		t.Fatal(err)
+	}
+	return user, freeSpace, approvalSpace
+}
+
+func createAndUpdateTestBooking(t *testing.T, user *User, spaceID, newSpaceID, newDay string) string {
+	payload := `{"spaceId": "` + spaceID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	res := ExecuteTestRequest(NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	payload = `{"spaceId": "` + newSpaceID + `", "enter": "2030-09-` + newDay + `T08:30:00Z", "leave": "2030-09-` + newDay + `T17:00:00Z"}`
+	res = ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+id, user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	return id
+}
+
+func TestBookingsUpdateIntoApprovalSpaceResetsApproval(t *testing.T) {
+	user, freeSpace, approvalSpace := setupBookingUpdateApprovalTest(t)
+	id := createAndUpdateTestBooking(t, user, freeSpace.ID, approvalSpace.ID, "01")
+	e, _ := GetBookingRepository().GetOne(id)
+	CheckTestBool(t, false, e.Approved)
+}
+
+func TestBookingsUpdateTimeInApprovalSpaceResetsApproval(t *testing.T) {
+	user, _, approvalSpace := setupBookingUpdateApprovalTest(t)
+	payload := `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	res := ExecuteTestRequest(NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	e, _ := GetBookingRepository().GetOne(id)
+	e.Approved = true
+	GetBookingRepository().Update(&e.Booking)
+
+	payload = `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-02T08:30:00Z", "leave": "2030-09-02T17:00:00Z"}`
+	res = ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+id, user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	e, _ = GetBookingRepository().GetOne(id)
+	CheckTestBool(t, false, e.Approved)
+}
+
+func TestBookingsUpdateUnchangedKeepsApproval(t *testing.T) {
+	user, _, approvalSpace := setupBookingUpdateApprovalTest(t)
+	payload := `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z"}`
+	res := ExecuteTestRequest(NewHTTPRequest("POST", "/booking/", user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+	e, _ := GetBookingRepository().GetOne(id)
+	e.Approved = true
+	GetBookingRepository().Update(&e.Booking)
+
+	payload = `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-01T08:30:00Z", "leave": "2030-09-01T17:00:00Z", "subject": "Changed"}`
+	res = ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+id, user.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	e, _ = GetBookingRepository().GetOne(id)
+	CheckTestBool(t, true, e.Approved)
+}
+
+func TestBookingsUpdateOutOfApprovalSpaceApproves(t *testing.T) {
+	user, freeSpace, approvalSpace := setupBookingUpdateApprovalTest(t)
+	id := createAndUpdateTestBooking(t, user, approvalSpace.ID, freeSpace.ID, "01")
+	e, _ := GetBookingRepository().GetOne(id)
+	CheckTestBool(t, true, e.Approved)
+}
+
+func TestBookingsUpdateWithinFreeSpaceStaysApproved(t *testing.T) {
+	user, freeSpace, _ := setupBookingUpdateApprovalTest(t)
+	id := createAndUpdateTestBooking(t, user, freeSpace.ID, freeSpace.ID, "02")
+	e, _ := GetBookingRepository().GetOne(id)
+	CheckTestBool(t, true, e.Approved)
+}
+
+// newFakeCalDavServer answers CalDAV discovery requests and records the paths
+// of all DELETE requests it receives.
+func newFakeCalDavServer(t *testing.T) (*httptest.Server, chan string) {
+	deleted := make(chan string, 10)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "PROPFIND":
+			w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+			w.WriteHeader(http.StatusMultiStatus)
+			fmt.Fprintf(w, `<?xml version="1.0" encoding="utf-8"?>
+<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+  <d:response>
+    <d:href>%s</d:href>
+    <d:propstat>
+      <d:prop>
+        <d:current-user-principal><d:href>/principal/</d:href></d:current-user-principal>
+        <c:calendar-home-set><d:href>/calendars/</d:href></c:calendar-home-set>
+      </d:prop>
+      <d:status>HTTP/1.1 200 OK</d:status>
+    </d:propstat>
+  </d:response>
+</d:multistatus>`, r.URL.Path)
+		case http.MethodDelete:
+			deleted <- r.URL.Path
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusCreated)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return srv, deleted
+}
+
+func setTestCalDavPreferences(t *testing.T, user *User, srvURL string) {
+	pass, err := EncryptString("pass")
+	if err != nil {
+		t.Fatal(err)
+	}
+	GetUserPreferencesRepository().Set(user.ID, PreferenceCalDAVURL.Name, srvURL+"/")
+	GetUserPreferencesRepository().Set(user.ID, PreferenceCalDAVUser.Name, "user")
+	GetUserPreferencesRepository().Set(user.ID, PreferenceCalDAVPass.Name, pass)
+	GetUserPreferencesRepository().Set(user.ID, PreferenceCalDAVPath.Name, "/calendars/")
+}
+
+func TestBookingsUpdateUserAndResetApprovalDeletesOldUsersCalDavEvent(t *testing.T) {
+	oldUser, _, approvalSpace := setupBookingUpdateApprovalTest(t)
+	org, _ := GetOrganizationRepository().GetOne(oldUser.OrganizationID)
+	admin := CreateTestUserOrgAdmin(org)
+	newUser := CreateTestUserInOrg(org)
+	oldSrv, oldDeleted := newFakeCalDavServer(t)
+	newSrv, newDeleted := newFakeCalDavServer(t)
+	setTestCalDavPreferences(t, oldUser, oldSrv.URL)
+	setTestCalDavPreferences(t, newUser, newSrv.URL)
+
+	e := &Booking{
+		UserID:   oldUser.ID,
+		SpaceID:  approvalSpace.ID,
+		Enter:    time.Date(2030, 9, 1, 8, 30, 0, 0, time.UTC),
+		Leave:    time.Date(2030, 9, 1, 17, 0, 0, 0, time.UTC),
+		Approved: true,
+	}
+	if err := GetBookingRepository().Create(e); err != nil {
+		t.Fatal(err)
+	}
+	if err := GetBookingRepository().UpdateCalDavID(e.ID, "old-event"); err != nil {
+		t.Fatal(err)
+	}
+
+	payload := `{"spaceId": "` + approvalSpace.ID + `", "enter": "2030-09-02T08:30:00Z", "leave": "2030-09-02T17:00:00Z", "userEmail": "` + newUser.Email + `"}`
+	res := ExecuteTestRequest(NewHTTPRequest("PUT", "/booking/"+e.ID, admin.ID, bytes.NewBufferString(payload)))
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+	updated, _ := GetBookingRepository().GetOne(e.ID)
+	CheckTestBool(t, false, updated.Approved)
+	CheckTestString(t, newUser.ID, updated.UserID)
+
+	done := make(chan struct{})
+	service.GetBookingService().EnqueueLifecycleEffect(e.ID, func() { close(done) })
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("lifecycle effects did not finish")
+	}
+	select {
+	case p := <-oldDeleted:
+		CheckTestString(t, "/calendars/old-event.ics", p)
+	default:
+		t.Fatal("expected CalDAV event to be deleted from the previous user's calendar")
+	}
+	select {
+	case p := <-newDeleted:
+		t.Fatalf("unexpected CalDAV delete in the new user's calendar: %s", p)
+	default:
+	}
 }
