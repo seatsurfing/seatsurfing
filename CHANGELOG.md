@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.142.0](https://github.com/seatsurfing/seatsurfing/compare/v1.141.0...v1.142.0) (2026-11-15)
+
+
+### ✨ Features
+
+* **main:** add space photos ([#2853](https://github.com/seatsurfing/seatsurfing/issues/2853)) ([f10466e](https://github.com/seatsurfing/seatsurfing/commit/f10466e37464007cfde4578afb7590f0f897e85a))
+* **server:** support S256 PKCE for OAuth logins ([#2867](https://github.com/seatsurfing/seatsurfing/issues/2867)) ([cf8e7f8](https://github.com/seatsurfing/seatsurfing/commit/cf8e7f8d0b9d2b4a7940b242f51a53b7747ee447))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump distroless/base-debian13 from `ca90dc2` to `0e48b9b` ([#2883](https://github.com/seatsurfing/seatsurfing/issues/2883)) ([f1f7717](https://github.com/seatsurfing/seatsurfing/commit/f1f7717ba69899e737acbbd7d94ea870ffeaeae8))
+* **deps:** bump react-tooltip from 6.0.9 to 6.0.10 in /ui in the production-dependencies group across 1 directory ([#2877](https://github.com/seatsurfing/seatsurfing/issues/2877)) ([c88e2f2](https://github.com/seatsurfing/seatsurfing/commit/c88e2f2331bbc1b999485fdd0333cbde9d3958d9))
+* **server:** prevent editing users with higher privileges ([#2888](https://github.com/seatsurfing/seatsurfing/issues/2888)) ([9b381db](https://github.com/seatsurfing/seatsurfing/commit/9b381dbb63ec5f1960598f023d6d341d84d50289))
+* **server:** update approval state when changing booking time or space ([#2876](https://github.com/seatsurfing/seatsurfing/issues/2876)) ([31d8d43](https://github.com/seatsurfing/seatsurfing/commit/31d8d43e7e910d69d3fe48fed941ff6d3227755e))
+
 ## [1.141.0](https://github.com/seatsurfing/seatsurfing/compare/v1.140.1...v1.141.0) (2026-11-11)
 
 
