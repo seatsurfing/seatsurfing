@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.142.1](https://github.com/seatsurfing/seatsurfing/compare/v1.142.0...v1.142.1) (2026-11-17)
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add bookings filter yesterday and tomorrow ([#2889](https://github.com/seatsurfing/seatsurfing/issues/2889)) ([665d670](https://github.com/seatsurfing/seatsurfing/commit/665d6706551f50c14c6b1d256e4046d34fb294d0))
+* **deps:** bump golang.org/x/oauth2 from 0.37.0 to 0.38.0 in /server in the minor-and-patch group ([#2891](https://github.com/seatsurfing/seatsurfing/issues/2891)) ([095d1ff](https://github.com/seatsurfing/seatsurfing/commit/095d1ffb7db8fffbcb88998f3b8d27398851383d))
+* **deps:** bump next from 16.4.5 to 16.4.6 in /ui in the production-dependencies group across 1 directory ([#2895](https://github.com/seatsurfing/seatsurfing/issues/2895)) ([c4d4830](https://github.com/seatsurfing/seatsurfing/commit/c4d48308b024f2c7526842737b47c86841816ad8))
+* **deps:** bump react-tooltip from 6.0.10 to 6.0.11 in /ui in the production-dependencies group across 1 directory ([#2890](https://github.com/seatsurfing/seatsurfing/issues/2890)) ([c3ea810](https://github.com/seatsurfing/seatsurfing/commit/c3ea8109bc40985a3e05976ba8ce57656b5cc5e6))
+* **main:** fix BulkUpdateResponse to include created space if applyApprovers() failed ([#2893](https://github.com/seatsurfing/seatsurfing/issues/2893)) ([a03d684](https://github.com/seatsurfing/seatsurfing/commit/a03d6846bd5d931622b528468d3f16a27eb2a01a))
+* **main:** stabilize Playwright CI (pin runner, relax search URL match) ([#2897](https://github.com/seatsurfing/seatsurfing/issues/2897)) ([b715473](https://github.com/seatsurfing/seatsurfing/commit/b71547384cbabc0b36f8d06f93b5cdf3c799f82d))
+* **server:** validate allowed booker groups belong to the organization ([#2894](https://github.com/seatsurfing/seatsurfing/issues/2894)) ([5bd5cec](https://github.com/seatsurfing/seatsurfing/commit/5bd5ceced4f9f1292f40831e4cab7f8f8284542a))
+
 ## [1.142.0](https://github.com/seatsurfing/seatsurfing/compare/v1.141.0...v1.142.0) (2026-11-15)
 
 
