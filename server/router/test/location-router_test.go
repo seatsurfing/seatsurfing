@@ -1011,3 +1011,49 @@ func TestLocationsAddAttributeForeignOrg(t *testing.T) {
 		t.Fatalf("Expected 0 attributes, got %d", len(resBody))
 	}
 }
+
+func TestLocationsForeignOrgAllowedBookerGroup(t *testing.T) {
+	ClearTestDB()
+	foreignOrg := CreateTestOrg("foreign.com")
+	foreignGroup := CreateTestGroup(foreignOrg, nil)
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	ownGroup := CreateTestGroup(org, nil)
+
+	// Create with a foreign org's group must be rejected and must not create the location
+	payload := `{"name": "L1", "allowedBookerGroupIds": ["` + foreignGroup.ID + `"]}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	locations, err := GetLocationRepository().GetAll(org.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(locations))
+
+	// Create with own group succeeds
+	payload = `{"name": "L1", "allowedBookerGroupIds": ["` + ownGroup.ID + `"]}`
+	req = NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// Update with a foreign org's group must be rejected and leave the location unchanged
+	payload = `{"name": "L2", "allowedBookerGroupIds": ["` + ownGroup.ID + `", "` + foreignGroup.ID + `"]}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	location, err := GetLocationRepository().GetOne(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "L1", location.Name)
+	allowedBookers, err := GetLocationRepository().GetAllAllowedBookersForLocation(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(allowedBookers))
+	CheckTestString(t, ownGroup.ID, allowedBookers[0].GroupID)
+}

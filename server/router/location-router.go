@@ -316,6 +316,9 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendBadRequest(w)
 		return
 	}
+	if !router.checkAllowedBookerGroups(w, e.OrganizationID, m.AllowedBookerGroupIDs) {
+		return
+	}
 	previousMapType := e.MapType
 	eNew := router.copyFromRestModel(&m)
 	eNew.ID = e.ID
@@ -368,6 +371,23 @@ func (router *LocationRouter) delete(w http.ResponseWriter, r *http.Request) {
 	SendUpdated(w)
 }
 
+// checkAllowedBookerGroups ensures all allowed booker groups belong to the
+// location's organization. It writes 400 (foreign/unknown group) or 500 and
+// returns false on failure.
+func (router *LocationRouter) checkAllowedBookerGroups(w http.ResponseWriter, organizationID string, groupIDs []string) bool {
+	ok, err := service.GetGroupService().ValidateGroupsInOrg(organizationID, groupIDs)
+	if err != nil {
+		log.Println(err)
+		SendInternalServerError(w)
+		return false
+	}
+	if !ok {
+		SendBadRequest(w)
+		return false
+	}
+	return true
+}
+
 func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 	var m CreateLocationRequest
 	if UnmarshalValidateBody(r, &m) != nil {
@@ -396,6 +416,9 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 	blockedFrom, blockedUntil, ok := parseBlockedPeriod(&m)
 	if !ok {
 		SendBadRequest(w)
+		return
+	}
+	if !router.checkAllowedBookerGroups(w, e.OrganizationID, m.AllowedBookerGroupIDs) {
 		return
 	}
 	e.BlockedFrom = blockedFrom
