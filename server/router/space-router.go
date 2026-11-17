@@ -358,7 +358,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				}
 				if err := router.applyApprovers(e, &mSpace, location.OrganizationID); err != nil {
 					log.Println("Could not apply approvers:", err)
-					log.Println(err)
+					res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: e.ID, Success: false})
 					continue
 				}
 				if err := router.applyAllowBookers(e, &mSpace); err != nil {
