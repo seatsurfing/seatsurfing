@@ -25,12 +25,12 @@ func TestGroupServiceValidateGroupsInOrg(t *testing.T) {
 		CheckTestBool(t, expected, ok)
 	}
 
-	// Positive: empty list, own groups, duplicates of own groups
+	// Positive: empty list, own groups
 	check(true, nil)
 	check(true, []string{ownGroup1.ID, ownGroup2.ID})
-	check(true, []string{ownGroup1.ID, ownGroup1.ID})
 
-	// Negative: foreign group, mixed list, unknown group
+	// Negative: duplicates, foreign group, mixed list, unknown group
+	check(false, []string{ownGroup1.ID, ownGroup1.ID})
 	check(false, []string{foreignGroup.ID})
 	check(false, []string{ownGroup1.ID, foreignGroup.ID})
 	check(false, []string{"00000000-0000-4000-8000-000000000000"})

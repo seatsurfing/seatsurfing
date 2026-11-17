@@ -1336,3 +1336,73 @@ func TestSpaceRouterBulkUpdateForeignOrgAllowedBookerGroup(t *testing.T) {
 	}
 	CheckTestString(t, space.Name, unchanged.Name)
 }
+
+func TestSpaceRouterBulkUpdateDuplicateApproverGroup(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	group := CreateTestGroup(org, nil)
+
+	// Attempt to create a public space with a duplicated approver group
+	payload := `{
+		"creates": [
+			{"name": "H1", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "publicBookingEnabled": true, "approverGroupIds": ["` + group.ID + `", "` + group.ID + `"]}
+		]
+	}`
+	req := NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *BulkUpdateResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Creates))
+	CheckTestBool(t, false, resBody.Creates[0].Success)
+	spaces, err := GetSpaceRepository().GetAll(location.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(spaces))
+
+	// Attempt to update an existing space with a duplicated approver group
+	payload = `{
+		"updates": [
+			{"id": "` + space.ID + `", "name": "Changed", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "publicBookingEnabled": true, "approverGroupIds": ["` + group.ID + `", "` + group.ID + `"]}
+		]
+	}`
+	req = NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Updates))
+	CheckTestBool(t, false, resBody.Updates[0].Success)
+	unchanged, err := GetSpaceRepository().GetOne(space.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, space.Name, unchanged.Name)
+	CheckTestBool(t, false, unchanged.PublicBookingEnabled)
+	approvers, err := GetSpaceRepository().GetApproverGroupIDs(space.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(approvers))
+
+	// Same request with a single approver group succeeds
+	payload = `{
+		"creates": [
+			{"name": "H1", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "publicBookingEnabled": true, "approverGroupIds": ["` + group.ID + `"]}
+		]
+	}`
+	req = NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	resBody = nil
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, true, resBody.Creates[0].Success)
+	approvers, err = GetSpaceRepository().GetApproverGroupIDs(resBody.Creates[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(approvers))
+}
