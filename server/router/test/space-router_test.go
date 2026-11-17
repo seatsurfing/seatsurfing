@@ -1284,3 +1284,55 @@ func TestSpacesImageForeignOrg(t *testing.T) {
 	res = ExecuteTestRequest(req)
 	CheckTestResponseCode(t, http.StatusOK, res.Code)
 }
+
+func TestSpaceRouterBulkUpdateForeignOrgAllowedBookerGroup(t *testing.T) {
+	ClearTestDB()
+	foreignOrg := CreateTestOrg("foreign.com")
+	foreignGroup := CreateTestGroup(foreignOrg, nil)
+
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+
+	// Attempt to create a space with a foreign org's group as allowed booker
+	payload := `{
+		"creates": [
+			{"name": "H1", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "allowedBookerGroupIds": ["` + foreignGroup.ID + `"]}
+		]
+	}`
+	req := NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *BulkUpdateResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, false, resBody.Creates[0].Success)
+	spaces, err := GetSpaceRepository().GetAll(location.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 1, len(spaces))
+
+	// Attempt to update an existing space to use a foreign org's group as allowed booker
+	payload = `{
+		"updates": [
+			{"id": "` + space.ID + `", "name": "Changed", "x": 50, "y": 110, "width": 210, "height": 310, "rotation": 90, "shape": "rect", "fontSize": "normal", "allowedBookerGroupIds": ["` + foreignGroup.ID + `"]}
+		]
+	}`
+	req = NewHTTPRequest("POST", "/location/"+location.ID+"/space/bulk", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestBool(t, false, resBody.Updates[0].Success)
+
+	allowedBookers, err := GetSpaceRepository().GetAllowedBookersGroupIDs(space)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestInt(t, 0, len(allowedBookers))
+	unchanged, err := GetSpaceRepository().GetOne(space.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, space.Name, unchanged.Name)
+}

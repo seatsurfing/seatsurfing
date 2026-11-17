@@ -343,7 +343,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 	// Process creates
 	if m.Creates != nil {
 		for _, mSpace := range m.Creates {
-			if err := router.validateApprovers(&mSpace, location.OrganizationID); err != nil {
+			if err := router.validateGroupReferences(&mSpace, location.OrganizationID); err != nil {
 				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
 				continue
 			}
@@ -377,7 +377,7 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: "", Success: false})
 				continue
 			}
-			if err := router.validateApprovers(&mSpace.CreateSpaceRequest, location.OrganizationID); err != nil {
+			if err := router.validateGroupReferences(&mSpace.CreateSpaceRequest, location.OrganizationID); err != nil {
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: mSpace.ID, Success: false})
 				continue
 			}
@@ -624,14 +624,28 @@ func (router *SpaceRouter) validateApprovers(m *CreateSpaceRequest, organization
 	if m.PublicBookingEnabled && len(m.ApproverGroupIDs) == 0 {
 		return errors.New("space has public booking enabled and requires at least one approver group")
 	}
-	if len(m.ApproverGroupIDs) > 0 {
-		ok, err := GetGroupRepository().GroupsExistAndBelongToOrg(organizationID, m.ApproverGroupIDs)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return errors.New("one or more approver groups do not exist or do not belong to the organization")
-		}
+	ok, err := service.GetGroupService().ValidateGroupsInOrg(organizationID, m.ApproverGroupIDs)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("one or more approver groups do not exist or do not belong to the organization")
+	}
+	return nil
+}
+
+// validateGroupReferences checks that all groups referenced by the request
+// (approvers and allowed bookers) belong to the space's organization.
+func (router *SpaceRouter) validateGroupReferences(m *CreateSpaceRequest, organizationID string) error {
+	if err := router.validateApprovers(m, organizationID); err != nil {
+		return err
+	}
+	ok, err := service.GetGroupService().ValidateGroupsInOrg(organizationID, m.AllowedBookerGroupIDs)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("one or more allowed booker groups do not exist or do not belong to the organization")
 	}
 	return nil
 }
