@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await login(page, "admin@seatsurfing.local", "Sea!surf1ng");
 
   // Ensure we've reached the dashboard
-  await expect(page).toHaveURL(/search\/$/);
+  await expect(page).toHaveURL(/search\/(\?.*)?$/);
   await expect(page.getByText("Loading …")).not.toBeVisible();
 
   // Navigate to "Administration"
