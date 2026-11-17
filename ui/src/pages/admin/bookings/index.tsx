@@ -34,7 +34,9 @@ import UserBookingCalendar from "@/components/calendar/UserBookingCalendar";
 
 const FILTER_OPTIONS = [
   "current",
+  "yesterday",
   "today",
+  "tomorrow",
   "this_week",
   "next_week",
   "next_7_days",
@@ -221,8 +223,18 @@ class Bookings extends React.Component<Props, State> {
     switch (this.state.filterOption) {
       case "enter_leave":
         return [this.state.start, DateUtil.setSecondsToMax(this.state.end)];
+      case "yesterday": {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        return [DateUtil.setHoursToMin(d), DateUtil.setHoursToMax(d)];
+      }
       case "today":
         return [DateUtil.getTodayStart(), DateUtil.getTodayEnd()];
+      case "tomorrow": {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return [DateUtil.setHoursToMin(d), DateUtil.setHoursToMax(d)];
+      }
       case "this_week":
         return [DateUtil.getThisWeekMonday(), DateUtil.getThisWeekSunday()];
       case "next_week":
@@ -498,7 +510,9 @@ class Bookings extends React.Component<Props, State> {
               <option value="current">
                 {this.props.t("filterBookingCurrent")}
               </option>
+              <option value="yesterday">{this.props.t("yesterday")}</option>
               <option value="today">{this.props.t("today")}</option>
+              <option value="tomorrow">{this.props.t("tomorrow")}</option>
               <option value="this_week">{this.props.t("thisWeek")}</option>
               <option value="next_week">{this.props.t("nextWeek")}</option>
               <option value="next_7_days">{this.props.t("next7Days")}</option>
