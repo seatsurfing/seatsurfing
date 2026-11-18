@@ -86,7 +86,7 @@ type Config struct {
 	DisableAnonymousUsageStats          bool // Disable sending anonymous usage statistics for this installation
 	DisableInstallIDExposure            bool // Disable exposing the install ID via public API
 	DomainVerification                  bool // Require DNS TXT ownership verification before a custom domain becomes active (cloud). When off, domains added through the API are active immediately (self-hosted default).
-	BlockPrivateOutbound                bool // Refuse outgoing requests to user-configured URLs (OAuth endpoints, CalDAV servers) that resolve to loopback, private or link-local addresses (cloud).
+	AllowPrivateOutbound                bool // Allow outgoing requests to user-configured URLs (OAuth endpoints, CalDAV servers) that resolve to loopback, private or link-local addresses. Blocked by default.
 }
 
 var _configInstance *Config
@@ -235,13 +235,7 @@ func (c *Config) ReadConfig() {
 	c.DisableAnonymousUsageStats = (c.getEnv("DISABLE_ANONYMOUS_USAGE_STATS", "0") == "1")
 	c.DisableInstallIDExposure = (c.getEnv("DISABLE_INSTALL_ID_EXPOSURE", "0") == "1")
 	c.DomainVerification = slices.Contains(c.FeatureFlags, "DOMAIN_VERIFICATION")
-	c.BlockPrivateOutbound = slices.Contains(c.FeatureFlags, "BLOCK_PRIVATE_OUTBOUND")
-
-	// Check deprecated environment variables
-	if c.getEnv("ALLOW_ORG_DELETE", "0") == "1" {
-		log.Println("⚠️  Warning: ALLOW_ORG_DELETE is deprecated. Use FEATURE_FLAGS=ALLOW_ORG_DELETE instead.")
-		c.AllowOrgDelete = true
-	}
+	c.AllowPrivateOutbound = slices.Contains(c.FeatureFlags, "ALLOW_PRIVATE_OUTBOUND")
 }
 
 // parsePluginsConfig parses the PLUGINS_CONFIG env var, a JSON array of
@@ -262,7 +256,7 @@ func (c *Config) parsePluginsConfig(raw string) []RemotePluginConfig {
 	return plugins
 }
 
-var validFeatureFlags = []string{"ALLOW_ORG_DELETE", "DOMAIN_VERIFICATION", "BLOCK_PRIVATE_OUTBOUND"}
+var validFeatureFlags = []string{"ALLOW_ORG_DELETE", "DOMAIN_VERIFICATION", "ALLOW_PRIVATE_OUTBOUND"}
 
 func (c *Config) parseFeatureFlags(raw string) []string {
 	var flags []string
