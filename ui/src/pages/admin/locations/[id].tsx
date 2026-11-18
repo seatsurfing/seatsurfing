@@ -51,7 +51,9 @@ import Loading from "@/components/Loading";
 import RendererUtils from "@/util/RendererUtils";
 import Navigation from "@/util/Navigation";
 import PremiumFeatureIcon from "@/components/PremiumFeatureIcon";
-import FloorPlanDesigner from "@/components/FloorPlanDesigner";
+import FloorPlanDesigner, {
+  EMPTY_FLOOR_PLAN_DESIGN,
+} from "@/components/FloorPlanDesigner";
 import WeekdaySelection from "@/components/WeekdaySelection";
 import ConfirmModal from "@/components/ConfirmModal";
 import HintTooltip from "@/components/HintTooltip";
@@ -2496,6 +2498,8 @@ class EditLocation extends React.Component<Props, State> {
                 onChange={() =>
                   this.setState({
                     mapType: "designed",
+                    designData:
+                      this.state.designData || EMPTY_FLOOR_PLAN_DESIGN,
                     files: null,
                     fileLabel: "",
                   })
