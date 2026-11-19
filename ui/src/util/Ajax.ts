@@ -141,6 +141,12 @@ export default class Ajax {
       return new Promise<void>(function (resolve, reject) {
         // Once it's our turn, check if we really need to refresh the token
         const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+        // If there's no access token, there should not be a refresh, if there is there should be one. This is a guard for when the user forgets to log out before closing the browser. The session will expire and the refresh token will not issue a new access token. In this case, we just resolve and let the caller handle the situation, by forcing a new login.
+        if (!credentials.accessToken) {
+          release();
+          resolve();
+          return;
+        }
         if (
           !force &&
           new Date().getTime() < credentials.accessTokenExpiry.getTime()
