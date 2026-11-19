@@ -325,11 +325,8 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 	eNew.OrganizationID = e.OrganizationID
 	eNew.BlockedFrom = blockedFrom
 	eNew.BlockedUntil = blockedUntil
-	// Clear stale floor plan data before flipping map_type so that a failure
-	// here does not leave the location in an inconsistent state (map_type
-	// already updated but stale map data still present).
 	if previousMapType == "designed" && eNew.MapType == "" {
-		if err := GetLocationRepository().ClearMapData(eNew); err != nil {
+		if err := router.restoreUploadedMap(eNew); err != nil {
 			log.Println(err)
 			SendInternalServerError(w)
 			return
@@ -586,6 +583,24 @@ func (router *LocationRouter) setFloorPlanDesign(w http.ResponseWriter, r *http.
 		return
 	}
 	SendUpdated(w)
+}
+
+// restoreUploadedMap re-derives the map metadata from the image kept in map_data.
+func (router *LocationRouter) restoreUploadedMap(e *Location) error {
+	stored, err := GetLocationRepository().GetMap(e)
+	if err != nil {
+		return err
+	}
+	if len(stored.Data) == 0 {
+		return GetLocationRepository().ClearMapData(e)
+	}
+	locationMap, err := service.GetLocationService().ParseLocationMap(stored.Data)
+	if err != nil {
+		log.Println(err)
+		return GetLocationRepository().ClearMapData(e)
+	}
+	locationMap.Scale = e.MapScale
+	return GetLocationRepository().SetMap(e, locationMap)
 }
 
 func (router *LocationRouter) setMap(w http.ResponseWriter, r *http.Request) {

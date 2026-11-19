@@ -815,7 +815,9 @@ class EditLocation extends React.Component<Props, State> {
       ? Formatting.getISO8601(this.state.blockedUntil)
       : "";
     this.entity.mapScale = this.state.mapScale;
-    this.entity.mapType = this.state.mapType === "designed" ? "designed" : "";
+    const newMapType = this.state.mapType === "designed" ? "designed" : "";
+    const mapTypeChanged = this.entity.mapType !== newMapType;
+    this.entity.mapType = newMapType;
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
       ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
       : [];
@@ -873,6 +875,9 @@ class EditLocation extends React.Component<Props, State> {
                       });
                     });
                 } else {
+                  if (mapTypeChanged) {
+                    this.loadData(this.entity.id);
+                  }
                   this.setState({
                     spaces: this.state.spaces.map((s) => {
                       s.orgHeight = parseInt(s.height.replace(/^\D+/g, ""));

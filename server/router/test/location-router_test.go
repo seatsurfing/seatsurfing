@@ -767,6 +767,105 @@ func TestLocationMapTypeDesigned(t *testing.T) {
 	CheckTestBool(t, true, string(svgData[:4]) == "<svg")
 }
 
+func TestLocationMapTypeSwitchKeepsUploadedMap(t *testing.T) {
+	data, err := os.ReadFile("../../res/floorplan.jpg")
+	if err != nil {
+		t.Fatal("Could not load example image")
+	}
+
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	payload := `{"name": "Location 1", "mapScale": 1.0}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	req = NewHTTPRequest("POST", "/location/"+id+"/map", loginResponse.UserID, bytes.NewBuffer(data))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	payload = `{"name": "Location 1", "mapScale": 1.0, "mapType": "designed"}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	designPayload := `{"designData": "{\"version\":1,\"elements\":[{\"id\":\"w1\",\"type\":\"wall\",\"x1\":0,\"y1\":0,\"x2\":200,\"y2\":0,\"thickness\":8}]}"}`
+	req = NewHTTPRequest("POST", "/location/"+id+"/floorplan-design", loginResponse.UserID, bytes.NewBufferString(designPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var locResp *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &locResp)
+	CheckTestString(t, "svg+xml", locResp.MapMimeType)
+
+	payload = `{"name": "Location 1", "mapScale": 0.5, "mapType": ""}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	locResp = nil
+	json.Unmarshal(res.Body.Bytes(), &locResp)
+	CheckTestString(t, "", locResp.MapType)
+	CheckTestString(t, "jpeg", locResp.MapMimeType)
+	CheckTestUint(t, 2047, locResp.MapWidth)
+	CheckTestUint(t, 802, locResp.MapHeight)
+
+	req = NewHTTPRequest("GET", "/location/"+id+"/map", loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var mapResp *GetMapResponse
+	json.Unmarshal(res.Body.Bytes(), &mapResp)
+	CheckTestString(t, "jpeg", mapResp.MimeType)
+	CheckTestBool(t, true, mapResp.Scale == 0.5)
+	data2, err := base64.StdEncoding.DecodeString(mapResp.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestUint(t, 0, uint(bytes.Compare(data, data2)))
+}
+
+func TestLocationMapTypeSwitchWithoutUploadedMap(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(admin.ID)
+
+	payload := `{"name": "Location 1", "mapScale": 1.0, "mapType": "designed"}`
+	req := NewHTTPRequest("POST", "/location/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	designPayload := `{"designData": "{\"version\":1,\"elements\":[]}"}`
+	req = NewHTTPRequest("POST", "/location/"+id+"/floorplan-design", loginResponse.UserID, bytes.NewBufferString(designPayload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	payload = `{"name": "Location 1", "mapScale": 1.0, "mapType": ""}`
+	req = NewHTTPRequest("PUT", "/location/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	req = NewHTTPRequest("GET", "/location/"+id, loginResponse.UserID, nil)
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var locResp *GetLocationResponse
+	json.Unmarshal(res.Body.Bytes(), &locResp)
+	CheckTestString(t, "", locResp.MapMimeType)
+	CheckTestUint(t, 0, locResp.MapWidth)
+	CheckTestUint(t, 0, locResp.MapHeight)
+}
+
 // TestLocationGetAttributesCrossTenant proves (and, once fixed, guards
 // against) CWE-285/CWE-639: any authenticated user must not be able to read
 // another organization's location attribute values just by putting that
