@@ -59,8 +59,8 @@ describe("PluginEmbed", () => {
     Ajax.PERSISTER = {
       persistRefreshTokenInLocalStorage: vi.fn(),
       readRefreshTokenFromLocalStorage: vi.fn(() => "refresh-1"),
-      updateCredentialsLocalStorage: vi.fn(),
-      readCredentialsFromLocalStorage: vi.fn(() => credentials()),
+      updateCredentialsSessionStorage: vi.fn(),
+      readCredentialsFromSessionStorage: vi.fn(() => credentials()),
       deleteCredentialsFromStorage: vi.fn(),
     } as any;
     Ajax.onUnauthorized = vi.fn();
@@ -121,7 +121,7 @@ describe("PluginEmbed", () => {
     const src = "/plugin-c.js";
     const refreshedCredentials = { ...credentials(), accessToken: "token-3" };
     const readCredentials = Ajax.PERSISTER
-      .readCredentialsFromLocalStorage as ReturnType<typeof vi.fn>;
+      .readCredentialsFromSessionStorage as ReturnType<typeof vi.fn>;
     readCredentials
       .mockReturnValueOnce(credentials())
       .mockReturnValue(refreshedCredentials);

@@ -62,7 +62,7 @@ export default class Ajax {
     }
 
     const credentials: AjaxCredentials =
-      Ajax.PERSISTER.readCredentialsFromLocalStorage();
+      Ajax.PERSISTER.readCredentialsFromSessionStorage();
     const options: RequestInit = Ajax.getFetchOptions(
       method,
       credentials.accessToken,
@@ -140,7 +140,7 @@ export default class Ajax {
     return Ajax.REFRESH_TOKEN_MUTEX.acquire().then((release) => {
       return new Promise<void>(function (resolve, reject) {
         // Once it's our turn, check if we really need to refresh the token
-        const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+        const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
         if (
           !force &&
           new Date().getTime() < credentials.accessTokenExpiry.getTime()
@@ -156,7 +156,8 @@ export default class Ajax {
         };
         const options: RequestInit = Ajax.getFetchOptions("POST", null, data);
         const url = Ajax.getBackendUrl() + Ajax.REFRESH_URL;
-        const oldCredentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+        const oldCredentials =
+          Ajax.PERSISTER.readCredentialsFromSessionStorage();
         fetch(url, options)
           .then((response) => {
             if (response.status >= 200 && response.status <= 299) {
@@ -171,7 +172,7 @@ export default class Ajax {
                     logoutUrl: oldCredentials.logoutUrl,
                     profilePageUrl: oldCredentials.profilePageUrl,
                   };
-                  Ajax.PERSISTER.updateCredentialsLocalStorage(c);
+                  Ajax.PERSISTER.updateCredentialsSessionStorage(c);
                   Ajax.PERSISTER.persistRefreshTokenInLocalStorage(
                     json.refreshToken,
                   );
@@ -205,7 +206,7 @@ export default class Ajax {
   }
 
   static hasAccessToken(): boolean {
-    const credentials = Ajax.PERSISTER.readCredentialsFromLocalStorage();
+    const credentials = Ajax.PERSISTER.readCredentialsFromSessionStorage();
     return !!credentials.accessToken;
   }
 

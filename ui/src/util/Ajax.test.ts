@@ -16,16 +16,18 @@ function makeJwt(expSecondsFromNow: number): string {
 describe("Ajax.refreshAccessToken", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it("skips the network call when the cached token is still valid", async () => {
-    window.localStorage.setItem("accessToken", makeJwt(3600));
-    window.localStorage.setItem(
+    window.sessionStorage.setItem("accessToken", makeJwt(3600));
+    window.sessionStorage.setItem(
       "accessTokenExpiry",
       (Date.now() + 3600 * 1000).toString(),
     );
@@ -37,8 +39,8 @@ describe("Ajax.refreshAccessToken", () => {
   });
 
   it("forces the network call even when the cached token still looks valid", async () => {
-    window.localStorage.setItem("accessToken", makeJwt(3600));
-    window.localStorage.setItem(
+    window.sessionStorage.setItem("accessToken", makeJwt(3600));
+    window.sessionStorage.setItem(
       "accessTokenExpiry",
       (Date.now() + 3600 * 1000).toString(),
     );
@@ -57,6 +59,10 @@ describe("Ajax.refreshAccessToken", () => {
     await Ajax.refreshAccessToken("some-refresh-token", true);
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(window.localStorage.getItem("accessToken")).toBe(newToken);
+    expect(window.sessionStorage.getItem("accessToken")).toBe(newToken);
+    expect(window.localStorage.getItem("refreshToken")).toBe(
+      "new-refresh-token",
+    );
+    expect(window.sessionStorage.getItem("refreshToken")).toBeNull();
   });
 });

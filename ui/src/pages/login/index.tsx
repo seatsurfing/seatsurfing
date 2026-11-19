@@ -169,7 +169,7 @@ class Login extends React.Component<Props, State> {
       logoutUrl: data.logoutUrl,
       profilePageUrl: "",
     };
-    Ajax.PERSISTER.updateCredentialsLocalStorage(credentials);
+    Ajax.PERSISTER.updateCredentialsSessionStorage(credentials);
     Ajax.PERSISTER.persistRefreshTokenInLocalStorage(data.refreshToken);
     await RuntimeConfig.loadUserAndSettings();
     this.setState({ redirect: this.getRedirectUrl() });
