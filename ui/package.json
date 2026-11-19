@@ -44,7 +44,7 @@
     "eslint": "10.14.0",
     "eslint-config-next": "16.4.6",
     "jsdom": "31.0.0",
-    "prettier": "3.10.0",
+    "prettier": "3.10.1",
     "typescript": "6.0.3",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "5.1.0"
