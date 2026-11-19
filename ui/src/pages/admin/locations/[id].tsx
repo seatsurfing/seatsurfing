@@ -2502,39 +2502,59 @@ class EditLocation extends React.Component<Props, State> {
                 }
               />
               {this.state.mapType === "upload" && (
-                <Form.Control
-                  id="location-floorplan"
-                  type="file"
-                  accept="image/png, image/jpeg, image/gif, image/svg+xml"
-                  onChange={(e: any) => {
-                    const file = e.target.files?.item(0);
-                    if (!file) {
-                      return;
-                    }
-                    if (file.size > MAX_MAP_FILE_SIZE) {
-                      e.target.value = "";
+                <InputGroup hasValidation={true}>
+                  <Form.Control
+                    id="location-floorplan"
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                    onChange={(e: any) => {
+                      const file = e.target.files?.item(0);
+                      if (!file) {
+                        return;
+                      }
+                      if (file.size > MAX_MAP_FILE_SIZE) {
+                        e.target.value = "";
+                        this.setState({
+                          files: null,
+                          fileLabel: "",
+                          fileTooLarge: true,
+                        });
+                        return;
+                      }
                       this.setState({
-                        files: null,
-                        fileLabel: "",
-                        fileTooLarge: true,
+                        files: e.target.files,
+                        fileLabel: file.name,
+                        fileTooLarge: false,
+                        mapScale: 1.0,
                       });
-                      return;
+                    }}
+                    isInvalid={this.state.fileTooLarge}
+                    required={
+                      !this.entity.id && this.state.mapType === "upload"
                     }
-                    this.setState({
-                      files: e.target.files,
-                      fileLabel: file.name,
-                      fileTooLarge: false,
-                      mapScale: 1.0,
-                    });
-                  }}
-                  isInvalid={this.state.fileTooLarge}
-                  required={!this.entity.id && this.state.mapType === "upload"}
-                />
-              )}
-              {this.state.mapType === "upload" && (
-                <Form.Control.Feedback type="invalid">
-                  {this.props.t("errorMapFileTooLarge")}
-                </Form.Control.Feedback>
+                  />
+                  {this.entity.mapType !== "designed" && this.mapData?.data ? (
+                    <a
+                      className="btn btn-outline-secondary"
+                      href={`data:image/${this.mapData.mimeType};base64,${this.mapData.data}`}
+                      download={`seatsurfing-${this.entity.name}-map.${this.mapData.mimeType.split("+")[0]}`}
+                      title={this.props.t("download")}
+                    >
+                      <IconDownload className="feather" />
+                    </a>
+                  ) : (
+                    <Button
+                      variant="outline-secondary"
+                      disabled={true}
+                      title={this.props.t("download")}
+                    >
+                      <IconDownload className="feather" />
+                    </Button>
+                  )}
+                  <Form.Control.Feedback type="invalid">
+                    {this.props.t("errorMapFileTooLarge")}
+                  </Form.Control.Feedback>
+                </InputGroup>
               )}
               {this.state.mapType === "designed" && (
                 <>
