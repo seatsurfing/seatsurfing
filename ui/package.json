@@ -5,7 +5,7 @@
   "dependencies": {
     "@types/react-dom": "19.3.0",
     "async-mutex": "0.5.0",
-    "bootstrap": "5.3.8",
+    "bootstrap": "5.3.9",
     "chart.js": "4.6.1",
     "excellentexport": "3.9.16",
     "moment-timezone": "0.6.6",
