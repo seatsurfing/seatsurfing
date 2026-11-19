@@ -496,6 +496,7 @@ class EditLocation extends React.Component<Props, State> {
   entity: Location = new Location();
   groups: Group[] = [];
   mapData: any = null;
+  mapRefreshPending = false;
   timezones: string[];
   ExcellentExport: any;
   editSpaceFormRef = React.createRef<HTMLFormElement>();
@@ -606,11 +607,7 @@ class EditLocation extends React.Component<Props, State> {
             });
             return this.entity.getMap().then((mapData) => {
               this.mapData = mapData;
-              const loadDesign =
-                location.mapType === "designed"
-                  ? this.entity.getFloorPlanDesign()
-                  : Promise.resolve("");
-              return loadDesign.then((designData) => {
+              return this.entity.getFloorPlanDesign().then((designData) => {
                 return SpaceAttribute.list().then((attributes) => {
                   return this.entity.getAttributes().then((attributeValues) => {
                     this.setState({
@@ -650,6 +647,7 @@ class EditLocation extends React.Component<Props, State> {
                           : [],
                       loading: false,
                     });
+                    this.mapRefreshPending = false;
                   });
                 });
               });
@@ -816,7 +814,9 @@ class EditLocation extends React.Component<Props, State> {
       : "";
     this.entity.mapScale = this.state.mapScale;
     const newMapType = this.state.mapType === "designed" ? "designed" : "";
-    const mapTypeChanged = this.entity.mapType !== newMapType;
+    if (this.entity.mapType !== newMapType) {
+      this.mapRefreshPending = true;
+    }
     this.entity.mapType = newMapType;
     this.entity.allowedBookerGroupIds = RuntimeConfig.INFOS.featureGroups
       ? this.state.locationAllowBookers?.map((e: any) => e.id) || []
@@ -875,7 +875,7 @@ class EditLocation extends React.Component<Props, State> {
                       });
                     });
                 } else {
-                  if (mapTypeChanged) {
+                  if (this.mapRefreshPending) {
                     this.loadData(this.entity.id);
                   }
                   this.setState({
