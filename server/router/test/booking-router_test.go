@@ -3794,3 +3794,81 @@ func TestBookingsUpdateUserAndResetApprovalDeletesOldUsersCalDavEvent(t *testing
 	default:
 	}
 }
+
+func TestCannotUpdateBookingIntoDisabledSpaceOrLocation(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	admin := CreateTestUserOrgAdmin(org)
+	loginResponse := LoginTestUser(user.ID)
+	adminLogin := LoginTestUser(admin.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// disable space after booking exists
+	space.Enabled = false
+	GetSpaceRepository().Update(space)
+
+	// retime by regular user - should fail
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-02T08:30:00Z\", \"leave\": \"2030-09-02T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req = NewHTTPRequest("PUT", "/booking/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// area admin may still update (same as create)
+	req = NewHTTPRequest("PUT", "/booking/"+id, adminLogin.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+
+	// re-enable space, disable location - should fail for regular user
+	space.Enabled = true
+	GetSpaceRepository().Update(space)
+	location.Enabled = false
+	GetLocationRepository().Update(location)
+	req = NewHTTPRequest("PUT", "/booking/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+
+	// re-enable location - update succeeds again
+	location.Enabled = true
+	GetLocationRepository().Update(location)
+	req = NewHTTPRequest("PUT", "/booking/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}
+
+func TestCannotUpdateBookingWithBlankRequiredSubject(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	_, space := CreateTestLocationAndSpace(org)
+	space.RequireSubject = true
+	GetSpaceRepository().Update(space)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	id := res.Header().Get("X-Object-Id")
+
+	// blank subject - should fail
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"\"}"
+	req = NewHTTPRequest("PUT", "/booking/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingSubjectRequired), res.Header().Get("X-Error-Code"))
+
+	// valid subject - should succeed
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-01T08:30:00Z\", \"leave\": \"2030-09-01T17:00:00Z\", \"subject\": \"New subject\"}"
+	req = NewHTTPRequest("PUT", "/booking/"+id, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusNoContent, res.Code)
+}

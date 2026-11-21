@@ -420,6 +420,10 @@ func (router *BookingRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendForbidden(w)
 		return
 	}
+	if bErr := service.GetBookingService().CheckSpaceRules(requestUser, space, location, m.Subject); bErr != nil {
+		sendBookingError(w, bErr)
+		return
+	}
 	eNew, err := router.copyFromRestModel(&m, location)
 	if err != nil {
 		SendInternalServerError(w)
