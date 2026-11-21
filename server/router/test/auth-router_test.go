@@ -2187,3 +2187,62 @@ func TestAuthOAuthIDTokenClaimsMissingEmailClaim(t *testing.T) {
 	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "could not read email address from field: upn, userinfo fields: sub, fields from ID token: given_name, family_name, groups"))
 	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "ID token not used"))
 }
+
+// If the groups claim is missing from userinfo and the ID token that might
+// carry it is rejected, the groups are unknown. The login still succeeds, but
+// the roles granted earlier by the provider's mappings must not be revoked.
+func TestAuthOAuthIDTokenRejectedKeepsRoles(t *testing.T) {
+	expired := func(claims jwt.MapClaims) { claims["exp"] = time.Now().Add(-time.Hour).Unix() }
+	otherSubject := func(claims jwt.MapClaims) { claims["sub"] = "someone-else" }
+	noGroups := func(claims jwt.MapClaims) { delete(claims, "groups") }
+	for name, testCase := range map[string]struct {
+		modify       func(claims jwt.MapClaims) // nil: token response has no ID token
+		roleRetained bool
+	}{
+		"expired-id-token":          {expired, true},
+		"subject-mismatch":          {otherSubject, true},
+		"no-id-token":               {nil, false},
+		"valid-id-token-no-groups":  {noGroups, false},
+		"valid-id-token-with-group": {func(claims jwt.MapClaims) {}, true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			// Role reconciliation is skipped for organizations without an administrator.
+			CreateTestUserOrgAdmin(org)
+			idToken := ""
+			if testCase.modify != nil {
+				claims := adfsTestIDTokenClaims()
+				testCase.modify(claims)
+				idToken = signTestIDTokenForRouter(t, claims)
+			}
+			// Userinfo has the email address, but no groups claim.
+			srv := newIDTokenTestServer(t, `{"sub":"pairwise-id","upn":"jane.doe@test.com"}`, idToken)
+			provider := createIDTokenTestProvider(t, org, srv)
+			role := CreateTestRole(org, "Group Coordinator", map[Permission]PermissionLevel{
+				PermissionGroups: PermissionLevelWrite,
+			})
+			addMapping(provider, "Seatsurfing-Admins", AuthProviderMappingTargetRole, role.ID)
+			user := &User{Email: "jane.doe@test.com", OrganizationID: org.ID, AuthProviderID: NullUUID(provider.ID)}
+			if err := GetUserRepository().Create(user); err != nil {
+				t.Fatal(err)
+			}
+			// The role was granted by the provider's mapping on an earlier login.
+			if err := GetUserRoleRepository().SetRolesForUser(user.ID, []string{role.ID}, RoleAssignmentSourceOIDC); err != nil {
+				t.Fatal(err)
+			}
+
+			location := runIDTokenTestLogin(t, provider)
+			CheckTestBool(t, true, strings.Contains(location, "/ui/login/success/"))
+			roleIDs, err := GetUserRoleRepository().GetRoleIDsForUser(user.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if testCase.roleRetained {
+				CheckTestInt(t, 1, len(roleIDs))
+			} else {
+				CheckTestInt(t, 0, len(roleIDs))
+			}
+		})
+	}
+}

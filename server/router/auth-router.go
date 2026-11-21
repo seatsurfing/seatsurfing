@@ -107,6 +107,12 @@ type IdPUserInfo struct {
 	// Groups as reported by the identity provider, used to assign roles and
 	// group memberships. Empty when the provider declares no groups claim.
 	Groups []string
+	// GroupsUnavailable is set when the provider's groups could not be
+	// determined: the groups claim is missing from the userinfo response and
+	// the ID token that might carry it was rejected. Roles and group
+	// memberships must then be left as they are instead of being reconciled
+	// against an empty list, which would revoke them.
+	GroupsUnavailable bool
 }
 
 type InitPasswordResetRequest struct {
@@ -1088,7 +1094,12 @@ func (router *AuthRouter) callback(w http.ResponseWriter, r *http.Request) {
 	// Apply the provider's role and group mappings on every login, so that a
 	// change made in the identity provider takes effect the next time the user
 	// signs in.
-	ReconcileUserFromIdP(user, provider, userInfo.Groups)
+	// If the groups could not be determined, keep the current assignments.
+	if userInfo.GroupsUnavailable {
+		log.Printf("Skipped identity provider role reconciliation for user %s: groups unavailable because the ID token of auth provider %s was rejected\n", user.ID, provider.ID)
+	} else {
+		ReconcileUserFromIdP(user, provider, userInfo.Groups)
+	}
 	payloadNew := &AuthStateLoginPayload{
 		UserID:    userInfo.Email,
 		LoginType: payload.LoginType,
@@ -1242,6 +1253,14 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if idTokenErr != nil && rawIDToken != "" {
 		// Login works without the ID token, but optional fields stay empty.
 		log.Printf("Ignoring ID token of auth provider %s: %v\n", provider.ID, idTokenErr)
+		// The rejected ID token may have carried the groups. Do not treat
+		// them as "empty" then, or a transient problem (e.g. clock skew)
+		// would revoke the user's roles and group memberships. Without any
+		// ID token, the userinfo response is the only source and an absent
+		// groups claim keeps meaning "no groups".
+		if provider.UserInfoGroupsField != "" && len(info.Groups) == 0 {
+			info.GroupsUnavailable = true
+		}
 	}
 	return info, payload, nil
 }
