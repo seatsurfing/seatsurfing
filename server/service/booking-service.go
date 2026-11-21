@@ -215,15 +215,8 @@ func (s *BookingService) PrepareCreate(requestUser *User, in *BookingInput) (*Pr
 	if !CanAccessOrg(requestUser, location.OrganizationID) {
 		return nil, &BookingError{Kind: BookingErrorForbidden}
 	}
-	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
-	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
-		if space.RequireSubject && len(strings.TrimSpace(in.Subject)) < 3 {
-			return nil, &BookingError{Kind: BookingErrorInvalid, Code: BookingCodeSubjectRequired}
-		}
-	}
-	// Disabled locations and spaces can only be booked by space admins.
-	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
-		return nil, &BookingError{Kind: BookingErrorInvalid}
+	if bErr := s.CheckSpaceRules(requestUser, space, location, in.Subject); bErr != nil {
+		return nil, bErr
 	}
 	enter, err := GetLocationRepository().AttachTimezoneInformation(in.Enter, location)
 	if err != nil {
@@ -241,6 +234,23 @@ func (s *BookingService) PrepareCreate(requestUser *User, in *BookingInput) (*Pr
 		Leave:   leave,
 	}
 	return &PreparedBooking{Booking: e, Space: space, Location: location}, nil
+}
+
+// CheckSpaceRules enforces the space-level rules that apply whenever a
+// booking is created or moved/edited: required subject and disabled
+// locations/spaces (bookable by area admins only).
+func (s *BookingService) CheckSpaceRules(requestUser *User, space *Space, location *Location, subject string) *BookingError {
+	globalRequireSubjectSetting, _ := GetSettingsRepository().GetInt(location.OrganizationID, SettingSubjectDefault.Name)
+	if globalRequireSubjectSetting != SettingSubjectDefaultDisabled {
+		if space.RequireSubject && len(strings.TrimSpace(subject)) < 3 {
+			return &BookingError{Kind: BookingErrorInvalid, Code: BookingCodeSubjectRequired}
+		}
+	}
+	// Disabled locations and spaces can only be booked by space admins.
+	if (!location.Enabled || !space.Enabled) && !HasPermission(requestUser, location.OrganizationID, PermissionAreas, PermissionLevelAdmin) {
+		return &BookingError{Kind: BookingErrorInvalid}
+	}
+	return nil
 }
 
 // CommitCreate validates a prepared booking against the booking rules and
