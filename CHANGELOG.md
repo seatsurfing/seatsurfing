@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.143.0](https://github.com/seatsurfing/seatsurfing/compare/v1.142.1...v1.143.0) (2026-11-21)
+
+
+### ✨ Features
+
+* **server:** support AD FS and other IdPs with claims only in ID token ([#2849](https://github.com/seatsurfing/seatsurfing/issues/2849)) ([5f82de6](https://github.com/seatsurfing/seatsurfing/commit/5f82de655eda96048d35f73c7a47610197f8f4b9))
+
+
+### 🐛 Bug Fixes
+
+* **admin-ui:** add download floorplan button ([#2903](https://github.com/seatsurfing/seatsurfing/issues/2903)) ([9d31400](https://github.com/seatsurfing/seatsurfing/commit/9d314000bf429e7f34f19aba3bbeb6c8fe184ea5))
+* **admin-ui:** restore location floorplan image when switching back ([#2904](https://github.com/seatsurfing/seatsurfing/issues/2904)) ([2776386](https://github.com/seatsurfing/seatsurfing/commit/2776386605e6ff43294463177a6c8467fbe65362))
+* **admin-ui:** set empty floorplan when switching location's map type ([#2899](https://github.com/seatsurfing/seatsurfing/issues/2899)) ([587116e](https://github.com/seatsurfing/seatsurfing/commit/587116e7a90aa01efb024ca915607d1496b725b8))
+* **booking-ui:** validate and encode public booking confirmation ID ([#2909](https://github.com/seatsurfing/seatsurfing/issues/2909)) ([5f19ab9](https://github.com/seatsurfing/seatsurfing/commit/5f19ab9b5ddf2eb46a92a5fa7b7a87ad62063dd8))
+* **deps:** bump bootstrap from 5.3.8 to 5.3.9 in /ui in the production-dependencies group across 1 directory ([#2905](https://github.com/seatsurfing/seatsurfing/issues/2905)) ([b4bc2e9](https://github.com/seatsurfing/seatsurfing/commit/b4bc2e926f2d07843de32b13ed9250c2df894227))
+* **deps:** bump golang.org/x/crypto from 0.58.0 to 0.59.0 in /server in the minor-and-patch group ([#2901](https://github.com/seatsurfing/seatsurfing/issues/2901)) ([1cf76ad](https://github.com/seatsurfing/seatsurfing/commit/1cf76ad39cd2538ccd48657d82010013902fb4d0))
+* **deps:** bump react-tooltip from 6.0.11 to 6.0.12 in /ui in the production-dependencies group across 1 directory ([#2907](https://github.com/seatsurfing/seatsurfing/issues/2907)) ([d831eb4](https://github.com/seatsurfing/seatsurfing/commit/d831eb44730c9b45c50452cbab22b16870906c38))
+* **server:** enforce disabled-space and required-subject rules on booking update ([#2910](https://github.com/seatsurfing/seatsurfing/issues/2910)) ([cd65809](https://github.com/seatsurfing/seatsurfing/commit/cd65809cf97823cf195a080466403f8d0c5832ae))
+* **server:** keep roles when ID token carrying groups is rejected ([#2898](https://github.com/seatsurfing/seatsurfing/issues/2898)) ([e2b6510](https://github.com/seatsurfing/seatsurfing/commit/e2b65104a5defd417616c0db3aa32dd7d9e1fd33))
+
 ## [1.142.1](https://github.com/seatsurfing/seatsurfing/compare/v1.142.0...v1.142.1) (2026-11-17)
 
 
