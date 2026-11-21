@@ -1997,3 +1997,193 @@ func TestAuthOAuthPKCELegacyState(t *testing.T) {
 	CheckTestBool(t, true, strings.Contains(res.Header().Get("Location"), "/ui/login/success/"))
 	CheckTestInt(t, 1, int(idp.tokenRequests.Load()))
 }
+
+func signTestIDTokenForRouter(t *testing.T, claims jwt.MapClaims) string {
+	t.Helper()
+	raw, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("test-secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
+// adfsTestIDTokenClaims returns the claims of an ID token as issued by AD FS
+// for the test provider's client ID.
+func adfsTestIDTokenClaims() jwt.MapClaims {
+	return jwt.MapClaims{
+		"sub":         "pairwise-id",
+		"aud":         "client",
+		"exp":         time.Now().Add(time.Hour).Unix(),
+		"upn":         "jane.doe@test.com",
+		"given_name":  "Jane",
+		"family_name": "Doe",
+		"groups":      []string{"Seatsurfing-Admins"},
+	}
+}
+
+// newIDTokenTestServer starts an IdP whose token endpoint returns the given
+// ID token (omitted if empty) and whose userinfo endpoint returns the given
+// JSON body.
+func newIDTokenTestServer(t *testing.T, userinfo string, idToken string) *httptest.Server {
+	t.Helper()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+		if r.FormValue("code") != "abc" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		response := map[string]string{"access_token": "tok", "token_type": "Bearer"}
+		if idToken != "" {
+			response["id_token"] = idToken
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	})
+	mux.HandleFunc("/userinfo", func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer tok" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(userinfo))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// createIDTokenTestProvider creates a provider configured like AD FS: the
+// email address is read from "upn", which AD FS only puts into the ID token.
+func createIDTokenTestProvider(t *testing.T, org *Organization, srv *httptest.Server) *AuthProvider {
+	t.Helper()
+	secret, err := EncryptString("secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider := &AuthProvider{
+		OrganizationID:         org.ID,
+		Name:                   "AD FS",
+		ProviderType:           int(OAuth2),
+		AuthStyle:              int(oauth2.AuthStyleInHeader),
+		AuthURL:                srv.URL + "/auth",
+		TokenURL:               srv.URL + "/token",
+		UserInfoURL:            srv.URL + "/userinfo",
+		UserInfoEmailField:     "upn",
+		UserInfoFirstnameField: "given_name",
+		UserInfoLastnameField:  "family_name",
+		UserInfoGroupsField:    "groups",
+		ClientID:               "client",
+		ClientSecret:           secret,
+		Scopes:                 "openid,profile,email",
+	}
+	if err := GetAuthProviderRepository().Create(provider); err != nil {
+		t.Fatal(err)
+	}
+	return provider
+}
+
+func runIDTokenTestLogin(t *testing.T, provider *AuthProvider) string {
+	t.Helper()
+	params := startPKCETestLogin(t, provider, "ui")
+	res := ExecuteTestRequest(NewHTTPRequest("GET", "/auth/"+provider.ID+"/callback?state="+params.Get("state")+"&code=abc", "", nil))
+	CheckTestResponseCode(t, http.StatusTemporaryRedirect, res.Code)
+	return res.Header().Get("Location")
+}
+
+func TestAuthOAuthIDTokenClaims(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	// Role reconciliation is skipped for organizations without an administrator.
+	CreateTestUserOrgAdmin(org)
+	srv := newIDTokenTestServer(t, `{"sub":"pairwise-id"}`, signTestIDTokenForRouter(t, adfsTestIDTokenClaims()))
+	provider := createIDTokenTestProvider(t, org, srv)
+	role := CreateTestRole(org, "Group Coordinator", map[Permission]PermissionLevel{
+		PermissionGroups: PermissionLevelWrite,
+	})
+	addMapping(provider, "Seatsurfing-Admins", AuthProviderMappingTargetRole, role.ID)
+
+	location := runIDTokenTestLogin(t, provider)
+	CheckTestBool(t, true, strings.Contains(location, "/ui/login/success/"))
+	user, err := GetUserRepository().GetByEmail(org.ID, "jane.doe@test.com")
+	if err != nil || user == nil {
+		t.Fatal("expected a user created from the ID token claims")
+	}
+	CheckTestString(t, "Jane", user.Firstname)
+	CheckTestString(t, "Doe", user.Lastname)
+	// Groups from the ID token are applied to the provider's role mappings.
+	CheckTestBool(t, true, HasPermission(user, org.ID, PermissionGroups, PermissionLevelWrite))
+}
+
+func TestAuthOAuthIDTokenClaimsUserinfoPrecedence(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	// Userinfo values win over the ID token; empty values count as missing.
+	srv := newIDTokenTestServer(t, `{"sub":"pairwise-id","upn":"userinfo@test.com","given_name":"","family_name":null}`, signTestIDTokenForRouter(t, adfsTestIDTokenClaims()))
+	provider := createIDTokenTestProvider(t, org, srv)
+
+	location := runIDTokenTestLogin(t, provider)
+	CheckTestBool(t, true, strings.Contains(location, "/ui/login/success/"))
+	user, err := GetUserRepository().GetByEmail(org.ID, "userinfo@test.com")
+	if err != nil || user == nil {
+		t.Fatal("expected the email address from userinfo")
+	}
+	CheckTestString(t, "Jane", user.Firstname)
+	CheckTestString(t, "Doe", user.Lastname)
+	other, _ := GetUserRepository().GetByEmail(org.ID, "jane.doe@test.com")
+	CheckTestBool(t, true, other == nil)
+}
+
+func TestAuthOAuthIDTokenClaimsRejected(t *testing.T) {
+	for name, testCase := range map[string]struct {
+		modify func(claims jwt.MapClaims)
+		reason string
+	}{
+		"wrong-audience":   {func(claims jwt.MapClaims) { claims["aud"] = "other-client" }, "audience does not match client ID"},
+		"expired":          {func(claims jwt.MapClaims) { claims["exp"] = time.Now().Add(-time.Hour).Unix() }, "ID token expired"},
+		"subject-mismatch": {func(claims jwt.MapClaims) { claims["sub"] = "someone-else" }, "subject of ID token does not match"},
+		"missing-id-token": {nil, "contains no ID token"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ClearTestDB()
+			org := CreateTestOrg("test.com")
+			idToken := ""
+			if testCase.modify != nil {
+				claims := adfsTestIDTokenClaims()
+				testCase.modify(claims)
+				idToken = signTestIDTokenForRouter(t, claims)
+			}
+			srv := newIDTokenTestServer(t, `{"sub":"pairwise-id"}`, idToken)
+			provider := createIDTokenTestProvider(t, org, srv)
+
+			location := runIDTokenTestLogin(t, provider)
+			CheckTestBool(t, true, strings.Contains(location, "/ui/login/failed/"))
+			attempt := getLastTestAuthAttempt(t, org)
+			CheckTestString(t, AuthErrorIdpAttributeMapping, attempt.ErrorCode)
+			// Only the keys returned by userinfo are listed as userinfo fields,
+			// followed by the reason why the ID token was not used.
+			CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "userinfo fields: sub, ID token not used: "))
+			CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, testCase.reason))
+			user, _ := GetUserRepository().GetByEmail(org.ID, "jane.doe@test.com")
+			CheckTestBool(t, true, user == nil)
+		})
+	}
+}
+
+func TestAuthOAuthIDTokenClaimsMissingEmailClaim(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	// The ID token is valid, but the configured email claim name does not
+	// exist in it. The detail lists the claims taken from the ID token
+	// separately from the userinfo fields.
+	claims := adfsTestIDTokenClaims()
+	delete(claims, "upn")
+	srv := newIDTokenTestServer(t, `{"sub":"pairwise-id"}`, signTestIDTokenForRouter(t, claims))
+	provider := createIDTokenTestProvider(t, org, srv)
+
+	location := runIDTokenTestLogin(t, provider)
+	CheckTestBool(t, true, strings.Contains(location, "/ui/login/failed/"))
+	attempt := getLastTestAuthAttempt(t, org)
+	CheckTestString(t, AuthErrorIdpAttributeMapping, attempt.ErrorCode)
+	CheckTestBool(t, true, strings.Contains(attempt.ErrorDetail, "could not read email address from field: upn, userinfo fields: sub, fields from ID token: given_name, family_name, groups"))
+	CheckTestBool(t, false, strings.Contains(attempt.ErrorDetail, "ID token not used"))
+}

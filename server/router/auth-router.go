@@ -1216,14 +1216,32 @@ func (router *AuthRouter) getUserInfo(provider *AuthProvider, state string, code
 	if err := json.Unmarshal(contents, &result); err != nil {
 		return nil, nil, &authError{code: AuthErrorIdpUserinfoFailed, detail: "failed parsing userinfo response as JSON: " + err.Error()}
 	}
+	userinfoKeys := make([]string, 0, len(result))
+	for k := range result {
+		userinfoKeys = append(userinfoKeys, k)
+	}
+	slices.Sort(userinfoKeys)
+	// Some OIDC providers (e.g. AD FS) return only "sub" from the userinfo
+	// endpoint and put profile claims into the ID token. Fill the configured
+	// fields that are missing from the userinfo response with ID token claims.
+	// Values present in the userinfo response are left untouched.
+	rawIDToken, _ := token.Extra("id_token").(string)
+	idTokenFields, idTokenErr := service.FillMissingUserInfoFromIDToken(result, rawIDToken, config.ClientID, time.Now(),
+		provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField, provider.UserInfoGroupsField)
 	info, err := ExtractUserInfoFields(result, provider.UserInfoEmailField, provider.UserInfoFirstnameField, provider.UserInfoLastnameField, provider.UserInfoGroupsField)
 	if err != nil {
-		keys := make([]string, 0, len(result))
-		for k := range result {
-			keys = append(keys, k)
+		detail := err.Error() + ", userinfo fields: " + strings.Join(userinfoKeys, ", ")
+		if len(idTokenFields) > 0 {
+			detail += ", fields from ID token: " + strings.Join(idTokenFields, ", ")
 		}
-		slices.Sort(keys)
-		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: err.Error() + ", userinfo fields: " + strings.Join(keys, ", ")}
+		if idTokenErr != nil {
+			detail += ", ID token not used: " + idTokenErr.Error()
+		}
+		return nil, nil, &authError{code: AuthErrorIdpAttributeMapping, detail: detail}
+	}
+	if idTokenErr != nil && rawIDToken != "" {
+		// Login works without the ID token, but optional fields stay empty.
+		log.Printf("Ignoring ID token of auth provider %s: %v\n", provider.ID, idTokenErr)
 	}
 	return info, payload, nil
 }
