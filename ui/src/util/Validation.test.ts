@@ -234,4 +234,29 @@ describe("Validation", () => {
       expect(regex.test("user name@example.com")).toBe(false);
     });
   });
+
+  describe("isUuid", () => {
+    it("should accept valid UUIDs", () => {
+      expect(Validation.isUuid("123e4567-e89b-12d3-a456-426614174000")).toBe(
+        true,
+      );
+      expect(Validation.isUuid("123E4567-E89B-12D3-A456-426614174000")).toBe(
+        true,
+      );
+    });
+
+    it("should reject path traversal and encoded separators", () => {
+      expect(Validation.isUuid("..\\..\\user\\totp\\disable")).toBe(false);
+      expect(Validation.isUuid("../user/totp/disable")).toBe(false);
+      expect(Validation.isUuid("..%5C..%5Cuser")).toBe(false);
+      expect(Validation.isUuid("123e4567-e89b-12d3-a456-426614174000/x")).toBe(
+        false,
+      );
+    });
+
+    it("should reject empty and malformed values", () => {
+      expect(Validation.isUuid("")).toBe(false);
+      expect(Validation.isUuid("not-a-uuid")).toBe(false);
+    });
+  });
 });
