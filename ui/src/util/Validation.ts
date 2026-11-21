@@ -11,12 +11,19 @@ export default class Validation {
   static readonly DOMAIN_PATTERN =
     /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
 
+  static readonly UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   static readonly PASSWORD_MIN_LENGTH = 8;
   static readonly PASSWORD_MAX_LENGTH = 64;
   static readonly PASSWORD_MIN_LENGTH_SA = 32;
 
   static isAbsoluteUrl(url: string): boolean {
     return /^(https?:)?\/\//i.test(url);
+  }
+
+  static isUuid(value: string): boolean {
+    return Validation.UUID_PATTERN.test(value);
   }
 
   static isRelativeUrl(url: string): boolean {

@@ -9,6 +9,7 @@ import Loading from "@/components/Loading";
 import Ajax from "@/util/Ajax";
 import BrowserUtil from "@/util/BrowserUtil";
 import Formatting from "@/util/Formatting";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -44,12 +45,19 @@ class ConfirmPublicBooking extends React.Component<Props, State> {
   componentDidMount = async () => {
     BrowserUtil.applyLanguageFromQuery();
     const { id } = this.props.router.query;
-    if (typeof id !== "string" || id.length === 0) {
+    // The ID is attacker-controllable (link) and ends up in a request path.
+    // Only accept the expected UUID shape to prevent path confusion.
+    if (typeof id !== "string" || !Validation.isUuid(id)) {
+      this.setState({ loading: false, status: "invalid" });
       return;
     }
     let request = confirmRequests.get(id);
     if (!request) {
-      request = Ajax.postData("/public-booking/confirm/" + id, {}, () => true);
+      request = Ajax.postData(
+        "/public-booking/confirm/" + encodeURIComponent(id),
+        {},
+        () => true,
+      );
       confirmRequests.set(id, request);
     }
     try {
