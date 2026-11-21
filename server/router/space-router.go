@@ -40,6 +40,8 @@ type CreateSpaceRequest struct {
 	ApproverGroupIDs      []string                     `json:"approverGroupIds" validate:"dive,uuid"`
 	AllowedBookerGroupIDs []string                     `json:"allowedBookerGroupIds" validate:"dive,uuid"`
 	PublicBookingEnabled  bool                         `json:"publicBookingEnabled"`
+	BlockedFrom           string                       `json:"blockedFrom"`
+	BlockedUntil          string                       `json:"blockedUntil"`
 }
 
 type UpdateSpaceRequest struct {
@@ -265,6 +267,8 @@ func (router *SpaceRouter) _getAvailability(spaceID string, w http.ResponseWrite
 		m.Enabled = e.Space.Enabled
 		m.Shape = e.Space.Shape
 		m.FontSize = e.Space.FontSize
+		m.BlockedFrom = formatDateOnly(e.Space.BlockedFrom)
+		m.BlockedUntil = formatDateOnly(e.Space.BlockedUntil)
 		m.Available = e.Available
 		m.IsAllowed = e.Allowed
 		m.IsApprovalRequired = e.ApprovalRequired
@@ -347,7 +351,11 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
 				continue
 			}
-			e := router.copyFromRestModel(&mSpace)
+			e, ok := router.copyFromRestModel(&mSpace)
+			if !ok {
+				res.Creates = append(res.Creates, BulkUpdateItemResponse{ID: "", Success: false})
+				continue
+			}
 			e.LocationID = vars["locationId"]
 			if err := GetSpaceRepository().Create(e); err != nil {
 				log.Println(err)
@@ -381,7 +389,11 @@ func (router *SpaceRouter) bulkUpdate(w http.ResponseWriter, r *http.Request) {
 				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: mSpace.ID, Success: false})
 				continue
 			}
-			e := router.copyFromRestModel(&mSpace.CreateSpaceRequest)
+			e, ok := router.copyFromRestModel(&mSpace.CreateSpaceRequest)
+			if !ok {
+				res.Updates = append(res.Updates, BulkUpdateItemResponse{ID: mSpace.ID, Success: false})
+				continue
+			}
 			e.ID = mSpace.ID
 			e.LocationID = vars["locationId"]
 			if err := GetSpaceRepository().Update(e); err != nil {
@@ -476,7 +488,11 @@ func (router *SpaceRouter) update(w http.ResponseWriter, r *http.Request) {
 		SendNotFound(w)
 		return
 	}
-	e := router.copyFromRestModel(&m)
+	e, ok := router.copyFromRestModel(&m)
+	if !ok {
+		SendBadRequest(w)
+		return
+	}
 	e.ID = vars["id"]
 	e.LocationID = vars["locationId"]
 	location, err := GetLocationRepository().GetOne(e.LocationID)
@@ -547,7 +563,11 @@ func (router *SpaceRouter) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	e := router.copyFromRestModel(&m)
+	e, ok := router.copyFromRestModel(&m)
+	if !ok {
+		SendBadRequest(w)
+		return
+	}
 	e.LocationID = vars["locationId"]
 	location, err := GetLocationRepository().GetOne(e.LocationID)
 	if err != nil {
@@ -1062,7 +1082,11 @@ func (router *SpaceRouter) deleteImage(w http.ResponseWriter, r *http.Request) {
 	SendUpdated(w)
 }
 
-func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
+func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) (*Space, bool) {
+	blockedFrom, blockedUntil, ok := parseBlockedPeriod(m.BlockedFrom, m.BlockedUntil)
+	if !ok {
+		return nil, false
+	}
 	e := &Space{}
 	e.Name = m.Name
 	e.X = m.X
@@ -1076,7 +1100,9 @@ func (router *SpaceRouter) copyFromRestModel(m *CreateSpaceRequest) *Space {
 	e.Shape = m.Shape
 	e.FontSize = m.FontSize
 	e.PublicBookingEnabled = m.PublicBookingEnabled
-	return e
+	e.BlockedFrom = blockedFrom
+	e.BlockedUntil = blockedUntil
+	return e, true
 }
 
 func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttributeValue, approvers, allowedBookers []*SpaceGroup) *GetSpaceResponse {
@@ -1095,6 +1121,8 @@ func (router *SpaceRouter) copyToRestModel(e *Space, attributes []*SpaceAttribut
 	m.Shape = e.Shape
 	m.FontSize = e.FontSize
 	m.PublicBookingEnabled = e.PublicBookingEnabled
+	m.BlockedFrom = formatDateOnly(e.BlockedFrom)
+	m.BlockedUntil = formatDateOnly(e.BlockedUntil)
 	if attributes != nil {
 		m.Attributes = []SpaceAttributeValueRequest{}
 		for _, attribute := range attributes {

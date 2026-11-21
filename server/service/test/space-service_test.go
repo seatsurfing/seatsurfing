@@ -337,3 +337,104 @@ func setTestPNGSize(data []byte, width, height uint32) []byte {
 	binary.BigEndian.PutUint32(res[29:], crc32.ChecksumIEEE(res[12:29]))
 	return res
 }
+
+func TestSpaceServiceBlockedPeriod(t *testing.T) {
+	org, user, location, space := setupServiceTest(t)
+	svc := GetSpaceService()
+	day := func(d int) *time.Time {
+		v := time.Date(2030, 9, d, 0, 0, 0, 0, time.UTC)
+		return &v
+	}
+	slot := func(d int) (time.Time, time.Time) {
+		return serviceTestSlot(d-2, 8, 17)
+	}
+
+	enter, leave := slot(5)
+	CheckTestBool(t, false, svc.IsSpaceBlocked(space, location, user, enter, leave))
+
+	space.BlockedFrom = day(4)
+	space.BlockedUntil = day(6)
+	enter, leave = slot(3)
+	CheckTestBool(t, false, svc.IsSpaceBlocked(space, location, user, enter, leave))
+	enter, leave = slot(4)
+	CheckTestBool(t, true, svc.IsSpaceBlocked(space, location, user, enter, leave))
+	enter, leave = slot(6)
+	CheckTestBool(t, true, svc.IsSpaceBlocked(space, location, user, enter, leave))
+	enter, leave = slot(7)
+	CheckTestBool(t, false, svc.IsSpaceBlocked(space, location, user, enter, leave))
+
+	// Open end
+	space.BlockedUntil = nil
+	enter, leave = slot(25)
+	CheckTestBool(t, true, svc.IsSpaceBlocked(space, location, user, enter, leave))
+
+	// Open start
+	space.BlockedFrom = nil
+	space.BlockedUntil = day(6)
+	enter, leave = slot(2)
+	CheckTestBool(t, true, svc.IsSpaceBlocked(space, location, user, enter, leave))
+	enter, leave = slot(7)
+	CheckTestBool(t, false, svc.IsSpaceBlocked(space, location, user, enter, leave))
+
+	admin := CreateTestUserOrgAdmin(org)
+	enter, leave = slot(2)
+	CheckTestBool(t, true, svc.IsSpaceBlocked(space, location, admin, enter, leave))
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "1")
+	CheckTestBool(t, false, svc.IsSpaceBlocked(space, location, admin, enter, leave))
+	CheckTestBool(t, true, svc.IsSpaceBlocked(space, location, nil, enter, leave))
+}
+
+func TestSpaceServiceAvailabilitySpaceBlocked(t *testing.T) {
+	_, user, location, space := setupServiceTest(t)
+	space2 := &Space{LocationID: location.ID, Name: "Space 2", Enabled: true}
+	GetSpaceRepository().Create(space2)
+	blockedFrom := time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC)
+	space.BlockedFrom = &blockedFrom
+	GetSpaceRepository().Update(space)
+
+	allowed := func(enter, leave time.Time) map[string]bool {
+		list, err := GetSpaceService().GetAvailabilityForUser(user, location, "", enter, leave, []SearchAttribute{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		res := map[string]bool{}
+		for _, e := range list {
+			res[e.Space.ID] = e.Allowed
+		}
+		return res
+	}
+	res := allowed(serviceTestSlot(1, 8, 17))
+	CheckTestBool(t, false, res[space.ID])
+	CheckTestBool(t, true, res[space2.ID])
+	res = allowed(serviceTestSlot(0, 8, 17))
+	CheckTestBool(t, true, res[space.ID])
+}
+
+func TestSpaceServicePublicAvailabilitySpaceBlocked(t *testing.T) {
+	org, _, location, space := setupServiceTest(t)
+	location.Timezone = "UTC"
+	GetLocationRepository().Update(location)
+	blockedUntil := time.Date(2030, 1, 2, 0, 0, 0, 0, time.UTC)
+	space.PublicBookingEnabled = true
+	space.BlockedUntil = &blockedUntil
+	GetSpaceRepository().Update(space)
+	space2 := &Space{LocationID: location.ID, Enabled: true, PublicBookingEnabled: true}
+	GetSpaceRepository().Create(space2)
+	at := func(day, h int) time.Time {
+		return time.Date(2030, 1, day, h, 0, 0, 0, time.UTC)
+	}
+
+	res, err := GetSpaceService().GetPublicAvailability(org.ID, at(2, 10), at(2, 12))
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckTestBool(t, false, res[space.ID])
+	CheckTestBool(t, true, res[space2.ID])
+	res, _ = GetSpaceService().GetPublicAvailability(org.ID, at(3, 10), at(3, 12))
+	CheckTestBool(t, true, res[space.ID])
+
+	available, _ := GetSpaceService().IsPublicSlotAvailable(space, location, at(2, 10), at(2, 12))
+	CheckTestBool(t, false, available)
+	available, _ = GetSpaceService().IsPublicSlotAvailable(space, location, at(3, 10), at(3, 12))
+	CheckTestBool(t, true, available)
+}

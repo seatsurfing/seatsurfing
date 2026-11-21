@@ -51,6 +51,7 @@ const (
 	BookingCodeInvalidSubject            = 1012
 	BookingCodeInvalidWeekday            = 1013
 	BookingCodeBlocked                   = 1016
+	BookingCodeSpaceBlocked              = 1017
 )
 
 // BookingErrorKind classifies why a booking operation failed.
@@ -494,6 +495,12 @@ func (s *BookingService) CheckBooking(in *BookingInput, location *Location, requ
 	}
 	if GetLocationService().IsLocationBlocked(location, requestUser, in.Enter, in.Leave) {
 		return false, BookingCodeBlocked
+	}
+	if in.SpaceID != "" {
+		space, err := GetSpaceRepository().GetOne(in.SpaceID)
+		if err == nil && GetSpaceService().IsSpaceBlocked(space, location, requestUser, in.Enter, in.Leave) {
+			return false, BookingCodeSpaceBlocked
+		}
 	}
 	return true, 0
 }

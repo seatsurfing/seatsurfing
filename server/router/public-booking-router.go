@@ -28,21 +28,23 @@ const publicBookingConfirmExpiry = 30 * time.Minute
 const maxPendingPublicBookingRequestsPerEmail = 5
 
 type GetPublicBookableSpaceResponse struct {
-	SpaceID        string `json:"spaceId"`
-	SpaceName      string `json:"spaceName"`
-	LocationID     string `json:"locationId"`
-	LocationName   string `json:"locationName"`
-	RequireSubject bool   `json:"requireSubject"`
-	BookableDays   []int  `json:"bookableDays"`
-	BlockedFrom    string `json:"blockedFrom"`
-	BlockedUntil   string `json:"blockedUntil"`
-	X              uint   `json:"x"`
-	Y              uint   `json:"y"`
-	Width          uint   `json:"width"`
-	Height         uint   `json:"height"`
-	Rotation       uint   `json:"rotation"`
-	Shape          string `json:"shape"`
-	FontSize       string `json:"fontSize"`
+	SpaceID           string `json:"spaceId"`
+	SpaceName         string `json:"spaceName"`
+	LocationID        string `json:"locationId"`
+	LocationName      string `json:"locationName"`
+	RequireSubject    bool   `json:"requireSubject"`
+	BookableDays      []int  `json:"bookableDays"`
+	BlockedFrom       string `json:"blockedFrom"`
+	BlockedUntil      string `json:"blockedUntil"`
+	SpaceBlockedFrom  string `json:"spaceBlockedFrom"`
+	SpaceBlockedUntil string `json:"spaceBlockedUntil"`
+	X                 uint   `json:"x"`
+	Y                 uint   `json:"y"`
+	Width             uint   `json:"width"`
+	Height            uint   `json:"height"`
+	Rotation          uint   `json:"rotation"`
+	Shape             string `json:"shape"`
+	FontSize          string `json:"fontSize"`
 }
 
 type GetPublicBookableSpacesResponse struct {
@@ -180,14 +182,16 @@ func (router *PublicBookingRouter) getSpaces(w http.ResponseWriter, r *http.Requ
 			continue
 		}
 		item := GetPublicBookableSpaceResponse{
-			SpaceID:        space.ID,
-			SpaceName:      space.Name,
-			LocationID:     location.ID,
-			LocationName:   location.Name,
-			RequireSubject: space.RequireSubject,
-			BookableDays:   service.WeekdaysFromString(location.BookableDays),
-			BlockedFrom:    formatLocationDate(location.BlockedFrom),
-			BlockedUntil:   formatLocationDate(location.BlockedUntil),
+			SpaceID:           space.ID,
+			SpaceName:         space.Name,
+			LocationID:        location.ID,
+			LocationName:      location.Name,
+			RequireSubject:    space.RequireSubject,
+			BookableDays:      service.WeekdaysFromString(location.BookableDays),
+			BlockedFrom:       formatDateOnly(location.BlockedFrom),
+			BlockedUntil:      formatDateOnly(location.BlockedUntil),
+			SpaceBlockedFrom:  formatDateOnly(space.BlockedFrom),
+			SpaceBlockedUntil: formatDateOnly(space.BlockedUntil),
 		}
 		if showMap {
 			item.X = space.X
@@ -357,6 +361,9 @@ func (router *PublicBookingRouter) validateSpaceAndTimes(orgID string, m *Create
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	if service.GetLocationService().IsLocationBlocked(location, nil, enter, leave) {
+		return nil, nil, time.Time{}, time.Time{}, false
+	}
+	if service.GetSpaceService().IsSpaceBlocked(space, location, nil, enter, leave) {
 		return nil, nil, time.Time{}, time.Time{}, false
 	}
 	return space, location, enter, leave, true

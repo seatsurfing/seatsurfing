@@ -653,6 +653,28 @@ func TestPublicBookingGetSpacesReturnsBlockedPeriod(t *testing.T) {
 	CheckTestString(t, "", resBody.Spaces[0].BlockedUntil)
 }
 
+func TestPublicBookingGetSpacesReturnsSpaceBlockedPeriod(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space = enablePublicBookingForOrgAndSpace(org, space)
+	blockedUntil := time.Date(2030, 1, 2, 0, 0, 0, 0, time.UTC)
+	space.BlockedUntil = &blockedUntil
+	if err := GetSpaceRepository().Update(space); err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewHTTPRequest("GET", "/public-booking/"+org.ID+"/spaces", "", nil)
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusOK, res.Code)
+	var resBody *GetPublicBookableSpacesResponse
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+	CheckTestInt(t, 1, len(resBody.Spaces))
+	CheckTestString(t, "", resBody.Spaces[0].BlockedFrom)
+	CheckTestString(t, "", resBody.Spaces[0].SpaceBlockedFrom)
+	CheckTestString(t, "2030-01-02", resBody.Spaces[0].SpaceBlockedUntil)
+}
+
 func TestPublicBookingGetSpacesReturnsEmptyBookableDaysWhenUnrestricted(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")
@@ -1118,4 +1140,19 @@ func TestPublicBookingGetSpacesReturnsEffectiveDurationLimits(t *testing.T) {
 	json.Unmarshal(res.Body.Bytes(), &resBody)
 	CheckTestInt(t, 2, resBody.MinDurationHours)
 	CheckTestInt(t, 5, resBody.MaxDurationHours)
+}
+
+func TestPublicBookingConfirmUnavailableWhenSpaceBlocked(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	_, space := CreateTestLocationAndSpace(org)
+	space = enablePublicBookingForOrgAndSpace(org, space)
+
+	id := createTestPublicBookingAuthState(t, space, time.Date(2030, 1, 2, 9, 0, 0, 0, time.UTC), time.Date(2030, 1, 2, 17, 0, 0, 0, time.UTC))
+	blockedFrom := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
+	space.BlockedFrom = &blockedFrom
+	if err := GetSpaceRepository().Update(space); err != nil {
+		t.Fatal(err)
+	}
+	CheckTestString(t, "unavailable", confirmTestPublicBooking(t, id))
 }
