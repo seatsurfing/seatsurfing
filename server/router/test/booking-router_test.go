@@ -253,6 +253,48 @@ func TestBookingsLocationBlocked(t *testing.T) {
 	CheckTestResponseCode(t, http.StatusCreated, res.Code)
 }
 
+func TestBookingsSpaceBlocked(t *testing.T) {
+	ClearTestDB()
+	org := CreateTestOrg("test.com")
+	user := CreateTestUserInOrg(org)
+	loginResponse := LoginTestUser(user.ID)
+	location, space := CreateTestLocationAndSpace(org)
+	space2 := &Space{LocationID: location.ID, Name: "Space 2", Enabled: true}
+	GetSpaceRepository().Create(space2)
+	GetSettingsRepository().Set(org.ID, SettingMaxDaysInAdvance.Name, "5000")
+
+	blockedFrom := time.Date(2030, 9, 2, 0, 0, 0, 0, time.UTC)
+	blockedUntil := time.Date(2030, 9, 4, 0, 0, 0, 0, time.UTC)
+	space.BlockedFrom = &blockedFrom
+	space.BlockedUntil = &blockedUntil
+	GetSpaceRepository().Update(space)
+
+	payload := "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-03T08:30:00Z\", \"leave\": \"2030-09-03T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req := NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res := ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingSpaceBlocked), res.Header().Get("X-Error-Code"))
+
+	// Other spaces in the same location are not affected
+	payload = "{\"spaceId\": \"" + space2.ID + "\", \"enter\": \"2030-09-03T08:30:00Z\", \"leave\": \"2030-09-03T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+	bookingID := res.Header().Get("X-Object-Id")
+
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-05T08:30:00Z\", \"leave\": \"2030-09-05T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req = NewHTTPRequest("POST", "/booking/", loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusCreated, res.Code)
+
+	// Moving an existing booking onto the blocked space is rejected
+	payload = "{\"spaceId\": \"" + space.ID + "\", \"enter\": \"2030-09-03T08:30:00Z\", \"leave\": \"2030-09-03T17:00:00Z\", \"subject\": \"Test Event\"}"
+	req = NewHTTPRequest("PUT", "/booking/"+bookingID, loginResponse.UserID, bytes.NewBufferString(payload))
+	res = ExecuteTestRequest(req)
+	CheckTestResponseCode(t, http.StatusBadRequest, res.Code)
+	CheckTestString(t, strconv.Itoa(ResponseCodeBookingSpaceBlocked), res.Header().Get("X-Error-Code"))
+}
+
 func TestBookingsSubjectRequired(t *testing.T) {
 	ClearTestDB()
 	org := CreateTestOrg("test.com")

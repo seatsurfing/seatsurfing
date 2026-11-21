@@ -20,6 +20,10 @@ export default class Space extends Entity {
   publicBookingEnabled: boolean;
   shape: string;
   fontSize: string;
+  /** first day ("YYYY-MM-DD") of the period the space cannot be booked in; empty means open start */
+  blockedFrom: string;
+  /** last day ("YYYY-MM-DD") of the period the space cannot be booked in; empty means open end */
+  blockedUntil: string;
   attributes: SpaceAttributeValue[];
   approverGroupIds: string[];
   allowedBookerGroupIds: string[];
@@ -45,6 +49,8 @@ export default class Space extends Entity {
     this.publicBookingEnabled = false;
     this.shape = "rect";
     this.fontSize = "normal";
+    this.blockedFrom = "";
+    this.blockedUntil = "";
     this.attributes = [];
     this.approverGroupIds = [];
     this.allowedBookerGroupIds = [];
@@ -132,6 +138,8 @@ export default class Space extends Entity {
       publicBookingEnabled: this.publicBookingEnabled,
       shape: this.shape,
       fontSize: this.fontSize,
+      blockedFrom: this.blockedFrom,
+      blockedUntil: this.blockedUntil,
       attributes: this.attributes.map((a) => a.serialize()),
       approverGroupIds: this.approverGroupIds,
       allowedBookerGroupIds: this.allowedBookerGroupIds,
@@ -153,6 +161,8 @@ export default class Space extends Entity {
     this.publicBookingEnabled = input.publicBookingEnabled ?? false;
     this.shape = input.shape || "rect";
     this.fontSize = input.fontSize || "normal";
+    this.blockedFrom = input.blockedFrom || "";
+    this.blockedUntil = input.blockedUntil || "";
     if (input.allowed !== undefined) {
       this.allowed = input.allowed;
     }

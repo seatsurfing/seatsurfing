@@ -311,7 +311,7 @@ func (router *LocationRouter) update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	blockedFrom, blockedUntil, ok := parseBlockedPeriod(&m)
+	blockedFrom, blockedUntil, ok := parseBlockedPeriod(m.BlockedFrom, m.BlockedUntil)
 	if !ok {
 		SendBadRequest(w)
 		return
@@ -410,7 +410,7 @@ func (router *LocationRouter) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	blockedFrom, blockedUntil, ok := parseBlockedPeriod(&m)
+	blockedFrom, blockedUntil, ok := parseBlockedPeriod(m.BlockedFrom, m.BlockedUntil)
 	if !ok {
 		SendBadRequest(w)
 		return
@@ -664,12 +664,12 @@ func weekdaysToString(days []int) string {
 	return strings.Join(parts, ",")
 }
 
-func parseBlockedPeriod(m *CreateLocationRequest) (*time.Time, *time.Time, bool) {
-	from, err := parseLocationDate(m.BlockedFrom)
+func parseBlockedPeriod(fromStr, untilStr string) (*time.Time, *time.Time, bool) {
+	from, err := parseDateOnly(fromStr)
 	if err != nil {
 		return nil, nil, false
 	}
-	until, err := parseLocationDate(m.BlockedUntil)
+	until, err := parseDateOnly(untilStr)
 	if err != nil {
 		return nil, nil, false
 	}
@@ -679,7 +679,7 @@ func parseBlockedPeriod(m *CreateLocationRequest) (*time.Time, *time.Time, bool)
 	return from, until, true
 }
 
-func parseLocationDate(s string) (*time.Time, error) {
+func parseDateOnly(s string) (*time.Time, error) {
 	if s == "" {
 		return nil, nil
 	}
@@ -690,7 +690,7 @@ func parseLocationDate(s string) (*time.Time, error) {
 	return &t, nil
 }
 
-func formatLocationDate(t *time.Time) string {
+func formatDateOnly(t *time.Time) string {
 	if t == nil {
 		return ""
 	}
@@ -726,8 +726,8 @@ func (router *LocationRouter) copyToRestModel(e *Location, allowedBookers []*Loc
 	m.Timezone = e.Timezone
 	m.Enabled = e.Enabled
 	m.BookableDays = service.WeekdaysFromString(e.BookableDays)
-	m.BlockedFrom = formatLocationDate(e.BlockedFrom)
-	m.BlockedUntil = formatLocationDate(e.BlockedUntil)
+	m.BlockedFrom = formatDateOnly(e.BlockedFrom)
+	m.BlockedUntil = formatDateOnly(e.BlockedUntil)
 	m.Announcement = e.Announcement
 
 	if allowedBookers != nil {

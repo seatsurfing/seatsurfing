@@ -147,6 +147,23 @@ func TestSpaceRoundTrip(t *testing.T) {
 	}
 }
 
+func TestSpaceRoundTripBlockedPeriod(t *testing.T) {
+	from := time.Date(2026, 12, 24, 0, 0, 0, 0, time.UTC)
+	until := time.Date(2027, 1, 2, 0, 0, 0, 0, time.UTC)
+	got := spaceFromProto(spaceToProto(&Space{ID: "s1", BlockedFrom: &from, BlockedUntil: &until}))
+	if got.BlockedFrom == nil || !got.BlockedFrom.Equal(from) {
+		t.Errorf("BlockedFrom mismatch: got=%v want=%v", got.BlockedFrom, from)
+	}
+	if got.BlockedUntil == nil || !got.BlockedUntil.Equal(until) {
+		t.Errorf("BlockedUntil mismatch: got=%v want=%v", got.BlockedUntil, until)
+	}
+
+	got = spaceFromProto(spaceToProto(&Space{ID: "s1"}))
+	if got.BlockedFrom != nil || got.BlockedUntil != nil {
+		t.Errorf("expected nil blocked period, got from=%v until=%v", got.BlockedFrom, got.BlockedUntil)
+	}
+}
+
 func TestBookingDetailsRoundTrip(t *testing.T) {
 	now := time.Now().UTC().Round(time.Second)
 	bd := &BookingDetails{
