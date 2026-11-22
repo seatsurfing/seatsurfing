@@ -82,7 +82,15 @@ test("space blocked period", async ({ page }) => {
   await page
     .locator('input[type="file"]')
     .setInputFiles("../server/res/floorplan.jpg");
+  // Saving reloads the spaces asynchronously, which would discard a space added too early
+  const spacesLoaded = page.waitForResponse(
+    (r) =>
+      r.request().method() === "GET" &&
+      /\/location\/[^/]+\/space\/$/.test(new URL(r.url()).pathname),
+  );
   await page.getByRole("button", { name: "Save" }).click();
+  await spacesLoaded;
+  await expect(page).toHaveURL(/locations\/[0-9a-f-]{36}\/$/);
 
   // Add a space and block it from today on
   await page.getByRole("button", { name: "Add space" }).click();
