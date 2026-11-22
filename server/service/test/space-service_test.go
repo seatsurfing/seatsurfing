@@ -385,15 +385,15 @@ func TestSpaceServiceBlockedPeriod(t *testing.T) {
 }
 
 func TestSpaceServiceAvailabilitySpaceBlocked(t *testing.T) {
-	_, user, location, space := setupServiceTest(t)
+	org, user, location, space := setupServiceTest(t)
 	space2 := &Space{LocationID: location.ID, Name: "Space 2", Enabled: true}
 	GetSpaceRepository().Create(space2)
 	blockedFrom := time.Date(2030, 9, 3, 0, 0, 0, 0, time.UTC)
 	space.BlockedFrom = &blockedFrom
 	GetSpaceRepository().Update(space)
 
-	allowed := func(enter, leave time.Time) map[string]bool {
-		list, err := GetSpaceService().GetAvailabilityForUser(user, location, "", enter, leave, []SearchAttribute{})
+	allowedFor := func(u *User, enter, leave time.Time) map[string]bool {
+		list, err := GetSpaceService().GetAvailabilityForUser(u, location, "", enter, leave, []SearchAttribute{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -403,11 +403,21 @@ func TestSpaceServiceAvailabilitySpaceBlocked(t *testing.T) {
 		}
 		return res
 	}
+	allowed := func(enter, leave time.Time) map[string]bool {
+		return allowedFor(user, enter, leave)
+	}
 	res := allowed(serviceTestSlot(1, 8, 17))
 	CheckTestBool(t, false, res[space.ID])
 	CheckTestBool(t, true, res[space2.ID])
 	res = allowed(serviceTestSlot(0, 8, 17))
 	CheckTestBool(t, true, res[space.ID])
+
+	admin := CreateTestUserOrgAdmin(org)
+	enter, leave := serviceTestSlot(1, 8, 17)
+	CheckTestBool(t, false, allowedFor(admin, enter, leave)[space.ID])
+	GetSettingsRepository().Set(org.ID, SettingNoAdminRestrictions.Name, "1")
+	CheckTestBool(t, true, allowedFor(admin, enter, leave)[space.ID])
+	CheckTestBool(t, false, allowedFor(user, enter, leave)[space.ID])
 }
 
 func TestSpaceServicePublicAvailabilitySpaceBlocked(t *testing.T) {

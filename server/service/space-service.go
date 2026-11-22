@@ -108,6 +108,13 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 	isAllowedToBookLocation := locations.IsUserAllowedToBookLocation(locationAllowedBookers, userGroups)
 	isValidWeekday := locations.IsLocationWeekdayBookable(location, user, enter, leave) &&
 		!locations.IsLocationBlocked(location, user, enter, leave)
+	blockExempt := false
+	for _, e := range list {
+		if hasBlockedPeriod(&e.Space) {
+			blockExempt = hasNoAdminRestrictions(user, location.OrganizationID)
+			break
+		}
+	}
 	res := []*UserSpaceAvailability{}
 	for _, e := range list {
 		if spaceID != "" && e.ID != spaceID {
@@ -119,7 +126,7 @@ func (s *SpaceService) GetAvailabilityForUser(user *User, location *Location, sp
 		item := &UserSpaceAvailability{
 			Space:            e.Space,
 			Available:        e.Available,
-			Allowed:          isAllowedToBookLocation && s.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups) && isValidWeekday && !s.IsSpaceBlocked(&e.Space, location, user, enter, leave),
+			Allowed:          isAllowedToBookLocation && isValidWeekday && s.IsUserAllowedToBookSpace(&e.Space, spaceAllowedBookers, userGroups) && (blockExempt || !isSpaceBlockedInPeriod(&e.Space, enter, leave)),
 			ApprovalRequired: s.IsApprovalRequired(&e.Space, approvers),
 			HasImage:         spacesWithImage[e.ID],
 			Attributes:       []*SpaceAttributeValue{},
@@ -256,13 +263,18 @@ func (s *SpaceService) isPublicLocationSlotAvailable(location *Location, enter, 
 // the space's own blocked period (see IsLocationBlocked). location is the
 // space's location, whose organization settings apply.
 func (s *SpaceService) IsSpaceBlocked(space *Space, location *Location, user *User, enter, leave time.Time) bool {
-	if space.BlockedFrom == nil && space.BlockedUntil == nil {
+	if !hasBlockedPeriod(space) || hasNoAdminRestrictions(user, location.OrganizationID) {
 		return false
 	}
-	if hasNoAdminRestrictions(user, location.OrganizationID) {
-		return false
-	}
-	return touchesPeriod(space.BlockedFrom, space.BlockedUntil, enter, leave)
+	return isSpaceBlockedInPeriod(space, enter, leave)
+}
+
+func hasBlockedPeriod(space *Space) bool {
+	return space.BlockedFrom != nil || space.BlockedUntil != nil
+}
+
+func isSpaceBlockedInPeriod(space *Space, enter, leave time.Time) bool {
+	return hasBlockedPeriod(space) && touchesPeriod(space.BlockedFrom, space.BlockedUntil, enter, leave)
 }
 
 // IsApprovalRequired reports whether any of approvers belongs to space e.
