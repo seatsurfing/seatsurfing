@@ -7,9 +7,17 @@ export function getIcal(bookingId: string, recurring?: boolean) {
     credentials.accessToken,
     null,
   );
-  let url = Ajax.getBackendUrl() + "/booking/" + bookingId + "/ical";
+  let url =
+    Ajax.getBackendUrl() +
+    "/booking/" +
+    encodeURIComponent(bookingId) +
+    "/ical";
   if (recurring) {
-    url = Ajax.getBackendUrl() + "/recurring-booking/" + bookingId + "/ical";
+    url =
+      Ajax.getBackendUrl() +
+      "/recurring-booking/" +
+      encodeURIComponent(bookingId) +
+      "/ical";
   }
   fetch(url, options).then((response) => {
     if (!response.ok) {

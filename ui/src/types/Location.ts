@@ -107,7 +107,9 @@ export default class Location extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+      () => undefined,
+    );
   }
 
   async getMap(): Promise<LocationMap> {
@@ -123,9 +125,10 @@ export default class Location extends Entity {
   }
 
   async setMap(file: File): Promise<void> {
-    return Ajax.postData(this.getBackendUrl() + this.id + "/map", file).then(
-      () => undefined,
-    );
+    return Ajax.postData(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/map",
+      file,
+    ).then(() => undefined);
   }
 
   async getFloorPlanDesign(): Promise<string> {
@@ -166,14 +169,20 @@ export default class Location extends Entity {
       value: value,
     };
     return Ajax.postData(
-      this.getBackendUrl() + this.id + "/attribute/" + attributeId,
+      this.getBackendUrl() +
+        encodeURIComponent(this.id) +
+        "/attribute/" +
+        encodeURIComponent(attributeId),
       payload,
     ).then(() => undefined);
   }
 
   async deleteAttribute(attributeId: string): Promise<void> {
     return Ajax.delete(
-      this.getBackendUrl() + this.id + "/attribute/" + attributeId,
+      this.getBackendUrl() +
+        encodeURIComponent(this.id) +
+        "/attribute/" +
+        encodeURIComponent(attributeId),
     ).then(() => undefined);
   }
 
@@ -182,7 +191,9 @@ export default class Location extends Entity {
     bookingContext: boolean = false,
   ): Promise<Location> {
     return Ajax.get(
-      "/location/" + id + Location.bookingContextQuery(bookingContext),
+      "/location/" +
+        encodeURIComponent(id) +
+        Location.bookingContextQuery(bookingContext),
     ).then((result) => {
       let e: Location = new Location();
       e.deserialize(result.json);

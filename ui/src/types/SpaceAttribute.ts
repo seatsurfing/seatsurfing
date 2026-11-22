@@ -55,15 +55,19 @@ export default class SpaceAttribute extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+      () => undefined,
+    );
   }
 
   static async get(id: string): Promise<SpaceAttribute> {
-    return Ajax.get("/space-attribute/" + id).then((result) => {
-      let e: SpaceAttribute = new SpaceAttribute();
-      e.deserialize(result.json);
-      return e;
-    });
+    return Ajax.get("/space-attribute/" + encodeURIComponent(id)).then(
+      (result) => {
+        let e: SpaceAttribute = new SpaceAttribute();
+        e.deserialize(result.json);
+        return e;
+      },
+    );
   }
 
   static async list(): Promise<SpaceAttribute[]> {

@@ -73,11 +73,13 @@ export default class Role extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+      () => undefined,
+    );
   }
 
   static async get(id: string): Promise<Role> {
-    return Ajax.get("/role/" + id).then((result) => {
+    return Ajax.get("/role/" + encodeURIComponent(id)).then((result) => {
       let e = new Role();
       e.deserialize(result.json);
       return e;
@@ -98,13 +100,13 @@ export default class Role extends Entity {
   }
 
   static async getUserIds(roleId: string): Promise<string[]> {
-    return Ajax.get("/role/" + roleId + "/users").then(
+    return Ajax.get("/role/" + encodeURIComponent(roleId) + "/users").then(
       (result) => result.json as string[],
     );
   }
 
   static async getRoleIdsForUser(userId: string): Promise<string[]> {
-    return Ajax.get("/user/" + userId + "/roles").then(
+    return Ajax.get("/user/" + encodeURIComponent(userId) + "/roles").then(
       (result) => result.json as string[],
     );
   }
@@ -113,7 +115,7 @@ export default class Role extends Entity {
     userId: string,
     roleIds: string[],
   ): Promise<void> {
-    return Ajax.putData("/user/" + userId + "/roles", {
+    return Ajax.putData("/user/" + encodeURIComponent(userId) + "/roles", {
       roleIds: roleIds,
     }).then(() => undefined);
   }

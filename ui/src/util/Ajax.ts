@@ -287,7 +287,7 @@ export default class Ajax {
       url += "/";
     }
     if (e.id) {
-      return Ajax.putData(url + e.id, e.serialize());
+      return Ajax.putData(url + encodeURIComponent(e.id), e.serialize());
     } else {
       return Ajax.postData(url, e.serialize()).then((result) => {
         e.id = result.objectId;

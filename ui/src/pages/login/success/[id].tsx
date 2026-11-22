@@ -27,13 +27,13 @@ class LoginSuccess extends React.Component<Props, State> {
 
   loadData = async () => {
     const idParam = this.props.router.query["id"];
-    if (typeof idParam !== "string" || idParam.length === 0) {
+    if (typeof idParam !== "string" || !Validation.isUuid(idParam)) {
       return;
     }
     const id = idParam;
     let request = verifyRequests.get(id);
     if (!request) {
-      request = Ajax.get("/auth/verify/" + id, () => true);
+      request = Ajax.get("/auth/verify/" + encodeURIComponent(id), () => true);
       verifyRequests.set(id, request);
     }
     try {

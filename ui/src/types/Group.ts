@@ -39,39 +39,41 @@ export default class Group extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+      () => undefined,
+    );
   }
 
   async getMembers(): Promise<User[]> {
-    return Ajax.get(this.getBackendUrl() + this.id + "/member").then(
-      (result) => {
-        let list: User[] = [];
-        (result.json as []).forEach((item) => {
-          let e: User = new User();
-          e.deserialize(item);
-          list.push(e);
-        });
-        return list;
-      },
-    );
+    return Ajax.get(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/member",
+    ).then((result) => {
+      let list: User[] = [];
+      (result.json as []).forEach((item) => {
+        let e: User = new User();
+        e.deserialize(item);
+        list.push(e);
+      });
+      return list;
+    });
   }
 
   async addMembers(userIds: string[]): Promise<void> {
     return Ajax.putData(
-      this.getBackendUrl() + this.id + "/member",
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/member",
       userIds,
     ).then(() => undefined);
   }
 
   async removeMembers(userIds: string[]): Promise<void> {
     return Ajax.postData(
-      this.getBackendUrl() + this.id + "/member/remove",
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/member/remove",
       userIds,
     ).then(() => undefined);
   }
 
   static async get(id: string): Promise<Group> {
-    return Ajax.get("/group/" + id).then((result) => {
+    return Ajax.get("/group/" + encodeURIComponent(id)).then((result) => {
       let e: Group = new Group();
       e.deserialize(result.json);
       return e;

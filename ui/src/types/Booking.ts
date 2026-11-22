@@ -109,18 +109,21 @@ export default class Booking extends Entity {
   }
 
   async delete(): Promise<void> {
-    await Ajax.delete(this.getBackendUrl() + this.id);
+    await Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id));
   }
 
   async approve(approved: boolean): Promise<void> {
     const payload = {
       approved,
     };
-    await Ajax.postData(this.getBackendUrl() + this.id + "/approve", payload);
+    await Ajax.postData(
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/approve",
+      payload,
+    );
   }
 
   static async get(id: string): Promise<Booking> {
-    const result = await Ajax.get("/booking/" + id);
+    const result = await Ajax.get("/booking/" + encodeURIComponent(id));
     const e: Booking = new Booking();
     e.deserialize(result.json);
     return e;

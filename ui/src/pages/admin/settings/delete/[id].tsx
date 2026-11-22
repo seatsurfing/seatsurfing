@@ -5,6 +5,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Ajax from "@/util/Ajax";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -32,7 +33,11 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
   onDeleteOrgSubmit = (e: any) => {
     e.preventDefault();
     const { id } = this.props.router.query;
-    if (!id || this.state.code?.length < 6) {
+    if (
+      typeof id !== "string" ||
+      !Validation.isUuid(id) ||
+      this.state.code?.length < 6
+    ) {
       return;
     }
     this.setState({ loading: true, complete: false, success: false });
@@ -40,7 +45,11 @@ class CompleteOrgDeletion extends React.Component<Props, State> {
       code: this.state.code,
     };
 
-    Ajax.postData("/organization/deleteorg/" + id, payload, () => true)
+    Ajax.postData(
+      "/organization/deleteorg/" + encodeURIComponent(id),
+      payload,
+      () => true,
+    )
       .then((res) => {
         if (res.status >= 200 && res.status <= 299) {
           this.setState({ loading: false, complete: true, success: true });

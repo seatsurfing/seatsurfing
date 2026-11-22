@@ -193,11 +193,15 @@ export default class Passkey {
   }
 
   static async rename(id: string, name: string): Promise<void> {
-    return Ajax.putData("/user/passkey/" + id, { name }).then(() => undefined);
+    return Ajax.putData("/user/passkey/" + encodeURIComponent(id), {
+      name,
+    }).then(() => undefined);
   }
 
   static async deletePasskey(id: string): Promise<void> {
-    return Ajax.delete("/user/passkey/" + id).then(() => undefined);
+    return Ajax.delete("/user/passkey/" + encodeURIComponent(id)).then(
+      () => undefined,
+    );
   }
 
   static async beginLogin(organizationId: string): Promise<BeginLoginResponse> {

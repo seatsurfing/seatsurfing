@@ -6,6 +6,7 @@ import withReadyRouter from "@/components/withReadyRouter";
 import { TranslationFunc, withTranslation } from "@/components/withTranslation";
 import SeatsurfingAppLogo from "@/components/SeatsurfingAppLogo";
 import Ajax from "@/util/Ajax";
+import Validation from "@/util/Validation";
 
 interface State {
   loading: boolean;
@@ -34,8 +35,14 @@ class ConfirmSignup extends React.Component<Props, State> {
 
   loadData = () => {
     const { id } = this.props.router.query;
-    if (id) {
-      Ajax.postData("/cloud-features/signup/confirm/" + id, null, () => true)
+    // The ID is attacker-controllable (link) and ends up in a request path.
+    // Only accept the expected UUID shape to prevent path confusion.
+    if (typeof id === "string" && Validation.isUuid(id)) {
+      Ajax.postData(
+        "/cloud-features/signup/confirm/" + encodeURIComponent(id),
+        null,
+        () => true,
+      )
         .then((res) => {
           if (res.status >= 200 && res.status <= 299) {
             this.setState({

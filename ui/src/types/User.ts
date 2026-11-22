@@ -111,13 +111,15 @@ export default class User extends Entity {
   }
 
   async delete(): Promise<void> {
-    return Ajax.delete(this.getBackendUrl() + this.id).then(() => undefined);
+    return Ajax.delete(this.getBackendUrl() + encodeURIComponent(this.id)).then(
+      () => undefined,
+    );
   }
 
   async setPassword(password: string): Promise<void> {
     let payload = { password: password };
     return Ajax.putData(
-      this.getBackendUrl() + this.id + "/password",
+      this.getBackendUrl() + encodeURIComponent(this.id) + "/password",
       payload,
     ).then(() => undefined);
   }
@@ -137,7 +139,7 @@ export default class User extends Entity {
   }
 
   static async get(id: string): Promise<User> {
-    return Ajax.get("/user/" + id).then((result) => {
+    return Ajax.get("/user/" + encodeURIComponent(id)).then((result) => {
       let e: User = new User();
       e.deserialize(result.json);
       return e;
@@ -162,11 +164,13 @@ export default class User extends Entity {
   }
 
   static async getByEmail(email: string): Promise<User> {
-    return Ajax.get("/user/byEmail/" + email).then((result) => {
-      let e: User = new User();
-      e.deserialize(result.json);
-      return e;
-    });
+    return Ajax.get("/user/byEmail/" + encodeURIComponent(email)).then(
+      (result) => {
+        let e: User = new User();
+        e.deserialize(result.json);
+        return e;
+      },
+    );
   }
 
   static async generateTotp(): Promise<TotpGenerateResponse> {
@@ -187,9 +191,9 @@ export default class User extends Entity {
   }
 
   static async getTotpSecret(stateId: string): Promise<string> {
-    return Ajax.get("/user/totp/" + stateId + "/secret").then(
-      (result) => result.json.secret,
-    );
+    return Ajax.get(
+      "/user/totp/" + encodeURIComponent(stateId) + "/secret",
+    ).then((result) => result.json.secret);
   }
 
   static async disableTotp(): Promise<void> {
@@ -197,27 +201,34 @@ export default class User extends Entity {
   }
 
   static async adminResetPasskeys(userId: string): Promise<void> {
-    return Ajax.delete("/user/" + userId + "/passkeys").then(() => undefined);
+    return Ajax.delete(
+      "/user/" + encodeURIComponent(userId) + "/passkeys",
+    ).then(() => undefined);
   }
 
   static async adminResetTotp(userId: string): Promise<void> {
-    return Ajax.delete("/user/" + userId + "/totp").then(() => undefined);
+    return Ajax.delete("/user/" + encodeURIComponent(userId) + "/totp").then(
+      () => undefined,
+    );
   }
 
   static async getApiTokenStatus(userId: string): Promise<boolean> {
-    return Ajax.get("/user/" + userId + "/api-token").then(
+    return Ajax.get("/user/" + encodeURIComponent(userId) + "/api-token").then(
       (result) => result.json.configured as boolean,
     );
   }
 
   static async generateApiToken(userId: string): Promise<string> {
-    return Ajax.postData("/user/" + userId + "/api-token", null).then(
-      (result) => result.json.token as string,
-    );
+    return Ajax.postData(
+      "/user/" + encodeURIComponent(userId) + "/api-token",
+      null,
+    ).then((result) => result.json.token as string);
   }
 
   static async revokeApiToken(userId: string): Promise<void> {
-    return Ajax.delete("/user/" + userId + "/api-token").then(() => undefined);
+    return Ajax.delete(
+      "/user/" + encodeURIComponent(userId) + "/api-token",
+    ).then(() => undefined);
   }
 }
 
