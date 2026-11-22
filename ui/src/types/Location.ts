@@ -150,7 +150,7 @@ export default class Location extends Entity {
   ): Promise<SpaceAttributeValue[]> {
     return Ajax.get(
       this.getBackendUrl() +
-        this.id +
+        encodeURIComponent(this.id) +
         "/attribute" +
         Location.bookingContextQuery(bookingContext),
     ).then((result) => {

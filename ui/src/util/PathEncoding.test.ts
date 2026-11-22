@@ -5,6 +5,7 @@ import Role from "@/types/Role";
 import Group from "@/types/Group";
 import Booking from "@/types/Booking";
 import Location from "@/types/Location";
+import Buddy from "@/types/Buddy";
 import AuthProvider from "@/types/AuthProvider";
 import SpaceAttribute from "@/types/SpaceAttribute";
 import RecurringBooking from "@/types/RecurringBooking";
@@ -40,12 +41,19 @@ describe("entity helpers encode ids placed into request paths", () => {
     await User.adminResetTotp(EVIL).catch(() => {});
     await Role.getUserIds(EVIL).catch(() => {});
 
+    const location = new Location();
+    location.id = EVIL;
+    await location.getAttributes().catch(() => {});
+    const buddy = new Buddy();
+    buddy.id = EVIL;
+    await buddy.delete().catch(() => {});
+
     const user = new User();
     user.id = EVIL;
     await user.delete().catch(() => {});
     await user.setPassword("x").catch(() => {});
 
-    expect(calls.length).toBeGreaterThanOrEqual(4);
+    expect(calls.length).toBeGreaterThanOrEqual(6);
     for (const url of calls) {
       expect(url).not.toContain("\\");
       expect(url).toContain(ENCODED);

@@ -155,7 +155,10 @@ class PublicBooking extends React.Component<Props, State> {
     const domain = window.location.host.split(":").shift();
     let res;
     try {
-      res = await Ajax.get("/auth/org/" + domain, () => true);
+      res = await Ajax.get(
+        "/auth/org/" + encodeURIComponent(domain ?? ""),
+        () => true,
+      );
     } catch {
       try {
         res = await Ajax.get("/auth/singleorg", () => true);
