@@ -4,9 +4,10 @@ import { createRoot, Root } from "react-dom/client";
 import { act } from "react";
 
 let mockQuery: Record<string, any> = {};
+const mockPush = vi.fn();
 
 vi.mock("next/router", () => ({
-  useRouter: () => ({ isReady: true, query: mockQuery, push: vi.fn() }),
+  useRouter: () => ({ isReady: true, query: mockQuery, push: mockPush }),
 }));
 vi.mock("next/link", () => ({
   default: ({ children }: any) => React.createElement("a", null, children),
@@ -65,10 +66,13 @@ describe("dynamic route ids never reach a request path unvalidated", () => {
     );
   });
 
-  it("login/success sends no request for a non-UUID id", async () => {
+  it("login/success redirects to the failure page without a request for a non-UUID id", async () => {
     mockQuery = { id: EVIL };
+    mockPush.mockClear();
     const get = vi.spyOn(Ajax, "get");
     await mount(LoginSuccess);
     expect(get).not.toHaveBeenCalled();
+    // must not leave the user on an endless spinner
+    expect(mockPush).toHaveBeenCalledWith("/login/failed/");
   });
 });

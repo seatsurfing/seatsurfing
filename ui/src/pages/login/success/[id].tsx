@@ -27,7 +27,12 @@ class LoginSuccess extends React.Component<Props, State> {
 
   loadData = async () => {
     const idParam = this.props.router.query["id"];
-    if (typeof idParam !== "string" || !Validation.isUuid(idParam)) {
+    if (typeof idParam !== "string" || idParam.length === 0) {
+      return;
+    }
+    if (!Validation.isUuid(idParam)) {
+      // Never put an unvalidated ID into a request path.
+      this.props.router.push("/login/failed/");
       return;
     }
     const id = idParam;
